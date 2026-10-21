@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
 import svelteManifest from 'svelte/package.json' with { type: 'json' };
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { SVELTE_CASES, SVELTE_CLEAN, SVELTE_SANDBOX } from '#tests/data/checks/svelte.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
@@ -21,19 +21,19 @@ test('Prettier reports and fixes a Svelte component through the Svelte plugin', 
         },
     );
 
-    const loose = await spawnGspot(root, ['check', '--only', 'format/prettier', '--json'], environment);
+    const loose = parseCheckReport(
+        await spawnGspot(root, ['check', '--only', 'format/prettier', '--json'], environment),
+    );
 
     expect(loose.code, loose.stdout + loose.stderr).toBe(1);
 
-    expect((JSON.parse(loose.stdout) as RunReport).checks[0]!.findings).toContainEqual(
-        matchFields({ file: 'src/Greeting.svelte' }),
-    );
+    expect(loose.report.checks[0]!.findings).toContainEqual(matchFields({ file: 'src/Greeting.svelte' }));
 
     const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'format/prettier'], environment);
 
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
 
-    expect(await Bun.file(path).text()).toBe(SVELTE_CLEAN);
+    expect(await readFile(path, 'utf8')).toBe(SVELTE_CLEAN);
 });
 
 test.each([...SVELTE_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {

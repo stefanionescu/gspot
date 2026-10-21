@@ -1,17 +1,22 @@
+import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { locateNode, buildFinding } from '#cli/runs/finding.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { findDocstring, PYTHON_SOURCES } from '#cli/parsers/python.ts';
 import { NON_WORD_RUN, PLACEHOLDERS } from '#cli/config/checks/python.ts';
 
 /**
  * Reports Python docstrings that only repeat a name or placeholder.
  *
- * @param input the scope Python files.
+ * @param session the repository and its tools.
+ * @param planned the scope Python files.
  * @returns the findings.
  */
-export async function checkPythonPlaceholderDocstrings(input: CheckInput): Promise<Finding[]> {
-    const parsed = await parseCached(input, PYTHON_SOURCES);
+export async function checkPythonPlaceholderDocstrings(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const parsed = await parseCached(
+        { root: session.root, reads: session.reads, resources: session.resources, files: planned.files },
+        PYTHON_SOURCES,
+    );
     const { functions } = parsed;
     return functions.flatMap((definition) => {
         const text = findDocstring(definition.node);
@@ -21,7 +26,7 @@ export async function checkPythonPlaceholderDocstrings(input: CheckInput): Promi
         if (plain !== '' && !isName && !PLACEHOLDERS.has(plain)) return [];
         return [
             buildFinding(
-                input,
+                planned,
                 locateNode(definition.path, definition.node),
                 'placeholder-docstring',
                 `The docstring of ${definition.name} says nothing the name does not. Say what the function does, or for whom.`,

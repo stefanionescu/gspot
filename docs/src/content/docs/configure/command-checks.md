@@ -83,7 +83,6 @@ run.
 | `sarif`        | SARIF results, rule metadata, source locations, and fixes.                                     |
 | `knip`         | Knip JSON issue categories and source positions.                                               |
 | `semgrep`      | Semgrep JSON results, locations, lint rule IDs, messages, and fixes.                           |
-| `trufflehog`   | TruffleHog JSON findings, with raw secret output withheld.                                     |
 | `typos`        | typos JSON, with byte offsets converted to character columns.                                  |
 | `markdownlint` | markdownlint result objects and their lint rule and source locations.                          |
 | `json`         | JSON findings selected by `items`, `children`, and `fields`.                                   |

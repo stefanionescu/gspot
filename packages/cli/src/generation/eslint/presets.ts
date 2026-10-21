@@ -1,93 +1,113 @@
-import { z } from 'zod';
 import { readAsset } from '#cli/system/assets.ts';
-import { stripUndefined } from '#cli/system/values.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { eslintPresetsSchema } from '#cli/schemas/generation.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
-import { eslintPresetSchema } from '#cli/configurations/schema/manifest.ts';
 import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
+import { TABINDEX_RULES, FOCUSABLE_ROLES } from '#cli/config/generation/eslint-fragments.ts';
 
-import {
-    type BlockWriter,
-    type EslintPresets,
-    type FragmentPreset,
-    type EslintSettingsBlock,
+import type {
+    EslintPreset,
+    EslintPresets,
+    EslintFragment,
+    EslintSettingsBlock,
+    EslintRuleExpression,
 } from '#cli/types/generation/eslint.ts';
 
-const eslintPresetsSchema = z.record(z.string(), eslintPresetSchema) satisfies z.ZodType<EslintPresets>;
+/**
+ * Read the pinned presets shipped beside their configuration.
+ *
+ * @param manifest the configuration owning the preset.
+ * @returns preset blocks without executable plugin or parser objects.
+ */
+function readPresets(manifest: Manifest): EslintPresets {
+    return eslintPresetsSchema.parse(JSON.parse(readAsset(`${manifest.folder}/${ESLINT_PRESETS_FILE}`)));
+}
 
 /**
- * Pick the preset fields to generate, without the parser-detection flag.
+ * Get a required preset and report a missing shipped export.
  *
- * @param block the captured preset metadata.
- *
- * @returns the rule and file properties.
+ * @param presets the captured exports of the configuration.
+ * @param name the required export.
+ * @returns the captured preset.
  */
-function pickPresetFields(block: EslintSettingsBlock | EslintPresets[string]['blocks'][number]): EslintSettingsBlock {
+function getPreset(presets: EslintPresets | undefined, name: string): EslintPreset {
+    const preset = presets?.[name];
+    if (preset === undefined) throw new Error(`The configuration ships no ${name} preset.`);
+    return preset;
+}
+
+/**
+ * Preserve every array preset spread while transforming its captured fields.
+ *
+ * @param preset the pinned array export.
+ * @param importName its imported binding.
+ * @param transform the rules and file fields of each block.
+ * @returns the changed blocks with their runtime expressions.
+ */
+function buildArrayPresetBlocks(
+    preset: EslintPreset,
+    importName: string,
+    transform: (block: EslintPreset['blocks'][number]) => EslintSettingsBlock,
+): EslintFragment['blocks'] {
+    const source = serializePresetAccess(importName, preset.source);
+    return preset.blocks.map((block, index) => ({
+        data: transform(block),
+        properties: `...${source}[${String(index)}]`,
+        preset: { expression: `${source}[${String(index)}].rules`, rules: block.rules },
+    }));
+}
+
+/**
+ * Merge first-block preset rules and their runtime expressions in the same order.
+ *
+ * @param entries imported bindings paired with captured presets.
+ * @returns the combined rule expression and captured rule values.
+ */
+function buildPresetRuleExpression(entries: (readonly [string, EslintPreset])[]): EslintRuleExpression {
+    const sources = entries.map(
+        ([importName, preset]) => '...' + serializePresetAccess(importName, preset.source) + '.rules',
+    );
     return {
-        ...(block.files === undefined ? {} : { files: block.files }),
-        ...(block.ignores === undefined ? {} : { ignores: block.ignores }),
-        ...(block.basePath === undefined ? {} : { basePath: block.basePath }),
-        ...(block.rules === undefined ? {} : { rules: block.rules }),
+        expression: '{ ' + sources.join(', ') + ' }',
+        rules: Object.fromEntries(
+            entries.flatMap(([, preset]) => {
+                const rules = preset.blocks[0].rules;
+                return rules === undefined ? [] : Object.entries(rules);
+            }),
+        ),
     };
 }
 
 /**
- * Read the exact pinned presets shipped beside their configuration.
+ * Add fixed options while retaining a rule's severity and existing options.
  *
- * @param manifest the configuration owning the preset.
- *
- * @returns preset blocks without executable plugin or parser objects.
+ * @param entry the pinned severity and its current parameters.
+ * @param options the rule-specific values that replace existing options.
+ * @returns the rule with the added options, or the unchanged non-array entry.
  */
-function readPresets(manifest: Manifest): EslintPresets {
-    const parsed = eslintPresetsSchema.parse(JSON.parse(readAsset(`${manifest.folder}/${ESLINT_PRESETS_FILE}`)));
+function addRuleOptions(entry: unknown, options: Record<string, unknown>): unknown {
+    if (!Array.isArray(entry)) return entry;
+    const severity: unknown = entry[0];
+    const previous: unknown = entry[1];
+    return [severity, Object.assign({}, previous, options)];
+}
+
+/**
+ * Allow keyboard focus on scrollable regions in accessibility presets.
+ *
+ * @param rules the captured jsx-a11y rules.
+ * @returns the rules with region roles permitted by tabindex checks.
+ */
+function allowFocusableRegions(rules: Record<string, unknown>): Record<string, unknown> {
     return Object.fromEntries(
-        Object.entries(parsed).map(([name, preset]) => [
-            name,
-            { ...preset, blocks: preset.blocks.map((block) => stripUndefined(block)) },
+        Object.entries(rules).map(([rule, entry]) => [
+            rule,
+            (TABINDEX_RULES as readonly string[]).includes(rule)
+                ? addRuleOptions(entry, { roles: [...FOCUSABLE_ROLES] })
+                : entry,
         ]),
     );
-}
-
-/**
- * Build the blocks of one pinned preset with a rule and parser transform.
- *
- * @param preset the pinned export and its blocks.
- * @param importName the JavaScript binding of the preset package.
- * @param transform changes each block, and keeps its runtime source expression.
- * @returns the changed blocks with their runtime source expressions.
- */
-function buildPresetBlocks(
-    preset: Pick<FragmentPreset, 'source'> & { blocks: readonly FragmentPreset['blocks'][number][] },
-    importName: string,
-    transform: (
-        block: FragmentPreset['blocks'][number],
-        index: number,
-        source: string,
-    ) => Parameters<BlockWriter['block']>,
-): Parameters<BlockWriter['block']>[] {
-    const source = serializePresetAccess(importName, preset.source);
-    return preset.blocks.map((block, index) => transform(block, index, source));
-}
-
-/**
- * Keep the runtime spread of each array preset block, and apply its component fields.
- *
- * @param preset the pinned array export.
- * @param importName the JavaScript binding of the plugin.
- * @param transform changes the rules or file fields of a block.
- * @returns the blocks with their installed preset expressions.
- */
-function buildArrayPresetBlocks(
-    preset: FragmentPreset,
-    importName: string,
-    transform: (block: FragmentPreset['blocks'][number]) => EslintSettingsBlock,
-): Parameters<BlockWriter['block']>[] {
-    return buildPresetBlocks(preset, importName, (block, index, source) => [
-        transform(block),
-        `...${source}[${String(index)}]`,
-        { expression: `${source}[${String(index)}].rules`, rules: block.rules },
-    ]);
 }
 
 /**
@@ -96,11 +116,20 @@ function buildArrayPresetBlocks(
  * @param block one captured component preset.
  * @returns its fields, with warnings turned into errors.
  */
-function promotePresetRules(block: FragmentPreset['blocks'][number]): EslintSettingsBlock {
+function promotePresetRules(block: EslintPreset['blocks'][number]): EslintSettingsBlock {
+    const { parser: _parser, ...fields } = block;
     return {
-        ...pickPresetFields(block),
+        ...fields,
         ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
     };
 }
 
-export { readPresets, pickPresetFields, buildPresetBlocks, promotePresetRules, buildArrayPresetBlocks };
+export {
+    getPreset,
+    readPresets,
+    addRuleOptions,
+    promotePresetRules,
+    allowFocusableRegions,
+    buildArrayPresetBlocks,
+    buildPresetRuleExpression,
+};

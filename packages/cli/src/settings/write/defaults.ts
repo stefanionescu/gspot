@@ -4,12 +4,11 @@ import { buildSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { DETECTED_SETTINGS } from '#cli/config/settings/defaults.ts';
+import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { findDeclaration, getSettingValue } from '#cli/settings/inherit.ts';
 import { type Settings, type WrittenTable } from '#cli/types/settings/values.ts';
@@ -99,12 +98,11 @@ function dropTableDefaults(
 /**
  * Drop written values that equal the default, but keep a scope override of its parent.
  *
- * @param settings the ordered draft, whose declarations own the defaults.
+ * @param settings the ordered draft, whose settings give the defaults.
  * @returns the draft without values that equal the default.
  */
 function dropDefaults(settings: TomlTable): TomlTable {
-    const reads = createReadCache(process.cwd());
-    const manifests = readManifests(reads);
+    const manifests = readManifests();
     const parsed = settingsSchema.parse(settings);
     const effectiveSettings = buildSettings(parsed, settings);
     const level = settingsSchema.shape.level.parse(settings['level']);
@@ -118,7 +116,7 @@ function dropDefaults(settings: TomlTable): TomlTable {
     const root = {
         scope: '',
         table: settings,
-        known: buildKnownSettings(selectForScope(selection, '', manifests), level, reads),
+        known: buildKnownSettings(selectForScope(selection, '', manifests), level),
     };
     const tables = [
         root,
@@ -127,19 +125,19 @@ function dropDefaults(settings: TomlTable): TomlTable {
             return {
                 scope,
                 table,
-                known: buildKnownSettings(selectForScope(selection, scope, manifests), level, reads),
+                known: buildKnownSettings(selectForScope(selection, scope, manifests), level),
             };
         }),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     // The writer has no project input to prove a computed default. Keep a written choice until the writer knows that input.
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.known.defaults.delete(key);
-    for (const [index, table] of scopes.entries()) {
+    const scopeValues = scopes.map((table) => {
         const scope = trimTrailingSlashes(table['path'] as string);
         const writtenTable = tables.find((entry) => entry.scope === scope) as WrittenTable;
-        scopes[index] = dropTableDefaults(writtenTable.table, writtenTable, tables, effectiveSettings);
-    }
-    if (scopes.length > 0) settings['scope'] = scopes;
-    return dropTableDefaults(settings, root, tables, effectiveSettings);
+        return dropTableDefaults(writtenTable.table, writtenTable, tables, effectiveSettings);
+    });
+    const rootValues = dropTableDefaults(settings, root, tables, effectiveSettings);
+    return scopes.length > 0 ? { ...rootValues, scope: scopeValues } : rootValues;
 }
 
 export { dropDefaults };

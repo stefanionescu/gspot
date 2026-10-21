@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { spawnGspot, spawnCheckReport } from '#tests/setup/run-gspot.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { DOCSTRING_MODULES } from '#tests/data/checks/python/docstrings.ts';
 import { updateSandbox, applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { PYPROJECT, PYDOCLINT_GOOGLE, PYDOCLINT_CHECK_ARGUMENTS } from '#tests/data/checks/python/project.ts';
@@ -24,13 +25,13 @@ TOTAL: int = "three"
         },
     );
     // The pointer replaces the file; gspot.toml keeps none of the old settings.
-    const pointer = await Bun.file(`${root}/pyrightconfig.json`).text();
+    const pointer = await readFile(`${root}/pyrightconfig.json`, 'utf8');
     expect(pointer).toContain('"extends": "./.gspot/configurations/language/python/basedpyright.json"');
     expect(pointer).not.toContain('basic');
-    const settings = await Bun.file(`${root}/gspot.toml`).text();
+    const settings = await readFile(`${root}/gspot.toml`, 'utf8');
     expect(settings).not.toContain('example/skipped.py');
     const command = ['check', '--only', 'python/basedpyright', '--json'];
-    const refused = await spawnCheckReport(root, command, environment);
+    const refused = parseCheckReport(await spawnGspot(root, command, environment));
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = refused.report;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
@@ -42,14 +43,14 @@ TOTAL: int = "three"
             rule: 'reportAssignmentType',
         }),
     );
-    await Bun.write(
+    await writeFile(
         `${root}/${ARITHMETIC_MODULE_PATH}`,
         `${ARITHMETIC_MODULE}
 
 TOTAL: int = 3
 `,
     );
-    const corrected = await spawnCheckReport(root, command, environment);
+    const corrected = parseCheckReport(await spawnGspot(root, command, environment));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const accepted = corrected.report;
     expect(accepted.checks.map((check) => [check.check, check.status])).toStrictEqual([
@@ -67,13 +68,9 @@ test('pydoclint finds the docstring style of each file and does not ask for type
         {
             check: 'python/pydoclint',
             files: {
-                'gspot.toml': buildSettingsText(['python'], {
+                'gspot.toml': buildSandboxSettings(['python'], {
                     level: 'all',
-                    tables: `[[scope]]
-path = "app"
-
-configurations = ["python"]
-`,
+                    scopes: [{ path: 'app', configurations: ['python'] }],
                 }),
                 'pyproject.toml': PYPROJECT,
                 'app/pyproject.toml': PYPROJECT,
@@ -81,7 +78,7 @@ configurations = ["python"]
             },
         },
     );
-    const failed = await spawnCheckReport(root, PYDOCLINT_CHECK_ARGUMENTS, environment);
+    const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const report = failed.report;
     expect(report.checks.map((check) => [check.scope, check.status])).toStrictEqual([
@@ -91,8 +88,8 @@ configurations = ["python"]
     for (const file of Object.keys(files))
         expect(report.checks.flatMap((check) => check.findings)).toContainEqual(matchFields({ file, rule: 'DOC103' }));
     for (const [file, text] of Object.entries(files))
-        await Bun.write(join(root, file), text.replace('amount', 'value'));
-    const corrected = await spawnCheckReport(root, PYDOCLINT_CHECK_ARGUMENTS, environment);
+        await writeFile(join(root, file), text.replace('amount', 'value'));
+    const corrected = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks.map((check) => [check.scope, check.status, check.findings])).toStrictEqual([
         ['', 'passed', []],
@@ -115,25 +112,25 @@ check-yield-types = true
         {
             check: 'python/pydoclint',
             files: {
-                'gspot.toml': buildSettingsText(['python']),
+                'gspot.toml': buildSandboxSettings(['python']),
                 'pyproject.toml': project,
                 'example/__init__.py': '',
                 [ARITHMETIC_MODULE_PATH]: ARITHMETIC_MODULE,
             },
         },
     );
-    const failed = await spawnCheckReport(root, PYDOCLINT_CHECK_ARGUMENTS, environment);
+    const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks[0]!.findings).toContainEqual(
         matchFields({ file: ARITHMETIC_MODULE_PATH, rule: 'DOC105' }),
     );
-    await Bun.write(
+    await writeFile(
         join(root, ARITHMETIC_MODULE_PATH),
         ARITHMETIC_MODULE.replaceAll('value: The number.', 'value (int): The number.')
             .replace('Twice the number.', 'int: Twice the number.')
             .replace('Three times the number.', 'int: Three times the number.'),
     );
-    const corrected = await spawnCheckReport(root, PYDOCLINT_CHECK_ARGUMENTS, environment);
+    const corrected = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await Bun.file(join(root, 'pyproject.toml')).text()).toBe(project);
+    expect(await readFile(join(root, 'pyproject.toml'), 'utf8')).toBe(project);
 });

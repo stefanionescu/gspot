@@ -1,7 +1,8 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 import {
     WORD,
@@ -64,18 +65,19 @@ function validateDocComment(
 /**
  * Reports each function without a summary line, with a vague summary, or with doc sections out of order.
  *
- * @param input the scope scripts to read.
+ * @param session the repository and its tools.
+ * @param planned the scope scripts to read.
  * @returns the findings.
  */
-export async function checkBashDocComments(input: CheckInput): Promise<Finding[]> {
-    const scripts = await readScripts(input);
+export async function checkBashDocComments(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) => {
         return file.functions.flatMap((entry) => {
             if (entry.name === MAIN_FUNCTION) return [];
             const found = validateDocComment(entry, collectCommentBlock(file.lines, entry.start));
             return found === undefined
                 ? []
-                : [buildFinding(input, { file: file.path, line: entry.start }, found.rule, found.message)];
+                : [buildFinding(planned, { file: file.path, line: entry.start }, found.rule, found.message)];
         });
     });
 }

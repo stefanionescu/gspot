@@ -1,19 +1,13 @@
 // The PurgeCSS command imports its tool file by a bare path, which Node refuses on Windows. Import it by URL instead.
-import { z } from 'zod';
+
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { text } from 'node:stream/consumers';
 import { PURGECSS } from '#cli/config/checks/site.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { PurgecssConstructor } from '#cli/types/checks/site.ts';
+import { purgecssRequestSchema, processArgumentSchema } from '#cli/schemas/checks/site/purgecss-process.ts';
 
-/** The request that the parent process sends on stdin. */
-const purgecssRequestSchema = z.strictObject({
-    toolFile: z.string().min(1),
-    css: z.array(z.string().min(1)),
-    content: z.array(z.string().min(1)),
-} satisfies SchemaShape<{ toolFile: string; css: string[]; content: string[] }>);
-const executable = z.string().parse(process.argv[2]);
+const executable = processArgumentSchema.parse(process.argv[2]);
 const api = (await import(pathToFileURL(createRequire(executable).resolve(PURGECSS)).href)) as {
     PurgeCSS: PurgecssConstructor;
 };

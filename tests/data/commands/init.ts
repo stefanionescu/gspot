@@ -1,6 +1,5 @@
 import { COMMITLINT_PACKAGE } from '#tests/data/checks/commits.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import { INVALID_CSS, STYLELINT_PACKAGE_JSON } from '#tests/data/checks/css.ts';
 
 /** pyproject.toml tables that init leaves in place while a generated tool file takes over. */
 const REPLACED_PYPROJECT_TABLES = [
@@ -92,34 +91,6 @@ const CI_PREFERENCE_CASES = [
     ['unrecognized remote host', [], '', 'https://github.com.example.com/example/repo.git', 'none'],
 ] as const;
 
-const SDK_DESTINATIONS = [
-    { sdk: 'iphoneos', destination: 'generic/platform=iOS Simulator' },
-    { sdk: 'iphonesimulator', destination: 'generic/platform=iOS Simulator' },
-    { sdk: 'macosx', destination: 'platform=macOS' },
-    { sdk: 'watchos', destination: 'generic/platform=watchOS Simulator' },
-    { sdk: 'watchsimulator', destination: 'generic/platform=watchOS Simulator' },
-    { sdk: 'xros', destination: 'generic/platform=visionOS Simulator' },
-    { sdk: 'xrsimulator', destination: 'generic/platform=visionOS Simulator' },
-] as const;
-
-const TEMPLATE_SWIFT_CHOICES = [
-    {
-        name: 'selected project',
-        destination: 'platform=macOS',
-        swift: {
-            xcode_project: 'Chosen.xcodeproj',
-        },
-    },
-    {
-        name: 'manual destination',
-        destination: 'custom destination',
-        swift: {
-            xcode_project: 'Chosen.xcodeproj',
-            xcode_destination: 'custom destination',
-        },
-    },
-] as const;
-
 const FORMAT_FILE_CASES = [
     {
         name: 'no formatter configuration',
@@ -200,30 +171,15 @@ const ROOT_INDENT_WIDTH = 2;
 const SCOPE_INDENT_WIDTH = 6;
 const ROOT_PRINT_WIDTH = 90;
 const SCOPE_PRINT_WIDTH = 100;
-const TEMPLATE_PRINT_WIDTH = 70;
 
 const SCOPE_FORMAT_CASES = [
     {
         name: 'repository configuration',
-        template: '',
         expected: [
             ['', ROOT_INDENT_WIDTH, ROOT_PRINT_WIDTH, 'double'],
             ['app', SCOPE_INDENT_WIDTH, SCOPE_PRINT_WIDTH, 'single'],
             ['app/deep', SCOPE_INDENT_WIDTH, SCOPE_PRINT_WIDTH, 'single'],
             ['sibling', ROOT_INDENT_WIDTH, ROOT_PRINT_WIDTH, 'double'],
-        ],
-    },
-    {
-        name: 'template precedence',
-        template: `[format]
-print_width = 70
-quotes = "double"
-`,
-        expected: [
-            ['', ROOT_INDENT_WIDTH, TEMPLATE_PRINT_WIDTH, 'double'],
-            ['app', SCOPE_INDENT_WIDTH, TEMPLATE_PRINT_WIDTH, 'double'],
-            ['app/deep', SCOPE_INDENT_WIDTH, TEMPLATE_PRINT_WIDTH, 'double'],
-            ['sibling', ROOT_INDENT_WIDTH, TEMPLATE_PRINT_WIDTH, 'double'],
         ],
     },
 ] as const;
@@ -234,7 +190,7 @@ const GIT_PLAN_CASES = [
     { name: 'a Git repository', hasGit: true },
 ] as const;
 
-const NON_JAVASCRIPT_PROJECTS = [['Python', 'source.py', 'VALUE = 1\n']] as const;
+const PYTHON_SOURCE = { 'source.py': 'VALUE = 1\n' };
 
 const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
 
@@ -260,15 +216,15 @@ const INIT_FILES = {
 /** Empty and named language lists both keep the common checks. */
 const CONFIGURATION_CHOICES = [
     { configurations: undefined },
-    { configurations: [] },
+    { configurations: undefined, noConfigurations: true },
     { configurations: ['python'] },
 ] as const;
 
 export {
     LINT_JOBS,
     INIT_FILES,
+    PYTHON_SOURCE,
     GIT_PLAN_CASES,
-    SDK_DESTINATIONS,
     FORMAT_FILE_CASES,
     TOOL_ONLY_PACKAGE,
     SCOPE_FORMAT_CASES,
@@ -276,24 +232,19 @@ export {
     CI_PREFERENCE_CASES,
     REPLACED_TOOL_FILES,
     CONFIGURATION_CHOICES,
-    TEMPLATE_SWIFT_CHOICES,
     INACTIVE_CONFIGURATIONS,
-    NON_JAVASCRIPT_PROJECTS,
     STYLELINT_LOOKUP_SCRIPT,
     REPLACED_PYPROJECT_TABLES,
 };
 
 /** A file that changes between the init plan and the write: an edited package.json field. */
-export const SHARED_FILE_RACES = [
-    {
-        name: 'one of its managed fields changed after the plan',
-        files: { 'package.json': STYLELINT_PACKAGE_JSON, 'source.css': INVALID_CSS },
-        configuration: 'css',
-        path: 'package.json',
-        note: 'managed stylelint fields; other content stays',
-        edited: STYLELINT_PACKAGE_JSON.replace('native-project', 'edited-project'),
-    },
-] as const;
+export const EDITED_STYLELINT_PACKAGE = `{
+  "name": "edited-project",
+  "private": true,
+  "type": "module",
+  "stylelint": {"rules":{"property-no-unknown":null}}
+}
+`;
 
 export const IMPORT_STYLE_CASES = [
     {

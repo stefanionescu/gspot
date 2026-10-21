@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import picomatch from 'picomatch';
 import { join, relative } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { ScratchFolder } from '#cli/types/system/files.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
@@ -10,7 +11,7 @@ import { GLOB_EXCLUDE, DRIVE_LETTER, PARENT_SEGMENT, FOLDER_CONTENTS } from '#cl
 
 // Refuses a pattern that climbs out of the folder it scans, in plain form, or hidden in a brace alternative.
 function assertInsideFolder(pattern: string): void {
-    const bare = pattern.startsWith('!') ? pattern.slice(1) : pattern;
+    const bare = pattern.startsWith(GLOB_EXCLUDE) ? pattern.slice(1) : pattern;
     // An absolute path starts with a slash, or on Windows with a drive letter.
     const climbs = bare.startsWith('/') || DRIVE_LETTER.test(bare) || PARENT_SEGMENT.test(bare);
     if (climbs) throw new Error(`A path pattern cannot leave its folder: ${pattern}`);
@@ -44,9 +45,8 @@ export function listMatchingPaths(cwd: string, patterns: string | string[]): str
     for (const pattern of list) assertInsideFolder(pattern);
     const positive = list.filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE));
     const excluded = list.filter((pattern) => pattern.startsWith(GLOB_EXCLUDE)).map((pattern) => pattern.slice(1));
-    const matches = picomatch(positive, { dot: true });
-    const isExcluded = picomatch(excluded, { dot: true });
-    const isPruned = picomatch(
+    const matches = buildPathMatcher(list);
+    const isPruned = buildPathMatcher(
         excluded
             .filter((pattern) => pattern.endsWith(FOLDER_CONTENTS))
             .map((pattern) => pattern.slice(0, -FOLDER_CONTENTS.length)),
@@ -54,7 +54,7 @@ export function listMatchingPaths(cwd: string, patterns: string | string[]): str
     const found = new Set<string>();
     const addMatchedFile = (absolute: string): void => {
         const file = convertToPosixPath(relative(cwd, absolute));
-        if (matches(file) && !isExcluded(file)) found.add(file);
+        if (matches(file)) found.add(file);
     };
     const roots = positive.values().flatMap((pattern) => {
         const { base, glob } = picomatch.scan(pattern);

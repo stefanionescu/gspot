@@ -16,5 +16,4 @@ rule_prefix = "@tanstack/query"
 version = "5.91.2"
 
 [eslint]
-fragment = true
 required_tools = ["@tanstack/eslint-plugin-query"]

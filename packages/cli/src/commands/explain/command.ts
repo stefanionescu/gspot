@@ -1,28 +1,24 @@
 import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { readText } from '#cli/system/files/reads.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
-import { RECORD_FIELDS } from '#cli/config/settings/file.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { readLintRules } from '#cli/configurations/lint-rules.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { listConfigurationSettings } from '#cli/settings/known.ts';
-import { REASON_NEEDED_TEXTS } from '#cli/config/commands/explain.ts';
-import { checkStageSchema } from '#cli/configurations/schema/parts.ts';
+import { listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
+import { checkStageSchema } from '#cli/schemas/configurations/parts.ts';
+import { quoteArgument, formatSimilarNames } from '#cli/system/text.ts';
 import { type SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { readLintRuleNames } from '#cli/configurations/lint-rule-names.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
-import { JAVASCRIPT_CONFIGURATION_FOLDER } from '#cli/config/configurations.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { ESLINT_TOOL, ESLINT_RULE_NAMES_FILE } from '#cli/config/generation/eslint.ts';
-import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { listCheckIds, listRuleFiles, readManifests } from '#cli/configurations/manifests.ts';
 import { listSettings, getSettingValue, findDeclaration, findSettingDefault } from '#cli/settings/inherit.ts';
 import { type Explanation, type SettingScope, type ConfigurationExplanation } from '#cli/types/commands/explain.ts';
@@ -31,12 +27,8 @@ function formatList(label: string, items: string[]): string[] {
     return items.length === 0 ? [] : [`${label}: ${items.join(', ')}`];
 }
 
-function explainConfiguration(
-    configurationName: string,
-    reads: ReadCache,
-    session: Session | undefined,
-): Explanation | undefined {
-    const manifest = readManifests(reads).get(configurationName);
+function explainConfiguration(session: Session | undefined, configurationName: string): Explanation | undefined {
+    const manifest = readManifests().get(configurationName);
     if (manifest === undefined) return undefined;
     const row: ConfigurationExplanation = {
         name: manifest.configuration.name,
@@ -89,12 +81,8 @@ function explainConfiguration(
 }
 
 // Describe one scope: the default, the value and where it comes from, and how to change it.
-function formatSettingScope(
-    key: string,
-    declaration: SettingDeclaration,
-    entry: SettingScope,
-    recordList: boolean,
-): string[] {
+function formatSettingScope(key: string, declaration: SettingDeclaration, entry: SettingScope): string[] {
+    const recordList = Object.hasOwn(listRecordFields(), key);
     const { scope, shipped, effective } = entry;
     const { value, source, reason } = effective ?? { value: undefined, source: 'unset', reason: undefined };
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
@@ -123,7 +111,7 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
     if (session === undefined) return undefined;
     const { settings } = session.settingsFile;
     // A record list lives in the root table only, so only the root scope can change it.
-    const recordList = Object.hasOwn(RECORD_FIELDS, key);
+    const recordList = Object.hasOwn(listRecordFields(), key);
     const scopes = session.scopes.flatMap((selection) => {
         const match = findDeclaration(selection.known, key);
         if (match === undefined || (recordList && selection.scope.path !== '')) return [];
@@ -132,13 +120,7 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
                 scope: selection.scope.path,
                 declaration: match.declaration,
                 effective: getSettingValue(selection.known, settings, key, selection.scope.path),
-                shipped: findSettingDefault(
-                    selection.known,
-                    match,
-                    selection.scope.path,
-                    (dependentKey) =>
-                        getSettingValue(selection.known, settings, dependentKey, selection.scope.path)?.value,
-                )?.value,
+                shipped: findSettingDefault(selection.known, settings, match, selection.scope.path)?.value,
             },
         ];
     });
@@ -151,8 +133,8 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
         '',
         ...(first.declaration.reason_needed === undefined
             ? []
-            : [`Reason: ${REASON_NEEDED_TEXTS[first.declaration.reason_needed]}`]),
-        ...scopes.flatMap((entry) => formatSettingScope(key, first.declaration, entry, recordList)),
+            : [`Reason: ${first.declaration.reason_needed} needs a reason`]),
+        ...scopes.flatMap((entry) => formatSettingScope(key, first.declaration, entry)),
     ];
     return {
         kind: 'setting',
@@ -172,19 +154,18 @@ function explainSetting(session: Session | undefined, key: string): Explanation 
     };
 }
 
-function formatUnknownSubject(session: Session | undefined, subject: string, reads: ReadCache): string {
+function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const candidates = [
-        ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks), reads),
-        ...readManifests(reads).keys(),
+        ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks)),
+        ...readManifests().keys(),
         ...(session?.scopes.flatMap((selection) =>
             listSettings(selection.known, session.settingsFile.settings, selection.scope.path).map(
                 (setting) => setting.key,
             ),
         ) ?? []),
     ];
-    const near = selectSimilarNames(subject, [...new Set(candidates)]);
-    const suggestion = near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
-    return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${suggestion}`;
+    const similar = formatSimilarNames(subject, [...new Set(candidates)]);
+    return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
 }
 
 // A check ID wins. A tracked path wins over a lint rule with the same first folder.
@@ -192,21 +173,19 @@ function explainSlashed(
     session: Session | undefined,
     subject: string,
     file: Explanation | undefined,
-    reads: ReadCache,
 ): Explanation | undefined {
-    const check = explainCheck(session, subject, reads);
+    const check = explainCheck(session, subject);
     if (check !== undefined) return check;
     if (file !== undefined) return file;
     const slash = subject.indexOf('/');
-    return explainLintRule(subject.slice(0, slash), subject.slice(slash + 1), reads);
+    return explainLintRule(subject.slice(0, slash), subject.slice(slash + 1));
 }
 
-function explainNamed(session: Session | undefined, subject: string, reads: ReadCache): Explanation | undefined {
-    const named = explainSetting(session, subject) ?? explainConfiguration(subject, reads, session);
+function explainNamed(session: Session | undefined, subject: string): Explanation | undefined {
+    const named = explainSetting(session, subject) ?? explainConfiguration(session, subject);
     if (named !== undefined) return named;
-    const ruleNamesPath = `${JAVASCRIPT_CONFIGURATION_FOLDER}/${ESLINT_RULE_NAMES_FILE}`;
-    if (!readLintRuleNames(ruleNamesPath).rules.includes(subject)) return undefined;
-    return explainLintRule(ESLINT_TOOL, subject, reads);
+    if (!readLintRules(ESLINT_RULE_NAMES_FILE).rules.includes(subject)) return undefined;
+    return explainLintRule(ESLINT_TOOL, subject);
 }
 
 /**
@@ -214,20 +193,19 @@ function explainNamed(session: Session | undefined, subject: string, reads: Read
  *
  * @param session the repository, or undefined outside one.
  * @param subject a check ID, a tool/rule pair, a configuration name, a setting key, or a file path.
- * @param reads the file cache for every lookup.
  * @returns the explanation.
  * @throws GspotError when no subject or file matches, with the closest known names
  */
-function explain(session: Session | undefined, subject: string, reads: ReadCache): Explanation {
+function explain(session: Session | undefined, subject: string): Explanation {
     const file = explainPath(session, subject);
     if (file !== undefined && subject.startsWith('./')) return file;
     let explanation: Explanation | undefined;
-    if (subject.includes('/')) explanation = explainSlashed(session, subject, file, reads);
+    if (subject.includes('/')) explanation = explainSlashed(session, subject, file);
     else if (subject.includes('.')) explanation = explainSetting(session, subject);
-    else explanation = explainNamed(session, subject, reads);
+    else explanation = explainNamed(session, subject);
     if (explanation !== undefined) return explanation;
     if (file !== undefined) return file;
-    throw new GspotError('arguments', formatUnknownSubject(session, subject, reads));
+    throw new GspotError('arguments', formatUnknownSubject(session, subject));
 }
 
 /**
@@ -257,9 +235,9 @@ function registerExplain(program: Command, onResult: CommandCompletion): void {
 async function runExplainCommand(cwd: string, subject: string): Promise<CommandResult> {
     const root = findRoot(cwd);
 
-    const session = readText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
+    const session = findText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
 
-    const result = explain(session, subject, session?.reads ?? createReadCache(root));
+    const result = explain(session, subject);
     return {
         text: result.text,
         json: { ...result.data, kind: result.kind, subject: result.subject },

@@ -121,8 +121,6 @@ function formatArgumentError(error: CommanderError, programHelp: string): string
         const correction = suggestion === undefined ? '' : ` Did you mean ${suggestion}?`;
         return `Unknown command ${name}.${correction} Run gspot --help to see the commands.`;
     }
-    if (error.code === 'commander.missingMandatoryOptionValue' && message.includes('--reason'))
-        return 'gspot ignore needs --reason "<why>".';
     const text = message.slice(COMMANDER_ERROR_PREFIX.length);
     return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 }
@@ -131,11 +129,10 @@ function formatArgumentError(error: CommanderError, programHelp: string): string
  * Print a command failure, and choose the exit status.
  *
  * @param error what the command threw.
- * @param output whether to print JSON.
  * @param programHelp the help that gspot prints when the arguments name no command.
  * @returns zero for Commander help, or the command error status.
  */
-function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>, programHelp: string): number {
+function printFailure(error: unknown, programHelp: string): number {
     if (error instanceof CommanderError) {
         if (error.exitCode === 0) return 0;
         printError({ error: 'arguments', message: formatArgumentError(error, programHelp) });
@@ -150,7 +147,7 @@ function printFailure(error: unknown, output: Pick<OutputOptions, 'json'>, progr
         .trim()
         .replace(/\.$/u, '');
     const message = `gspot stopped because of an internal error: ${detail}. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.`;
-    printError(output.json ? { error: 'failure', message } : message);
+    printError({ error: 'failure', message });
     return EXIT_ERROR;
 }
 

@@ -8,6 +8,18 @@ export type ProjectLicenses = {
     dependencyFile: string;
     packages: LicensedPackage[];
     locked: string[];
-    packageKey: (name: string) => string;
+    ecosystem: 'npm' | 'python';
     configuration: ConfigurationTables['licenses'];
 };
+
+export type PythonLicenseReport = {
+    Name: string;
+    Version: string;
+    'License-Expression'?: string | undefined;
+    'License-Metadata'?: string | undefined;
+    'License-Classifier'?: string | undefined;
+};
+
+export type JavascriptPackageLicense = { licenses?: string | string[] | undefined };
+
+export type JavascriptLicenseReport = Record<string, JavascriptPackageLicense>;

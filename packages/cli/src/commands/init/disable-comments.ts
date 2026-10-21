@@ -1,11 +1,7 @@
 import type { Session } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
+import { extractRulePrefix } from '#cli/configurations/tools.ts';
 import { CODE_FILE_TAGS, DIRECTIVE_TAIL, ESLINT_DIRECTIVE } from '#cli/config/commands/init.ts';
-
-function readPluginPrefix(rule: string): string | undefined {
-    const slash = rule.lastIndexOf('/');
-    return slash === -1 ? undefined : rule.slice(0, slash);
-}
 
 /**
  * List the files whose eslint-disable comments name a rule that no plugin of the new setup provides. ESLint reports
@@ -23,12 +19,12 @@ export function listForeignDisableComments(session: Session): { path: string; no
     return session.repository.files
         .filter((file) => file.kind === 'source' && file.tags.some((tag) => CODE_FILE_TAGS.has(tag)))
         .flatMap((file) => {
-            const text = readCachedText(session.reads, file.path) ?? '';
+            const text = readCachedText(session.reads, file.path);
             const rules = [...text.matchAll(ESLINT_DIRECTIVE)]
                 .flatMap((match) => (match.groups?.['rules'] ?? '').split(DIRECTIVE_TAIL, 1)[0]?.split(',') ?? [])
                 .map((rule) => rule.trim())
                 .filter((rule) => {
-                    const prefix = readPluginPrefix(rule);
+                    const prefix = extractRulePrefix(rule);
                     return prefix !== undefined && !prefixes.has(prefix);
                 });
             if (rules.length === 0) return [];

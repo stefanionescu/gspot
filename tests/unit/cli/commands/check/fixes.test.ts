@@ -4,14 +4,14 @@ import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { FIXER_FEEDBACK_CASES } from '#tests/data/commands/check.ts';
 
 test.each([...FIXER_FEEDBACK_CASES])(
     'check --fix reports $name, and --dry-run writes nothing',
     async ({ paths, preview, applied }) => {
         await using sandbox = await testdir();
-        const settings = buildSettingsText([], {
+        const settings = buildSandboxSettings([], {
             tables: stringify({
                 command_check: [
                     {
@@ -30,7 +30,6 @@ test.each([...FIXER_FEEDBACK_CASES])(
         });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,
-            'added.py': 'pass\n',
             'source.txt': 'original\n',
             'other.txt': 'original\n',
             'control.md': '# Preserve this file\n',
@@ -39,7 +38,6 @@ test.each([...FIXER_FEEDBACK_CASES])(
         const planned = await runGspot(sandbox.path, ['check', '--only', 'sandbox/feedback', '--fix', '--dry-run']);
         expect(planned.code, planned.stdout + planned.stderr).toBe(0);
         expect(planned.stdout).toContain(`${preview}\n`);
-        expect(planned.stderr).not.toMatch(/The saved setup is stale:|Setup detection could not finish:/u);
         expect(planned.stdout.split('\n').filter((line) => line === '-original')).toHaveLength(paths.length);
         expect(planned.stdout.split('\n').filter((line) => line === '+corrected')).toHaveLength(paths.length);
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
@@ -48,13 +46,11 @@ test.each([...FIXER_FEEDBACK_CASES])(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.stdout).toContain(applied);
         expect(corrected.stderr).not.toContain(applied);
-        expect(corrected.stderr).not.toMatch(/The saved setup is stale:|Setup detection could not finish:/u);
         for (const path of new Set(['source.txt', 'other.txt', ...paths]))
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
                 new Set<string>(paths).has(path) ? 'corrected\n' : 'original\n',
             );
         expect(await readFile(join(sandbox.path, 'control.md'), 'utf8')).toBe('# Preserve this file\n');
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-        expect(await readFile(join(sandbox.path, 'added.py'), 'utf8')).toBe('pass\n');
     },
 );

@@ -2,13 +2,17 @@ import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
+import { getTable } from '#cli/settings/scope-view.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { DOCKER_TOOL } from '#cli/config/checks/docker.ts';
 import { parseNginxDirectives } from '#cli/parsers/nginx.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { listSourcePaths } from '#cli/repository/coverage.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { Mount, NginxMounts } from '#cli/types/checks/nginx.ts';
-import { type Finding, type CheckInput, type BuiltInCheckResult } from '#cli/types/runs/check.ts';
+import { type Finding, type BuiltInCheckResult } from '#cli/types/runs/check.ts';
 
 import {
     NGINX_CONF,
@@ -23,8 +27,12 @@ import {
     READ_ONLY_MOUNT,
     LOOPBACK_ADDRESS,
     OPENSSL_KEY_FLAG,
+    NGINX_COPY_PREFIX,
     NGINX_MAIN_TARGET,
     NGINX_TEST_COMMAND,
+    NGINX_VARIABLE_MARK,
+    NGINX_DUMP_FILE_LINE,
+    NGINX_EMERGENCY_MARK,
     DOCKER_RUN_ARGUMENTS,
     CERTIFICATE_ARGUMENTS,
     NGINX_CERTIFICATE_FILE,
@@ -33,37 +41,37 @@ import {
 } from '#cli/config/checks/nginx.ts';
 
 // nginx resolves include paths from the folder of the main configuration file.
-function listIncludedFiles(input: CheckInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
+function listIncludedFiles(planned: PlannedCheck, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
     const included: Pick<Mount, 'path' | 'target'>[] = [];
     for (const [name, value] of parseNginxDirectives(text)) {
-        if (name !== 'include' || value === undefined || value.includes('$')) continue;
+        if (name !== 'include' || value === undefined || value.includes(NGINX_VARIABLE_MARK)) continue;
         const target = posix.resolve(NGINX_FOLDER, value);
         const isIncluded = picomatch(posix.normalize(posix.join(base, posix.relative(NGINX_FOLDER, target))));
-        for (const file of input.files.filter((candidate) => isIncluded(candidate.path)))
+        for (const file of planned.files.filter((candidate) => isIncluded(candidate.path)))
             included.push({ path: file.path, target: posix.resolve(NGINX_FOLDER, posix.relative(base, file.path)) });
     }
     return included;
 }
 
-function copyNginxFiles(input: CheckInput, path: string, work: string): Map<string, Mount> {
-    const folder = mkdtempSync(join(work, 'configuration-'));
+function copyNginxFiles(session: Session, planned: PlannedCheck, path: string, work: string): Map<string, Mount> {
+    const folder = mkdtempSync(join(work, NGINX_COPY_PREFIX));
     const configurations = new Map<string, Mount>();
     const pending = [{ path, target: NGINX_MAIN_TARGET }];
     const base = posix.dirname(path);
     for (const entry of pending) {
         if (configurations.has(entry.target)) continue;
         const source = join(folder, `${String(configurations.size)}.conf`);
-        const bytes = readCachedBytes(input.reads, entry.path);
+        const bytes = readCachedBytes(session.reads, entry.path);
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         configurations.set(entry.target, { ...entry, source, text });
-        pending.push(...listIncludedFiles(input, text, base));
+        pending.push(...listIncludedFiles(planned, text, base));
     }
     return configurations;
 }
 
 function buildSyntaxResult(
-    input: CheckInput,
+    planned: PlannedCheck,
     path: string,
     configurations: Map<string, Mount>,
     message: string,
@@ -72,18 +80,19 @@ function buildSyntaxResult(
     const { file: target = '', line = '1' } = location === undefined ? {} : location;
     const file = configurations.get(target)?.path ?? path;
     return {
-        findings: [buildFinding(input, { file, line: Number(line) }, 'syntax', message)],
+        findings: [buildFinding(planned, { file, line: Number(line) }, 'syntax', message)],
         files: configurations.has(target) ? [file] : [],
     };
 }
 
 async function testNginxFile(
-    input: CheckInput,
+    session: Session,
+    planned: PlannedCheck,
     path: string,
     work: string,
     image: string,
 ): Promise<BuiltInCheckResult> {
-    const configurations = copyNginxFiles(input, path, work);
+    const configurations = copyNginxFiles(session, planned, path, work);
     const mounts = {
         configs: [...configurations.values()],
         certificate: join(work, NGINX_CERTIFICATE_FILE),
@@ -94,9 +103,9 @@ async function testNginxFile(
         mounts,
         image,
     );
-    const result = await runCheckTool(input, ['docker', ...commandArguments], { cwd: input.root });
+    const result = await runCheckTool(session, planned, [DOCKER_TOOL, ...commandArguments], { cwd: session.root });
     if (result.code === 0) {
-        const parsed = [...result.stdout.matchAll(/^# configuration file (?<path>[^\n]+):$/gmu)]
+        const parsed = [...result.stdout.matchAll(NGINX_DUMP_FILE_LINE)]
             .map((match) => match.groups?.['path'])
             .filter((path) => path !== undefined);
         if (!parsed.includes(NGINX_MAIN_TARGET))
@@ -109,10 +118,10 @@ async function testNginxFile(
             }),
         };
     }
-    const errorLine = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
+    const errorLine = result.stderr.split('\n').find((line) => line.includes(NGINX_EMERGENCY_MARK));
     if (result.code !== 1 || errorLine === undefined)
         throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
-    return buildSyntaxResult(input, path, configurations, errorLine);
+    return buildSyntaxResult(planned, path, configurations, errorLine);
 }
 
 /**
@@ -130,7 +139,7 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
     const parsed = parseNginxDirectives(text);
     const hosts = new Set(
         parsed.flatMap(([name, value]) => {
-            if (value === undefined || value.includes('$')) return [];
+            if (value === undefined || value.includes(NGINX_VARIABLE_MARK)) return [];
             const host = HOST_PATTERNS.get(name)?.exec(value)?.[1];
             return host === undefined || LOCAL_NAMES.has(host) ? [] : [host];
         }),
@@ -141,7 +150,7 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
     const volumes = [
         ...mounts.configs.map(({ source, target }) => `${source}:${target}${READ_ONLY_MOUNT}`),
         ...parsed.flatMap(([name, path]) => {
-            if (path === undefined || path.includes('$')) return [];
+            if (path === undefined || path.includes(NGINX_VARIABLE_MARK)) return [];
             const source = certificates.get(name);
             return source === undefined ? [] : [`${source}:${posix.resolve(NGINX_FOLDER, path)}${READ_ONLY_MOUNT}`];
         }),
@@ -158,19 +167,19 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
 /**
  * Tests every tracked nginx.conf with the server's own parser.
  *
- * @param input the scope files and nginx image.
+ * @param session the repository and its tools.
+ * @param planned the scope files and nginx image.
  * @returns one finding for each file nginx refuses.
  */
-export async function checkNginxSyntax(input: CheckInput): Promise<BuiltInCheckResult> {
-    const image = input.selection.view.options('tools.nginx')['image'];
-    const paths = input.files
-        .map((file) => file.path)
-        .filter((path) => path === NGINX_CONF || path.endsWith(`/${NGINX_CONF}`));
+export async function checkNginxSyntax(session: Session, planned: PlannedCheck): Promise<BuiltInCheckResult> {
+    const image = getTable(planned.selection.view, 'tools.nginx')['image'];
+    const paths = listSourcePaths(planned.files, [NGINX_CONF]);
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = createScratchFolder();
     const work = workFolder.path;
     const certificate = await runCheckTool(
-        input,
+        session,
+        planned,
         [
             OPENSSL_PROGRAM,
             ...CERTIFICATE_ARGUMENTS,
@@ -188,7 +197,7 @@ export async function checkNginxSyntax(input: CheckInput): Promise<BuiltInCheckR
     const findings: Finding[] = [];
     const checked = new Set<string>();
     for (const path of paths) {
-        const result = await testNginxFile(input, path, work, image);
+        const result = await testNginxFile(session, planned, path, work, image);
         findings.push(...result.findings);
         for (const file of result.files) checked.add(file);
     }

@@ -4,9 +4,14 @@ import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { TRAILING_NEWLINE } from '#cli/config/text.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
-import { normalizeEnvironmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
-import type { StdoutRead, SpawnResult, SpawnOptions, ByteSpawnResult } from '#cli/types/system/processes.ts';
+import { buildSpawnEnvironment, normalizeEnvironmentKey, readEnvironmentVariable } from '#cli/system/environment.ts';
 
+import {
+    type SpawnResult,
+    type StdoutReader,
+    type SpawnOptions,
+    type ByteSpawnResult,
+} from '#cli/types/system/processes.ts';
 import type {
     GitLookup,
     GitOptions,
@@ -25,7 +30,6 @@ import {
     NOT_REPOSITORY_CODE,
     WORK_TREE_ARGUMENTS,
     GIT_SOURCE_ARGUMENTS,
-    GIT_PREFIX_ARGUMENTS,
     GIT_FOLDER_ARGUMENTS,
     GIT_SETTING_ARGUMENTS,
     GIT_SHALLOW_ARGUMENTS,
@@ -37,6 +41,8 @@ import {
     GIT_NONLOCAL_ENVIRONMENT_NAME,
 } from '#cli/config/system/git.ts';
 
+let sourceMetadata: { metadata: string[]; source?: GitLookup } | undefined;
+
 // The original working folder of the hook decides relative paths and the implicit Git worktree root.
 function readInheritedGitEnvironment(origin: string): GitLookup {
     const env = Object.fromEntries(
@@ -45,9 +51,9 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
             return value === undefined ? [] : [[name, resolve(origin, value)]];
         }),
     );
-    const source = spawnProcessBlocking(['git', ...GIT_SOURCE_ARGUMENTS], {
+    const source = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_SOURCE_ARGUMENTS], {
         cwd: origin,
-        env: env,
+        env,
     });
     if (source.code !== 0) return { failure: source };
     const line = source.stdout.indexOf('\n');
@@ -58,14 +64,14 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
         readEnvironmentVariable(GIT_DIR_VARIABLE) !== undefined &&
         readEnvironmentVariable(GIT_WORK_TREE_VARIABLE) === undefined
     ) {
-        const worktree = spawnProcessBlocking(['git', ...GIT_TOP_LEVEL_ARGUMENTS], {
+        const worktree = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_TOP_LEVEL_ARGUMENTS], {
             cwd: origin,
-            env: env,
+            env,
         });
         if (worktree.code !== 0) return { failure: worktree };
         env[GIT_WORK_TREE_VARIABLE] = trimGitLine(worktree.stdout);
     }
-    return { folder: folder, env };
+    return { folder, env };
 }
 
 // The metadata of the target decides whether inherited repository-local variables stay valid.
@@ -75,7 +81,7 @@ function readTargetGitEnvironment(
     environment: GitTargetEnvironment,
 ): GitEnvironment {
     const { isolated, overrides, explicit } = environment;
-    const target = spawnProcessBlocking(['git', ...GIT_FOLDER_ARGUMENTS], {
+    const target = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_FOLDER_ARGUMENTS], {
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
@@ -84,8 +90,6 @@ function readTargetGitEnvironment(
     const isSameRepository = realpathSync(source.folder) === realpathSync(trimGitLine(target.stdout));
     return { env: { ...(isSameRepository ? source.env : isolated), ...explicit } };
 }
-
-let sourceMetadata: { metadata: string[]; source?: GitLookup } | undefined;
 
 /**
  * Build the environment for one Git command. Git names the local variables and worktree metadata;
@@ -102,8 +106,7 @@ export function buildGitEnvironment(
     explicit: Record<string, string | undefined>,
 ): GitEnvironment {
     if (
-        // eslint-disable-next-line n/no-process-env -- reason: Git scans variable names to isolate repository-local settings.
-        !Object.keys(process.env).some((key) => {
+        !Object.keys(buildSpawnEnvironment()).some((key) => {
             const name = normalizeEnvironmentKey(key);
             return name.startsWith(GIT_VARIABLE_PREFIX) && !GIT_NONLOCAL_ENVIRONMENT_NAME.test(name);
         })
@@ -111,7 +114,10 @@ export function buildGitEnvironment(
         return { env: explicit };
     const origin = process.cwd();
     if (sourceMetadata === undefined) {
-        const declared = spawnProcessBlocking(['git', ...GIT_LOCAL_VARIABLES_ARGUMENTS], { cwd: origin, env: {} });
+        const declared = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_LOCAL_VARIABLES_ARGUMENTS], {
+            cwd: origin,
+            env: {},
+        });
         if (declared.code !== 0) return { failure: declared };
         // The installed Git version lists its own local variable names.
         const metadata = trimGitLine(declared.stdout)
@@ -145,9 +151,13 @@ export function runGitBlocking(
     commandArguments: readonly string[],
     options: Omit<SpawnOptions, 'cwd' | 'timeoutSeconds'> = {},
 ): SpawnResult {
-    const selected = buildGitEnvironment(workingFolder, ['git', ...commandArguments], { ...options.env });
+    const selected = buildGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
     if ('failure' in selected) return selected.failure;
-    return spawnProcessBlocking(['git', ...commandArguments], { ...options, env: selected.env, cwd: workingFolder });
+    return spawnProcessBlocking([GIT_EXECUTABLE, ...commandArguments], {
+        ...options,
+        env: selected.env,
+        cwd: workingFolder,
+    });
 }
 
 /**
@@ -156,20 +166,42 @@ export function runGitBlocking(
  * @param workingFolder where Git runs.
  * @param commandArguments the arguments after git.
  * @param options spawn settings for standard input and optional cancellation.
- * @param output how to decode stdout.
  * @returns what Git printed and how it exited.
  */
 export async function runGit(
     workingFolder: string,
     commandArguments: readonly string[],
     options: GitOptions,
-    output: StdoutRead = 'utf8',
 ): Promise<SpawnResult> {
-    const selected = buildGitEnvironment(workingFolder, ['git', ...commandArguments], { ...options.env });
+    const selected = buildGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
     if ('failure' in selected) return selected.failure;
-    const command = ['git', ...commandArguments];
+    const command = [GIT_EXECUTABLE, ...commandArguments];
     const prepared = { ...options, env: selected.env, cwd: workingFolder };
-    return output === 'utf8' ? spawnProcess(command, prepared) : streamProcess(command, prepared, output);
+    return spawnProcess(command, prepared);
+}
+
+/**
+ * Stream Git output with repository isolation and optional cancellation.
+ *
+ * @param workingFolder where Git runs.
+ * @param commandArguments the arguments after git.
+ * @param options spawn settings for standard input and optional cancellation.
+ * @param read consumes stdout while Git runs.
+ * @returns the captured stderr and exit status.
+ */
+export async function runGitStream(
+    workingFolder: string,
+    commandArguments: readonly string[],
+    options: GitOptions,
+    read: StdoutReader,
+): Promise<SpawnResult> {
+    const selected = buildGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
+    if ('failure' in selected) return selected.failure;
+    return streamProcess(
+        [GIT_EXECUTABLE, ...commandArguments],
+        { ...options, env: selected.env, cwd: workingFolder },
+        read,
+    );
 }
 
 /**
@@ -186,7 +218,7 @@ export async function runGitForBytes(
     options: GitOptions,
 ): Promise<ByteSpawnResult> {
     const chunks: Buffer[] = [];
-    const result = await runGit(workingFolder, commandArguments, options, async (output) => {
+    const result = await runGitStream(workingFolder, commandArguments, options, async (output) => {
         for await (const chunk of output) chunks.push(chunk);
     });
     return { ...result, stdout: Buffer.concat(chunks) };
@@ -203,8 +235,9 @@ export function readGitSetting(workingFolder: string, key: string): string | und
     const result = runGitBlocking(workingFolder, [...GIT_SETTING_ARGUMENTS, key]);
     if (result.code === 0) return result.stdout.slice(0, -1);
     if (result.code === 1 && result.stdout === '' && result.stderr === '') return undefined;
-    throw new Error(
-        `Git configuration ${key} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
+    throw new GspotError(
+        'git',
+        `Git ${GIT_SETTING_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
     );
 }
 
@@ -216,7 +249,11 @@ export function readGitSetting(workingFolder: string, key: string): string | und
  */
 export function readHooksFolder(workingFolder: string): string {
     const result = runGitBlocking(workingFolder, GIT_HOOKS_ARGUMENTS);
-    if (result.code !== 0) throw new Error(`Cannot read the Git hooks folder: ${result.stderr.trim()}`);
+    if (result.code !== 0)
+        throw new GspotError(
+            'git',
+            `Git ${GIT_HOOKS_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(result.code)}): ${result.stderr.trim()}`,
+        );
     return resolve(workingFolder, trimGitLine(result.stdout));
 }
 
@@ -289,18 +326,6 @@ export async function isShallow(workingFolder: string, options: GitOptions): Pro
 }
 
 /**
- * Read the path from the Git top level to the project root, with a trailing slash.
- *
- * @param workingFolder the repository folder.
- * @returns the repository-relative prefix for this folder.
- */
-export function readGitPrefix(workingFolder: string): string {
-    const result = runGitBlocking(workingFolder, GIT_PREFIX_ARGUMENTS);
-    if (result.code !== 0) throw new GspotError('git', `Cannot read the Git path prefix: ${result.stderr.trim()}`);
-    return trimGitLine(result.stdout);
-}
-
-/**
  * Remove the final newline from a Git result, and keep the other bytes.
  *
  * @param text the value that Git printed.
@@ -321,8 +346,9 @@ export function isGitRepository(workingFolder: string): boolean {
     const inspection = runGitBlocking(workingFolder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code === 0 && inspection.stdout.trim() === 'true') return true;
     if (isOutsideGit(inspection)) return false;
-    throw new Error(
-        `Git work-tree discovery failed in ${workingFolder} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
+    throw new GspotError(
+        'git',
+        `Git ${WORK_TREE_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
     );
 }
 

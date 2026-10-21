@@ -1,4 +1,5 @@
 import type { Node } from 'web-tree-sitter';
+import { getLastName } from '#cli/parsers/python.ts';
 import { addIdentifier } from '#cli/checks/naming/collect.ts';
 import type { Identifier, ExtractSink, NamedCategory } from '#cli/types/checks/naming.ts';
 
@@ -64,21 +65,20 @@ function classifyDeclaredName(node: Node, name: string): NamedCategory {
     return holder === 'module' && PYTHON_CONSTANT.test(name) ? 'constants' : 'variables';
 }
 
-function readLastName(node: Node | null): string {
-    return node?.text.split('.').at(-1) ?? '';
-}
-
 function isTypeOperand(operand: Node | null): boolean {
     if (operand === null) return false;
     if (operand.type === 'none') return true;
     if (operand.type === 'identifier' || operand.type === 'attribute')
-        return PYTHON_TYPE_NAME.test(readLastName(operand));
+        return PYTHON_TYPE_NAME.test(getLastName(operand.text));
     return isTypeForm(operand);
 }
 
 function isTypeForm(node: Node | null): boolean {
     if (node === null) return false;
-    if (node.type === 'subscript') return PYTHON_TYPE_FORMS.has(readLastName(node.childForFieldName('value')));
+    if (node.type === 'subscript') {
+        const value = node.childForFieldName('value');
+        return value !== null && PYTHON_TYPE_FORMS.has(getLastName(value.text));
+    }
     if (node.type !== 'binary_operator' || node.childForFieldName('operator')?.text !== '|') return false;
     return isTypeOperand(node.childForFieldName('left')) && isTypeOperand(node.childForFieldName('right'));
 }

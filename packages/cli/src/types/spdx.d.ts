@@ -3,5 +3,5 @@ declare module 'spdx-expression-parse' {
 }
 
 declare module 'spdx-satisfies' {
-    export default function satisfies(expression: string, approved: string[]): boolean;
+    export default function satisfies(expression: string, approved: readonly string[]): boolean;
 }

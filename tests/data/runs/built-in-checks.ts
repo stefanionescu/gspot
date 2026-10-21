@@ -1,29 +1,3 @@
-// A reused command session must read the corrected source in its next run.
-export const SOURCE_EDITS = [
-    {
-        language: 'swift',
-        path: 'Source.swift',
-        sample: 'func readSourceEntriesFromFilesNow() -> Int { 1 }\n',
-        corrected: String.raw`func readLines(_ source: String) -> [String] {
-    let trimmed = source.trimmingCharacters(in: .whitespaces)
-    let lines = trimmed.components(separatedBy: "\n")
-    return lines
-}
-`,
-    },
-    {
-        language: 'bash',
-        path: 'source.sh',
-        sample: 'BadName() { echo ready; }\n',
-        corrected: String.raw`read_lines() {
-    local source="$1"
-    printf "%s\n" "$source"
-    printf "%s\n" "Complete"
-}
-`,
-    },
-] as const;
-
 export const HEADERS_FILE = `/*
     X-Content-Type-Options: nosniff
     Referrer-Policy: same-origin

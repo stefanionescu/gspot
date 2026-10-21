@@ -1,3 +1,4 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
 
 const MALFORMED_TSCONFIGS = [
@@ -161,9 +162,7 @@ export {
     YOUR_TSCONFIG,
     COMPILER_SOURCE,
     ROOT_PORT_SOURCE,
-    TSCONFIG_PROJECT,
     CHILD_PORT_SOURCE,
-    SOLUTION_TSCONFIG,
     TYPED_DECLARATION,
     MALFORMED_TSCONFIGS,
     STRICT_TSCONFIG_TEXT,
@@ -196,3 +195,18 @@ export const TSCONFIG_READ_ERRORS = [
         fixed: 'missing.json',
     },
 ] as const;
+
+export const IMPLICIT_PROJECT_TREE = {
+    ...IMPLICIT_PROJECT_FILES,
+    'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+};
+
+export const SOLUTION_PROJECT_TREE = {
+    'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+    '.gitignore': 'node_modules/\n.gspot/\n',
+    'tsconfig.json': SOLUTION_TSCONFIG,
+    'orders/tsconfig.json': TSCONFIG_PROJECT,
+    'users/tsconfig.json': TSCONFIG_PROJECT.replace('"include"', '"references":[{"path":"../orders"}],"include"'),
+    'orders/order.ts': 'export const total: number = "wrong";',
+    'users/user.ts': 'import { total } from "../orders/order.js"; export const active: boolean = total;',
+};

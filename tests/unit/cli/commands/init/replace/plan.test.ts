@@ -1,20 +1,20 @@
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { SQL_CHECK } from '#tests/data/checks/sql.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { parseToolProject } from '#cli/install/npm/tool-project.ts';
-import { stat, chmod, symlink, readFile, readlink } from 'node:fs/promises';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { assertPackageManager } from '#cli/repository/package-manager.ts';
 import { PYPROJECT, PYDOCLINT_GOOGLE } from '#tests/data/checks/python/project.ts';
-import { runGspot, checkReport, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
+import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
 import {
     INIT_FILES,
@@ -26,11 +26,11 @@ import {
 test.each(['', 'hooks', '.husky'])(
     'the init plan tells hook scripts in the source apart from the hooks folder Git uses (%s)',
     async (hooksPath) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'hooks/use-thing.ts': 'export function useThing() { return true; }\n',
             ...(hooksPath === '' ? {} : { [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' }),
         });
+
         readGitOutput(sandbox.path, ['init', '-q']);
         if (hooksPath !== '') readGitOutput(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
         const result = await runGspot(sandbox.path, [
@@ -46,8 +46,8 @@ test.each(['', 'hooks', '.husky'])(
 );
 
 test('the init plan deletes the replaced tool files and lists the lint folder', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, INIT_FILES);
+    await using sandbox = await testdir(INIT_FILES);
+
     commitAll(sandbox.path);
     const preview = await runGspot(sandbox.path, [
         ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown']),
@@ -55,7 +55,7 @@ test('the init plan deletes the replaced tool files and lists the lint folder', 
         '--json',
     ]);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const plan = (JSON.parse(preview.stdout) as InitJson).plan!;
+    const plan = (JSON.parse(preview.stdout) as InitJson).plan;
     for (const path of Object.keys(REPLACED_TOOL_FILES).filter((path) => path !== '.markdownlint.jsonc'))
         expect(plan.delete).toContainEqual({ path, note: matchSubstring('replaced by the generated') });
     expect(plan.delete.map(({ path }) => path)).not.toContain('.markdownlint.jsonc');
@@ -95,32 +95,34 @@ exclude_rules = LT01, RF01
     await chmod(join(sandbox.path, path), 0o640);
     const initialized = await runGspot(sandbox.path, buildInitArguments(['sql'], { json: true }));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    expect(readSettings(sandbox.path, createReadCache(process.cwd())).settings.ignore).toStrictEqual([]);
-    expect((JSON.parse(initialized.stdout) as InitJson).plan!.delete.some((entry) => entry.path === path)).toBe(false);
+    expect(readSettings(sandbox.path).settings.ignore).toStrictEqual([]);
+    expect((JSON.parse(initialized.stdout) as InitJson).plan.delete.some((entry) => entry.path === path)).toBe(false);
     await assertRetainedFile(sandbox.path, path, original, JSON.parse(initialized.stdout) as InitJson);
 });
 
 test('init replaces an ignore file inside a scope, and the scope check runs', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'README.md': '# test\n',
         'db/accounts.sql': 'SELECT 1;\n',
         'db/package.json': '{"private":true}',
         'db/.sqlfluffignore': '# Templates\ntemplates/\n',
     });
-    await Bun.write(join(sandbox.path, 'template.toml'), 'configurations = []\n' + SQL_CHECK);
+
     commitAll(sandbox.path);
-    const commandArguments = [...buildInitArguments([]), '--from', 'template.toml'];
+    const commandArguments = buildInitArguments([]);
     const initialized = await runGspot(sandbox.path, commandArguments);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    const settings = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
+    const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(settings).not.toContain('templates');
+    await writeFile(join(sandbox.path, 'gspot.toml'), settings + SQL_CHECK);
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
     const selected = await runGspot(sandbox.path, ['set', 'level', 'all']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const dialect = await runGspot(sandbox.path, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'db']);
     expect(dialect.code, dialect.stdout + dialect.stderr).toBe(0);
-    const checked = await checkReport(sandbox.path, ['check', '--only', 'project/read-sql', '--json']);
+    const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'project/read-sql', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks).toMatchObject([
         { check: 'project/read-sql', scope: '', status: 'passed', fileCount: 1 },
@@ -147,7 +149,7 @@ exclude_rules = LT01
             ...(isDryRun ? ['--dry-run'] : []),
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        const plan = (JSON.parse(initialized.stdout) as InitJson).plan!;
+        const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
         expect(plan.retained).toContainEqual({
             path: 'setup.cfg',
             note: matchSubstring('Delete the section when ready'),
@@ -184,7 +186,7 @@ keep = true
         const commandArguments = buildInitArguments([configuration]);
         const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        expect((JSON.parse(preview.stdout) as InitJson).plan!.retained).toContainEqual({
+        expect((JSON.parse(preview.stdout) as InitJson).plan.retained).toContainEqual({
             path,
             note: matchSubstring(table),
         });
@@ -197,45 +199,37 @@ keep = true
 );
 
 test('at level recommended, init keeps the tool files of checks that are off', async () => {
-    using _output = spyOn(process.stdout, 'write').mockReturnValue(true);
+    await using sandbox = await testdir(INACTIVE_CONFIGURATIONS);
 
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, INACTIVE_CONFIGURATIONS);
     commitAll(sandbox.path);
-    await Bun.write(join(sandbox.path, 'coverage.template.toml'), 'level = "recommended"\n');
-    const preview = await runRegisteredCommand(sandbox.path, [
+    const preview = await runGspot(sandbox.path, [
         'init',
         '--yes',
         '--dry-run',
         '--no-configurations',
-        '--from',
-        'coverage.template.toml',
+        '--level',
+        'recommended',
+        '--json',
     ]);
-    const plan = (preview.json as InitJson).plan!;
+    const plan = (JSON.parse(preview.stdout) as InitJson).plan;
     expect(plan.delete).toStrictEqual([]);
     expect(plan.change.some((row) => row.path === 'package.json')).toBe(false);
     expect(plan.write.some((row) => /commitlint|syncpack/u.test(row.path))).toBe(false);
-    const written = await runRegisteredCommand(sandbox.path, [
-        'init',
-        '--yes',
-        '--no-configurations',
-        '--from',
-        'coverage.template.toml',
-    ]);
-    expect(written.exitCode, written.text).toBe(0);
+    const written = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations', '--level', 'recommended']);
+    expect(written.code, written.stdout + written.stderr).toBe(0);
     for (const [path, source] of Object.entries(INACTIVE_CONFIGURATIONS))
-        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(source);
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
     const session = await openSession(sandbox.path);
     const project = parseToolProject(
-        await Bun.file(join(sandbox.path, '.gspot/package.json')).text(),
-        session.requirePackageManager().name,
+        await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'),
+        assertPackageManager(session.packageManager).name,
     );
     expect(project.dependencies).not.toHaveProperty('@commitlint/cli');
     expect(project.dependencies).not.toHaveProperty('syncpack');
 });
 
 async function assertRetainedFile(root: string, path: string, original: string, initialized: InitJson): Promise<void> {
-    expect(initialized.plan!.retained).toContainEqual({ path, note: matchSubstring('Delete the section when ready') });
+    expect(initialized.plan.retained).toContainEqual({ path, note: matchSubstring('Delete the section when ready') });
     expect(await readFile(join(root, path), 'utf8')).toBe(original);
     const attributes = await stat(join(root, path));
     expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));

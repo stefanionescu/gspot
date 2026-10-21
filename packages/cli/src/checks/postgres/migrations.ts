@@ -1,28 +1,29 @@
 import { posix } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
-import type { CheckInput } from '#cli/types/runs/check.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
-import { listCoveredFiles } from '#cli/repository/coverage.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
+import { listCheckFiles } from '#cli/repository/coverage.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { type Migration, type MigrationRead } from '#cli/types/checks/postgres.ts';
-import { MIGRATION_DOWN, DOWN_MIGRATION_SUFFIX } from '#cli/config/checks/postgres.ts';
+import { MIGRATION_VERSION, MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
+import { SQUAWK_CHECK, MIGRATION_DOWN, DOWN_MIGRATION_SUFFIX } from '#cli/config/checks/postgres.ts';
 
 const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
 
-async function parseMigrations(input: CheckInput, paths: string[]): Promise<Migration[]> {
+async function parseMigrations(session: Session, paths: Pick<Migration, 'path' | 'version'>[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
-    for (const path of paths) {
-        const original = readCachedBytes(input.reads, path).toString('utf8');
-        const text = original.split(MIGRATION_DOWN, 1)[0] ?? '';
+    for (const { path, version } of paths) {
+        const original = readCachedText(session.reads, path);
+        const text = stripDownSection(original);
         const name = posix.basename(path);
-        const parsed = await parseSqlFile(text, input.reads);
+        const parsed = await parseSqlFile(text, session.reads);
         migrations.push({
             path,
             name,
-            version: MIGRATION_VERSION.exec(name)?.groups?.['version'] ?? '',
+            version,
             text,
             statements: parsed.statements,
             ...(parsed.error === undefined ? {} : { error: parsed.error }),
@@ -34,26 +35,28 @@ async function parseMigrations(input: CheckInput, paths: string[]): Promise<Migr
 /**
  * Reads and parses every tracked migration in version order.
  *
- * @param input the scope whose migrations to read.
+ * @param session the repository and its tools.
+ * @param planned the scope whose migrations to read.
  * @returns the migrations, empty when the repository has no migrations folder.
  */
-async function readMigrations(input: CheckInput): Promise<MigrationRead> {
-    const paths = listMigrationPaths(input);
+async function readMigrations(session: Session, planned: PlannedCheck): Promise<MigrationRead> {
+    const paths = listMigrationPaths(planned);
     if (paths.length === 0) return { migrations: [], findings: [] };
     const key = JSON.stringify(paths);
-    const migrations = await getCachedMapValue(input.reads, MIGRATION_MEMO, key, () =>
+    const migrations = await getCachedMapValue(session.reads, MIGRATION_MEMO, key, () =>
         parseMigrations(
-            input,
+            session,
             paths
                 .map((path) => ({
                     path,
-                    version: BigInt(MIGRATION_VERSION.exec(posix.basename(path))?.groups?.['version'] ?? '0'),
+                    version: MIGRATION_VERSION.exec(posix.basename(path))?.groups?.['version'] ?? '',
                 }))
                 .toSorted((left, right) => {
-                    if (left.version === right.version) return left.path.localeCompare(right.path);
-                    return left.version < right.version ? -1 : 1;
-                })
-                .map((entry) => entry.path),
+                    const first = BigInt(left.version || '0');
+                    const second = BigInt(right.version || '0');
+                    if (first === second) return left.path.localeCompare(right.path);
+                    return first < second ? -1 : 1;
+                }),
         ),
     );
     return {
@@ -61,7 +64,7 @@ async function readMigrations(input: CheckInput): Promise<MigrationRead> {
         findings: migrations.flatMap(({ path, error }) =>
             error === undefined
                 ? []
-                : [buildFinding(input, { file: path, line: error.line, column: error.column }, 'syntax', error.text)],
+                : [buildFinding(planned, { file: path, line: error.line, column: error.column }, 'syntax', error.text)],
         ),
     };
 }
@@ -69,24 +72,38 @@ async function readMigrations(input: CheckInput): Promise<MigrationRead> {
 /**
  * Lists the forward SQL migrations that the postgres/squawk check covers.
  *
- * @param input the scope whose files to search.
+ * @param planned the scope whose files to search.
  * @returns the root-relative paths.
  */
-function listMigrationPaths(input: CheckInput): string[] {
-    const migrations = input.selection.selected.flatMap((manifest) =>
-        manifest.checks
-            .filter((check) => check.name === 'postgres/squawk')
-            .flatMap((check) =>
-                listCoveredFiles(check.files ?? manifest.files, input.files, {
-                    selected: input.selection.selected,
-                    scope: input.selection.scope.path,
-                    view: input.selection.view,
-                }),
-            ),
-    );
+function listMigrationPaths(planned: PlannedCheck): string[] {
+    const migrations = listCheckFiles(planned, SQUAWK_CHECK);
     return migrations
         .filter((file) => file.path.endsWith(SQL_EXTENSION) && !file.path.endsWith(DOWN_MIGRATION_SUFFIX))
         .map((file) => file.path);
+}
+
+/**
+ * Read migrations for semantic checks to inspect.
+ *
+ * @param session the repository and its tools.
+ * @param planned the planned scope and run cache.
+ * @returns the migration statements in version order.
+ * @throws a skip when the migration-order check owns a syntax failure.
+ */
+export async function readParsedMigrations(session: Session, planned: PlannedCheck): Promise<Migration[]> {
+    const { migrations, findings } = await readMigrations(session, planned);
+    if (findings.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
+    return migrations;
+}
+
+/**
+ * Strip the down section before migration checks inspect the forward SQL.
+ *
+ * @param text the full migration source.
+ * @returns the forward section.
+ */
+export function stripDownSection(text: string): string {
+    return text.split(MIGRATION_DOWN, 1)[0] ?? '';
 }
 
 export { readMigrations };

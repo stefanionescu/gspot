@@ -1,4 +1,5 @@
-import type { NamedFunction, ImplementedFunction } from './types/syntax.ts';
+import type { TypeServices, NamedFunction, ImplementedFunction } from './types/syntax.ts';
+import { ZOD_MODULES, ZOD_SCHEMA_FACTORIES, ZOD_SCHEMA_NAMESPACES } from './config/schemas.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -7,9 +8,15 @@ import {
     EXPORT_REFERENCES,
     UNWRAPPABLE_NODES,
     COMPARISON_OPERATORS,
+    IMPORT_SPECIFIER_NODES,
+    TRANSPARENT_EXPRESSIONS,
     EXECUTABLE_DECLARATIONS,
     NON_EXECUTABLE_STATEMENTS,
 } from './config/syntax.ts';
+
+const isUnwrappable = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST_NODE_TYPES[type]));
+
+const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 
 // Walk only the visitor keys of the parser, which leave out metadata and parent links.
 function listChildNodes(
@@ -61,6 +68,34 @@ function isComposedCall(node: TSESTree.CallExpression): boolean {
     );
 }
 
+function isTypeImportReference(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
+    let value = node;
+    while (value.type === AST_NODE_TYPES.CallExpression || value.type === AST_NODE_TYPES.MemberExpression)
+        value = value.type === AST_NODE_TYPES.CallExpression ? value.callee : value.object;
+    if (value.type !== AST_NODE_TYPES.Identifier) return false;
+    return (
+        ASTUtils.findVariable(source.getScope(node), value)?.defs.some(
+            ({ node: declaration }) =>
+                IMPORT_SPECIFIER_NODES.has(declaration.type) &&
+                declaration.parent.type === AST_NODE_TYPES.ImportDeclaration &&
+                (declaration.parent.importKind === 'type' ||
+                    (declaration.type === AST_NODE_TYPES.ImportSpecifier && declaration.importKind === 'type')),
+        ) === true
+    );
+}
+
+/**
+ * Walk through type assertions and conditional or logical expressions to the outermost value.
+ *
+ * @param node the expression
+ * @returns the outermost expression that wraps it
+ */
+export function findOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
+    let value = node;
+    while (isTransparentExpression(value.parent)) value = value.parent;
+    return value;
+}
+
 /**
  * Count the executable statements under a node, nested functions included. An expression body counts as one.
  *
@@ -74,27 +109,8 @@ export function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Recor
     const isExpressionBody =
         FUNCTIONS.has(node.type) && (node as ImplementedFunction).body.type !== AST_NODE_TYPES.BlockStatement;
     const isStatement = node.type.endsWith('Statement') && !NON_EXECUTABLE_STATEMENTS.has(node.type);
-    const own = [isExpressionBody, isStatement, EXECUTABLE_DECLARATIONS.has(node.type)].includes(true) ? 1 : 0;
+    const own = Number(isExpressionBody || isStatement || EXECUTABLE_DECLARATIONS.has(node.type));
     return listChildNodes(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);
-}
-
-/**
- * Check whether a constructor sets instance state through parameter properties or `this` assignments.
- *
- * @param node the function to check
- * @returns whether the constructor sets instance state
- */
-export function hasConstructorState(node: ImplementedFunction): boolean {
-    if (node.parent.type !== AST_NODE_TYPES.MethodDefinition || node.parent.kind !== 'constructor') return false;
-    if (node.params.some((parameter) => parameter.type === AST_NODE_TYPES.TSParameterProperty)) return true;
-    if (node.body.type !== AST_NODE_TYPES.BlockStatement) return false;
-    return node.body.body.some(
-        (statement) =>
-            statement.type === AST_NODE_TYPES.ExpressionStatement &&
-            statement.expression.type === AST_NODE_TYPES.AssignmentExpression &&
-            statement.expression.left.type === AST_NODE_TYPES.MemberExpression &&
-            statement.expression.left.object.type === AST_NODE_TYPES.ThisExpression,
-    );
 }
 
 /**
@@ -105,8 +121,7 @@ export function hasConstructorState(node: ImplementedFunction): boolean {
  */
 export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     let value = node;
-    const canUnwrap = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST_NODE_TYPES[type]));
-    while (value !== null && canUnwrap(value)) value = value.expression;
+    while (value !== null && isUnwrappable(value)) value = value.expression;
     return value;
 }
 
@@ -137,7 +152,9 @@ export function listCallableVariables(
 ): TSESLint.Scope.Variable[] {
     const owners: NamedFunction[] = [];
     if (node.type !== AST_NODE_TYPES.ArrowFunctionExpression && node.id !== null) owners.push({ node, id: node.id });
-    if (node.parent.type === AST_NODE_TYPES.VariableDeclarator) owners.push({ node: node.parent, id: node.parent.id });
+    const value = node.type === AST_NODE_TYPES.FunctionDeclaration ? node : findOutermostValue(node);
+    if (value.parent.type === AST_NODE_TYPES.VariableDeclarator)
+        owners.push({ node: value.parent, id: value.parent.id });
     return owners.flatMap(({ node: owner, id }) =>
         source
             .getDeclaredVariables(owner)
@@ -154,13 +171,24 @@ export function listCallableVariables(
  * @returns whether the module exports the function
  */
 export function isExportedFunction(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
-    const owner = node.parent.type === AST_NODE_TYPES.VariableDeclarator ? node.parent.parent : node;
+    let value: TSESTree.Node = node.type === AST_NODE_TYPES.FunctionDeclaration ? node : findOutermostValue(node);
+    let variables: readonly TSESLint.Scope.Variable[] = listCallableVariables(node, source);
+    if (
+        value.parent.type === AST_NODE_TYPES.MethodDefinition ||
+        value.parent.type === AST_NODE_TYPES.PropertyDefinition
+    ) {
+        value = value.parent.parent.parent;
+        variables = source.getDeclaredVariables(
+            value.parent.type === AST_NODE_TYPES.VariableDeclarator ? value.parent : value,
+        );
+    }
+    const owner = value.parent.type === AST_NODE_TYPES.VariableDeclarator ? value.parent.parent : value;
     if (
         owner.parent.type === AST_NODE_TYPES.ExportNamedDeclaration ||
         owner.parent.type === AST_NODE_TYPES.ExportDefaultDeclaration
     )
         return true;
-    return listCallableVariables(node, source).some((variable) =>
+    return variables.some((variable) =>
         variable.references.some(
             (reference) => reference.isRead() && EXPORT_REFERENCES.has(reference.identifier.parent.type),
         ),
@@ -175,4 +203,46 @@ export function isExportedFunction(node: ImplementedFunction, source: TSESLint.S
  */
 export function isTypePredicate(node: ImplementedFunction): boolean {
     return node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate;
+}
+
+/**
+ * Find schema factory calls through their Zod imports, including aliased bindings.
+ *
+ * @param source the parsed module and its scopes
+ * @returns calls that construct runtime validation schemas
+ */
+export function findZodSchemaConstructors(source: TSESLint.SourceCode): TSESTree.Node[] {
+    const factories = Object.fromEntries(
+        ZOD_SCHEMA_FACTORIES.map((name) => [name, { [ASTUtils.ReferenceTracker.CALL]: true }]),
+    );
+    const namespaces = Object.fromEntries(
+        Object.entries(ZOD_SCHEMA_NAMESPACES).map(([name, methods]) => [
+            name,
+            Object.fromEntries(methods.map((method) => [method, { [ASTUtils.ReferenceTracker.CALL]: true }])),
+        ]),
+    );
+    const constructors = { ...factories, ...namespaces };
+    const imports = Object.fromEntries(
+        ZOD_MODULES.map((name) => [
+            name,
+            { [ASTUtils.ReferenceTracker.ESM]: true, ...constructors, z: constructors, default: constructors },
+        ]),
+    );
+    const tracker = new ASTUtils.ReferenceTracker(source.getScope(source.ast));
+    return [...tracker.iterateEsmReferences(imports)]
+        .filter((reference) => !isTypeImportReference(reference.node, source))
+        .map((reference) => reference.node);
+}
+
+/**
+ * Get the checker and node mapping when the parser supplies a TypeScript program.
+ *
+ * @param source the parsed file and its parser services
+ * @returns the type services, or undefined without a program
+ */
+export function getTypeServices(source: TSESLint.SourceCode): TypeServices | undefined {
+    const services = source.parserServices;
+    if (services?.program === undefined || services.program === null || services.esTreeNodeToTSNodeMap === undefined)
+        return undefined;
+    return { checker: services.program.getTypeChecker(), mapping: services.esTreeNodeToTSNodeMap };
 }

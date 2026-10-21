@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { readFile } from 'node:fs/promises';
+import { isOnDisk } from '#tests/setup/files.ts';
 import { readGitOutput } from '#tests/setup/git.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSandboxPath } from '#tests/setup/install.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {
     STAGED_FORMAT_FILES,
@@ -28,7 +27,7 @@ const installedSandbox = registerSharedSandbox({
 
 test('Prettier uses the format overrides, and an ignore on one path stops its findings until unignore', async () => {
     const root = installedSandbox().root;
-    await using _sourceChange = await updateSandbox(installedSandbox(), {
+    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: '',
         files: {
             'gspot.toml': FORMAT_OVERRIDES_SETTINGS,
@@ -64,57 +63,52 @@ test('Prettier uses the format overrides, and an ignore on one path stops its fi
         'generated/kept.json',
         'generated/review.json',
     ];
-    const failed = await spawnGspot(root, commandArguments);
+    const failed = parseCheckReport(await spawnGspot(root, commandArguments));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: 'generated/review.json' },
-    ]);
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([{ file: 'generated/review.json' }]);
     const fixed = await spawnGspot(root, [...commandArguments.slice(0, 4), '--fix', ...commandArguments.slice(4)]);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await readFile(join(root, 'generated/kept.json'), 'utf8')).toBe('{"value":1}');
     expect(JSON.parse(await readFile(join(root, 'generated/review.json'), 'utf8'))).toStrictEqual({ value: 1 });
     const removed = await spawnGspot(root, ['unignore', 'format/prettier', '--paths', 'generated/kept.json']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const exposed = await spawnGspot(root, commandArguments);
+    const exposed = parseCheckReport(await spawnGspot(root, commandArguments));
     expect(exposed.code, exposed.stdout + exposed.stderr).toBe(1);
-    expect((JSON.parse(exposed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: 'generated/kept.json' },
-    ]);
-    const corrected = await spawnGspot(root, [...commandArguments.slice(0, 4), '--fix', ...commandArguments.slice(4)]);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks.every(({ findings }) => findings.length === 0)).toBe(
-        true,
+    expect(exposed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([{ file: 'generated/kept.json' }]);
+    const corrected = parseCheckReport(
+        await spawnGspot(root, [...commandArguments.slice(0, 4), '--fix', ...commandArguments.slice(4)]),
     );
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(corrected.report.checks.every(({ findings }) => findings.length === 0)).toBe(true);
 });
 
 test('editorconfig-checker leaves indentation to the formatter and checks line endings, the final newline, and trailing spaces', async () => {
     const root = installedSandbox().root;
-    await using _sourceChange = await updateSandbox(installedSandbox(), {
+    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: '',
         files: {
-            'gspot.toml': buildSettingsText(['format'], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['format'], { level: 'all' }),
             'indented.txt': '\tcontent\n',
         },
     });
-    const configured = await spawnGspot(root, ['apply']);
-    expect(configured.code, configured.stdout + configured.stderr).toBe(0);
+
     const commandArguments = ['check', '--only', 'format/editorconfig-checker', '--json', '--'];
-    const environment = { PATH: buildSandboxPath() };
+    const environment = {};
     const accepted = await spawnGspot(root, [...commandArguments, 'indented.txt'], environment);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(await readFile(join(root, 'indented.txt'), 'utf8')).toBe('\tcontent\n');
     for (const { file, broken, corrected } of EDITORCONFIG_SAMPLES) {
         await createFileTree(root, { [file]: broken });
-        const rejected = await spawnGspot(root, [...commandArguments, file], environment);
+        const rejected = parseCheckReport(await spawnGspot(root, [...commandArguments, file], environment));
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const report = JSON.parse(rejected.stdout) as RunReport;
+        const report = rejected.report;
         expect(report.checks).toMatchObject([{ check: 'format/editorconfig-checker', status: 'failed' }]);
         expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toContain(file);
         expect(await readFile(join(root, file), 'utf8')).toBe(broken);
         await createFileTree(root, { [file]: corrected });
-        const fixed = await spawnGspot(root, [...commandArguments, file], environment);
+        const fixed = parseCheckReport(await spawnGspot(root, [...commandArguments, file], environment));
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-        expect((JSON.parse(fixed.stdout) as RunReport).checks).toMatchObject([
+        expect(fixed.report.checks).toMatchObject([
             { check: 'format/editorconfig-checker', status: 'passed', findings: [] },
         ]);
         expect(await readFile(join(root, file), 'utf8')).toBe(corrected);
@@ -123,21 +117,23 @@ test('editorconfig-checker leaves indentation to the formatter and checks line e
 
 test('staged Prettier uses the indexed format before a later scoped apply and preserves working files', async () => {
     const root = installedSandbox().root;
-    await using _sourceChange = await updateSandbox(installedSandbox(), { check: '', files: STAGED_FORMAT_FILES });
-    const configured = await spawnGspot(root, ['apply']);
-    expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-    expect(await Bun.file(join(root, STAGED_FORMAT_PATHS.rootConfig)).exists()).toBe(true);
-    expect(await Bun.file(join(root, STAGED_FORMAT_PATHS.scopeConfig)).exists()).toBe(false);
+    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        check: '',
+        files: STAGED_FORMAT_FILES,
+    });
+
+    expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.rootConfig))).toBe(true);
+    expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
     const originalConfig = await readFile(join(root, STAGED_FORMAT_PATHS.rootConfig), 'utf8');
-    await Bun.write(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.staged);
+    await writeFile(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.staged);
     readGitOutput(root, ['add', '-A']);
     const index = readGitOutput(root, ['write-tree']);
     const changed = await spawnGspot(root, [...STAGED_FORMAT_CHANGE_ARGUMENTS]);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     const applied = await spawnGspot(root, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    await Bun.write(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.working);
-    expect(await Bun.file(join(root, STAGED_FORMAT_PATHS.scopeConfig)).exists()).toBe(false);
+    await writeFile(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.working);
+    expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
     expect(await readFile(join(root, STAGED_FORMAT_PATHS.rootConfig), 'utf8')).not.toBe(originalConfig);
     const files = new Map<string, string>();
     for (const path of Object.values(STAGED_FORMAT_PATHS).filter((path) => path !== STAGED_FORMAT_PATHS.scopeConfig))
@@ -147,9 +143,9 @@ test('staged Prettier uses the indexed format before a later scoped apply and pr
         STAGED_FORMAT_CHECK_ARGUMENTS.filter((argument) => argument !== '--staged'),
     );
     expect(working.code, working.stdout + working.stderr).toBe(0);
-    const staged = await spawnGspot(root, [...STAGED_FORMAT_CHECK_ARGUMENTS]);
+    const staged = parseCheckReport(await spawnGspot(root, [...STAGED_FORMAT_CHECK_ARGUMENTS]));
     expect(staged.code, staged.stdout + staged.stderr).toBe(0);
-    expect((JSON.parse(staged.stdout) as RunReport).checks).toMatchObject([
+    expect(staged.report.checks).toMatchObject([
         { check: 'format/prettier', scope: '', status: 'passed', fileCount: 1, findings: [] },
     ]);
     for (const [path, content] of files) expect(await readFile(join(root, path), 'utf8')).toBe(content);
@@ -158,13 +154,11 @@ test('staged Prettier uses the indexed format before a later scoped apply and pr
 
 /** Check each generated formatter override against the bytes written by Prettier. */
 async function verifyFormatOverrides(root: string): Promise<void> {
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const commandArguments = ['check', '--only', 'format/prettier', '--json'];
     const files = PRETTIER_OPTIONS_BY_FILE.map(({ file }) => file);
-    const before = await spawnGspot(root, [...commandArguments, '--', ...files]);
+    const before = parseCheckReport(await spawnGspot(root, [...commandArguments, '--', ...files]));
     expect(before.code, before.stdout + before.stderr).toBe(1);
-    const report = JSON.parse(before.stdout) as RunReport;
+    const report = before.report;
     expect(
         report.checks
             .flatMap(({ findings }) => findings.map(({ file }) => file))
@@ -189,9 +183,7 @@ async function verifyFormatOverrides(root: string): Promise<void> {
     const editor = await spawnGspot(
         root,
         ['check', '--only', 'format/editorconfig-checker', '--json', '--', ...files],
-        {
-            PATH: buildSandboxPath(),
-        },
+        {},
     );
     expect(editor.code, editor.stdout + editor.stderr).toBe(0);
 }

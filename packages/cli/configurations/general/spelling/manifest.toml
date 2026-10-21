@@ -7,15 +7,10 @@ title = "Spelling"
 paths = ["**"]
 
 [[tool]]
-brew = "typos-cli"
-cargo = "typos-cli"
-github = { name = "crate-ci/typos", version = "v1.43.5" }
 mise = "typos"
 name = "typos"
 replace = ["typos.toml", ".typos.toml", "_typos.toml"]
-scoop = "typos"
 version = "1.43.5"
-winget = "crate-ci.typos"
 
 [[tool_file]]
 per_scope = true

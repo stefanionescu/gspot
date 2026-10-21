@@ -1,67 +1,32 @@
-import { z } from 'zod';
 import { posix } from 'node:path';
+import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { findScope } from '#cli/repository/scopes.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import { parse as parseToml } from '@decimalturn/toml-patch';
+import { findText } from '#cli/system/files/reads.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { parseTomlFile } from '#cli/parsers/toml/document.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/python.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { FORMAT_CONFIGURATION } from '#cli/config/configurations.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
+import { buildDraftSelection } from '#cli/commands/init/selection.ts';
 import { DEFAULT_QUOTES } from '#cli/config/generation/formatting.ts';
-import { buildDraftSelection } from '#cli/commands/init/settings-text.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import { ruffFormatSchema, formatOptionsSchema } from '#cli/schemas/commands.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
 import type { SettingsDraft, InitFormatOptions } from '#cli/types/commands/init.ts';
-import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 
 import {
     PYTHON_FILES,
-    PYTHON_EXTENSION,
     EDITORCONFIG_FILE,
     PRETTIER_DEFAULTS,
     RUFF_SETTINGS_FILES,
-    EDITORCONFIG_NUMBER,
     PRETTIER_JSON_FILES,
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
 } from '#cli/config/commands/init.ts';
-
-// Read only the formatting options that gspot settings use.
-const fileFormatSchema = z.object({
-    tabWidth: z.number().optional(),
-    printWidth: z.number().optional(),
-    singleQuote: z.boolean().optional(),
-} satisfies SchemaShape<Omit<InitFormatOptions, 'overrides'>>);
-
-const formatOptionsSchema = fileFormatSchema.extend({
-    overrides: z
-        .array(
-            z.object({
-                files: z.union([z.string(), z.array(z.string())]),
-                options: fileFormatSchema,
-            } satisfies SchemaShape<NonNullable<InitFormatOptions['overrides']>[number]>),
-        )
-        .optional(),
-} satisfies SchemaShape<Pick<InitFormatOptions, 'overrides'>>) satisfies z.ZodType<InitFormatOptions>;
-
-const ruffFormatSchema = z.looseObject({
-    format: z.looseObject({ 'quote-style': z.string().optional() }).optional(),
-    tool: z
-        .looseObject({
-            ruff: z
-                .looseObject({ format: z.looseObject({ 'quote-style': z.string().optional() }).optional() })
-                .optional(),
-        })
-        .optional(),
-});
-
-// Prettier matches a glob without a slash against the file name, in any folder.
-function convertPrettierFiles(files: string | string[]): string[] {
-    return (Array.isArray(files) ? files : [files]).map((glob) => (glob.includes('/') ? glob : `**/${glob}`));
-}
 
 function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | undefined {
     if (singleQuote === undefined) return undefined;
@@ -69,22 +34,21 @@ function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | 
 }
 
 function readQuoteStyle(file: string, text: string): string | undefined {
-    const parsed = ruffFormatSchema.parse(parseToml(text));
+    const parsed = parseTomlFile(file, text, ruffFormatSchema);
     const format = file === PYPROJECT_TOML ? parsed.tool?.ruff?.format : parsed.format;
     return format?.['quote-style'];
 }
 
 function readPythonQuotes(root: string): string | undefined {
     for (const file of RUFF_SETTINGS_FILES) {
-        const text = readText(root, file);
+        const text = findText(root, file);
         const quotes = text === undefined ? undefined : readQuoteStyle(file, text);
         if (quotes !== undefined) return quotes;
     }
     return undefined;
 }
 
-function buildPythonOverride(root: string, quotes: string | undefined, hasPython: boolean): TomlTable[] {
-    if (!hasPython) return [];
+function buildPythonOverride(root: string, quotes: string | undefined): TomlTable[] {
     const python = readPythonQuotes(root) ?? DEFAULT_QUOTES.ruff;
     return python === (quotes ?? DEFAULT_QUOTES.ruff) ? [] : [{ paths: [...PYTHON_FILES], quotes: python }];
 }
@@ -95,13 +59,15 @@ function buildFormatOverrides(
 ): TomlTable[] {
     const prettier = (options?.overrides ?? []).map((entry) =>
         stripUndefined({
-            paths: convertPrettierFiles(entry.files),
+            paths: (Array.isArray(entry.files) ? entry.files : [entry.files]).map((glob) =>
+                glob.includes('/') ? glob : `**/${glob}`,
+            ),
             indent_width: entry.options.tabWidth,
             print_width: entry.options.printWidth,
             quotes: convertQuotes(entry.options.singleQuote),
         }),
     );
-    return [...prettier, ...buildPythonOverride(scope.root, scope.quotes, scope.hasPython)].filter(
+    return [...prettier, ...(scope.hasPython ? buildPythonOverride(scope.root, scope.quotes) : [])].filter(
         (entry) => Object.keys(entry).length > 1,
     );
 }
@@ -109,10 +75,10 @@ function buildFormatOverrides(
 // Resolve tab indentation and numeric widths from the selected EditorConfig fields.
 function parseEditorWidths(fields: Record<string, string>): InitFormatOptions {
     const width = fields['indent_size'] === 'tab' ? fields['tab_width'] : fields['indent_size'];
-    const tabWidth = width === undefined || !EDITORCONFIG_NUMBER.test(width) ? undefined : Number(width);
+    const tabWidth = width === undefined || !DIGITS_ONLY.test(width) ? undefined : Number(width);
     const lineWidth = fields['max_line_length'];
-    const printWidth = lineWidth === undefined || !EDITORCONFIG_NUMBER.test(lineWidth) ? undefined : Number(lineWidth);
-    return stripUndefined({ tabWidth, printWidth, singleQuote: undefined });
+    const printWidth = lineWidth === undefined || !DIGITS_ONLY.test(lineWidth) ? undefined : Number(lineWidth);
+    return stripUndefined({ tabWidth, printWidth });
 }
 
 /**
@@ -122,7 +88,7 @@ function parseEditorWidths(fields: Record<string, string>): InitFormatOptions {
  * @returns the formatting options, or null when the project has no EditorConfig.
  */
 function readFormattingFields(folder: string): InitFormatOptions | null {
-    const text = readText(folder, EDITORCONFIG_FILE);
+    const text = findText(folder, EDITORCONFIG_FILE);
     if (text === undefined) return null;
     const sections: { files: string; fields: Record<string, string> }[] = [];
     let fields: Record<string, string> | undefined;
@@ -162,10 +128,10 @@ function readFormatOptions(
     prettierFiles: string[],
 ): InitFormatOptions | null {
     const root = posix.dirname(file);
-    const packageJson = readText(root, PACKAGE_JSON);
+    const packageJson = findText(root, PACKAGE_JSON);
     const packageOptions = packageJson === undefined ? undefined : parseJsonFile(file, packageJson)['prettier'];
     const prettierFile = prettierFiles
-        .map((path) => ({ path, text: readText(root, path) }))
+        .map((path) => ({ path, text: findText(root, path) }))
         .find((entry): entry is { path: string; text: string } => entry.text !== undefined);
     const usesPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
@@ -184,17 +150,16 @@ function readScopeFormat(
         draft: SettingsDraft;
         repository: Repository;
         manifests: Map<string, Manifest>;
-        dependencyFiles: DependencyFile[];
     },
 ): TomlTable {
-    const { draft, repository, manifests, dependencyFiles } = context;
+    const { draft, repository, manifests } = context;
     const configurations = selectForScope(buildDraftSelection(draft), scope, manifests);
-    const format = configurations.find((entry) => entry.configuration.name === 'format');
+    const format = configurations.find((entry) => entry.configuration.name === FORMAT_CONFIGURATION);
     if (format === undefined) return {};
     const options = readFormatOptions(
         posix.join(repository.root, scope, PACKAGE_JSON),
         Object.fromEntries(
-            dependencyFiles
+            repository.dependencyFiles
                 .filter((entry) => findScope(entry.path, draft.scopes).path === scope)
                 .flatMap((entry) => Object.entries(entry.dependencies)),
         ),
@@ -205,33 +170,30 @@ function readScopeFormat(
         (file) => file.path.endsWith(PYTHON_EXTENSION) && findScope(file.path, draft.scopes).path === scope,
     );
     const overrides = buildFormatOverrides(options, { root: posix.join(repository.root, scope), quotes, hasPython });
-    if (options === null)
-        return overrides.length === 0 ? {} : { format: { override: overrides, ...draft.template?.tables.format } };
+    if (options === null) return overrides.length === 0 ? {} : { format: { override: overrides } };
     const fields = stripUndefined({
         indent_width: options.tabWidth,
         print_width: options.printWidth,
         quotes,
         override: overrides.length === 0 ? undefined : overrides,
     });
-    return { format: { ...fields, ...draft.template?.tables.format } };
+    return { format: { ...fields } };
 }
 
 /**
  * Read the formatting options for each scope that init sets up.
  *
- * @param draft the configurations and the template.
+ * @param draft the configurations.
  * @param repository the root and the tracked files.
  * @param manifests every configuration.
- * @param dependencyFiles the parsed package declarations.
- * @returns the formatting tables, with the template values kept.
+ * @returns the formatting tables.
  */
 export function readFormatTables(
     draft: SettingsDraft,
     repository: Repository,
     manifests: Map<string, Manifest>,
-    dependencyFiles: DependencyFile[],
 ): Map<string, TomlTable> {
-    const context = { draft, repository, manifests, dependencyFiles };
+    const context = { draft, repository, manifests };
     return new Map(
         ['', ...draft.scopes.map((scope) => scope.path)].map((scope): [string, TomlTable] => [
             scope,

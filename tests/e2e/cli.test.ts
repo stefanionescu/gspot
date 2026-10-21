@@ -6,8 +6,8 @@ import { isOnDisk } from '#tests/setup/files.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
 import { CI_PINS } from '#cli/config/generation/ci.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { parseCheckReport } from '#tests/setup/run-gspot.ts';
 import type { PackedSandbox } from '#tests/types/packages.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
@@ -16,7 +16,7 @@ import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/data/packed-i
 
 // Checks what init replaced and kept, before the test reads the check report.
 async function assertReplacedFiles(root: string, output: string): Promise<void> {
-    expect((JSON.parse(output) as InitJson).plan?.delete.map(({ path }) => path)).toStrictEqual([
+    expect((JSON.parse(output) as InitJson).plan.delete.map(({ path }) => path)).toStrictEqual([
         'prettier.config.mjs',
         '.editorconfig',
     ]);
@@ -44,12 +44,20 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     });
     await assertReplacedFiles(root, initialized.stdout);
     expect(initialized.stdout).not.toContain('formatter stdout');
-    const checked = await runCommand(
-        [...consumer.command, 'check', '--only', 'bash/shellcheck,dependencies/lockfiles,format/prettier', '--json'],
-        consumer.offlineOptions,
+    const checked = parseCheckReport(
+        await runCommand(
+            [
+                ...consumer.command,
+                'check',
+                '--only',
+                'bash/shellcheck,dependencies/lockfiles,format/prettier',
+                '--json',
+            ],
+            consumer.offlineOptions,
+        ),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const { checks, exitCode } = JSON.parse(checked.stdout) as RunReport;
+    const { checks, exitCode } = checked.report;
     expect(exitCode).toBe(1);
     expect(checks).toHaveLength(3);
     expect(checks.filter(({ status }) => status === 'error' || status === 'missing')).toStrictEqual([]);
@@ -71,14 +79,15 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
         findings: SHELLCHECK_SYNTAX_FINDINGS,
     });
     await writeFile(join(root, 'broken.sh'), 'echo example\n');
-    const corrected = await runCommand(
-        [...consumer.command, 'check', '--only', 'bash/shellcheck', '--json'],
-        consumer.offlineOptions,
+    const corrected = parseCheckReport(
+        await runCommand(
+            [...consumer.command, 'check', '--only', 'bash/shellcheck', '--json'],
+            consumer.offlineOptions,
+        ),
     );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const clean = JSON.parse(corrected.stdout) as RunReport;
+    const clean = corrected.report;
     expect(clean.exitCode).toBe(0);
-    expect(clean.skips).toStrictEqual([]);
     expect(clean.checks).toHaveLength(1);
     expect(clean.checks[0]).toMatchObject({ check: 'bash/shellcheck', status: 'passed', fileCount: 1, findings: [] });
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe(STARTING_FILES['authored.txt']);
@@ -108,7 +117,6 @@ async function prepareFormatterSandbox(installation: PackedSandbox) {
         env: {
             ...installation.onlineOptions.env,
             PATH: `${systemTools}${delimiter}${installation.onlineOptions.env['PATH'] ?? ''}`,
-            NO_PROXY: '127.0.0.1,localhost',
         },
     };
     await setUpPackedSandbox(
@@ -128,9 +136,9 @@ test('the installed formatter reports and fixes source and keeps your package.js
     const { command } = consumer;
     const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterSandbox(consumer);
     const formatter = [...command, 'check', 'source.js', '--only', 'format/prettier', '--json'];
-    const invalid = await runCommand(formatter, toolOptions);
+    const invalid = parseCheckReport(await runCommand(formatter, toolOptions));
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-    expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
+    expect(invalid.report.checks).toMatchObject([
         { check: 'format/prettier', status: 'failed', findings: [{ file: 'source.js' }] },
     ]);
     const fixed = await runCommand([...formatter, '--fix'], toolOptions);

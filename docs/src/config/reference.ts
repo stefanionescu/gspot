@@ -3,27 +3,29 @@ const CODE_SPAN = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)/u
 /** A tag that generated reference text writes on purpose: a heading with its anchor, or code. */
 const KEPT_TAG = /<\/?(?:h[2-6]|code)(?:\s[^<>]*)?>/u;
 
-const GUIDES = {
-    javascript: { path: '/languages/javascript-typescript/', title: 'JavaScript and TypeScript' },
-    python: { path: '/languages/python/', title: 'Python' },
-    css: { path: '/languages/css/', title: 'CSS' },
-    swift: { path: '/languages/swift/', title: 'Swift' },
-    security: { path: '/checks/security/', title: 'Security and secrets' },
-    testing: { path: '/checks/testing/', title: 'Tests and coverage' },
-    dependencies: { path: '/checks/dependencies/', title: 'Dependencies and licenses' },
-    prose: { path: '/checks/prose/', title: 'Spelling and prose' },
+export const INLINE_CODE_SPAN = /(`[^`]+`)/u;
+
+export const GUIDES = {
+    javascript: 'languages/javascript-typescript',
+    python: 'languages/python',
+    css: 'languages/css',
+    swift: 'languages/swift',
+    security: 'checks/security',
+    testing: 'checks/testing',
+    dependencies: 'checks/dependencies',
+    prose: 'checks/prose',
 } as const;
 
 /** Labels for the conditions that select configurations and rules. */
 export const DETECTION_LABELS = {
-    extensions: 'File extensions',
-    filenames: 'Filenames',
-    dependencies: 'Dependencies',
-    shebangs: 'Script interpreters',
+    extensions: 'file extensions',
+    filenames: 'filenames',
+    dependencies: 'dependencies',
+    shebangs: 'script interpreters',
     runtimes: 'JavaScript runtimes',
-    tags: 'Files marked',
-    paths: 'File paths',
-    project_files: 'Project files',
+    tags: 'files marked',
+    paths: 'file paths',
+    project_files: 'project files',
 } as const;
 
 /** Plain labels for JSON schema types in settings tables. */
@@ -58,8 +60,11 @@ export const LEVEL_DESCRIPTIONS = {
     all: 'Also naming, wording, code structure, doc comments, declaration order, duplication, API style, and complexity. Choose it for a new repository or one that coding agents write.',
 } as const;
 
+export const REFERENCE_PATH = '/reference/';
 export const REFERENCE_FOLDERS = {
     commands: 'commands',
+    settings: 'gspot-toml',
+    jsonOutput: 'json-output',
     configurations: 'configurations',
     checks: 'checks',
     eslintPlugin: 'eslint-plugin',
@@ -78,7 +83,6 @@ export const FLAGS_OUTSIDE_CODE = /```[\s\S]*?```|`[^`]*`|(?<![\w-])--[a-z][a-z-
 export const HTML_BRACKET_ENTITIES: Readonly<Record<string, string>> = { '<': '&lt;', '>': '&gt;' };
 
 export const SECTION_HEADING = /^## /mu;
-export const SETTING_PLACEHOLDER = /^\{setting:(?<setting>[^}]+)\}$/u;
 /** A list of allowed values longer than this prints as a count; editors read the full list from the schema. */
 export const LISTED_VALUES_LIMIT = 12;
 /** The check that reads the suppression comments of every tool. */
@@ -99,7 +103,7 @@ export const LANGUAGE_PLACEHOLDER = '<language>';
 export const CATEGORY_PLACEHOLDER = '<category>';
 
 /** The guide page of each configuration that has one. */
-export const CONFIGURATION_GUIDES: Readonly<Record<string, { path: string; title: string }>> = {
+export const CONFIGURATION_GUIDES: Readonly<Record<string, string>> = {
     javascript: GUIDES.javascript,
     typescript: GUIDES.javascript,
     nextjs: GUIDES.javascript,
@@ -119,14 +123,7 @@ export const CONFIGURATION_GUIDES: Readonly<Record<string, { path: string; title
     spelling: GUIDES.prose,
 };
 
-/** One status line of the exit codes in the CLI help: the codes, then what they mean. */
-export const EXIT_CODE_ROW = /^ {2}(?<codes>\d+(?:(?:, | or )\d+)?) {2,}(?<meaning>\S.*)$/u;
-
 /** The environment variables that change what gspot does, and what each one does. */
 export const ENVIRONMENT_VARIABLES: readonly [name: string, meaning: string][] = [
-    [
-        '`GITHUB_TOKEN`',
-        'Lets gspot read a template from a private GitHub repository. mise also reads it for tool downloads from GitHub.',
-    ],
     ['`NO_COLOR`', 'Any nonempty value turns color off.'],
 ];

@@ -1,4 +1,5 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { isRecord, getValueAt } from '#cli/system/values.ts';
@@ -6,20 +7,21 @@ import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { type PathVisitor } from '#cli/types/settings/values.ts';
-import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import { scopeSchema, settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { scopeSchema, settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { GROUP_HINT, NEGATED_PATTERN, UNESCAPED_GROUP } from '#cli/config/checks/gspot.ts';
 
 /**
  * Reports setting paths that match no tracked file or folder.
  *
- * @param input the settings and tracked files.
+ * @param session the repository and its tools.
+ * @param planned the settings and tracked files.
  * @returns the findings.
  */
-export function checkUnmatchedPatterns(input: CheckInput): Finding[] {
-    const files = input.repositoryFiles;
+export function checkUnmatchedPatterns(session: Session, planned: PlannedCheck): Finding[] {
+    const files = session.repository.files;
     const candidates = [...includeParentFolders(files.map((file) => file.path))];
-    return listSettingsTables(input.settingsFile.settings).flatMap(({ table, scope = '', path }) => {
+    return listSettingsTables(session.settingsFile.settings).flatMap(({ table, scope = '', path }) => {
         const findings: Finding[] = [];
         const schema = scope === '' ? settingsSchema : scopeSchema;
         const visit: PathVisitor = (pattern, keys, role) => {
@@ -33,7 +35,7 @@ export function checkUnmatchedPatterns(input: CheckInput): Finding[] {
                 const where = Array.isArray(written) && written.some((entry) => isRecord(entry)) ? `[[${key}]]` : key;
                 findings.push(
                     buildFinding(
-                        input,
+                        planned,
                         { file: SETTINGS_FILE, line: 1 },
                         'unused-record',
                         `${pattern} under ${where} matches no tracked file or folder.${UNESCAPED_GROUP.test(pattern) ? GROUP_HINT : ''}`,

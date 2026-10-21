@@ -1,3 +1,5 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+
 const GRANT_FILES = {
     'migrations/V1_before.sql': 'GRANT ALL ON TABLE before_table TO authenticated;\n',
     'migrations/V2_at.sql': 'GRANT ALL ON TABLE at_table TO authenticated;\n',
@@ -99,4 +101,12 @@ export {
     DROPPED_CONSTRAINTS_SQL,
     UNNAMED_FOREIGN_KEY_SQL,
     DEFAULT_MIGRATION_FOLDER_FILES,
+};
+
+export const MALFORMED_MIGRATION_FILES = {
+    'gspot.toml': buildSandboxSettings(['postgres'], {
+        level: 'all',
+        tables: '[postgres]\nfrozen_through = "all"\n',
+    }),
+    'migrations/20240201_teams.sql': 'CREATE TABLE ;',
 };

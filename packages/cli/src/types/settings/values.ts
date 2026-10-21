@@ -3,23 +3,8 @@ import type { Scope } from '#cli/types/repository/inventory.ts';
 import type { ImportRule } from '#cli/types/settings/imports.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
-
-import type {
-    TomlTable,
-    ToolTable,
-    IgnoreRecord,
-    WrittenFormat,
-    FormatSettings,
-    ParsedSettings,
-} from '#cli/types/settings/file.ts';
-import type {
-    ParsedCi,
-    TableName,
-    ParsedRules,
-    TableValues,
-    TableSettings,
-    SettingDeclaration,
-} from '#cli/types/settings/tables.ts';
+import type { TomlTable, IgnoreRecord, WrittenFormat, ParsedSettings } from '#cli/types/settings/file.ts';
+import type { ParsedCi, ParsedRules, TableValues, SettingDeclaration } from '#cli/types/settings/tables.ts';
 
 type ScopeSelection = {
     scope: Scope;
@@ -37,7 +22,6 @@ type SettingsFile = {
 type ScopeSettings = {
     settings: Record<string, unknown>;
     values: TableValues;
-    limits: LimitTable;
     test_files: Settings['test_files'];
 };
 
@@ -45,13 +29,8 @@ type ScopeView = {
     configurations: string[];
     test_files: Settings['test_files'];
     settings: Record<string, unknown>;
-    format: FormatSettings;
-    limit: (key: string, language?: string) => number;
     values: TableValues;
-    options: <Name extends TableName>(name: Name) => TableSettings<Name>;
-    ignoresFor: (check: string) => (IgnoreRecord & { paths: string[] })[];
-    rulesOff: (check: string) => string[];
-    extra: (name: string) => Record<string, unknown> | undefined;
+    ignores: (IgnoreRecord & { paths: string[] })[];
 };
 
 type EffectiveSetting = {
@@ -81,8 +60,6 @@ type DeclarationMatch = { declaration: SettingDeclaration; language?: string; ca
 
 type StructureSettings = Defined<Required<NonNullable<ParsedSettings['structure']>>>;
 
-type LimitTable = Record<string, number>;
-
 type Settings = Omit<
     ParsedSettings,
     | 'scope'
@@ -109,14 +86,14 @@ type Settings = Omit<
     structure: StructureSettings;
     format: WrittenFormat;
     allowed_words: NonNullable<ParsedSettings['allowed_words']>;
-    tools: Record<string, ToolTable>;
+    tools: Record<string, TomlTable>;
     test_files: string[];
     ignore: IgnoreRecord[];
     commandChecks: Record<string, CommandCheck>;
     hooks?: Defined<Required<NonNullable<ParsedSettings['hooks']>>>;
     ci?: ParsedCi;
     rules: ParsedRules;
-    scopes: Record<string, SettingsTable & Pick<Settings, 'configurations' | 'removed_configurations'>>;
+    scopes: Record<string, NonNullable<ParsedSettings['scope']>[number] & Pick<Settings, 'written'>>;
 };
 
 type WrittenSetting = Pick<EffectiveSetting, 'value' | 'reason'>;
@@ -127,10 +104,7 @@ type CommandCheck = CheckDeclaration & {
 };
 
 /** Root or scoped values and their source-document location. */
-/** The root or one scope of the settings: every table optional, and a scope structure table with its scope keys only. */
-type SettingsTable = Partial<Omit<Settings, 'structure'>> & {
-    structure?: Partial<StructureSettings>;
-} & Pick<Settings, 'written'>;
+type SettingsTable = Settings | Settings['scopes'][string];
 
 type WrittenScopeTable = { table: SettingsTable; scope?: string; path: KeyPath };
 

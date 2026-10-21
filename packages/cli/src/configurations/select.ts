@@ -1,7 +1,9 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { formatUnknownName } from '#cli/system/text.ts';
+import { detectConfigurations } from '#cli/repository/detect.ts';
 import { SOURCE_FILE_GROUPS } from '#cli/config/configurations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import type { Repository } from '#cli/types/repository/inventory.ts';
 
 import {
     type Manifest,
@@ -121,3 +123,48 @@ export {
     listUnknownConfigurations,
     filterSourceConfigurations,
 };
+
+/**
+ * List the general configurations that gspot adds without an explicit selection.
+ *
+ * @param manifests every shipped configuration
+ * @param repository the available inventory, if any
+ * @returns the automatic configurations, each once
+ */
+export function listAutomaticConfigurations(
+    manifests: Map<string, Manifest>,
+    repository?: Pick<Repository, 'root' | 'files' | 'hasGit'>,
+): string[] {
+    const general = new Map([...manifests].filter(([, manifest]) => manifest.configuration.group === 'general'));
+    const automatic = new Set(
+        general
+            .values()
+            .filter(({ configuration }) => configuration.always_selected && configuration.when === undefined)
+            .map(({ configuration }) => configuration.name),
+    );
+    if (repository === undefined) return [...automatic];
+    const detected = new Set(
+        detectConfigurations({ ...repository, dependencyFiles: [] }, general).map(({ configuration }) => configuration),
+    );
+    for (const { configuration } of general.values())
+        if (detected.has(configuration.name) && (configuration.when?.git !== true || repository.hasGit))
+            automatic.add(configuration.name);
+    return general
+        .keys()
+        .filter((name) => automatic.has(name))
+        .toArray();
+}
+
+/**
+ * Refuse every unknown configuration named by a command.
+ *
+ * @param names the requested configuration names.
+ * @param manifests every available configuration.
+ */
+export function assertKnownConfigurations(names: string[], manifests: Map<string, Manifest>): void {
+    const unknown = listUnknownConfigurations(
+        names.map((name) => ({ name })),
+        manifests,
+    );
+    if (unknown.length > 0) throw new GspotError('arguments', unknown.map(({ message }) => message).join('\n'));
+}

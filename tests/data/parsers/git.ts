@@ -16,10 +16,10 @@ const ENTRY_FAILURE =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
 
 const INVALID_ENTRIES = [
-    { message: ENTRY_FAILURE, name: 'unmerged index stage', output: `100644 ${SHA1} 1\tsource.ts\0` },
-    { message: ENTRY_FAILURE, name: 'unsupported mode', output: `100600 ${SHA1} 0\tsource.ts\0` },
-    { message: ENTRY_FAILURE, name: 'short object ID', output: '100644 aaaa 0\tsource.ts\0' },
-    { message: ENTRY_FAILURE, name: 'empty path', output: `100644 ${SHA1} 0\t\0` },
+    { name: 'unmerged index stage', output: `100644 ${SHA1} 1\tsource.ts\0` },
+    { name: 'unsupported mode', output: `100600 ${SHA1} 0\tsource.ts\0` },
+    { name: 'short object ID', output: '100644 aaaa 0\tsource.ts\0' },
+    { name: 'empty path', output: `100644 ${SHA1} 0\t\0` },
     {
         name: 'invalid UTF-8 path',
         message: 'Revision paths must be valid UTF-8.',
@@ -30,13 +30,13 @@ const INVALID_ENTRIES = [
 const BLOB_FAILURE = 'The Git object stream is incomplete or invalid.';
 
 const INVALID_BLOBS = [
-    { message: BLOB_FAILURE, name: 'missing header terminator', output: `${SHA1} blob 0` },
-    { message: BLOB_FAILURE, name: 'wrong object identity', output: `${SHA256} blob 0\n\n` },
-    { message: BLOB_FAILURE, name: 'non-blob object', output: `${SHA1} tree 0\n\n` },
-    { message: BLOB_FAILURE, name: 'missing object', output: `${SHA1} missing\n` },
-    { message: BLOB_FAILURE, name: 'unsafe byte count', output: `${SHA1} blob 9007199254740992\n\n` },
-    { message: BLOB_FAILURE, name: 'truncated content', output: `${SHA1} blob 3\nab\n` },
-    { message: BLOB_FAILURE, name: 'missing body terminator', output: `${SHA1} blob 2\nab` },
+    { name: 'missing header terminator', output: `${SHA1} blob 0` },
+    { name: 'wrong object identity', output: `${SHA256} blob 0\n\n` },
+    { name: 'non-blob object', output: `${SHA1} tree 0\n\n` },
+    { name: 'missing object', output: `${SHA1} missing\n` },
+    { name: 'unsafe byte count', output: `${SHA1} blob 9007199254740992\n\n` },
+    { name: 'truncated content', output: `${SHA1} blob 3\nab\n` },
+    { name: 'missing body terminator', output: `${SHA1} blob 2\nab` },
 ] as const;
 
 const PUSH_CHECK_ARGUMENTS = ['check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json', '--'] as const;
@@ -61,6 +61,8 @@ export {
     SHA256,
     ENTRY_PATH,
     BINARY_BLOB,
+    BLOB_FAILURE,
+    ENTRY_FAILURE,
     INVALID_BLOBS,
     INVALID_ENTRIES,
     ATTRIBUTE_LINES,

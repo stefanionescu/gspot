@@ -1,19 +1,9 @@
 import { test, expect } from 'bun:test';
-import { Ajv2020 } from 'ajv/dist/2020.js';
 import { stringify } from '@decimalturn/toml-patch';
 import { validateSettingsText } from '#tests/setup/settings.ts';
-import { buildJsonSchema } from '#cli/settings/schema/gspot-toml.ts';
-import { ISO_DATE, PUBLISHED_SCHEMA_CASES } from '#tests/data/settings/schema.ts';
-
-const publishedSettingsValidator = new Ajv2020({
-    strict: true,
-    // Commands require one program name and accept any number of arguments.
-    strictTuples: false,
-    formats: {
-        uri: (value: string) => URL.canParse(value),
-        date: (value: string) => ISO_DATE.test(value) && !Number.isNaN(Date.parse(value)),
-    },
-}).compile(buildJsonSchema());
+import { buildJsonSchema } from '#cli/schemas/settings/gspot-toml.ts';
+import { PUBLISHED_SCHEMA_CASES } from '#tests/data/settings/schema.ts';
+import { publishedSettingsValidator } from '#tests/schemas/settings.ts';
 
 test.each([...PUBLISHED_SCHEMA_CASES])('runtime and published schemas agree on $name', ({ input, valid }) => {
     const errors = validateSettingsText(stringify(input));

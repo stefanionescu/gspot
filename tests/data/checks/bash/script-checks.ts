@@ -182,3 +182,8 @@ configurations = ["bash"]
 [scope.structure]
 environment_readers = ["tools/env.sh"]
 `;
+
+export const PASSED_BASH_RESULTS = [
+    { status: 'passed' as const, findings: [] },
+    { status: 'passed' as const, findings: [] },
+];

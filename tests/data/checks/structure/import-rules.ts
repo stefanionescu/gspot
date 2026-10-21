@@ -56,3 +56,6 @@ export const SWIFT_IMPORT_FILES = {
     'Sources/Loose/Helper.swift': 'public struct Helper {}\n',
     'Tests/CoreTests/ModelTests.swift': 'import Core\n',
 } as const;
+
+export const REFUSAL_HINT =
+    'Move the code, move that rule above this one, or list the rules it may import in can_import.';

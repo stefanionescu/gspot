@@ -144,18 +144,6 @@ export const JSX_COMMENTS = [
     'alert(element);',
 ].join('\n');
 
-export const VALE_OFF_GUIDE = `# A page
-
-<!-- vale off -->
-
-Text hidden from the prose check.
-`;
-
-export const VALE_FIXED_GUIDE = `# A page
-
-Text remains visible to the prose check.
-`;
-
 // Each Ruff directive, whether Ruff honors it for F401, and whether gspot records it as a directive on line 1.
 export const RUFF_SUPPRESSIONS = [
     { source: 'import os # noqa: F401\n', suppressed: true, directive: true },
@@ -186,3 +174,22 @@ export const VALE_SUPPRESSIONS = [
     { source: '`<!-- vale off -->`', suppressed: false, directive: false },
     { source: '```markdown\n<!-- vale off -->\n```', suppressed: false, directive: false },
 ] as const;
+
+export const EXPIRED_IGNORE_SETTINGS = `configurations = ["bash"]
+# [[ignore]] here is a comment, not a record.
+
+[[ "ignore" ]]
+check = "bash/shellcheck"
+rule = "SC2086"
+reason = "The sample preserves word splitting."
+until = 2030-01-02
+
+[[ignore]]
+check = "bash/shellcheck"
+rule = "SC2046"
+reason = "The sample preserves command substitution."
+until = 2099-01-01
+
+[rules]
+enabled = false
+`;

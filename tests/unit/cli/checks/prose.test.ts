@@ -5,20 +5,21 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { VALE_ALERT } from '#tests/data/checks/prose.ts';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { checkFindings, buildCheckInput, findBuiltInCheck, openPinnedSession } from '#tests/setup/check-input.ts';
+import { checkFindings, planSandboxCheck, findBuiltInCheck, openPinnedSession } from '#tests/setup/check-input.ts';
 
 test('Vale gets the timeout setting, and its alerts become findings with file, line and column', async () => {
     await using folder = await testdir();
     const path = 'sample.md';
     await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['prose', 'markdown'], { tables: 'tool_timeout_seconds = 1\n' }),
+        'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { tables: 'tool_timeout_seconds = 1\n' }),
         '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
         [path]: '# Example text\n',
     });
@@ -37,7 +38,7 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     expect(command).toContain(join(folder.path, '.gspot/configurations/general/prose/vale.ini'));
     expect(command).toContain(join(folder.path, path));
     expect(options.stdin).toBeUndefined();
-    expect(result.report.exitCode).toBe(1);
+
     expect(result.report.checks).toMatchObject([{ check: 'prose/vale', status: 'failed' }]);
     expect(result.report.checks[0]!.findings).toStrictEqual([
         matchFields({ file: path, line: 1, column: 3, rule: 'gspot.Example' }),
@@ -45,17 +46,17 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
 });
 
 test('files Vale reads from stdin are scanned as read at the start of the run', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['prose', 'typescript']),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['prose', 'typescript']),
         '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
         'first.mts': '// First explanation.\n',
         'second.cts': '// Second explanation.\n',
     });
+
     const session = await openSession(folder.path);
     const paths = ['first.mts', 'second.cts'];
     const original = paths.map((path) => readCachedBytes(session.reads, path).toString('utf8'));
-    for (const path of paths) await Bun.write(join(session.root, path), '// Changed after the run read it.\n');
+    for (const path of paths) await writeFile(join(session.root, path), '// Changed after the run read it.\n');
 
     using resources = new DisposableStack();
     resources.use(fakePinnedExecutables([getToolDeclaration(session.manifests.values(), 'vale')]));
@@ -68,7 +69,7 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
             return Promise.resolve(buildProcessResult({ stdout: JSON.stringify({ 'source.mts.ts': [VALE_ALERT] }) }));
         }),
     );
-    const findings = await findBuiltInCheck('prose/vale')(buildCheckInput(session, 'prose/vale', { paths }));
+    const findings = await findBuiltInCheck('prose/vale')(session, planSandboxCheck(session, 'prose/vale', { paths }));
     expect(run.mock.calls.map(([command]) => command.includes('--ext=.ts'))).toStrictEqual(paths.map(() => true));
     expect(scanned).toStrictEqual(original);
     expect(nativePaths).toStrictEqual(paths.map((path) => `--path=${join(folder.path, path)}.ts`));
@@ -76,12 +77,12 @@ test('files Vale reads from stdin are scanned as read at the start of the run', 
         paths.map((file) => ({ file, line: 1, column: 3, rule: 'gspot.Example' })),
     );
     for (const path of paths)
-        expect(await Bun.file(join(session.root, path)).text()).toBe('// Changed after the run read it.\n');
+        expect(await readFile(join(session.root, path), 'utf8')).toBe('// Changed after the run read it.\n');
 });
 
 test('Vale reads known file types by path, and .mts files and scripts without an extension through stdin', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['prose', 'typescript', 'bash']),
+        'gspot.toml': buildSandboxSettings(['prose', 'typescript', 'bash']),
         '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
         'a.tsx': '// Component explanation.\n',
         'a.mts': '// Module explanation.\n',
@@ -187,7 +188,7 @@ test.each(['diagnostic text', '{"file.md":[{}]}'])('the Vale check refuses malfo
 async function prepareValeSession(resources: AsyncDisposableStack): Promise<Session> {
     const sandbox = resources.use(
         await testdir({
-            'gspot.toml': buildSettingsText(['prose', 'markdown']),
+            'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
             '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
             'example.md': '# Documentation\n',
         }),

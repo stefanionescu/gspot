@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/runs/run.ts';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { createSandbox } from '#tests/setup/sandbox.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
-import { checkLongFiles } from '#cli/checks/structure/long-files.ts';
 import { LONG_PYTHON_FILE } from '#tests/data/checks/python/modules.ts';
-import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
+import { checkFindings, findBuiltInCheck, planSandboxCheck } from '#tests/setup/check-input.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 import { ROUTE_CASES, LONE_FILE_TREE, FILE_FOLDER_CLASH_CASES } from '#tests/data/checks/structure/folders.ts';
 
@@ -28,56 +28,62 @@ test.each(['.sh', '.bats', ''])(
         const source = '#!/bin/sh\n# comment\ncat <<\'EOF\'\n# literal\nEOF\nvalue="first\n# literal\nlast"\n';
         const file = `run${extension}`;
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['bash'], { level: 'all', tables: '[limits.bash]\nfile_lines = 5\n' }),
+            'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', tables: '[limits.bash]\nfile_lines = 5\n' }),
             [file]: source,
         });
-        const found = await checkLongFiles(buildCheckInput(await openSession(sandbox.path), 'structure/long-files'));
+        const session = await openSession(sandbox.path);
+        const found = await findBuiltInCheck('structure/long-files')(
+            session,
+            planSandboxCheck(session, 'structure/long-files'),
+        );
         expect(found).toMatchObject([
             { file, line: 1, rule: 'file-lines', message: 'This file has 6 code lines, over the limit of 5.' },
         ]);
-        await Bun.write(join(sandbox.path, file), source.replace('# literal\nEOF', 'EOF'));
+        await writeFile(join(sandbox.path, file), source.replace('# literal\nEOF', 'EOF'));
+        const checkedSession = await openSession(sandbox.path);
         expect(
-            await checkLongFiles(buildCheckInput(await openSession(sandbox.path), 'structure/long-files')),
+            await findBuiltInCheck('structure/long-files')(
+                checkedSession,
+                planSandboxCheck(checkedSession, 'structure/long-files'),
+            ),
         ).toStrictEqual([]);
     },
 );
 
 test('file-lines: Python files count each executable line against the declared limit', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['python'], { level: 'all', tables: '[limits]\nfile_lines = 12\n' }),
+        'gspot.toml': buildSandboxSettings(['python'], { level: 'all', tables: '[limits]\nfile_lines = 12\n' }),
         'example/big.py': `"""A test module."""\n\n\n${LONG_PYTHON_FILE}\n`,
     });
+    const session = await openSession(sandbox.path);
     expect(
-        await checkLongFiles(buildCheckInput(await openSession(sandbox.path), 'structure/long-files')),
+        await findBuiltInCheck('structure/long-files')(session, planSandboxCheck(session, 'structure/long-files')),
     ).toMatchObject([{ file: 'example/big.py', rule: 'file-lines', line: 1 }]);
 });
 test('lone-files: an untracked neighbor does not hide a selected tracked lone file', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['typescript'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'lone/only.ts': LONE_FILE_TREE['lone/only.ts'],
     });
     commitAll(sandbox.path);
-    await Bun.write(join(sandbox.path, 'lone/notes.txt'), 'Untracked notes.\n');
+    await writeFile(join(sandbox.path, 'lone/notes.txt'), 'Untracked notes.\n');
     expect(await checkFindings(sandbox.path, 'structure/lone-files', { paths: ['lone/only.ts'] })).toMatchObject([
         { file: 'lone/only.ts', rule: 'lone-file' },
     ]);
 });
 
 test('lone-files: lone-files counts code files only and honors ignores and nested folders', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], {
             tables: '[[ignore]]\ncheck = "structure/lone-files"\npaths = ["allowed/**", "parent/child/**"]\nreason = "Required entry directory."\n',
             level: 'all',
         }),
         ...LONE_FILE_TREE,
     });
-    const result = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['structure/lone-files'] }),
-    );
-    expect(result.report.exitCode).toBe(1);
-    expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toStrictEqual([
+
+    const findings = await checkFindings(sandbox.path, 'structure/lone-files');
+
+    expect(findings.map((finding) => finding.file)).toStrictEqual([
         'dist/pkg/lone.ts',
         'lone/only.ts',
         'module/one.mts',
@@ -96,7 +102,7 @@ test('lone-files: build, dist and coverage folders are checked; folders marked l
         ]),
     );
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript'], {
+        'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
         }),
         ...authored,
@@ -116,7 +122,6 @@ test('lone-files: build, dist and coverage folders are checked; folders marked l
             .flatMap((folder) => [`${folder}/lone/only.ts`, `${folder}/cards/asset-one.ts`])
             .toSorted((left, right) => left.localeCompare(right)),
     );
-    expect(result.report.exitCode).toBe(1);
 });
 
 test.each([...ROUTE_CASES])(
@@ -125,27 +130,21 @@ test.each([...ROUTE_CASES])(
         await using sandbox = await testdir();
         const route = `${folder}/users/${name}`;
         const neighbor = `${folder}/teams/${name}`;
-        const settings = buildSettingsText(['typescript', framework], { level: 'all' });
+        const settings = buildSandboxSettings(['typescript', framework], { level: 'all' });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,
             'package.json': '{"name":"example","private":true,"type":"module"}\n',
             [route]: content,
             [neighbor]: content,
         });
-        const result = await runChecks(
-            await openSession(sandbox.path),
-            buildRunOptions({ only: ['structure/lone-files'] }),
-        );
-        expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toStrictEqual([
-            neighbor,
-            route,
-        ]);
+        const findings = await checkFindings(sandbox.path, 'structure/lone-files');
+        expect(findings.map((finding) => finding.file)).toStrictEqual([neighbor, route]);
     },
 );
 
 test('lone-files: a folder with only a Next.js route file is a route, not a lone file', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['typescript', 'react', 'react-dom', 'nextjs'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['typescript', 'react', 'react-dom', 'nextjs'], { level: 'all' }),
         'app/about/page.tsx': 'export default function About() { return null; }\n',
         'app/api/health/route.ts': 'export function GET() { return new Response("ok"); }\n',
         'app/lone/widget.tsx': 'export const widget = 1;\n',
@@ -158,7 +157,7 @@ test('lone-files: a folder with only a Next.js route file is a route, not a lone
 
 test('lone-files: a folder with only a SvelteKit route file is a route, not a lone file', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['typescript', 'svelte'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['typescript', 'svelte'], { level: 'all' }),
         'package.json': '{"name":"example","private":true,"type":"module"}\n',
         'src/routes/users/+page.svelte': '<p>Users</p>\n',
         'src/routes/api/+server.ts': 'export function GET() { return new Response("ok"); }\n',

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { runFixers } from '#cli/runs/fixes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { FIXER_RESULTS } from '#tests/data/runs/fixes.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
@@ -14,12 +14,12 @@ import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/builders.ts';
 
 test.each([0, 3])('a declared crash pattern fails a fix that exits %s', async (code) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`);
     planned.check.exit_codes = [3];
-    planned.check.crash_pattern = '^Fatal:';
+    planned.tool!.crash_pattern = '^Fatal:';
     const {
         results: [failed],
     } = await runFixers(session, [planned], { isDryRun: false, selectImplementation: selectCheckImplementation });
@@ -29,7 +29,7 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %s', async (c
         note: matchSubstring('Fatal: cannot write'),
     });
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
-    corrected.check.crash_pattern = planned.check.crash_pattern;
+    corrected.tool!.crash_pattern = planned.tool!.crash_pattern;
     const {
         results: [correctedResult],
     } = await runFixers(session, [corrected], { isDryRun: false, selectImplementation: selectCheckImplementation });
@@ -42,8 +42,8 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %s', async (c
 test.each([...FIXER_RESULTS])(
     '$name classifies $status from the exit code and the resulting bytes',
     async ({ script, exit_codes: exitCodes, status, after, ...row }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+        await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
         const session = await openSession(sandbox.path);
         const planned = planFixer(session, script);
         if (exitCodes !== undefined) planned.check.exit_codes = [...exitCodes];
@@ -58,8 +58,8 @@ test.each([...FIXER_RESULTS])(
 );
 
 test('compares bytes that decode to the same replacement character', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
     const session = await openSession(sandbox.path);
     await writeFile(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
     const planned = planFixer(session, "await Bun.write('source.txt', new Uint8Array([0xfe]))");
@@ -72,8 +72,8 @@ test('compares bytes that decode to the same replacement character', async () =>
 });
 
 test('counts deletion of an empty file as a change', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerSettings(), 'source.txt': '' });
+    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': '' });
+
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "require('node:fs').unlinkSync('source.txt')");
     const {
@@ -85,11 +85,11 @@ test('counts deletion of an empty file as a change', async () => {
 });
 
 test('distinguishes a skipped fix from a missing tool', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "await Bun.write('source.txt', 'wrong')");
-    const skipped = await runFixers(session, [{ ...planned, skip: { cause: 'flag', note: 'Not selected.' } }], {
+    const skipped = await runFixers(session, [{ ...planned, skip: { cause: 'level', note: 'Not selected.' } }], {
         isDryRun: false,
         selectImplementation: selectCheckImplementation,
     }).then(({ results }) => results[0]!);
@@ -107,8 +107,8 @@ test('distinguishes a skipped fix from a missing tool', async () => {
 });
 
 test('runs the fixer program when it differs from the check program', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "await Bun.write('source.txt', 'corrected')");
     const result = await runFixers(
@@ -121,8 +121,8 @@ test('runs the fixer program when it differs from the check program', async () =
 });
 
 test('a fix that exits nonzero fails the run even when its check passes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
     const session = await openSession(sandbox.path);
     const result = await runChecks(session, buildRunOptions({ fix: true, only: ['sandbox/fixer'] }));
     expect(result.report.checks[0]?.status).toBe('passed');
@@ -132,8 +132,8 @@ test('a fix that exits nonzero fails the run even when its check passes', async 
 });
 
 test('a failed version check blocks a check and its fix without changing source bytes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "await Bun.write('source.txt', 'changed')");
     planned.tool = {

@@ -1,5 +1,7 @@
 import type { LEVELS } from '#cli/config/configurations.ts';
 import type { CASE_NAMES } from '#cli/config/checks/naming.ts';
+import type { Optional, SchemaShape } from '#cli/types/shapes.ts';
+import type { ReasonNeeded } from '#cli/types/settings/metadata.ts';
 import type { ParsedTools } from '#cli/types/settings/tool-tables.ts';
 import type { ParsedNamingOverride } from '#cli/types/settings/file.ts';
 import type { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
@@ -7,9 +9,11 @@ import type { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declaratio
 import type { ConfigurationTables } from '#cli/types/settings/configuration-tables.ts';
 
 import type {
+    PATH_ROLES,
     CI_PROVIDERS,
     LINE_ENDINGS,
     QUOTE_STYLES,
+    SETTING_TYPES,
     REEXPORT_MODES,
     TRAILING_COMMAS,
     SETTING_LANGUAGES,
@@ -20,68 +24,30 @@ import type {
 
 type SettingDeclaration = {
     name: string;
-    type: 'number' | 'string' | 'path' | 'boolean' | 'list' | 'table';
-    path_role?: 'source' | 'destination' | 'build';
+    type: (typeof SETTING_TYPES)[number];
+    path_role?: (typeof PATH_ROLES)[number];
     default?: unknown;
     default_all?: unknown;
     language_defaults?: Record<string, unknown>;
-    reason_needed?: 'raising' | 'lowering' | 'adding';
+    reason_needed?: ReasonNeeded;
     reason_values?: boolean;
     summary: string;
     languages?: string[];
     categories?: string[];
-    off_values?: (string | number | boolean)[];
 };
 
 type TableValues = {
-    cloudflare?: ConfigurationTables['cloudflare'] | undefined;
-    coverage?: ConfigurationTables['coverage'] | undefined;
-    dependencies?: ConfigurationTables['dependencies'] | undefined;
-    docs?: ConfigurationTables['docs'] | undefined;
-    drizzle?: ConfigurationTables['drizzle'] | undefined;
+    [Name in keyof ConfigurationTables]?: ConfigurationTables[Name] | undefined;
+} & {
+    [Tool in keyof ParsedTools as `tools.${Tool}`]?: NonNullable<ParsedTools[Tool]> | undefined;
+} & {
     format: ParsedFormat;
-    javascript?: ConfigurationTables['javascript'] | undefined;
-    python?: ConfigurationTables['python'] | undefined;
-    trpc?: ConfigurationTables['trpc'] | undefined;
-    zustand?: ConfigurationTables['zustand'] | undefined;
-    licenses?: ConfigurationTables['licenses'] | undefined;
     limits?: ParsedLimits | undefined;
     naming?: ParsedNaming | undefined;
-    openapi?: ConfigurationTables['openapi'] | undefined;
-    postgres?: ConfigurationTables['postgres'] | undefined;
-    repository?: ConfigurationTables['repository'] | undefined;
-    prose?: ConfigurationTables['prose'] | undefined;
-    duplication?: ConfigurationTables['duplication'] | undefined;
-    swift?: ConfigurationTables['swift'] | undefined;
-    secrets?: ConfigurationTables['secrets'] | undefined;
-    site?: ConfigurationTables['site'] | undefined;
-    spelling?: ConfigurationTables['spelling'] | undefined;
     structure?: ParsedStructure | undefined;
-    supabase?: ConfigurationTables['supabase'] | undefined;
-    translations?: ConfigurationTables['translations'] | undefined;
-    xcode?: ConfigurationTables['xcode'] | undefined;
-    'tools.commitlint'?: NonNullable<ParsedTools['commitlint']> | undefined;
-    'tools.editorconfig-checker'?: NonNullable<ParsedTools['editorconfig-checker']> | undefined;
-    'tools.eslint'?: NonNullable<ParsedTools['eslint']> | undefined;
-    'tools.hadolint'?: NonNullable<ParsedTools['hadolint']> | undefined;
-    'tools.knip'?: NonNullable<ParsedTools['knip']> | undefined;
-    'tools.markdownlint'?: NonNullable<ParsedTools['markdownlint']> | undefined;
-    'tools.nginx'?: NonNullable<ParsedTools['nginx']> | undefined;
-    'tools.prettier'?: NonNullable<ParsedTools['prettier']> | undefined;
-    'tools.purgecss'?: NonNullable<ParsedTools['purgecss']> | undefined;
-    'tools.ruff'?: NonNullable<ParsedTools['ruff']> | undefined;
-    'tools.semgrep'?: NonNullable<ParsedTools['semgrep']> | undefined;
-    'tools.shellcheck'?: NonNullable<ParsedTools['shellcheck']> | undefined;
-    'tools.sqlfluff'?: NonNullable<ParsedTools['sqlfluff']> | undefined;
-    'tools.squawk'?: NonNullable<ParsedTools['squawk']> | undefined;
-    'tools.stylelint'?: NonNullable<ParsedTools['stylelint']> | undefined;
-    'tools.swiftlint'?: NonNullable<ParsedTools['swiftlint']> | undefined;
-    'tools.taplo'?: NonNullable<ParsedTools['taplo']> | undefined;
-    'tools.trivy'?: NonNullable<ParsedTools['trivy']> | undefined;
-    'tools.typos'?: NonNullable<ParsedTools['typos']> | undefined;
-    'tools.v8r'?: NonNullable<ParsedTools['v8r']> | undefined;
-    'tools.yamllint'?: NonNullable<ParsedTools['yamllint']> | undefined;
 };
+
+type ToolTableSchemas = Pick<SchemaShape<TableValues>, `tools.${keyof ParsedTools}`>;
 
 type TableName = keyof TableValues;
 type TableSettings<Name extends TableName> = NonNullable<TableValues[Name]>;
@@ -176,17 +142,7 @@ type ParsedFormat = {
     quotes?: (typeof QUOTE_STYLES)[number] | undefined;
     trailing_commas: (typeof TRAILING_COMMAS)[number];
     semicolons: boolean;
-    override: {
-        indent_style?: (typeof FORMAT_INDENT_STYLES)[number] | undefined;
-        indent_width?: number | undefined;
-        print_width?: number | undefined;
-        line_ending?: (typeof LINE_ENDINGS)[number] | undefined;
-        final_newline?: boolean | undefined;
-        quotes?: (typeof QUOTE_STYLES)[number] | undefined;
-        trailing_commas?: (typeof TRAILING_COMMAS)[number] | undefined;
-        semicolons?: boolean | undefined;
-        paths: string[];
-    }[];
+    override: (Optional<Omit<ParsedFormat, 'override'>> & { paths: string[] })[];
 };
 
 type ParsedRoot = {
@@ -213,7 +169,6 @@ type ParsedRules = { enabled: boolean; exclude: string[] };
 
 export type {
     ParsedCi,
-    TableName,
     NamingCase,
     ParsedRoot,
     TableValues,
@@ -229,6 +184,7 @@ export type {
     NamingCategory,
     SettingLanguage,
     ParsedStructure,
+    ToolTableSchemas,
     SettingDeclaration,
     LanguageLimitField,
     ParsedNamingFields,

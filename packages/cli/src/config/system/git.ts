@@ -30,8 +30,6 @@ export const GIT_LOCALE = { LC_ALL: 'C' } as const;
 
 export const GIT_DIR_VARIABLE = 'GIT_DIR';
 
-export const GIT_PREFIX_ARGUMENTS = ['rev-parse', '--show-prefix'] as const;
-
 export const GIT_LOCAL_VARIABLES_ARGUMENTS = ['rev-parse', '--local-env-vars'] as const;
 export const GIT_SOURCE_ARGUMENTS = ['rev-parse', '--is-bare-repository', '--absolute-git-dir'] as const;
 export const GIT_TOP_LEVEL_ARGUMENTS = ['rev-parse', '--show-toplevel'] as const;

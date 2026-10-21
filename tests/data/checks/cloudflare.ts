@@ -20,3 +20,5 @@ export const CLOUDFLARE_HEADERS = `  Header-before-path: value
   X-Frame-Options: INVALID
   No colon
 `;
+
+export const CLOUDFLARE_SCOPE_SETTINGS = [{ path: 'app', configurations: ['cloudflare'] }];

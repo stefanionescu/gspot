@@ -56,8 +56,7 @@ Use `float` for numeric APIs that also accept integers. Use `str` for text and `
 A `Path | None = None` input handles its `None` branch
 before calling path methods. The default path belongs to the module that reads the configuration. Generic
 types name their parameters, such as `Sequence[int]`. A bare `Sequence` or `dict` exists only when
-the elements accept any value on purpose and say so with `Any`. A `TypeVar` connects
-input and output types when that relationship matters, as `Key` does above.
+the elements accept any value on purpose and say so with `Any`.
 
 ## Aliases, variables, and forward references
 

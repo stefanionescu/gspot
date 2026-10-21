@@ -1,4 +1,4 @@
-import { PACKAGE_MANAGERS } from '#cli/config/parsers/dependency-files.ts';
+import { PACKAGE_MANAGERS } from '#cli/config/parsers/dependencies.ts';
 
 export const LINT_FOLDERS = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;
 

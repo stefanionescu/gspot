@@ -1,12 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { unlink } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { getValueAt } from '#cli/system/values.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { parse, stringify } from '@decimalturn/toml-patch';
+import { unlink, readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { parseToolProject } from '#cli/install/npm/tool-project.ts';
+import { importRulesSchema } from '#cli/schemas/settings/imports.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
+import { assertPackageManager } from '#cli/repository/package-manager.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 
 import {
@@ -23,6 +27,7 @@ import {
     CAN_IMPORT_TABLES,
     ENVIRONMENT_TABLES,
     TEST_IMPORT_TABLES,
+    PACKAGE_IMPORT_FILES,
     ENVIRONMENT_COMPOSED,
 } from '#tests/data/generation/eslint/architecture.ts';
 
@@ -30,13 +35,13 @@ test.each([...MODULE_CASES])(
     'modules > $level loads eslint-plugin-boundaries for $declarations import rules',
     async ({ level, declarations }) => {
         await using sandbox = await testdir();
-        const settings = buildSettingsText(['typescript'], { level, tables: MODULE_TABLES[declarations] });
+        const settings = buildSandboxSettings(['typescript'], { level, tables: MODULE_TABLES[declarations] });
         await createFileTree(sandbox.path, { ...MODULE_FILES, 'gspot.toml': settings });
         const eslint = await createEslint(sandbox.path);
         const session = await openSession(sandbox.path);
         const packages = parseToolProject(
-            await Bun.file(join(sandbox.path, '.gspot/package.json')).text(),
-            session.requirePackageManager().name,
+            await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'),
+            assertPackageManager(session.packageManager).name,
         );
         const enabled = level === 'all' || declarations !== 'none';
         expect(Object.hasOwn(packages.dependencies, 'eslint-plugin-boundaries')).toBe(enabled);
@@ -77,7 +82,7 @@ test.each([...MODULE_CASES])(
         });
         await Promise.all(
             ['app/source.ts', 'apps/api/app/source.ts'].map((file) =>
-                Bun.write(join(sandbox.path, file), FIXED_SOURCE),
+                writeFile(join(sandbox.path, file), FIXED_SOURCE),
             ),
         );
         expect(await lintFiles()).toStrictEqual({ configured, findings: [] });
@@ -85,9 +90,8 @@ test.each([...MODULE_CASES])(
 );
 
 test('modules > module boundaries skip your test files in each scope and check other files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], { level: 'all', tables: QA_MODULE_TABLES }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: QA_MODULE_TABLES }),
         'package.json': '{"name":"boundaries","private":true,"type":"module"}',
         'storage/value.js': 'export const value = 1;\n',
         'apps/api/storage/value.js': 'export const value = 1;\n',
@@ -98,6 +102,7 @@ test('modules > module boundaries skip your test files in each scope and check o
             ]),
         ),
     });
+
     const eslint = await createEslint(sandbox.path);
     expect(
         await collectLintFindings(
@@ -117,7 +122,7 @@ test.each([...LEVELS])(
     'roles > a file outside test_files may not import a test file, in root and child scopes, at %s',
     async (level) => {
         await using sandbox = await testdir();
-        const settings = buildSettingsText(['typescript'], { level, tables: TEST_IMPORT_TABLES });
+        const settings = buildSandboxSettings(['typescript'], { level, tables: TEST_IMPORT_TABLES });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,
             'package.json': '{"private":true,"type":"module"}',
@@ -135,7 +140,7 @@ test.each([...LEVELS])(
                 path: `${prefix}${row.folder}/case${String(index)}.ts`,
             })),
         );
-        for (const row of files) await Bun.write(join(sandbox.path, row.path), row.source);
+        for (const row of files) await writeFile(join(sandbox.path, row.path), row.source);
         const eslint = await createEslint(sandbox.path);
         for (const row of files) {
             expect(
@@ -151,7 +156,7 @@ test.each([...LEVELS])(
     'roles > environment reads are allowed only in environment_readers files of each scope at %s',
     async (level) => {
         await using sandbox = await testdir();
-        const settings = buildSettingsText(['typescript'], { level, tables: ENVIRONMENT_TABLES });
+        const settings = buildSandboxSettings(['typescript'], { level, tables: ENVIRONMENT_TABLES });
         const paths = [
             'src/source.js',
             'config/env.js',
@@ -208,13 +213,13 @@ test.each([...LEVELS])(
 );
 
 test('roles > environment rules stay off when no env role is set, at all', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript'], { level: 'all' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}',
         'src/source.js': '',
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
     });
+
     const eslint = await createEslint(sandbox.path);
     for (const { source, rule } of ENVIRONMENT_CASES) {
         await createFileTree(sandbox.path, { 'src/source.js': source });
@@ -223,14 +228,14 @@ test('roles > environment rules stay off when no env role is set, at all', async
 });
 
 test('modules > can_import names exactly the rules a rule may import, and a refused import says what it may import', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         ...MODULE_FILES,
-        'gspot.toml': buildSettingsText(['typescript'], { tables: CAN_IMPORT_TABLES }),
+        'gspot.toml': buildSandboxSettings(['typescript'], { tables: CAN_IMPORT_TABLES }),
         'core/value.ts': 'export const value = 3;\n',
         'app/source.ts':
             "import { value } from '../storage/value.js';\nimport { value as core } from '../core/value.js';\nexport const result = value + core;\n",
     });
+
     const eslint = await createEslint(sandbox.path);
     const [result] = await eslint.lintFiles(['app/source.ts']);
     expect(
@@ -241,7 +246,30 @@ test('modules > can_import names exactly the rules a rule may import, and a refu
         {
             line: 2,
             message:
-                'Import rule "app" may import its own files and "storage", not ../core/value.js from import-rule:core. Move the code, or add that rule to can_also_import or can_import.',
+                'Import rule "app" may import its own files and "storage", not ../core/value.js from import-rule:core. Move the code, move that rule above this one, or list the rules it may import in can_import.',
         },
+    ]);
+});
+
+test('repository import rules refuse imports between CLI and plugin source packages', async () => {
+    const settings: unknown = parse(await readFile(new URL('../../../../../gspot.toml', import.meta.url), 'utf8'));
+    await using sandbox = await testdir({
+        ...PACKAGE_IMPORT_FILES,
+        'gspot.toml': buildSandboxSettings(['typescript'], {
+            level: 'all',
+            tables: stringify({ import_rule: importRulesSchema.parse(getValueAt(settings, ['import_rule'])) }),
+        }),
+    });
+    const eslint = await createEslint(sandbox.path);
+    expect(
+        await collectLintFindings(
+            eslint,
+            sandbox.path,
+            ['packages/cli/src/system/paths.ts', 'packages/eslint-plugin/src/rules/imports.ts'],
+            ['boundaries/dependencies'],
+        ),
+    ).toStrictEqual([
+        { file: 'packages/cli/src/system/paths.ts', rule: 'boundaries/dependencies', line: 1 },
+        { file: 'packages/eslint-plugin/src/rules/imports.ts', rule: 'boundaries/dependencies', line: 1 },
     ]);
 });

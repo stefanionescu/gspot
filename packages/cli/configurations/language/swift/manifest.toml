@@ -1,9 +1,8 @@
 allowed_words = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
-ignored_folders = [".build", "DerivedData", "Pods"]
+ignored_paths = [".build", "DerivedData", "**/.build/**", "**/DerivedData/**", "**/Pods/**"]
 
 [configuration]
 description = "Swift sources and their XCTest and Swift Testing tests: lint and analyzer rules for each level, one format, a clean build, no unused code, a reason on each disabled test, and a coverage floor."
-suggests = []
 title = "Swift"
 
 [detect]
@@ -20,15 +19,13 @@ filenames = ["Package.swift", "Package.resolved", "*.xctestplan"]
 "UIKIT.md" = { tags = ["swift-import:UIKit"] }
 
 [[tool]]
-brew = "swiftlint"
 builds = ["macos", "linux"]
-github = { name = "realm/SwiftLint", version = "0.63.2" }
 min_version = "0.57.0"
 mise = "swiftlint"
 name = "swiftlint"
 replace = [".swiftlint.yml", ".swiftlint.yaml"]
 rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
-suppression = { marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)", example = "// swiftlint:disable:next force_unwrapping - the URL is a literal" }
+suppression = { marker = "\\bswiftlint:disable\\b(?::(?:next|this|previous))?(?<rules>.*)", reason = " - (?<reason>\\S.*)", example = "// swiftlint:disable:next force_unwrapping - the URL is a literal", separator = "\\s-\\s", all_rules = "^all(?=$|\\s)", limit_rules = "(?:^|[\\s,])(?:cyclomatic_complexity|function_body_length|file_length|type_body_length|function_parameter_count)(?=$|[\\s,])" }
 version = "0.63.2"
 version_command = ["version"]
 
@@ -40,14 +37,10 @@ replace = [".swiftformat"]
 suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)", example = "// swiftformat:disable:next redundantSelf - the closure needs self" }
 version = "0.61.1"
 # The GitHub release ships an app bundle beside the executable, which mise skips.
-brew = "swiftformat"
-github = { name = "nicklockwood/SwiftFormat", version = "0.61.1" }
 mise = { name = "swiftformat", version = "0.61.1", options = { no_app = true, rename_exe = "swiftformat" } }
 
 [[tool]]
-brew = "periphery"
 builds = ["macos"]
-github = { name = "peripheryapp/periphery", version = "3.6.0" }
 min_version = "3.0.0"
 mise = "periphery"
 name = "periphery"
@@ -91,7 +84,6 @@ tool = "periphery"
 per_scope = true
 target = "semgrep.yml"
 tool = "semgrep"
-when = { configuration = "security" }
 
 [[check]]
 command = ["swiftlint", "lint", "--strict", "--quiet", "--no-cache", "--reporter", "json", "{files}"]

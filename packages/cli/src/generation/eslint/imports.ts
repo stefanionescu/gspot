@@ -1,13 +1,18 @@
 import picomatch from 'picomatch';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
 import { type ScopeSelection } from '#cli/types/settings/values.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { findParentSelection } from '#cli/generation/eslint/lint-rules.ts';
-import { buildNodePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
 import { readScopeAliases, readPackageAliases } from '#cli/generation/eslint/aliases.ts';
 import { type EslintBlock, type EslintContext, type EslintImportBoundaryRule } from '#cli/types/generation/eslint.ts';
 
+import {
+    buildScopeGlob,
+    buildNodePatterns,
+    buildSourcePattern,
+    listNestedScopeGlobs,
+} from '#cli/generation/eslint/files.ts';
 import {
     REGEX_SYMBOLS,
     CODE_LANGUAGES,
@@ -41,19 +46,18 @@ function buildImportStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[]): 
     });
     return changed.flatMap((entry) => {
         const path = entry.scope.path;
-        const children = listNestedScopes(
-            changed.map(({ scope }) => scope.path),
-            path,
-        );
         const styles = entry.view.values[ESLINT_SETTINGS_TABLE]?.import_extension;
         return styles === undefined
             ? []
             : [
                   {
                       files: [buildSourcePattern(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, path)].map(
-                          (pattern) => [path === '' ? '**/*' : `${escapeGlob(path)}/**/*`, pattern],
+                          (pattern) => [buildScopeGlob(path, '**/*'), pattern],
                       ),
-                      ignores: children.map((child) => `${escapeGlob(child)}/**`),
+                      ignores: listNestedScopeGlobs(
+                          changed.map(({ scope }) => scope.path),
+                          path,
+                      ),
                       settings: {
                           n: {
                               tryExtensions: IMPORT_EXTENSIONS,
@@ -101,10 +105,11 @@ function buildImportBoundariesRule(
  * @param context the scopes and Node.js script paths to cover.
  * @returns the boundary-rule blocks with the aliases of each project.
  */
-function buildScopeImportBlocks(
-    context: Pick<EslintContext, 'root' | 'reads' | 'scopes' | 'nodeFiles'>,
-): EslintBlock[] {
-    const { root, reads, scopes, nodeFiles } = context;
+function buildScopeImportBlocks(context: Pick<EslintContext, 'session' | 'nodeFiles'>): EslintBlock[] {
+    const {
+        session: { root, reads, scopes },
+        nodeFiles,
+    } = context;
     return scopes
         .filter((entry) => entry.scope.path !== '')
         .map((entry) => {
@@ -112,7 +117,7 @@ function buildScopeImportBlocks(
             const aliases = readScopeAliases(root, path, reads);
             return {
                 files: [
-                    `${escapeGlob(path)}/${buildSourcePattern(...CODE_LANGUAGES)}`,
+                    buildScopeGlob(path, buildSourcePattern(...CODE_LANGUAGES)),
                     ...buildNodePatterns(nodeFiles, path),
                 ],
                 rules: {
@@ -129,18 +134,20 @@ function buildScopeImportBlocks(
  * @param context the scopes and the Node scripts without a code extension.
  * @returns one block for each project.
  */
-function buildNodeScriptBlocks(context: Pick<EslintContext, 'root' | 'scopes' | 'nodeFiles'>): EslintBlock[] {
-    const { root, scopes, nodeFiles } = context;
+function buildNodeScriptBlocks(context: Pick<EslintContext, 'session' | 'nodeFiles'>): EslintBlock[] {
+    const {
+        session: { root, scopes },
+        nodeFiles,
+    } = context;
     const paths = scopes.map((entry) => entry.scope.path);
     return scopes.map((entry) => {
         const path = entry.scope.path;
-        const prefix = path === '' ? '' : `${escapeGlob(path)}/`;
         return {
             files: [
-                ...NODE_SCRIPT_PATTERNS.map((pattern) => `${prefix}${pattern}`),
+                ...NODE_SCRIPT_PATTERNS.map((pattern) => buildScopeGlob(path, pattern)),
                 ...buildNodePatterns(nodeFiles, path),
             ],
-            ignores: listNestedScopes(paths, path).map((child) => `${escapeGlob(child)}/**`),
+            ignores: listNestedScopeGlobs(paths, path),
             settings: { n: { tryExtensions: IMPORT_EXTENSIONS, typescriptExtensionMap: [] } },
             rules: {
                 [FILE_EXTENSION_RULE]: ['error', 'always'],

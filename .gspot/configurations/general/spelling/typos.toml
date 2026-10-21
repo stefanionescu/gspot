@@ -3,9 +3,9 @@ locale = "en"
 extend-ignore-re = ["\\b[0-9a-f]{7,40}\\b", "\\b[A-Za-z0-9+/]{40,}={0,2}\\b"]
 
 [default.extend-identifiers]
-capitalisation = "capitalisation"
+axe = "axe"
+optin = "optin"
 IIF = "IIF"
-LICENCE = "LICENCE"
 next-intl = "next-intl"
 udid = "udid"
 NGINX = "NGINX"
@@ -14,12 +14,11 @@ markdownlint = "markdownlint"
 React = "React"
 Native = "Native"
 Simple = "Simple"
-Icons = "Icons"
 
 [default.extend-words]
-capitalisation = "capitalisation"
+axe = "axe"
+optin = "optin"
 IIF = "IIF"
-LICENCE = "LICENCE"
 next-intl = "next-intl"
 udid = "udid"
 NGINX = "NGINX"
@@ -28,7 +27,6 @@ markdownlint = "markdownlint"
 React = "React"
 Native = "Native"
 Simple = "Simple"
-Icons = "Icons"
 
 [files]
 extend-exclude = [
@@ -64,6 +62,8 @@ extend-exclude = [
   "packages/cli/.markdownlint.jsonc",
   "packages/eslint-plugin/.markdownlint.jsonc",
   # Generator outputs
+  "packages/cli/configurations/**/eslint-presets.json",
+  "packages/cli/configurations/**/*-names.json",
   "docs/worker-configuration.d.ts",
   "docs/cloudflare-env.d.ts",
   "**/*.pbxproj",
@@ -89,26 +89,9 @@ extend-exclude = [
 
 [type]
 
-[type.license_names]
-extend-glob = ["gspot.toml"]
-
-[type.zod_types]
-extend-glob = ["shapes.ts"]
-
 [type.gspot-settings]
 extend-glob = ["gspot.toml"]
 
 [type.gspot-settings.extend-identifiers]
 
 [type.gspot-settings.extend-words]
-axe = "axe"
-optin = "optin"
-
-[type.zod_types.extend-words]
-optin = "optin"
-
-[type.license_names.extend-words]
-axe = "axe"
-optin = "optin"
-
-[type.license_names.extend-identifiers]

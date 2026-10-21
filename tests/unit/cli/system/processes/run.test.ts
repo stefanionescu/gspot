@@ -1,9 +1,9 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { isWindows } from '#tests/setup/system.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { buildProcessBackends } from '#tests/setup/processes.ts';
@@ -65,8 +65,8 @@ test.each(buildProcessBackends())(
 test.skipIf(isWindows).each(buildProcessBackends())(
     '$name: denied execution is not a missing file',
     async (backend) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'denied.sh': '#!/bin/sh\nexit 0\n' });
+        await using sandbox = await testdir({ 'denied.sh': '#!/bin/sh\nexit 0\n' });
+
         const executable = join(sandbox.path, 'denied.sh');
         await chmod(executable, 0o600);
         const result = await backend.execute([executable], { cwd: sandbox.path });

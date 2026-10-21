@@ -1,11 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { runSandboxStep } from '#tests/setup/install.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { readFile } from 'node:fs/promises';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { RUFF_SANDBOX, VERSION_SOURCE, RUFF_VERSION_CASES } from '#tests/data/checks/python/tool-checks.ts';
 
 const installedSandbox = registerSharedSandbox(RUFF_SANDBOX);
@@ -28,16 +27,16 @@ requires-python = "${requires}"
             [join(scope, 'sample.py'), VERSION_SOURCE],
         ]),
     );
-    const sourceFiles = { 'gspot.toml': buildSettingsText(['python'], { level: 'all', tables }), ...files };
-    await using _sourceChange = await updateSandbox(
+    const sourceFiles = { 'gspot.toml': buildSandboxSettings(['python'], { level: 'all', tables }), ...files };
+    await using _sourceChange = await applySandboxChanges(
         installedSandbox(),
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
-    await runSandboxStep(sandbox.path, ['apply'], {}, 'apply');
+
     const command = ['check', '--only', 'python/ruff', '--json'];
-    const checked = await spawnGspot(sandbox.path, command);
+    const checked = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = JSON.parse(checked.stdout) as RunReport;
+    const report = checked.report;
     for (const { scope, generics, unions } of RUFF_VERSION_CASES) {
         const found = report.checks.find((entry) => entry.scope === scope)!.findings;
         expect(
@@ -49,11 +48,11 @@ requires-python = "${requires}"
             scope || 'root',
         ).toBe(unions);
     }
-    const fixed = await spawnGspot(sandbox.path, [...command, '--fix']);
+    const fixed = parseCheckReport(await spawnGspot(sandbox.path, [...command, '--fix']));
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(1);
-    const fixedReport = JSON.parse(fixed.stdout) as RunReport;
+    const fixedReport = fixed.report;
     for (const { scope, annotation } of RUFF_VERSION_CASES) {
-        const text = await Bun.file(join(sandbox.path, scope, 'sample.py')).text();
+        const text = await readFile(join(sandbox.path, scope, 'sample.py'), 'utf8');
         expect(text, scope).toContain(annotation);
         const result = fixedReport.checks.find((entry) => entry.scope === scope)!;
         expect(result.status, scope).toBe(scope === 'modern' ? 'passed' : 'failed');

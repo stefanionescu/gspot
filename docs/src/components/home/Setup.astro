@@ -3,7 +3,6 @@ import { URL_BREAK } from '../../config/home.ts';
 import { Icon } from '@astrojs/starlight/components';
 import { LLMS_URL, AGENT_PROMPT, LLMS_COMMAND, SETUP_COMMANDS } from '../../config/setup.ts';
 
-const [first] = SETUP_COMMANDS;
 const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
 ---
 
@@ -34,7 +33,7 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
         </div>
         <div class="setup-tools">
             <label class="manager">
-                <span class="visually-hidden">Package manager</span>
+                <span class="sr-only">Package manager</span>
                 <select>
                     {SETUP_COMMANDS.map(({ label }, index) => (
                         <option value={index}>{label}</option>
@@ -62,7 +61,11 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
     </div>
     <div class="setup-body">
         <div class="setup-panel" role="tabpanel" id="panel-human" aria-labelledby="mode-human" tabindex="0">
-            <pre class="commands">{first.lines.map((line) => <span class="cmd"><span class="prompt" aria-hidden="true">$ </span>{line}</span>)}</pre>
+            {SETUP_COMMANDS.map(({ lines }, index) => <pre
+                class="commands"
+                data-manager={index}
+                hidden={index !== 0}
+            >{lines.map((line) => <span class="cmd"><span class="prompt" aria-hidden="true">$ </span><span class="command-text">{line}</span></span>)}</pre>)}
         </div>
         <div class="setup-panel" role="tabpanel" id="panel-agent" aria-labelledby="mode-agent" tabindex="0" hidden>
             <p class="agent-prompt">
@@ -80,35 +83,24 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
             </p>
         </div>
     </div>
-    <span class="visually-hidden" role="status" data-copy-status></span>
+    <span class="sr-only" role="status" data-copy-status></span>
 </home-setup>
 
 <script>
-    import { AGENT_PROMPT, SETUP_COMMANDS } from '../../config/setup.ts';
+    import { AGENT_PROMPT } from '../../config/setup.ts';
 
     class HomeSetup extends HTMLElement {
         connectedCallback(): void {
             const manager = this.querySelector('select');
-            const commands = this.querySelector('.commands');
+            const commands = [...this.querySelectorAll<HTMLPreElement>('pre.commands')];
             const copy = this.querySelector('[data-copy]');
             const status = this.querySelector('[data-copy-status]');
             const tabs = [...this.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-            if (manager === null || commands === null || copy === null || status === null) {
+            if (manager === null || commands.length === 0 || copy === null || status === null) {
                 throw new Error('The setup card has a missing control.');
             }
             manager.addEventListener('change', () => {
-                const selected = SETUP_COMMANDS[manager.selectedIndex];
-                if (selected === undefined) throw new Error('The package manager has no setup commands.');
-                commands.replaceChildren(...selected.lines.map((text) => {
-                    const line = document.createElement('span');
-                    line.className = 'cmd';
-                    const prompt = document.createElement('span');
-                    prompt.className = 'prompt';
-                    prompt.setAttribute('aria-hidden', 'true');
-                    prompt.textContent = '$ ';
-                    line.append(prompt, text);
-                    return line;
-                }));
+                for (const [index, pre] of commands.entries()) pre.hidden = index !== manager.selectedIndex;
             });
             for (const tab of tabs) {
                 tab.addEventListener('click', () => {
@@ -134,9 +126,10 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
                 });
             }
             copy.addEventListener('click', async () => {
-                const selected = SETUP_COMMANDS[manager.selectedIndex];
-                if (selected === undefined) throw new Error('The package manager has no setup commands.');
-                const text = this.dataset['mode'] === 'agent' ? AGENT_PROMPT : selected.lines.join('\n');
+                const text = this.dataset['mode'] === 'agent' ? AGENT_PROMPT : commands
+                    .filter((pre) => !pre.hidden)
+                    .flatMap((pre) => [...pre.querySelectorAll('.command-text')].map((line) => line.textContent))
+                    .join('\n');
                 try {
                     await navigator.clipboard.writeText(text);
                     status.textContent = 'Copied.';

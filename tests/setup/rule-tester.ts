@@ -17,14 +17,15 @@ RuleTester.describeSkip = describe.skip;
 /**
  * A rule tester using the TypeScript parser and a fixed repository root.
  *
- * @param repositoryRoot folder the rules resolve paths against.
- * @param languageOptions settings for the runtime under test.
+ * @param options the repository root and language options for the cases.
+ * @param options.root the folder the rules resolve paths against.
+ * @param options.languageOptions the parser and runtime settings for the cases.
  * @returns a tester that runs the ESLint plugin rules.
  */
-export function createRuleTester(
-    repositoryRoot = RULE_TESTER_ROOT,
-    languageOptions: RuleTesterConfig['languageOptions'] = {},
-): RuleTester {
+export function createRuleTester({
+    root = RULE_TESTER_ROOT,
+    languageOptions = {},
+}: { root?: string; languageOptions?: RuleTesterConfig['languageOptions'] } = {}): RuleTester {
     return new RuleTester({
         languageOptions: {
             ...languageOptions,
@@ -34,6 +35,6 @@ export function createRuleTester(
                 ...languageOptions.parserOptions,
             },
         },
-        settings: { gspot: { root: repositoryRoot } },
+        settings: { gspot: { root } },
     });
 }

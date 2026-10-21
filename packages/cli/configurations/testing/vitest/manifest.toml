@@ -36,12 +36,12 @@ npm = "@vitest/coverage-v8"
 system = true
 
 [eslint]
-fragment = true
 required_tools = ["@vitest/eslint-plugin"]
 all_level_rules = ["vitest/no-import-node-test", "vitest/prefer-strict-equal", "vitest/valid-title"]
 
 [[check]]
 command = ["vitest", "run", "--coverage", "--coverage.reporter=text-summary", "--coverage.thresholds.lines={setting:coverage.lines}", "--coverage.thresholds.branches={setting:coverage.branches}", "--coverage.thresholds.functions={setting:coverage.functions}", "--coverage.thresholds.statements={setting:coverage.statements}"]
+coverage_arguments = ["--coverage", "--coverage.reporter", "--coverage.thresholds.lines", "--coverage.thresholds.branches", "--coverage.thresholds.functions", "--coverage.thresholds.statements"]
 cwd = "scope"
 example = "Vitest reports `ERROR: Coverage for lines (85%) does not meet global threshold (90%)`. Add tests for the uncovered lines."
 help = "Add tests for the lines the report marks, or lower one floor under `coverage` with a reason."

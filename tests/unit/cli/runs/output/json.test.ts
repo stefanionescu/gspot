@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { parseJsonFindings } from '#cli/runs/output/json.ts';
-import { outputSchema } from '#cli/configurations/schema/output.ts';
+import { outputSchema } from '#cli/schemas/configurations/output.ts';
 
 /** Parse a JSON report with the paths and help text that these cases share. */
 function parseJsonReport(check: string, output: unknown, stdout: string): Finding[] {
@@ -21,7 +21,6 @@ test('a flat JSON list maps its fields to a finding', () => {
     const stdout = JSON.stringify([{ path: 'nginx.conf', line: 9, plugin: 'ssrf', summary: 'Possible SSRF.' }]);
     const output = {
         format: 'json' as const,
-        file_type: 'path' as const,
         fields: { file: 'path', line: 'line', rule: 'plugin', message: 'summary' },
     };
     expect(parseJsonReport('nginx/gixy', output, stdout)).toStrictEqual([
@@ -43,7 +42,6 @@ test('a nested list reads the file from the item and the rest from the child', (
     })}`;
     const output = {
         format: 'json' as const,
-        file_type: 'path' as const,
         items: 'files',
         children: 'violations',
         fields: { file: 'filepath', line: 'start_line_no', rule: 'code', message: 'description' },
@@ -62,16 +60,24 @@ test.each([
     (name, extra, expected) => {
         const output = {
             format: 'json' as const,
-            file_type: 'path' as const,
             children: 'messages',
             fields: { file: 'filePath', message: 'message', fixable: 'fix' },
         };
         const stdout = JSON.stringify([{ filePath: '/repo/a.js', messages: [{ message: name, ...extra }] }]);
-        const check = { name: 'javascript/eslint', help: 'Correct the defect.', output, fix: ['formatter'] };
+        const check = {
+            runs: 'files' as const,
+            name: 'javascript/eslint',
+            help: 'Correct the defect.',
+            output,
+            fix: ['formatter'],
+        };
         const findings = parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' });
         expect(findings).toMatchObject([{ file: 'a.js', fixable: expected }]);
         expect(
-            parseOutput({ name: check.name, help: check.help, output }, stdout, '', { root: '/repo', cwd: '/repo' }),
+            parseOutput({ runs: check.runs, name: check.name, help: check.help, output }, stdout, '', {
+                root: '/repo',
+                cwd: '/repo',
+            }),
         ).toMatchObject([{ fixable: false }]);
     },
 );
@@ -80,7 +86,6 @@ test('a tool that counts lines from zero names its line base', () => {
     const stdout = JSON.stringify([{ file: 'a.sql', line: 0, column: 18, rule_name: 'r', message: 'm' }]);
     const output = {
         format: 'json' as const,
-        file_type: 'path' as const,
         line_base: 0 as const,
         fields: { file: 'file', line: 'line', column: 'column', rule: 'rule_name', message: 'message' },
     };
@@ -104,7 +109,6 @@ test('lists nested two levels down read the file from the top and join several m
     });
     const output = {
         format: 'json' as const,
-        file_type: 'path' as const,
         items: 'results',
         children: 'packages.vulnerabilities',
         fields: { file: 'source.path', rule: 'id', message: 'package.name package.version summary' },
@@ -117,24 +121,24 @@ test('lists nested two levels down read the file from the top and join several m
     ]);
 });
 
-test.each(['', '{ broken', '{"items":null}'])('an invalid JSON report is refused: %s', (stdout) => {
-    expect(() => parseJsonReport('x/y', { format: 'json', items: 'items' }, stdout)).toThrow(
-        'JSON returned invalid structured findings.',
-    );
+test.each([
+    ['', 'JSON returned no structured findings.'],
+    ['noise only', 'JSON returned no structured findings.'],
+    ['{ broken', 'JSON returned invalid structured findings.'],
+    ['{"items":null}', 'Required JSON report array items is missing or invalid.'],
+])('an invalid JSON report is refused: %s', (stdout, message) => {
+    expect(() => parseJsonReport('x/y', { format: 'json', items: 'items' }, stdout)).toThrow(message);
 });
 
-test('an empty report has no findings, and missing nested lists are refused', () => {
+test('an empty report has no findings, and invalid findings name the missing field or list', () => {
     expect(parseJsonReport('x/y', { format: 'json' }, '[]')).toStrictEqual([]);
-    for (const output of [
-        { format: 'json' as const },
-        { format: 'json' as const, file_type: 'path' as const, fields: { message: 'message' } },
-        { format: 'json' as const, file_type: 'path' as const, children: 'messages' },
-    ])
-        expect(() =>
-            parseJsonReport(
-                'x/y',
-                output,
-                output.fields === undefined && output.children === undefined ? '[null]' : '[{}]',
-            ),
-        ).toThrow('JSON returned invalid structured findings.');
+    expect(() => parseJsonReport('x/y', { format: 'json' }, '[null]')).toThrow(
+        'The JSON report contains an invalid finding object.',
+    );
+    expect(() => parseJsonReport('x/y', { format: 'json', fields: { message: 'message' } }, '[{}]')).toThrow(
+        'The JSON report contains a finding without its mapped message.',
+    );
+    expect(() => parseJsonReport('x/y', { format: 'json', children: 'messages' }, '[{}]')).toThrow(
+        'Required JSON report array messages is missing or invalid.',
+    );
 });

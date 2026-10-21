@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { I18N_SOURCE } from '#tests/data/generation/eslint/framework.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { ZUSTAND_FILES, RESTRICTION_TABLES } from '#tests/data/generation/eslint/fragments.ts';
@@ -9,13 +9,18 @@ import { ZUSTAND_FILES, RESTRICTION_TABLES } from '#tests/data/generation/eslint
 describe('drizzle', () => {
     test('Drizzle reports delete and update without where only for its client names', async () => {
         const level = 'all';
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': `level = "${level}"\nconfigurations = ["drizzle"]\n[[scope]]\npath = "app"\nconfigurations = ["drizzle"]\n[scope.drizzle]\nclient_names = ["connection"]\n`,
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['drizzle'], {
+                level: level,
+                rules: true,
+                scopes: [{ path: 'app', configurations: ['drizzle'] }],
+                tables: '[scope.drizzle]\nclient_names = ["connection"]\n',
+            }),
             'source.js':
                 'db.delete(table);\nother.delete(table);\nnew Map().delete(key);\nnew Set().delete(key);\nnew Headers().delete("header");\nnew URLSearchParams().delete("query");\n',
             'app/source.js': 'connection.update(table).set({ value: 1 });\nother.update(table).set({ value: 1 });\n',
         });
+
         const eslint = await createEslint(sandbox.path);
         const rules = ['drizzle/enforce-delete-with-where', 'drizzle/enforce-update-with-where'];
         expect(await collectLintFindings(eslint, sandbox.path, ['source.js', 'app/source.js'], rules)).toStrictEqual([
@@ -34,9 +39,9 @@ describe('translations', () => {
         const tested = ['qa/entry.jsx', 'app/qa/entry.jsx', 'app/verification/entry.jsx', 'app/deep/qa/entry.jsx'];
         const ordinary = new Set(['source.jsx', 'app/source.jsx', 'app/deep/source.jsx']);
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['translations', 'react'], {
+            'gspot.toml': buildSandboxSettings(['translations', 'react'], {
                 level,
-                tables: 'test_files = [ "**/qa/**" ]\n\n[[scope]]\npath = "app"\ntest_files = [ "app/verification/**" ]\n\n[[scope]]\npath = "app/deep"\n\n[[scope]]\npath = "sibling"\nremoved_configurations = [ "translations" ]\n',
+                tables: 'test_files = [ "**/qa/**" ]\n\n[[scope]]\npath = "app"\ntest_files = [ "app/verification/**" ]\n\n[[scope]]\npath = "app/deep"\n\n[[scope]]\npath = "sibling"\nremoved_configurations = { value = [ "translations" ], reason = "This scope does not translate its UI text." }\n',
             }),
             'package.json': '{"private":true,"type":"module"}\n',
             ...Object.fromEntries([...tested, ...ordinary, 'sibling/source.jsx'].map((path) => [path, I18N_SOURCE])),
@@ -56,14 +61,14 @@ describe('zustand', () => {
     test.each([...LEVELS])(
         '%s keeps your import restrictions in store files and the Zustand restriction elsewhere',
         async (level) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
+            await using sandbox = await testdir({
                 ...ZUSTAND_FILES,
-                'gspot.toml': buildSettingsText(['javascript', 'zustand'], {
+                'gspot.toml': buildSandboxSettings(['javascript', 'zustand'], {
                     tables: RESTRICTION_TABLES,
                     level: level,
                 }),
             });
+
             const eslint = await createEslint(sandbox.path);
             const files = ['src/widget.js', 'src/store.js'];
             expect(await collectLintFindings(eslint, sandbox.path, files, ['no-restricted-imports'])).toStrictEqual([

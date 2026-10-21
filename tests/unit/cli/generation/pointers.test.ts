@@ -8,10 +8,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildPointerFiles } from '#cli/generation/pointers.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import type { WholeToolFile } from '#cli/types/generation/files.ts';
-import { MODULE_VALUE, MODULE_TARGETS, MARKDOWNLINT_SCOPE_TABLES } from '#tests/data/generation/tool-files.ts';
+import { MODULE_VALUE, MODULE_TARGETS, MARKDOWNLINT_SCOPE_TABLES } from '#tests/data/generation/settings.ts';
 
 test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
     'XCTest folder pointers keep their SwiftLint overrides in scope "%s"',
@@ -23,12 +24,12 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
         const scopeTable =
             scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\nconfigurations = ["swift"]\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(scope === '' ? ['swift'] : [], {
+            'gspot.toml': buildSandboxSettings(scope === '' ? ['swift'] : [], {
                 level: 'all',
                 tables:
                     scopeTable +
                     `[[scope]]\npath = ${JSON.stringify(child)}\nconfigurations = ["swift"]\n` +
-                    '[[scope]]\npath = "omitted"\n\nremoved_configurations = ["swift"]\n',
+                    '[[scope]]\npath = "omitted"\n\nremoved_configurations = { value = ["swift"], reason = "This scope does not use Swift or its generated pointers." }\n',
             }),
             [`${folder}/Value.swift`]: 'import XCTest\n',
             [`${folder}/Deep/Value.swift`]: 'import XCTest\n',
@@ -54,7 +55,7 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
         const childConfig = buildScopeTarget(
             child,
             session.manifests.get('swift')!.toolFiles.find(({ tool }) => tool.includes('swiftlint'))!,
-            session.toolFiles().targets,
+            getToolFiles(session).targets,
         );
         const childPointer =
             files.find((file) => file.path === `${child}/.swiftlint.yml`) ??
@@ -72,15 +73,15 @@ test.each(['', 'ios # app', 'AppTests', 'AppTests/Helpers'])(
 test.each(['javascript'])(
     `%s pointers import modules from folders with URI characters and Unicode`,
     async (configuration) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText([...new Set([configuration, 'javascript'])]),
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([...new Set([configuration, 'javascript'])]),
         });
+
         const session = await openSession(sandbox.path);
         const manifest = session.manifests.get(configuration)!;
         const toolFile = manifest.toolFiles
             .filter((file): file is WholeToolFile => file.source !== undefined)
-            .find((file) => file.pointer?.body?.includes('{target_module}') === true)!;
+            .find((file) => file.pointer?.body.includes('{target_module}') === true)!;
         // Windows file names cannot contain a question mark.
         const components = MODULE_TARGETS.filter((component) => !isWindows || !component.includes('?'));
         const paths = [];
@@ -116,9 +117,8 @@ test.each(['javascript'])(
 );
 
 test('a scope gets its own markdownlint pointer only when its rules differ from the root', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['markdown'], { tables: MARKDOWNLINT_SCOPE_TABLES }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['markdown'], { tables: MARKDOWNLINT_SCOPE_TABLES }),
         'README.md': '# Root\n',
         'same/README.md': '# Same\n',
         'other/README.md': '# Other\n',

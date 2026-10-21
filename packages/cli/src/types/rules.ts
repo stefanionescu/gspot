@@ -13,7 +13,7 @@ export type RuleFile = {
 export type AgentsBlockInput = {
     files: RuleFile[];
     generatedPaths: string[];
-    fileEdits: { path: string; keys: string[] }[];
+    fileSettings: { path: string; keys: string[] }[];
     hasChecks: boolean;
     startCommand: string;
     hasOwnTitle: boolean;

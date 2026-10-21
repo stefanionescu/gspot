@@ -1,16 +1,17 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runCommand } from '#tests/setup/processes.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
+import { installToolProjects } from '#tests/setup/install.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
-import { buildSandboxPath, installToolProjects } from '#tests/setup/install.ts';
+import { runGspot, spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 import {
     LICENSE_CHECK,
@@ -30,22 +31,22 @@ test('licenses/allowed accepts an allowed license choice and reports a disallowe
         ...LICENSED_PACKAGES,
     });
     commitAll(root);
-    const environment = { PATH: buildSandboxPath() };
+    const environment = {};
     for (const command of [buildInitArguments(['licenses']), ['set', 'licenses.allowed', '["MIT","Apache-2.0"]']]) {
         const prepared = await spawnGspot(root, command, environment);
         expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
     }
     await installToolProjects(root);
-    const baseline = await spawnGspot(root, LICENSE_CHECK, environment);
+    const baseline = parseCheckReport(await spawnGspot(root, LICENSE_CHECK, environment));
     expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
-    expect((JSON.parse(baseline.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
-    await Bun.write(
+    expect(baseline.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    await writeFile(
         join(root, 'node_modules/strict/package.json'),
         JSON.stringify({ name: 'strict', version: '1.0.0', license: 'GPL-3.0-only' }),
     );
-    const checked = await spawnGspot(root, LICENSE_CHECK, environment);
+    const checked = parseCheckReport(await spawnGspot(root, LICENSE_CHECK, environment));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect((JSON.parse(checked.stdout) as RunReport).checks[0]?.findings).toStrictEqual([
+    expect(checked.report.checks[0]?.findings).toStrictEqual([
         matchFields({
             file: 'package.json',
             line: 1,
@@ -59,7 +60,7 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
     await using sandbox = await testdir();
     const root = sandbox.path;
     const files = {
-        'gspot.toml': buildSettingsText(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n', level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n', level: 'all' }),
         'pyproject.toml': PIP_LICENSES_PYPROJECT,
     };
     await createFileTree(root, files);
@@ -77,34 +78,35 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
     );
     expect(location.code, location.stderr).toBe(0);
     const metadata = join(location.stdout.trim(), 'licensed_example-1.0.0.dist-info/METADATA');
-    await Bun.write(metadata, LICENSED_EXAMPLE_METADATA);
-    const failed = await spawnGspot(root, LICENSE_CHECK);
+    await writeFile(metadata, LICENSED_EXAMPLE_METADATA);
+    const failed = parseCheckReport(await spawnGspot(root, LICENSE_CHECK));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual([
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
         matchFields({
             file: 'pyproject.toml',
             rule: 'disallowed-license',
             message: matchSubstring('licensed-example@1.0.0 uses GPL-3.0-only'),
         }),
     ]);
-    await Bun.write(
+    await writeFile(
         join(root, 'gspot.toml'),
-        buildSettingsText(['licenses'], {
+        buildSandboxSettings(['licenses'], {
             tables: '[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "Licensed._Example"\nversion = "1.0.0"\nreason = "GPL-3.0-only. This test checks name normalization."\n',
             level: 'all',
         }),
     );
     const corrected = await runGspot(root, ['apply', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const passed = await spawnGspot(root, LICENSE_CHECK);
+    const passed = parseCheckReport(await spawnGspot(root, LICENSE_CHECK));
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    expect((JSON.parse(passed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+    expect(passed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
 
 test('an allowed package at the root covers the same package in a scope with no package.json of its own at the root', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['licenses'], {
-            tables: '[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "@fontsource/inter"\nversion = "5.2.8"\nreason = "OFL-1.1. Documentation distributes the font."\n[[scope]]\npath = "docs"\n',
+        'gspot.toml': buildSandboxSettings(['licenses'], {
+            tables: '[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "@fontsource/inter"\nversion = "5.2.8"\nreason = "OFL-1.1. Documentation distributes the font."\n',
+            scopes: [{ path: 'docs' }],
         }),
         ...FONT_PACKAGE_FILES,
     });
@@ -112,10 +114,12 @@ test('an allowed package at the root covers the same package in a scope with no 
     using state = new DisposableStack();
     state.use(
         overrideEnvironment({
-            PATH: [join(sandbox.path, '.gspot/node_modules/.bin'), buildSandboxPath()].join(delimiter),
+            PATH: [join(sandbox.path, '.gspot/node_modules/.bin'), readEnvironmentVariable('PATH') ?? ''].join(
+                delimiter,
+            ),
         }),
     );
-    const checked = await spawnGspot(sandbox.path, LICENSE_CHECK);
+    const checked = parseCheckReport(await spawnGspot(sandbox.path, LICENSE_CHECK));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect((JSON.parse(checked.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+    expect(checked.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });

@@ -35,3 +35,6 @@ export type ScriptFindingCase = {
     recommended: readonly { ruleId: string | null; line: number }[];
     all?: readonly { ruleId: string | null; line: number }[];
 };
+
+export type RuffRule = { code: string | null; preview: boolean };
+export type RuffConfiguration = { lint: { select: string[] } };

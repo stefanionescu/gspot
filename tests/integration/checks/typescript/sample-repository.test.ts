@@ -2,8 +2,7 @@ import { join } from 'node:path';
 import { appendFile } from 'node:fs/promises';
 import { test, expect, beforeAll } from 'bun:test';
 import { TYPO } from '#tests/data/checks/spelling.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
@@ -35,17 +34,13 @@ test('typos keeps its excluded paths for a file named on the command line', asyn
         },
     );
 
-    const excluded = await spawnGspot(
-        root,
-        ['check', '--only', 'spelling/typos', '--json', '--', 'assets/mark.svg'],
-        environment,
+    const excluded = parseCheckReport(
+        await spawnGspot(root, ['check', '--only', 'spelling/typos', '--json', '--', 'assets/mark.svg'], environment),
     );
 
     expect(excluded.code, excluded.stdout + excluded.stderr).toBe(0);
 
-    expect((JSON.parse(excluded.stdout) as RunReport).checks).toMatchObject([
-        { check: 'spelling/typos', status: 'passed', fileCount: 1 },
-    ]);
+    expect(excluded.report.checks).toMatchObject([{ check: 'spelling/typos', status: 'passed', fileCount: 1 }]);
 });
 test.each([...TYPESCRIPT_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
     const result = await runCheckSample(installedSandbox(), entry, TYPESCRIPT_SANDBOX);

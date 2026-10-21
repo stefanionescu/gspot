@@ -1,15 +1,17 @@
 import { buildFinding } from '#cli/runs/finding.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { readScripts } from '#cli/checks/bash/scripts.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 /**
  * Reports each function called with more arguments than it reads.
  *
- * @param input the scope scripts to read.
+ * @param session the repository and its tools.
+ * @param planned the scope scripts to read.
  * @returns the findings.
  */
-export async function checkBashUnreadArguments(input: CheckInput): Promise<Finding[]> {
-    const scripts = await readScripts(input);
+export async function checkBashUnreadArguments(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const scripts = await readScripts(session, planned);
     const names = new Set(scripts.flatMap((file) => file.functions.map((entry) => entry.name)));
     const widest = new Map<string, number>();
     for (const file of scripts)
@@ -28,7 +30,7 @@ export async function checkBashUnreadArguments(input: CheckInput): Promise<Findi
                 unread.length === 1 ? `position ${unread.join('')} is` : `positions ${unread.join(' and ')} are`;
             return [
                 buildFinding(
-                    input,
+                    planned,
                     { file: file.path, line: entry.start },
                     'unread-arguments',
                     `${entry.name} is called with up to ${String(width)} ${width === 1 ? 'argument' : 'arguments'} but ${read}: ${positions} never read.`,

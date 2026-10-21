@@ -29,17 +29,7 @@ tools.
 
 ### Systems
 
-gspot runs on macOS, Linux, and Windows. Some checks need more:
-
-| Checks                                                                  | Need                                         |
-| ----------------------------------------------------------------------- | -------------------------------------------- |
-| Swift checks                                                            | The Swift toolchain                          |
-| SwiftLint, SwiftFormat, and Swift package builds                        | macOS or Linux                               |
-| `xcode/plutil`, Periphery, the SwiftLint analyzer, Xcode project builds | macOS, with Xcode selected by `xcode-select` |
-| Some container checks                                                   | A running Docker daemon                      |
-| Some scans                                                              | Network access                               |
-
-Each [check page](/reference/checks/) lists its systems.
+gspot runs on macOS, Linux, and Windows. Some checks need macOS or Linux, the Swift toolchain, a running Docker daemon, or network access; each [check page](/reference/checks/) says what it needs.
 
 ## Choose how to install
 
@@ -165,7 +155,7 @@ Keep credentials in environment variables or your user settings, never in `gspot
 
 To stop checking one language or framework instead, see [gspot.toml](/configure/gspot-toml/#choose-configurations).
 
-gspot has no uninstall command. Commit first, so you can go back.
+Commit first, so you can go back.
 
 1. Copy the list under "Generated files" in the gspot section of `AGENTS.md`. It names every file gspot writes outside
    `.gspot/` and each key it sets in your files.

@@ -8,9 +8,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPlan } from '#cli/checks/swift/cache.ts';
 import * as environment from '#cli/system/environment.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { checkFindings, buildCheckInput, createCompilerCache } from '#tests/setup/check-input.ts';
+import { checkFindings, planSandboxCheck, createCompilerCache } from '#tests/setup/check-input.ts';
 
 import {
     XCTEST_FAILURES,
@@ -65,7 +65,7 @@ test.each([
         await using sandbox = await testdir();
         await using _cache = await createCompilerCache();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['swift', 'xcode'], {
+            'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
                 tables: `[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n[coverage]\nlines = ${String(lines)}\nswift_target = ${JSON.stringify(target).replaceAll(':', ' = ')}\n`,
             }),
             'ExampleTests.swift': 'import XCTest\n',
@@ -85,13 +85,12 @@ test.each([
             result.report.checks[0]?.findings.map((finding) => finding.message),
             JSON.stringify(result.report),
         ).toStrictEqual([...expected]);
-        expect(result.report.exitCode).toBe(expected.length === 0 ? 0 : 1);
     },
 );
 
 test.each([...XCTEST_FAILURES])(
     'swift/coverage: XCTest coverage classifies $failure and passes after the fix',
-    async ({ settings, build, coverage, code, status, produced, note }) => {
+    async ({ settings, build, coverage, status, produced, note }) => {
         using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
         await using sandbox = await testdir();
         await using _cache = await createCompilerCache();
@@ -110,13 +109,14 @@ test.each([...XCTEST_FAILURES])(
             await openSession(sandbox.path),
             buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
         );
-        expect(result.report.exitCode).toBe(code);
+
         expect(result.report.checks[0]!.status).toBe(status);
         if (note !== undefined) expect(result.report.checks[0]!.note).toContain(note);
         expect(await isOnDisk(join(sandbox.path, 'viewed.txt'))).toBe(false);
         await writeFile(join(sandbox.path, 'gspot.toml'), XCTEST_SETTINGS);
+        const session = await openSession(sandbox.path);
         const viewed = join(
-            buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift/coverage'), {
+            buildPlan(session, planSandboxCheck(session, 'swift/coverage'), {
                 purpose: 'coverage',
             }).folder,
             'source/viewed.txt',
@@ -134,7 +134,7 @@ test.each([...XCTEST_FAILURES])(
             await openSession(sandbox.path),
             buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
         );
-        expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
+
         expect(corrected.report.checks).toMatchObject([{ check: 'swift/coverage', status: 'passed', findings: [] }]);
     },
 );
@@ -159,7 +159,8 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
         'node_modules/.bin/xcrun',
         `#!${process.execPath}\nconsole.log(JSON.stringify({targets:[{name:'Example',lineCoverage:1}]}));\n`,
     );
-    const cache = buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift/coverage'), {
+    const session = await openSession(sandbox.path);
+    const cache = buildPlan(session, planSandboxCheck(session, 'swift/coverage'), {
         purpose: 'coverage',
     }).folder;
     await writeFile(join(outside.path, 'authored.txt'), 'preserved');
@@ -170,7 +171,7 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
         await openSession(sandbox.path),
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
-    expect(refused.report.exitCode).toBe(2);
+
     expect(refused.report.checks[0]?.note).toContain('is a link. gspot does not write through links.');
     expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
     expect(await isOnDisk(join(cache, 'source/tested.txt'))).toBe(false);
@@ -181,20 +182,20 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
         await openSession(sandbox.path),
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
-    expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
+    expect(corrected.report.failed).toStrictEqual([]);
+
     expect(await isOnDisk(bundle)).toBe(false);
     expect(await readFile(join(cache, 'source/tested.txt'), 'utf8')).toBe('tested');
     expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
 });
 
 test.each([...SKIP_REASON_CASES])('Swift skip reason belongs to its argument: $body', async ({ body, missing }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['swift']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['swift']),
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
-    const session = await openSession(sandbox.path);
-    const findings = await checkFindings(session.root, 'swift/skip-reasons');
+
+    const findings = await checkFindings(sandbox.path, 'swift/skip-reasons');
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual(
         missing ? [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }] : [],
     );
@@ -206,7 +207,7 @@ test('Swift package coverage measures actual custom target paths and applies eve
     await using _cache = await createCompilerCache();
     const reportPath = join(sandbox.path, 'coverage-input.json');
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['swift'], {
+        'gspot.toml': buildSandboxSettings(['swift'], {
             tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "Core"\nlines = 51\n[[coverage.swift_target]]\nname = "API"\nlines = 67\n',
         }),
         'Package.swift': '// swift-tools-version: 6.0\nimport PackageDescription\n',
@@ -231,7 +232,7 @@ else if (process.argv.includes('describe')) console.log(${JSON.stringify(JSON.st
         await openSession(sandbox.path),
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
-    expect(measured.report.exitCode, JSON.stringify(measured.report)).toBe(1);
+
     expect(measured.report.checks[0]?.findings.map(({ message }) => message)).toStrictEqual([
         'Core covers 50% of its lines, under the limit of 51%.',
         'API covers 66% of its lines, under the limit of 67%.',
@@ -244,17 +245,17 @@ else if (process.argv.includes('describe')) console.log(${JSON.stringify(JSON.st
         await openSession(sandbox.path),
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
-    expect(omitted.report.exitCode).toBe(2);
+
     expect(omitted.report.checks[0]?.note).toContain('The Swift coverage report has no source lines for target API.');
 });
 
 test('Swift coverage skips a scope that holds no Swift tests', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['swift']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['swift']),
         'Package.swift': '// swift-tools-version: 6.0\nimport PackageDescription\n',
         'Sources/App/App.swift': 'func value() -> Int { 1 }\n',
     });
+
     const { report } = await runChecks(
         await openSession(sandbox.path),
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),

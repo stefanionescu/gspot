@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Build the CLI: bundle gspot.js and the Linkinator and PurgeCSS child processes, copy the grammars and their licenses, and check the copy of the package license."
+#MISE description="Build the CLI: bundle gspot.js and the PurgeCSS child process, copy the grammars and their licenses, and check the copy of the package license."
 #MISE dir="{{config_root}}/packages/cli"
 set -euo pipefail
 
@@ -9,7 +9,7 @@ mkdir -p dist
     printf '%s\n' '#!/usr/bin/env node'
     bun build src/bin.ts --target node --format esm --packages external
 } >dist/gspot.js
-bun build src/checks/site/linkinator-process.ts src/checks/site/purgecss-process.ts --outdir dist --target node --format esm --packages external
+bun build src/checks/site/purgecss-process.ts --outdir dist --target node --format esm --packages external
 
 mkdir -p grammars/licenses
 for grammar in bash css html javascript python typescript; do
@@ -27,7 +27,7 @@ for pin in \
     "3533cec129bb4bba015c0d61d86dd7c3b7e82110e4d2ff7837a01eff5bad5ccc grammars/licenses/tree-sitter-swift.txt https://raw.githubusercontent.com/alex-pinkus/tree-sitter-swift/b8b22bffbb3441780e6471665bacfb263741c86a/LICENSE"; do
     read -r checksum file url <<<"${pin}"
     if ! sha256sum -c - <<<"${checksum}  ${file}" >/dev/null 2>&1; then
-        curl --fail --silent --show-error --location --output "${file}" "${url}"
+        curl --fail --silent --show-error --location --connect-timeout 10 --max-time 60 --output "${file}" "${url}"
         sha256sum -c - <<<"${checksum}  ${file}"
     fi
 done

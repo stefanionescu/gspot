@@ -1,23 +1,18 @@
 // Reads TypeScript project files and compiler options.
-import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
+import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import { isMissingFileError } from '#cli/system/errors.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
+import { findCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { typeScriptConfigSchema } from '#cli/schemas/parsers/tsconfig.ts';
+import { isInside, convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import { TSCONFIG_FILE, TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
-
-const typeScriptConfigSchema = z.looseObject({
-    compilerOptions: z.record(z.string(), z.unknown()).optional(),
-} satisfies SchemaShape<Pick<TypeScriptConfiguration['raw'], 'compilerOptions'>>);
 
 const TSCONFIG_MEMO = { create: () => new Map<string, TypeScriptConfiguration | undefined>() };
 
@@ -149,19 +144,18 @@ function buildCompilerHost(
  */
 function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache): string | undefined {
     const local = convertToPosixPath(relative(repositoryRoot, path));
-    using files = openFiles(repositoryRoot);
     try {
         const segments = local.split('/');
         const dependency = segments.indexOf(NODE_MODULES);
         if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
+            using files = openFiles(repositoryRoot);
             // Follow linked dependency folders. Refuse links before node_modules.
-
             if (dependency > 0) files.readStats(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }
-        return readCachedText(reads, local);
+        return findCachedText(reads, local);
     } catch (error) {
-        if (isMissingFileError(error)) return undefined;
+        if (hasErrorCode(error, 'ENOENT')) return undefined;
         throw error;
     }
 }
@@ -210,23 +204,19 @@ function readTsconfigProject(
     files: string[],
     reads: ReadCache,
 ): TypeScriptProject | undefined {
-    const own = join(repositoryRoot, scope);
-    let folder = own;
-    let path = join(folder, TSCONFIG_FILE);
-    let config = readTsconfig(repositoryRoot, path, reads);
-    while (config === undefined && folder !== repositoryRoot) {
-        folder = dirname(folder);
-        path = join(folder, TSCONFIG_FILE);
-        config = readTsconfig(repositoryRoot, path, reads);
+    for (const folder of listEnclosingFolders(scope)) {
+        const path = join(repositoryRoot, folder, TSCONFIG_FILE);
+        const config = readTsconfig(repositoryRoot, path, reads);
+        if (config === undefined) continue;
+        const projects = readReferencedProjects(repositoryRoot, path, reads);
+        const members = new Set(
+            [...projects.values()].flatMap((project) => project.fileNames.map((file) => convertToPosixPath(file))),
+        );
+        if (folder !== scope && files.some((file) => !members.has(convertToPosixPath(join(repositoryRoot, file)))))
+            return undefined;
+        return { path, config, projects };
     }
-    if (config === undefined) return undefined;
-    const projects = readReferencedProjects(repositoryRoot, path, reads);
-    const members = new Set(
-        [...projects.values()].flatMap((project) => project.fileNames.map((file) => convertToPosixPath(file))),
-    );
-    if (folder !== own && files.some((file) => !members.has(convertToPosixPath(join(repositoryRoot, file)))))
-        return undefined;
-    return { path, config, projects };
+    return undefined;
 }
 
 /**

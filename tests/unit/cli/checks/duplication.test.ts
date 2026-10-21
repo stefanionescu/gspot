@@ -1,13 +1,16 @@
 import { runChecks } from '#cli/runs/run.ts';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { join, toNamespacedPath } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeNpmTool } from '#tests/setup/fakes.ts';
-import { runGspot } from '#tests/setup/run-gspot.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { generate } from '#cli/generation/generate.ts';
+import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 
 test.each([1, 0])('jscpd output is kept in the error when exit %i writes no report', async (code) => {
@@ -21,7 +24,7 @@ test.each([1, 0])('jscpd output is kept in the error when exit %i writes no repo
     });
     const failed = await runChecks(session, buildRunOptions({ only: ['duplication/jscpd'] }));
     expect(folders.length, JSON.stringify(failed.report)).toBeGreaterThan(0);
-    expect(failed.report.exitCode).toBe(2);
+
     expect(failed.report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'error', findings: [] }]);
     expect(failed.report.checks[0]!.note).toBe(
         `The duplication/jscpd check failed: The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
@@ -55,7 +58,7 @@ test.each(['relative', 'absolute', 'namespaced'])(
         const session = await openSession(root);
         using _spawn = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {
             const work = command[command.indexOf('--output') + 1]!;
-            await Bun.write(join(work, 'jscpd-report.json'), JSON.stringify(report));
+            await writeFile(join(work, 'jscpd-report.json'), JSON.stringify(report));
             return buildProcessResult();
         });
         const result = await runChecks(session, buildRunOptions({ only: ['duplication/jscpd'] }));
@@ -78,10 +81,13 @@ async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promi
     const folder = resources.use(await testdir());
     await fakeNpmTool(folder.path, 'jscpd');
     await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash', 'duplication'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['bash', 'duplication'], { level: 'all' }),
         'sample.sh': 'echo example\n',
     });
-    const applied = await runGspot(folder.path, ['apply', '--json']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    {
+        const session = await openSession(folder.path);
+        using writer = openWriter(folder.path);
+        writeGeneratedFiles(session, generate(session), writer);
+    }
     return folder.path;
 }

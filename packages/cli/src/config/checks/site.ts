@@ -4,10 +4,6 @@ export const SITEMAP_LOCATION = /<loc>\s*(?<url>[^<\s]+)\s*<\/loc>/gu;
 
 export const SITEMAP_FILE = /^sitemap.*\.xml$/u;
 
-export const HTTP_OK_STATUS = 200;
-
-export const LINKINATOR_PROCESS = 'dist/linkinator-process.js';
-
 export const PURGECSS_PROCESS = 'dist/purgecss-process.js';
 
 export const TEXT_SUFFIXES = new Set([
@@ -35,13 +31,26 @@ export const TEXT_SUFFIXES = new Set([
 
 export const ASSET_FOLDER = /(?:^|\/)(?:assets|public|static)\//u;
 
-export const LINKINATOR_STATES = ['OK', 'BROKEN', 'SKIPPED'] as const;
-export const LINKINATOR = 'linkinator';
-export const LOCAL_HOSTS: ReadonlySet<string> = new Set(['localhost', '127.0.0.1']);
 export const INDEX_PAGE = 'index.html';
 export const HTML_EXTENSION = '.html';
-export const BROKEN_LINK = 'BROKEN';
 export const HTML_VALIDATE = 'html-validate';
 export const PURGECSS = 'purgecss';
 export const CSS_EXTENSION = '.css';
 export const PURGECSS_CONTENT = ['**/*.html', '**/*.js'] as const;
+
+export const LYCHEE = 'lychee';
+export const LYCHEE_ARGUMENTS = [
+    '--offline',
+    '--include-fragments',
+    '--index-files',
+    'index.html',
+    '--fallback-extensions',
+    'html',
+    '--format',
+    'detailed',
+    '--no-progress',
+] as const;
+
+export const SITEMAP_EXTENSION = '.xml';
+export const HTML_VALIDATE_CONFIG_FLAG = '--config';
+export const HTML_VALIDATE_FORMATTER_FLAG = '--formatter';

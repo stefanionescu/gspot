@@ -1,32 +1,26 @@
-// Reads and edits YAML keys. Comments and layout stay as written.
-import { isMap, isNode, parseDocument } from 'yaml';
-import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
+// Parses user YAML files with merge keys and file-specific errors.
+import { parse } from 'yaml';
+import type { z } from 'zod';
+import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 
+export function parseYamlFile(path: string, text: string): unknown;
+export function parseYamlFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
 /**
- * Open YAML for key edits that keep the rest of the file as written.
+ * Parse YAML, and name the file on invalid syntax or fields.
  *
- * @param path where the file sits, for the error message.
- * @param source the YAML text.
- * @returns the editable file.
+ * @param path the source file.
+ * @param text the YAML contents.
+ * @param schema the fields to validate, when supplied.
+ * @returns the parsed value.
  */
-export function openYamlFile(path: string, source: string): EditableFile {
-    const document = parseDocument(source);
-    if (document.errors.length > 0) throw new Error(`${path} is not valid YAML. Fix the file, then run gspot apply.`);
-    return {
-        format: 'yaml',
-        getValue(keys) {
-            const value: unknown = document.getIn(keys, true);
-            if (!isNode(value)) return value;
-            const json: unknown = value.toJSON();
-            return json;
-        },
-        set(keys, value) {
-            if (value === undefined) document.deleteIn(keys);
-            else document.setIn(keys, value);
-        },
-        getText() {
-            const contents = document.contents;
-            return contents === null || (isMap(contents) && contents.items.length === 0) ? '' : document.toString();
-        },
-    };
+export function parseYamlFile(path: string, text: string, schema?: z.ZodType): unknown {
+    let value: unknown;
+    try {
+        value = parse(text, { merge: true }) as unknown;
+    } catch (error) {
+        if (!(error instanceof Error)) throw error;
+        const detail = error.message.split('\n', 1).join('').replace(/\.$/u, '');
+        throw new GspotError('filesystem', `${path} is not valid YAML: ${detail}. Fix the file.`, { cause: error });
+    }
+    return schema === undefined ? value : parseFileFields(path, value, schema);
 }

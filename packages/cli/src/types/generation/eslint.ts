@@ -1,9 +1,10 @@
+import type { Session } from '#cli/types/planning.ts';
 import type { JsonValue } from '#cli/types/parsers/json.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import type { WrittenSettings } from '#cli/types/settings/file.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
-import type { Manifest, EslintAllRules } from '#cli/types/configurations.ts';
+import type { COMPONENT_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
 import type { Settings, ScopeView, ScopeSelection } from '#cli/types/settings/values.ts';
+import { type Level, type Manifest, type EslintAllRules } from '#cli/types/configurations.ts';
 
 /** The `[tools.eslint]` table of gspot.toml. */
 type EslintSettings = NonNullable<NonNullable<WrittenSettings['tools']>['eslint']>;
@@ -15,9 +16,13 @@ type EslintBoundaryFile = {
     isUnknown?: boolean;
 };
 
-export type FragmentPreset = {
-    source: string;
-    blocks: [EslintSettingsBlock & { parser: boolean }, ...(EslintSettingsBlock & { parser: boolean })[]];
+/** One captured block that omits executable parsers and plugin objects. */
+type EslintPresetBlock = {
+    parser: boolean;
+    files?: (string | string[])[];
+    ignores?: string[];
+    basePath?: string;
+    rules?: Record<string, JsonValue>;
 };
 
 export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
@@ -27,12 +32,11 @@ export type EslintRuleOptions = PathExpressions & { scope: string; rules: NonNul
 
 /** Generated rule blocks retain their level, project paths, and your own options. */
 export type BlockWriterInput = {
-    source: string;
+    applied: Set<string>;
     allRules: EslintAllRules;
-    isAll: boolean;
+    level: Level;
     codeFiles: string[];
     ruleOptions: EslintRuleOptions[];
-    scope?: { path: string; excluded: string[] };
 };
 
 /** One no-restricted-syntax rule: its file set, or every code file when absent, and the selectors it holds. */
@@ -67,26 +71,11 @@ export type EslintBoundaryPolicy = {
 export type EslintBoundaryContext = {
     importRules: Settings['import_rule'];
     enforceTests: boolean;
+    hasFixedPolicies: boolean;
     tests: string[];
     trpcPaths: string[];
     /** The tRPC server files, which other files of a tRPC scope import only as types. */
     serverFiles: string[];
-};
-
-/** The parts of the ESLint configuration that the settings and the scope decide. */
-export type EslintParts = {
-    projects: string[];
-    nodeFiles: string[];
-    allLevelRules: Record<string, unknown>;
-    javascriptAllLevelRules: Record<string, unknown>;
-    importStyleBlocks: EslintBlock[];
-    runtimes: EslintRuntimeBlock[];
-    boundaryBlocks: EslintBlock[];
-    scopeBlocks: EslintBlock[];
-    ignoredPaths: string[];
-    importIgnores: string[];
-    restrictedImports: unknown[];
-    extra: { reason: string | undefined; entries: Record<string, unknown> } | undefined;
 };
 
 /** Your own rules for one repository scope. */
@@ -98,11 +87,11 @@ export type EslintRuntimeBlock = PathExpressions & {
     runtime: string;
 };
 
-/** A function selector retains the exact declarations that generate it. */
+/** A function selector names a component matcher or the index of a runtime declaration. */
 export type EslintFileSelector =
     | string
-    | { component: 'vue' | 'svelte' }
-    | { runtime: { declarations: EslintRuntimeBlock[]; index: number } };
+    | { component: (typeof COMPONENT_CONFIGURATIONS)[number] }
+    | { runtime: number };
 
 /** Serializable rule fields that generation and the baseline of the last apply share. */
 export type EslintSettingsBlock = {
@@ -110,12 +99,6 @@ export type EslintSettingsBlock = {
     ignores?: string[];
     basePath?: string;
     rules?: Record<string, unknown>;
-};
-
-/** A block writer bound to its scope. */
-export type BlockWriter = {
-    block: (block: EslintSettingsBlock, runtime?: string, preset?: EslintRuleExpression) => string;
-    listUnappliedRules: () => string[];
 };
 
 /** Component patterns, detected Node files, and your test or script patterns. */
@@ -135,57 +118,31 @@ export type EslintFiles = {
     scripts: string[][];
 };
 
-export type FragmentPresets = EslintPresets & {
-    strict: FragmentPreset;
-    untyped: FragmentPreset;
-    recommended: FragmentPreset;
-    jsx: FragmentPreset;
-    hooks: FragmentPreset;
-    refresh: FragmentPreset;
-    accessibility: FragmentPreset;
-    noSwagger: FragmentPreset;
+/** One pinned preset, with at least one captured block. */
+export type EslintPreset = {
+    package: string;
+    version: string;
+    source: string;
+    blocks: [EslintPresetBlock, ...EslintPresetBlock[]];
 };
 
-export type EslintPresets = Record<
-    string,
-    {
-        package: string;
-        version: string;
-        source: string;
-        blocks: {
-            parser: boolean;
-            files?: (string | string[])[] | undefined;
-            ignores?: string[] | undefined;
-            basePath?: string | undefined;
-            rules?: Record<string, JsonValue> | undefined;
-        }[];
-    }
->;
+export type EslintPresets = Record<string, EslintPreset>;
 
 /** Inputs and printers shared by the ESLint fragment builders. */
 export type EslintContext = {
-    generatedPatterns: string[];
-    root: string;
-    reads: ReadCache;
-    scopes: ScopeSelection[];
+    session: Session;
     selection: ScopeSelection;
+    level: Level;
     nodeFiles: string[];
+    projects: string[];
     ruleOptions: EslintRuleOptions[];
-    eslint: EslintParts;
-    blockWriter: BlockWriter;
+    blockInput: BlockWriterInput;
     eslintFiles: EslintFiles;
+    levelRules: EslintLevelRules;
     settingsBlocks: EslintRuleBlock[];
     eslintAllRules: Set<string>;
     eslintPresets: Map<string, EslintPresets>;
-    configurations: string[];
-    settings: ScopeView['settings'];
-    testFiles: string[];
-    scope: string;
-    scopeDependencies: string[];
-    isAll: boolean;
-    repositorySettings: Settings;
-    /** Source file paths; a fragment gets only the files of its scope. */
-    sourceFiles: string[];
+    configurations: Manifest[];
 };
 
 /** The expression and captured values of rules supplied by a pinned preset. */
@@ -203,13 +160,31 @@ export type EslintLevelRules = {
 export type EslintPlugins = Record<string, readonly [string, string]>;
 
 /** The imports and blocks that one ESLint fragment produces. */
-export type EslintFragment = { imports: string[]; blocks: string };
+export type EslintFragment = { imports: EslintPlugins; blocks: Omit<EslintBlockInput, 'scope' | 'label'>[] };
 
 /** Relative-import enforcement with explicit project folders and import aliases. */
-export type EslintImportBoundaryRule = ['error', { folders: string[]; aliases: Record<string, string> }];
+export type EslintImportBoundaryRule = [
+    'error',
+    { folders: string[]; aliases: Record<string, string>; externals?: string[] },
+];
 
-/** Repository facts shared by ESLint selectors, boundaries, and rule blocks. */
-export type EslintFacts = Pick<
-    EslintContext,
-    'root' | 'reads' | 'scopes' | 'repositorySettings' | 'selection' | 'nodeFiles' | 'generatedPatterns'
->;
+/** One block before the writer prints its scope and label. */
+export type EslintBlockInput = {
+    data: EslintSettingsBlock;
+    properties?: string;
+    preset?: EslintRuleExpression;
+    scope?: { path: string; excluded: string[] };
+    label: string;
+};
+
+/** The data one configuration uses to build its blocks. */
+export type EslintFragmentContext = {
+    scope: string;
+    view: ScopeView;
+    eslintFiles: EslintFiles;
+    presets: EslintPresets | undefined;
+    eslintPresets: Map<string, EslintPresets>;
+    scopeDependencies: string[];
+    sourceFiles: string[];
+    projects: string[];
+};

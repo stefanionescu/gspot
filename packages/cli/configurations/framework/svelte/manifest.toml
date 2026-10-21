@@ -55,7 +55,6 @@ files = "*.svelte"
 embeddedLanguageFormatting = "auto"
 
 [eslint]
-fragment = true
 required_tools = ["eslint-plugin-svelte", "svelte-eslint-parser"]
 all_level_rules = ["svelte/no-useless-mustaches", "svelte/prefer-const", "svelte/no-dom-manipulating", "svelte/require-event-dispatcher-types"]
 

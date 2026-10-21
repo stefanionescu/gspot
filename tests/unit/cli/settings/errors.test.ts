@@ -1,27 +1,31 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { symlink } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { FIRST_READ } from '#cli/config/rules.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { parseSettings } from '#cli/settings/read.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
-import { buildScopeView } from '#cli/settings/scope-view.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { readSettings, parseSettings } from '#cli/settings/read.ts';
+import { getTable, buildScopeView } from '#cli/settings/scope-view.ts';
 import { matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
-import { buildSettingsText, validateSettingsText } from '#tests/setup/settings.ts';
-import { KEY_PATH_CASES, REVIEWED_REASON, UNKNOWN_KEY_CASES } from '#tests/data/settings/errors.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/settings.ts';
+
+import {
+    KEY_PATH_CASES,
+    REVIEWED_REASON,
+    RULE_FILE_ERRORS,
+    UNKNOWN_KEY_CASES,
+    RULE_FILE_SETTINGS,
+} from '#tests/data/settings/errors.ts';
 
 test('a file path and a category folder are accepted', () => {
     expect(() =>
         parseSettings(
             '[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESSIBILITY.md", ".gspot/configurations/library"]\n',
             undefined,
-            createReadCache(process.cwd()),
         ),
     ).not.toThrow();
 });
@@ -31,133 +35,70 @@ test('an entry that matches no rule file names the near match', () => {
         parseSettings(
             '[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESIBILITY.md"]\n',
             undefined,
-            createReadCache(process.cwd()),
         ),
     ).toThrow('ACCESSIBILITY.md');
 });
 
 test.each([...FIRST_READ.slice(0, 1), 'general/prose'])('a first-read entry %s cannot be left out', (entry) => {
-    expect(() =>
-        parseSettings(
-            `[rules]\nexclude = [".gspot/configurations/${entry}"]\n`,
-            undefined,
-            createReadCache(process.cwd()),
-        ),
-    ).toThrow('every agent opens first');
+    expect(() => parseSettings(`[rules]\nexclude = [".gspot/configurations/${entry}"]\n`, undefined)).toThrow(
+        'every agent opens first',
+    );
 });
 
 test('a limit looser than the default needs a reason, and a tighter one does not', () => {
-    expect(() =>
-        parseSettings(
-            'configurations = ["bash"]\n[limits]\nfile_lines = 1000\n',
-            undefined,
-            createReadCache(process.cwd()),
-        ),
-    ).toThrow('reason');
-    expect(() =>
-        parseSettings(
-            'configurations = ["bash"]\n[limits]\nfile_lines = 100\n',
-            undefined,
-            createReadCache(process.cwd()),
-        ),
-    ).not.toThrow();
+    expect(() => parseSettings('configurations = ["bash"]\n[limits]\nfile_lines = 1000\n', undefined)).toThrow(
+        'reason',
+    );
+    expect(() => parseSettings('configurations = ["bash"]\n[limits]\nfile_lines = 100\n', undefined)).not.toThrow();
 });
 
 test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {
-    expect(() => parseSettings(row.text, undefined, createReadCache(process.cwd()))).toThrow(row.message);
-    expect(() =>
-        parseSettings(
-            row.text.replace(row.correction[0], row.correction[1]),
-            undefined,
-            createReadCache(process.cwd()),
-        ),
-    ).not.toThrow();
+    expect(() => parseSettings(row.text, undefined)).toThrow(row.message);
+    expect(() => parseSettings(row.text.replace(row.correction[0], row.correction[1]), undefined)).not.toThrow();
 });
 
-test('a refusal names both versions when the repository last ran another gspot version', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': '[hooks]\npsh = "all"\n', '.gspot/version': '0.0.1\n' });
-    const versions = `This repository last ran gspot 0.0.1, and this run uses ${packageManifest.version}.`;
-    expect(() => readSettings(sandbox.path, createReadCache(sandbox.path))).toThrow(versions);
-    await Bun.write(join(sandbox.path, '.gspot/version'), `${packageManifest.version}\n`);
-    const current = await captureRejection(
-        Promise.try(() => readSettings(sandbox.path, createReadCache(sandbox.path))),
-    );
-    expect(current).toContain('`psh` is not a gspot.toml setting.');
-    expect(current).not.toContain('last ran gspot');
-});
-
-test('a tool option named reason is passed on and is not a gspot reason', () => {
+test('a rule option named reason is passed on and is not a gspot reason', () => {
     const settings = parseSettings(
-        `configurations = ["javascript"]\n[tools.prettier]\nextra = { value = { reason = false }, reason = "${REVIEWED_REASON}" }\n`,
+        'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = ["^[a-z]+$", { reason = false }]\n',
         undefined,
-        createReadCache(process.cwd()),
     );
-    const selected = selectForScope(settings, '', readManifests(createReadCache(process.cwd())));
-    expect(
-        buildScopeView(
-            buildKnownSettings(selected, 'recommended', createReadCache(process.cwd())),
-            settings,
-            selected,
-            '',
-        ).extra('prettier'),
-    ).toStrictEqual({
-        reason: false,
-    });
+    const selected = selectForScope(settings, '', readManifests());
+    const rules: unknown = getTable(
+        buildScopeView(buildKnownSettings(selected, 'recommended'), settings, selected, ''),
+        'tools.stylelint',
+    ).rules;
+    expect(rules).toStrictEqual({ 'selector-class-pattern': ['^[a-z]+$', { reason: false }] });
 });
 
 test('a record without a reason is refused at its reason field', () => {
     const text = 'configurations = ["bash"]\n[[ignore]]\ncheck = "bash/shellcheck"\n';
-    expect(() => parseSettings(text, undefined, createReadCache(process.cwd()))).toThrow('ignore.0.reason:');
-    expect(() =>
-        parseSettings(text + `reason = "${REVIEWED_REASON}"\n`, undefined, createReadCache(process.cwd())),
-    ).not.toThrow();
-});
-
-test('an extra tool options table needs a reason', () => {
-    expect(() =>
-        parseSettings(
-            'configurations = ["javascript"]\n[tools.prettier]\nextra = { useTabs = false }\n',
-            undefined,
-            createReadCache(process.cwd()),
-        ),
-    ).toThrow('extra');
+    expect(() => parseSettings(text, undefined)).toThrow('ignore.0.reason:');
+    expect(() => parseSettings(text + `reason = "${REVIEWED_REASON}"\n`, undefined)).not.toThrow();
 });
 
 test.each(['', 'because', 'Codex'])('a word with the reason %s is refused', (reason) => {
     expect(() =>
-        parseSettings(
-            `configurations = ["prose"]\nallowed_words = { Codex = ${JSON.stringify(reason)} }\n`,
-            undefined,
-            createReadCache(process.cwd()),
-        ),
+        parseSettings(`configurations = ["prose"]\nallowed_words = { Codex = ${JSON.stringify(reason)} }\n`, undefined),
     ).toThrow('allowed_words.Codex needs a reason');
 });
 
-test('allowed_words written as one list with one reason is refused with the table form', () => {
-    expect(() =>
-        parseSettings(
-            'configurations = ["prose"]\nallowed_words = { value = ["Codex"], reason = "The product is named Codex." }\n',
-            undefined,
-            createReadCache(process.cwd()),
-        ),
-    ).toThrow('Write allowed_words as a table of word = reason');
-});
-
 test('an OSV ignore expiry cannot add a TOML table', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: ['dependencies'],
-            ignore: [
-                {
-                    check: 'dependencies/osv-scanner',
-                    rule: 'GHSA-example',
-                    reason: 'Reviewed upstream.',
-                    until: '2026-09-20\n[verbatim]\ninjected = true',
-                },
-            ],
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['dependencies'], {
+            rules: true,
+            tables: stringify({
+                ignore: [
+                    {
+                        check: 'dependencies/osv-scanner',
+                        rule: 'GHSA-example',
+                        reason: 'Reviewed upstream.',
+                        until: '2026-09-20\n[verbatim]\ninjected = true',
+                    },
+                ],
+            }),
         }),
     });
+
     expect(await captureRejection(openSession(sandbox.path))).toContain('ignore.0.until');
 });
 
@@ -186,7 +127,7 @@ test.each([
         },
     ].map(({ source, correction, where }) => ({
         name: where.join(', '),
-        text: buildSettingsText(['javascript'], { rules: true, tables: `[[tools.eslint.override]]\n${source}\n` }),
+        text: buildSandboxSettings(['javascript'], { rules: true, tables: `[[tools.eslint.override]]\n${source}\n` }),
         where,
         correction,
         messages: [],
@@ -216,9 +157,9 @@ test.each(['\n', '\r\n'])(
 
 test('unknown configurations are refused where they are written, with a suggestion', () => {
     const errors = validateSettingsText(
-        buildSettingsText(['bas', 'bash', 'bas'], {
+        buildSandboxSettings(['bas', 'bash', 'bas'], {
             rules: true,
-            tables: '[[scope]]\npath = "api"\nconfigurations = ["pythonn", "bas"]\n',
+            scopes: [{ path: 'api', configurations: ['pythonn', 'bas'] }],
         }),
     );
     expect(errors).toStrictEqual([
@@ -233,14 +174,24 @@ test('unknown configurations are refused where they are written, with a suggesti
 });
 
 test('a scope path through a link to a folder outside the repository is refused', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'project/.keep': '', 'outside/nested/sentinel': 'unchanged' });
+    await using sandbox = await testdir({ 'project/.keep': '', 'outside/nested/sentinel': 'unchanged' });
+
     const root = join(sandbox.path, 'project');
     await symlink('../outside', join(root, 'linked'));
     const found = validateSettingsText(
-        buildSettingsText(['bash'], { rules: true, tables: '[[scope]]\npath = "linked"\n' }),
+        buildSandboxSettings(['bash'], { rules: true, scopes: [{ path: 'linked' }] }),
         root,
     );
     expect(found).toHaveLength(1);
     expect(found[0]).toContain('linked is a link. gspot does not write through links.');
+});
+
+test('a Semgrep rule file or a scope plugin module that names no file is refused at its key', async () => {
+    await using sandbox = await testdir({ 'present.mjs': 'export default {};', 'present.yml': 'rules: []' });
+    const text = stringify(RULE_FILE_SETTINGS);
+    expect(validateSettingsText(text, sandbox.path)).toStrictEqual([...RULE_FILE_ERRORS]);
+    const corrected = text
+        .replaceAll(/missing-(?:root|scope)\.mjs/gu, 'present.mjs')
+        .replaceAll(/missing-(?:root|scope)\.yml/gu, 'present.yml');
+    expect(validateSettingsText(corrected, sandbox.path)).toStrictEqual([]);
 });

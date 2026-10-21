@@ -1,16 +1,16 @@
-import { z } from 'zod';
 import { posix } from 'node:path';
 import { isRecord } from '#cli/system/values.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
-import { parse as parseToml } from '@decimalturn/toml-patch';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
+import { findCachedText } from '#cli/system/files/reads.ts';
+import { listEnclosingFolders } from '#cli/system/paths.ts';
+import { parseTomlFile } from '#cli/parsers/toml/document.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { NPM_TOOL_PREFIX } from '#cli/config/checks/dependencies.ts';
 import { MISE_FILES } from '#cli/config/repository/existing-tools.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import { readPackageFields } from '#cli/checks/dependencies/package-json.ts';
-
-const miseToolsSchema = z.looseObject({ tools: z.record(z.string(), z.unknown()).default({}) });
+import { readCachedPackageJson } from '#cli/repository/dependency-files.ts';
+import { miseToolsSchema } from '#cli/schemas/checks/package-manager-pin.ts';
 
 function readPinnedVersion(value: unknown): string | undefined {
     const first: unknown = Array.isArray(value) ? value[0] : value;
@@ -19,20 +19,17 @@ function readPinnedVersion(value: unknown): string | undefined {
     return typeof version === 'string' ? version : undefined;
 }
 
-function readMisePin(input: CheckInput, path: string, tool: string): string | undefined {
-    const text = readCachedText(input.reads, path);
+function readMisePin(session: Session, path: string, tool: string): string | undefined {
+    const text = findCachedText(session.reads, path);
     if (text === undefined) return undefined;
-    const { tools } = miseToolsSchema.parse(parseToml(text));
+    const { tools } = parseTomlFile(path, text, miseToolsSchema);
     return readPinnedVersion(tools[tool] ?? tools[`${NPM_TOOL_PREFIX}${tool}`]);
 }
 
-function findMisePin(input: CheckInput, folder: string, tool: string): { path: string; version: string } | undefined {
-    const segments = folder === '' ? [] : folder.split('/');
-    const paths = Array.from({ length: segments.length + 1 }, (_value, index) =>
-        segments.slice(0, segments.length - index).join('/'),
-    ).flatMap((base) => MISE_FILES.map((file) => posix.join(base, file)));
+function findMisePin(session: Session, folder: string, tool: string): { path: string; version: string } | undefined {
+    const paths = listEnclosingFolders(folder).flatMap((base) => MISE_FILES.map((file) => posix.join(base, file)));
     for (const path of paths) {
-        const version = readMisePin(input, path, tool);
+        const version = readMisePin(session, path, tool);
         if (version !== undefined) return { path, version };
     }
     return undefined;
@@ -47,20 +44,21 @@ function splitPackageManager(field: string | undefined): { tool: string; version
 /**
  * Reports a packageManager field that names another version than the mise pin of the same package manager.
  *
- * @param input the scope and the run cache.
+ * @param session the repository and its tools.
+ * @param planned the scope and the run cache.
  * @returns a finding when the two versions differ.
  */
-export function checkPackageManagerPin(input: CheckInput): Finding[] {
-    const folder = input.selection.scope.path;
+export function checkPackageManagerPin(session: Session, planned: PlannedCheck): Finding[] {
+    const folder = planned.selection.scope.path;
     const manifest = posix.join(folder, PACKAGE_JSON);
-    const declared = splitPackageManager(readPackageFields(input, manifest)?.packageManager);
+    const declared = splitPackageManager(readCachedPackageJson(session.reads, manifest)?.packageManager);
     if (declared === undefined) return [];
     const { tool, version } = declared;
-    const pin = findMisePin(input, folder, tool);
+    const pin = findMisePin(session, folder, tool);
     if (pin === undefined || pin.version === version) return [];
     return [
         buildFinding(
-            input,
+            planned,
             { file: manifest, line: 1 },
             'package-manager-pin',
             `packageManager names ${tool} ${version}, but ${pin.path} pins ${tool} ${pin.version}. Write one version in both.`,

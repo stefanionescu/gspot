@@ -6,8 +6,9 @@ import { GspotError } from '#cli/system/errors.ts';
 import { runGitForBytes } from '#cli/system/git.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { parseIndexEntries } from '#cli/parsers/git.ts';
+import { isIgnored } from '#cli/repository/gitignore.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
-import { readBytes, decodeUtf8 } from '#cli/system/files/reads.ts';
+import { readText, decodeUtf8 } from '#cli/system/files/reads.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/system/locations.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { EXECUTABLE_BITS, EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
@@ -69,20 +70,10 @@ function readFolderListing(root: string, folder: string, inherited: PathIgnore[]
     if (entries.some((entry) => entry.name === GITIGNORE_FILE && entry.isFile())) {
         ignores.push({
             base: folder,
-            matcher: ignore().add(readBytes(root, `${folder}${GITIGNORE_FILE}`).toString('utf8')),
+            matcher: ignore().add(readText(root, `${folder}${GITIGNORE_FILE}`)),
         });
     }
     return { entries, ignores };
-}
-
-function isIgnored(candidate: string, ignores: PathIgnore[]): boolean {
-    let ignored = false;
-    for (const { base, matcher } of ignores) {
-        const result = matcher.test(candidate.slice(base.length));
-        if (result.ignored) ignored = true;
-        else if (result.unignored) ignored = false;
-    }
-    return ignored;
 }
 
 function walkPaths(root: string): string[] {

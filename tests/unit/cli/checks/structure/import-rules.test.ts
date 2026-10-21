@@ -1,24 +1,25 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { checkReport } from '#tests/setup/run-gspot.ts';
+import { runChecks } from '#cli/runs/run.ts';
+import { openSession } from '#cli/session.ts';
+import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { GROUPED_PBXPROJ } from '#tests/data/checks/xcode.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { UNCOVERED_FILE_MESSAGE } from '#cli/config/checks/import-rules.ts';
 
 import {
+    REFUSAL_HINT,
     SWIFT_IMPORT_FILES,
     SWIFT_IMPORT_RULES,
     PYTHON_IMPORT_FILES,
     PYTHON_IMPORT_RULES,
 } from '#tests/data/checks/structure/import-rules.ts';
 
-const REFUSAL_HINT = 'Move the code, or add that rule to can_also_import or can_import.';
-
 test('Python imports follow the import rules: rules above, can_import, relative imports, and host modules', async () => {
     await using sandbox = await testdir({
         ...PYTHON_IMPORT_FILES,
-        'gspot.toml': buildSettingsText(['python'], { tables: PYTHON_IMPORT_RULES }),
+        'gspot.toml': buildSandboxSettings(['python'], { tables: PYTHON_IMPORT_RULES }),
     });
     const findings = await checkFindings(sandbox.path, 'structure/import-rules');
     expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
@@ -52,7 +53,7 @@ test('Python imports follow the import rules: rules above, can_import, relative 
 test('Swift imports follow the import rules through the SwiftPM targets, and a file outside every rule is reported', async () => {
     await using sandbox = await testdir({
         ...SWIFT_IMPORT_FILES,
-        'gspot.toml': buildSettingsText(['swift'], { tables: SWIFT_IMPORT_RULES }),
+        'gspot.toml': buildSandboxSettings(['swift'], { tables: SWIFT_IMPORT_RULES }),
     });
     const findings = await checkFindings(sandbox.path, 'structure/import-rules');
     expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
@@ -75,7 +76,7 @@ test('an Xcode native target is a Swift module named after the target', async ()
         'First Group/Shared.swift': 'public struct Shared {}\n',
         'Root.swift': 'public struct Root {}\n',
         'Tools/Script.swift': 'import App_Kit\n',
-        'gspot.toml': buildSettingsText(['swift'], {
+        'gspot.toml': buildSandboxSettings(['swift'], {
             tables: '[[import_rule]]\nname = "tools"\npaths = ["Tools/**"]\n\n[[import_rule]]\nname = "app"\npaths = ["First Group/**", "Root.swift"]\n',
         }),
     });
@@ -87,10 +88,13 @@ test('an Xcode native target is a Swift module named after the target', async ()
 
 test('without import rules the check is skipped', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['python'], {}),
+        'gspot.toml': buildSandboxSettings(['python'], {}),
         'main.py': 'import os\n',
     });
-    const { report } = await checkReport(sandbox.path, ['check', '--only', 'structure/import-rules', '--json']);
+    const { report } = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['structure/import-rules'] }),
+    );
     expect(report.checks).toMatchObject([
         { check: 'structure/import-rules', status: 'skipped', note: 'Add [[import_rule]] records to check imports.' },
     ]);

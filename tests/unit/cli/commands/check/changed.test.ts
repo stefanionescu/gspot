@@ -1,12 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { buildReportingCheck } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 test('--changed compares with the merge base, names its base, and a folder argument stays a path', async () => {
     await using sandbox = await testdir();
@@ -19,32 +20,21 @@ test('--changed compares with the merge base, names its base, and a folder argum
     commitAll(sandbox.path);
     readGitOutput(sandbox.path, ['branch', 'base']);
     readGitOutput(sandbox.path, ['branch', '--set-upstream-to=base']);
-    await Bun.write(join(sandbox.path, 'api/source.txt'), 'committed change');
+    await writeFile(join(sandbox.path, 'api/source.txt'), 'committed change');
     commitAll(sandbox.path);
-    await Bun.write(join(sandbox.path, 'web/source.txt'), 'working change');
-    const selected = await checkReport(sandbox.path, [
-        'check',
-        '--only',
-        'sandbox/paths',
-        '--changed',
-        '--json',
-        '--',
-        'api',
-    ]);
+    await writeFile(join(sandbox.path, 'web/source.txt'), 'working change');
+    const selected = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json', '--', 'api']),
+    );
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
     const report = selected.report;
     expect(report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
     expect(report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
-    const explicit = await checkReport(sandbox.path, [
-        'check',
-        '--only',
-        'sandbox/paths',
-        '--changed',
-        'base',
-        '--json',
-    ]);
+    const explicit = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', 'base', '--json']),
+    );
     expect(explicit.code, explicit.stdout + explicit.stderr).toBe(1);
     const all = explicit.report;
     expect(
@@ -64,7 +54,7 @@ test('--changed without an upstream names the fix, and uses the remote default b
     expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toContain('use --changed <ref>');
     readGitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
     readGitOutput(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
-    await Bun.write(join(sandbox.path, 'api/source.txt'), 'changed');
+    await writeFile(join(sandbox.path, 'api/source.txt'), 'changed');
     const defaultRange = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed']);
     expect(defaultRange.code, defaultRange.stdout + defaultRange.stderr).toBe(1);
     expect(defaultRange.stdout).toContain('refs/remotes/origin/main');
@@ -77,7 +67,7 @@ test('a shallow clone explains how to fetch the missing history', async () => {
     readGitOutput(source, ['init', '-b', 'main']);
     commitAll(source);
     const base = readGitOutput(source, ['rev-parse', 'HEAD']);
-    await Bun.write(join(source, 'api/source.txt'), 'after');
+    await writeFile(join(source, 'api/source.txt'), 'after');
     commitAll(source);
     readGitOutput(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']);
     const result = await runGspot(join(sandbox.path, 'checkout'), [

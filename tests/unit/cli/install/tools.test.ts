@@ -1,24 +1,19 @@
-import { join } from 'node:path';
-import { readFile } from 'node:fs/promises';
+import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { readTree } from '#tests/setup/files.ts';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
-import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 test('an unexpected error during install prints the internal error once and changes nothing', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `configurations = ["markdown"]
-[rules]
-enabled = false
-`,
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['markdown'], { tables: '[rules]\nenabled = false\n' }),
         'README.md': '# Example\n',
     });
+
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const settings = await readFile(join(sandbox.path, 'gspot.toml'));
     const before = await readTree(sandbox.path);
     using resources = new DisposableStack();
     resources.use(
@@ -41,8 +36,5 @@ enabled = false
         error: 'failure',
         message,
     });
-    expect(await readFile(join(sandbox.path, 'gspot.toml'))).toStrictEqual(settings);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/package-lock.json'))).toBe(false);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

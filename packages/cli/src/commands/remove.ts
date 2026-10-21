@@ -1,35 +1,15 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { findScopeTable } from '#cli/settings/edit.ts';
-import { stripUndefined } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { saveSettings } from '#cli/apply/save-settings.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
-import type { Mutation } from '#cli/types/settings/edits.ts';
-import type { Settings } from '#cli/types/settings/values.ts';
+import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { startConfigurationEdit } from '#cli/commands/settings.ts';
+import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type ConfigurationsOptions } from '#cli/types/commands/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-
-function formatUnselectedConfigurations(configurations: string[]): string {
-    return `No change: ${configurations.join(' and ')} ${configurations.length === 1 ? 'is' : 'are'} not selected.\n`;
-}
-
-function buildRemovalEdit(
-    scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>,
-    options: ConfigurationsOptions,
-    selected: string[],
-): Mutation {
-    const current = scopeSettings.configurations;
-    return (written) => {
-        const scopeTable = findScopeTable(written, options.scope);
-        const removed = options.configurations.filter((id) => selected.includes(id));
-        if (removed.length === 0) return;
-        scopeTable['configurations'] = current.filter((id) => !removed.includes(id));
-        scopeTable['removed_configurations'] = [...new Set([...scopeSettings.removed_configurations, ...removed])];
-    };
-}
 
 function refuseRequirements(configurations: string[], kept: string[], manifests: Map<string, Manifest>): void {
     for (const configuration of configurations) {
@@ -50,23 +30,35 @@ function refuseRequirements(configurations: string[], kept: string[], manifests:
  * @param options the parsed flags.
  * @returns the command result.
  */
-async function runRemoveCommand(options: ConfigurationsOptions): Promise<CommandResult> {
+async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
     const { root, input, scopeSettings, selected, manifests } = startConfigurationEdit(options);
     const kept = selected.filter((id) => !options.configurations.includes(id));
     refuseRequirements(options.configurations, kept, manifests);
     if (!options.configurations.some((name) => selected.includes(name))) {
         return {
-            text: formatUnselectedConfigurations(options.configurations),
+            text: `No change: ${options.configurations.join(' and ')} ${options.configurations.length === 1 ? 'is' : 'are'} not selected.\n`,
             json: { changed: false },
             exitCode: 0,
         };
     }
-    const removeConfigurations = buildRemovalEdit(scopeSettings, options, selected);
+    const current = scopeSettings.configurations;
+    const scopeTable = findScopeTable(input.table, options.scope);
+    const removed = options.configurations.filter((id) => selected.includes(id));
+    scopeTable['configurations'] = current.filter((id) => !removed.includes(id));
+    const previous = scopeTable['removed_configurations'];
+    if (isRecord(previous) && previous['reason'] !== options.reason)
+        throw new GspotError(
+            'arguments',
+            `removed_configurations already has the reason ${JSON.stringify(previous['reason'])}. Pass --reason with a reason that covers every item.`,
+        );
+    scopeTable['removed_configurations'] = {
+        value: [...new Set([...scopeSettings.removed_configurations, ...removed])],
+        reason: options.reason,
+    };
     const where = options.scope === undefined ? '' : ` from scope ${options.scope}`;
     const description = `Removed ${options.configurations.join(' and ')}${where}.`;
     return saveSettings(root, {
         input,
-        change: removeConfigurations,
         summary: description,
     });
 }
@@ -83,12 +75,17 @@ function registerRemove(program: Command, onResult: CommandCompletion): void {
         .argument('<configuration...>', COMMAND_HELP.remove.arguments['configuration'])
         .summary(COMMAND_HELP.remove.summary)
         .description(COMMAND_HELP.remove.description)
+        .option('--reason <text>', COMMAND_HELP.remove.options['--reason <text>'])
         .option('--scope <path>', COMMAND_HELP.remove.options['--scope <path>'], trimTrailingSlashes)
         .action(async (configurations, flags) => {
+            if (flags.reason === undefined) throw new GspotError('arguments', 'gspot remove needs --reason "<why>".');
+            const invalid = validateReason('gspot remove', flags.reason);
+            if (invalid !== undefined) throw new GspotError('arguments', invalid);
             onResult(
                 await runRemoveCommand({
                     cwd: process.cwd(),
                     configurations: configurations,
+                    reason: flags.reason,
                     ...stripUndefined({ scope: flags.scope }),
                 }),
             );

@@ -9,7 +9,7 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { listExecutableNames } from '#cli/system/paths.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
@@ -19,13 +19,13 @@ import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, FIXED_VALE_INSTALL_SCRIPT } f
 test.each([...VALE_INSTALL_FAILURES])(
     'a failed Vale package install reports %s, and the next install succeeds after the fix',
     async (_failure, script, expected, limit) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['prose'], { level: 'all', tables: limit }),
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: limit }),
             '.gspot/configurations/general/prose/vale.ini': VALE_PACKAGES_INI,
             '.gspot/vale/Google/terms.yml': 'previous bytes\n',
             'guide.md': 'Authored text.\n',
         });
+
         const session = await openSession(sandbox.path);
         const tool = getToolDeclaration(session.manifests.values(), 'vale');
         const executable = join(sandbox.path, 'node_modules/.bin', listExecutableNames('vale')[0]!);
@@ -42,7 +42,7 @@ test.each([...VALE_INSTALL_FAILURES])(
             join(sandbox.path, 'node_modules/.bin/vale.js'),
             launcher.replace(script, FIXED_VALE_INSTALL_SCRIPT),
         );
-        await writeFile(join(sandbox.path, 'gspot.toml'), buildSettingsText(['prose'], { level: 'all' }));
+        await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
         const steps: (readonly string[])[] = [];
         const fixed = { ...request, session: await openSession(sandbox.path), steps };
         expect(await installValePackages(fixed)).toBe('installed Vale packages in .gspot/vale');
@@ -68,8 +68,8 @@ test.each([...LEVELS])(
 test.each([...VALE_PACKAGE_FOLDERS])(
     'level all needs the shipped %s folder whatever the Packages line says',
     async (missing) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { '.gspot/configurations/general/prose/vale.ini': 'Packages = \n' });
+        await using sandbox = await testdir({ '.gspot/configurations/general/prose/vale.ini': 'Packages = \n' });
+
         for (const folder of VALE_PACKAGE_FOLDERS.filter((folder) => folder !== missing))
             await createFileTree(sandbox.path, { [`.gspot/vale/${folder}/.keep`]: '' });
         expect(hasValePackages(sandbox.path, 'all')).toBe(false);
@@ -77,8 +77,8 @@ test.each([...VALE_PACKAGE_FOLDERS])(
 );
 
 test('at level recommended install installs no Vale packages', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildSettingsText(['prose'], { level: 'recommended' }) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['prose'], { level: 'recommended' }) });
+
     const session = await openSession(sandbox.path);
     const steps: (readonly string[])[] = [];
     using writer = openWriter(sandbox.path);

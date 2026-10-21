@@ -1,17 +1,17 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
-import { toolsSchema } from '#cli/settings/schema/tools.ts';
-import { getCachedValue } from '#cli/system/files/cache.ts';
+import { PATH_ROLES } from '#cli/config/settings/schema.ts';
+import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { OVERRIDING_GROUPS } from '#cli/config/settings/values.ts';
-import { importRulesSchema } from '#cli/settings/schema/imports.ts';
-import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
-import type { MemoKey, ReadCache } from '#cli/types/system/files.ts';
-import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
+import { importRulesSchema } from '#cli/schemas/settings/imports.ts';
+import { unwrapSettingSchema } from '#cli/schemas/settings/parts.ts';
+import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/gspot-toml.ts';
 import type { KnownSettings, SettingDefault } from '#cli/types/settings/values.ts';
-import { tableSettingSchemas, configurationTableSchemas } from '#cli/settings/schema/tables.ts';
+import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 
 function getSchemaPathRole(input: z.core.JSONSchema.JSONSchema): unknown {
     if (input['pathRole'] !== undefined) return input['pathRole'];
@@ -83,45 +83,37 @@ function deriveSettingType(schema: z.ZodType): Pick<SettingDeclaration, 'type' |
     const document = z.toJSONSchema(schema, { io: 'input' });
     const input = document.anyOf?.find((value) => typeof value === 'object' && value.type !== undefined) ?? document;
     const pathRole = getSchemaPathRole(input);
+    const allowedRole = PATH_ROLES.find((role) => role === pathRole);
     return {
         type: input.type === 'string' && pathRole !== undefined ? 'path' : convertSchemaType(input.type),
-        ...(['source', 'destination', 'build'].includes(pathRole as string)
-            ? { path_role: pathRole as NonNullable<SettingDeclaration['path_role']> }
-            : {}),
+        ...(allowedRole === undefined ? {} : { path_role: allowedRole }),
     };
 }
 
-const rootDeclarations: MemoKey<SettingDeclaration[]> = {
-    create: () => [
-        ...Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).map<SettingDeclaration>(
-            ([name, schema]) => {
-                const value = schema.parse(undefined);
-                return {
-                    name,
-                    ...deriveSettingType(schema),
-                    default: value,
-                    summary: schema.description ?? '',
-                    ...schema.meta(),
-                };
-            },
-        ),
-    ],
-};
+const rootDeclarations: SettingDeclaration[] = [
+    ...Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).map<SettingDeclaration>(([name, schema]) => {
+        const value = schema.parse(undefined);
+        return {
+            name,
+            ...deriveSettingType(schema),
+            default: value,
+            summary: schema.description ?? '',
+            ...schema.meta(),
+        };
+    }),
+];
 
-const toolDeclarations: MemoKey<Map<string, SettingDeclaration[]>> = {
-    create: () =>
-        new Map(
-            Object.entries(toolsSchema.shape).map(([tool, table]) => [
-                tool,
-                Object.entries<z.ZodType>(table.unwrap().shape).map<SettingDeclaration>(([field, schema]) => ({
-                    name: `tools.${tool}.${field}`,
-                    ...deriveSettingType(schema),
-                    summary: schema.description ?? '',
-                    ...schema.meta(),
-                })),
-            ]),
-        ),
-};
+const toolDeclarations: Map<string, SettingDeclaration[]> = new Map(
+    Object.entries(toolsSchema.shape).map(([tool, table]) => [
+        tool,
+        Object.entries<z.ZodType>(table.unwrap().shape).map<SettingDeclaration>(([field, schema]) => ({
+            name: `tools.${tool}.${field}`,
+            ...deriveSettingType(schema),
+            summary: schema.description ?? '',
+            ...schema.meta(),
+        })),
+    ]),
+);
 
 /**
  * Build the known settings in selection order. Framework, platform, library, and database configurations override
@@ -129,18 +121,23 @@ const toolDeclarations: MemoKey<Map<string, SettingDeclaration[]>> = {
  *
  * @param selected the manifests of the selection, in order.
  * @param level picks the recommended or all defaults.
- * @param reads the run cache.
  * @returns the declarations, their defaults, and the conflicts found on the way.
  */
-function buildKnownSettings(selected: Manifest[], level: Level, reads: ReadCache): KnownSettings {
-    const roots = getCachedValue(reads, rootDeclarations);
-    const declarationsByTool = getCachedValue(reads, toolDeclarations);
+function buildKnownSettings(selected: Manifest[], level: Level): KnownSettings {
+    const roots = rootDeclarations;
+    const declarationsByTool = toolDeclarations;
 
     const known: KnownSettings = { declarations: new Map(), defaults: new Map(), errors: [] };
     for (const declaration of roots) {
         known.declarations.set(declaration.name, declaration);
         known.defaults.set(declaration.name, { value: declaration.default, configuration: 'gspot default' });
     }
+    for (const [language, { categories }] of Object.entries(readNamingDefaults().languages))
+        for (const [category, { cases }] of Object.entries(categories))
+            known.defaults.set(`naming.${language}.${category}.cases`, {
+                value: cases,
+                configuration: 'gspot default',
+            });
     for (const manifest of selected) addManifest(known, manifest, level);
     const tools = new Set(selected.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     for (const [, declarations] of [...declarationsByTool].filter(([tool]) => tools.has(tool))) {

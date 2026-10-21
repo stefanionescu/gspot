@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
-import { createRule } from '../create-rule.ts';
 import { INDEX_BASENAMES } from '../config/paths.ts';
 import { IMPORT_SELECTOR } from '../config/syntax.ts';
 import type { ImportSource } from '../types/syntax.ts';
+import { createRule } from '../schemas/rules/options.ts';
 import { INTERNAL_PREFIXES, MODULE_MOCK_METHODS } from '../config/imports.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

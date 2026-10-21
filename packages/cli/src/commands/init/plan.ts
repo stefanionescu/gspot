@@ -1,7 +1,6 @@
+import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { getColors } from '#cli/system/terminal.ts';
-import { stripUndefined } from '#cli/system/values.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
@@ -10,8 +9,8 @@ import { listSubmodulePaths } from '#cli/repository/tracked.ts';
 import { readLintJobs } from '#cli/repository/existing-tools.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/tracked.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
+import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 
 import {
@@ -29,7 +28,6 @@ import {
     PYTHON_TOOL_PROJECT_FILE,
 } from '#cli/config/system/locations.ts';
 import {
-    COUNT,
     HOOKS_ROW,
     COLUMN_GAP,
     REASON_WIDTH,
@@ -40,7 +38,7 @@ import {
     DETECTION_LABEL_WIDTH,
 } from '#cli/config/commands/init.ts';
 
-function buildToolProjectRows(everySelected: Manifest[], reads: ReadCache): InitPlan['change'] {
+function buildToolProjectRows(everySelected: Manifest[]): InitPlan['change'] {
     const pins = listToolProjectPins(everySelected);
     const count = Object.keys(pins.npm).length;
     const rows: InitPlan['change'] =
@@ -53,16 +51,19 @@ function buildToolProjectRows(everySelected: Manifest[], reads: ReadCache): Init
             path: PYTHON_TOOL_PROJECT_FILE,
             note: `${formatCount(python, 'pinned Python tool')}; matching uv.lock and tool environment`,
         });
-    const mise = listMisePins(everySelected, reads).length;
+    const mise = listMisePins(everySelected).length;
     if (mise > 0) rows.unshift({ path: MISE_TOOL_PROJECT_FILE, note: formatCount(mise, 'tool pin') });
     return rows;
 }
 
 // Name the dependencies that the generated tool project pins. Keep the authored dependency file.
-function buildPinnedDependencyRows({ root, existingTools }: InitPlanInputs, requirements: Manifest[]): InitFileRow[] {
+function buildPinnedDependencyRows(
+    { repository, existingTools }: InitPlanInputs,
+    requirements: Manifest[],
+): InitFileRow[] {
     const pinned = new Set(Object.keys(listToolProjectPins(requirements).npm));
     return existingTools.toolOnlyPackages.flatMap((path) => {
-        const packageJson = readPackageJson(root, path) as PackageJson;
+        const packageJson = readPackageJson(repository.root, path) as PackageJson;
         const names = [
             ...new Set(
                 Object.keys({
@@ -130,14 +131,6 @@ function formatConfigurationSection(rows: InitPlan['configurations'], level: Ini
     return ['configurations', ...lines, ''];
 }
 
-function formatTemplateSection(template: InitPlan['template']): string[] {
-    if (!template) return [];
-    const detected = template.detected.map(
-        (id) => `  detected, not in the template: ${id}  (add it afterwards: gspot add ${id})`,
-    );
-    return [`template    ${template.source}  sha256 ${template.digest}`, ...detected, ''];
-}
-
 /**
  * Build the file writes and integrations that init shows before it asks you to accept.
  *
@@ -158,15 +151,9 @@ function buildInitPlan(
         generated,
     }: { settings: Settings; settingsText: string; requirements: Manifest[]; generated: GenerationResult },
 ): InitPlan {
-    const { root, hasGit, existingTools, selection, answers, replaced, options } = planning;
-    const template = options.template && {
-        source: options.template.source,
-        digest: options.template.digest,
-        detected: selection.detected
-            .map((evidence) => evidence.configuration)
-            .filter((id) => !selection.selectedIds.has(id)),
-    };
-    const change = buildToolProjectRows(requirements, planning.reads);
+    const { repository, existingTools, answers, replaced } = planning;
+    const { root, hasGit } = repository;
+    const change = buildToolProjectRows(requirements);
     if (hasGit) {
         change.unshift({ path: GITIGNORE_FILE, note: 'one managed block' }, ATTRIBUTES_ROW);
         if (answers.hooks) change.push(HOOKS_ROW);
@@ -188,14 +175,13 @@ function buildInitPlan(
             }),
     ];
     return {
-        ...stripUndefined({ template }),
         level: settings.level,
         configurations: buildConfigurationRows(planning, settings),
         write,
         delete: replaced.deleted.filter(({ path }) => !write.some((row) => row.path === path)),
         retained: [
             ...replaced.retained,
-            ...listSubmodulePaths(planning.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
+            ...listSubmodulePaths(repository.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...buildKeptCiRows(answers.ci, existingTools.ci, readLintJobs(root, existingTools.ci)),
             ...planning.foreignDisableComments,
         ],
@@ -216,7 +202,6 @@ function buildInitPlan(
 function formatInitPlan(plan: InitPlan): string {
     const { dim } = getColors();
     const lines = [
-        ...formatTemplateSection(plan.template),
         ...formatConfigurationSection(plan.configurations, plan.level),
         ...formatFileSection('write', plan.write),
         ...formatFileSection(
@@ -286,7 +271,7 @@ function formatDetection(summary: DetectionSummary): string {
         )
         .map((evidence) => {
             const count = evidence.evidence.split(' ', 1)[0] ?? '';
-            return COUNT.test(count)
+            return DIGITS_ONLY.test(count)
                 ? `${evidence.configuration} ${count}`
                 : `${evidence.configuration} (${evidence.evidence})`;
         });

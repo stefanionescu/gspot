@@ -15,11 +15,11 @@ import { link, stat, mkdir, rmdir, symlink, readFile } from 'node:fs/promises';
 import { OUTSIDE_LINKS, PORTABLE_PATHS, MODE_REPLACEMENTS } from '#tests/data/system.ts';
 
 test('a lock removed after a failed create can be taken', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         [`${STATE_PATH}/writer.lock`]: `${String(process.pid)}:first`,
         source: 'kept',
     });
+
     const target = join(sandbox.path, `${STATE_PATH}/writer.lock`);
     {
         using files = openFiles(sandbox.path);
@@ -113,8 +113,8 @@ test('the recovery folder refuses a second recovery until the first one ends', a
 });
 
 test('a second writer is refused until the first releases the lock', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, { source: 'kept' });
+    await using folder = await testdir({ source: 'kept' });
+
     const path = `${STATE_PATH}/writer.lock`;
     {
         using second = openFiles(folder.path);
@@ -182,8 +182,8 @@ test.each([...PORTABLE_PATHS])('portable paths refuse $path: $refused', ({ path,
 });
 
 test('rmdir refuses linked and outside parents and keeps folders that are not empty', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'project/.keep': '', 'outside/kept/value': 'external' });
+    await using sandbox = await testdir({ 'project/.keep': '', 'outside/kept/value': 'external' });
+
     const root = join(sandbox.path, 'project');
     await symlink('../outside', join(root, 'linked'));
     using files = openFiles(root);
@@ -249,8 +249,8 @@ test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(
 test.skipIf(isWindows).each([...OUTSIDE_LINKS])(
     'path $path cannot change a file outside the folder',
     async ({ path, refusal }) => {
-        await using folder = await testdir();
-        await createFileTree(folder.path, { 'project/.keep': '', 'outside/sentinel': 'authored\n' });
+        await using folder = await testdir({ 'project/.keep': '', 'outside/sentinel': 'authored\n' });
+
         const outside = join(folder.path, 'outside');
         const project = join(folder.path, 'project');
         await symlink(outside, join(project, 'escape'));

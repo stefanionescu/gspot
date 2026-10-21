@@ -1,3 +1,5 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+
 /** Only the EditorConfig check reads the format settings. */
 export const EDITORCONFIG_SETTINGS = `configurations = ["format"]
 [[ignore]]
@@ -48,12 +50,12 @@ export const EDITORCONFIG_SELECTOR_ERRORS = [
     {
         pattern: 'src/*.+(ts|js)',
         message:
-            'EditorConfig cannot represent selector "src/*.+(ts|js)". Keep this override in tools.prettier.extra.value.overrides or an EditorConfig section.',
+            'EditorConfig cannot represent selector "src/*.+(ts|js)". Keep this override in a `[[format.override]]` record with a selector that EditorConfig can read.',
     },
     {
         pattern: '!src/*.js',
         message:
-            'EditorConfig cannot represent selector "!src/*.js". Keep this override in tools.prettier.extra.value.overrides or an EditorConfig section.',
+            'EditorConfig cannot represent selector "!src/*.js". Keep this override in a `[[format.override]]` record with a selector that EditorConfig can read.',
     },
 ] as const;
 
@@ -68,14 +70,10 @@ export const NON_RECORD_JSON = ['null', '[]', '42'];
 
 /** A staged format check uses the root tool file until a later apply writes the scope tool file. */
 export const STAGED_FORMAT_FILES = {
-    'gspot.toml': `configurations = ["format"]
-[format]
-indent_width = 2
-[[scope]]
-path = "app"
-[rules]
-enabled = false
-`,
+    'gspot.toml': buildSandboxSettings(['format'], {
+        tables: '[format]\nindent_width = 2\n[rules]\nenabled = false\n',
+        scopes: [{ path: 'app' }],
+    }),
     'app/value.js': 'export const value = {\n  value: {\n    active: true,\n  },\n};\n',
 } as const;
 

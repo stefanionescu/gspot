@@ -7,7 +7,7 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
-import { TRAILING_STAR, LOCAL_PATH_PREFIX, PATHS_BASE_OPTION } from '#cli/config/repository/aliases.ts';
+import { LOCAL_PATH_PREFIX, PATHS_BASE_OPTION } from '#cli/config/repository/aliases.ts';
 
 function findImportTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;
@@ -31,8 +31,8 @@ export function readPackageAliases(root: string, prefix: string): Record<string,
         const found = findImportTarget(target);
         if (found === undefined) continue;
         if (!found.startsWith(LOCAL_PATH_PREFIX)) continue;
-        const alias = found.slice(LOCAL_PATH_PREFIX.length).replace(TRAILING_STAR, '');
-        aliases[pattern.replace(TRAILING_STAR, '')] = `${prefix}${alias}`;
+        const alias = found.slice(LOCAL_PATH_PREFIX.length);
+        aliases[pattern] = `${prefix}${alias}`;
     }
     return aliases;
 }
@@ -58,8 +58,8 @@ export function readScopeAliases(repositoryRoot: string, scope: string, reads: R
     for (const [pattern, targets] of paths) {
         const target = targets[0];
         if (target === undefined) continue;
-        const alias = convertToPosixPath(relative(repositoryRoot, resolve(base, target))).replace(TRAILING_STAR, '');
-        aliases[pattern.replace(TRAILING_STAR, '')] = alias;
+        const alias = convertToPosixPath(relative(repositoryRoot, resolve(base, target)));
+        aliases[pattern] = alias;
     }
     return aliases;
 }

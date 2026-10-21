@@ -64,13 +64,13 @@ export const PROJECT_DEPENDENCY_FILES = {
 } as const;
 
 export const PROJECT_DEPENDENCY_SCOPES = [
-    { scope: '', dependencies: { '@nestjs/swagger': '11.2.3' } },
-    { scope: 'application', dependencies: { '@nestjs/swagger': '11.2.3' } },
-    { scope: 'app', dependencies: { tailwindcss: '4.1.13' } },
-    { scope: 'app/styles', dependencies: { tailwindcss: '4.1.13' } },
-    { scope: 'other', dependencies: { next: '16.3.5' } },
-    { scope: 'empty', dependencies: {} },
-    { scope: 'empty/src', dependencies: {} },
+    { scope: '', names: ['@nestjs/swagger'] },
+    { scope: 'application', names: ['@nestjs/swagger'] },
+    { scope: 'app', names: ['tailwindcss'] },
+    { scope: 'app/styles', names: ['tailwindcss'] },
+    { scope: 'other', names: ['next'] },
+    { scope: 'empty', names: [] },
+    { scope: 'empty/src', names: [] },
 ] as const;
 
 /** Invalid dependency file fields stay errors of the dependency file reader. */
@@ -90,7 +90,7 @@ export const INVALID_DEPENDENCY_FILES = [
         '{"workspaces":[7]}',
         'package.json: workspaces: Invalid input; workspaces.0: Invalid input: expected string, received number; workspaces: Invalid input: expected object, received array. Fix the field.',
     ],
-    ['pyproject.toml', '[project', 'pyproject.toml is not valid TOML. Fix the file, then run gspot apply.'],
+    ['pyproject.toml', '[project', 'pyproject.toml:1:9 is not valid TOML: Error parsing TOML (1, 9):. Fix the file.'],
     [
         'pyproject.toml',
         '[project]\ndependencies = [7]\n',

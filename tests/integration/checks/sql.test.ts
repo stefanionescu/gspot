@@ -1,27 +1,20 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import type { ProcessOutput } from '#tests/types/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 import { SQL_CASES, SQL_SANDBOX, SQL_DUCKDB_SOURCE, SQL_FUNCTION_SOURCE } from '#tests/data/checks/sql.ts';
 
-/** Write the SQL sources, apply, and restore them when the test ends. */
-async function prepareSqlFiles(files: Record<string, string>): Promise<AsyncDisposable> {
-    const sandbox = installedSandbox();
-    await using resources = new AsyncDisposableStack();
-    resources.use(await updateSandbox(sandbox, { check: 'sql/sqlfluff', files }));
-    const applied = await spawnGspot(sandbox.root, ['apply'], sandbox.environment);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    return resources.move();
-}
-
 test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL default", async () => {
     const { root, environment } = installedSandbox();
-    await using _sourceChange = await prepareSqlFiles({
-        'gspot.toml': buildSettingsText(['sql'], {
-            tables: `[tools.sqlfluff]
+    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        check: 'sql/sqlfluff',
+        files: {
+            'gspot.toml': buildSandboxSettings(['sql'], {
+                tables: `[tools.sqlfluff]
 dialect = "postgres"
 [[scope]]
 path = "warehouse"
@@ -30,14 +23,15 @@ dialect = "duckdb"
 [[scope]]
 path = "warehouse/child"
 `,
-        }),
-        'query.sql': 'PRAGMA table_info (users);\n',
-        'warehouse/query.sql': 'SELECT 1;\n',
-        'warehouse/child/query.sql': SQL_DUCKDB_SOURCE,
+            }),
+            'query.sql': 'PRAGMA table_info (users);\n',
+            'warehouse/query.sql': 'SELECT 1;\n',
+            'warehouse/child/query.sql': SQL_DUCKDB_SOURCE,
+        },
     });
     const wrong = await spawnGspot(root, ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json'], environment);
     expect(wrong.code, wrong.stdout + wrong.stderr).toBe(1);
-    expect(hasSqlParseError(wrong.stdout)).toBe(true);
+    expect(hasSqlParseError(wrong)).toBe(true);
     const selected = await spawnGspot(root, ['set', 'tools.sqlfluff.dialect', 'sqlite'], environment);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const corrected = await spawnGspot(root, ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json'], environment);
@@ -60,26 +54,29 @@ path = "warehouse/child"
         environment,
     );
     expect(wrongChild.code, wrongChild.stdout + wrongChild.stderr).toBe(1);
-    expect(hasSqlParseError(wrongChild.stdout)).toBe(true);
+    expect(hasSqlParseError(wrongChild)).toBe(true);
 });
 
 test('SQLFluff reports and fixes uppercase function names', async () => {
     const { root, environment } = installedSandbox();
-    await using _sourceChange = await prepareSqlFiles({
-        'gspot.toml': buildSettingsText(['sql'], {
-            level: 'all',
-            tables: '[tools.sqlfluff]\ndialect = "postgres"\n',
-        }),
-        'functions.sql': SQL_FUNCTION_SOURCE,
+    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        check: 'sql/sqlfluff',
+        files: {
+            'gspot.toml': buildSandboxSettings(['sql'], {
+                level: 'all',
+                tables: '[tools.sqlfluff]\ndialect = "postgres"\n',
+            }),
+            'functions.sql': SQL_FUNCTION_SOURCE,
+        },
     });
     const command = ['check', 'functions.sql', '--only', 'sql/sqlfluff', '--json'];
     const positive = await spawnGspot(root, command, environment);
     expect(positive.code, positive.stdout + positive.stderr).toBe(0);
-    await Bun.write(join(root, 'functions.sql'), SQL_FUNCTION_SOURCE.replaceAll('get_user_name', 'GET_USER_NAME'));
-    const failed = await spawnGspot(root, command, environment);
+    await writeFile(join(root, 'functions.sql'), SQL_FUNCTION_SOURCE.replaceAll('get_user_name', 'GET_USER_NAME'));
+    const failed = parseCheckReport(await spawnGspot(root, command, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        (JSON.parse(failed.stdout) as RunReport).checks
+        failed.report.checks
             .flatMap((check) => check.findings)
             .filter((finding) => finding.rule === 'CP03')
             .map(({ line, column }) => ({ line, column })),
@@ -89,7 +86,7 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
     ]);
     const fixed = await spawnGspot(root, [...command, '--fix'], environment);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-    expect(await Bun.file(join(root, 'functions.sql')).text()).toBe(SQL_FUNCTION_SOURCE);
+    expect(await readFile(join(root, 'functions.sql'), 'utf8')).toBe(SQL_FUNCTION_SOURCE);
     const corrected = await spawnGspot(root, command, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
@@ -119,8 +116,8 @@ test.each([...SQL_CASES])('$check reports $expected.file and passes after the fi
 });
 
 /** Find SQL parse errors in the check report. */
-function hasSqlParseError(stdout: string): boolean {
-    return (JSON.parse(stdout) as RunReport).checks
-        .flatMap((check) => check.findings)
+function hasSqlParseError(output: ProcessOutput): boolean {
+    return parseCheckReport(output)
+        .report.checks.flatMap((check) => check.findings)
         .some((finding) => finding.rule === 'PRS');
 }

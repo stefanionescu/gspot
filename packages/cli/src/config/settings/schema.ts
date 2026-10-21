@@ -4,20 +4,8 @@ export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 
 
 export const ESLINT_OPTION_STRING = /^(?!(?:off|warn|error)$)[\s\S]*$/u;
 
-export const ESLINT_OPTIONS_HELP =
-    'ESLint rule selection comes from level recommended or all. Write only options in an array, without a severity. Accept a finding with gspot ignore javascript/eslint --rule <rule> --reason "<why>".';
-
-export const MARKDOWNLINT_OPTIONS_HELP =
-    'Markdownlint rule selection comes from level recommended or all. Write only option tables by Markdown rule ID, such as MD024. Accept a finding with gspot ignore markdown/markdownlint --rule <rule> --reason "<why>".';
-
-export const STYLELINT_OPTIONS_HELP =
-    'Stylelint rule selection comes from level recommended or all. Write options only for active rules. Severity remains error; accept a finding with gspot ignore css/stylelint --rule <rule> --reason "<why>".';
-
-export const COMMITLINT_OPTIONS_HELP =
-    'Commitlint rule selection comes from level recommended or all. Write options as ["always" or "never", optional value], without a severity. Accept a finding with gspot ignore commits/commitlint --rule <rule> --reason "<why>".';
-
-export const YAMLLINT_OPTIONS_HELP =
-    'Yamllint rule selection comes from level recommended or all. Write option tables for active rules. Severity remains error; record exclusions with gspot ignore. Set indentation width under format. Accept a finding with gspot ignore files/yamllint --rule <rule> --reason "<why>".';
+export const RULE_OPTIONS_REFUSAL =
+    'This table holds options only, without a severity; the level decides which rules run. To turn {rule} off, run gspot ignore {check} --rule {rule} --reason "<why>".';
 
 export const INDENT_MAX = 8;
 
@@ -25,26 +13,7 @@ export const PRINT_WIDTH_MIN = 40;
 
 export const PRINT_WIDTH_MAX = 400;
 
-export const DEFAULT_TEST_PATTERNS = [
-    '**/test/**',
-    '**/tests/**',
-    '**/__tests__/**',
-    '**/*.test.*',
-    '**/*.spec.*',
-    '**/test_*.py',
-    '**/*_test.py',
-    '**/conftest.py',
-    '**/Tests/**',
-    '**/*Tests.swift',
-] as const;
-
-export const LEVEL_SUMMARY =
-    "Correctness, security, accessibility, type safety, routine formatting, and the project's own declared checks apply at both levels.";
-
-export const ALL_LEVEL_SUMMARY =
-    'Level `all` adds checks and rules for word choice, architecture, naming, doc comments, declaration order, API style, and complexity. No level turns on experimental or preview lint rules.';
-
-export const RULE_TOKEN = '<rule>';
+export const RULE_TOKEN = '{rule}';
 
 /** Complete written examples used by the editor schema and settings reference. */
 export const SETTINGS_EXAMPLES = [
@@ -101,14 +70,7 @@ export const SETTINGS_EXAMPLES = [
     { ci: { enabled: true, provider: 'github', operating_systems: ['linux'] } },
     { rules: { enabled: true } },
     { tool_timeout_seconds: 300 },
-    { import_rule: [{ name: 'core', paths: ['src/core/**'], can_also_import: [] }] },
-    {
-        tools: {
-            prettier: {
-                extra: { value: { proseWrap: 'always' }, reason: 'Documentation uses reviewed paragraph wrapping.' },
-            },
-        },
-    },
+    { import_rule: [{ name: 'core', paths: ['src/core/**'] }] },
 ] as const;
 
 export const FORMAT_INDENT_STYLES = ['space', 'tab'] as const;
@@ -153,12 +115,6 @@ export const NAMING_LANGUAGE_CATEGORIES = {
     html: ['files', 'folders'],
 } as const;
 
-/** The schema metadata of the extra options table of a tool. */
-export const EXTRA_OPTIONS_METADATA = {
-    description: 'Extra options passed to the tool as written.',
-    reason_needed: 'adding',
-} as const;
-
 /** The description of the reason of a reasoned value, by the change that needs a reason. */
 export const REASON_DESCRIPTIONS = {
     raising: 'Why this code needs more than the default; required when you raise the value.',
@@ -175,7 +131,6 @@ export const INTERNAL_SCHEMA_METADATA = [
     'language_defaults',
     'pathRole',
     'default_all',
-    'off_values',
 ] as const;
 
 /** What each top-level table of gspot.toml holds, for editors that show the schema on hover. */
@@ -218,3 +173,23 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     ci: 'Whether gspot writes a CI workflow, for which provider, and on which systems it runs.',
     rules: 'Whether gspot writes rules for coding agents, and which rule files it leaves out.',
 };
+
+export const SETTING_RULES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+    eslint: {
+        'sonarjs/no-identical-functions': 'duplication.min_lines',
+        'no-restricted-imports': 'tools.eslint.restricted_imports',
+        'gspot/import-boundaries': '[[import_rule]]',
+        'barrel-files/avoid-barrel-files': 'structure.reexports',
+        'gspot/no-trivial-functions': 'limits.trivial_function_statements',
+        'gspot/no-trivial-files': 'limits.trivial_function_statements',
+        'n/file-extension-in-import': 'tools.eslint.import_extension',
+    },
+    markdownlint: { MD007: 'format.indent_width' },
+};
+
+/** A formatting override includes paths and at least one option. */
+export const FORMAT_OVERRIDE_MIN_FIELDS = 2;
+
+export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
+
+export const PATH_ROLES = ['source', 'destination', 'build'] as const;

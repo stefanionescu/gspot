@@ -56,6 +56,7 @@ await Promise.all(messages.map((message) => persistMessage(message)));
 
 /**
  * Run a provider operation and release its lock on success or failure.
+ *
  * @param request the provider operation to submit
  * @returns the provider's result
  * @throws wraps a provider failure while preserving its cause
@@ -73,15 +74,13 @@ export async function createProviderOperation(request: ProviderOperationRequest)
 
 ## Naming
 
-### TypeScript files and modules
-
 <!-- level: all -->
+
+### TypeScript files and modules
 
 - Keep generator-style file names only for generator output.
 
 ### TypeScript variables
-
-<!-- level: all -->
 
 - Use explanatory destructuring names.
 
@@ -97,13 +96,9 @@ Name a reused daily timer duration `MILLISECONDS_PER_DAY` and define it as
 
 ### TypeScript functions
 
-<!-- level: all -->
-
 - Use async/await in names only to distinguish a function from a blocking counterpart. The return type already shows async.
 
 ### TypeScript types
-
-<!-- level: all -->
 
 - Use plain and discriminated unions for alternatives.
 - Use interfaces only when a framework contract, declaration merging, or

@@ -16,3 +16,5 @@ export const FRAME_ANCESTORS = /frame-ancestors/iu;
 
 export const PATH_PREFIXES = ['/', 'https://'] as const;
 export const DETACH_PREFIX = '! ';
+
+export const HEADERS_FILE = '_headers';

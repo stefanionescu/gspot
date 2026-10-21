@@ -1,39 +1,36 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { parse } from '@decimalturn/toml-patch';
 import { commitAll } from '#tests/setup/git.ts';
-import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { readTree, isOnDisk } from '#tests/setup/files.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { parseToolProject } from '#cli/install/npm/tool-project.ts';
-import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { VUE_COMPONENT } from '#tests/data/checks/component-samples.ts';
+import { assertPackageManager } from '#cli/repository/package-manager.ts';
 import { buildInitArguments, listAlwaysSelected } from '#tests/setup/builders.ts';
-import { TOOL_ONLY_PACKAGE, CONFIGURATION_CHOICES, NON_JAVASCRIPT_PROJECTS } from '#tests/data/commands/init.ts';
+import { PYTHON_SOURCE, TOOL_ONLY_PACKAGE, CONFIGURATION_CHOICES } from '#tests/data/commands/init.ts';
 
 test.each([...CONFIGURATION_CHOICES])(
     'init with --configurations %j keeps the always-selected configurations',
-    async ({ configurations }) => {
+    async (entry) => {
+        const { configurations } = entry;
+        const flags = configurations === undefined ? [] : ['--configurations', ...configurations];
+        if ('noConfigurations' in entry) flags.push('--no-configurations');
         await using sandbox = await testdir({
             'package.json': '{"name":"example","private":true,"type":"module"}\n',
             'source.js': 'export const port = 8080;\n',
         });
         commitAll(sandbox.path);
-        const initialized = await runGspot(sandbox.path, [
-            'init',
-            '--yes',
-            ...(configurations === undefined || configurations.length === 0
-                ? []
-                : ['--configurations', ...configurations]),
-        ]);
+        const initialized = await runGspot(sandbox.path, ['init', '--yes', ...flags]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const session = await openSession(sandbox.path);
         const selected = session.scopes[0]!.selected.map((manifest) => manifest.configuration.name);
@@ -42,88 +39,75 @@ test.each([...CONFIGURATION_CHOICES])(
 );
 
 // The init plan picks languages from the sources and keeps package boundaries.
-test.each([...NON_JAVASCRIPT_PROJECTS])(
-    'a root package.json with only tool dependencies leaves JavaScript to the scope with Node source (%s)',
-    async (language, file, source) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'package.json': TOOL_ONLY_PACKAGE,
-            'app/package.json': '{"name":"example-app","private":true}\n',
-            [`app/${file}`]: source,
-        });
-        const before = await readTree(sandbox.path);
-        const commandArguments = [...buildInitArguments([]).filter((argument) => argument !== '--yes'), '--dry-run'];
-        const preview = await runGspot(sandbox.path, commandArguments);
-        const accepted = await runGspot(sandbox.path, [...commandArguments, '--yes']);
-        for (const result of [preview, accepted]) {
-            expect(result.code, `${language}: ${result.stdout}${result.stderr}`).toBe(0);
-            expect(result.stdout).toContain('\nconfigurations\n');
-            expect(result.stdout).toMatch(/^ {2}javascript\s/mu);
-        }
-        expect(preview.stdout.slice(preview.stdout.indexOf('\nconfigurations\n'))).toBe(
-            accepted.stdout.slice(accepted.stdout.indexOf('\nconfigurations\n')),
-        );
-        const json = await runGspot(sandbox.path, [...commandArguments, '--yes', '--json']);
-        expect(json.code, json.stdout + json.stderr).toBe(0);
-        const output = JSON.parse(json.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
-        expect(output.plan.configurations.map(({ configuration }) => configuration)).toContain('javascript');
-        expect(
-            Object.keys(parseSettings(output.settings, sandbox.path, createReadCache(process.cwd())).scopes),
-        ).toStrictEqual(['app']);
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-        const written = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
-        expect(written.code, written.stdout + written.stderr).toBe(0);
-        const session = await openSession(sandbox.path);
-        expect(session.repository.scopes.map(({ path }) => path)).toStrictEqual(['', 'app']);
-        expect(session.scopes.find(({ scope }) => scope.path === '')!.view.configurations).not.toContain('javascript');
-        expect(session.scopes.find(({ scope }) => scope.path === 'app')!.view.configurations).toContain('javascript');
-    },
-);
+test('init leaves javascript out of a root package.json with only tool dependencies and selects it in the app package scope', async () => {
+    await using sandbox = await testdir({
+        'package.json': TOOL_ONLY_PACKAGE,
+        'app/package.json': '{"name":"example-app","private":true}\n',
+        'app/source.py': PYTHON_SOURCE['source.py'],
+    });
 
-test.each([...NON_JAVASCRIPT_PROJECTS])(
-    'JavaScript tools arrive after JavaScript is selected for new Node source, at both levels (%s)',
-    async (language, file, source) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'package.json': TOOL_ONLY_PACKAGE, [file]: source });
-        const initialized = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
-        expect(initialized.code, `${language}: ${initialized.stdout}${initialized.stderr}`).toBe(0);
-        for (const level of LEVELS) {
-            const selected = await runGspot(sandbox.path, ['set', 'level', level]);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            const session = await openSession(sandbox.path);
-            const project = parseToolProject(
-                await Bun.file(join(sandbox.path, '.gspot/package.json')).text(),
-                session.requirePackageManager().name,
-            );
-            for (const name of ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'])
-                expect(Object.keys(project.dependencies)).not.toContain(name);
-            expect(
-                await Bun.file(join(sandbox.path, '.gspot/configurations/language/javascript/eslint.mjs')).exists(),
-            ).toBe(false);
-        }
-        await Bun.write(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
-        const discovered = await runGspot(sandbox.path, ['add', 'javascript']);
-        expect(discovered.code, discovered.stdout + discovered.stderr).toBe(0);
-        for (const level of LEVELS) {
-            const applied = await runGspot(sandbox.path, ['set', 'level', level]);
-            expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-            const selected = await openSession(sandbox.path);
-            expect(selected.scopes.flatMap(({ view }) => view.configurations)).toContain('javascript');
-            const project = parseToolProject(
-                await Bun.file(join(sandbox.path, '.gspot/package.json')).text(),
-                selected.requirePackageManager().name,
-            );
-            expect(Object.keys(project.dependencies)).toContain('eslint');
-            expect(
-                await Bun.file(join(sandbox.path, '.gspot/configurations/language/javascript/eslint.mjs')).exists(),
-            ).toBe(true);
-        }
-    },
-);
+    const before = await readTree(sandbox.path);
+    const commandArguments = [...buildInitArguments([]).filter((argument) => argument !== '--yes'), '--dry-run'];
+    const preview = await runGspot(sandbox.path, commandArguments);
+    const accepted = await runGspot(sandbox.path, [...commandArguments, '--yes']);
+    for (const result of [preview, accepted]) {
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        expect(result.stdout).toContain('\nconfigurations\n');
+        expect(result.stdout).toMatch(/^ {2}javascript\s/mu);
+    }
+    expect(preview.stdout.slice(preview.stdout.indexOf('\nconfigurations\n'))).toBe(
+        accepted.stdout.slice(accepted.stdout.indexOf('\nconfigurations\n')),
+    );
+    const json = await runGspot(sandbox.path, [...commandArguments, '--yes', '--json']);
+    expect(json.code, json.stdout + json.stderr).toBe(0);
+    const output = JSON.parse(json.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
+    expect(output.plan.configurations.map(({ configuration }) => configuration)).toContain('javascript');
+    expect(Object.keys(parseSettings(output.settings, sandbox.path).scopes)).toStrictEqual(['app']);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const written = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
+    expect(written.code, written.stdout + written.stderr).toBe(0);
+    const session = await openSession(sandbox.path);
+    expect(session.repository.scopes.map(({ path }) => path)).toStrictEqual(['', 'app']);
+    expect(session.scopes.find(({ scope }) => scope.path === '')!.view.configurations).not.toContain('javascript');
+    expect(session.scopes.find(({ scope }) => scope.path === 'app')!.view.configurations).toContain('javascript');
+});
+
+test('the JavaScript tools and the ESLint tool file appear only after gspot add javascript for a new Node script, at both levels', async () => {
+    await using sandbox = await testdir({ 'package.json': TOOL_ONLY_PACKAGE, ...PYTHON_SOURCE });
+
+    const initialized = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    for (const level of LEVELS) {
+        const selected = await runGspot(sandbox.path, ['set', 'level', level]);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+        const session = await openSession(sandbox.path);
+        const project = parseToolProject(
+            await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'),
+            assertPackageManager(session.packageManager).name,
+        );
+        for (const name of ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'])
+            expect(Object.keys(project.dependencies)).not.toContain(name);
+        expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/javascript/eslint.mjs'))).toBe(false);
+    }
+    await writeFile(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
+    const discovered = await runGspot(sandbox.path, ['add', 'javascript']);
+    expect(discovered.code, discovered.stdout + discovered.stderr).toBe(0);
+    for (const level of LEVELS) {
+        const applied = await runGspot(sandbox.path, ['set', 'level', level]);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const selected = await openSession(sandbox.path);
+        expect(selected.scopes.flatMap(({ view }) => view.configurations)).toContain('javascript');
+        const project = parseToolProject(
+            await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'),
+            assertPackageManager(selected.packageManager).name,
+        );
+        expect(Object.keys(project.dependencies)).toContain('eslint');
+        expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/javascript/eslint.mjs'))).toBe(true);
+    }
+});
 
 test('accepting the defaults leaves the detected plan unchanged', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'package.json': '{"name":"example","private":true,"type":"module"}\n',
         'source.js': 'export const port = 8080;\n',
         'api/pyproject.toml': `[project]
@@ -132,6 +116,7 @@ version = "1.0.0"
 `,
         'api/source.py': 'PORT = 8080\n',
     });
+
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
     const commandArguments = [...buildInitArguments([]).filter((argument) => argument !== '--yes'), '--dry-run'];
@@ -158,11 +143,11 @@ async function listPlannedConfigurations(root: string): Promise<string[]> {
 }
 
 test('init selects a recommended language only when the repository holds its files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'package.json': '{"name":"example","private":true,"type":"module","dependencies":{"vue":"3.5.22"}}\n',
         'src/Greeting.vue': VUE_COMPONENT,
     });
+
     commitAll(sandbox.path);
     const plain = await listPlannedConfigurations(sandbox.path);
     expect(plain).toContain('vue');
@@ -181,12 +166,11 @@ test('init selects a recommended language only when the repository holds its fil
     const typed = await listPlannedConfigurations(sandbox.path);
     expect(typed).toContain('typescript');
     expect(typed).toContain('css');
-    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).exists()).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });
 
 test('init proposes a project scope and sets lint-only packages aside', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'package.json': '{"name":"app","private":true,"type":"module"}\n',
         'supabase/config.toml': 'project_id = "example"\n',
         'ios/Package.swift': `// swift-tools-version:6.0
@@ -196,6 +180,7 @@ let package = Package(name: "App")
         'ios/Sources/App/App.swift': 'let answer = 42\n',
         'tools/lint/package.json': '{"name":"lint","private":true,"devDependencies":{"eslint":"9.39.5"}}\n',
     });
+
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -217,8 +202,7 @@ test.each([
 ])(
     'a named Next.js configuration list wins over locale dependency detection: %j',
     async ({ dependency, named, isSelected }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'package.json': JSON.stringify({
                 name: 'translated-app',
                 private: true,
@@ -226,6 +210,7 @@ test.each([
             }),
             'app/page.tsx': 'export default function Page() { return "home"; }\n',
         });
+
         const configurations = ['--configurations', 'nextjs', ...(named ? ['translations'] : [])];
         const result = await runGspot(sandbox.path, [
             ...buildInitArguments([], { json: true }),
@@ -239,17 +224,17 @@ test.each([
 );
 
 test('init proposes workspace scopes without a lockfile, and writes nothing when the workspace file is broken', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'package.json': '{"private":true,"packageManager":"pnpm@9.0.0","workspaces":["packages/*"]}',
         'packages/api/package.json': '{"name":"api"}',
         'packages/api/source.js': 'export const port = 8080;\n',
     });
+
     const command = buildInitArguments([]);
     const proposed = await runGspot(sandbox.path, [...command, '--dry-run', '--json']);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'settings'>>;
-    const settings = parseSettings(plan.settings, undefined, createReadCache(process.cwd()));
+    const settings = parseSettings(plan.settings, undefined);
     expect(Object.keys(settings.scopes)).toStrictEqual(['packages/api']);
     await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
     const before = await readTree(sandbox.path);
@@ -267,8 +252,8 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
 });
 
 test('a named configuration brings its suggested configurations', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'tools/a.sh': CLEAN_BASH_SCRIPT, 'jobs/b.sh': CLEAN_BASH_SCRIPT });
+    await using sandbox = await testdir({ 'tools/a.sh': CLEAN_BASH_SCRIPT, 'jobs/b.sh': CLEAN_BASH_SCRIPT });
+
     commitAll(sandbox.path);
     const preview = [...buildInitArguments([], { json: true }), '--dry-run'];
     const named = await runGspot(sandbox.path, [...preview, '--configurations', 'bash']);

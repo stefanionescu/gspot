@@ -1,4 +1,5 @@
 import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/data/settings/scopes.ts';
 
 /** A path ignore applies to one check and keeps the rule findings of the others. */
@@ -218,10 +219,7 @@ const TOOL_FILE_PLANNING_CASES = [
     {
         name: 'a TypeScript-only scope selects Knip',
         files: {
-            'gspot.toml': `configurations = ["typescript"]
-[rules]
-enabled = false
-`,
+            'gspot.toml': buildSandboxSettings(['typescript'], { tables: '[rules]\nenabled = false\n' }),
             'src/main.ts': 'export const value = 1;\n',
         },
         check: 'javascript/knip',
@@ -230,7 +228,7 @@ enabled = false
     {
         name: 'Go and Rust sources do not select Prettier',
         files: {
-            'gspot.toml': 'level = "all"\nconfigurations = []\n',
+            'gspot.toml': buildSandboxSettings([], { level: 'all', rules: true }),
             'main.go': 'package main\nfunc main() {}\n',
             'main.rs': 'fn main() {}\n',
         },

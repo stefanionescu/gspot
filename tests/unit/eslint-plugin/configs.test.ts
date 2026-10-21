@@ -34,3 +34,26 @@ test('all shares plugin identity with explicit rules', () => {
     const messages = linter.verify("export const value = 'public';", config);
     expect(messages).toStrictEqual([]);
 });
+
+test('schema placement remains opt-in', () => {
+    const linter = new Linter({ configType: 'flat', cwd: '/repo' });
+    const config: object[] = [plugin.configs.all];
+    const messages = linter.verify('import { z } from "zod"; export const schema = z.string();', config, {
+        filename: '/repo/src/parsers/name.js',
+    });
+    expect(messages).toStrictEqual([]);
+});
+
+test('schema placement resolves configured folders from the ESLint working directory', () => {
+    const linter = new Linter({ configType: 'flat', cwd: '/repo' });
+    const config: object[] = [
+        {
+            plugins: { gspot: plugin },
+            rules: { 'gspot/schema-location': ['error', { folders: ['src/schemas'] }] },
+        },
+    ];
+    const source = 'import { z } from "zod"; export const schema = z.string();';
+    expect(linter.verify(source, config, { filename: '/repo/src/schemas/name.js' })).toStrictEqual([]);
+    const messages = linter.verify(source, config, { filename: '/repo/src/parsers/name.js' });
+    expect(messages).toMatchObject([{ ruleId: 'gspot/schema-location', messageId: 'location' }]);
+});

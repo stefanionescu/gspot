@@ -1,4 +1,6 @@
-export const SITE_URL = 'https://generativespotting.com';
+import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
+
+export const { homepage: SITE_URL } = cliPackage;
 /** The site description: the hero lead and the page metadata. */
 export const DESCRIPTION =
     'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.';

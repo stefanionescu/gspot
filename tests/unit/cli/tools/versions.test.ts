@@ -1,13 +1,12 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { chmod } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
+import { chmod, readFile } from 'node:fs/promises';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { fakeTool, fakeNpmPackage } from '#tests/setup/fakes.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
@@ -24,10 +23,10 @@ test('an npm tool is the version its package holds, whatever it prints', async (
 });
 
 test('a shim that no configuration gives a version is missing, not broken', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'node_modules/.bin/shimmed': "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
     });
+
     await chmod(join(sandbox.path, 'node_modules/.bin/shimmed'), EXECUTABLE_FILE);
     const inspection = inspectTool(buildInspectionContext(sandbox.path), buildProgramPin('shimmed', '3.8.1'));
     expect(inspection.state).toBe('missing');
@@ -76,21 +75,21 @@ test('a manifest can declare the exit code of its version command without accept
 });
 
 test('a command reads each version once and the next session reads it again', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([]),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([]),
         'inspection.ts':
             'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
     });
+
     using _which = useExecutable(process.execPath);
     const pin = { ...buildProgramPin('version-teller', '3.8.1'), version_command: ['inspection.ts'] };
     const session = await openSession(sandbox.path);
     expect(inspectTool(session, pin).state).toBe('ok');
     expect(inspectTool(session, pin).state).toBe('ok');
-    expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('1');
+    expect(await readFile(join(sandbox.path, 'calls.txt'), 'utf8')).toBe('1');
     const next = await openSession(sandbox.path);
     expect(inspectTool(next, pin).state).toBe('ok');
-    expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('2');
+    expect(await readFile(join(sandbox.path, 'calls.txt'), 'utf8')).toBe('2');
 });
 
 test.each([
@@ -123,7 +122,7 @@ function computeVersionBelow(floor: string): string {
 test.each(['gitleaks', 'next'])('the %s pin is outdated below its floor and accepted at it', async (name) => {
     await using sandbox = await testdir();
     using _which = useExecutable(process.execPath);
-    const pin = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), name);
+    const pin = getToolDeclaration(readManifests().values(), name);
     const floor = pin.min_version!;
     const available = pin.system === true ? 'system' : 'ok';
     for (const version of [computeVersionBelow(floor), floor]) {
@@ -141,14 +140,13 @@ test.each([
     ['0.9.0', 'ok'],
     ['0.8.0', 'outdated'],
 ] as const)('a wrapper with its own version runs program %s and reports %s', async (version, state) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         '.gspot/node_modules/wrapper/package.json': '{"name":"wrapper","version":"0.7.0"}',
     });
-    await fakeTool(sandbox.path, '.gspot/node_modules/.bin/wrapped', 'console.log(process.env.WRAPPER_VERSION);\n');
+
+    await fakeTool(sandbox.path, '.gspot/node_modules/.bin/wrapped', `console.log(${JSON.stringify(version)});\n`);
     const tool = buildProgramPin('wrapped', '0.10.0');
     tool.min_version = '0.9.0';
-    tool.env = { WRAPPER_VERSION: version };
     tool.installers['npm'] = { name: 'wrapper', version: '0.7.0' };
     const inspection = inspectTool(buildInspectionContext(sandbox.path), tool);
     expect(inspection.found).toBe(version);

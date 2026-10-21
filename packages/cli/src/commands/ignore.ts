@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+import { statSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { escapeGlob } from '#cli/repository/matchers.ts';
@@ -7,21 +7,20 @@ import { mergeIgnore } from '#cli/settings/write/text.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { saveSettings } from '#cli/apply/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { type TomlTable } from '#cli/types/settings/file.ts';
 import { startSettingsEdit } from '#cli/commands/settings.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
 import { stringify, LocalDate } from '@decimalturn/toml-patch';
 import { GROUP_CHARACTERS } from '#cli/config/commands/ignore.ts';
-import { calendarDateSchema } from '#cli/settings/schema/parts.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
+import { calendarDateSchema } from '#cli/schemas/settings/parts.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type IgnoreOptions } from '#cli/types/commands/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
-function assertIgnoreTarget(options: IgnoreOptions, settings: Settings, reads: ReadCache): void {
+function assertIgnoreTarget(options: IgnoreOptions, settings: Settings): void {
     if (options.check !== undefined) {
-        assertKnownCheck(options.check, settings, reads);
+        assertKnownCheck(options.check, settings);
         return;
     }
     if (options.paths === undefined)
@@ -44,7 +43,8 @@ function escapeExistingPaths(root: string, paths: string[] | undefined): string[
         for (let index = parts.length; index > 0; index -= 1) {
             const prefix = parts.slice(0, index).join('/');
             if (!GROUP_CHARACTERS.test(prefix)) return path;
-            if (existsSync(join(root, prefix))) return [escapeGlob(prefix), ...parts.slice(index)].join('/');
+            if (statSync(join(root, prefix), { throwIfNoEntry: false }) !== undefined)
+                return [escapeGlob(prefix), ...parts.slice(index)].join('/');
         }
         return path;
     });
@@ -57,34 +57,31 @@ function escapeExistingPaths(root: string, paths: string[] | undefined): string[
  * @returns the command result.
  */
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
-    const { root, input, settings, reads } = startSettingsEdit(options.cwd);
-    assertIgnoreTarget(options, settings, reads);
+    const { root, input, settings } = startSettingsEdit(options.cwd);
+    assertIgnoreTarget(options, settings);
     const paths = escapeExistingPaths(root, options.paths);
     const target = options.check ?? 'every check';
     const message = validateReason(`gspot ignore ${options.check ?? ''}`.trimEnd(), options.reason);
     if (message !== undefined) throw new GspotError('settings', message);
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
-    let saved: TomlTable = {};
+    const saved = mergeIgnore(
+        list,
+        stripUndefined({
+            check: options.check,
+            rule: options.rule,
+            names: options.names,
+            paths,
+            reason: options.reason,
+            until: options.until === undefined ? undefined : parseExpiryDate(options.until),
+        }),
+    );
+    input.table['ignore'] = list;
     const result = await saveSettings(root, {
         input,
-        change: (written) => {
-            saved = mergeIgnore(
-                list,
-                stripUndefined({
-                    check: options.check,
-                    rule: options.rule,
-                    names: options.names,
-                    paths,
-                    reason: options.reason,
-                    until: options.until === undefined ? undefined : parseExpiryDate(options.until),
-                }),
-            );
-            written['ignore'] = list;
-        },
         summary: `Ignored ${target}${paths === undefined ? '' : ' for ' + paths.join(' and ')}.`,
     });
-    const written = stringify({ ignore: [saved] }).trimEnd();
-    return result.exitCode === 0 && result.json.changed ? { ...result, text: `${written}\n${result.text}` } : result;
+    const record = stringify({ ignore: [saved] }).trimEnd();
+    return result.json.changed ? { ...result, text: `${record}\n${result.text}` } : result;
 }
 
 /**
@@ -102,7 +99,7 @@ function registerIgnore(program: Command, onResult: CommandCompletion): void {
         .requiredOption('--reason <text>', COMMAND_HELP.ignore.options['--reason <text>'])
         .option('--rule <rule>', COMMAND_HELP.ignore.options['--rule <rule>'])
         .option('--names <names...>', COMMAND_HELP.ignore.options['--names <names...>'])
-        .option('--paths <glob...>', COMMAND_HELP.ignore.options['--paths <glob...>'])
+        .option('--paths <path...>', COMMAND_HELP.ignore.options['--paths <path...>'])
         .option('--until <date>', COMMAND_HELP.ignore.options['--until <date>'])
         .action(async (check, flags) => {
             onResult(

@@ -1,11 +1,12 @@
 // Reads Xcode projects, source groups, and build settings.
-import { z } from 'zod';
 import { posix } from 'node:path';
-import type { SchemaShape } from '#cli/types/shapes.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
+import { pbxprojSchema } from '#cli/schemas/parsers/xcode.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 
 import {
-    PROJECT_TOKEN,
+    PBXPROJ,
+    PROJECT_TOKENS,
     PROJECT_ESCAPE,
     PROJECT_ESCAPES,
     SETTING_REFERENCE,
@@ -69,12 +70,13 @@ function readProjectValue(state: ProjectTokens): unknown {
 
 function parseProjectDocument(text: string): unknown {
     const tokens: string[] = [];
-    const matcher = new RegExp(PROJECT_TOKEN, 'yu');
     for (let offset = 0; offset < text.length; ) {
-        matcher.lastIndex = offset;
-        const match = matcher.exec(text);
-        if (match === null) throw new Error(`The Xcode project has invalid syntax at offset ${String(offset)}.`);
-        offset = matcher.lastIndex;
+        const match = PROJECT_TOKENS.map((matcher) => {
+            matcher.lastIndex = offset;
+            return matcher.exec(text);
+        }).find((token) => token !== null);
+        if (match === undefined) throw new Error(`The Xcode project has invalid syntax at offset ${String(offset)}.`);
+        offset += match[0].length;
         const token = match[0];
         if (token.trim() !== '' && !token.startsWith('//') && !token.startsWith('/*')) tokens.push(token);
     }
@@ -92,9 +94,9 @@ function getElement(project: Pick<XcodeProject, 'objects'>, id: string): PbxElem
 }
 
 // Find the parent group of each object. Refuse an object that two groups claim.
-function buildParentGroups(objects: Record<string, PbxElement>): Map<string, string> {
+function buildParentGroups(elements: Record<string, PbxElement>): Map<string, string> {
     const parents = new Map<string, string>();
-    for (const [id, entry] of Object.entries(objects))
+    for (const [id, entry] of Object.entries(elements))
         for (const child of entry.children ?? []) {
             if (parents.has(child))
                 throw new Error(`The Xcode project gives an object multiple parent groups: ${child}.`);
@@ -166,48 +168,15 @@ function parseProjectMetadata(text: string): ProjectMetadata {
     return { objects: project.objects, root };
 }
 
-const itemSchema = z.object({
-    isa: z.string(),
-    buildSettings: z
-        .object({
-            SDKROOT: z.string().optional(),
-            SWIFT_VERSION: (
-                (z.union([z.string(), z.number()]) satisfies z.ZodType<string | number>).transform(
-                    String,
-                ) satisfies z.ZodType<string, string | number>
-            ).optional(),
-        } satisfies SchemaShape<NonNullable<PbxElement['buildSettings']>>)
-        .optional(),
-    name: z.string().optional(),
-    path: z.string().optional(),
-    sourceTree: z.string().optional(),
-    children: z.array(z.string()).optional(),
-    fileRef: z.string().optional(),
-    files: z.array(z.string()).optional(),
-    buildPhases: z.array(z.string()).optional(),
-    fileSystemSynchronizedGroups: z.array(z.string()).optional(),
-    exceptions: z.array(z.string()).optional(),
-    membershipExceptions: z.array(z.string()).optional(),
-    target: z.string().optional(),
-    productType: z.string().optional(),
-    mainGroup: z.string().optional(),
-    targets: z.array(z.string()).optional(),
-    projectDirPath: z.string().optional(),
-} satisfies SchemaShape<PbxElement>);
-
-const pbxprojSchema = z.object({
-    rootObject: z.string(),
-    objects: z.record(z.string(), itemSchema),
-} satisfies SchemaShape<{ rootObject: string; objects: Record<string, PbxElement> }>);
-
 /**
  * Find the Swift sources and managed folders that belong to project targets.
  *
  * @param text the project.pbxproj contents.
- * @param folder where the project file sits, relative to the repository root.
+ * @param path the project.pbxproj file, relative to the repository root.
  * @returns the source paths and managed folders of the project, and the same for each target.
  */
-export function parsePbxproj(text: string, folder: string): ProjectSources {
+export function parsePbxproj(text: string, path: string): ProjectSources {
+    const folder = extractParentFolder(path.slice(0, path.indexOf(PBXPROJ)));
     const parsed = parseProjectMetadata(text);
     const root = parsed.root;
     if (root.mainGroup === undefined) throw new Error('The Xcode project has no main group.');

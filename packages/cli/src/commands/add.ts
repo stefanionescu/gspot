@@ -1,15 +1,27 @@
 // The add command: add configurations to gspot.toml.
 
 import { findScopeTable } from '#cli/settings/edit.ts';
-import { stripUndefined } from '#cli/system/values.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { saveSettings } from '#cli/apply/save-settings.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { Mutation } from '#cli/types/settings/edits.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
+import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { startConfigurationEdit } from '#cli/commands/settings.ts';
 import { type ConfigurationsOptions } from '#cli/types/commands/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+
+function restoreConfigurations(table: TomlTable, removed: string[], configurations: string[]): void {
+    const previous = table['removed_configurations'];
+    if (previous === undefined) return;
+    const remaining = removed.filter((name) => !configurations.includes(name));
+    if (remaining.length === 0) Reflect.deleteProperty(table, 'removed_configurations');
+    else
+        table['removed_configurations'] = {
+            value: remaining,
+            reason: isRecord(previous) ? previous['reason'] : undefined,
+        };
+}
 
 /**
  * Add configurations to the root list or to the list of one scope.
@@ -28,20 +40,15 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
             exitCode: 0,
         };
     }
-    const addConfigurations: Mutation = (written) => {
-        const scopeTable = findScopeTable(written, options.scope);
-        const list = [...current];
-        for (const name of options.configurations)
-            if (!selected.includes(name) && !list.includes(name)) list.push(name);
-        scopeTable['configurations'] = list;
-        if (scopeTable['removed_configurations'] !== undefined)
-            scopeTable['removed_configurations'] = removed.filter((name) => !options.configurations.includes(name));
-    };
+    const scopeTable = findScopeTable(input.table, options.scope);
+    const list = [...current];
+    for (const name of options.configurations) if (!selected.includes(name) && !list.includes(name)) list.push(name);
+    scopeTable['configurations'] = list;
+    restoreConfigurations(scopeTable, removed, options.configurations);
     const where = options.scope === undefined ? '' : ` to scope ${options.scope}`;
     const description = `Added ${options.configurations.join(' and ')}${where}.`;
     return await saveSettings(root, {
         input,
-        change: addConfigurations,
         summary: description,
     });
 }

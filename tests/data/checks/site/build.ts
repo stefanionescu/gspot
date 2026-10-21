@@ -1,9 +1,10 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { ALT_TEXT_PAGE } from '#tests/data/checks/site/built-pages.ts';
 
 export const BUILD_OUTPUT_CHECKS = [
     'site/html-validate',
     'site/purgecss',
-    'site/linkinator',
+    'site/lychee',
     'site/size',
     'site/sitemap',
 ] as const;
@@ -78,14 +79,10 @@ build_command = ["bun", "build.js"]
 `;
 
 export const WORKSPACE_SITE_FILES = {
-    'gspot.toml': `configurations = []
-[[scope]]
-path = "web"
-configurations = ["site", "javascript"]
-site.build_command = ["bun", "build.js"]
-[rules]
-enabled = false
-`,
+    'gspot.toml': buildSandboxSettings([], {
+        scopes: [{ path: 'web', configurations: ['site', 'javascript'] }],
+        tables: 'site.build_command = ["bun", "build.js"]\n[rules]\nenabled = false\n',
+    }),
     'package.json': '{"private":true,"workspaces":["web","packages/*"]}',
     'web/package.json': '{"name":"web","type":"module","dependencies":{"core":"workspace:*"}}',
     'web/build.js':

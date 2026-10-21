@@ -10,8 +10,6 @@ export const EDITORCONFIG_FIXED_SECTIONS = {
     '*.md': { trim_trailing_whitespace: false },
     Makefile: { indent_style: 'tab' },
 } as const;
-export const IGNORE_FILE_PURPOSES = {
-    prettier: 'Editors and gspot checks use the same ordered ignore patterns.',
-} as const;
+export const PRETTIERIGNORE_PURPOSE = 'Editors and gspot checks use the same ordered ignore patterns.';
 
 export const PRETTIER_TOOL = 'prettier';

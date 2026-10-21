@@ -57,5 +57,3 @@ export function writePlans(writer: Writer, plans: WritePlan[]): void {
         plans.filter((plan) => plan.status === 'changed'),
     );
 }
-
-export { buildPreservedFilesError };

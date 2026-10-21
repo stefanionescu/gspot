@@ -22,9 +22,7 @@ function buildStatementViews(bytes: Buffer, statement: RawStmt): SqlStatementVie
  * @returns the statements, or the parse error with its position.
  */
 async function parseSqlText(text: string): Promise<SqlFile> {
-    const prepared = replacePsqlSyntax(text);
-    const source = prepared.text;
-    const variables = prepared.variables;
+    const { text: source, variables } = replacePsqlSyntax(text);
     if (source.trim() === '') return { source, variables, statements: [], error: undefined };
     const parsed = await parsePostgres(source);
     const bytes = Buffer.from(source, 'utf8');
@@ -117,16 +115,6 @@ export function readStatement<Result, Arguments extends unknown[]>(
         | ((statement: SqlStatementView, ...readerArguments: Arguments) => Result)
         | undefined;
     return read?.(statement, ...readerArguments);
-}
-
-/**
- * Read the text parts of a qualified name.
- *
- * @param list the String nodes, if any.
- * @returns each part in source order.
- */
-export function listNameParts(list: Node[] | undefined): string[] {
-    return listNodeFields(list, 'String').map((node) => node.sval ?? '');
 }
 
 /**

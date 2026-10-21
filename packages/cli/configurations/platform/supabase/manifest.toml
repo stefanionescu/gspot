@@ -7,7 +7,6 @@ suggests = ["typescript"]
 title = "Supabase"
 
 [detect]
-paths = ["**/supabase/config.toml"]
 project_files = ["supabase/config.toml"]
 
 [files]
@@ -17,22 +16,22 @@ paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]
 "postgres.client_schemas" = ["public"]
 "tools.squawk.assume_in_transaction" = true
 
+[[naming.override]]
+allowed_names = ["shared"]
+categories = ["folders"]
+paths = ["**/supabase/functions/_shared/**"]
+reason = "Supabase deploys every folder under functions/ except _shared, which holds the code the functions share."
+
 [[tool]]
-brew = "deno"
-github = { name = "denoland/deno", version = "v2.6.6" }
 min_version = "2.0.0"
 mise = "deno"
 name = "deno"
-scoop = "deno"
 version = "2.6.6"
 
 [[tool]]
-brew = "supabase/tap/supabase"
 min_version = "2.0.0"
-mise = "supabase"
 name = "supabase"
 npm = "supabase"
-scoop = "supabase"
 system = true
 version_command = ["--version"]
 
@@ -41,7 +40,6 @@ per_scope = true
 rule_paths_setting = "supabase.functions_folder"
 target = "semgrep.yml"
 tool = "semgrep"
-when = { configuration = "security" }
 
 [[check]]
 example = "A storage bucket with no policy on `storage.objects` reports a finding. Add a migration that defines access for that bucket."

@@ -33,7 +33,8 @@ function findTomlTable(
         }
         const child = table[key];
         if (!isRecord(child))
-            throw new Error(
+            throw new GspotError(
+                'filesystem',
                 `${options.filePath} has a TOML field that is not a table: ${String(key)}. Fix the field, then run gspot apply.`,
             );
         table = child;
@@ -102,26 +103,30 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
     );
 }
 
-export function parseTomlFile(input: TomlInput): Record<string, unknown>;
-export function parseTomlFile<Value>(input: TomlInput, schema: z.ZodType<Value>): Value;
+export function parseTomlFile(path: string, text: string): Record<string, unknown>;
+export function parseTomlFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
 /**
- * Parse TOML, and name the file on invalid syntax or fields.
+ * Parse TOML, and name the file and position on invalid syntax or fields.
  *
- * @param input the file path and TOML text.
+ * @param path the source file.
+ * @param text the TOML contents.
  * @param schema the shape to check, when supplied.
  * @returns the parsed table.
- * @throws a file-specific error with the parser failure as its cause.
  */
-export function parseTomlFile(input: TomlInput, schema?: z.ZodType): unknown {
+export function parseTomlFile(path: string, text: string, schema?: z.ZodType): unknown {
     let value: Record<string, unknown>;
     try {
-        value = parseToml(input.source) as Record<string, unknown>;
+        value = parseToml(text) as Record<string, unknown>;
     } catch (error) {
-        throw new GspotError('filesystem', `${input.path} is not valid TOML. Fix the file, then run gspot apply.`, {
-            cause: error,
-        });
+        if (!(error instanceof Error)) throw error;
+        const position =
+            'line' in error && typeof error.line === 'number' && 'column' in error && typeof error.column === 'number'
+                ? `${path}:${String(error.line)}:${String(error.column + 1)}`
+                : path;
+        const detail = error.message.split('\n', 1).join('').replace(/\.$/u, '');
+        throw new GspotError('filesystem', `${position} is not valid TOML: ${detail}. Fix the file.`, { cause: error });
     }
-    return schema === undefined ? value : parseFileFields(input.path, value, schema);
+    return schema === undefined ? value : parseFileFields(path, value, schema);
 }
 
 /**
@@ -131,10 +136,9 @@ export function parseTomlFile(input: TomlInput, schema?: z.ZodType): unknown {
  * @returns the editable document.
  */
 export function openTomlFile(input: TomlInput): EditableFile {
-    const document: Record<string, unknown> = parseTomlFile(input);
+    const document: Record<string, unknown> = parseTomlFile(input.path, input.source);
     const original = parseTomlSyntax(input.source, document);
     return {
-        format: 'toml',
         getValue: (path) => getValueAt(document, path),
         set(path, value) {
             if (path.some((key) => typeof key !== 'string')) throw new Error(`${input.path} requires TOML table keys.`);

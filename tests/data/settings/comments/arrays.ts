@@ -43,9 +43,8 @@ enabled = true
     },
     {
         name: `nested arrays`,
-        source: `[tools.eslint]
-extra.reason = "The project keeps reviewed native options."
-extra.value={ values=[
+        source: `[tools.eslint.rules]
+values=[
  # First group
  [
  # First number
@@ -57,12 +56,9 @@ extra.value={ values=[
  # Last number
  3
  ]
-] }
+]
 `,
-        expected: `[tools.eslint.extra]
-reason = "The project keeps reviewed native options."
-
-[tools.eslint.extra.value]
+        expected: `[tools.eslint.rules]
 values = [
     # First group
     # First group inline
@@ -82,9 +78,8 @@ values = [
     },
     {
         name: `mixed array`,
-        source: `[tools.eslint]
-extra.reason = "The project keeps reviewed native options."
-extra.value={ values=[
+        source: `[tools.eslint.rules]
+values=[
  # A table
  {a=[
  # Nested table number
@@ -92,12 +87,9 @@ extra.value={ values=[
  ]},
  # A scalar
  2
-] }
+]
 `,
-        expected: `[tools.eslint.extra]
-reason = "The project keeps reviewed native options."
-
-[tools.eslint.extra.value]
+        expected: `[tools.eslint.rules]
 values = [
     # A table
     { a = [

@@ -1,17 +1,15 @@
 import type { SqlFile } from '#cli/types/parsers/sql.ts';
+import type { FindingPlace } from '#cli/types/runs/check.ts';
 import type { NamingCase } from '#cli/types/settings/tables.ts';
+import type { NAMED_CATEGORIES } from '#cli/config/checks/naming.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { CheckInput, FindingPlace } from '#cli/types/runs/check.ts';
-import type { ACRONYM_STYLES, NAMED_CATEGORIES } from '#cli/config/checks/naming.ts';
 
 /** A banned word split into parts, with where it came from. */
 export type BannedWord = { word: string; parts: string[]; setting: string; group?: string; categories?: string[] };
 
 /** The naming settings and the test-file status. */
-export type NamingInputs = Pick<CheckInput, 'check'> & {
-    settings: NamingSettings;
-    isTestFile: boolean;
-};
+export type NamingInputs = { check: CheckDeclaration; settings: NamingSettings; isTestFile: boolean };
 
 /** The input and finding location that the checks of one identifier share. */
 export type NamingContext = NamingInputs & { identifier: Identifier; place: FindingPlace; prefix: string };
@@ -27,7 +25,6 @@ export type CompiledOverride = {
     ignoredPrefix: RegExp | undefined;
     ignoredNames: RegExp | undefined;
     cases: NamingCase[] | undefined;
-    origin: string;
 };
 
 /** The limits and cases one identifier category gets. */
@@ -51,7 +48,13 @@ export type PathContainer = { open: string; close: string; category: NamedCatego
 export type NamedFile = { file: TrackedFile; language: string };
 
 /** Identifier spellings associated with one file for cross-project comparisons. */
-export type FileNames = { path: string; stem: string; names: string[]; declarations: string[] };
+export type FileNames = {
+    path: string;
+    stem: string;
+    names: string[];
+    declarations: string[] | undefined;
+    folders: Identifier[];
+};
 
 /** The validated shipped naming settings. */
 export type NamingDefaults = {
@@ -62,15 +65,9 @@ export type NamingDefaults = {
     reserved: Record<string, string[]>;
     allowed_names: string[];
     allowed_phrases: string[];
-    languages: Record<
-        string,
-        { acronyms: (typeof ACRONYM_STYLES)[number]; categories: Record<string, { cases: NamingCase[] }> }
-    >;
+    languages: Record<string, { categories: Record<string, { cases: NamingCase[] }> }>;
     override: NamingOverride[];
 };
-
-/** The table of one language in the shipped settings. */
-export type NamingDefaultsLanguage = NamingDefaults['languages'][string];
 
 /** One path-specific naming rule in settings or shipped configuration data. */
 export type NamingOverride = {

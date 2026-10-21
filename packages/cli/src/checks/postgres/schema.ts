@@ -1,7 +1,7 @@
 import type { RangeVar, Constraint } from '@pgsql/types';
 import type { SqlStatementReaders } from '#cli/types/parsers/sql.ts';
+import { getNodeFields, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 import { PUBLIC_SCHEMA, SCHEMA_PART_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/postgres.ts';
-import { getNodeFields, listNameParts, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 
 import type {
     Schema,
@@ -56,7 +56,10 @@ function recordConstraint(state: SchemaState, at: Location, node: Constraint, co
     if (!(kind in CONSTRAINT_SUFFIXES)) return;
     const { keys, columns } =
         column === undefined
-            ? { keys: listNameParts(node.keys), columns: listNameParts(node.fk_attrs) }
+            ? {
+                  keys: listNodeFields(node.keys, 'String').map((part) => part.sval ?? ''),
+                  columns: listNodeFields(node.fk_attrs, 'String').map((part) => part.sval ?? ''),
+              }
             : { keys: [column], columns: [column] };
     const isForeign = kind === 'CONSTR_FOREIGN';
     const name = deriveConstraintName(node, at.table, kind, isForeign ? columns : keys);
@@ -104,7 +107,7 @@ const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, mig
 // A dropped table leaves the state, so no check reports it.
 const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
     for (const item of listNodeFields(statement.fields.objects, 'List')) {
-        const parts = listNameParts(item.items);
+        const parts = listNodeFields(item.items, 'String').map((part) => part.sval ?? '');
         switch (statement.fields.removeType) {
             case 'OBJECT_TABLE': {
                 forgetTable(state, joinNameParts(parts));

@@ -154,6 +154,20 @@ async function selectLine(context: PushSearch, result: PushSelection, line: Push
 }
 
 /**
+ * Compare a push with its upstream or remote default. Without either, start at the root commit.
+ *
+ * @param repositoryRoot the folder where Git runs.
+ * @param cancelSignal stops the Git commands.
+ * @returns the commit the pushed range starts after.
+ */
+async function readPushBase(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
+    const compared = await readDefaultRef(repositoryRoot, cancelSignal);
+    if (compared !== '') return readMergeBase(repositoryRoot, compared, cancelSignal);
+    const roots = await readGitLines(repositoryRoot, ROOT_COMMITS_ARGUMENTS, { cancelSignal });
+    return roots.at(-1) as string;
+}
+
+/**
  * Resolve the exact objects that the Git pre-push input names, before source checks run.
  *
  * @param repositoryRoot the folder where Git runs.
@@ -184,20 +198,6 @@ export async function selectPush(
     const result: PushSelection = { revisions: [], skipped: [] };
     for (const line of lines) await selectLine(context, result, line);
     return result;
-}
-
-/**
- * Compare a push with its upstream or remote default. Without either, start at the root commit.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param cancelSignal stops the Git commands.
- * @returns the commit the pushed range starts after.
- */
-export async function readPushBase(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
-    const compared = await readDefaultRef(repositoryRoot, cancelSignal);
-    if (compared !== '') return readMergeBase(repositoryRoot, compared, cancelSignal);
-    const roots = await readGitLines(repositoryRoot, ROOT_COMMITS_ARGUMENTS, { cancelSignal });
-    return roots.at(-1) as string;
 }
 
 /**

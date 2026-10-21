@@ -1,13 +1,13 @@
-import { isFileIgnore } from '#cli/settings/scope-view.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { PlanInputs, PlannedCheck } from '#cli/types/planning.ts';
+import { listIgnores, isFileIgnore } from '#cli/settings/scope-view.ts';
 import { classifyFile, isInGspotFolder } from '#cli/repository/classify.ts';
 import { isInScope, joinScope, isOutsideChildren } from '#cli/repository/scopes.ts';
-import { type Manifest, type CheckDeclaration } from '#cli/types/configurations.ts';
-import type { Session, PlanInputs, PlannedCheck, CheckCandidate } from '#cli/types/planning.ts';
+import { type Manifest, type KnownCheck, type CheckDeclaration } from '#cli/types/configurations.ts';
 
 // List every tracked file under the scope.
 function listScopeFiles(context: PlanInputs, scopePath: string, runs: CheckDeclaration['runs']): TrackedFile[] {
@@ -18,8 +18,8 @@ function listScopeFiles(context: PlanInputs, scopePath: string, runs: CheckDecla
 }
 
 // List the files of a project-wide check: the scope tree, when the check files match anything in it.
-function listProjectCheckFiles(context: PlanInputs, entry: CheckCandidate, scopePath: string): TrackedFile[] {
-    const { check, manifest } = entry;
+function listProjectCheckFiles(context: PlanInputs, entry: KnownCheck, scopePath: string): TrackedFile[] {
+    const { check, configuration: manifest } = entry;
     const { selection: scope } = context;
     const owners = check.files ?? (manifest?.configuration.group === 'language' ? manifest.files : undefined);
     const candidates = listScopeFiles(context, scopePath, check.runs);
@@ -38,12 +38,14 @@ function listProjectCheckFiles(context: PlanInputs, entry: CheckCandidate, scope
 }
 
 // Per-file checks select their owners. Project checks keep all inputs after a declared trigger matches.
-function listCheckFiles(context: PlanInputs, entry: CheckCandidate, scopePath: string): TrackedFile[] {
+function listCheckFiles(context: PlanInputs, entry: KnownCheck, scopePath: string): TrackedFile[] {
     const { session, selection: scope } = context;
-    const { check, manifest } = entry;
+    const { check, configuration: manifest } = entry;
     if (check.runs !== 'files') return listProjectCheckFiles(context, entry, scopePath);
-    if (!manifest)
-        return session.repository.files.filter((file) => buildPathMatcher(check.files?.paths ?? [])(file.path));
+    if (!manifest) {
+        const isMatch = buildPathMatcher(check.files?.paths ?? []);
+        return session.repository.files.filter((file) => isMatch(file.path));
+    }
     return listCoveredFiles(check.files ?? manifest.files, session.repository.files, {
         selected: scope.selected,
         scope: scopePath,
@@ -57,7 +59,7 @@ function stripIgnoredFiles(
     check: CheckDeclaration,
     scope: ScopeSelection,
 ): Pick<PlannedCheck, 'files' | 'skip'> {
-    const paths = scope.view.ignoresFor(check.name).flatMap((entry) => (isFileIgnore(entry) ? entry.paths : []));
+    const paths = listIgnores(scope.view, check.name).flatMap((entry) => (isFileIgnore(entry) ? entry.paths : []));
     const isIgnored = buildPathMatcher(paths);
     const selected = files.filter((file) => !isIgnored(file.path));
     return {
@@ -69,7 +71,7 @@ function stripIgnoredFiles(
 }
 
 // Narrow the files to the selection; a project check keeps everything when the selection touches it.
-function filterNarrowedFiles(context: PlanInputs, entry: CheckCandidate, files: TrackedFile[]): TrackedFile[] {
+function filterNarrowedFiles(context: PlanInputs, entry: KnownCheck, files: TrackedFile[]): TrackedFile[] {
     const { narrow } = context;
     if (!narrow) return files;
     const isTouched = narrow.has(SETTINGS_FILE) || narrow.values().some((path) => isInGspotFolder(path));
@@ -80,8 +82,8 @@ function filterNarrowedFiles(context: PlanInputs, entry: CheckCandidate, files: 
 }
 
 // List the paths deleted from the tree that still trigger a project check.
-function listDeletedTriggers(context: PlanInputs, entry: CheckCandidate, scopePath: string): string[] {
-    const { check, manifest } = entry;
+function listDeletedTriggers(context: PlanInputs, entry: KnownCheck, scopePath: string): string[] {
+    const { check, configuration: manifest } = entry;
     if (check.runs === 'files' || context.narrow === undefined) return [];
     const { session, children, selection: scope } = context;
     const readable = new Set(session.repository.files.map((file) => file.path));
@@ -109,14 +111,14 @@ function listDeletedTriggers(context: PlanInputs, entry: CheckCandidate, scopePa
 /**
  * List the scopes nested inside a scope. Their files belong to them, not to it.
  *
- * @param session the scopes of this run.
+ * @param selections the scopes of this run.
  * @param selection the parent selection.
  *
  * @returns the child scope paths.
  */
-export function listChildScopes(session: Pick<Session, 'scopes'>, selection: ScopeSelection): string[] {
+export function listChildScopes(selections: ScopeSelection[], selection: ScopeSelection): string[] {
     const own = selection.scope.path;
-    return session.scopes
+    return selections
         .map((entry) => entry.scope.path)
         .filter((path) => path !== '' && path !== own && isInScope(path, own));
 }
@@ -151,11 +153,11 @@ export function isRootOnlyCheck(manifest: Manifest | undefined, check: CheckDecl
  */
 export function selectCheckFiles(
     context: PlanInputs,
-    entry: CheckCandidate,
+    entry: KnownCheck,
 ): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'> {
     const { selection, children } = context;
-    const { check, manifest } = entry;
-    const isRootCheck = check.runs === 'once' || check.runs === 'history';
+    const { check, configuration: manifest } = entry;
+    const isRootCheck = isRepositoryCheck(check);
     const scopePath = isRootCheck ? '' : selection.scope.path;
     const triggerPaths = listDeletedTriggers(context, entry, scopePath);
     const keepsChildScopes = check.runs !== 'files' || isRootOnlyCheck(manifest, check);
@@ -164,7 +166,7 @@ export function selectCheckFiles(
             ? listCheckFiles(context, entry, scopePath)
             : listScopeFiles(context, scopePath, check.runs);
     if (!keepsChildScopes) files = files.filter((file) => isOutsideChildren(file.path, children));
-    if (check.runs === 'files' && triggerPaths.length === 0)
+    if (check.runs === 'files')
         return { ...stripIgnoredFiles(filterNarrowedFiles(context, entry, files), check, selection), triggerPaths };
     const selected = stripIgnoredFiles(files, check, selection);
     return { ...selected, triggerPaths };
@@ -179,4 +181,14 @@ export function selectCheckFiles(
 export function extractToolFileName(file: string): string {
     const dot = file.indexOf('.');
     return dot === -1 ? file : file.slice(0, dot);
+}
+
+/**
+ * Check whether a declaration runs once for the repository.
+ *
+ * @param check the declaration to inspect
+ * @returns whether the check runs once or reads history
+ */
+export function isRepositoryCheck(check: Pick<CheckDeclaration, 'runs'>): boolean {
+    return check.runs === 'once' || check.runs === 'history';
 }

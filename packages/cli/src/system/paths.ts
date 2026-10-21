@@ -15,17 +15,6 @@ export function convertToPosixPath(path: string): string {
 }
 
 /**
- * Convert a path that a tool printed to forward slashes. Test inputs and Windows tools can print
- * backslashes on any system.
- *
- * @param path the text that the tool printed.
- * @returns the path with forward slashes.
- */
-export function normalizeOutputPath(path: string): string {
-    return path.replaceAll('\\', '/');
-}
-
-/**
  * Convert a POSIX path to the form of this system, for tool arguments.
  *
  * @param path the input, with forward slashes.
@@ -148,4 +137,20 @@ export function buildVenvBinPath(folder: string): string {
  */
 export function buildVenvExecutablePath(folder: string, name: string): string {
     return join(buildVenvBinPath(folder), name + systemExecutables.environmentSuffix);
+}
+
+/**
+ * List a repository folder and each parent, ending at the repository root.
+ *
+ * @param folder the repository-relative folder, with forward slashes.
+ * @returns the enclosing folders, nearest first, with an empty string for the root.
+ */
+export function listEnclosingFolders(folder: string): string[] {
+    let current = folder === '.' ? '' : folder;
+    const folders = [current];
+    while (current !== '') {
+        current = extractParentFolder(current);
+        folders.push(current);
+    }
+    return folders;
 }

@@ -9,11 +9,14 @@ import {
     SWIFT_MEMBER_PARENTS,
 } from '#cli/config/checks/naming.ts';
 
+function addSwiftName(sink: ExtractSink, node: Node, category: NamedCategory): void {
+    addIdentifier(sink, node, category, node.text.replaceAll(SWIFT_NAME_QUOTE, ''));
+}
+
 function addTypes(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType([...SWIFT_TYPE_NODES])) {
         const name = node.childForFieldName('name');
-        if (name?.type === 'type_identifier')
-            addIdentifier(sink, name, 'types', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
+        if (name?.type === 'type_identifier') addSwiftName(sink, name, 'types');
     }
 }
 
@@ -22,7 +25,7 @@ function addParameters(sink: ExtractSink, declaration: Node): void {
     for (const parameter of declaration.namedChildren) {
         if (parameter.type !== 'parameter') continue;
         const name = parameter.childrenForFieldName('name').find((child) => child.type === 'simple_identifier');
-        if (name) addIdentifier(sink, name, 'parameters', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
+        if (name) addSwiftName(sink, name, 'parameters');
     }
 }
 
@@ -32,12 +35,7 @@ function addFunctions(sink: ExtractSink, root: Node): void {
         addParameters(sink, node);
         const name = node.childForFieldName('name');
         if (name?.type !== 'simple_identifier') continue;
-        addIdentifier(
-            sink,
-            name,
-            SWIFT_MEMBER_PARENTS.has(node.parent?.type ?? '') ? 'methods' : 'functions',
-            name.text.replaceAll(SWIFT_NAME_QUOTE, ''),
-        );
+        addSwiftName(sink, name, SWIFT_MEMBER_PARENTS.has(node.parent?.type ?? '') ? 'methods' : 'functions');
     }
 }
 
@@ -55,7 +53,7 @@ function addNames(sink: ExtractSink, root: Node): void {
         const category = classifyDeclaredName(node);
         for (const pattern of node.childrenForFieldName('name')) {
             const bound = pattern.childForFieldName('bound_identifier');
-            if (bound) addIdentifier(sink, bound, category, bound.text.replaceAll(SWIFT_NAME_QUOTE, ''));
+            if (bound) addSwiftName(sink, bound, category);
         }
     }
 }
@@ -63,8 +61,7 @@ function addNames(sink: ExtractSink, root: Node): void {
 function addCases(sink: ExtractSink, root: Node): void {
     for (const entry of root.descendantsOfType('enum_entry'))
         for (const name of entry.childrenForFieldName('name'))
-            if (name.type === 'simple_identifier')
-                addIdentifier(sink, name, 'enum_cases', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
+            if (name.type === 'simple_identifier') addSwiftName(sink, name, 'enum_cases');
 }
 
 /**

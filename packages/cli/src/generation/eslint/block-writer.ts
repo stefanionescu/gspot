@@ -1,10 +1,8 @@
-import { joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/repository/matchers.ts';
-import { buildScopeFiles } from '#cli/generation/eslint/files.ts';
+import { buildScopeGlob, buildScopeFiles } from '#cli/generation/eslint/files.ts';
 import { serializeBlock, indentEslintBlock } from '#cli/generation/eslint/print.ts';
 
 import type {
-    BlockWriter,
+    EslintBlockInput,
     BlockWriterInput,
     EslintSettingsBlock,
     EslintRuleExpression,
@@ -14,7 +12,6 @@ import type {
 function buildOptionBlocks(
     block: EslintSettingsBlock & { rules: Record<string, unknown> },
     input: BlockWriterInput,
-    applied: Set<string>,
 ): EslintSettingsBlock[] {
     return input.ruleOptions.flatMap((options): EslintSettingsBlock[] => {
         const entries = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
@@ -22,7 +19,7 @@ function buildOptionBlocks(
             const severity: unknown = Array.isArray(value) ? value[0] : value;
             return chosen === undefined || severity === 'off' || severity === 0 ? [] : [[name, [severity, ...chosen]]];
         });
-        for (const [name] of entries) applied.add(name);
+        for (const [name] of entries) input.applied.add(name);
         if (entries.length === 0) return [];
         return [
             {
@@ -36,71 +33,72 @@ function buildOptionBlocks(
 }
 
 // Preset syntax belongs to the first block; option blocks retain only their own rules.
-function formatBlocks(
-    blocks: EslintSettingsBlock[],
-    input: BlockWriterInput,
-    runtime: string | undefined,
-    preset: EslintRuleExpression | undefined,
-): string {
-    const level = input.isAll ? 'all' : 'recommended';
+function formatBlocks(blocks: EslintSettingsBlock[], call: EslintBlockInput, level: BlockWriterInput['level']): string {
     return blocks
         .map((entry, index) => {
             let runtimeText = '';
             let selectedPreset: EslintRuleExpression | undefined;
-            let note = input.source;
+            let note = call.label;
             if (index === 0) {
-                runtimeText = runtime ?? '';
-                selectedPreset = preset;
-                if (preset !== undefined) note += ': ' + preset.expression;
+                runtimeText = call.properties ?? '';
+                selectedPreset = call.preset;
+                if (call.preset !== undefined) note += ': ' + call.preset.expression;
             } else note += ': your own rule options';
-            const source = serializeBlock(
-                entry,
-                runtimeText,
-                selectedPreset,
-                input.scope === undefined ? level : undefined,
-            );
-            const value = input.scope === undefined ? source : `stripRuntimeGlobals(${source}, globals)`;
+            const source = serializeBlock(entry, {
+                properties: runtimeText,
+                preset: selectedPreset,
+                level: call.scope === undefined ? level : undefined,
+            });
+            const value = call.scope === undefined ? source : `stripRuntimeGlobals(${source}, globals)`;
             return indentEslintBlock(`// ${note}\n${value}`);
         })
         .join(',\n');
 }
 
 /**
- * Create the writer for the ESLint blocks of one level and scope.
+ * Print a block and record the rule options it applies.
  *
- * @param input what the blocks cover, with your own options.
- * @returns the functions that format each ESLint block.
+ * @param input the file's rule options and shared applied set.
+ * @param call the block, its scope, and its label.
+ * @returns the serialized block and any applicable option blocks.
  */
-function createBlockWriter(input: BlockWriterInput): BlockWriter {
-    const { allRules, isAll, codeFiles, scope } = input;
-    const applied = new Set<string>();
-    return {
-        listUnappliedRules: () => [
-            ...new Set(
-                input.ruleOptions.flatMap((options) => Object.keys(options.rules)).filter((rule) => !applied.has(rule)),
-            ),
-        ],
-        block: (payload, runtime, preset) => {
-            const rules: Record<string, unknown> = Object.fromEntries(
-                (payload.rules === undefined ? [] : Object.entries(payload.rules)).map(([name, value]) => [
-                    name,
-                    !isAll && allRules.has(name) ? 'off' : value,
-                ]),
-            );
-            const nested =
-                scope === undefined
-                    ? {}
-                    : {
-                          files: (payload.files ?? codeFiles).map((entry) => [
-                              ...(Array.isArray(entry) ? entry : [entry]),
-                              joinScope(escapeGlob(scope.path), '**/*'),
-                          ]),
-                          ignores: [...(payload.ignores ?? []), ...scope.excluded],
-                      };
-            const block = { ...payload, ...nested, rules };
-            return formatBlocks([block, ...buildOptionBlocks(block, input, applied)], input, runtime, preset);
-        },
-    };
+function writeEslintBlock(input: BlockWriterInput, call: EslintBlockInput): string {
+    const { allRules, level, codeFiles } = input;
+    const { data: payload, scope } = call;
+    const rules: Record<string, unknown> = Object.fromEntries(
+        (payload.rules === undefined ? [] : Object.entries(payload.rules)).map(([name, value]) => [
+            name,
+            level !== 'all' && allRules.has(name) ? 'off' : value,
+        ]),
+    );
+    const nested =
+        scope === undefined
+            ? {}
+            : {
+                  files: (payload.files ?? codeFiles).map((entry) => [
+                      ...(Array.isArray(entry) ? entry : [entry]),
+                      buildScopeGlob(scope.path, '**/*'),
+                  ]),
+                  ignores: [...(payload.ignores ?? []), ...scope.excluded],
+              };
+    const block = { ...payload, ...nested, rules };
+    return formatBlocks([block, ...buildOptionBlocks(block, input)], call, level);
+}
+
+/**
+ * List your rule options that no enabled block accepted.
+ *
+ * @param input the options and the shared applied set.
+ * @returns the unapplied rule names.
+ */
+function listUnappliedRules(input: BlockWriterInput): string[] {
+    return [
+        ...new Set(
+            input.ruleOptions
+                .flatMap((options) => Object.keys(options.rules))
+                .filter((rule) => !input.applied.has(rule)),
+        ),
+    ];
 }
 
 /**
@@ -120,4 +118,16 @@ function convertWarningsToErrors(rules: Record<string, unknown>): Record<string,
     );
 }
 
-export { createBlockWriter, convertWarningsToErrors };
+/**
+ * Serialize the blocks in order with the block writer of the scope.
+ *
+ * @param input the shared rule options and applied set.
+ * @param blocks the block arguments, in order.
+ *
+ * @returns the serialized ESLint blocks.
+ */
+function serializeBlocks(input: BlockWriterInput, blocks: EslintBlockInput[]): string {
+    return blocks.map((block) => writeEslintBlock(input, block)).join(',\n');
+}
+
+export { serializeBlocks, listUnappliedRules, convertWarningsToErrors };

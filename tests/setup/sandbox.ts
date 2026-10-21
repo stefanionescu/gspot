@@ -7,18 +7,17 @@ import { linkPackages } from '#tests/setup/modules.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildInitArguments } from '#tests/setup/builders.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { runGspot, spawnGspot } from '#tests/setup/run-gspot.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { isOnDisk, encodeZipArchive } from '#tests/setup/files.ts';
 import { VALE_TOOL_FILE_PATH } from '#cli/config/system/locations.ts';
 import { runGit, commitAll, markExecutable } from '#tests/setup/git.ts';
-import { installSandbox, buildSandboxPath } from '#tests/setup/install.ts';
+import { installSandbox, runSandboxStep } from '#tests/setup/install.ts';
 import type { OriginalFile, SampleChanges } from '#tests/types/samples.ts';
 import { PROSE_SANDBOX, VALE_PACKAGE_FILES } from '#tests/data/checks/prose.ts';
-import type { Sandbox, SandboxPlan, SandboxFiles, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
+import type { Sandbox, SandboxPlan, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 import { JSON_INDENT, REGISTRY_HOST, SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON } from '#tests/data/test-setup.ts';
 import { rm, open, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
@@ -57,15 +56,15 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
 }
 
 /** Build one isolated sandbox and run its checks in the current process. */
-async function createSandbox(plan: SandboxPlan): Promise<Sandbox> {
+async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     const folder = resources.use(await testdir());
     await writeSandbox(folder.path, plan);
     await plan.before?.(folder.path);
     commitAll(folder.path);
-    await Bun.write(
+    await writeFile(
         join(folder.path, 'gspot.toml'),
-        buildSettingsText([...plan.configurations], { level: plan.level ?? 'all' }),
+        buildSandboxSettings([...plan.configurations], { level: plan.level ?? 'all' }),
     );
     await plan.prepare?.(folder.path, {});
     const owned = resources.move();
@@ -83,19 +82,17 @@ async function prepareInstalledSandbox(root: string, plan: InstalledSandboxPlan)
     if (plan.dependencies !== undefined) await linkPackages(join(root, 'node_modules'), Object.keys(plan.dependencies));
     await plan.before?.(root);
     commitAll(root);
-    const environment = { PATH: buildSandboxPath() };
     await installSandbox(
-        root,
-        buildInitArguments([...plan.configurations]),
-        environment,
+        { root, environment: {}, run: spawnGspot },
         {
+            configurations: plan.configurations,
             without: [...(plan.without ?? [])],
             level: plan.level ?? 'all',
             ...(plan.install === false ? { install: false } : {}),
+            prepare: plan.prepare,
         },
-        plan.prepare,
     );
-    return environment;
+    return {};
 }
 
 /** Share a sandbox after installing its tools once for the current test file. */
@@ -108,12 +105,7 @@ function registerSharedSandbox(plan: InstalledSandboxPlan): () => Sandbox {
         sandbox = {
             root: folder.path,
             environment,
-            run: async (cwd, commandArguments, environment) => {
-                const result = await spawnGspot(cwd, commandArguments, environment);
-                if (commandArguments[0] === 'apply' && result.code === 0) await plan.prepare?.(cwd, environment);
-                return result;
-            },
-            [Symbol.asyncDispose]: folder[Symbol.asyncDispose].bind(folder),
+            run: spawnGspot,
         };
     });
     afterAll(() => resources.disposeAsync());
@@ -196,7 +188,7 @@ async function writeChanges(cwd: string, changes: SampleChanges, settings: strin
 }
 
 // Saves file bytes and modes before the first change, so a failed change still restores them.
-async function changeSandbox(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
+async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
     const tree = runGit(cwd, ['write-tree']).stdout.trim();
     const head = runGit(cwd, ['rev-parse', 'HEAD']).stdout.trim();
@@ -242,13 +234,12 @@ async function changeSandbox(sandbox: SandboxFiles, changes: SampleChanges): Pro
 }
 
 /** Change the sandbox for a test that applies, and apply again after the restore so the generated files match. */
-async function updateSandbox(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
+async function updateSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     const change = await changeSandbox(sandbox, changes);
     return {
         async [Symbol.asyncDispose]() {
             await change[Symbol.asyncDispose]();
-            const result = await sandbox.run(sandbox.root, ['apply'], sandbox.environment);
-            if (result.code !== 0) throw new Error(`Sandbox restore failed: ${result.stdout}${result.stderr}`);
+            await runSandboxStep(sandbox, ['apply']);
         },
     };
 }
@@ -261,31 +252,39 @@ function shareProseSandbox(): () => Sandbox {
         );
         server = Bun.serve({ hostname: REGISTRY_HOST, port: 0, fetch: () => new Response(new Uint8Array(archive)) });
     });
+    function pointValePackages(root: string): void {
+        const packages = VALE_PACKAGES.map((name) => `http://${REGISTRY_HOST}:${String(server.port)}/${name}.zip`).join(
+            ', ',
+        );
+        using writer = openWriter(root);
+        const file = writer.files.read(VALE_TOOL_FILE_PATH) as FileContents;
+        writePlans(writer, [
+            planReplacement(writer, {
+                path: VALE_TOOL_FILE_PATH,
+                next: {
+                    bytes: Buffer.from(
+                        file.bytes.toString('utf8').replace(/^Packages = .*$/mu, `Packages = ${packages}`),
+                    ),
+                    mode: 0o444,
+                },
+            }),
+        ]);
+    }
     const sandbox = registerSharedSandbox({
         ...PROSE_SANDBOX,
-        prepare: (root) => {
-            const packages = VALE_PACKAGES.map(
-                (name) => `http://${REGISTRY_HOST}:${String(server.port)}/${name}.zip`,
-            ).join(', ');
-            using writer = openWriter(root);
-            const file = writer.files.read(VALE_TOOL_FILE_PATH) as FileContents;
-            writePlans(writer, [
-                planReplacement(writer, {
-                    path: VALE_TOOL_FILE_PATH,
-                    next: {
-                        bytes: Buffer.from(
-                            file.bytes.toString('utf8').replace(/^Packages = .*$/mu, `Packages = ${packages}`),
-                        ),
-                        mode: 0o444,
-                    },
-                }),
-            ]);
-        },
+        prepare: pointValePackages,
     });
     afterAll(async () => {
         await server.stop(true);
     });
-    return sandbox;
+    return () => ({
+        ...sandbox(),
+        async run(root, commandArguments, environment) {
+            const result = await spawnGspot(root, commandArguments, environment);
+            if (commandArguments[0] === 'apply' && result.code === 0) pointValePackages(root);
+            return result;
+        },
+    });
 }
 
 export {
@@ -299,24 +298,19 @@ export {
 };
 
 /** Write the sample files and run apply; disposal restores the files and applies again. */
-export async function applySandboxChanges(sandbox: SandboxFiles, changes: SampleChanges): Promise<AsyncDisposable> {
+export async function applySandboxChanges(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     resources.use(await updateSandbox(sandbox, changes));
-    const applied = await sandbox.run(sandbox.root, ['apply'], sandbox.environment);
-    if (applied.code !== 0) throw new Error(`Sandbox apply failed: ${applied.stdout}${applied.stderr}`);
+    await runSandboxStep(sandbox, ['apply']);
     return resources.move();
 }
 
 /** Write and stage the sample files, then run apply; disposal restores the index and files. */
-export async function applyStagedSandboxChanges(
-    sandbox: SandboxFiles,
-    changes: SampleChanges,
-): Promise<AsyncDisposable> {
+export async function applyStagedSandboxChanges(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     resources.use(await updateSandbox(sandbox, changes));
     const staged = runGit(sandbox.root, ['add', '--all']);
     if (staged.code !== 0) throw new Error(`Staging sandbox inputs failed: ${staged.stderr}${staged.stdout}`);
-    const applied = await sandbox.run(sandbox.root, ['apply'], sandbox.environment);
-    if (applied.code !== 0) throw new Error(`Sandbox apply failed: ${applied.stdout}${applied.stderr}`);
+    await runSandboxStep(sandbox, ['apply']);
     return resources.move();
 }

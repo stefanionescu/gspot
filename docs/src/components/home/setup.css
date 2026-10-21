@@ -36,7 +36,7 @@
     background: transparent;
     color: var(--sl-color-gray-3);
     font: inherit;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 550;
     cursor: pointer;
 }
@@ -67,7 +67,7 @@
     background: transparent;
     color: var(--sl-color-gray-1);
     font: inherit;
-    font-size: 14px;
+    font-size: 0.875rem;
     cursor: pointer;
 }
 
@@ -100,7 +100,7 @@
     background: transparent;
     color: var(--sl-color-gray-1);
     font: inherit;
-    font-size: 14px;
+    font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
 }
@@ -137,9 +137,13 @@
     display: grid;
     gap: 6px;
     color: var(--code-text);
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1.6;
     white-space: normal;
+}
+
+.commands[hidden] {
+    display: none;
 }
 
 .commands .cmd {
@@ -157,7 +161,7 @@
     margin: 0;
     color: var(--code-text);
     font-family: var(--sl-font-mono);
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1.6;
 }
 
@@ -169,20 +173,11 @@
     color: var(--sl-color-text-accent);
 }
 
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-}
-
 @media (width >= 50rem) {
     .commands,
     .agent-prompt {
         margin: 0;
-        font-size: 15px;
+        font-size: 0.9375rem;
     }
 
     .copy-label {

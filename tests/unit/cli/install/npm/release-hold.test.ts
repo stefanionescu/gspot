@@ -26,10 +26,10 @@ test('a Bun tool lockfile reads the hold from a bunfig.toml in its folder', asyn
     });
 });
 
-test('a pnpm tool lockfile reads the hold from pnpm-workspace.yaml, so it stops ignoring that file', async () => {
+test('a pnpm tool lockfile reads the hold from pnpm-workspace.yaml', async () => {
     await using folder = await testdir();
     const hold = addToolReleaseHold(folder.path, LOCKFILE_ARGUMENTS.pnpm, { name: 'pnpm', version: '10.30.0' }, 7);
-    expect(hold).toStrictEqual(LOCKFILE_ARGUMENTS.pnpm.filter((part) => part !== '--ignore-workspace'));
+    expect(hold).toStrictEqual([...LOCKFILE_ARGUMENTS.pnpm]);
     expect(Bun.YAML.parse(await readFile(join(folder.path, 'pnpm-workspace.yaml'), 'utf8'))).toStrictEqual({
         minimumReleaseAge: 10_080,
         minimumReleaseAgeExclude: [...OWN_PACKAGES],

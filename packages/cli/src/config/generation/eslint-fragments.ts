@@ -1,3 +1,19 @@
+import type { EslintPlugins } from '#cli/types/generation/eslint.ts';
+
+/** Test correctness rules shared by the two test plugins, without their namespace. */
+const TEST_RULE_NAMES = [
+    'no-focused-tests',
+    'no-disabled-tests',
+    'no-identical-title',
+    'no-standalone-expect',
+    'no-commented-out-tests',
+    'expect-expect',
+    'valid-describe-callback',
+    'no-conditional-expect',
+    'valid-expect',
+    'prefer-strict-equal',
+] as const;
+
 const ASTRO_RULES = {
     'astro/no-set-html-directive': 'error',
     'astro/no-exports-from-components': 'error',
@@ -117,7 +133,7 @@ const TYPESCRIPT_TEST_RULES_OFF = {
     '@typescript-eslint/no-non-null-assertion': 'off',
 } as const;
 
-const NESTJS_ALL_LEVEL_RULES = {
+const NESTJS_RULES = {
     '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
 } as const;
 
@@ -185,46 +201,97 @@ const DRIZZLE_RULES = ['drizzle/enforce-delete-with-where', 'drizzle/enforce-upd
 
 const JEST_GLOBAL_PACKAGE = '@jest/globals';
 
+/** Imported bindings for the blocks of each configuration. */
+const FRAGMENT_IMPORTS = {
+    expo: { expoPlugin: ['expoPlugin', 'eslint-plugin-expo'] },
+    'react-native': {
+        reactNativePlatform: ['reactNativePlatform', '@react-native/eslint-plugin'],
+        reactNative: ['reactNative', 'eslint-plugin-react-native'],
+    },
+    zod: { zodPlugin: ['zodPlugin', 'eslint-plugin-zod'] },
+    translations: { i18next: ['i18next', 'eslint-plugin-i18next'] },
+    nextjs: {
+        nextPlugin: ['nextPlugin', '@next/eslint-plugin-next'],
+        reactRefresh: ['reactRefresh', 'eslint-plugin-react-refresh'],
+    },
+    vue: {
+        vuePlugin: ['vuePlugin', 'eslint-plugin-vue'],
+        vueParser: ['vueParser', 'vue-eslint-parser'],
+        vueAccessibility: ['vueAccessibility', 'eslint-plugin-vuejs-accessibility'],
+    },
+    'react-dom': { accessibility: ['accessibility', 'eslint-plugin-jsx-a11y'] },
+    astro: { astroPlugin: ['astroPlugin', 'eslint-plugin-astro'] },
+    zustand: {},
+    svelte: {
+        sveltePlugin: ['sveltePlugin', 'eslint-plugin-svelte'],
+        svelteParser: ['svelteParser', 'svelte-eslint-parser'],
+    },
+    nestjs: { nestjsTyped: ['nestjsTyped', '@darraghor/eslint-plugin-nestjs-typed'] },
+    'tanstack-query': { tanstackQuery: ['tanstackQuery', '@tanstack/eslint-plugin-query'] },
+    vitest: { vitest: ['vitest', '@vitest/eslint-plugin'] },
+    typescript: {
+        tseslint: ['tseslint', 'typescript-eslint'],
+        '{ createTypeScriptImportResolver }': [
+            '{ createTypeScriptImportResolver }',
+            'eslint-import-resolver-typescript',
+        ],
+    },
+    'testing-library': { testingLibrary: ['testingLibrary', 'eslint-plugin-testing-library'] },
+    react: {
+        reactHooks: ['reactHooks', 'eslint-plugin-react-hooks'],
+        react: ['react', 'eslint-plugin-react'],
+        reactRefresh: ['reactRefresh', 'eslint-plugin-react-refresh'],
+    },
+    drizzle: { drizzlePlugin: ['drizzlePlugin', 'eslint-plugin-drizzle'] },
+    jest: { jest: ['jest', 'eslint-plugin-jest'] },
+} as const satisfies Record<string, EslintPlugins>;
+
 /** Import statements, selectors, and lint rules for the fragments with no configuration-specific calculation. */
 const PLUGIN_LINT_RULE_FRAGMENTS: Readonly<
     Record<
         string,
         {
-            imports: readonly string[];
-            plugins: string;
-            files: 'code' | readonly string[];
-            ignores?: 'testFiles';
+            imports: EslintPlugins;
+            properties: string;
+            files: 'code' | 'tests' | readonly string[];
+            ignores?: 'tests';
             rules: Readonly<Record<string, unknown>>;
         }
     >
 > = {
+    jest: {
+        imports: FRAGMENT_IMPORTS.jest,
+        properties: `plugins: { jest }, languageOptions: { globals: jest.environments.globals.globals }, settings: { jest: { globalPackage: ${JSON.stringify(JEST_GLOBAL_PACKAGE)} } }`,
+        files: 'tests',
+        rules: {
+            ...Object.fromEntries(TEST_RULE_NAMES.map((name) => [`jest/${name}`, 'error'])),
+            'jest/valid-expect': ['error', { maxArgs: 1 }],
+        },
+    },
     expo: {
-        imports: ["import expoPlugin from 'eslint-plugin-expo';"],
-        plugins: 'plugins: { expo: expoPlugin }',
+        imports: FRAGMENT_IMPORTS.expo,
+        properties: 'plugins: { expo: expoPlugin }',
         files: 'code',
         rules: EXPO_RULES,
     },
-    express: { imports: [], plugins: '', files: 'code', rules: EXPRESS_RULES },
+    express: { imports: {}, properties: '', files: 'code', rules: EXPRESS_RULES },
     'react-native': {
-        imports: [
-            "import reactNativePlatform from '@react-native/eslint-plugin';",
-            "import reactNative from 'eslint-plugin-react-native';",
-        ],
-        plugins: "plugins: { '@react-native': reactNativePlatform, 'react-native': reactNative }",
+        imports: FRAGMENT_IMPORTS['react-native'],
+        properties: "plugins: { '@react-native': reactNativePlatform, 'react-native': reactNative }",
         files: 'code',
         rules: REACT_NATIVE_RULES,
     },
     zod: {
-        imports: ["import zodPlugin from 'eslint-plugin-zod';"],
-        plugins: 'plugins: { zod: zodPlugin }',
+        imports: FRAGMENT_IMPORTS.zod,
+        properties: 'plugins: { zod: zodPlugin }',
         files: 'code',
         rules: Object.fromEntries(ZOD_RULES.map((rule) => [`zod/${rule}`, 'error'])),
     },
     translations: {
-        imports: ["import i18next from 'eslint-plugin-i18next';"],
-        plugins: 'plugins: { i18next }',
+        imports: FRAGMENT_IMPORTS.translations,
+        properties: 'plugins: { i18next }',
         files: JSX_FILES,
-        ignores: 'testFiles',
+        ignores: 'tests',
         rules: TRANSLATIONS_RULES,
     },
 };
@@ -238,20 +305,27 @@ export {
     REFRESH_RULE,
     SVELTE_RULES,
     SVELTE_FILES,
+    NESTJS_RULES,
     DRIZZLE_RULES,
     JSX_CODE_FILES,
     TABINDEX_RULES,
+    TEST_RULE_NAMES,
     FOCUSABLE_ROLES,
     NEXT_EXTRA_HOCS,
+    FRAGMENT_IMPORTS,
     TYPESCRIPT_RULES,
     NEXT_SERVER_FILES,
     NEXT_PAGES_FOLDERS,
     ASTRO_SCRIPT_FILES,
-    JEST_GLOBAL_PACKAGE,
-    NESTJS_ALL_LEVEL_RULES,
     ZUSTAND_STORE_CREATORS,
     TYPESCRIPT_TEST_RULES_OFF,
     PLUGIN_LINT_RULE_FRAGMENTS,
     NESTJS_INJECTABLE_FILTER_PATHS,
     TESTING_LIBRARY_DEFAULT_PRESET,
 };
+
+/** Vue component files share one selector across captured and authored rule blocks. */
+export const VUE_FILES = ['**/*.vue'] as const;
+export const TESTING_LIBRARY_SCOPE = '@testing-library/';
+/** Astro's processor exposes component return values without the typed service's return contract. */
+export const ASTRO_TYPED_RULES = { '@typescript-eslint/no-unsafe-return': 'off' } as const;

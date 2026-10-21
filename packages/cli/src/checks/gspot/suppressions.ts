@@ -1,16 +1,20 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
 import { getToolName } from '#cli/configurations/tools.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
+import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import { ISO_DATE_LENGTH } from '#cli/config/settings/values.ts';
 import type { SuppressionSyntax } from '#cli/types/checks/gspot.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Finding, FindingPlace } from '#cli/types/runs/check.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
-import type { Finding, CheckInput, FindingPlace } from '#cli/types/runs/check.ts';
-import { REASON_ABOVE, SUPPRESSION_LIMITS, SUPPRESSION_DIRECTIVE_MESSAGES } from '#cli/config/checks/gspot.ts';
+import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/comments.ts';
+import { REASON_ABOVE, EXPIRED_IGNORE_HELP, SUPPRESSION_KIND_MESSAGES } from '#cli/config/checks/gspot.ts';
 
 // A reason on the line above covers only the next line. Code or comments between them break the link.
 function findReasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
@@ -52,25 +56,30 @@ function listSuppressionSyntaxes(selection: ScopeSelection): SuppressionSyntax[]
             inlineMarker: new RegExp(definition.inline_marker ?? definition.marker, 'u'),
             reason: new RegExp(definition.reason, 'u'),
             forbidden: definition.forbidden === true,
+            separator: definition.separator === undefined ? undefined : new RegExp(definition.separator, 'u'),
+            allRules: definition.all_rules === undefined ? undefined : new RegExp(definition.all_rules, 'u'),
+            limitRules: definition.limit_rules === undefined ? undefined : new RegExp(definition.limit_rules, 'u'),
         };
     });
 }
 
-// The lint rules that a directive of a tool with size limits names; undefined for any other comment.
-function readDirectiveRules(tool: string, text: string): string | undefined {
-    const limits = SUPPRESSION_LIMITS.get(tool);
-    const directive = limits?.directive.exec(text);
-    if (limits === undefined || directive === null || directive === undefined) return undefined;
-    return (directive.groups?.['rules'] ?? '').split(limits.separator)[0];
+// The rules named by a suppression with a size-limit grammar; undefined for any other comment.
+function parseSuppressionRules(form: SuppressionSyntax, text: string): string | undefined {
+    if (form.separator === undefined) return undefined;
+    const suppression = form.marker.exec(text);
+    if (suppression === null) return undefined;
+    return (suppression.groups?.['rules'] ?? '').split(form.separator)[0];
 }
 
-// A directive that turns off every rule, or one that lifts a size or complexity limit.
-function classifyDirective(tool: string, text: string): keyof typeof SUPPRESSION_DIRECTIVE_MESSAGES | undefined {
-    const rules = readDirectiveRules(tool, text);
-    const limits = SUPPRESSION_LIMITS.get(tool);
-    if (rules === undefined || limits === undefined) return undefined;
-    if (limits.allRules.test(rules.trim())) return 'all';
-    return limits.lintRules.test(rules) ? 'limit' : undefined;
+// A suppression that turns off every rule, or one that lifts a size or complexity limit.
+function classifySuppression(
+    form: SuppressionSyntax,
+    text: string,
+): keyof typeof SUPPRESSION_KIND_MESSAGES | undefined {
+    const rules = parseSuppressionRules(form, text);
+    if (rules === undefined) return undefined;
+    if (form.allRules?.test(rules.trim()) === true) return 'all';
+    return form.limitRules?.test(rules) === true ? 'limit' : undefined;
 }
 
 function hasAcceptedReason(form: SuppressionSyntax, text: string, preceding: string | undefined): boolean {
@@ -79,7 +88,7 @@ function hasAcceptedReason(form: SuppressionSyntax, text: string, preceding: str
 }
 
 function checkSuppressionComment(
-    input: CheckInput,
+    planned: PlannedCheck,
     form: SuppressionSyntax,
     comment: SourceComment & FindingPlace,
     preceding: string | undefined,
@@ -91,19 +100,18 @@ function checkSuppressionComment(
     if (form.forbidden)
         return [
             buildFinding(
-                input,
+                planned,
                 at,
                 form.tool,
                 `${form.tool} suppression is not allowed; fix the finding or configure an explicit ignore.`,
             ),
         ];
-    const directive = classifyDirective(form.tool, text);
-    if (directive !== undefined)
-        return [buildFinding(input, at, `${form.tool}-${directive}`, SUPPRESSION_DIRECTIVE_MESSAGES[directive])];
+    const kind = classifySuppression(form, text);
+    if (kind !== undefined) return [buildFinding(planned, at, `${form.tool}-${kind}`, SUPPRESSION_KIND_MESSAGES[kind])];
     if (hasAcceptedReason(form, text, preceding)) return [];
     return [
         buildFinding(
-            input,
+            planned,
             at,
             `${form.tool}-no-reason`,
             `This ${form.tool} suppression has no reason of two or more words.`,
@@ -111,30 +119,58 @@ function checkSuppressionComment(
     ];
 }
 
+function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] {
+    const { settings, text } = session.settingsFile;
+    const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
+    const expired = new Map(
+        settings.ignore.flatMap((entry, index) => {
+            const date = entry.until?.toISOString();
+            return date === undefined || today < date ? [] : [[index, { entry, date }] as const];
+        }),
+    );
+    if (expired.size === 0) return [];
+    return parseTomlSyntax(text, settings.written).pathNodes.flatMap(({ path: [table, index, ...keys], node }) => {
+        if (table !== 'ignore' || typeof index !== 'number' || keys.length > 0) return [];
+        const ignore = expired.get(index);
+        if (ignore === undefined) return [];
+        const line = text.slice(0, getTomlRange(node)[0]).split('\n').length;
+        return [
+            buildFinding(
+                planned,
+                { file: SETTINGS_FILE, line },
+                'expired-ignore',
+                `This ignore of ${ignore.entry.check ?? 'every check'} ended on ${ignore.date}.`,
+                { help: EXPIRED_IGNORE_HELP },
+            ),
+        ];
+    });
+}
+
 /**
  * Reports forbidden suppressions and suppressions without a valid reason.
  *
- * @param input the files to scan, by scope.
+ * @param session the repository and its tools.
+ * @param planned the files to scan, by scope.
  * @returns the findings.
  */
-export async function checkSuppressions(input: CheckInput): Promise<Finding[]> {
-    const scopes = input.selections.map((selection) => selection.scope);
-    const selections = new Map(input.selections.map((selection) => [selection.scope.path, selection]));
-    const found: Finding[] = [];
+export async function checkSuppressions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const scopes = session.scopes.map((selection) => selection.scope);
+    const selections = new Map(session.scopes.map((selection) => [selection.scope.path, selection]));
+    const found: Finding[] = listExpiredIgnores(session, planned);
     for (const [scope, selection] of selections) {
         const syntaxes = listSuppressionSyntaxes(selection);
-        for (const file of input.files.filter(
+        for (const file of planned.files.filter(
             (file) =>
                 file.kind === 'source' && file.tags.includes('text') && findScope(file.path, scopes).path === scope,
         )) {
             const forms = syntaxes.filter((form) => form.covers(file));
-            const source = readCachedBytes(input.reads, file.path).toString('utf8');
+            const source = readCachedText(session.reads, file.path);
             const comments = await parseComments(file.path, source, file.tags);
             found.push(
                 ...comments.flatMap((comment, index) => {
                     const preceding = findReasonAbove(comments[index - 1], comment);
                     return forms.flatMap((form) =>
-                        checkSuppressionComment(input, form, { ...comment, file: file.path }, preceding),
+                        checkSuppressionComment(planned, form, { ...comment, file: file.path }, preceding),
                     );
                 }),
             );

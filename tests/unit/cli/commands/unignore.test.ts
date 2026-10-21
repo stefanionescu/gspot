@@ -1,18 +1,18 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { UNIGNORE_CASES } from '#tests/data/commands/ignore.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { parse, stringify, LocalDate } from '@decimalturn/toml-patch';
 
 test.each([...UNIGNORE_CASES])(
     'unignore from %s prints its summary and reports a repeat as unchanged',
     async (_, tables, summary) => {
         await using folder = await testdir();
-        const settings = buildSettingsText(['bash'], { rules: true, tables });
+        const settings = buildSandboxSettings(['bash'], { rules: true, tables });
         await createFileTree(folder.path, {
             'gspot.toml': settings,
             'entry.sh': 'echo example\n',
@@ -33,33 +33,9 @@ test.each([...UNIGNORE_CASES])(
     },
 );
 
-test('unignore writes its summary and replaces an edited file it owns', async () => {
-    await using folder = await testdir();
-    const settings = buildSettingsText(['bash'], {
-        tables: `[[ignore]]
-check = "bash/shellcheck"
-rule = "SC2086"
-reason = "The sample keeps word splitting."
-`,
-    });
-    await createFileTree(folder.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
-    const applied = await runGspot(folder.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const config = join(folder.path, '.gspot/configurations/language/bash/shellcheckrc');
-    const edited = `${await readFile(config, 'utf8')}# Preserve this authored edit.\n`;
-    await chmod(config, 0o644);
-    await writeFile(config, edited);
-    const removed = await runGspot(folder.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toStartWith('Removed 1 ignore for bash/shellcheck.\n');
-    expect((parse(await readFile(join(folder.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore']).toBeUndefined();
-    expect(await readFile(config, 'utf8')).not.toContain('# Preserve this authored edit.');
-    expect(await readFile(join(folder.path, 'entry.sh'), 'utf8')).toBe('echo example\n');
-});
-
 test('ignore removal refuses invalid settings before it changes an authored ignore', async () => {
     await using folder = await testdir();
-    const settings = buildSettingsText(['bash'], {
+    const settings = buildSandboxSettings(['bash'], {
         tables: `[[ignore]]
 check = "bash/shellcheck"
 rule = "SC2086"
@@ -94,7 +70,7 @@ test('unignore counts changed entries and keeps other paths and other rules', as
         rule: other.rule,
         reason: 'The variables are read by sourcing scripts.',
     };
-    const settings = buildSettingsText(['bash'], {
+    const settings = buildSandboxSettings(['bash'], {
         tables: stringify({ ignore: [first, second, global, other, globalOther] }),
     });
     await createFileTree(folder.path, {

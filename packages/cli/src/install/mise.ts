@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { runInstallStep } from '#cli/install/steps.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { readMiseBinPaths } from '#cli/tools/locate.ts';
 import { DOT_GSPOT } from '#cli/config/system/locations.ts';
@@ -10,8 +11,8 @@ import type { InstallContext } from '#cli/types/install.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { redactInstallOutput } from '#cli/install/credentials.ts';
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
-import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/find.ts';
 import { MISE_TRUST_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/install.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
@@ -31,10 +32,10 @@ function selectHookPrograms(session: Session, tools: ToolDeclaration[]) {
     const programs = tools.filter(
         (tool) =>
             programNames.has(tool.name) &&
-            findMissingBuild(tool, host.platform, host.arch) === undefined &&
+            findMissingBuild(tool, host) === undefined &&
             findMisePin(tool) !== undefined,
     );
-    const pins = listMisePins(manifests, session.reads).filter(
+    const pins = listMisePins(manifests).filter(
         (pin) =>
             programs.some((tool) => findMisePin(tool)?.name === pin.name) ||
             (pin.name === UV_TOOL && listToolProjectPins(manifests).python.length > 0),
@@ -69,21 +70,16 @@ export async function installMiseTools(context: InstallContext): Promise<string>
         { command: [...MISE_INSTALL_ARGUMENTS, ...pins.map((pin) => pin.name)], cwd: join(session.root, DOT_GSPOT) },
     ];
     for (const { command, cwd } of commands) {
-        steps.push(command);
-        const result = await runTool(command, { cancelSignal: context.cancelSignal, cwd, timeoutSeconds });
-        context.cancelSignal?.throwIfAborted();
-        assertWithinTimeLimit(`The command ${command.join(' ')}`, result, timeoutSeconds);
+        const result = await runInstallStep(context, command, { cwd });
         if (result.code !== 0)
             throw new GspotError(
                 'installation',
                 `The command ${command.join(' ')} failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
             );
     }
-    session.miseBinPaths = readMiseBinPaths(
-        session.root,
-        pins.map((pin) => pin.name),
-        timeoutSeconds,
-        steps,
-    );
+    const names = pins.map((pin) => pin.name);
+    steps.push([...MISE_BIN_PATHS_ARGUMENTS, ...names]);
+    session.miseBinPaths = readMiseBinPaths(session.root, names, timeoutSeconds);
+    delete session.uvPath;
     return 'trusted .gspot/mise.toml for mise';
 }

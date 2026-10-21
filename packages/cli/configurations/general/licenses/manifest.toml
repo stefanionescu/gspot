@@ -6,7 +6,6 @@ title = "Licenses"
 filenames = ["package.json", "pyproject.toml"]
 
 [[tool]]
-mise = "npm:license-checker-rseidelsohn"
 name = "license-checker-rseidelsohn"
 npm = "license-checker-rseidelsohn"
 replace = [".license-checker.json"]
@@ -14,7 +13,6 @@ version = "5.0.1"
 version_exit_code = 1
 
 [[tool]]
-mise = "pipx:pip-licenses"
 name = "pip-licenses"
 pypi = "pip-licenses"
 version = "5.5.5"

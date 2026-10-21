@@ -23,7 +23,8 @@ export const ANY_FOLDER_PREFIX = '**/';
 export const DRIVE_LETTER = /^[a-z]:/iu;
 export const PARENT_SEGMENT = /(?:^|[/{,])\.\.(?=[/},]|$)/u;
 
-export const WHOLE_TREE_GLOBS = ['**', '**/*'] as const;
+export const ALL_FILES_GLOB = '**/*';
+export const WHOLE_TREE_GLOBS = ['**', ALL_FILES_GLOB] as const;
 export const GLOB_SPECIAL_CHARACTERS = /[\\*?{}[\]()!+@,]/gu;
 
 export const TRAILING_SLASH = /\/$/u;

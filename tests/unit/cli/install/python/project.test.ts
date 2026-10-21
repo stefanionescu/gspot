@@ -1,21 +1,21 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { fakeCommand } from '#tests/setup/fakes.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInstallContext } from '#tests/setup/install.ts';
-import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { PYTHON_VERSION } from '#cli/config/parsers/dependencies.ts';
 import { installPythonTools, preparePythonLockfile } from '#cli/install/python/project.ts';
 import { UV_TOML, PYTHON_TOOL_PROJECT, PYTHON_TOOL_LOCKFILE } from '#tests/data/install/python-tool-project.ts';
 
 /** The Python tool project files with the Python version filled in. */
 function buildPythonProjectFiles(): Record<string, string> {
     return {
-        'gspot.toml': buildSettingsText([]),
+        'gspot.toml': buildSandboxSettings([]),
         '.gspot/pyproject.toml': PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VERSION),
         '.gspot/uv.lock': PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION),
         'uv.toml': UV_TOML,
@@ -23,8 +23,8 @@ function buildPythonProjectFiles(): Record<string, string> {
 }
 
 test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index passwords', async (step) => {
-    await using repository = await testdir();
-    await createFileTree(repository.path, buildPythonProjectFiles());
+    await using repository = await testdir(buildPythonProjectFiles());
+
     const calls: string[][] = [];
     using _boundary = fakeCommand('unavailable-uv', (command) => {
         calls.push([...command]);
@@ -58,8 +58,8 @@ test.each(['venv', 'sync'])('a failed uv %s can be repaired and hides index pass
 });
 
 test('a successful uv run refuses a password in its new lockfile and keeps the tool project files', async () => {
-    await using repository = await testdir();
-    await createFileTree(repository.path, buildPythonProjectFiles());
+    await using repository = await testdir(buildPythonProjectFiles());
+
     using boundary = fakeCommand('synthetic-uv', async (_command, options) => {
         await writeFile(
             join(options.cwd, 'uv.lock'),
@@ -77,7 +77,6 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     const lockfileError: unknown = await preparePythonLockfile(buildInstallContext(session, log), {
         path: '.gspot/pyproject.toml',
         content: PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VERSION),
-        kind: 'tool_project',
     }).catch((error: unknown) => error);
     expect(lockfileError).toMatchObject({ name: 'GspotError', code: 'installation' });
     expect(lockfileError instanceof Error ? lockfileError.message : '').toBe(
@@ -92,8 +91,8 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
 });
 
 test('uv installs the tool project with its own Python, whatever UV_PYTHON and .python-version the repository sets', async () => {
-    await using repository = await testdir();
-    await createFileTree(repository.path, { ...buildPythonProjectFiles(), '.python-version': '3.12.13\n' });
+    await using repository = await testdir({ ...buildPythonProjectFiles(), '.python-version': '3.12.13\n' });
+
     const runs: { command: string[]; env: Record<string, string | undefined> | undefined }[] = [];
     using _boundary = fakeCommand('pinned-uv', (command, options) => {
         runs.push({ command: [...command], env: options.env });

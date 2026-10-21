@@ -1,3 +1,5 @@
+import { LocalDate } from '@decimalturn/toml-patch';
+
 export const NESTED_SCOPE_SETTINGS = `configurations = ["bash", "swift", "structure"]
 [rules]
 enabled = false
@@ -73,3 +75,25 @@ max_words = 3
 max_characters = 20
 cases = { value = ["kebab"], reason = "CSS and HTML file names use kebab case." }
 `;
+
+export const IGNORE_EXPIRY_ENTRIES = [
+    { check: 'dependencies/osv-scanner', rule: 'permanent', reason: 'Reviewed upstream.' },
+    {
+        check: 'dependencies/osv-scanner',
+        rule: 'past',
+        reason: 'Reviewed upstream.',
+        until: new LocalDate('2030-05-19'),
+    },
+    {
+        check: 'dependencies/osv-scanner',
+        rule: 'today',
+        reason: 'Reviewed upstream.',
+        until: new LocalDate('2030-05-20'),
+    },
+    {
+        check: 'dependencies/osv-scanner',
+        rule: 'future',
+        reason: 'Reviewed upstream.',
+        until: new LocalDate('2030-05-21'),
+    },
+] as const;

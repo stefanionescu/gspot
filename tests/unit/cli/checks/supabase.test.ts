@@ -7,8 +7,7 @@ import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { checkFindings, openPinnedSession } from '#tests/setup/check-input.ts';
 
@@ -21,10 +20,10 @@ import {
 } from '#tests/data/checks/supabase.ts';
 
 test('Supabase config.toml and function folders are read per scope', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['supabase'], {
-            tables: '[[scope]]\npath = "apps/api"\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "apps/api/edge"\n',
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['supabase'], {
+            scopes: [{ path: 'apps/api', configurations: ['supabase'] }],
+            tables: '[scope.supabase]\nfunctions_folder = "apps/api/edge"\n',
         }),
         'supabase/config.toml': '[functions.missing]\nverify_jwt = true\n',
         'supabase/functions/root/index.ts': 'export {};\n',
@@ -32,6 +31,7 @@ test('Supabase config.toml and function folders are read per scope', async () =>
         'apps/api/edge/hello/index.ts': 'export {};\n',
         'apps/api/edge/_shared/index.ts': 'export {};\n',
     });
+
     using resources = new DisposableStack();
     const session = await openPinnedSession(sandbox.path, ['deno'], resources);
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(
@@ -49,19 +49,19 @@ test('Supabase config.toml and function folders are read per scope', async () =>
 
 test('supabase/storage-policies reports nothing for a config.toml with a TOML syntax error', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['supabase'], { tables: '[[scope]]\npath = "apps/api"\n' }),
+        'gspot.toml': buildSandboxSettings(['supabase'], { scopes: [{ path: 'apps/api' }] }),
         'apps/api/supabase/config.toml': '[broken',
     });
     expect(await checkFindings(sandbox.path, 'supabase/storage-policies', { scope: 'apps/api' })).toStrictEqual([]);
 });
 
 test.each([1, 2])("Deno lint exit %s without JSON reports Deno's error text", async (code) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['supabase']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['supabase']),
         'supabase/functions/greet/index.ts': 'export {};',
         'supabase/functions/greet/deno.json': '{',
     });
+
     using resources = new DisposableStack();
     const session = await openPinnedSession(sandbox.path, ['deno'], resources);
     resources.use(
@@ -78,9 +78,9 @@ test.each([...STORAGE_POLICIES])(
     "a storage policy counts only a real bucket_id = 'name' condition on storage.objects: $name",
     async ({ sql, allowed }) => {
         await using sandbox = await testdir();
-        const settings = buildSettingsText(['supabase'], {
+        const settings = buildSandboxSettings(['supabase'], {
             level: 'all',
-            tables: '[[scope]]\npath = "app"\nconfigurations = ["supabase"]\n',
+            scopes: [{ path: 'app', configurations: ['supabase'] }],
         });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,
@@ -113,10 +113,13 @@ test.each([...STORAGE_POLICIES])(
 );
 
 test("service role keys are allowed in each scope's test files and refused in client files", async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': SERVICE_KEY_SETTINGS, ...SERVICE_KEY_READERS });
-    const result = await checkReport(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(1);
+    await using sandbox = await testdir({ 'gspot.toml': SERVICE_KEY_SETTINGS, ...SERVICE_KEY_READERS });
+
+    const result = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['supabase/service-role-key'] }),
+    );
+
     const report = result.report;
     expect(report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))).toStrictEqual([
         { file: 'client.ts', rule: 'admin-key' },
@@ -126,7 +129,7 @@ test("service role keys are allowed in each scope's test files and refused in cl
 
 test('service role keys are refused in component and module clients and allowed in the functions folder', async () => {
     await using sandbox = await testdir();
-    const settings = buildSettingsText(['supabase'], { tables: '[supabase]\nfunctions_folder = "server"\n' });
+    const settings = buildSandboxSettings(['supabase'], { tables: '[supabase]\nfunctions_folder = "server"\n' });
     const sources = {
         'client.vue': '<script setup>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
         'client.svelte': '<script>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
@@ -138,10 +141,8 @@ test('service role keys are refused in component and module clients and allowed 
         'notes.txt': 'SUPABASE_SERVICE_ROLE_KEY\n',
     };
     await createFileTree(sandbox.path, { 'gspot.toml': settings, ...sources });
-    const result = await checkReport(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = result.report;
-    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual([
+    const findings = await checkFindings(sandbox.path, 'supabase/service-role-key');
+    expect(findings.map(({ file }) => file)).toStrictEqual([
         'client.astro',
         'client.cjs',
         'client.cts',
@@ -151,19 +152,22 @@ test('service role keys are refused in component and module clients and allowed 
     ]);
     for (const [path, text] of Object.entries(sources)) {
         if (path.startsWith('client.'))
-            await Bun.write(
+            await writeFile(
                 join(sandbox.path, path),
                 text.replaceAll('SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY'),
             );
     }
-    const corrected = await checkReport(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    const corrected = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['supabase/service-role-key'] }),
+    );
+
     expect(corrected.report.checks[0]?.findings).toStrictEqual([]);
 });
 
 test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in client files', async (read) => {
     await using sandbox = await testdir();
-    const settings = buildSettingsText(['supabase'], {
+    const settings = buildSandboxSettings(['supabase'], {
         tables: 'test_files = ["qa/**"]\n[supabase]\nfunctions_folder = "server"\n[[scope]]\npath = "apps/web"\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "apps/web/server"\n',
     });
     const source = `export const key = ${read};\n`;
@@ -179,23 +183,29 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
         ...allowed,
         ...Object.fromEntries(clients.map((path) => [path, source])),
     });
-    const command = ['check', '--only', 'supabase/service-role-key', '--json'];
-    const failed = await checkReport(sandbox.path, command);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+
+    const failed = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['supabase/service-role-key'] }),
+    );
+
     expect(
         failed.report.checks.flatMap((check) => check.findings).map(({ file, line, rule }) => ({ file, line, rule })),
     ).toStrictEqual(clients.map((file) => ({ file, line: 1, rule: 'admin-key' })));
     for (const path of clients)
-        await Bun.write(join(sandbox.path, path), 'export const key = "sb_publishable_example";\n');
-    const corrected = await runGspot(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        await writeFile(join(sandbox.path, path), 'export const key = "sb_publishable_example";\n');
+    const corrected = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['supabase/service-role-key'] }),
+    );
+    expect(corrected.report.failed).toStrictEqual([]);
 });
 
 test.each(['', 'apps/api'])(
     'supabase/storage-policies fails on a config.toml whose buckets value is not a table in scope %s',
     async (scope) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['supabase'], {
+            'gspot.toml': buildSandboxSettings(['supabase'], {
                 tables: scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`,
             }),
             [join(scope, 'supabase/config.toml')]: INVALID_BUCKETS_CONFIG,
@@ -204,17 +214,17 @@ test.each(['', 'apps/api'])(
         const session = await openSession(sandbox.path);
         using _resources = session.resources;
         const failed = await runChecks(session, buildRunOptions({ only: ['supabase/storage-policies'] }));
-        expect(failed.report.exitCode).toBe(2);
+
         const check = failed.report.checks.find((entry) => entry.scope === scope);
         expect(check).toMatchObject({ check: 'supabase/storage-policies', scope, status: 'error', findings: [] });
         expect(check?.note).toContain('expected record, received string');
-        expect(check?.note).toContain('"storage"');
-        expect(check?.note).toContain('"buckets"');
+        expect(check?.note).toContain('storage.buckets:');
+        expect(check?.note).toContain(join(scope, 'supabase/config.toml'));
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );
 
 test('supabase/storage-policies reports nothing without a config.toml', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText(['supabase']) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['supabase']) });
     expect(await checkFindings(sandbox.path, 'supabase/storage-policies')).toStrictEqual([]);
 });

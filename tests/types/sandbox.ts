@@ -1,8 +1,5 @@
+import type { GspotCall } from '#tests/types/samples.ts';
 import type { Level } from '#cli/types/configurations.ts';
-import type { GspotCall, SampleFix, CheckSample } from '#tests/types/samples.ts';
-
-/** Settings that installSandbox applies before it installs tools. */
-export type SandboxSettings = Pick<InstalledSandboxPlan, 'without' | 'level' | 'install'>;
 
 /** What one sandbox holds and how to prepare it. */
 export type SandboxPlan = {
@@ -13,7 +10,7 @@ export type SandboxPlan = {
     level?: Level;
     before?: (root: string) => void | Promise<void>;
     prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>;
-    corrected?: (entry: CheckSample) => SampleFix;
+    cleanSource?: string;
 };
 
 /** A sandbox with tools installed for its integration tests. */
@@ -23,12 +20,9 @@ export type InstalledSandboxPlan = SandboxPlan & {
     install?: false;
 };
 
-/** A sandbox whose disposal removes its files. */
-export type Sandbox = AsyncDisposable & {
+/** A test repository and the command runner that uses its environment. */
+export type Sandbox = {
     root: string;
     environment: Record<string, string>;
     run: GspotCall;
 };
-
-/** What changeSandbox needs to edit and restore an installed sandbox. */
-export type SandboxFiles = Pick<Sandbox, 'root' | 'environment' | 'run'>;

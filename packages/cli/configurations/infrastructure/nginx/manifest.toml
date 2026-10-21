@@ -9,7 +9,6 @@ paths = ["**/nginx.conf", "**/nginx/**/*.conf"]
 
 [[tool]]
 builds = ["macos", "linux"]
-mise = "pipx:gixy-ng"
 name = "gixy"
 pypi = "gixy-ng"
 version = "0.2.53"
@@ -47,5 +46,5 @@ needs = ["docker"]
 runs = "scope"
 stage = "push"
 summary = "Runs `nginx -t` on each main file inside the image, with a throwaway certificate and resolved upstream names. Records every file that nginx parsed."
-tool = "docker"
+tool = ["docker", "openssl"]
 why = "Only nginx itself can confirm that a file parses; otherwise the first test comes at the restart in production."

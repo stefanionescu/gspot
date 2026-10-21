@@ -44,6 +44,16 @@ level = "recommended"
 Framework lint rules follow your dependencies. For example, a NestJS project that uses `@nestjs/swagger` also gets the
 Swagger lint rules.
 
+## Start from another repository
+
+Copy the `gspot.toml` of a repository whose setup you want, and the files that its settings name: ESLint plugin
+modules, Semgrep rule files, and command check scripts. Delete the `[[scope]]` records of folders that this
+repository does not have. Then run `gspot apply` and `gspot install`. `gspot doctor` lists the configurations that
+this repository needs, and `gspot check` reports old tool settings files and paths that match nothing.
+
+To share lint rules across repositories, publish them as an ESLint plugin package, install it, and name a module that
+re-exports it in `[[tools.eslint.plugins]]`.
+
 ## The level
 
 ```shell
@@ -90,6 +100,35 @@ To pass a value that starts with `-`, put `--` before the values:
 ```shell
 gspot set ci.setup_command -- bun install --frozen-lockfile
 ```
+
+## Accept a banned name
+
+Allow an exact name only when an external contract requires it. Every shipped banned naming group applies at level
+`all`. The `roles` group rejects vague job labels such as `helper` and `manager`; `defensive` rejects qualifiers such as
+`ensure` and `maybe`; `marketing` rejects claims such as `advanced` and `enhanced`. `naming.banned_words` adds project
+words.
+
+For `export const helperCommand = 1;`, `naming/identifiers` reports:
+
+```text
+javascript variable "helperCommand": "helper" is banned (roles group).
+```
+
+This complete example accepts that exact variable name in one file:
+
+```toml title="gspot.toml"
+configurations = ["javascript", "naming"]
+level = "all"
+
+[[naming.override]]
+paths = ["helper.js"]
+categories = ["variables"]
+allowed_names = ["helperCommand"]
+reason = "An external API requires this exact name."
+```
+
+Write override records by hand, then run `gspot apply`. The override removes this `banned-word` finding; other names
+keep their checks.
 
 ## Edit the file by hand
 

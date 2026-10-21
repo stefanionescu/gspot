@@ -3,8 +3,9 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import type { Finding } from '#cli/types/runs/check.ts';
+import { parseCheckReport } from '#tests/setup/run-gspot.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
-import type { Finding, RunReport } from '#cli/types/runs/check.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/data/packed-install.ts';
 import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
 import type { PackedSandbox, CommandOptions } from '#tests/types/packages.ts';
@@ -30,11 +31,11 @@ async function runPackedCheck(
 ) {
     const commandArguments = [...installation.command, 'check', check.path, '--only', check.only, '--json'];
     await writeFile(join(options.cwd, check.path), check.sample);
-    const failed = await runCommand(commandArguments, options);
-    const report = JSON.parse(failed.stdout) as RunReport;
+    const failed = parseCheckReport(await runCommand(commandArguments, options));
+    const report = failed.report;
     await writeFile(join(options.cwd, check.path), check.corrected);
-    const passed = await runCommand(commandArguments, options);
-    const accepted = JSON.parse(passed.stdout) as RunReport;
+    const passed = parseCheckReport(await runCommand(commandArguments, options));
+    const accepted = passed.report;
     return { failed: { ...failed, report }, passed: { ...passed, report: accepted } };
 }
 // Install the configurations and write their project vocabulary.
@@ -81,25 +82,21 @@ async function assertInstalledSql(installation: PackedSandbox): Promise<void> {
     const installed = await runCommand([...command, 'install'], onlineOptions);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     await writeFile(join(root, 'query.sql'), 'SELECT FROM;\n');
-    const failed = await runCommand(
-        [...command, 'check', 'query.sql', '--only', 'sql/sqlfluff', '--json'],
-        offlineOptions,
+    const failed = parseCheckReport(
+        await runCommand([...command, 'check', 'query.sql', '--only', 'sql/sqlfluff', '--json'], offlineOptions),
     );
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const failedReport = JSON.parse(failed.stdout) as RunReport;
-    expect(failedReport.skips).toStrictEqual([]);
+    const failedReport = failed.report;
     expect(failedReport.checks).toMatchObject([{ check: 'sql/sqlfluff', status: 'failed', fileCount: 1 }]);
     expect(failedReport.checks[0]!.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'query.sql', line: 1, rule: 'PRS' },
     ]);
     await writeFile(join(root, 'query.sql'), 'SELECT 1;\n');
-    const sql = await runCommand(
-        [...command, 'check', 'query.sql', '--only', 'sql/sqlfluff', '--json'],
-        offlineOptions,
+    const sql = parseCheckReport(
+        await runCommand([...command, 'check', 'query.sql', '--only', 'sql/sqlfluff', '--json'], offlineOptions),
     );
     expect(sql.code, sql.stdout + sql.stderr).toBe(0);
-    const sqlReport = JSON.parse(sql.stdout) as RunReport;
-    expect(sqlReport.skips).toStrictEqual([]);
+    const sqlReport = sql.report;
     expect(sqlReport.checks).toHaveLength(1);
     expect(sqlReport.checks[0]).toMatchObject({
         check: 'sql/sqlfluff',
@@ -123,7 +120,6 @@ test('a packed install runs the pinned language tools, reports their findings, a
         }
         const { failed, passed } = await runPackedCheck(installation, installation.offlineOptions, check);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(failed.report.skips).toStrictEqual([]);
         expect(failed.report.checks).toMatchObject([
             {
                 check: check.only,
@@ -132,7 +128,6 @@ test('a packed install runs the pinned language tools, reports their findings, a
             },
         ]);
         expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-        expect(passed.report.skips).toStrictEqual([]);
         expect(passed.report.checks).toMatchObject([{ check: check.only, status: 'passed', findings: [] }]);
     }
     // The Vale word list exists at level all, which the Swift check turned on.

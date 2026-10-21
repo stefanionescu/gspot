@@ -62,8 +62,8 @@ ENTRYPOINT ["/server"]
 
 ## Package installation and downloads
 
-hadolint reports unpinned images and packages, apt cleanup, `ADD` for local files, and shell-form
-commands. Also apply these requirements:
+hadolint reports untagged images, apt cleanup, and shell-form commands, and at level `all` also unpinned packages
+and `ADD` for local files. Also apply these requirements:
 
 - Install application dependencies from the declared lockfile without updating it during the build.
 - Refresh repository metadata and install packages in the same `RUN`, so a stale cache cannot

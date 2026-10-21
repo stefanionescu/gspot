@@ -1,27 +1,37 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse } from '@decimalturn/toml-patch';
+import { isRecord } from '#cli/system/values.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import { PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
 import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
+import type { TomlTable, ReasonedValue } from '#cli/types/settings/file.ts';
 
 /**
- * Parse written settings or a template, and keep TOML date kinds and source locations.
+ * Identify a written setting that carries both its value and its reason.
+ *
+ * @param value the written setting.
+ * @returns whether the setting has both reasoned-value fields.
+ */
+function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
+    return isRecord(value) && Object.hasOwn(value, 'value') && Object.hasOwn(value, 'reason');
+}
+
+/**
+ * Parse written settings, and keep TOML date kinds and source locations.
  *
  * @param text the written TOML.
- * @param path the source file or URL.
- * @param kind the document to name in the error.
+ * @param path the source file.
  * @returns the parsed table, without defaults.
  */
-function parseTomlText(text: string, path: string, kind: 'settings' | 'template'): TomlTable {
+function parseTomlText(text: string, path: string): TomlTable {
     try {
         return parse(text) as TomlTable;
     } catch (error) {
@@ -29,7 +39,7 @@ function parseTomlText(text: string, path: string, kind: 'settings' | 'template'
         const { line, column } = error;
         if (typeof line !== 'number' || typeof column !== 'number') throw error;
         const detail = error.message.split('\n').slice(PARSE_CONTEXT_LINES).join('\n');
-        throw new GspotError(kind, `${path}:${String(line)}:${String(column + 1)} is not valid TOML: ${detail}`);
+        throw new GspotError('settings', `${path}:${String(line)}:${String(column + 1)} is not valid TOML: ${detail}`);
     }
 }
 
@@ -64,7 +74,6 @@ function writeSettings(writer: Writer, text: string, original: FileContents | un
             ...planReplacement(writer, {
                 path: SETTINGS_FILE,
                 next,
-                canReplace: true,
                 expected: original,
             }),
             before: original,
@@ -72,4 +81,4 @@ function writeSettings(writer: Writer, text: string, original: FileContents | un
     ]);
 }
 
-export { parseTomlText, writeSettings, readSettingsFile };
+export { parseTomlText, writeSettings, isReasonedValue, readSettingsFile };

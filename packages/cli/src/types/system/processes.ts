@@ -39,7 +39,7 @@ export type SpawnCompletion = Pick<
     'code' | 'exitCode' | 'failed' | 'shortMessage' | 'stderr' | 'timedOut' | 'isCanceled'
 > & { stdout?: string | undefined; cause?: unknown };
 
-export type StdoutRead = 'utf8' | ((chunks: AsyncIterable<Buffer>) => Promise<void>);
+export type StdoutReader = (chunks: AsyncIterable<Buffer>) => Promise<void>;
 
 /** The completion state of a process tree, and its stop and disposal operations. */
 export type ProcessTreeControl = {

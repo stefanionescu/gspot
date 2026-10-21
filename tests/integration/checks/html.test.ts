@@ -1,12 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { COPY_PAGE_BUILD } from '#tests/data/checks/site/build.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {
     AUTOPLAY_PAGE,
@@ -27,25 +26,24 @@ test.each([...AUTOPLAY_CHECKS])(
                 ? [{ check: entry.check, scope: 'app', status: 'skipped' as const, fileCount: 0, findings: [] }]
                 : [];
         const sourceFiles = {
-            'gspot.toml': buildSettingsText(['html'], { level: 'all', tables: AUTOPLAY_SCOPE_SETTINGS }),
+            'gspot.toml': buildSandboxSettings(['html'], { level: 'all', tables: AUTOPLAY_SCOPE_SETTINGS }),
             'index.html': AUTOPLAY_PAGE,
             'app/page.html': AUTOPLAY_PAGE,
             'app/build.mjs': COPY_PAGE_BUILD,
         };
-        await using _sourceChange = await updateSandbox(installedSandbox(), {
+        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
             check: '',
             files: sourceFiles,
             removed: Object.keys(CHECKS_HTML_INSTALLED_SANDBOX.files).filter(
                 (path) => path !== '.gitignore' && !Object.hasOwn(sourceFiles, path),
             ),
         });
-        expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-        const checked = await spawnGspot(sandbox.path, entry.arguments);
+        const checked = parseCheckReport(await spawnGspot(sandbox.path, entry.arguments));
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-        expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+        expect(checked.report.checks).toMatchObject([
             {
                 check: entry.check,
                 scope: entry.scope,
@@ -55,9 +53,9 @@ test.each([...AUTOPLAY_CHECKS])(
             ...skippedChecks,
         ]);
         await writeFile(join(sandbox.path, entry.source), CONTROLLED_PLAYBACK_PAGE);
-        const corrected = await spawnGspot(sandbox.path, entry.arguments);
+        const corrected = parseCheckReport(await spawnGspot(sandbox.path, entry.arguments));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+        expect(corrected.report.checks).toMatchObject([
             { check: entry.check, scope: entry.scope, status: 'passed', findings: [] },
             ...skippedChecks,
         ]);

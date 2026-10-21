@@ -1,19 +1,19 @@
 // Defines tool-output formats and reads findings from tool output.
 import { realpathSync } from 'node:fs';
 import { sep, posix, isAbsolute } from 'node:path';
+import { hasErrorCode } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { DRIVE_LETTER } from '#cli/config/system/paths.ts';
 import { parseJsonFindings } from '#cli/runs/output/json.ts';
 import { parseKnipFindings } from '#cli/runs/output/knip.ts';
 import { parseSarifFindings } from '#cli/runs/output/sarif.ts';
 import { parseTyposFindings } from '#cli/runs/output/typos.ts';
 import { parseSemgrepFindings } from '#cli/runs/output/semgrep.ts';
-import { parseTrufflehogFindings } from '#cli/runs/output/trufflehog.ts';
 import { FILE_GROUP, MISSING_PATH_CODES } from '#cli/config/runs/output.ts';
 import { parseMarkdownlintFindings } from '#cli/runs/output/markdownlint.ts';
-import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
-import { parseRegexFindings, parseGroupedFindings } from '#cli/runs/output/text.ts';
+import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/runs/output/text.ts';
 import type { OutputSpec, OutputPaths, ParsingCheck, OutputDescriptor } from '#cli/types/runs/output.ts';
 
 /**
@@ -27,7 +27,7 @@ function readRealPath(path: string): string | undefined {
         // The call gives Windows paths one drive letter case and their long folder names.
         return convertToPosixPath(realpathSync.native(path));
     } catch (error) {
-        if (MISSING_PATH_CODES.has((error as NodeJS.ErrnoException).code ?? '')) return undefined;
+        if ([...MISSING_PATH_CODES].some((code) => hasErrorCode(error, code))) return undefined;
         throw error;
     }
 }
@@ -56,38 +56,24 @@ function listRootPrefixes(root: string): string[] {
 }
 
 function hasFilePaths(output: OutputSpec): boolean {
-    return (
-        output.file_type === 'path' &&
-        (output.pattern === undefined ? output.fields?.file !== undefined : output.pattern.includes(FILE_GROUP))
-    );
+    return (output.pattern ?? '').includes(FILE_GROUP);
 }
 
 /** The reader and process-result rules for every supported output format. */
 export const outputFormats = {
-    none: { read: () => [], namesFiles: () => false, redactsOutput: false },
+    none: { read: () => [], namesFiles: () => false },
     json: {
         read: parseJsonFindings,
-        namesFiles: (output) => output.file_type === 'path' && output.fields?.file !== undefined,
-        redactsOutput: false,
+        namesFiles: (output) => output.fields?.file !== undefined,
     },
-    sarif: { read: parseSarifFindings, namesFiles: () => true, redactsOutput: false },
-    trufflehog: { read: parseTrufflehogFindings, namesFiles: () => false, redactsOutput: true },
-    typos: { read: parseTyposFindings, namesFiles: () => true, redactsOutput: false },
-    markdownlint: { read: parseMarkdownlintFindings, namesFiles: () => true, redactsOutput: false },
-    knip: { read: parseKnipFindings, namesFiles: () => true, redactsOutput: false },
-    semgrep: { read: parseSemgrepFindings, namesFiles: () => true, redactsOutput: false },
-    lines: {
-        read: ({ check, text, help }) =>
-            text
-                .split('\n')
-                .map((line) => line.trim())
-                .filter((line) => line !== '')
-                .map((line) => ({ check, file: '', message: line, help, fixable: false })),
-        namesFiles: () => false,
-        redactsOutput: false,
-    },
-    regex: { read: parseRegexFindings, namesFiles: hasFilePaths, redactsOutput: false },
-    grouped: { read: parseGroupedFindings, namesFiles: hasFilePaths, redactsOutput: false },
+    sarif: { read: parseSarifFindings, namesFiles: () => true },
+    typos: { read: parseTyposFindings, namesFiles: () => true },
+    markdownlint: { read: parseMarkdownlintFindings, namesFiles: () => true },
+    knip: { read: parseKnipFindings, namesFiles: () => true },
+    semgrep: { read: parseSemgrepFindings, namesFiles: () => true },
+    lines: { read: parseLineFindings, namesFiles: () => false },
+    regex: { read: parseRegexFindings, namesFiles: hasFilePaths },
+    grouped: { read: parseGroupedFindings, namesFiles: hasFilePaths },
 } satisfies Record<OutputSpec['format'], OutputDescriptor>;
 
 /**
@@ -101,7 +87,7 @@ export const outputFormats = {
  */
 export function parseOutput(check: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
     const { root, cwd } = paths;
-    const rootPath = isAbsolute(root) ? convertToPosixPath(root) : normalizeOutputPath(root);
+    const rootPath = convertToPosixPath(root);
     const output = check.output;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`);
@@ -119,10 +105,9 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
         let message = finding.message;
         for (const prefix of prefixes) message = message.replaceAll(prefix, '');
         const formatted = { ...finding, message, fixable: check.fix !== undefined && finding.fixable };
-        if (output.file_type !== 'path' || finding.file === '') return formatted;
-        const file = normalizeOutputPath(finding.file);
-        const absolute =
-            isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(normalizeOutputPath(cwd), file);
+        if (check.runs === 'history' || finding.file === '') return formatted;
+        const file = convertToPosixPath(finding.file);
+        const absolute = isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(convertToPosixPath(cwd), file);
         formatted.file = stripRoot(rootPath, absolute);
         return formatted;
     });

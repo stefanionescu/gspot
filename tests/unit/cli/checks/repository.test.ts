@@ -1,30 +1,37 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runChecks } from '#cli/runs/run.ts';
 import { runGit } from '#tests/setup/git.ts';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { checkReport } from '#tests/setup/run-gspot.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
+import { buildRunOptions } from '#tests/setup/builders.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
 import { TRACKED_PATTERNS, LARGE_FILE_SETTINGS, LARGE_FILE_ATTRIBUTES } from '#tests/data/checks/repository.ts';
 
 test("tracked-files follows each scope's configurations: env files, dependency folders and build output are reported", async () => {
     await using sandbox = await testdir();
     const { refused, allowed, scopes, indexOnly } = TRACKED_PATTERNS;
-    const settings = buildSettingsText(['javascript'], { level: 'all', tables: scopes });
+    const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: scopes });
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
         ...Object.fromEntries([...refused, ...allowed].map((path) => [path, 'PUBLIC_EXAMPLE=value\n'])),
     });
+
     expect(runGit(sandbox.path, ['init', '-q']).code).toBe(0);
     const staged = runGit(sandbox.path, ['add', '-f', '.']);
     expect(staged.code, staged.stderr).toBe(0);
-    const input = buildCheckInput(await openSession(sandbox.path), 'repository/local-files', { paths: [] });
-    const found = await findBuiltInCheck('repository/local-files')({
-        ...input,
-        index: [...input.index, ...input.index, ...indexOnly.map((path) => ({ ...input.index[0]!, path }))],
-    });
+
+    const session = await openSession(sandbox.path);
+    const input = planSandboxCheck(session, 'repository/local-files', { paths: [] });
+    session.repository.index = [
+        ...session.repository.index,
+        ...session.repository.index,
+        ...indexOnly.map((path) => ({ ...session.repository.index[0]!, path })),
+    ];
+    const found = await findBuiltInCheck('repository/local-files')(session, input);
     expect(found.map(({ file }) => file).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         [...refused, ...indexOnly].toSorted((left, right) => left.localeCompare(right)),
     );
@@ -33,7 +40,7 @@ test("tracked-files follows each scope's configurations: env files, dependency f
 
 test('large files are reported in every scope except LFS, generated and vendored files, and pass once shrunk', async () => {
     await using sandbox = await testdir();
-    const settings = buildSettingsText(['javascript'], {
+    const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
         tables: LARGE_FILE_SETTINGS,
     });
@@ -48,21 +55,28 @@ test('large files are reported in every scope except LFS, generated and vendored
         ),
         'small.txt': 'small',
     });
+
     expect(runGit(sandbox.path, ['init', '-q']).code).toBe(0);
     expect(runGit(sandbox.path, ['add', '-f', '.']).code).toBe(0);
-    const command = ['check', '--only', 'repository/large-files', '--json'];
-    const failed = await checkReport(sandbox.path, command);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    const failed = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['repository/large-files'] }),
+    );
+
     expect(
         failed.report.checks.flatMap(({ findings }) => findings.map(({ file, rule, line }) => ({ file, rule, line }))),
     ).toStrictEqual([
         { file: 'app/big.bin', rule: 'size', line: 1 },
         { file: 'big.bin', rule: 'size', line: 1 },
     ]);
-    await Bun.write(join(sandbox.path, 'app/big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
-    await Bun.write(join(sandbox.path, 'big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
+    await writeFile(join(sandbox.path, 'app/big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
+    await writeFile(join(sandbox.path, 'big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
+
     expect(runGit(sandbox.path, ['add', '-f', 'app/big.bin', 'big.bin']).code).toBe(0);
-    const fixed = await checkReport(sandbox.path, command);
-    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+    const fixed = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['repository/large-files'] }),
+    );
+
     expect(fixed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });

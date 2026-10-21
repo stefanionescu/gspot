@@ -29,9 +29,9 @@ Read this rule when you change HTML or an HTML template.
 
 ## Naming
 
-### Route and attribute names
-
 <!-- level: all -->
+
+### Route and attribute names
 
 - Use kebab-case file names that match the public route: `about-us.html`, `pricing/index.html`.
   Folder routes end in `index.html` in generated output.

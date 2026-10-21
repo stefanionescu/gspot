@@ -1,22 +1,25 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { createEslint } from '#tests/setup/tool-files.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { RUNTIME_CASES, FRAMEWORK_RUNTIME_CASES } from '#tests/data/generation/eslint/overrides.ts';
 
 test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart: %j', async (entry) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            configurations: ['javascript'],
-            tools: { eslint: { override: [{ paths: ['application/**'], runtime: entry.runtime }] } },
+            rules: true,
+            tables: stringify({
+                tools: { eslint: { override: [{ paths: ['application/**'], runtime: entry.runtime }] } },
+            }),
         }),
         'application/source.js': 'process.exit(0);\nBuffer.from("value");\n',
         'server.js': 'process.exit(0);\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     const computed = (await eslint.calculateConfigForFile('application/source.js')) as EslintConfiguration;
     for (const name of entry.globals) expect(computed.languageOptions.globals[name]).toBeDefined();
@@ -34,12 +37,12 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart: %j'
 });
 
 test('ES modules reject CommonJS globals and .cjs files keep CommonJS', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'configurations = ["javascript"]\n',
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { rules: true }),
         'source.mjs': 'export const folder = __dirname;\n',
         'source.cjs': 'module.exports = __dirname;\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     const [module] = await eslint.lintFiles(['source.mjs']);
     expect(module!.messages).toContainEqual(
@@ -52,10 +55,16 @@ test('ES modules reject CommonJS globals and .cjs files keep CommonJS', async ()
 });
 
 test('framework runtimes and your runtime settings stay inside their scopes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'configurations = [ "javascript" ]\n\n[[scope]]\npath = "native"\nconfigurations = [ "react-native" ]\n\n[[scope]]\npath = "web"\nconfigurations = [ "react" ]\n\n[[scope]]\npath = "native/server"\nconfigurations = [ "javascript" ]\n\n[[tools.eslint.override]]\npaths = [ "native/src/browser.js" ]\nruntime = "browser"\n\n[[tools.eslint.override]]\npaths = [ "native/scripts/worker.js" ]\nruntime = "worker"\n\n[[tools.eslint.override]]\npaths = [ "native/server/**/*" ]\nruntime = "node"\n',
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: '[[tools.eslint.override]]\npaths = [ "native/src/browser.js" ]\nruntime = "browser"\n\n[[tools.eslint.override]]\npaths = [ "native/scripts/worker.js" ]\nruntime = "worker"\n\n[[tools.eslint.override]]\npaths = [ "native/server/**/*" ]\nruntime = "node"\n',
+            scopes: [
+                { path: 'native', configurations: ['react-native'] },
+                { path: 'web', configurations: ['react'] },
+                { path: 'native/server', configurations: ['javascript'] },
+            ],
+        }),
         'server.js': 'export const value = 1;\n',
         'native/src/source.js': 'export const value = 1;\n',
         'native/src/browser.js': 'export const value = 1;\n',
@@ -65,6 +74,7 @@ test('framework runtimes and your runtime settings stay inside their scopes', as
         'web/source.js': 'export const value = 1;\n',
         'web/scripts/build.js': 'export const value = 1;\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     const node = (await eslint.calculateConfigForFile('server.js')) as EslintConfiguration;
     const native = (await eslint.calculateConfigForFile('native/src/source.js')) as EslintConfiguration;
@@ -89,22 +99,24 @@ test('framework runtimes and your runtime settings stay inside their scopes', as
 });
 
 test('a later [[tools.eslint.override]] runtime replaces an earlier one', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: ['javascript'],
-            tools: {
-                eslint: {
-                    override: [
-                        { paths: ['**/*.js'], runtime: 'browser' },
-                        { paths: ['worker.js'], runtime: 'worker' },
-                    ],
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: stringify({
+                tools: {
+                    eslint: {
+                        override: [
+                            { paths: ['**/*.js'], runtime: 'browser' },
+                            { paths: ['worker.js'], runtime: 'worker' },
+                        ],
+                    },
                 },
-            },
+            }),
         }),
         'application.js': 'window.alert("value");\n',
         'worker.js': 'postMessage("value");\nwindow.alert("value");\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     const [browser] = await eslint.lintFiles(['application.js']);
     expect(browser!.messages.some(({ ruleId }) => ruleId === 'no-undef')).toBe(false);
@@ -113,14 +125,14 @@ test('a later [[tools.eslint.override]] runtime replaces an earlier one', async 
 });
 
 test.each([...FRAMEWORK_RUNTIME_CASES])('framework presets keep no globals of another runtime: %j', async (entry) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: [entry.configuration],
-            tools: { eslint: { override: [{ paths: ['src/**'], runtime: 'worker' }] } },
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([entry.configuration], {
+            rules: true,
+            tables: stringify({ tools: { eslint: { override: [{ paths: ['src/**'], runtime: 'worker' }] } } }),
         }),
         [entry.path]: entry.source,
     });
+
     const eslint = await createEslint(sandbox.path);
     const [result] = await eslint.lintFiles([entry.path]);
     for (const name of ['window', 'process'])

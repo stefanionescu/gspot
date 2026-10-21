@@ -11,6 +11,7 @@ filenames = ["jest.config.*"]
 paths = ["{setting:test_files}", "**/jest.config.*"]
 
 [[tool]]
+crash_pattern = "^No tests found|^  ● Test suite failed to run"
 name = "jest"
 system = true
 
@@ -22,13 +23,12 @@ rule_prefix = "jest"
 version = "29.16.6"
 
 [eslint]
-fragment = true
 required_tools = ["eslint-plugin-jest"]
 all_level_rules = ["jest/prefer-strict-equal"]
 
 [[check]]
 command = ["jest", "--ci", "--rootDir={root}/{scope}", "--coverage", "--coverageReporters=text-summary", "--coverageThreshold={\"global\":{\"lines\":{setting:coverage.lines},\"branches\":{setting:coverage.branches},\"functions\":{setting:coverage.functions},\"statements\":{setting:coverage.statements}}}"]
-crash_pattern = "^No tests found|^  ● Test suite failed to run"
+coverage_arguments = ["--coverage", "--coverageReporters", "--coverageThreshold"]
 cwd = "scope"
 example = "Jest reports `coverage threshold for lines (90%) not met: 85%`. Add tests for the lines its report marks uncovered."
 exit_codes = [1]

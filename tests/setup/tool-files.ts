@@ -1,20 +1,22 @@
 // Reads generated tool files and ESLint findings for tests.
 import ts from 'typescript';
 import { ESLint } from 'eslint';
+import { testdir } from 'testdirs';
 import { parse as parseIni } from 'ini';
 import { parse as parseYaml } from 'yaml';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { join, extname, relative } from 'node:path';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { runSandboxStep } from '#tests/setup/install.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { extractToolFileName } from '#cli/planning/files.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { linkInstalledModules } from '#tests/setup/modules.ts';
+import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { LintFinding, ScriptFindingCase, EslintConfiguration } from '#tests/types/tool-output.ts';
@@ -48,8 +50,7 @@ async function collectLintFindings(
  */
 async function createEslint(sandboxRoot: string, options?: ESLint.Options): Promise<ESLint> {
     await linkInstalledModules(join(sandboxRoot, 'node_modules'));
-    const result = await runGspot(sandboxRoot, ['apply']);
-    if (result.code !== 0) throw new Error(result.stdout + result.stderr);
+    await runSandboxStep({ root: sandboxRoot, environment: {}, run: runGspot }, ['apply']);
     const session = await openSession(sandboxRoot);
     const selection = session.scopes.find((selection) =>
         selection.selected.some((manifest) =>
@@ -74,8 +75,8 @@ async function createEslint(sandboxRoot: string, options?: ESLint.Options): Prom
  * @returns the generated content.
  */
 async function generateFile(settings: string, path: string, files: Record<string, string>): Promise<string> {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { ...files, 'gspot.toml': settings });
+    await using sandbox = await testdir({ ...files, 'gspot.toml': settings });
+
     const session = await openSession(sandbox.path);
     const output = generate(session);
     const file = output.files.find((entry) => entry.path === path);
@@ -98,7 +99,7 @@ function toolFileFor(session: Session, tool: string, scope = ''): string {
         ?.selected.flatMap((manifest) => manifest.toolFiles)
         .find((file) => extractToolFileName(file.file) === tool);
     if (declaration === undefined) throw new Error(`The sandbox generates no ${tool} file for ${scope || 'the root'}.`);
-    return buildScopeTarget(scope, declaration, session.toolFiles().targets);
+    return buildScopeTarget(scope, declaration, getToolFiles(session).targets);
 }
 
 function parseJson(text: string, path: string): void {

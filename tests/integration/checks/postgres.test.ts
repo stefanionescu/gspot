@@ -1,11 +1,11 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildSandboxPath, installToolProjects } from '#tests/setup/install.ts';
+import { installToolProjects } from '#tests/setup/install.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 import {
     UNWRAPPED_MIGRATION,
@@ -15,18 +15,17 @@ import {
 } from '#tests/data/checks/postgres.ts';
 
 test("Squawk uses each scope's assume_in_transaction setting, and false under Supabase", async () => {
-    await using sandbox = await testdir();
-
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['supabase'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['supabase'], {
             tables: SQUAWK_SCOPE_SETTINGS,
         }),
         [SQUAWK_ROOT_MIGRATION]: UNWRAPPED_MIGRATION,
         'transactional/supabase/migrations/0001_initial.sql': 'SELECT 1;\n',
         [SQUAWK_CHILD_MIGRATION]: UNWRAPPED_MIGRATION,
     });
+
     await installToolProjects(sandbox.path);
-    const environment = { PATH: buildSandboxPath() };
+    const environment = {};
     const transactional = await spawnGspot(
         sandbox.path,
         ['check', SQUAWK_CHILD_MIGRATION, '--only', 'postgres/squawk', '--json'],
@@ -34,12 +33,12 @@ test("Squawk uses each scope's assume_in_transaction setting, and false under Su
     );
     expect(transactional.code, transactional.stdout + transactional.stderr).toBe(0);
     const command = ['check', SQUAWK_ROOT_MIGRATION, '--only', 'postgres/squawk', '--json'];
-    const failed = await spawnGspot(sandbox.path, command, environment);
+    const failed = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toContainEqual(
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toContainEqual(
         matchFields({ rule: 'prefer-robust-stmts' }),
     );
-    await Bun.write(
+    await writeFile(
         join(sandbox.path, SQUAWK_ROOT_MIGRATION),
         UNWRAPPED_MIGRATION.replace('ADD COLUMN ', 'ADD COLUMN IF NOT EXISTS '),
     );

@@ -1,13 +1,13 @@
 // Classifies repository files, tags, and generated declarations.
 import { posix } from 'node:path';
-import { readBytes } from '#cli/system/files/reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
+import { stripBlock } from '#cli/system/managed-blocks.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { MARKERS } from '#cli/config/system/managed-blocks.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Lockfile } from '#cli/types/parsers/lockfiles.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependency-files.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependencies.ts';
 import { DOT_GSPOT, VALE_PACKAGES_PATH } from '#cli/config/system/locations.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { HEADER_LINES_CHECKED, GENERATED_HEADER_LINE } from '#cli/config/generation/header.ts';
@@ -24,13 +24,16 @@ import {
 } from '#cli/types/repository/inventory.ts';
 import {
     TEXT_TAG,
+    SCRIPT_TAG,
     SET_VALUES,
     LFS_FILTER,
     BINARY_TAG,
+    UNSET_VALUE,
     NOTICE_FILE,
     SOURCE_KIND,
     RUNTIME_TAG,
     SHEBANG_TAG,
+    KIND_ORIGINS,
     BANNER_BYTES,
     LICENSE_FILE,
     LICENSE_TAGS,
@@ -45,10 +48,10 @@ import {
     BUILD_LAUNCHERS,
     FILTER_ATTRIBUTE,
     VENDORED_FOLDERS,
+    TRAILING_VERSION,
     BINARY_EXTENSIONS,
     VENDORED_ATTRIBUTE,
     MARKDOWN_EXTENSION,
-    VERSION_CHARACTERS,
     GENERATED_ATTRIBUTE,
     DOCKERFILE_EXTENSION,
     INTERPRETER_DIALECTS,
@@ -70,7 +73,7 @@ function findAttributeKind(attributes: Record<string, string> | undefined): File
     if (generated !== undefined && SET_VALUES.has(generated)) return { kind: 'generated', origin: GITATTRIBUTES_FILE };
     const vendored = attributes[VENDORED_ATTRIBUTE];
     if (vendored !== undefined && SET_VALUES.has(vendored)) return { kind: 'vendored', origin: GITATTRIBUTES_FILE };
-    const isBinary = attributes[TEXT_ATTRIBUTE] === 'unset' || attributes[FILTER_ATTRIBUTE] === LFS_FILTER;
+    const isBinary = attributes[TEXT_ATTRIBUTE] === UNSET_VALUE || attributes[FILTER_ATTRIBUTE] === LFS_FILTER;
     return isBinary ? { kind: 'binary', origin: GITATTRIBUTES_FILE } : undefined;
 }
 
@@ -83,12 +86,12 @@ function isLicenseFile(path: string): boolean {
 
 // Tool paths and banners identify generated files; downloaded Vale styles belong to another party.
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
-    if (path.startsWith(`${VALE_PACKAGES_PATH}/`)) return { kind: 'vendored', origin: 'gspot' };
-    if (isInGspotFolder(path)) return { kind: 'generated', origin: 'gspot' };
-    if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: 'build wrapper' };
+    if (path.startsWith(`${VALE_PACKAGES_PATH}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
+    if (isInGspotFolder(path)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
+    if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildWrapper };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     if (hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some((banner) => banner.test(start)))
-        return { kind: 'generated', origin: 'banner' };
+        return { kind: 'generated', origin: KIND_ORIGINS.banner };
     return undefined;
 }
 
@@ -96,10 +99,10 @@ function findGeneratedKind(path: string, prefix: Buffer): FileClassification | u
 function classifyManagedDocument(root: string, entry: ListedFile, prefix: Buffer): FileClassification {
     if (entry.symlink || !entry.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
-    const text = readBytes(root, entry.path).toString('utf8');
-    const span = findBlockSpan(text, { path: entry.path, style: 'markdown' });
-    if (span === undefined || `${text.slice(0, span.start)}${text.slice(span.end)}`.trim() !== '') return SOURCE_KIND;
-    return { kind: 'generated', origin: 'gspot' };
+    const text = readText(root, entry.path);
+    const authored = stripBlock(text, { path: entry.path, style: 'markdown' });
+    if (authored === text || authored.trim() !== '') return SOURCE_KIND;
+    return { kind: 'generated', origin: KIND_ORIGINS.gspot };
 }
 
 /**
@@ -123,8 +126,8 @@ function classifyKind(
     if (declared) return declared;
     // Explicit text attributes override binary content and extension hints.
     if (isBinary && inputs.attributes.get(path)?.[TEXT_ATTRIBUTE] !== ATTRIBUTE_SET)
-        return { kind: 'binary', origin: 'content' };
-    if (isLicenseFile(path)) return { kind: 'vendored', origin: 'license' };
+        return { kind: 'binary', origin: KIND_ORIGINS.content };
+    if (isLicenseFile(path)) return { kind: 'vendored', origin: KIND_ORIGINS.license };
     const managed = findGeneratedKind(path, prefix);
     if (managed) return managed;
     if (
@@ -133,36 +136,31 @@ function classifyKind(
             .slice(0, -1)
             .some((segment) => VENDORED_FOLDERS.has(segment))
     )
-        return { kind: 'vendored', origin: 'directory' };
+        return { kind: 'vendored', origin: KIND_ORIGINS.directory };
     return classifyManagedDocument(root, entry, prefix);
 }
 
 function listShebangTags(firstLine: string): string[] {
     const interpreter = parseShebang(firstLine);
     if (interpreter === undefined) return [];
-    const shebang = SHEBANG_INTERPRETERS[interpreter] ?? SHEBANG_INTERPRETERS[stripTrailingVersion(interpreter)];
+    const shebang =
+        SHEBANG_INTERPRETERS[interpreter] ?? SHEBANG_INTERPRETERS[interpreter.replace(TRAILING_VERSION, '')];
     if (shebang === undefined) return [];
     const dialect = INTERPRETER_DIALECTS[interpreter] ?? DEFAULT_DIALECT;
     const runtime = JAVASCRIPT_RUNTIMES.find((name) => name === interpreter);
     return [
         ...(SHEBANG_TAGS[shebang] ?? []),
         `${SHEBANG_TAG}${shebang}`,
-        ...(shebang === 'shell' ? [dialect] : []),
+        ...(shebang === SCRIPT_TAG ? [dialect] : []),
         ...(runtime === undefined ? [] : [`${RUNTIME_TAG}${runtime}`]),
     ];
 }
 
 function tagTextFile(tags: Set<string>, firstLine: string): Tagged {
     for (const tag of listShebangTags(firstLine)) tags.add(tag);
-    if (Object.values(INTERPRETER_DIALECTS).some((dialect) => tags.has(dialect))) tags.delete('bash');
+    if (Object.values(INTERPRETER_DIALECTS).some((dialect) => tags.has(dialect))) tags.delete(DEFAULT_DIALECT);
     tags.add(TEXT_TAG);
     return { tags: [...tags], isBinary: false };
-}
-
-function stripTrailingVersion(word: string): string {
-    let end = word.length;
-    while (end > 0 && VERSION_CHARACTERS.includes(word[end - 1] ?? '')) end -= 1;
-    return word.slice(0, end);
 }
 
 /**
@@ -342,6 +340,16 @@ function isInstalledToolPath(path: string): boolean {
  */
 function isInDependencyFolder(path: string): boolean {
     return path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part));
+}
+
+/**
+ * List the tracked paths that the current inventory classifies as generated.
+ *
+ * @param files the files of the current repository read.
+ * @returns the paths tagged as generated by the inventory.
+ */
+export function listGeneratedPaths(files: TrackedFile[]): ReadonlySet<string> {
+    return new Set(files.filter(({ kind }) => kind === 'generated').map(({ path }) => path));
 }
 
 export {

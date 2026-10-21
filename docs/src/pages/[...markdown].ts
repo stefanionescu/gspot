@@ -17,7 +17,7 @@ export const getStaticPaths = (async () => {
 }) satisfies GetStaticPaths;
 
 /**
- * Write the Markdown copy of one docs page: its title, its description, and its content.
+ * Build the Markdown copy of one docs page: its title, its description, and its content.
  *
  * @param context - the endpoint context with the page
  * @returns the Markdown
@@ -26,6 +26,9 @@ export const GET: APIRoute<{ entry: CollectionEntry<'docs'> }> = async (context)
     const { entry } = context.props;
     const { title, description } = entry.data;
     const content = await entryToSimpleMarkdown(entry, context);
-    const parts = description === undefined ? [`# ${title}`, content] : [`# ${title}`, `> ${description}`, content];
+    const parts =
+        description === undefined || content.startsWith(description)
+            ? [`# ${title}`, content]
+            : [`# ${title}`, `> ${description}`, content];
     return new Response(`${parts.join('\n\n')}\n`);
 };

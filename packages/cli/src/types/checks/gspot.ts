@@ -7,4 +7,7 @@ export type SuppressionSyntax = {
     inlineMarker: RegExp;
     reason: RegExp;
     forbidden: boolean;
+    separator: RegExp | undefined;
+    allRules: RegExp | undefined;
+    limitRules: RegExp | undefined;
 };

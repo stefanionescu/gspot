@@ -1,18 +1,20 @@
 import { posix } from 'node:path';
 import { normalizePath } from '../paths.ts';
 import { INDEX_BASENAMES } from '../config/paths.ts';
+import { createRule } from '../schemas/rules/options.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
-import { createRule, buildOptionsSchema } from '../create-rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { trivialFilesOptionsSchema } from '../schemas/rules/no/trivial.ts';
 import type { ContentCheck, ImplementedFunction } from '../types/syntax.ts';
 
 import {
     unwrap,
     hasCalculation,
+    getTypeServices,
     countStatements,
     isTypePredicate,
     isExportedFunction,
-    hasConstructorState,
+    findZodSchemaConstructors,
 } from '../syntax.ts';
 import {
     SHEBANG,
@@ -24,6 +26,25 @@ import {
     MODULE_CALL_SELECTOR,
     STRUCTURED_EXPRESSIONS,
 } from '../config/syntax.ts';
+
+/**
+ * Check whether a constructor sets instance state through parameter properties or `this` assignments.
+ *
+ * @param node the function to check
+ * @returns whether the constructor sets instance state
+ */
+function hasConstructorState(node: ImplementedFunction): boolean {
+    if (node.parent.type !== AST_NODE_TYPES.MethodDefinition || node.parent.kind !== 'constructor') return false;
+    if (node.params.some((parameter) => parameter.type === AST_NODE_TYPES.TSParameterProperty)) return true;
+    if (node.body.type !== AST_NODE_TYPES.BlockStatement) return false;
+    return node.body.body.some(
+        (statement) =>
+            statement.type === AST_NODE_TYPES.ExpressionStatement &&
+            statement.expression.type === AST_NODE_TYPES.AssignmentExpression &&
+            statement.expression.left.type === AST_NODE_TYPES.MemberExpression &&
+            statement.expression.left.object.type === AST_NODE_TYPES.ThisExpression,
+    );
+}
 
 function hasOwnTypeShape(annotation: TSESTree.TypeNode): boolean {
     if (annotation.type !== AST_NODE_TYPES.TSTypeReference) return true;
@@ -43,7 +64,13 @@ function hasDeclarationContent(node: TSESTree.Node, inspect: ContentCheck): bool
             return node.body.body.some((member) => inspect(member));
         }
         case AST_NODE_TYPES.VariableDeclaration: {
-            return node.declarations.some((declaration) => inspect(declaration.init));
+            return node.declarations.some(
+                (declaration) =>
+                    inspect(declaration.init) ||
+                    (node.declare &&
+                        declaration.id.typeAnnotation !== undefined &&
+                        hasOwnTypeShape(declaration.id.typeAnnotation.typeAnnotation)),
+            );
         }
         case AST_NODE_TYPES.TSInterfaceDeclaration: {
             return node.body.body.length > 0;
@@ -105,7 +132,7 @@ function hasCallContent(node: TSESTree.CallExpression | TSESTree.NewExpression, 
 
 // The value that a function body returns, when the body holds one return or one expression statement: null for an
 // empty body, and undefined for any other body.
-function readOnlyValue(node: ImplementedFunction): TSESTree.Node | null | undefined {
+function getSingleValue(node: ImplementedFunction): TSESTree.Node | null | undefined {
     if (node.body.type !== AST_NODE_TYPES.BlockStatement) return node.body;
     const [statement, ...rest] = node.body.body;
     if (statement === undefined) return null;
@@ -117,8 +144,10 @@ function readOnlyValue(node: ImplementedFunction): TSESTree.Node | null | undefi
 // An exported function that only forwards returns a constant, another value or its member, or a call that passes on its
 // own parameters unchanged. An exported function that does more counts as the content of its file.
 function isForwarding(node: ImplementedFunction): boolean {
-    const value = unwrap(readOnlyValue(node) ?? null);
-    if (value === null) return readOnlyValue(node) === null;
+    const single = getSingleValue(node);
+    if (single === undefined) return false;
+    const value = unwrap(single);
+    if (value === null) return true;
     if (FORWARDED_VALUES.has(value.type)) return true;
     if (value.type === AST_NODE_TYPES.TemplateLiteral) return value.expressions.length === 0;
     if (value.type !== AST_NODE_TYPES.CallExpression && value.type !== AST_NODE_TYPES.NewExpression) return false;
@@ -171,19 +200,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
             why: 'A file that only forwards to another module adds a step to every import and hides where the code lives.',
             fix: 'Import re-exported values from the modules that define them. Move aliases and small functions into the modules that use them, then delete the forwarding file.',
         },
-        schema: [
-            buildOptionsSchema({
-                trivialStatements: {
-                    description: 'Functions with this many statements or fewer are reported.',
-                    type: 'integer',
-                    minimum: 1,
-                },
-                allowIndex: {
-                    description: 'Allow a file named index that only re-exports.',
-                    type: 'boolean',
-                },
-            }),
-        ],
+        schema: [trivialFilesOptionsSchema],
         messages: {
             trivial:
                 'This file only forwards or renames code. Import from the module that defines it, and delete this file.',
@@ -194,7 +211,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(normalizePath(context.physicalFilename))))
             return {};
         const max = options.trivialStatements;
-        let hasImplementation = false;
+        let hasImplementation = findZodSchemaConstructors(context.sourceCode).length > 0;
         const isSubstantial: ContentCheck = (expression) => {
             const node = unwrap(expression);
             if (node === null) return false;
@@ -211,10 +228,9 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
                     hasImplementation = true;
                     return;
                 }
-                const program = context.sourceCode.parserServices?.program;
-                const mapping = context.sourceCode.parserServices?.esTreeNodeToTSNodeMap;
-                if (program === undefined || program === null || mapping === undefined) return;
-                const checker = program.getTypeChecker();
+                const services = getTypeServices(context.sourceCode);
+                if (services === undefined) return;
+                const { checker, mapping } = services;
                 hasImplementation ||= node.arguments.some((argument) => {
                     if (argument.type === AST_NODE_TYPES.SpreadElement) return false;
                     const type = checker.getTypeAtLocation(mapping.get(argument));

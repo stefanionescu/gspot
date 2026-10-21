@@ -2,8 +2,8 @@
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { isMissingFileError } from '#cli/system/errors.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { type FilesState, type FileContents } from '#cli/types/system/files.ts';
 import { TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
 
@@ -35,27 +35,29 @@ function prepareParentFolder(folder: string): Stats {
     try {
         return lstatSync(folder);
     } catch (error) {
-        if (!isMissingFileError(error)) throw error;
+        if (!hasErrorCode(error, 'ENOENT')) throw error;
     }
     try {
         mkdirSync(folder);
     } catch (creationError) {
-        if ((creationError as NodeJS.ErrnoException).code !== 'EEXIST') throw creationError;
+        if (!hasErrorCode(creationError, 'EEXIST')) throw creationError;
     }
     return lstatSync(folder);
 }
 
 // Read the file contents of a symbolic link: its target text and its own mode.
-function readSymbolicLink(target: string, stat: Stats): FileContents {
+function readSymbolicLink(target: string): FileContents {
     const bytes = Buffer.from(readlinkSync(target));
-    const mode = normalizeFileMode({ mode: stat.mode & MODE_BITS, isLink: true });
-    return { bytes, mode, isLink: true };
+    return { bytes, mode: PERMISSION_BITS, isLink: true };
 }
 
 // Read the bytes and mode of a private regular file.
 function readRegularFile(target: string, stat: Stats, path: string): FileContents {
     if (!stat.isFile() || stat.nlink !== 1)
-        throw new Error(`${path} is not a regular file with one link. Use a regular file without extra hard links.`);
+        throw new GspotError(
+            'filesystem',
+            `${path} is not a regular file with one link. Use a regular file without extra hard links.`,
+        );
     const bytes = readFileSync(target);
     return { bytes, mode: normalizeFileMode({ mode: stat.mode & MODE_BITS }) };
 }
@@ -68,7 +70,10 @@ function walkParentFolders(bounds: FilesState, path: string, statParent: (path: 
         folder = join(folder, part);
         const stat = statParent(folder);
         if (!stat.isDirectory() || stat.isSymbolicLink())
-            throw new Error(`A parent of ${path} is a link or is not a directory. Choose a directory without links.`);
+            throw new GspotError(
+                'filesystem',
+                `A parent of ${path} is a link or is not a directory. Choose a directory without links.`,
+            );
     }
     return join(bounds.root, ...parts);
 }
@@ -156,7 +161,7 @@ export function readEntry(bounds: FilesState, path: string): FileContents | unde
         const target = verifyPath(bounds, path);
         return readRegularFile(target, lstatSync(target), path);
     } catch (error) {
-        if (isMissingFileError(error)) return undefined;
+        if (hasErrorCode(error, 'ENOENT')) return undefined;
         throw error;
     }
 }
@@ -172,9 +177,9 @@ export function readEntryKeepingLinks(bounds: FilesState, path: string): FileCon
     try {
         const target = verifyPath(bounds, path);
         const stat = lstatSync(target);
-        return stat.isSymbolicLink() ? readSymbolicLink(target, stat) : readRegularFile(target, stat, path);
+        return stat.isSymbolicLink() ? readSymbolicLink(target) : readRegularFile(target, stat, path);
     } catch (error) {
-        if (isMissingFileError(error)) return undefined;
+        if (hasErrorCode(error, 'ENOENT')) return undefined;
         throw error;
     }
 }

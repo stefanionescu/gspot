@@ -10,7 +10,7 @@ export type CommandReference = {
     usage: string;
     arguments: { name: string; description: string; required: boolean; choices?: string[]; default?: unknown }[];
     options: { flags: string; description: string; choices?: string[]; default?: unknown }[];
-    exitCodes: string;
+    exitCodes: readonly (readonly [codes: string, meaning: string])[];
     example: string;
 };
 
@@ -20,15 +20,10 @@ export type SettingVariant = { setting: SettingDeclaration; owners: string[] };
 /** Plain data read by the documentation build. */
 export type ReferenceData = {
     commands: CommandReference[];
-    exitCodes: string;
     configurations: Manifest[];
     checks: ConfigurationCheck[];
     settings: SettingVariant[];
     schema: JSONSchema.JSONSchema;
-    schemaFile: string;
-    version: string;
-    styles: { extractor: RegExp; tokenEnd: string; pseudoClasses: RegExp };
-    groups: Record<string, string>;
     ruleFiles: Record<string, string[]>;
     configurationSettings: Record<string, SettingDeclaration[]>;
 };

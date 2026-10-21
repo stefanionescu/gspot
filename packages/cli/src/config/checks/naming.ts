@@ -9,8 +9,6 @@ const TYPESCRIPT_FUNCTION_NODES = [
 const TYPESCRIPT_METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'] as const;
 export const DIGIT = /\d/u;
 
-export const VERB_CATEGORIES = new Set(['functions', 'methods', 'variables']);
-
 /** The identifier categories a setting can narrow to; every other category borrows the limits of one of these. */
 export const CATEGORY_PARENTS = {
     classes: 'types',
@@ -33,8 +31,6 @@ export const CAMEL_WORD = /^[a-z][A-Za-z]*$/u;
 export const PASCAL_WORD = /^[A-Z][A-Za-z]*$/u;
 
 export const UPPER_WORD = /^[A-Z]+$/u;
-
-export const DIGITS_ONLY = /^\d+$/u;
 
 /** The digits of a migration timestamp, YYYYMMDDHHMMSS. */
 export const MIGRATION_DIGITS = 14;
@@ -200,15 +196,19 @@ export const CASE_NAMES = [
     'timestamp-snake',
 ] as const;
 
-export const ACRONYM_STYLES = ['word', 'initialism', 'lower'] as const;
-
 export const REST_SEGMENT = /^\.\.\./u;
 export const DIGIT_RUNS = /\d+/gu;
 export const LAST_EXTENSION = /\.[^.]*$/u;
 export const TEST_TERM_GROUP = 'tests';
 export const DIGIT_BOUNDARY = /(?<=\D)(?=\d)|(?<=\d)(?=\D)/u;
 export const SWIFTLINT_PARENTS: ReadonlySet<string> = new Set(['types', 'variables']);
-export const RUFF_CATEGORIES: ReadonlySet<string> = new Set(['classes', 'exceptions']);
+export const RUFF_CATEGORIES: ReadonlySet<string> = new Set([
+    'classes',
+    'exceptions',
+    'functions',
+    'methods',
+    'parameters',
+]);
 
 export const SWIFT_NAME_QUOTE = '`';
 export const SWIFT_CALLABLE_NODES = [...SWIFT_FUNCTION_NODES, 'init_declaration'] as const;
@@ -226,3 +226,7 @@ export const BANNED_WORD_FORMS: Readonly<Record<string, readonly string[]>> = {
     sync: ['sync', 'synchronize'],
     resolve: ['resolve', 'resolution'],
 };
+
+export const SQL_CREATE_PREFIX = /^\s*CREATE\s+(?:OR\s+REPLACE\s+)?/iu;
+export const SQL_CREATE_MODIFIER = /^(?:UNIQUE|CONSTRAINT|MATERIALIZED|TEMPORARY|TEMP|UNLOGGED)\s+/iu;
+export const SQL_CREATE_KIND = /^\w+(?:\s+IF\s+NOT\s+EXISTS)?/iu;

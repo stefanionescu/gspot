@@ -5,7 +5,7 @@ import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { prepareCommand } from '#tests/setup/processes.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { MILLISECONDS_PER_SECOND } from '#tests/data/test-setup.ts';
@@ -13,7 +13,7 @@ import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/data/commands/check.ts';
 
 test('only refuses a commit message check outside the message stage', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText(['commits']) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['commits']) });
     commitAll(sandbox.path);
     const refused = await runGspot(sandbox.path, ['check', '--only', 'commits/commitlint']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -38,8 +38,8 @@ stage = "commit"
         `${flag === '--hook' ? '--hook pre-push' : flag} needs a Git repository.`,
     );
     expect((JSON.parse(result.stdout) as CommandFailureJson).error).toBe('git');
-    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(settings);
-    expect(await Bun.file(join(sandbox.path, 'api/source.txt')).text()).toBe('before');
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+    expect(await readFile(join(sandbox.path, 'api/source.txt'), 'utf8')).toBe('before');
 });
 
 // A committed repository with a check whose fixer rewrites the source when it runs.
@@ -52,11 +52,11 @@ fix = ${JSON.stringify(fix)}
 paths = ["source.txt"]
 stage = "commit"
 `;
-    const sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([], { tables: check }),
+    const sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], { tables: check }),
         'source.txt': 'original\n',
     });
+
     commitAll(sandbox.path);
     return sandbox;
 }
@@ -138,7 +138,7 @@ test.each([...ARGUMENT_REFUSALS])(
 );
 
 test('check reports an unreadable message file as an argument error and writes nothing', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText(['commits']) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['commits']) });
     const before = await readTree(sandbox.path);
     const message = `The commit message file ${join(sandbox.path, 'missing-message.txt')} cannot be read.`;
     const human = await runGspot(sandbox.path, ['check', '--hook', 'commit-msg', '--', 'missing-message.txt']);

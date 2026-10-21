@@ -1,6 +1,6 @@
 // Lock managed writes and release their locks.
 import { randomUUID } from 'node:crypto';
-import { GspotError } from '#cli/system/errors.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system/modes.ts';
 import type { FilesState, FileContents } from '#cli/types/system/files.ts';
 import { readEntry, verifyPath, preparePath } from '#cli/system/files/entries.ts';
@@ -15,7 +15,7 @@ function writeLockFile(target: string, token: string): boolean {
         linkSync(temporary, target);
         return true;
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+        if (!hasErrorCode(error, 'EEXIST')) throw error;
         return false;
     } finally {
         unlinkSync(temporary);
@@ -33,9 +33,8 @@ function assertAbandonedLock(current: FileContents, path: string): void {
     try {
         process.kill(pid, 0);
     } catch (error) {
-        const { code } = error as NodeJS.ErrnoException;
-        if (code === 'ESRCH') return;
-        if (code !== 'EPERM') throw error;
+        if (hasErrorCode(error, 'ESRCH')) return;
+        if (!hasErrorCode(error, 'EPERM')) throw error;
     }
     throw new GspotError(
         'filesystem',
@@ -49,7 +48,7 @@ function removeStaleLock(bounds: FilesState, path: string, target: string): void
     try {
         mkdirSync(reclaim, { mode: PRIVATE_FOLDER });
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+        if (!hasErrorCode(error, 'EEXIST')) throw error;
         throw new GspotError(
             'filesystem',
             `Another process is recovering ${path}. Retry after it finishes. If no gspot command is running, remove ${path}${LOCK_RECOVERY_SUFFIX}.`,

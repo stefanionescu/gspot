@@ -1,12 +1,10 @@
 // Parses Git index, tree, and blob output.
-import { z } from 'zod';
 import { posix } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import { ANY_FOLDER_PREFIX } from '#cli/config/system/paths.ts';
-import { GIT_ENTRY_MODES } from '#cli/config/repository/revisions.ts';
+import { gitEntrySchema } from '#cli/schemas/parsers/git.ts';
+import { LEADING_SLASH, ANY_FOLDER_PREFIX } from '#cli/config/system/paths.ts';
 import type { GitEntry, GitStream, GitIndexEntry, AttributePattern } from '#cli/types/parsers/git.ts';
 
 import {
@@ -15,7 +13,6 @@ import {
     INDEX_ENTRY,
     BINARY_MACRO,
     PATH_ESCAPES,
-    LEADING_SLASH,
     ATTRIBUTE_LINE,
     OCTAL_PATH_BYTE,
     ATTRIBUTE_FIELDS,
@@ -27,17 +24,6 @@ import {
     IGNORED_ATTRIBUTE_PATTERN,
     INVALID_GIT_STREAM_MESSAGE,
 } from '#cli/config/parsers/git.ts';
-
-// Validate the fields captured from an index or committed-tree entry.
-const gitEntrySchema = z.object({
-    mode: z.enum(GIT_ENTRY_MODES),
-    hash: z.string(),
-    path: z.string(),
-} satisfies SchemaShape<GitEntry>);
-
-function splitEntries(text: string): string[] {
-    return text.split('\0').filter(Boolean);
-}
 
 function parseEntry(match: RegExpExecArray | null): GitEntry {
     const entry = gitEntrySchema.safeParse(match?.groups);
@@ -164,9 +150,7 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
     const attributes = new Map<string, Record<string, string>>();
     for (let index = 0; index + ATTRIBUTE_FIELDS <= fields.length; index += ATTRIBUTE_FIELDS) {
         const [path, name, value] = fields.slice(index, index + ATTRIBUTE_FIELDS) as [string, string, string];
-        let table = attributes.get(path);
-        if (table === undefined) table = {};
-        table[name] = value;
+        const table = { ...attributes.get(path), [name]: value };
         attributes.set(path, table);
     }
     return attributes;
@@ -179,11 +163,14 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
  * @returns the index entries with their stages.
  */
 export function parseIndexEntries(text: string): GitIndexEntry[] {
-    return splitEntries(text).map((line) => {
-        const match = INDEX_ENTRY.exec(line);
-        const entry = parseEntry(match);
-        return { ...entry, stage: Number(match?.groups?.['stage']) };
-    });
+    return text
+        .split('\0')
+        .filter(Boolean)
+        .map((line) => {
+            const match = INDEX_ENTRY.exec(line);
+            const entry = parseEntry(match);
+            return { ...entry, stage: Number(match?.groups?.['stage']) };
+        });
 }
 
 /**
@@ -195,7 +182,10 @@ export function parseIndexEntries(text: string): GitIndexEntry[] {
 export function parseTreeEntries(output: Uint8Array): GitEntry[] {
     const text = decodeUtf8(output);
     if (text === undefined) throw new GspotError('git', 'Revision paths must be valid UTF-8.');
-    return splitEntries(text).map((line) => parseEntry(TREE_ENTRY.exec(line)));
+    return text
+        .split('\0')
+        .filter(Boolean)
+        .map((line) => parseEntry(TREE_ENTRY.exec(line)));
 }
 
 /**

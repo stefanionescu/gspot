@@ -6,7 +6,6 @@ suggests = ["swift"]
 title = "Xcode"
 
 [detect]
-paths = ["**/*.xcodeproj/project.pbxproj"]
 project_files = ["*.xcodeproj"]
 
 [files]

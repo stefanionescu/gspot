@@ -14,5 +14,4 @@ rule_prefix = "jsx-a11y"
 version = "6.10.2"
 
 [eslint]
-fragment = true
 required_tools = ["eslint-plugin-jsx-a11y"]

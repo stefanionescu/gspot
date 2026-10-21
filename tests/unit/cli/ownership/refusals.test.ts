@@ -1,18 +1,19 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { isWindows } from '#tests/setup/system.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { OWNERSHIP_REFUSAL } from '#tests/data/ownership.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
+import { planSettingsWrite } from '#cli/ownership/file-settings.ts';
+import { planBlock, planReplacement } from '#cli/ownership/plans.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { planBlock, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
 
 test.each(['replacement', 'block', 'keys'] as const)(
     '%s plans refuse a file edited after planning and do not record it',
     async (kind) => {
-        await using folder = await testdir();
-        await createFileTree(folder.path, { 'config.toml': 'strict = true\n' });
+        await using folder = await testdir({ 'config.toml': 'strict = true\n' });
+
         await chmod(join(folder.path, 'config.toml'), 0o640);
         {
             using log = openWriter(folder.path);
@@ -22,10 +23,10 @@ test.each(['replacement', 'block', 'keys'] as const)(
                     planReplacement(log, {
                         path: 'config.toml',
                         next: { bytes: Buffer.from('strict = false\n'), mode: 0o444 },
-                        canReplace: true,
+                        expected: log.files.read('config.toml'),
                     }),
                 block: () => planBlock(log, 'config.toml', 'managed content', 'hash'),
-                keys: () => planManagedKeys(log, 'config.toml', [{ path: ['extends'], value: './managed.json' }]),
+                keys: () => planSettingsWrite(log, 'config.toml', [{ path: ['extends'], value: './managed.json' }]),
             };
             const plan = plans[kind]();
             expect(log.files.read('config.toml')).toStrictEqual({
@@ -45,8 +46,8 @@ test.each(['replacement', 'block', 'keys'] as const)(
 );
 
 test('a batch writes the files before an edited one and refuses the edited one', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, { 'first.txt': 'original first', 'last.txt': 'original last' });
+    await using folder = await testdir({ 'first.txt': 'original first', 'last.txt': 'original last' });
+
     {
         using log = openWriter(folder.path);
 
@@ -54,7 +55,7 @@ test('a batch writes the files before an edited one and refuses the edited one',
             planReplacement(log, {
                 path,
                 next: { bytes: Buffer.from('replacement'), mode: 0o644 },
-                canReplace: true,
+                expected: log.files.read(path),
             }),
         );
         await writeFile(join(folder.path, 'last.txt'), 'authored after plan');
@@ -67,8 +68,8 @@ test('a batch writes the files before an edited one and refuses the edited one',
 });
 
 test('a file gspot does not own refuses the whole batch and leaves every file as it was', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, { '.gspot/owned.txt': 'original', 'authored.txt': 'keep authored' });
+    await using folder = await testdir({ '.gspot/owned.txt': 'original', 'authored.txt': 'keep authored' });
+
     {
         using log = openWriter(folder.path);
 
@@ -76,7 +77,7 @@ test('a file gspot does not own refuses the whole batch and leaves every file as
             planReplacement(log, {
                 path: '.gspot/owned.txt',
                 next: { bytes: Buffer.from('installed'), mode: 0o644 },
-                canReplace: true,
+                expected: log.files.read('.gspot/owned.txt'),
             }),
         ]);
         const plans = ['.gspot/owned.txt', 'authored.txt'].map((path) =>
@@ -118,7 +119,6 @@ test.each(
                 planReplacement(log, {
                     path: 'authored.json',
                     next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
-                    canReplace: true,
                     expected: read,
                 }),
             ]);

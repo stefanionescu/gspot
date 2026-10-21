@@ -1,4 +1,4 @@
-import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
+import { PYTHON_VERSION } from '#cli/config/parsers/dependencies.ts';
 
 export const PYTHON_ENVIRONMENT_FOLDER = '.venv';
 
@@ -39,3 +39,10 @@ export const PIP_LICENSES_COMMAND = ['pip-licenses', '--format=json', '--from=al
 
 export const UV_LOCKFILE_CREDENTIAL_MESSAGE =
     'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install';
+
+export const UV_PROJECT_FLAGS = {
+    project: '--project',
+    directory: '--directory',
+    configFile: '--config-file',
+} as const;
+export const UV_ENVIRONMENT_VARIABLE = 'UV_PROJECT_ENVIRONMENT';

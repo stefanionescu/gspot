@@ -1,14 +1,14 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { TRPC_FILES, TRPC_TYPES, TRPC_IMPORTS, TRPC_MODULES, TRPC_FAILURES } from '#tests/data/checks/trpc.ts';
 
 describe('trpc', () => {
     test('the generated tRPC rule composes server value boundaries', async () => {
         await using sandbox = await testdir();
-        const settings = buildSettingsText(['trpc', 'typescript'], {
+        const settings = buildSandboxSettings(['trpc', 'typescript'], {
             level: 'all',
             tables: `${TRPC_MODULES.replaceAll('["private/**", "app/api/trpc/**"]', '["private/**", "app/api/trpc/**", "app/private/**", "app/child/private/**", "flat/router.ts"]')}
 [[scope]]
@@ -80,9 +80,9 @@ describe('trpc', () => {
                 'plain/routers/action.ts',
             ];
             await createFileTree(sandbox.path, {
-                'gspot.toml': buildSettingsText(['trpc', 'typescript'], {
+                'gspot.toml': buildSandboxSettings(['trpc', 'typescript'], {
                     level,
-                    tables: '[trpc]\nrouter_files = [ "custom/**", "child/handlers/**" ]\n\n[[scope]]\npath = "child"\n\n[[scope]]\npath = "inherited"\n\n[[scope]]\npath = "plain"\nremoved_configurations = [ "trpc" ]\n',
+                    tables: '[trpc]\nrouter_files = [ "custom/**", "child/handlers/**" ]\n\n[[scope]]\npath = "child"\n\n[[scope]]\npath = "inherited"\n\n[[scope]]\npath = "plain"\nremoved_configurations = { value = [ "trpc" ], reason = "This scope does not expose a tRPC router." }\n',
                 }),
                 'package.json': '{"private":true,"type":"module"}',
                 'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}',

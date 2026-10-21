@@ -10,15 +10,11 @@ extensions = [".md", ".mdx", ".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs
 tags = ["shebang:shell"]
 
 [[tool]]
-brew = "vale"
-github = { name = "errata-ai/vale", version = "v3.21.0" }
 mise = "vale"
 name = "vale"
 replace = [".vale.ini", "_vale.ini", "vale.ini"]
-scoop = "vale"
 suppression = { marker = "^<!--\\s*vale\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
 version = "3.21.0"
-winget = "errata-ai.Vale"
 
 [[tool_file]]
 target = "vale.ini"

@@ -3,16 +3,14 @@ import { runFixers } from '#cli/runs/fixes.ts';
 import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
 import { findTool } from '#cli/runs/command/tool.ts';
-import { buildCheckRun } from '#cli/runs/check-run.ts';
-import { readRepository } from '#cli/repository/read.ts';
+import { readSessionRepository } from '#cli/session.ts';
 import { DOCKER_TOOL } from '#cli/config/checks/docker.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { listActiveIgnores } from '#cli/settings/scope-view.ts';
+import { runCheckImplementation } from '#cli/runs/check-run.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { listFileDeclarations } from '#cli/repository/classify.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { buildRunReport, buildBaseResult, formatReproduceCommand } from '#cli/runs/report.ts';
 import { RAN_STATUSES, FAILED_STATUSES, DOCKER_MISSING_MESSAGE } from '#cli/config/runs/run.ts';
@@ -20,17 +18,11 @@ import { RAN_STATUSES, FAILED_STATUSES, DOCKER_MISSING_MESSAGE } from '#cli/conf
 import {
     type Finding,
     type RunState,
-    type IgnoreUse,
     type RunResult,
     type RunOptions,
     type CheckResult,
-    type RunnableCheck,
     type PlanAfterFixes,
 } from '#cli/types/runs/check.ts';
-
-function isNameMatch(record: IgnoreRecord, finding: Finding): boolean {
-    return record.names === undefined || (finding.name !== undefined && record.names.includes(finding.name));
-}
 
 /**
  * Checks whether an ignore record covers a finding.
@@ -40,45 +32,39 @@ function isNameMatch(record: IgnoreRecord, finding: Finding): boolean {
  * @returns whether the ignore covers this finding.
  */
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
-    if (record.check !== undefined && record.check !== finding.check) return false;
-    if (record.rule !== undefined && record.rule !== finding.rule) return false;
-    if (!isNameMatch(record, finding)) return false;
+    if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
+        return false;
+    if (record.names !== undefined) {
+        if (finding.name === undefined) return false;
+        if (!record.names.includes(finding.name)) return false;
+    }
     return record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file);
-}
-
-function planChecks(session: Session, options: RunOptions): RunnableCheck[] {
-    return planRun(session, options).map((check) => ({
-        check,
-        run: buildCheckRun(options.selectImplementation(check.check)),
-    }));
 }
 
 // Rereads the repository after fixers changed it, so the next run checks the corrected files.
 async function refreshAfterFixes(session: Session): Promise<void> {
-    const { scopes: tables } = session.settingsFile.settings;
-    const scopes = Object.entries(tables).map(([path, { configurations }]) => ({ path, configurations }));
     session.reads = createReadCache(session.root);
-    const selected = new Map(session.scopes.map((selection) => [selection.scope.path, selection.selected]));
-    session.repository = await readRepository(session.reads, {
-        declarations: listFileDeclarations(selected),
-        scopes: scopes,
+    session.repository = await readSessionRepository({
+        settings: session.settingsFile.settings,
+        text: session.settingsFile.text,
         manifests: session.manifests,
+        reads: session.reads,
     });
     session.inspections.clear();
 }
 
-// The result of a check that cannot run: canceled, skipped by the plan, or without Docker.
+// The result of a check that cannot run: canceled or without Docker.
 function findUnrunnableResult(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
-    if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
     return 'status' in findTool(session, session.root, getToolDeclaration(session.manifests.values(), DOCKER_TOOL))
         ? { ...base, status: 'missing', note: DOCKER_MISSING_MESSAGE }
         : undefined;
 }
 
-function checkFailure(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
-    if (error instanceof GspotError && error.code === 'skip') return { status: 'skipped', note: error.message };
+function checkFailure(name: string, error: unknown): Pick<CheckResult, 'status' | 'note' | 'cause'> {
+    if (error instanceof GspotError && error.code === 'skip')
+        return { status: 'skipped', cause: 'condition', note: error.message };
     if (error instanceof GspotError && error.code === 'tool') return { status: 'missing', note: error.message };
     return {
         status: 'error',
@@ -86,28 +72,22 @@ function checkFailure(name: string, error: unknown): Pick<CheckResult, 'status' 
     };
 }
 
-async function runOne(runState: RunState, executable: RunnableCheck): Promise<CheckResult> {
-    const { session, staged } = runState;
-    const { check: planned, run } = executable;
+async function runOne(runState: RunState, planned: PlannedCheck): Promise<CheckResult> {
+    const { session } = runState;
     const base = buildBaseResult(planned, session);
     const early = findUnrunnableResult(session, planned, base);
     if (early) return early;
     const started = performance.now();
     // Each thrown failure belongs to this check; the other results of the run survive.
     try {
-        return await run(session, planned, staged === undefined ? {} : { staged });
+        return await runCheckImplementation(session, planned, runState.options.selectImplementation(planned.check));
     } catch (error) {
         return { ...base, duration: performance.now() - started, ...checkFailure(planned.check.name, error) };
     }
 }
 
-function dropIgnoredFindings(result: CheckResult, uses: Map<IgnoreRecord, IgnoreUse>): void {
-    result.findings = result.findings.filter((finding) => {
-        const use = uses.values().find(({ record }) => isIgnoreMatch(record, finding));
-        if (use === undefined) return true;
-        use.matched += 1;
-        return false;
-    });
+function dropIgnoredFindings(result: CheckResult, ignores: IgnoreRecord[]): void {
+    result.findings = result.findings.filter((finding) => !ignores.some((record) => isIgnoreMatch(record, finding)));
     result.status = result.findings.length > 0 ? 'failed' : 'passed';
 }
 
@@ -121,31 +101,31 @@ function dropOutsideFindings(result: CheckResult, runState: RunState): void {
     result.findings = result.findings.filter((finding) => paths.has(finding.file) || !tracked.has(finding.file));
 }
 
-function filterResult(runState: RunState, result: CheckResult): void {
+function finishResult(runState: RunState, result: CheckResult): void {
     if (RAN_STATUSES.has(result.status)) {
         dropOutsideFindings(result, runState);
-        dropIgnoredFindings(result, runState.uses);
+        dropIgnoredFindings(result, runState.session.settingsFile.settings.ignore);
     }
     if (FAILED_STATUSES.has(result.status))
         result.reproduce = formatReproduceCommand(result.check, result.scope, {
-            ...(runState.options.messageFile === undefined ? {} : { messageFile: runState.options.messageFile }),
-            ...(runState.options.push === undefined ? {} : { push: runState.options.push }),
+            messageFile: runState.options.messageFile,
+            push: runState.options.push,
             staged: runState.options.comparison?.content === 'index',
         });
 }
 
-async function runActiveChecks(runState: RunState, executables: RunnableCheck[]): Promise<CheckResult[]> {
+async function runActiveChecks(runState: RunState, checks: PlannedCheck[]): Promise<CheckResult[]> {
     const limiter = pLimit(availableParallelism());
     let completed = 0;
     // runOne catches check errors; these rejections cover ignore matching and onResult callbacks before resource disposal.
     const settled = await Promise.allSettled(
-        executables.map((executable) =>
+        checks.map((planned) =>
             limiter(async () => {
-                const result = await runOne(runState, executable);
-                filterResult(runState, result);
+                const result = await runOne(runState, planned);
+                finishResult(runState, result);
                 runState.options.onResult?.(result, {
                     completed: ++completed,
-                    total: executables.length,
+                    total: checks.length,
                     comparison: runState.options.comparison,
                 });
                 return result;
@@ -159,16 +139,15 @@ async function runActiveChecks(runState: RunState, executables: RunnableCheck[])
 }
 
 async function planAfterFixes(session: Session, options: RunOptions): Promise<PlanAfterFixes> {
-    const executables = planChecks(session, options);
-    if (!options.fix) return { executables, fixes: undefined };
-    const fixes = await runFixers(
-        session,
-        executables.map(({ check }) => check),
-        { isDryRun: options.isDryRun, selectImplementation: options.selectImplementation },
-    );
-    if (options.isDryRun) return { executables, fixes };
+    const planned = planRun(session, options);
+    if (!options.fix) return { planned, fixes: undefined };
+    const fixes = await runFixers(session, planned, {
+        isDryRun: options.isDryRun,
+        selectImplementation: options.selectImplementation,
+    });
+    if (options.isDryRun) return { planned, fixes };
     await refreshAfterFixes(session);
-    return { executables: planChecks(session, options), fixes };
+    return { planned: planRun(session, options), fixes };
 }
 
 /**
@@ -179,32 +158,23 @@ async function planAfterFixes(session: Session, options: RunOptions): Promise<Pl
  * @returns the report, the plan, and the fix report when --fix ran.
  */
 async function runChecks(opened: Session, options: RunOptions): Promise<RunResult> {
-    using resources = new DisposableStack();
-    const session: Session = {
-        ...opened,
-        resources,
-        ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
-    };
+    const session = opened;
     const started = new Date();
-    const { executables, fixes } = await planAfterFixes(session, options);
-    const planned = executables.map(({ check }) => check);
-    const ignore = listActiveIgnores(session.settingsFile.settings);
+    const { planned, fixes } = await planAfterFixes(session, options);
     const runState: RunState = {
         session,
         options,
-        staged: options.staged ? new Set(options.staged) : undefined,
-        uses: new Map(ignore.map((record) => [record, { record, matched: 0 }])),
     };
-    const active = executables.filter(({ check }) => isActive(check) || check.skip?.cause === 'ignore');
+    const active = planned.filter((check) => isActive(check) && check.skip === undefined);
     const ran = await runActiveChecks(runState, active);
     const report = buildRunReport({
         session,
         options,
         started,
         planned,
-        active: active.map(({ check }) => check),
+        active,
         ran,
-        uses: runState.uses,
+        ignores: session.settingsFile.settings.ignore,
         fixes,
     });
     return fixes ? { report, planned, fixes } : { report, planned };

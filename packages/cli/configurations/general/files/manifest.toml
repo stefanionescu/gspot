@@ -9,26 +9,20 @@ title = "Data files"
 extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".xml"]
 
 [[tool]]
-brew = "taplo"
-cargo = "taplo-cli"
 min_version = "0.9.0"
+# No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
 mise = "taplo"
 name = "taplo"
 replace = ["taplo.toml", ".taplo.toml"]
 version = "0.10.0"
-# No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
-github = { name = "tamasfe/taplo", version = "0.10.0" }
 
 [[tool]]
-brew = "yamllint"
-mise = "pipx:yamllint"
 name = "yamllint"
 pypi = "yamllint"
 replace = [".yamllint", ".yamllint.yml", ".yamllint.yaml"]
 version = "1.38.0"
 
 [[tool]]
-mise = "npm:v8r"
 name = "v8r"
 npm = "v8r"
 requires = ["ajv"]
@@ -43,8 +37,6 @@ npm = "ajv"
 version = "8.20.0"
 
 [[tool]]
-apt = "libxml2-utils"
-brew = "libxml2"
 name = "xmllint"
 system = true
 
@@ -59,10 +51,6 @@ tool = "yamllint"
 
 [[tool_file]]
 target = "v8r.yml"
-tool = "v8r"
-
-[[tool_file]]
-target = "gspot-toml.schema.json"
 tool = "v8r"
 
 [[check]]

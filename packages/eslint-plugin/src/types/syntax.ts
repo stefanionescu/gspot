@@ -1,4 +1,5 @@
-import type { TSESTree } from '@typescript-eslint/utils';
+import type ts from 'typescript';
+import type { TSESTree, ParserServicesWithTypeInformation } from '@typescript-eslint/utils';
 
 export type ImplementedFunction =
     | TSESTree.FunctionDeclaration
@@ -13,5 +14,9 @@ export type ImportSource =
     | TSESTree.ExportAllDeclaration
     | TSESTree.ExportNamedDeclaration
     | TSESTree.ImportExpression;
-export type StatementStart = { offset: number; line: number };
 export type ContentCheck = (node: TSESTree.Node | null) => boolean;
+
+export type TypeServices = {
+    checker: ts.TypeChecker;
+    mapping: ParserServicesWithTypeInformation['esTreeNodeToTSNodeMap'];
+};

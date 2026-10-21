@@ -57,7 +57,7 @@ export const YARN_ENVIRONMENT_SETTINGS = [
 export const LOCKFILE_ARGUMENTS = {
     npm: ['npm', 'install', '--package-lock-only', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
     bun: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted', '--network-concurrency=1'],
-    pnpm: ['pnpm', 'install', '--lockfile-only', '--ignore-workspace', '--node-linker=hoisted'],
+    pnpm: ['pnpm', 'install', '--lockfile-only', '--node-linker=hoisted'],
 } as const;
 
 /** Installation refuses any change to the recorded lockfile. */
@@ -93,3 +93,15 @@ export const YARN_SECRET_KEYS: ReadonlySet<string> = new Set(['npmAuthToken', 'n
 
 export const MISSING_PACKAGE_MANAGER_MESSAGE =
     'No package manager is selected for the npm tool project. Run gspot apply first.';
+
+export const LOCKFILE_WORKSPACE_KEYS = { npm: 'packages', bun: 'workspaces', pnpm: 'importers' } as const;
+
+export const YARN_REGISTRY_VARIABLE = 'YARN_REGISTRY';
+export const YARN_SETTINGS_FILE_VARIABLE = 'YARN_RC_FILENAME';
+export const YARN_SETTING_KEYS = {
+    npmRegistryServer: 'npmRegistryServer',
+    unsafeHttpWhitelist: 'unsafeHttpWhitelist',
+    npmMinimalAgeGate: 'npmMinimalAgeGate',
+    npmPreapprovedPackages: 'npmPreapprovedPackages',
+} as const;
+export const YARN_CONFIG_GET_FLAGS = ['--json', '--no-redacted'] as const;

@@ -4,29 +4,31 @@ import { resolve, relative } from 'node:path';
 import { warn } from '#cli/system/terminal.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
+import { DRY_RUN_NOTE } from '#cli/config/terminal.ts';
 import { readHookStatus } from '#cli/install/hooks.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { formatUnknownName } from '#cli/system/text.ts';
-import { listHookNames } from '#cli/generation/hooks.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Session, StageFilter } from '#cli/types/planning.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { RunReport, RunOptions } from '#cli/types/runs/check.ts';
 import { type ChangedPaths } from '#cli/types/repository/revisions.ts';
+import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { selectCheckImplementation } from '#cli/checks/implementations.ts';
-import { formatFixes, formatRunReport } from '#cli/commands/check/report.ts';
-import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
+import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
-function buildRunOptions(
-    options: CheckOptions,
-    filters: RunFilters,
-    signal: AbortSignal,
-    revision: RevisionSource | undefined,
-): RunOptions {
+function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: RevisionSource | undefined): RunOptions {
     const { changed, staging, stage, paths } = filters;
     const changedPaths = changed?.paths;
-    const changedCommits = changed?.commits;
+    let commits = changed?.commits;
+    let base = changed?.reference;
+    let historyComplete: RunOptions['historyComplete'];
+    if (revision?.content === 'commit') {
+        commits = revision.commits;
+        base = revision.base ?? base;
+        historyComplete = revision.historyComplete;
+    } else if (revision !== undefined) commits = undefined;
     const comparison = buildComparison(revision, changed);
     return {
         ...stripUndefined({
@@ -43,12 +45,11 @@ function buildRunOptions(
             messageFile: options.messageFile,
             push: options.push,
             // A --changed run checks the commit messages and history after the merge base, not the whole history.
-            commits: revision === undefined ? changedCommits : revision.commits,
-            base: revision?.base ?? changed?.reference,
-            historyComplete: revision?.historyComplete,
+            commits,
+            base,
+            historyComplete,
         }),
         unstagedChanges: staging.unstaged,
-        cancelSignal: signal,
     };
 }
 
@@ -62,8 +63,8 @@ function buildComparison(
 }
 
 // List the files that a path names: the file itself, or every file in a folder.
-function listMatchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
-    const selector = convertToPosixPath(relative(session.root, resolve(options.cwd, path)));
+function listMatchingFiles(session: Session, cwd: string, path: string, candidates: string[]): string[] {
+    const selector = convertToPosixPath(relative(session.root, resolve(cwd, path)));
     if (!isInside(selector)) throw new GspotError('arguments', `Path ${path} is outside this repository.`);
     const matches = candidates.filter((file) => isInScope(file, selector));
     if (matches.length === 0) throw new GspotError('arguments', `Path ${path} matches no repository files.`);
@@ -81,7 +82,9 @@ function listMatchingFiles(session: Session, options: CheckOptions, path: string
 function selectArgumentPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
     if (options.paths.length === 0) return [];
     const candidates = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
-    const selected = new Set(options.paths.flatMap((path) => listMatchingFiles(session, options, path, candidates)));
+    const selected = new Set(
+        options.paths.flatMap((path) => listMatchingFiles(session, options.cwd, path, candidates)),
+    );
     return [...selected];
 }
 
@@ -105,14 +108,9 @@ function refuseUnknownChecks(session: Session, only: string[] | undefined): void
 // Warns when the clone receiving the report lacks the configured hooks.
 function warnAboutHooks(session: Session, revision: RevisionSource | undefined): void {
     if (revision?.content === 'commit') return;
-    const hooks = readHookStatus({
-        runner: session.startRunner,
-        settings: session.settingsFile.settings,
-        hooks: listHookNames(session.configuredChecks),
-        repository: {
-            root: revision?.reportRoot ?? session.root,
-            hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
-        },
+    const hooks = readHookStatus(session, {
+        root: revision?.reportRoot ?? session.root,
+        hasGit: revision?.reportRoot !== undefined || session.repository.hasGit,
     });
     if (!hooks.ready) warn('The Git hooks are not installed in this clone. Run: gspot install');
 }
@@ -124,19 +122,9 @@ async function readChangedSet(
     signal: AbortSignal,
     revision: RevisionSource | undefined,
 ): Promise<ChangedPaths | undefined> {
-    if (revision?.changed !== undefined) return { reference: revision.reference, paths: revision.changed };
+    if (revision?.content === 'commit' && revision.changed !== undefined)
+        return { reference: revision.reference, paths: revision.changed };
     return options.base === undefined ? undefined : readChangedPaths(session.root, options.base, signal);
-}
-
-// Read the staged paths: from the revision, from the index for --staged, or none.
-async function readStagedSet(
-    session: Session,
-    options: CheckOptions,
-    signal: AbortSignal,
-    revision: RevisionSource | undefined,
-): Promise<RunFilters['staging']> {
-    if (revision?.staged !== undefined) return revision.staged;
-    return options.staged ? readStagedPaths(session.root, signal) : { staged: undefined, unstaged: 0 };
 }
 
 // Collect the run filters: the changed paths, the staged paths, and the stage.
@@ -147,7 +135,7 @@ async function readRunFilters(
     revision: RevisionSource | undefined,
 ): Promise<RunFilters> {
     const changed = await readChangedSet(session, options, signal, revision);
-    const staging = await readStagedSet(session, options, signal, revision);
+    const staging = revision?.content === 'index' ? revision.staged : { staged: undefined, unstaged: 0 };
     const stage: StageFilter = options.stage ?? 'all';
     const paths = selectArgumentPaths(session, options, [...(staging.staged ?? []), ...(changed?.paths ?? [])]);
     return { changed, staging, stage, paths: paths.length === 0 ? undefined : paths };
@@ -168,20 +156,23 @@ export async function checkTree(
     signal: AbortSignal,
     revision?: RevisionSource,
 ): Promise<CommandResult<RunReport>> {
-    const session = await openSession(treeFolder, undefined, { installedRoot: revision?.installedRoot ?? treeFolder });
+    using resources = new DisposableStack();
+    const session = await openSession(treeFolder, {
+        installedRoot: revision?.installedRoot ?? treeFolder,
+        resources,
+        cancelSignal: signal,
+    });
     refuseUnknownChecks(session, options.only);
     warnAboutHooks(session, revision);
     const { changed, staging, stage, paths } = await readRunFilters(session, options, signal, revision);
-    const result = await runChecks(
-        session,
-        buildRunOptions(options, { changed, staging, stage, paths }, signal, revision),
-    );
+    const result = await runChecks(session, buildRunOptions(options, { changed, staging, stage, paths }, revision));
+    if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
     const reportText = formatRunReport(result.report, { verbose: options.verbose });
     const text = result.fixes
-        ? `${formatFixes(result.fixes, { isDryRun: options.isDryRun, verbose: options.verbose }).join('\n')}\n${reportText}`
+        ? `${formatFixes(result.fixes, { isDryRun: options.isDryRun }).join('\n')}\n${reportText}`
         : reportText;
     return {
-        text: options.isDryRun ? `${text}Dry run: nothing was written.\n` : text,
+        text: options.isDryRun ? `${text}${DRY_RUN_NOTE}\n` : text,
         json: { ...result.report, ...stripUndefined({ fixes: result.fixes }) },
         exitCode: result.report.exitCode,
     };

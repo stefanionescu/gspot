@@ -6,7 +6,6 @@ title = "OpenAPI"
 filenames = ["openapi.yaml", "openapi.yml", "openapi.json", "swagger.json", "swagger.yaml"]
 
 [[tool]]
-mise = "npm:@stoplight/spectral-cli"
 name = "spectral"
 npm = "@stoplight/spectral-cli"
 version = "6.15.0"

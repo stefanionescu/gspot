@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { createEslint, listFindingRules, collectLintFindings } from '#tests/setup/tool-files.ts';
 import type { LintFinding, SourceRuleCase, EslintConfiguration } from '#tests/types/tool-output.ts';
 
@@ -39,8 +39,7 @@ function listTrivialFiles(findings: Pick<LintFinding, 'file' | 'rule'>[]): strin
 test.each([...LEVELS])(
     'entry-files > Knip entry files still get the trivial-file rules at %s, in nested scopes',
     async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
             'src/start.js': STARTER_SOURCE,
             'src/main.js': ENTRY_SOURCE,
@@ -49,6 +48,7 @@ test.each([...LEVELS])(
             'api/src/main.js': ENTRY_SOURCE,
             'api/src/task.js': ENTRY_SOURCE,
         });
+
         expect(listTrivialFiles(await collectTrivialFindings(sandbox.path, ENTRY_SETTINGS))).toStrictEqual([
             ...TRIVIAL_ENTRY_FILES,
         ]);
@@ -56,10 +56,7 @@ test.each([...LEVELS])(
             join(sandbox.path, 'src/main.js'),
             "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
         );
-        const settings = ENTRY_SETTINGS.replace('level = "all"', `level = "${level}"`).replace(
-            '[tools.knip]',
-            '[tools.eslint.rules]\n"gspot/no-trivial-functions" = [{trivialStatements = 2}]\n"gspot/no-trivial-files" = [{trivialStatements = 2}]\n[tools.knip]',
-        );
+        const settings = ENTRY_SETTINGS.replace('level = "all"', `level = "${level}"`);
         const findings = await collectTrivialFindings(sandbox.path, settings);
         expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(
             level === 'all'
@@ -82,9 +79,8 @@ test.each([...LEVELS])(
 );
 
 test('structure > level all skips build output and files marked linguist-generated in .gitattributes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
         }),
         'package.json': '{"private":true,"type":"module"}\n',
@@ -94,6 +90,7 @@ test('structure > level all skips build output and files marked linguist-generat
         'emitted/check.js': 'missing();',
         '.gitattributes': 'emitted/** linguist-generated\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     for (const filePath of ['tests/build/check.js', 'src/dist/check.js', 'coverage/check.js']) {
         expect(await eslint.isPathIgnored(filePath)).toBe(true);
@@ -102,15 +99,15 @@ test('structure > level all skips build output and files marked linguist-generat
 });
 
 test.each([...LEVELS])('structure > size limits apply to test files only at level all (%s)', async (level) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             tables: '[limits]\nfile_lines = 8\nfunction_lines = 5\nfunction_statements = 3\n',
             level: level,
         }),
         'package.json': '{"private":true,"type":"module"}\n',
         'sample.test.js': '',
     });
+
     const eslint = await createEslint(sandbox.path);
     const rules = ['max-lines', 'max-lines-per-function', 'max-statements'];
     const declarations = Array.from(
@@ -128,16 +125,16 @@ test.each([...LEVELS])('structure > size limits apply to test files only at leve
 test.each([...LEVELS])(
     'structure > trivial-file and trivial-function rules apply to root and nested files only at level all (%s)',
     async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['javascript'], {
-                tables: '[[scope]]\npath = "app"\nconfigurations = [ "javascript" ]\n',
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['javascript'], {
                 level: level,
+                scopes: [{ path: 'app', configurations: ['javascript'] }],
             }),
             'package.json': '{"private":true,"type":"module"}\n',
             'main.js': '',
             'app/main.js': '',
         });
+
         const eslint = await createEslint(sandbox.path);
         for (const filePath of ['main.js', 'app/main.js']) {
             await createFileTree(sandbox.path, { [filePath]: 'export function start() { return launch(); }' });
@@ -155,16 +152,17 @@ test.each([...LEVELS])(
 );
 
 test('structure > a JSON import attribute is accepted where your import extensions need a suffix', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
-            tables: '[tools.eslint]\nimport_extension = "js"\n\n[[scope]]\npath = "app"\nconfigurations = [ "javascript" ]\n',
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
+            tables: '[tools.eslint]\nimport_extension = "js"\n\n',
+            scopes: [{ path: 'app', configurations: ['javascript'] }],
         }),
         'package.json': '{"private":true,"type":"module","imports":{"#manifest":"./package.json"}}\n',
         'main.js': '',
         'app/main.js': '',
     });
+
     const eslint = await createEslint(sandbox.path);
     for (const filePath of ['main.js', 'app/main.js']) {
         const config = (await eslint.calculateConfigForFile(filePath)) as EslintConfiguration;
@@ -185,7 +183,7 @@ test.each(LEVEL_REEXPORT_CASES)(
     async (level, reexports) => {
         await using sandbox = await testdir({
             ...IMPORT_FILES,
-            'gspot.toml': buildSettingsText(['typescript'], {
+            'gspot.toml': buildSandboxSettings(['typescript'], {
                 level,
                 tables: `[structure]\nreexports = ${reexports === 'index-only' ? '{ value = "index-only", reason = "The package exports its public index files." }' : '"none"'}\n[limits]\nindex_exports = 2\n[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n`,
             }),

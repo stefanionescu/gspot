@@ -1,15 +1,12 @@
 ---
+import InlineText from './InlineText.astro';
 import { listGuideChecks } from '../reference/checks.ts';
 
 type Props = {
     configurations: string[];
-}
+};
 
-// A summary marks code with backticks; splitting on each code span keeps the span, backticks included.
-const rows = listGuideChecks(Astro.props.configurations).map((check) => ({
-    ...check,
-    parts: check.summary.split(/(`[^`]*`)/u),
-}));
+const rows = listGuideChecks(Astro.props.configurations);
 ---
 
 <table>
@@ -21,20 +18,20 @@ const rows = listGuideChecks(Astro.props.configurations).map((check) => ({
         </tr>
     </thead>
     <tbody>
-        {
-            rows.map(({ name, link, stage, parts }) => (
-                <tr>
-                    <td>
-                        <a href={link}>
-                            <code>{name}</code>
-                        </a>
-                    </td>
-                    <td>
-                        <code>{stage}</code>
-                    </td>
-                    <td>{parts.map((part) => (part.startsWith('`') ? <code>{part.slice(1, -1)}</code> : part))}</td>
-                </tr>
-            ))
-        }
+        {rows.map(({ name, link, stage, summary }) => (
+            <tr>
+                <td>
+                    <a href={link}>
+                        <code>{name}</code>
+                    </a>
+                </td>
+                <td>
+                    <code>{stage}</code>
+                </td>
+                <td>
+                    <InlineText text={summary} />
+                </td>
+            </tr>
+        ))}
     </tbody>
 </table>

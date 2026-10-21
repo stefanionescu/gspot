@@ -37,7 +37,6 @@ const PATH_ESCAPES: Readonly<Record<string, string>> = {
     '\\': '\\',
     '"': '"',
 };
-const LEADING_SLASH = /^\//u;
 const BINARY_ATTRIBUTES = { diff: 'unset', merge: 'unset', text: 'unset' } as const;
 const BINARY_MACRO = 'binary';
 
@@ -50,7 +49,6 @@ export {
     HASH_PATTERN,
     BINARY_MACRO,
     PATH_ESCAPES,
-    LEADING_SLASH,
     ATTRIBUTE_LINE,
     OCTAL_PATH_BYTE,
     ATTRIBUTE_FIELDS,

@@ -1,5 +1,5 @@
-import { DRIZZLE_RULES } from '#cli/config/generation/eslint-fragments.ts';
-import { type EslintContext, type EslintFragment } from '#cli/types/generation/eslint.ts';
+import { DRIZZLE_RULES, FRAGMENT_IMPORTS } from '#cli/config/generation/eslint-fragments.ts';
+import { type EslintFragment, type EslintFragmentContext } from '#cli/types/generation/eslint.ts';
 
 /**
  * Require safe changes in Drizzle queries.
@@ -7,27 +7,20 @@ import { type EslintContext, type EslintFragment } from '#cli/types/generation/e
  * @param context the ESLint inputs of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
-function buildDrizzleFragment(
-    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'settings'>,
-): EslintFragment {
-    const { blockWriter, eslintFiles, settings } = context;
-
-    const imports: string[] = ["import drizzlePlugin from 'eslint-plugin-drizzle';"];
-
-    const output: string[] = ['\n'];
-    const rule = ['error', { drizzleObjectName: settings['drizzle.client_names'] }];
-    output.push(
-        '\n',
-        blockWriter.block(
-            {
-                files: eslintFiles.code,
-                rules: Object.fromEntries(DRIZZLE_RULES.map((name) => [name, rule])),
-            },
-            'plugins: { drizzle: drizzlePlugin }',
-        ),
-        ',\n',
-    );
-    return { imports: imports, blocks: output.join('') };
+function buildDrizzleFragment(context: Pick<EslintFragmentContext, 'eslintFiles' | 'view'>): EslintFragment {
+    const { eslintFiles, view } = context;
+    const blocks: EslintFragment['blocks'] = [];
+    const rule = ['error', { drizzleObjectName: view.settings['drizzle.client_names'] }];
+    blocks.push({
+        data: {
+            files: eslintFiles.code,
+            rules: Object.fromEntries(DRIZZLE_RULES.map((name) => [name, rule])),
+        },
+        properties: 'plugins: { drizzle: drizzlePlugin }',
+    });
+    return {
+        imports: FRAGMENT_IMPORTS['drizzle'],
+        blocks,
+    };
 }
-
 export { buildDrizzleFragment };

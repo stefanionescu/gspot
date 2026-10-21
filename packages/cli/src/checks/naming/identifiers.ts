@@ -1,14 +1,14 @@
 import { posix } from 'node:path';
 import { extractStem } from '#cli/system/paths.ts';
-import type { CheckInput } from '#cli/types/runs/check.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { REST_SEGMENT } from '#cli/config/checks/naming.ts';
 import { createIdentifier } from '#cli/checks/naming/collect.ts';
 import { extractSqlIdentifiers } from '#cli/checks/naming/sql.ts';
 import { extractBashIdentifiers } from '#cli/checks/naming/bash.ts';
 import { SQL_EXTENSION } from '#cli/config/repository/inventory.ts';
 import { extractSwiftIdentifiers } from '#cli/checks/naming/swift.ts';
+import { parseSource, selectGrammar } from '#cli/parsers/grammars.ts';
 import { extractPythonIdentifiers } from '#cli/checks/naming/python.ts';
-import { parseSource, selectGrammar } from '#cli/parsers/tree-sitter.ts';
 import { extractTypescriptIdentifiers } from '#cli/checks/naming/typescript.ts';
 import { type Identifier, type PathContainer, type IdentifierRead } from '#cli/types/checks/naming.ts';
 
@@ -66,19 +66,19 @@ export function buildFolderIdentifiers(path: string, language: string, container
  * @param file the repository path of the source.
  * @param text the source to parse.
  * @param language the configuration that covers the file.
- * @param context the read cache and parser resources.
+ * @param session the read cache and parser resources.
  * @returns the identifiers in source order, or a syntax error.
  */
 export async function parseIdentifiers(
     file: string,
     text: string,
     language: string,
-    context: Pick<CheckInput, 'reads' | 'resources'>,
+    session: Pick<Session, 'reads' | 'resources'>,
 ): Promise<IdentifierRead> {
-    if (language === 'sql') return extractSqlIdentifiers(file, text, context.reads);
+    if (language === 'sql') return extractSqlIdentifiers(file, text, session.reads);
     const grammar = selectGrammar(file, language);
     if (grammar === undefined) return { identifiers: [], error: undefined };
-    const tree = await parseSource(grammar, text, context);
+    const tree = await parseSource(grammar, text, session);
     try {
         let identifiers: Identifier[];
         switch (grammar) {

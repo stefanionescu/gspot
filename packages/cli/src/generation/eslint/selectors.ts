@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { escapeGlob } from '#cli/repository/matchers.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { SelectorGroup } from '#cli/types/generation/eslint.ts';
 import type { SelectorPaths } from '#cli/types/generation/fragments.ts';
 import { REEXPORT_SELECTORS } from '#cli/config/generation/eslint-rules.ts';
@@ -66,10 +66,10 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
 }
 
 // The selectors that settings turn on: environment reads outside the readers at level all, and alias suffixes.
-function listSettingSelectors(selection: ScopeSelection, isAll: boolean): SelectorPaths[] {
+function listSettingSelectors(selection: ScopeSelection, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];
     const owners = selection.view.values.structure?.environment_readers ?? [];
-    if (isAll && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, except: owners });
+    if (level === 'all' && owners.length > 0) selectors.push({ ...ENVIRONMENT_SELECTOR, except: owners });
     const styles = selection.view.values[ESLINT_SETTINGS_TABLE]?.import_extension;
     if (styles !== undefined)
         selectors.push({ ...ALIAS_IMPORT_SELECTORS[styles === 'extensionless' ? 'never' : 'always'], except: [] });
@@ -87,34 +87,30 @@ function buildSelectorPaths(selection: ScopeSelection, entry: Manifest['eslint']
  * Resolve the selectors that fragments add in each project scope.
  *
  * @param scopes every project selection.
- * @param isAll whether the house style selectors apply.
+ * @param level the selected lint rule level.
  * @param reexports the export convention.
  *
  * @returns selector groups with their owning scope and excluded child projects.
  */
 export function groupFragmentSelectors(
     scopes: ScopeSelection[],
-    isAll: boolean,
+    level: Level,
     reexports: Settings['structure']['reexports'],
 ): SelectorGroup[] {
     const scopePaths = scopes.map((entry) => entry.scope.path);
     return scopes.flatMap((selection) => {
         const prefix = escapeGlob(selection.scope.path);
-        const declarations = selection.selected.flatMap((manifest) => (isAll ? manifest.eslint.selectors : []));
+        const declarations = selection.selected.flatMap((manifest) =>
+            level === 'all' ? manifest.eslint.selectors : [],
+        );
         const applied: SelectorPaths[] = [
             ...new Map(declarations.map((entry) => [entry.selector, entry])).values(),
         ].map((entry) => buildSelectorPaths(selection, entry));
-        if (isAll) {
+        if (level === 'all') {
             const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];
-            applied.push(
-                ...REEXPORT_SELECTORS.map((selector) => ({
-                    selector,
-                    message: 'Export values at their declaration instead of re-exporting them.',
-                    except,
-                })),
-            );
+            applied.push(...REEXPORT_SELECTORS.map((selector) => ({ ...selector, except })));
         }
-        applied.push(...listSettingSelectors(selection, isAll));
+        applied.push(...listSettingSelectors(selection, level));
         return groupSelectors(applied).map((group) => ({
             ...group,
             scope: selection.scope.path,

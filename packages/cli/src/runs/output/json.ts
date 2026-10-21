@@ -1,15 +1,16 @@
 // Reads findings from declared JSON fields.
-import { z } from 'zod';
+import { parseReport } from '#cli/parsers/json.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { getValueAt } from '#cli/system/values.ts';
 import { JSON_START } from '#cli/config/runs/output.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { type ReportInput, type JsonFindingSpec } from '#cli/types/runs/output.ts';
+import { type ReportInput } from '#cli/types/runs/output.ts';
 
 // The manifest names where the list of findings sits and the field of each value.
 function listAt(value: unknown, path: string | undefined): unknown[] {
     const found = path === undefined || path === '' ? value : getValueAt(value, path.split('.'));
-    if (!Array.isArray(found)) throw new Error(`Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
+    if (!Array.isArray(found))
+        throw new GspotError('output', `Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
     return found;
 }
 
@@ -26,10 +27,10 @@ function setPosition(finding: Finding, base: number, line: string | undefined, c
     if (column !== undefined && Number(column) >= base) finding.column = Number(column) - base + 1;
 }
 
-function readJsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
-    const { check, help, output } = shape;
+function readJsonFinding(input: ReportInput, sources: unknown[]): Finding {
+    const { check, help, output } = input;
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
-        throw new Error('The JSON report contains an invalid finding object.');
+        throw new GspotError('output', 'The JSON report contains an invalid finding object.');
     const fields: Record<string, string | undefined> | undefined = output.fields;
     // A field may name several paths with spaces between them; the values join in that order.
     const getFieldValues = (name: string) =>
@@ -52,7 +53,8 @@ function readJsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
         return joined === '' ? undefined : joined;
     };
     const message = getField('message');
-    if (message === undefined) throw new Error('The JSON report contains a finding without its mapped message.');
+    if (message === undefined)
+        throw new GspotError('output', 'The JSON report contains a finding without its mapped message.');
     const file = getField('file') ?? '';
     const finding: Finding = {
         check,
@@ -75,30 +77,12 @@ function readJsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
  * @returns the findings from a valid report.
  */
 export function parseJsonFindings(input: ReportInput): Finding[] {
-    const { check, output, stdout, help } = input;
+    const { output, stdout } = input;
     const start = stdout.search(JSON_START);
-    const schema = z.unknown().transform((parsed) => {
-        const shape = { check, help, output };
-        const keys = output.children === undefined ? [] : output.children.split('.');
-        return listAt(parsed, output.items).flatMap((item) =>
-            listChains([item], keys).map((chain) => readJsonFinding(shape, chain)),
-        );
-    }) satisfies z.ZodType<Finding[]>;
-    return parseReport('JSON', stdout.slice(start), schema);
-}
-
-/**
- * Parse and validate a report, and keep its untrusted contents out of errors.
- *
- * @param tool the program that printed the report.
- * @param text the JSON report.
- * @param schema the shape that the report must have.
- * @returns the validated report.
- */
-export function parseReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value {
-    try {
-        return schema.parse(JSON.parse(text));
-    } catch {
-        throw new GspotError('output', `${tool} returned invalid structured findings.`);
-    }
+    if (start === -1) throw new GspotError('output', 'JSON returned no structured findings.');
+    const parsed = parseReport('JSON', stdout.slice(start));
+    const keys = output.children === undefined ? [] : output.children.split('.');
+    return listAt(parsed, output.items).flatMap((item) =>
+        listChains([item], keys).map((chain) => readJsonFinding(input, chain)),
+    );
 }

@@ -1,9 +1,10 @@
 import prettier from 'prettier';
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/values.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
@@ -11,7 +12,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildIgnoreSections } from '#cli/generation/ignore-files.ts';
 
 import {
@@ -26,19 +27,22 @@ import {
 test.each([...PRETTIER_IGNORE_CASES])(
     'the generated .prettierignore ignores $file: $ignored',
     async ({ file, ignored }) => {
-        await using folder = await testdir();
-        await createFileTree(folder.path, {
-            'gspot.toml': stringify(PRETTIER_IGNORE_SETTINGS),
+        await using folder = await testdir({
+            'gspot.toml': buildSandboxSettings(PRETTIER_IGNORE_SETTINGS.configurations, {
+                rules: true,
+                tables: stringify({ ignore: PRETTIER_IGNORE_SETTINGS.ignore }),
+            }),
             '.gitattributes': PRETTIER_IGNORE_ATTRIBUTES,
             'package.json': '{"packageManager":"pnpm@9.0.0"}',
             'source.ts': 'export const value = 1;\n',
             [file]: 'const value={enabled:true};\n',
         });
+
         const generated = generate(await openSession(folder.path)).files.find(
             ({ path }) => path === '.prettierignore',
         )!;
         const ignorePath = join(folder.path, generated.path);
-        await Bun.write(ignorePath, generated.content);
+        await writeFile(ignorePath, generated.content);
         const result = await prettier.getFileInfo(join(folder.path, file), { ignorePath, resolveConfig: false });
         expect(result).toStrictEqual({ ignored, inferredParser: ignored ? null : 'typescript' });
     },
@@ -78,7 +82,7 @@ test.each([...LANGUAGE_IGNORES])(
     "$name: Prettier ignores only the selected languages' folders, and a markdownlint pointer at the root",
     async ({ settings, ignored, absent }) => {
         await using sandbox = await testdir({
-            'gspot.toml': `level = "all"\n${settings}`,
+            'gspot.toml': settings,
             'source.js': 'const value = 1;\n',
             'source.py': 'value = 1\n',
             'Source.swift': 'let value = 1\n',
@@ -89,9 +93,9 @@ test.each([...LANGUAGE_IGNORES])(
         const session = await openSession(sandbox.path);
         const files = new Map(generate(session).files.map(({ path, content }) => [path, content]));
         const internal = files.get('.prettierignore')!;
-        await Bun.write(join(sandbox.path, '.prettierignore'), internal);
-        for (const path of ignored) {
-            expect(internal.split('\n')).toContain(path);
+        await writeFile(join(sandbox.path, '.prettierignore'), internal);
+        for (const { path, pattern } of ignored) {
+            expect(internal.split('\n')).toContain(pattern);
             const source = join(sandbox.path, 'web', path, path.endsWith('/') ? 'source.js' : '');
             const information = await prettier.getFileInfo(source, {
                 ignorePath: join(sandbox.path, '.prettierignore'),
@@ -131,7 +135,7 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
 
 test('a second apply writes the same files when .prettierignore covers every source file', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         'source/build/value.js': 'export const value = 1;\n',
         'coverage/value.js': 'export const value = 1;\n',
     });
@@ -149,15 +153,15 @@ test('a second apply writes the same files when .prettierignore covers every sou
 });
 
 test('tool files leave out what the tracked .gitignore files ignore, apart from patterns that match a tracked file', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['python', 'javascript']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python', 'javascript']),
         '.gitignore': '.open-next/\n# A comment\n!keep.log\n.env*\n',
         'app/.gitignore': 'other/\n/generated/types\n',
         '.env.example': 'TOKEN=\n',
         'app/main.py': 'value = 1\n',
         'entry.js': 'export const value = 1;\n',
     });
+
     readGitOutput(sandbox.path, ['init', '-q']);
     readGitOutput(sandbox.path, [
         'add',
@@ -184,7 +188,7 @@ test('tool files leave out what the tracked .gitignore files ignore, apart from 
 
 test('root paths in the generated-files section are anchored, so an authored tools/eslint.config.mjs stays checked', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['format', 'javascript', 'duplication'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['format', 'javascript', 'duplication'], { level: 'all' }),
         'source.js': 'export const value = 1;\n',
         'tools/eslint.config.mjs': 'export default [];\n',
     });
@@ -193,7 +197,7 @@ test('root paths in the generated-files section are anchored, so an authored too
     expect(ignoreFile.content.split('\n')).toContain('/eslint.config.mjs');
     expect(ignoreFile.content.split('\n')).not.toContain('eslint.config.mjs');
     const ignorePath = join(sandbox.path, ignoreFile.path);
-    await Bun.write(ignorePath, ignoreFile.content);
+    await writeFile(ignorePath, ignoreFile.content);
     const root = await prettier.getFileInfo(join(sandbox.path, 'eslint.config.mjs'), {
         ignorePath,
         resolveConfig: false,

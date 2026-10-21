@@ -6,21 +6,22 @@ import { testModules } from '#tests/setup/modules.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/processes.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { createSandbox } from '#tests/setup/sandbox.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { NESTJS_SANDBOX } from '#tests/data/checks/nestjs.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
 import { ALIAS_IMPORT, RESPONSE_MESSAGES } from '#tests/data/generation/eslint/selectors.ts';
 import { createEslint, readEslintRules, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { SERVER_FILES, RAW_HTML_CASES, COMPONENT_FILES } from '#tests/data/generation/eslint/framework.ts';
 
 test('components > Vue, Svelte and Astro files parse in their scopes, and a plain scope gets none of their rules', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript', 'typescript', 'vue', 'svelte', 'astro'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'vue', 'svelte', 'astro'], {
             level: 'all',
-            tables: '[[scope]]\npath = "app"\n\n[[scope]]\npath = "plain"\nremoved_configurations = [ "vue", "svelte", "astro" ]\n',
+            scopes: [{ path: 'app' }, { path: 'plain' }],
+            tables: 'removed_configurations = { value = [ "vue", "svelte", "astro" ], reason = "This scope contains plain JavaScript rather than framework components." }\n',
         }),
         'package.json': '{"private":true,"type":"module"}',
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*"]}',
@@ -29,6 +30,7 @@ test('components > Vue, Svelte and Astro files parse in their scopes, and a plai
         'plain/Card.vue': COMPONENT_FILES['Card.vue'],
         'plain/source.js': COMPONENT_FILES['source.js'],
     });
+
     const eslint = await createEslint(sandbox.path);
     for (const prefix of ['', 'app/']) {
         expect(
@@ -55,9 +57,8 @@ test('components > Vue, Svelte and Astro files parse in their scopes, and a plai
 test.each([...RAW_HTML_CASES])(
     'components > $configuration reports raw HTML and accepts text, and a plain JavaScript file gets no such rule',
     async (component) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['javascript'], {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['javascript'], {
                 level: 'all',
                 tables: `[[scope]]\npath = "app"\nconfigurations = ["${component.configuration}"]\n`,
             }),
@@ -65,6 +66,7 @@ test.each([...RAW_HTML_CASES])(
             [`app/${component.path}`]: component.sample,
             'plain.js': 'export const markup = "<b>Hello</b>";\n',
         });
+
         const eslint = await createEslint(sandbox.path);
         const path = `app/${component.path}`;
         expect(await collectLintFindings(eslint, sandbox.path, [path], [component.rule])).toStrictEqual([
@@ -79,15 +81,20 @@ test.each([...RAW_HTML_CASES])(
 test.each([...LEVELS])(
     'express > Express selectors and security rules apply in the Express scope at their level (%s)',
     async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': `level = "${level}"\nconfigurations = ["javascript"]\n[tools.eslint]\nimport_extension = "js"\n[[scope]]\npath = "api"\nconfigurations = ["express"]\n`,
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['javascript'], {
+                level: level,
+                rules: true,
+                tables: '[tools.eslint]\nimport_extension = "js"\n',
+                scopes: [{ path: 'api', configurations: ['express'] }],
+            }),
             'package.json': '{"private":true,"type":"module","imports":{"#owner":"./owner.js"}}',
             'owner.js': 'export const value = 1;',
             'source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
             'api/source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
             'api/child/source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
         });
+
         const eslint = await createEslint(sandbox.path);
         const root = (await eslint.calculateConfigForFile('source.js')) as EslintConfiguration;
         const express = (await eslint.calculateConfigForFile('api/source.js')) as EslintConfiguration;
@@ -117,7 +124,16 @@ test.each(['none', 'index-only'])(
         await using sandbox = await testdir();
         const files = ['app/page.tsx', 'app/index.ts', 'app/format.ts', 'library/page.tsx'];
         await createFileTree(sandbox.path, {
-            'gspot.toml': `level = "all"\nconfigurations = ["typescript"]\n[structure]\nreexports = ${reexports === 'index-only' ? '{ value = "index-only", reason = "The package exports its public index files." }' : '"none"'}\n[[scope]]\npath = "app"\nconfigurations = ["nextjs"]\n`,
+            'gspot.toml': buildSandboxSettings(['typescript'], {
+                level: 'all',
+                rules: true,
+                tables: `[structure]
+reexports = ${reexports === 'index-only' ? '{ value = "index-only", reason = "The package exports its public index files." }' : '"none"'}
+[[scope]]
+path = "app"
+configurations = ["nextjs"]
+`,
+            }),
             ...Object.fromEntries(files.map((file) => [file, 'export const value = 1;\n'])),
         });
         const eslint = await createEslint(sandbox.path);
@@ -141,12 +157,8 @@ test.each(['none', 'index-only'])(
 );
 
 test('nextjs > Next.js reports require-server-only in .server files and server folders', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        ...SERVER_FILES,
-        'gspot.toml':
-            'level = "all"\nconfigurations = [ "javascript" ]\n\n[[scope]]\npath = "app"\nconfigurations = [ "nextjs" ]\n',
-    });
+    await using sandbox = await testdir(SERVER_FILES);
+
     const eslint = await createEslint(sandbox.path);
     expect(
         await collectLintFindings(
@@ -162,11 +174,14 @@ test('nextjs > Next.js reports require-server-only in .server files and server f
 });
 
 test('nextjs > Next.js route rules use each project root and stay off in a scope without pages', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: '[[scope]]\npath = "apps/first"\nconfigurations = [ "nextjs" ]\n\n[[scope]]\npath = "apps/second"\nconfigurations = [ "nextjs" ]\n\n[[scope]]\npath = "apps/empty"\nconfigurations = [ "nextjs" ]\n',
+            scopes: [
+                { path: 'apps/first', configurations: ['nextjs'] },
+                { path: 'apps/second', configurations: ['nextjs'] },
+                { path: 'apps/empty', configurations: ['nextjs'] },
+            ],
         }),
         'package.json': '{"private":true,"type":"module"}\n',
         'apps/first/pages/about.jsx': 'export default function About() { return <p>About</p>; }\n',
@@ -175,6 +190,7 @@ test('nextjs > Next.js route rules use each project root and stay off in a scope
         'apps/second/src/pages/index.jsx': 'export default function Home() { return <a href="/about">About</a>; }\n',
         'apps/empty/component.jsx': 'export function Empty() { return <p>Empty</p>; }\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     using warnings = spyOn(console, 'warn');
 
@@ -215,8 +231,8 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
             .some(({ ruleId }) => ruleId === '@darraghor/nestjs-typed/controllers-should-supply-api-tags'),
     ).toBe(false);
     const packagePath = join(repository.root, 'package.json');
-    const manifest = JSON.parse(await Bun.file(packagePath).text()) as PackageJson;
-    await Bun.write(
+    const manifest = JSON.parse(await readFile(packagePath, 'utf8')) as PackageJson;
+    await writeFile(
         packagePath,
         JSON.stringify({ ...manifest, dependencies: { ...manifest.dependencies, '@nestjs/swagger': '11.2.3' } }),
     );
@@ -232,11 +248,10 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
 });
 
 test('nextjs > react-refresh knows the catchError wrapper of next/error', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
-            tables: '[[scope]]\npath = "web"\nconfigurations = [ "nextjs" ]\n',
+            scopes: [{ path: 'web', configurations: ['nextjs'] }],
         }),
         'package.json': '{"private":true,"type":"module"}\n',
         'web/app/layout.jsx': 'export const fontClass = "sans";\nexport default function Layout() { return null; }\n',
@@ -244,6 +259,7 @@ test('nextjs > react-refresh knows the catchError wrapper of next/error', async 
             "import { catchError } from 'next/error';\nfunction Panel() { return null; }\nexport default catchError(Panel, { fallback: () => null });\n",
         'web/components/mixed.jsx': 'export const count = 2;\nexport function Mixed() { return null; }\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     const config = (await eslint.calculateConfigForFile(
         join(sandbox.path, 'web/components/panel.jsx'),
@@ -263,14 +279,14 @@ test('nextjs > react-refresh knows the catchError wrapper of next/error', async 
 });
 
 test('react-dom > a scrollable region may take tabIndex, and an article may not', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript', 'react', 'react-dom']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'react', 'react-dom']),
         'package.json': '{"private":true,"type":"module"}\n',
         'log.jsx':
             'export function Log() {\n    return <div role="region" aria-label="Build log" tabIndex={0}>Done</div>;\n}\n',
         'story.jsx': 'export function Story() {\n    return <article tabIndex={0}>Text</article>;\n}\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     expect(
         await collectLintFindings(

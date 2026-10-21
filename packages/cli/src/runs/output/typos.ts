@@ -1,13 +1,12 @@
 // Reads spelling findings from Typos reports.
-import { z } from 'zod';
 import { resolve, relative } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
+import { parseReport } from '#cli/parsers/json.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { parseReport } from '#cli/runs/output/json.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { reportedTypoSchema } from '#cli/schemas/runs/output/typos.ts';
 import { type ReportInput, type ReportedTypo } from '#cli/types/runs/output.ts';
 
 // Read the lines of a source file as bytes, once per file, so byte offsets map to columns.
@@ -71,15 +70,6 @@ function readTypoFinding(
         ...position,
     };
 }
-
-const reportedTypoSchema = z.object({
-    type: z.literal('typo'),
-    path: z.string().min(1),
-    line_num: z.number().int().positive().optional(),
-    byte_offset: z.number().int().nonnegative(),
-    typo: z.string().min(1),
-    corrections: z.array(z.string()).nullable(),
-} satisfies SchemaShape<ReportedTypo>);
 
 /**
  * Read the JSON lines that typos prints. JSON keeps filename delimiters. Offsets count UTF-8 bytes,

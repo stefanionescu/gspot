@@ -5,15 +5,18 @@ import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
+import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { type Session } from '#cli/types/planning.ts';
-import { checkNextjsTsc } from '#cli/checks/nextjs.ts';
+import { generate } from '#cli/generation/generate.ts';
+import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
+import { runCheckImplementation } from '#cli/runs/check-run.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
@@ -104,7 +107,7 @@ test.each([
         using read = mockNextjsCommands();
         const { directories: folders, routesSeen } = read;
         const collectFindings = async () => {
-            const result = await checkNextjsTsc(session, planned);
+            const result = await runCheckImplementation(session, planned, selectCheckImplementation(planned.check));
             return result.findings;
         };
         const found = await collectFindings();
@@ -139,13 +142,13 @@ test("a failed type generation removes the scratch copy and keeps the developer'
     using resources = new DisposableStack();
 
     const message = 'Generator failed';
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['nextjs']),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['nextjs']),
         'package.json': '{"private":true}\n',
         'tsconfig.json': '{}\n',
         'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
     });
+
     const session = await openSession(folder.path);
     const planned = planRun(session, { stage: 'push', only: ['nextjs/tsc'] })[0]!;
     let scratch = '';
@@ -157,7 +160,9 @@ test("a failed type generation removes the scratch copy and keeps the developer'
             return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
         }),
     );
-    expect(await captureRejection(checkNextjsTsc(session, planned))).toContain(message);
+    expect(
+        await captureRejection(runCheckImplementation(session, planned, selectCheckImplementation(planned.check))),
+    ).toContain(message);
     expect(scratch).not.toBe('');
     expect(await isOnDisk(scratch)).toBe(false);
     expect(await readFile(join(folder.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
@@ -174,7 +179,7 @@ test("a failed type generation removes the scratch copy and keeps the developer'
 async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<Session> {
     const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;
     await createFileTree(sandboxRoot, {
-        'gspot.toml': buildSettingsText(['nextjs'], { level: 'all', tables: scopeTable }),
+        'gspot.toml': buildSandboxSettings(['nextjs'], { level: 'all', tables: scopeTable }),
         [join(scope, 'package.json')]: JSON.stringify({
             private: true,
             dependencies: { next: '16.3.5' },
@@ -189,8 +194,11 @@ async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<S
         'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
         'unrelated/private.txt': 'Preserve unrelated scope\n',
     });
-    const applied = await runGspot(sandboxRoot, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    {
+        const session = await openSession(sandboxRoot);
+        using writer = openWriter(sandboxRoot);
+        writeGeneratedFiles(session, generate(session), writer);
+    }
     commitAll(sandboxRoot);
     await writeFile(join(sandboxRoot, join(scope, '.next/local-cache.bin')), Buffer.from(NEXT_CACHE_BYTES));
     const session = await openSession(sandboxRoot);
@@ -218,7 +226,7 @@ test.each(['', 'apps/web'])(`Next.js reference compilation keeps the type genera
         return buildProcessResult();
     });
     const { directories: folders, commands } = read;
-    const result = await checkNextjsTsc(session, planned);
+    const result = await runCheckImplementation(session, planned, selectCheckImplementation(planned.check));
     expect(result).toMatchObject({ status: 'passed', findings: [] });
     expect(folders).toHaveLength(2);
     expect(new Set(folders).size).toBe(1);

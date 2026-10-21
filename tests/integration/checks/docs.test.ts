@@ -1,20 +1,19 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSandboxPath } from '#tests/setup/install.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import type { LinkFailure } from '#tests/types/tool-output.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { LINK_PAGE, ROOT_LINK_FILES, LINK_TEXT_CASES, LINK_SCOPE_SETTINGS } from '#tests/data/checks/docs.ts';
 
 // Checks the exit code, and the status and finding positions of the root and child scopes.
 async function assertLinkFailures(root: string, check: string, failures: readonly LinkFailure[]): Promise<void> {
-    const checked = await spawnGspot(root, ['check', '--only', check, '--json'], { PATH: buildSandboxPath() });
+    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json'], {}));
     expect(checked.code, checked.stdout + checked.stderr).toBe(failures.length === 0 ? 0 : 1);
-    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject(
+    expect(checked.report.checks).toMatchObject(
         ['', 'app'].map((scope) => {
             const expected = failures.filter((failure) => failure.scope === scope);
             return {
@@ -30,7 +29,7 @@ async function assertLinkFailures(root: string, check: string, failures: readonl
 // The link check must reject a missing text fragment and accept one that exists.
 async function assertTextFragments(root: string, check: string, target: string): Promise<void> {
     for (const { fragment, failures } of LINK_TEXT_CASES) {
-        await Bun.write(join(root, 'root.md'), `# Links\n\nRead [the page](${target}#:~:text=${fragment}).\n`);
+        await writeFile(join(root, 'root.md'), `# Links\n\nRead [the page](${target}#:~:text=${fragment}).\n`);
         await assertLinkFailures(root, check, failures);
     }
 }
@@ -53,7 +52,7 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
         const url = server.url.toString();
         const child = `# Links\n\nRead [the page](${url}page#setup).\n\n[Child endpoint](${url}child-only)\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText([], { tables: LINK_SCOPE_SETTINGS }),
+            'gspot.toml': buildSandboxSettings([], { tables: LINK_SCOPE_SETTINGS }),
             'root.md': `# Links\n\nRead [the page](${url}missing).\n\n[Root endpoint](${url}root-only)\n`,
             'app/guide.md': child,
             'page.html': LINK_PAGE,
@@ -67,9 +66,9 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
         expect(requests).toContain('/missing');
         expect(requests).not.toContain('/root-only');
         expect(requests).not.toContain('/child-only');
-        await Bun.write(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}child-only).\n`);
+        await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}child-only).\n`);
         await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
-        await Bun.write(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}page#setup).\n`);
+        await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}page#setup).\n`);
         await assertLinkFailures(sandbox.path, 'docs/lychee-external', []);
         const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
@@ -83,18 +82,18 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
 });
 
 test('docs/lychee reads a root-relative link from the repository root, and leaves a site route to the site', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, ROOT_LINK_FILES);
+    await using sandbox = await testdir(ROOT_LINK_FILES);
+
     commitAll(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'docs/lychee', '--json'];
-    const passed = await spawnGspot(sandbox.path, command, { PATH: buildSandboxPath() });
+    const passed = await spawnGspot(sandbox.path, command, {});
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    await Bun.write(join(sandbox.path, 'root.md'), '# Links\n\nRead [the setup guide](/guides/missing.md).\n');
-    const failed = await spawnGspot(sandbox.path, command, { PATH: buildSandboxPath() });
+    await writeFile(join(sandbox.path, 'root.md'), '# Links\n\nRead [the setup guide](/guides/missing.md).\n');
+    const failed = parseCheckReport(await spawnGspot(sandbox.path, command, {}));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual([
+    expect(failed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
         matchFields({ file: 'root.md', line: 3, column: 6 }),
     ]);
 });

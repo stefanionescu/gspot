@@ -1,99 +1,98 @@
 // Installs sandbox tools and runtimes and prepares locked tool projects.
-import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { join, delimiter } from 'node:path';
-import { isWindows } from '#tests/setup/system.ts';
+import { isOnDisk } from '#tests/setup/files.ts';
+import { hashContent } from '#cli/system/text.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import type { Level } from '#cli/types/configurations.ts';
+import { FOLDER_LINK_TYPE } from '#tests/setup/system.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import type { InstallContext } from '#cli/types/install.ts';
-import type { SandboxSettings } from '#tests/types/sandbox.ts';
+import { buildInitArguments } from '#tests/setup/builders.ts';
+import type { ProcessOutput } from '#tests/types/processes.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
+import { testModules, linkPackages } from '#tests/setup/modules.ts';
+import type { Sandbox, SandboxPlan } from '#tests/types/sandbox.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectLockfileName } from '#cli/install/npm/tool-project.ts';
-import { testModules, installedModules } from '#tests/setup/modules.ts';
-import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
+import { runtimeSettingsSchema } from '#tests/schemas/preparation.ts';
+import type { PackageManager } from '#cli/types/parsers/dependencies.ts';
 import { open, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
-import { MISE_TRUST, PINNED_TOOLS_FILE, TEST_RUN_FOLDER_NAME } from '#tests/data/test-setup.ts';
+import { MISE_TRUST, PINNED_TOOLS_FILE, TEST_RUN_HASH_LENGTH, TEST_RUN_FOLDER_NAME } from '#tests/data/test-setup.ts';
 
 /** Give a hook repository the Bun and Node pins of this repository; a clone keeps its committed file. */
 async function installRuntimes(root: string): Promise<void> {
-    if (!(await Bun.file(join(root, PINNED_TOOLS_FILE)).exists())) {
+    if (!(await isOnDisk(join(root, PINNED_TOOLS_FILE)))) {
         const runtimeSettings: unknown = parse(
             await readFile(join(import.meta.dir, '../..', PINNED_TOOLS_FILE), 'utf8'),
         );
-        const { tools } = z.object({ tools: z.object({ bun: z.string(), node: z.string() }) }).parse(runtimeSettings);
+        const { tools } = runtimeSettingsSchema.parse(runtimeSettings);
         await writeFile(join(root, PINNED_TOOLS_FILE), stringify({ tools }));
     }
     const trusted = await runCommand([...MISE_TRUST, PINNED_TOOLS_FILE], { cwd: root });
     if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
 }
 
-/** A `PATH` that puts the installed test package programs before system tools. */
-function buildToolsPath(): string {
-    return [join(testModules, '.bin'), join(installedModules, '.bin'), readEnvironmentVariable('PATH') ?? ''].join(
-        delimiter,
-    );
-}
+const repositoryRoot = join(import.meta.dir, '../..');
 
-/** The folder that holds the packages and tool paths of this test run. */
-function testRunFolder(): string {
-    return join(tmpdir(), TEST_RUN_FOLDER_NAME);
-}
-
-/** A `PATH` with the test run launcher first, then the installed tools. */
-function buildSandboxPath(): string {
-    const folder = testRunFolder();
-    return [join(folder, 'bin'), buildToolsPath()].join(delimiter);
-}
+/** The packages and tool paths of the test run for this checkout. */
+const TEST_RUN_FOLDER = join(
+    tmpdir(),
+    `${TEST_RUN_FOLDER_NAME}-${hashContent(repositoryRoot).slice(0, TEST_RUN_HASH_LENGTH)}`,
+);
 
 /** Run init in a sandbox, set its level and configurations, and install its tools. */
 async function installSandbox(
-    root: string,
-    commandArguments: string[],
-    environment: Record<string, string>,
-    settings: SandboxSettings = {},
-    prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>,
-): Promise<void> {
-    await runSandboxStep(root, commandArguments, environment, 'init');
-    if (settings.level !== undefined)
-        await runSandboxStep(root, ['set', 'level', settings.level], environment, 'level');
-    for (const configuration of settings.without ?? []) {
-        await runSandboxStep(root, ['remove', configuration], environment, 'remove');
-    }
-    await prepare?.(root, environment);
-    if (settings.install !== false) await runSandboxStep(root, ['install'], environment, 'install');
+    sandbox: Sandbox,
+    options: {
+        configurations: readonly string[];
+        level?: Level;
+        without?: readonly string[];
+        install?: false;
+        prepare?: SandboxPlan['prepare'];
+    },
+): Promise<ProcessOutput> {
+    const initialized = await runSandboxStep(sandbox, buildInitArguments([...options.configurations], { json: true }));
+    if (options.level !== undefined) await runSandboxStep(sandbox, ['set', 'level', options.level]);
+    for (const configuration of options.without ?? [])
+        await runSandboxStep(sandbox, [
+            'remove',
+            configuration,
+            '--reason',
+            'The sandbox exercises selected checks without this configuration.',
+        ]);
+    await options.prepare?.(sandbox.root, sandbox.environment);
+    if (options.install !== false) await runSandboxStep(sandbox, ['install']);
+    return initialized;
 }
 
 /** Run one gspot command in a sandbox and throw with its output when it fails. */
-async function runSandboxStep(
-    root: string,
-    commandArguments: string[],
-    environment: Record<string, string>,
-    step: string,
-): Promise<void> {
-    const result = await spawnGspot(root, commandArguments, environment);
-    if (result.code !== 0) throw new Error(`Sandbox ${step} failed: ${result.stdout}${result.stderr}`);
+async function runSandboxStep(sandbox: Sandbox, commandArguments: readonly string[]): Promise<ProcessOutput> {
+    const result = await sandbox.run(sandbox.root, commandArguments, sandbox.environment);
+    if (result.code !== 0) {
+        const message = `gspot ${commandArguments.join(' ')} failed in ${sandbox.root}:\n${result.stdout}${result.stderr}`;
+        throw new Error(message);
+    }
+    return result;
 }
 
 /** Run apply and install in a sandbox. */
 async function installToolProjects(root: string): Promise<void> {
-    const applied = await spawnGspot(root, ['apply']);
-    if (applied.code !== 0) throw new Error(`Sandbox apply failed: ${applied.stdout}${applied.stderr}`);
-    const installed = await spawnGspot(root, ['install']);
-    if (installed.code !== 0) throw new Error(`Sandbox install failed: ${installed.stdout}${installed.stderr}`);
+    const sandbox = { root, environment: {}, run: spawnGspot };
+    await runSandboxStep(sandbox, ['apply']);
+    await runSandboxStep(sandbox, ['install']);
 }
 
 /** Link the installed TypeScript package and its executable launchers. */
 async function installCompiler(root: string, folder = join(root, 'node_modules')): Promise<string> {
     await mkdir(folder, { recursive: true });
-    const kind = isWindows ? 'junction' : 'dir';
-    await symlink(await realpath(join(testModules, 'typescript')), join(folder, 'typescript'), kind);
-    await symlink(await realpath(join(testModules, '.bin')), join(folder, '.bin'), kind);
+    await linkPackages(folder, ['typescript']);
+    await symlink(await realpath(join(testModules, '.bin')), join(folder, '.bin'), FOLDER_LINK_TYPE);
     return [join(folder, '.bin'), readEnvironmentVariable('PATH') ?? ''].join(delimiter);
 }
 
@@ -133,12 +132,11 @@ function buildInstallContext(session: Session, writer: Writer): InstallContext {
 }
 
 export {
-    testRunFolder,
     runSandboxStep,
     installSandbox,
+    TEST_RUN_FOLDER,
     installRuntimes,
     installCompiler,
-    buildSandboxPath,
     installToolProjects,
     buildInstallContext,
     readToolProjectFiles,

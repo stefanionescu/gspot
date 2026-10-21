@@ -1,20 +1,23 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitOutput } from '#tests/setup/git.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { SORT_CASES, SORT_RULES, SORT_LEVELS } from '#tests/data/generation/eslint/sorting.ts';
 
 test('a bundler scope uses extensionless imports while the Node.js parent keeps .js suffixes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `configurations = ["javascript"]\n[[scope]]\npath = "app"\nconfigurations = ["react"]\n`,
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            rules: true,
+            scopes: [{ path: 'app', configurations: ['react'] }],
+        }),
         'source.js': '',
         'value.js': 'export const value = 1;\n',
         'app/source.js': '',
         'app/value.js': 'export const value = 1;\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     const source = 'import { value } from "./value";\n';
     await createFileTree(sandbox.path, { 'source.js': source, 'app/source.js': source });
@@ -28,11 +31,10 @@ test('a bundler scope uses extensionless imports while the Node.js parent keeps 
 test.each([...SORT_LEVELS])(
     'imports and exports are sorted at level all only, in root and child scopes ($level)',
     async ({ level, severity }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['typescript'], {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['typescript'], {
                 level,
-                tables: '[[scope]]\npath = "app"\nconfigurations = [ "typescript" ]\n',
+                scopes: [{ path: 'app', configurations: ['typescript'] }],
             }),
             'package.json': '{"private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
@@ -40,6 +42,7 @@ test.each([...SORT_LEVELS])(
             'src/source.ts': '',
             'app/src/source.ts': '',
         });
+
         const eslint = await createEslint(sandbox.path, {
             fix: ({ ruleId }) =>
                 (ruleId !== null && new Set<string>(SORT_RULES).has(ruleId)) ||
@@ -64,9 +67,11 @@ test.each([...SORT_LEVELS])(
 );
 
 test('a bundler scope drops only code suffixes, and its Node scripts keep every suffix', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `configurations = ["javascript"]\n[[scope]]\npath = "app"\nconfigurations = ["react"]\n`,
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            rules: true,
+            scopes: [{ path: 'app', configurations: ['react'] }],
+        }),
         'app/value.js': 'export const value = 1;\n',
         'app/styles.css': '.card { color: red; }\n',
         'app/data.json': '{"value":1}\n',
@@ -74,6 +79,7 @@ test('a bundler scope drops only code suffixes, and its Node scripts keep every 
         'app/source.js': '',
         'app/tool.mjs': '',
     });
+
     const eslint = await createEslint(sandbox.path, { fix: true });
     const rules = ['n/file-extension-in-import'];
     const bundled =
@@ -92,15 +98,15 @@ test('a bundler scope drops only code suffixes, and its Node scripts keep every 
 });
 
 test('a Node script imports through package.json imports, never through TypeScript paths', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript'], { level: 'all' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module","imports":{"#src/*":"./src/*"}}',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"paths":{"@/*":["./src/*"]}},"include":["src/**/*.ts"]}',
         'src/app/value.mjs': 'export const value = 1;\n',
         'src/app/entry.ts': '',
         'tools/run/tool.mjs': '',
     });
+
     const eslint = await createEslint(sandbox.path, { fix: ({ ruleId }) => ruleId === 'gspot/import-boundaries' });
     const [fixed] = await eslint.lintText('import { value } from "../../src/app/value.mjs";\nexport { value };\n', {
         filePath: 'tools/run/tool.mjs',
@@ -109,12 +115,12 @@ test('a Node script imports through package.json imports, never through TypeScri
 });
 
 test('import-x never parses a gitignored bundle that code imports', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript']),
         '.gitignore': 'node_modules/\n.open-next/\n',
         'worker.js': '',
     });
+
     readGitOutput(sandbox.path, ['init', '-q']);
     readGitOutput(sandbox.path, ['add', '--', '.gitignore', 'worker.js', 'gspot.toml']);
     const eslint = await createEslint(sandbox.path);

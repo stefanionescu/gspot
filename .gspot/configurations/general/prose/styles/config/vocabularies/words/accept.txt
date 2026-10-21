@@ -4,9 +4,9 @@ actionlint
 ajv
 ASD
 astro-check
+axe
 Bash
 Bun
-capitalisation
 CI
 Cloudflare
 commitlint
@@ -40,13 +40,11 @@ globals
 gspot
 HTML
 html-validate
-Icons
 IIF
 JavaScript
 jscpd
 JSON
 knip
-LICENCE
 license-checker-rseidelsohn
 linkinator
 Linux
@@ -62,6 +60,7 @@ NGINX
 node
 Node
 npm
+optin
 osv-scanner
 picomatch
 pip-licenses

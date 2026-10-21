@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { checkFindings } from '#tests/setup/check-input.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { RLS_SOURCE, GRANT_FILES, FROZEN_GRANTS } from '#tests/data/checks/postgres.ts';
 
 test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the newer ones', async (scope) => {
@@ -16,7 +16,7 @@ test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the
     for (const { through, files } of FROZEN_GRANTS) {
         await writeFile(
             join(sandbox.path, 'gspot.toml'),
-            buildSettingsText(['postgres'], {
+            buildSandboxSettings(['postgres'], {
                 level,
                 tables: `[postgres]\nfrozen_through = "${through}"\n[[scope]]\npath = "app"\nconfigurations = ["postgres"]\n`,
             }),
@@ -37,9 +37,10 @@ test.each(['', 'app'])(
         const prefix = scope === '' ? '' : `${scope}/`;
         const path = `${prefix}migrations/1_tables.sql`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['postgres'], {
+            'gspot.toml': buildSandboxSettings(['postgres'], {
                 level,
-                tables: '[postgres]\nclient_schemas = ["public"]\n[[scope]]\npath = "app"\nconfigurations = ["postgres"]\n',
+                tables: '[postgres]\nclient_schemas = ["public"]\n',
+                scopes: [{ path: 'app', configurations: ['postgres'] }],
             }),
             [path]: RLS_SOURCE,
         });

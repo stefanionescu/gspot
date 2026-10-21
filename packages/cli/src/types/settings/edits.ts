@@ -5,11 +5,9 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 
 export type SettingsFileContents = { text: string; original: FileContents };
 
-export type SettingsEdit = { text: string; table: TomlTable; values: TomlTable; original: FileContents };
+export type SettingsEdit = { text: string; table: TomlTable; original: FileContents };
 
 export type EditedSettings = { text: string; settings: Settings; changed: boolean };
-
-export type Mutation = (written: TomlTable) => void;
 
 export type SettingKey = { path: string[]; name: string };
 

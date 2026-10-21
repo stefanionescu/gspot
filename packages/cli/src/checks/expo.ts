@@ -4,9 +4,11 @@ import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 import {
     FAILED_CHECK,
@@ -18,7 +20,7 @@ import {
 
 function hasInstalledExpo(scopeRoot: string): boolean {
     try {
-        createRequire(join(scopeRoot, 'package.json')).resolve(EXPO_PACKAGE_JSON);
+        createRequire(join(scopeRoot, PACKAGE_JSON)).resolve(EXPO_PACKAGE_JSON);
         return true;
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND') return false;
@@ -55,22 +57,23 @@ function parseExpoDoctor(stdout: string): string[] {
 /**
  * Runs Expo Doctor in a scope that depends on expo.
  *
- * @param input the scope to check.
+ * @param session the repository and its tools.
+ * @param planned the scope to check.
  * @returns one finding per failed Doctor check.
  */
-export async function checkExpoDoctor(input: CheckInput): Promise<Finding[]> {
-    const path = joinScope(input.selection.scope.path, 'package.json');
+export async function checkExpoDoctor(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const path = joinScope(planned.selection.scope.path, PACKAGE_JSON);
     // Doctor exits 0 without reading a project whose expo package does not exist, so check the project first.
-    if (!hasInstalledExpo(join(input.root, input.selection.scope.path)))
+    if (!hasInstalledExpo(join(session.root, planned.selection.scope.path)))
         throw new GspotError(
             'tool',
             'Expo is not installed in this scope; Expo Doctor reads an installed Expo project.',
         );
-    const result = await runCheckTool(input, EXPO_DOCTOR_COMMAND, {
-        cwd: join(input.root, input.selection.scope.path),
+    const result = await runCheckTool(session, planned, EXPO_DOCTOR_COMMAND, {
+        cwd: join(session.root, planned.selection.scope.path),
     });
     const findings = parseExpoDoctor(result.stdout).map((message) =>
-        buildFinding(input, { file: path, line: 1 }, 'failed-check', message),
+        buildFinding(planned, { file: path, line: 1 }, 'failed-check', message),
     );
     return assertToolFindings(result, findings, 'expo-doctor');
 }

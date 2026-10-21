@@ -1,5 +1,4 @@
 import ts from 'typescript';
-import { checkInput } from '#cli/runs/built-in.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { findScope } from '#cli/repository/scopes.ts';
@@ -12,15 +11,15 @@ import { extractToolFileName } from '#cli/planning/files.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { copyCheckIntoScratch } from '#cli/runs/copy/files.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
 import type { WholeToolFile } from '#cli/types/generation/files.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { buildJsconfig } from '#cli/generation/tool-files/jsconfig.ts';
+import { buildJsconfig } from '#cli/generation/settings/jsconfig.ts';
+import { formatScopeTarget } from '#cli/generation/settings/generate.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { formatScopeTarget } from '#cli/generation/tool-files/generate.ts';
 import { readToolFileDeclaration } from '#cli/runs/command/placeholders.ts';
 import { type TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
-import { checkCopyInputs, copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { readTsconfig, listSourceFiles, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 
@@ -91,10 +90,6 @@ function buildScopeCompilerProject(
 }
 
 // A project with references builds them first; a project without them needs no prerequisites.
-function selectReferenceProject(project: ReturnType<typeof readTsconfigProject>) {
-    return (project?.config.projectReferences ?? []).length > 0 ? project : undefined;
-}
-
 /**
  * Finds the generated jsconfig of a scope without parsing the authored options of another scope.
  *
@@ -136,12 +131,12 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
     const project = readTsconfigProject(
         session.root,
         planned.selection.scope.path,
-        listCoveredInputs(session, planned)
+        listCoveredInputs(session.scopes, planned)
             .filter((file) => file.tags.includes('typescript'))
             .map((file) => file.path),
         session.reads,
     );
-    const references = selectReferenceProject(project);
+    const references = (project?.config.projectReferences ?? []).length > 0 ? project : undefined;
     const prerequisites =
         references === undefined
             ? []
@@ -153,9 +148,9 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
                   ]),
               );
     using source =
-        references === undefined
-            ? createScratchFolder()
-            : await copyIntoScratch(checkCopyInputs(checkInput(session, planned), prerequisites));
+        references === undefined ? createScratchFolder() : await copyCheckIntoScratch(session, planned, prerequisites);
+    let scratchSession = session;
+    let scopeProject = project;
     if (references !== undefined) {
         writeReferenceProjects({
             root: session.root,
@@ -163,17 +158,10 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
             reads: session.reads,
             projects: references.projects,
         });
+        scratchSession = { ...session, root: source.path, reads: createReadCache(source.path) };
+        scopeProject = { ...references, path: join(source.path, relative(session.root, references.path)) };
     }
-    const scratchSession =
-        references === undefined ? session : { ...session, root: source.path, reads: createReadCache(source.path) };
-    const result = await runTsc(
-        scratchSession,
-        planned,
-        source.path,
-        references === undefined || project === undefined
-            ? project
-            : { ...project, path: join(source.path, relative(session.root, project.path)) },
-    );
+    const result = await runTsc(scratchSession, planned, source.path, scopeProject);
     return restoreCommandPaths(result, source.path, session.root);
 }
 
@@ -186,7 +174,8 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
  */
 export async function checkJavascriptTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.selection.scope.path;
-    if (listCoveredInputs(session, planned).length === 0) return { ...buildBaseResult(planned, session), fileCount: 0 };
+    if (listCoveredInputs(session.scopes, planned).length === 0)
+        return { ...buildBaseResult(planned, session), fileCount: 0 };
     const target = findJavascriptProject(session, planned);
     const generated = readTsconfig(session.root, join(session.root, target), session.reads);
     if (generated === undefined) throw new Error(`Missing JavaScript tool file: ${target}`);
@@ -196,7 +185,7 @@ export async function checkJavascriptTsc(session: Session, planned: PlannedCheck
     };
     if (project.fileNames.length === 0) return { ...buildBaseResult(planned, session), fileCount: 0 };
     const prerequisites = listCompilerInputs(session, [[scope, project]]);
-    using folder = await copyIntoScratch(checkCopyInputs(checkInput(session, planned), [target, ...prerequisites]));
+    using folder = await copyCheckIntoScratch(session, planned, [target, ...prerequisites]);
     const scratch = folder.path;
     const generatedPath = join(scratch, target);
     chmodSync(generatedPath, PRIVATE_FILE);
@@ -218,7 +207,7 @@ export async function checkJavascriptTsc(session: Session, planned: PlannedCheck
     const command = [...JAVASCRIPT_TSC_COMMAND, generatedPath, ...TSC_PLAIN_OUTPUT];
     appendBuildMetadata(command, project.options, scratch, JSCONFIG_TSBUILDINFO);
     const result = await runCheckCommand(session, planned, {
-        command: command,
+        command,
         scratchRoot: scratch,
     });
     return restoreCommandPaths(result, scratch, session.root);

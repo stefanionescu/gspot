@@ -1,9 +1,7 @@
 import { Query, type Node } from 'web-tree-sitter';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { CheckInput } from '#cli/types/runs/check.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
-import { isInGspotFolder } from '#cli/repository/classify.ts';
-import type { SourceInput } from '#cli/types/parsers/tree-sitter.ts';
+import { parseSource } from '#cli/parsers/grammars.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { CountedLanguage, ConventionSource } from '#cli/types/checks/structure.ts';
 import { CONVENTION_QUERIES, LANGUAGE_BY_EXTENSION } from '#cli/config/checks/structure.ts';
@@ -31,18 +29,20 @@ function captureSource(source: ConventionSource): void {
 /**
  * Parses Bash, Python, and Swift sources and collects their convention captures.
  *
- * @param input the scope files to parse.
+ * @param session the repository reads and parse resources.
+ * @param planned the scope files to parse.
  * @returns the convention sources, with live syntax trees.
  */
 async function readConventionSources(
-    input: Omit<SourceInput, 'files'> & Pick<CheckInput, 'files' | 'selection'>,
+    session: Pick<Session, 'root' | 'reads' | 'resources'>,
+    planned: Pick<PlannedCheck, 'files' | 'selection'>,
 ): Promise<ConventionSource[]> {
     const sources: ConventionSource[] = [];
     try {
-        for (const file of input.files.filter((entry) => entry.kind === 'source' && !isInGspotFolder(entry.path))) {
+        for (const file of planned.files.filter((entry) => entry.kind === 'source')) {
             const language = detectLanguage(file);
-            if (language === undefined || !input.selection.view.configurations.includes(language)) continue;
-            const tree = await parseSource(language, readCachedBytes(input.reads, file.path).toString('utf8'), input);
+            if (language === undefined || !planned.selection.view.configurations.includes(language)) continue;
+            const tree = await parseSource(language, readCachedText(session.reads, file.path), session);
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
             sources.push(source);
             captureSource(source);
@@ -64,4 +64,15 @@ function releaseConventionSources(sources: ConventionSource[]): void {
 }
 
 /** Lets every convention check share one parse of each file. */
-export const CONVENTION_SOURCES = { read: readConventionSources, dispose: releaseConventionSources };
+export const CONVENTION_SOURCES = {
+    read: ({
+        root,
+        reads,
+        resources,
+        files,
+        selection,
+    }: Pick<Session, 'root' | 'reads' | 'resources'> & Pick<PlannedCheck, 'files' | 'selection'>): Promise<
+        ConventionSource[]
+    > => readConventionSources({ root, reads, resources }, { files, selection }),
+    dispose: releaseConventionSources,
+};

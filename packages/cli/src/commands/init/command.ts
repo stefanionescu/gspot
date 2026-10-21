@@ -4,32 +4,30 @@ import { openSession } from '#cli/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { readText } from '#cli/system/files/reads.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { DRY_RUN_NOTE } from '#cli/config/terminal.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { readTemplate } from '#cli/settings/templates.ts';
 import { print, getColors } from '#cli/system/terminal.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { type FileContents } from '#cli/types/system/files.ts';
-import { readFormatTables } from '#cli/commands/init/format.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { readManifests } from '#cli/configurations/manifests.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { planReplacedFiles } from '#cli/commands/init/replace.ts';
+import { INIT_INSTALL_NOTES } from '#cli/config/commands/init.ts';
 import { writePlans, openWriter } from '#cli/ownership/writer.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
-import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { readExistingTools } from '#cli/repository/existing-tools.ts';
-import type { ExistingTools } from '#cli/types/repository/inventory.ts';
 import { listForeignDisableComments } from '#cli/commands/init/disable-comments.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { INIT_INSTALL_NOTES, INIT_TEMPLATE_DEFAULTS } from '#cli/config/commands/init.ts';
 import { buildInitPlan, formatInitPlan, formatDetection } from '#cli/commands/init/plan.ts';
 import { detectCiProvider, buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
 
@@ -42,18 +40,6 @@ import {
     type DetectionSummary,
 } from '#cli/types/commands/init.ts';
 
-function buildInitAnswers(root: string, options: InitOptions, existingTools: ExistingTools): InitAnswers {
-    const template = options.template === undefined ? INIT_TEMPLATE_DEFAULTS : options.template.tables;
-    const { ci: templateCi } = template;
-    const hooks = settingsSchema.shape.hooks.unwrap().shape.enabled.parse(template.hooks?.enabled);
-    const rules = settingsSchema.shape.rules.unwrap().shape.enabled.parse(template.rules?.enabled);
-    let ci: InitAnswers['ci'] = 'none';
-    if (options.template === undefined) ci = detectCiProvider(root, existingTools);
-    else if (templateCi?.enabled === true)
-        ci = settingsSchema.shape.ci.unwrap().in.shape.provider.parse(templateCi.provider);
-    return { hooks, ci, rules };
-}
-
 /**
  * Detect configurations, show the plan, and write the files after you accept it.
  *
@@ -62,26 +48,26 @@ function buildInitAnswers(root: string, options: InitOptions, existingTools: Exi
  */
 async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
     const root = findRoot(options.cwd);
-    if (readText(root, SETTINGS_FILE) !== undefined)
+    if (findText(root, SETTINGS_FILE) !== undefined)
         throw new GspotError(
             'settings',
             'This repository already has a gspot.toml. Run `gspot doctor` to inspect its setup and see suggested commands.',
         );
-    let effective = options;
-    if (options.from !== undefined) {
-        const template = await readTemplate(options.from, options.cwd);
-        effective = { ...options, template };
-    }
-    const prepared = await planInit(root, effective);
+    const prepared = await planInit(root, options);
     const { plan, settingsText } = prepared;
     print(formatDetection(prepared.detection));
     print(formatInitPlan(plan));
     if (options.isDryRun) {
-        print('Dry run: nothing was written.\n');
-        return { text: '', json: { root, plan, settings: settingsText, dryRun: true }, exitCode: 0 };
+        print(`${DRY_RUN_NOTE}\n`);
+        return { text: '', json: { root, plan, settings: settingsText, written: false }, exitCode: 0 };
     }
     const accepted = await askConfirmation({ yes: options.yes });
-    if (!accepted) return { text: 'Nothing written.\n', json: { root, plan, written: false }, exitCode: 0 };
+    if (!accepted)
+        return {
+            text: 'Nothing written.\n',
+            json: { root, plan, settings: settingsText, written: false },
+            exitCode: 0,
+        };
     const written = writeInitFiles(root, prepared);
     written.push('Next: run gspot install to install the tools and turn on the Git hooks.');
     return {
@@ -90,6 +76,7 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
             root,
             plan,
             settings: settingsText,
+            written: true,
         },
         exitCode: 0,
     };
@@ -108,7 +95,6 @@ function registerInit(program: Command, onResult: CommandCompletion): void {
         .description(COMMAND_HELP.init.description)
         .option('--yes', COMMAND_HELP.init.options['--yes'])
         .option('--dry-run', COMMAND_HELP.init.options['--dry-run'])
-        .option('--from <template>', COMMAND_HELP.init.options['--from <template>'])
         .option('--configurations <names...>', COMMAND_HELP.init.options['--configurations <names...>'])
         .option('--no-configurations', COMMAND_HELP.init.options['--no-configurations'])
         .addOption(new Option('--level <level>', COMMAND_HELP.init.options['--level <level>']).choices(LEVELS))
@@ -124,7 +110,6 @@ function registerInit(program: Command, onResult: CommandCompletion): void {
                     yes: flags.yes === true,
                     isDryRun: flags.dryRun === true,
                     ...stripUndefined({
-                        from: flags.from,
                         level: flags.level,
                         configurations: flags.configurations === false ? [] : flags.configurations,
                     }),
@@ -137,25 +122,20 @@ function registerInit(program: Command, onResult: CommandCompletion): void {
  * Read the repository and build the plan that init shows before it writes.
  *
  * @param repositoryRoot the folder whose files decide detection and tool replacement.
- * @param options the flags, with the answers of a template folded in.
+ * @param options the flags.
  * @returns the plan, the settings text, and the files it read.
  */
 async function planInit(repositoryRoot: string, options: InitOptions): Promise<InitPrepared> {
     const reads = createReadCache(repositoryRoot);
-    const manifests = readManifests(reads);
+    const manifests = readManifests();
     const repository = await readRepository(reads, { declarations: [], scopes: [], manifests });
-    const dependencyFiles = repository.dependencyFiles;
-    const scopes = repository.scopes;
-    const inputs = { root: repositoryRoot, repository, dependencyFiles, scopes, manifests };
-    const selection = selectForInit({ ...inputs, options });
-    const existingTools = readExistingTools(repositoryRoot, repository.files, dependencyFiles, reads);
-    const answers = buildInitAnswers(repositoryRoot, options, existingTools);
-    const draft = buildSettingsDraft(selection, answers);
-    const effective = { ...draft, ...stripUndefined({ template: options.template, level: options.level }) };
-    const formats = readFormatTables(effective, repository, manifests, dependencyFiles);
-    const settingsText = buildInitSettings(effective, repository, manifests, formats);
-    const settings = parseSettings(settingsText, repositoryRoot, reads);
-    const session = await openSession(repositoryRoot, { settings, text: settingsText });
+    const selection = selectForInit({ repository, manifests, options });
+    const existingTools = readExistingTools(reads, repository);
+    const answers: InitAnswers = { hooks: true, rules: true, ci: detectCiProvider(repositoryRoot, existingTools) };
+    const draft = buildSettingsDraft(selection, answers, options);
+    const settingsText = buildInitSettings(draft, repository, manifests);
+    const settings = parseSettings(settingsText, repositoryRoot);
+    const session = await openSession(repositoryRoot, { settingsFile: { settings, text: settingsText } });
     const everySelected = listSelectedManifests(session.scopes);
     const applicable = session.neededToolManifests;
     const tools = new Set(applicable.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
@@ -173,12 +153,10 @@ async function planInit(repositoryRoot: string, options: InitOptions): Promise<I
         hasGit: repository.hasGit,
     };
     const generated = generate(session);
-    const replaced = planReplacedFiles(repositoryRoot, existingTools, tools, generated.fileEdits);
+    const replaced = planReplacedFiles(repositoryRoot, existingTools, tools, generated.fileSettings);
     const planning: InitPlanInputs = {
         reads,
-        root: repositoryRoot,
-        hasGit: repository.hasGit,
-        index: session.repository.index,
+        repository: session.repository,
         options,
         existingTools,
         selection,
@@ -241,7 +219,7 @@ function writeInitFiles(repositoryRoot: string, prepared: InitPrepared): string[
     const applied = writeGeneratedFiles(session, generated, writer, { reviewedOriginals: prepared.read });
     const kept = deleteReplacedFiles(writer, prepared.deleted, prepared.read);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
-    const version = getColors().dim(`gspot ${session.version}`);
+    const version = getColors().dim(`gspot ${packageManifest.version}`);
     return [
         'written: gspot.toml, .gspot/',
         ...applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note)),

@@ -32,45 +32,8 @@ const TOML_FORMAT = { updateOrder: true, bracketSpacing: true, trailingComma: fa
 /** Parse errors show the location, the source line, and a caret. */
 const PARSE_CONTEXT_LINES = 3;
 
-const TEMPLATE_COMMENT_PREFIX = '# Copied from template ';
-const METADATA_PREFIXES = [TEMPLATE_COMMENT_PREFIX] as const;
 const SCHEMA_URL = 'https://generativespotting.com/gspot.schema.json';
 const SCHEMA_FILE = 'gspot.schema.json';
-
-const RECORD_FIELDS = {
-    scope: ['path', 'configurations', 'removed_configurations', 'test_files'],
-    command_check: ['name', 'command', 'paths', 'outputs', 'stage', 'summary', 'help', 'fix', 'exit_codes', 'output'],
-    ignore: ['check', 'rule', 'names', 'paths', 'reason', 'until'],
-    import_rule: ['name', 'paths', 'can_also_import', 'can_import'],
-    'format.override': [
-        'paths',
-        'indent_style',
-        'indent_width',
-        'print_width',
-        'line_ending',
-        'final_newline',
-        'quotes',
-        'trailing_commas',
-        'semicolons',
-    ],
-    'naming.override': [
-        'paths',
-        'languages',
-        'categories',
-        'ignored_prefix',
-        'ignored_names_pattern',
-        'allow_digits',
-        'allow_repeated_words',
-        'allowed_names',
-        'cases',
-        'reason',
-    ],
-    'coverage.swift_target': ['name', 'lines', 'reason'],
-    'licenses.allowed_package': ['name', 'version', 'reason'],
-    'site.size_limit': ['paths', 'kilobytes'],
-    'tools.eslint.override': ['paths', 'rules', 'runtime'],
-    'tools.v8r.schema': ['paths', 'url'],
-} as const;
 
 const IGNORE_IDENTITY_FIELDS = ['check', 'rule', 'reason'] as const;
 const TOML_ASSIGNMENT_FORMAT = { ...TOML_FORMAT, inlineTableStart: 0 } as const;
@@ -83,14 +46,11 @@ export {
     LAST_TABLES,
     SCHEMA_FILE,
     FIRST_TABLES,
-    RECORD_FIELDS,
-    METADATA_PREFIXES,
     TOML_HEADER_FORMAT,
     PARSE_CONTEXT_LINES,
     IGNORE_IDENTITY_FIELDS,
     TOML_ASSIGNMENT_FORMAT,
     SETTINGS_REFERENCE_URL,
-    TEMPLATE_COMMENT_PREFIX,
 };
 
 /** The commands that change gspot.toml. */

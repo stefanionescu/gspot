@@ -6,12 +6,11 @@ import { useExecutable } from '#tests/setup/processes.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import { EXECUTABLE_MODE } from '#tests/data/test-setup.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import type { spawnProcess } from '#cli/system/processes.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { NPM_TOOL_FOLDER } from '#tests/data/install/installation.ts';
+import { GSPOT_NODE_MODULES_PATH } from '#cli/config/system/locations.ts';
 
 /**
  * Replace one child command and run the others normally.
@@ -78,10 +77,10 @@ export async function fakeTool(sandboxRoot: string, name: string, script: string
 
 /** Write the package.json and a version program for the pinned npm tool. */
 export async function fakeNpmTool(root: string, tool: string): Promise<ToolDeclaration> {
-    const declaration = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), tool);
+    const declaration = getToolDeclaration(readManifests().values(), tool);
     const installer = declaration.installers['npm'];
     if (installer === undefined) throw new Error(`The tool ${tool} has no npm installer.`);
-    const installed = join(root, NPM_TOOL_FOLDER, installer.name);
+    const installed = join(root, GSPOT_NODE_MODULES_PATH, installer.name);
     await mkdir(installed, { recursive: true });
     await writeFile(
         join(installed, 'package.json'),
@@ -89,7 +88,7 @@ export async function fakeNpmTool(root: string, tool: string): Promise<ToolDecla
     );
     await fakeTool(
         root,
-        `${NPM_TOOL_FOLDER}/.bin/${tool}`,
+        `${GSPOT_NODE_MODULES_PATH}/.bin/${tool}`,
         `console.log(${JSON.stringify(declaration.version)}); process.exitCode = ${String(declaration.version_exit_code ?? 0)};`,
     );
     return declaration;

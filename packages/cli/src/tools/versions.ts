@@ -10,11 +10,11 @@ import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { TOOL_ENV, NO_VERSION, VERSION_FLAG } from '#cli/config/tools/run.ts';
-import type { ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts';
 import { readHostPackage, readToolProjectPackage } from '#cli/repository/packages.ts';
+import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools/find.ts';
 
 // Find the version that the first package.json above a folder declares for the named package, searching upward.
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
@@ -104,27 +104,19 @@ function classifyToolVersion(
 /**
  * Read version output, using installed npm metadata when the declared package supplies the executable.
  *
- * @param installationRoot the boundary for validating installed npm metadata before the version query.
- * @param cwd the project working folder.
+ * @param inspected the tool, installed metadata boundary, working folder, and query timeout.
  * @param path the resolved executable.
- * @param tool the declared version query and package.
- * @param timeoutSeconds the maximum time allowed for the version query.
  *
  * @returns the version or the query failure.
  */
-function readToolVersion(
-    installationRoot: string,
-    cwd: string,
-    path: string,
-    tool: ToolDeclaration,
-    timeoutSeconds: number,
-): ParsedToolVersion {
+function readToolVersion(inspected: InspectedTool, path: string): ParsedToolVersion {
+    const { root, cwd, tool, timeoutSeconds } = inspected;
     const npm = tool.installers['npm'];
-    const installedVersion = readPackageVersion(installationRoot, path, npm?.name);
+    const installedVersion = readPackageVersion(root, path, npm?.name);
     const result = spawnProcessBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
         cwd,
-        timeoutSeconds: timeoutSeconds,
-        env: { ...TOOL_ENV, ...tool.env },
+        timeoutSeconds,
+        env: TOOL_ENV,
     });
     return parseVersionOutput(tool, result, installedVersion);
 }
@@ -152,7 +144,11 @@ function isBelowFloor(found: string | undefined, floor: string | undefined): boo
  *
  * @returns the parsed version or its inspection failure.
  */
-function parseVersionOutput(tool: ToolDeclaration, result: SpawnResult, installedVersion?: string): ParsedToolVersion {
+function parseVersionOutput(
+    tool: ToolDeclaration,
+    result: SpawnResult,
+    installedVersion: string | undefined,
+): ParsedToolVersion {
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
     // An npm tool reports the version its package declares.

@@ -47,15 +47,6 @@ export const LOCKFILES = [
 
 export const PNPM_ROOT_IMPORTER = '.';
 
-export const LOCKED_PACKAGE_LOCKFILES = [
-    'package-lock.json',
-    'npm-shrinkwrap.json',
-    'bun.lock',
-    'pnpm-lock.yaml',
-    'yarn.lock',
-    'uv.lock',
-] as const;
-
 export const JAVASCRIPT_LOCKFILES = [
     'bun.lock',
     'pnpm-lock.yaml',
@@ -64,6 +55,7 @@ export const JAVASCRIPT_LOCKFILES = [
     'npm-shrinkwrap.json',
 ] as const;
 export const PYTHON_LOCKFILES = ['uv.lock'] as const;
+export const LOCKED_PACKAGE_LOCKFILES = [...JAVASCRIPT_LOCKFILES, ...PYTHON_LOCKFILES] as const;
 
 export const NPM_PACKAGE_FOLDER = 'node_modules/';
 

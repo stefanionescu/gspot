@@ -6,5 +6,4 @@ export const VERSION_PIN_COMMANDS: ReadonlySet<string> = new Set([
     'ignore',
     'unignore',
     'install',
-    'export',
 ]);

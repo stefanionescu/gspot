@@ -1,30 +1,25 @@
 import type { Session } from '#cli/types/planning.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
-import type { Template } from '#cli/types/settings/templates.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
 import type { Scope, Repository, TrackedFile, ExistingTools } from '#cli/types/repository/inventory.ts';
 
 type InitPlanInputs = {
     reads: ReadCache;
-    root: string;
-    hasGit: boolean;
-    index: Repository['index'];
+    repository: Repository;
     options: InitOptions;
     existingTools: ExistingTools;
     selection: InitSelection;
     everySelected: Manifest[];
     answers: InitAnswers;
     replaced: ReplacedFiles;
-    foreignDisableComments: { path: string; note: string }[];
+    foreignDisableComments: InitFileRow[];
 };
 
 type InitPlan = {
     level: Level;
-    template?: { source: string; digest: string; detected: string[] };
     configurations: { configuration: string; how: ConfigurationReason; checks: number; checksOff: number }[];
     write: InitFileRow[];
     delete: InitFileRow[];
@@ -42,13 +37,12 @@ type ReplacedFiles = {
 };
 
 type SettingsDraft = InitAnswers & {
-    template?: Template;
     level?: Level;
     configurations: string[];
     scopes: Scope[];
 };
 
-/** The defaults or template values init uses. */
+/** The integration choices init uses. */
 type InitAnswers = {
     hooks: boolean;
     ci: CiChoice;
@@ -67,13 +61,7 @@ type InitPrepared = {
 };
 
 /** The JSON the init command prints: the plan and the settings it wrote or showed in a dry run. */
-type InitJson = {
-    root?: string;
-    plan?: InitPlan;
-    settings?: string;
-    dryRun?: boolean;
-    written?: boolean;
-};
+type InitJson = { root: string; plan: InitPlan; settings: string; written: boolean };
 
 type DetectionSummary = {
     files: TrackedFile[];
@@ -98,22 +86,9 @@ type InitOptions = {
     isDryRun: boolean;
     level?: Level;
     configurations?: string[];
-    from?: string;
-    template?: Template;
 };
 
 type ConfigurationReason = 'named' | 'detected' | 'suggested' | 'required';
-
-/** What init selection reads. */
-type InitDetection = {
-    root: string;
-    manifests: Map<string, Manifest>;
-    files: TrackedFile[];
-    dependencyFiles: DependencyFile[];
-    options: Pick<InitOptions, 'configurations' | 'template'>;
-    /** Whether the folder contains a Git repository; a configuration whose checks all read Git stays out otherwise. */
-    hasGit: boolean;
-};
 
 /** The configurations init selects: at the root, per scope, and the closure of both. */
 type InitSelection = {
@@ -127,12 +102,9 @@ type InitSelection = {
 
 /** The inputs to init selection. */
 type InitInputs = {
-    root: string;
     repository: Repository;
-    dependencyFiles: DependencyFile[];
-    scopes: Scope[];
     manifests: Map<string, Manifest>;
-    options: Pick<InitOptions, 'configurations' | 'template'>;
+    options: Pick<InitOptions, 'configurations'>;
 };
 
 /** Explicit, detected, and recommended choices, to explain the init selection. */
@@ -145,6 +117,13 @@ type InitFormatOptions = {
     overrides?: { files: string | string[]; options: Omit<InitFormatOptions, 'overrides'> }[] | undefined;
 };
 
+type RuffFormatOptions = { 'quote-style'?: string | undefined };
+
+type RuffFormatSettings = {
+    format?: RuffFormatOptions | undefined;
+    tool?: { ruff?: { format?: RuffFormatOptions | undefined } | undefined } | undefined;
+};
+
 export type {
     InitPlan,
     InitJson,
@@ -155,11 +134,11 @@ export type {
     InitPrepared,
     ReplacedFiles,
     SettingsDraft,
-    InitDetection,
     InitSelection,
     InitPlanInputs,
     DetectionSummary,
     InitFormatOptions,
+    RuffFormatSettings,
     ConfigurationReason,
     ConfigurationChoices,
 };

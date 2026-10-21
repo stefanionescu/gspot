@@ -42,7 +42,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
         tags: file.tags,
         configurations: configurations.map((manifest) => manifest.configuration.name),
         checks: session.configuredChecks
-            .filter((check) => listCoveredInputs(session, check).some((entry) => entry.path === file.path))
+            .filter((check) => listCoveredInputs(session.scopes, check).some((entry) => entry.path === file.path))
             .map((check) => ({
                 check: check.check.name,
                 stage: check.check.stage,
@@ -57,8 +57,8 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
                 ...(entry.rule === undefined ? {} : { rule: entry.rule }),
                 reason: entry.reason,
             })),
+        fileKindOrigin: file.kindOrigin,
     };
-    if (file.kindOrigin !== undefined) report.fileKindOrigin = file.kindOrigin;
     const unchecked = formatUncheckedKind(file);
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (report.checks.length === 0 && file.kind === 'source') {

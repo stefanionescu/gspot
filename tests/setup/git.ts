@@ -1,15 +1,16 @@
 // Creates test commits and reads Git output.
 import { join } from 'node:path';
 import { isWindows } from '#tests/setup/system.ts';
+import { runGspot } from '#tests/setup/run-gspot.ts';
 import { LFS_ATTRIBUTES } from '#tests/data/hooks.ts';
+import { runSandboxStep } from '#tests/setup/install.ts';
 import { stat, chmod, writeFile } from 'node:fs/promises';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import { runRegisteredCommand } from '#tests/setup/run-gspot.ts';
+import { NESTED_SCOPE_FILES } from '#tests/data/runs/copies.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
-import { NESTED_SCOPE_FILES } from '#tests/data/runs/scratch-copies.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 
 import {
@@ -97,7 +98,7 @@ export async function preparePushRepository(
     sandboxRoot: string,
 ): Promise<{ base: string; reviewed: string; broken: string; zero: string }> {
     await createFileTree(sandboxRoot, {
-        'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'changed.sh': PUSH_CONTENT.base,
         'legacy.sh': PUSH_CONTENT.broken,
     });
@@ -127,14 +128,14 @@ export async function prepareNestedRepository(
     readGitOutput(root, ['add', '.']);
     readGitOutput(root, ['commit', '-m', 'Fixture']);
     const base = readGitOutput(root, ['rev-parse', 'HEAD']);
-    await Bun.write(join(project, 'source.txt'), 'pushed');
-    await Bun.write(join(root, 'outside.txt'), 'changed context');
+    await writeFile(join(project, 'source.txt'), 'pushed');
+    await writeFile(join(root, 'outside.txt'), 'changed context');
     readGitOutput(root, ['add', '.']);
     readGitOutput(root, ['commit', '-m', 'Change']);
     const commitId = readGitOutput(root, ['rev-parse', 'HEAD']);
-    await Bun.write(join(project, 'source.txt'), 'indexed');
+    await writeFile(join(project, 'source.txt'), 'indexed');
     readGitOutput(root, ['add', '.']);
-    await Bun.write(join(project, 'source.txt'), 'working');
+    await writeFile(join(project, 'source.txt'), 'working');
     return { project, base, commitId };
 }
 
@@ -145,12 +146,11 @@ export async function prepareNestedRepository(
  */
 export async function prepareAppliedBashRepository(sourceRoot: string): Promise<void> {
     await createFileTree(sourceRoot, {
-        'gspot.toml': buildSettingsText(['bash']),
+        'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
     });
     readGitOutput(sourceRoot, ['init', '-q']);
-    const applied = await runRegisteredCommand(sourceRoot, ['apply']);
-    if (applied.exitCode !== 0) throw new Error(`Sandbox apply failed: ${applied.text}`);
+    await runSandboxStep({ root: sourceRoot, environment: {}, run: runGspot }, ['apply']);
     commitAll(sourceRoot);
 }
 
@@ -161,7 +161,7 @@ export async function prepareAppliedBashRepository(sourceRoot: string): Promise<
  */
 export async function createLfsRepository(): Promise<TestdirResult> {
     const sandbox = await testdir({
-        'gspot.toml': buildSettingsText([], { tables: '[hooks]\nenabled = true\n' }),
+        'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = true\n' }),
         '.gitattributes': LFS_ATTRIBUTES,
         'asset.bin': 'binary',
     });

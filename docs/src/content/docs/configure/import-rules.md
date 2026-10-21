@@ -123,8 +123,8 @@ paths = ["Sources/Views/**"]
 
 ## Move off import-linter contracts
 
-gspot still runs import-linter for the contracts that you write in `.importlinter` or `pyproject.toml`. A layers
-contract lists its top layer first, so write its import rules in reverse order, with the lowest layer first. An independence contract maps to rules with
-`can_import` lists that leave each other out. After the import rules cover your contracts, delete the contracts.
+gspot does not run import-linter. Write a layers contract as import rules, lowest layer first, and an independence
+contract as rules with `can_import` lists that leave each other out. To keep a contract that import rules cannot
+express, run `lint-imports` as a command check.
 
 [Import rule settings](/reference/gspot-toml/#import_rule) lists the accepted fields.

@@ -32,6 +32,11 @@ export const MILLISECONDS_PER_SECOND = 1000;
 /** The folder for the npm packages packed before the test workers start. */
 export const TEST_RUN_FOLDER_NAME = 'gspot-test-run';
 
+export const TEST_RUN_HASH_LENGTH = 12;
+
+export const TEST_RUN_FOLDER_SCRIPT =
+    'const setup = await import(process.argv[1]); console.log(setup.TEST_RUN_FOLDER);';
+
 export const TOOL_PATHS_FILE = 'tool-paths.txt';
 
 export const GSPOT_LAUNCHER_PATH = 'bin/gspot';
@@ -59,8 +64,6 @@ export const MISE_TRUST = ['mise', 'trust'] as const;
 export const MISE_INSTALL = ['mise', 'install'] as const;
 
 export const MISE_BIN_PATHS = ['mise', 'bin-paths'] as const;
-
-export const HTTP_REDIRECT = 302;
 
 export const OFFLINE_ENVIRONMENT = {
     HTTP_PROXY: 'http://127.0.0.1:1',
@@ -191,7 +194,6 @@ export const PYTHON_SANDBOX_IGNORES = [
     'security/semgrep-registry',
     'format/editorconfig-checker',
     'python/basedpyright',
-    'python/import-linter',
     'python/pydoclint',
     'python/deptry',
 ] as const;

@@ -1,19 +1,17 @@
-import { z } from 'zod';
-import { posix } from 'node:path';
-import { parse } from '@decimalturn/toml-patch';
-import type { SchemaShape } from '#cli/types/shapes.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
+import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { runCommandGroups } from '#cli/runs/command/check.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
-import { readText, readCachedBytes } from '#cli/system/files/reads.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/python.ts';
+import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
+import { docstringStyleSchema } from '#cli/schemas/checks/python/pydoclint.ts';
 import { type PydoclintOptions, type PythonDocstringStyle } from '#cli/types/checks/python.ts';
 
 import {
     NUMPY_DOCSTRING,
-    DOCSTRING_STYLES,
     GOOGLE_DOCSTRING,
     PYDOCLINT_COMMAND,
     PYDOCLINT_STYLE_FLAG,
@@ -22,7 +20,7 @@ import {
 } from '#cli/config/checks/python.ts';
 
 async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
-    const module = await parsePythonModule(path, readCachedBytes(session.reads, path).toString('utf8'), session);
+    const module = await parsePythonModule(path, readCachedText(session.reads, path), session);
     try {
         for (const node of module.tree.rootNode.descendantsOfType(['function_definition', 'class_definition'])) {
             const docstring = findDocstring(node);
@@ -50,49 +48,16 @@ async function groupByDocstringStyle(
     }
     return groups;
 }
-
-const docstringStyleSchema = z.object({
-    tool: z
-        .object({
-            pydoclint: z
-                .object({ style: z.enum(DOCSTRING_STYLES).optional() } satisfies SchemaShape<{
-                    style?: PythonDocstringStyle | undefined;
-                }>)
-                .catchall(z.unknown())
-                .default({}),
-            ruff: z
-                .object({
-                    lint: z
-                        .object({
-                            pydocstyle: z
-                                .object({ convention: z.unknown().optional() } satisfies SchemaShape<{
-                                    convention?: unknown;
-                                }>)
-                                .default({}),
-                        } satisfies SchemaShape<{ pydocstyle: { convention?: unknown } }>)
-                        .default({ pydocstyle: {} }),
-                } satisfies SchemaShape<{ lint: { pydocstyle: { convention?: unknown } } }>)
-                .default({ lint: { pydocstyle: {} } }),
-        } satisfies SchemaShape<{
-            pydoclint: { style?: PythonDocstringStyle | undefined } & Record<string, unknown>;
-            ruff: { lint: { pydocstyle: { convention?: unknown } } };
-        }>)
-        .default({ pydoclint: {}, ruff: { lint: { pydocstyle: {} } } }),
-} satisfies SchemaShape<{
-    tool: {
-        pydoclint: { style?: PythonDocstringStyle | undefined } & Record<string, unknown>;
-        ruff: { lint: { pydocstyle: { convention?: unknown } } };
-    };
-}>);
 /**
  * Builds the pydoclint command: keeps written options, takes the Ruff style, and stops docstrings from repeating signature types.
  *
+ * @param path the pyproject.toml path.
  * @param text the pyproject.toml of the scope.
  * @param convention the Ruff docstring style from the settings.
  * @returns the command, and the style when known.
  */
-function parsePydoclintOptions(text: string, convention: unknown): PydoclintOptions {
-    const { tool } = docstringStyleSchema.parse(parse(text));
+function parsePydoclintOptions(path: string, text: string, convention: unknown): PydoclintOptions {
+    const { tool } = parseTomlFile(path, text, docstringStyleSchema);
     const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
     const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);
     const written = new Set(Object.keys(tool.pydoclint).map((name) => name.replaceAll('_', '-')));
@@ -112,7 +77,8 @@ function parsePydoclintOptions(text: string, convention: unknown): PydoclintOpti
  */
 export async function checkPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const configured = parsePydoclintOptions(
-        readText(session.root, posix.join(planned.selection.scope.path, PYPROJECT_TOML)) ?? '',
+        joinScope(planned.selection.scope.path, PYPROJECT_TOML),
+        findCachedText(session.reads, joinScope(planned.selection.scope.path, PYPROJECT_TOML)) ?? '',
         planned.selection.view.values['tools.ruff']?.docstring_convention,
     );
     const groups = await groupByDocstringStyle(session, planned.files, configured.style);

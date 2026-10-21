@@ -3,10 +3,9 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { createPythonSandbox } from '#tests/setup/python-index.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 test('a staged Python finding is reported by Ruff from the installed environment while the working tree differs', async () => {
     await using repository = await testdir();
@@ -21,9 +20,9 @@ test('a staged Python finding is reported by Ruff from the installed environment
     readGitOutput(repository.path, ['add', 'source.py']);
     await writeFile(join(repository.path, 'source.py'), 'VALUE = 1\n');
     const command = ['check', '--only', 'python/ruff', '--json'];
-    const staged = await spawnGspot(repository.path, [...command, '--staged']);
+    const staged = parseCheckReport(await spawnGspot(repository.path, [...command, '--staged']));
     expect(staged.code, staged.stdout + staged.stderr).toBe(1);
-    const report = JSON.parse(staged.stdout) as RunReport;
+    const report = staged.report;
     expect(report.checks).toMatchObject([
         {
             check: 'python/ruff',
@@ -34,9 +33,7 @@ test('a staged Python finding is reported by Ruff from the installed environment
             ],
         },
     ]);
-    const working = await spawnGspot(repository.path, command);
+    const working = parseCheckReport(await spawnGspot(repository.path, command));
     expect(working.code, working.stdout + working.stderr).toBe(0);
-    expect((JSON.parse(working.stdout) as RunReport).checks).toMatchObject([
-        { check: 'python/ruff', status: 'passed' },
-    ]);
+    expect(working.report.checks).toMatchObject([{ check: 'python/ruff', status: 'passed' }]);
 });

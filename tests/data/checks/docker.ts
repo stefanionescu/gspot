@@ -1,3 +1,5 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+
 // Trivy uses this configured exit code when an image report contains findings.
 export const TRIVY_FINDINGS_EXIT = 10;
 
@@ -35,56 +37,71 @@ export const REPORT_FAILURES = {
 } as const;
 
 export const INVALID_COMPOSE = [
-    { name: 'malformed YAML', source: 'services: [' },
-    { name: 'a non-string image', source: 'services: {app: {image: 12}}' },
-    { name: 'an empty service value', source: 'services: {app: null}' },
+    { name: 'malformed YAML', source: 'services: [', message: 'compose.yaml is not valid YAML:' },
+    {
+        name: 'a non-string image',
+        source: 'services: {app: {image: 12}}',
+        message: 'compose.yaml: services.app.image:',
+    },
+    { name: 'an empty service value', source: 'services: {app: null}', message: 'compose.yaml: services.app:' },
 ] as const;
 
 export const DOCKERIGNORE_CASES = [
-    { name: 'Docker alone', settings: 'configurations = ["docker"]\n', text: '.git\n.env\n', missing: '', scope: '' },
+    {
+        name: 'Docker alone',
+        settings: buildSandboxSettings(['docker'], { rules: true }),
+        text: '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+        missing: '',
+        scope: '',
+    },
     {
         name: 'JavaScript',
-        settings: 'configurations = ["docker", "javascript"]\n',
-        text: '.git\n.env\n',
-        missing: 'node_modules, bower_components',
+        settings: buildSandboxSettings(['docker', 'javascript'], { rules: true }),
+        text: '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+        missing: '**/node_modules/**, **/bower_components/**',
         scope: '',
     },
     {
         name: 'Python',
-        settings: 'configurations = ["docker", "python"]\n',
-        text: '.git\n.env\n',
-        missing: '.venv, venv',
+        settings: buildSandboxSettings(['docker', 'python'], { rules: true }),
+        text: '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+        missing: '**/.venv/**, **/venv/**',
         scope: '',
     },
     {
         name: 'wildcard entries',
-        settings: 'configurations = ["docker", "python", "javascript"]\n',
+        settings: buildSandboxSettings(['docker', 'python', 'javascript'], { rules: true }),
         text: `**/.git
 **/.env*
-**/node_modules
-**/bower_components
-**/.venv
-**/venv
+**/.env
+**/.env.*
+**/.dev.vars
+**/.dev.vars.*
+**/node_modules/**
+**/bower_components/**
+**/.venv/**
+**/venv/**
 `,
         missing: '',
         scope: '',
     },
     {
         name: 'a sibling language scope',
-        settings: `configurations = ["docker"]
-[[scope]]
-path = "api"
-
-configurations = ["docker", "python"]
-[[scope]]
-path = "web"
-
-configurations = ["javascript"]
-`,
+        settings: buildSandboxSettings(['docker'], {
+            rules: true,
+            scopes: [
+                { path: 'api', configurations: ['docker', 'python'] },
+                { path: 'web', configurations: ['javascript'] },
+            ],
+        }),
         text: `.git
 .env
-.venv
-venv
+**/.env
+**/.env.*
+**/.dev.vars
+**/.dev.vars.*
+**/.venv/**
+**/venv/**
 `,
         missing: '',
         scope: 'api',
@@ -95,8 +112,11 @@ export const DOCKER_CONTEXT_CASES = [
     {
         name: 'each scope lists the folders of its own configurations',
         files: {
-            'gspot.toml':
-                'level = "all"\nconfigurations = ["docker"]\n\n[[scope]]\npath = "app"\nconfigurations = ["python"]\n',
+            'gspot.toml': buildSandboxSettings(['docker'], {
+                level: 'all',
+                rules: true,
+                scopes: [{ path: 'app', configurations: ['python'] }],
+            }),
             Dockerfile: 'FROM scratch\n',
             'app/Dockerfile': 'FROM scratch\n',
         },
@@ -105,23 +125,30 @@ export const DOCKER_CONTEXT_CASES = [
                 file: 'app/Dockerfile',
                 rule: 'missing-file',
                 message:
-                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, .venv, venv.',
+                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*, **/.venv/**, **/venv/**.',
             },
             {
                 file: 'Dockerfile',
                 rule: 'missing-file',
-                message: 'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env.',
+                message:
+                    'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
         ],
     },
     {
         name: 'a Dockerfile-specific ignore',
-        files: { Dockerfile: 'FROM scratch\n', 'Dockerfile.dockerignore': '.git\n.env\n' },
+        files: {
+            Dockerfile: 'FROM scratch\n',
+            'Dockerfile.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+        },
         findings: [],
     },
     {
         name: 'a suffixed Dockerfile-specific ignore',
-        files: { 'Dockerfile.test': 'FROM scratch\n', 'Dockerfile.test.dockerignore': '.git\n.env\n' },
+        files: {
+            'Dockerfile.test': 'FROM scratch\n',
+            'Dockerfile.test.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+        },
         findings: [],
     },
     {
@@ -129,7 +156,7 @@ export const DOCKER_CONTEXT_CASES = [
         files: {
             'compose.yaml': 'services: {app: {build: {context: project, dockerfile: docker/Dockerfile}}}\n',
             'project/docker/Dockerfile': 'FROM scratch\n',
-            'project/.dockerignore': '.git\n.env\n',
+            'project/.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
         },
         findings: [],
     },
@@ -139,7 +166,7 @@ export const DOCKER_CONTEXT_CASES = [
             'compose.yaml': 'services: {app: {build: {context: project}}}\n',
             'compose.override.yaml': 'services: {app: {build: {dockerfile: docker/Dockerfile}}}\n',
             'project/docker/Dockerfile': 'FROM scratch\n',
-            'project/.dockerignore': '.git\n.env\n',
+            'project/.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
         },
         findings: [],
     },
@@ -150,25 +177,30 @@ export const DOCKER_CONTEXT_CASES = [
             'compose.override.yaml': 'services: {affected: {build: {dockerfile: Dockerfile}}}\n',
             'affected/Dockerfile': 'FROM scratch\n',
             'other/Dockerfile': 'FROM scratch\n',
-            'other/.dockerignore': '.git\n.env\n',
+            'other/.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
         },
         findings: [
             {
                 file: 'affected/Dockerfile',
                 rule: 'missing-file',
                 message:
-                    'Add an ignore file at affected/Dockerfile.dockerignore or affected/.dockerignore that lists .git, .env.',
+                    'Add an ignore file at affected/Dockerfile.dockerignore or affected/.dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
         ],
     },
     {
         name: 'a specific ignore taking precedence over the general ignore',
-        files: { Dockerfile: 'FROM scratch\n', '.dockerignore': '.git\n.env\n', 'Dockerfile.dockerignore': '.git\n' },
+        files: {
+            Dockerfile: 'FROM scratch\n',
+            '.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            'Dockerfile.dockerignore': '.git\n',
+        },
         findings: [
             {
                 file: 'Dockerfile.dockerignore',
                 rule: 'missing-entry',
-                message: 'Add these entries to Dockerfile.dockerignore: .env.',
+                message:
+                    'Add these entries to Dockerfile.dockerignore: .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
         ],
     },
@@ -179,7 +211,8 @@ export const DOCKER_CONTEXT_CASES = [
             {
                 file: 'Dockerfile',
                 rule: 'missing-file',
-                message: 'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env.',
+                message:
+                    'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
             },
         ],
     },

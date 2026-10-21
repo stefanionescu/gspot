@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { isRecord } from '#cli/system/values.ts';
 import type { PathVisitor } from '#cli/types/settings/values.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { findSettingSchema } from '#cli/schemas/settings/gspot-toml.ts';
 
 function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
     if (schema instanceof z.ZodUnion) {

@@ -6,7 +6,7 @@ export const DEFAULT_GROUPED_PATTERN = String.raw`^\s+(?<line>\d+): (?<message>.
 
 export const LEADING_DOT_SLASH = /^\.\//u;
 
-export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN, file_type: 'path' } as const;
+export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN } as const;
 
 /** The exit code that Semgrep returns when it cannot parse a source file. */
 export const SEMGREP_PARSE_EXIT = 3;
@@ -51,10 +51,6 @@ export const KNIP_ISSUE_MESSAGES = {
     unlisted: 'Unlisted dependency',
     unresolved: 'Unresolved import',
 } as const;
-
-export const MARKDOWNLINT_SEVERITIES = ['error', 'warning'] as const;
-
-export const OUTPUT_FILE_TYPES = ['path', 'link', 'history'] as const;
 
 export const MISSING_PATH_CODES: ReadonlySet<string> = new Set(['ENOENT', 'ENOTDIR']);
 export const FILE_GROUP = '(?<file>';

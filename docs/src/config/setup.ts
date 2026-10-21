@@ -1,4 +1,7 @@
-import { SITE_URL } from './site.ts';
+import { SIDEBAR } from './navigation.ts';
+import { SITE_URL, DOCS_PATH } from './site.ts';
+import { REFERENCE_PATH, REFERENCE_FOLDERS } from './reference.ts';
+import { SKILLS_FOLDER, SKILLS_INDEX_FILE, MARKDOWN_COPY_FILE } from './agents.ts';
 
 // Two ways to start with gspot: the commands for each package manager, or a prompt that sends a coding agent to the
 // steps in /llms.txt. The home page and the Quickstart share these values.
@@ -35,10 +38,6 @@ export const LLMS_URL = `${SITE_URL}/llms.txt`;
 export const LLMS_COMMAND = `curl -fsSL ${LLMS_URL}`;
 
 export const AGENT_PROMPT = `Set up gspot in a repository. Run ${LLMS_COMMAND} and follow its steps.`;
-
-/** The summary at the top of llms.txt. */
-export const LLMS_DESCRIPTION =
-    'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.';
 
 export const AGENT_STEPS = `## Steps for coding agents
 
@@ -100,7 +99,7 @@ install.minimumReleaseAgeExcludes for Bun, min-release-age-exclude for npm, and 
  * last. llms-small.txt holds the guides only, and the reference gets its own set.
  */
 export const LLMS_PAGES = {
-    promote: ['start/overview', 'start/quickstart', 'start/**', 'use/**', 'configure/**', 'checks/**', 'languages/**'],
+    promote: SIDEBAR.flatMap(({ items }) => items.map(({ slug }) => slug.replace(/\/index$/u, ''))),
     demote: ['404', 'reference/**'],
     exclude: ['404', 'reference/**'],
     customSets: [
@@ -115,27 +114,27 @@ export const LLMS_PAGES = {
     optionalLinks: [
         {
             label: 'Commands',
-            url: `${SITE_URL}/reference/commands/`,
+            url: `${SITE_URL}${REFERENCE_PATH}${REFERENCE_FOLDERS.commands}/`,
             description: 'every command, its options, and exit codes',
         },
         {
             label: 'Settings',
-            url: `${SITE_URL}/reference/gspot-toml/`,
+            url: `${SITE_URL}${REFERENCE_PATH}${REFERENCE_FOLDERS.settings}/`,
             description: 'every key of gspot.toml, its accepted values, and its default',
         },
         {
             label: 'JSON output',
-            url: `${SITE_URL}/reference/json-output/`,
+            url: `${SITE_URL}${REFERENCE_PATH}${REFERENCE_FOLDERS.jsonOutput}/`,
             description: 'the fields of gspot check --json',
         },
         {
             label: 'Markdown pages',
-            url: `${SITE_URL}/start/overview/index.md`,
+            url: `${SITE_URL}${DOCS_PATH}${MARKDOWN_COPY_FILE}`,
             description: 'add index.md to the address of any page for its Markdown copy',
         },
         {
             label: 'Agent Skill',
-            url: `${SITE_URL}/.well-known/agent-skills/index.json`,
+            url: `${SITE_URL}/${SKILLS_FOLDER}${SKILLS_INDEX_FILE}`,
             description: 'the steps above as an Agent Skill',
         },
     ],

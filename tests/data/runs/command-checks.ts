@@ -1,3 +1,5 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+
 // A check that records its inputs and passes corrected ones, and a fixer that corrects them.
 export const QUALITY_COMMAND = [
     'node',
@@ -43,21 +45,16 @@ export const FAILED_RUN = { code: 1 } as const;
 
 export const LOCATED_CHECK = {
     ...BASE_CHECK,
-    output: { format: 'regex', file_type: 'path', pattern: '^(?<file>[^:]+): (?<message>.*)$' },
+    output: { format: 'regex', pattern: '^(?<file>[^:]+): (?<message>.*)$' },
 } as const;
 
 export const FILELESS_CHECKS = [
     {
         ...BASE_CHECK,
         name: 'sandbox/coverage',
-        output: { format: 'regex', file_type: 'path', pattern: '^ERROR: (?<message>.*)$' },
+        output: { format: 'regex', pattern: '^ERROR: (?<message>.*)$' },
     },
-    {
-        ...BASE_CHECK,
-        name: 'sandbox/links',
-        output: { format: 'regex', file_type: 'link', pattern: '(?<file>.+)' },
-    },
-    { ...BASE_CHECK, name: 'sandbox/lines', output: { format: 'lines', file_type: 'path' } },
+    { ...BASE_CHECK, name: 'sandbox/lines', output: { format: 'lines' } },
 ] as const;
 
 // Prints each line of the listed files that holds PENDING as file:line:text, the way grep -n -H does.
@@ -83,7 +80,10 @@ export const HEADER_FAILURE =
 
 export const SCOPE_PATH_CHECK = {
     files: {
-        'gspot.toml': 'configurations = ["swift"]\n[rules]\nenabled = false\n[[scope]]\npath = "app"\n',
+        'gspot.toml': buildSandboxSettings(['swift'], {
+            tables: '[rules]\nenabled = false\n',
+            scopes: [{ path: 'app' }],
+        }),
         'app/src/a.swift': 'let value = 1\n',
         'lib/x.ts': 'export const value = 1;\n',
     },

@@ -1,16 +1,14 @@
 import { posix } from 'node:path';
+import { isRecord } from '#cli/system/values.ts';
 import type { ShippedRule } from '#cli/types/rules.ts';
 import { formatUnknownName } from '#cli/system/text.ts';
-import { getCachedValue } from '#cli/system/files/cache.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { readAsset, listAssets } from '#cli/system/assets.ts';
 import type { Settings } from '#cli/types/settings/values.ts';
-import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { type NamingDefaults } from '#cli/types/checks/naming.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
-import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
-import { namingDefaultsSchema } from '#cli/configurations/schema/naming.ts';
+import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
+import { namingDefaultsSchema } from '#cli/schemas/configurations/naming.ts';
 
 import {
     RULES_FOLDER,
@@ -27,10 +25,10 @@ import {
     type ManifestDeclaration,
 } from '#cli/types/configurations.ts';
 
-// Each read cache keeps its own copy of the shipped declarations.
-const MANIFESTS = { create: readShippedManifests };
+// Every run shares the immutable declarations shipped with the package.
+let MANIFESTS: Map<string, Manifest> | undefined;
 
-const NAMING_DEFAULTS = { create: readShippedNamingDefaults };
+let NAMING_DEFAULTS: NamingDefaults | undefined;
 
 // A configuration with exactly one tool gives that tool to each tool file that names no consumer.
 function findOnlyToolName(tools: unknown): string | undefined {
@@ -95,6 +93,7 @@ function parseManifest(text: string, configurationFolder: string): ManifestDecla
     const result = manifestSchema.safeParse({
         ...parsed,
         tool_file: discoveredToolFiles,
+        folder: configurationFolder,
         configuration: {
             ...(isRecord(parsed['configuration']) ? parsed['configuration'] : {}),
             name: posix.basename(configurationFolder),
@@ -105,18 +104,10 @@ function parseManifest(text: string, configurationFolder: string): ManifestDecla
         throw buildManifestError(posix.basename(configurationFolder), [
             ...new Set(result.error.issues.flatMap((issue) => formatZodIssue(issue))),
         ]);
-    const declared = result.data;
-    // The check ID joins the configuration name and the check name.
-    return {
-        ...declared,
-        checks: declared.checks.map((check) =>
-            stripUndefined({ ...check, name: `${declared.configuration.name}/${check.name}` }),
-        ),
-        folder: configurationFolder,
-    };
+    return result.data;
 }
 
-// Parse shipped declarations only for the first manifest read in one run.
+// Parse shipped declarations only for the first manifest read in the process.
 function readShippedManifests(): Map<string, Manifest> {
     const manifests = new Map<string, ManifestDeclaration>();
     const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));
@@ -151,36 +142,35 @@ function buildManifestError(configuration: string, errors: string[]): GspotError
 }
 
 /**
- * Read every manifest once per run.
+ * Read every manifest once per process.
  *
- * @param reads the run cache.
  * @returns the manifests by configuration name.
  */
-function readManifests(reads: ReadCache): Map<string, Manifest> {
-    return getCachedValue(reads, MANIFESTS);
+function readManifests(): Map<string, Manifest> {
+    MANIFESTS ??= readShippedManifests();
+    return MANIFESTS;
 }
 
 /**
  * List the shipped check IDs and the command check IDs of the repository.
  *
  * @param checks the [[command_check]] records.
- * @param reads the run cache.
  * @returns the shipped IDs, then your command check IDs.
  */
-function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[], reads: ReadCache): string[] {
-    const shipped = [...listChecksById(readManifests(reads).values()).keys()];
+function listCheckIds(checks: readonly Pick<CheckDeclaration, 'name'>[]): string[] {
+    const shipped = [...listChecksById(readManifests().values()).keys()];
     const authored = checks.map((check) => check.name);
     return [...new Set([...shipped, ...authored])];
 }
 
 /**
- * Read the shipped naming settings once for a run.
+ * Read the shipped naming settings once per process.
  *
- * @param reads the run cache
  * @returns the shipped naming choices
  */
-function readNamingDefaults(reads: ReadCache): NamingDefaults {
-    return getCachedValue(reads, NAMING_DEFAULTS);
+function readNamingDefaults(): NamingDefaults {
+    NAMING_DEFAULTS ??= readShippedNamingDefaults();
+    return NAMING_DEFAULTS;
 }
 
 /**
@@ -190,12 +180,12 @@ function readNamingDefaults(reads: ReadCache): NamingDefaults {
  * @returns each file with its path inside the rules folder.
  */
 function listRuleFiles(manifest: Manifest): ShippedRule[] {
-    const { group, name } = manifest.configuration;
+    const { group } = manifest.configuration;
     const sources = listAssets(`${manifest.folder}/${RULES_FOLDER}/`);
     return sources.map((source) => ({
         source,
         group,
-        path: `${group}/${name}/${RULES_FOLDER}/${posix.relative(manifest.folder + '/' + RULES_FOLDER, source)}`,
+        path: posix.relative(CONFIGURATIONS_FOLDER, source),
     }));
 }
 
@@ -226,7 +216,7 @@ function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string
     for (const manifest of manifests)
         for (const tool of manifest.tools.filter((entry) => typeof entry !== 'string')) {
             const previous = tools.get(tool.name);
-            if (previous !== undefined && previous !== tool)
+            if (previous !== undefined)
                 throw buildManifestError(manifest.configuration.name, [`tool ${tool.name} is already declared.`]);
             tools.set(tool.name, tool);
         }
@@ -238,10 +228,9 @@ function listDeclaredTools(manifests: Iterable<ManifestDeclaration>): Map<string
  *
  * @param name the requested check ID.
  * @param settings the command checks of gspot.toml.
- * @param reads the run cache.
  */
-function assertKnownCheck(name: string, settings: Pick<Settings, 'commandChecks'>, reads: ReadCache): void {
-    const known = listCheckIds(Object.values(settings.commandChecks), reads);
+function assertKnownCheck(name: string, settings: Pick<Settings, 'commandChecks'>): void {
+    const known = listCheckIds(Object.values(settings.commandChecks));
     if (!known.includes(name)) throw new GspotError('arguments', formatUnknownName('check', name, known));
 }
 

@@ -1,8 +1,11 @@
+import type { ReadCache } from '#cli/types/system/files.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
+import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { StaleFile, ApplyReport } from '#cli/types/apply.ts';
-import type { Mutation, SettingsEdit } from '#cli/types/settings/edits.ts';
+import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
+import type { Settings, EffectiveSetting } from '#cli/types/settings/values.ts';
 
-export type SaveSettingsOptions = { input: SettingsEdit; change: Mutation; summary: string };
+export type SaveSettingsOptions = { input: SettingsEdit; summary: string };
 export type SaveSettingsResult = CommandResult<ApplyReport & { changed: boolean }>;
 
 export type ConfigurationsOptions = { cwd: string; configurations: string[]; scope?: string };
@@ -16,7 +19,6 @@ export type DryRunJson = {
     dryRun: true;
     pin: { from: string | undefined; to: string };
     stale: StaleFile[];
-    notes: string[];
 };
 
 export type IgnoreOptions = {
@@ -49,3 +51,15 @@ export type IgnoreRemoval = {
 };
 
 export type UnsetOptions = { cwd: string; key: string; items: string[]; scope?: string };
+
+/** The settings read once before a command edits their table. */
+export type PreparedSettingsEdit = { root: string; input: SettingsEdit; settings: Settings; reads: ReadCache };
+
+/** A proposed setting value and the reason rules that apply to it. */
+export type SettingReasonContext = {
+    options: SetOptions;
+    declaration: SettingDeclaration;
+    change: ParsedSettingValue;
+    previous: EffectiveSetting | undefined;
+    shippedDefault: unknown;
+};

@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { stringify } from 'yaml';
 import { writeFileSync } from 'node:fs';
-import { formatHold } from '#cli/generation/release-holds.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
-import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
-import { GSPOT_PACKAGES, TOOL_HOLD_FILES, PNPM_IGNORE_WORKSPACE } from '#cli/config/generation/file-edits.ts';
+import { MINUTES_PER_DAY, SECONDS_PER_DAY } from '#cli/config/units.ts';
+import type { PackageManager } from '#cli/types/parsers/dependencies.ts';
+import { GSPOT_PACKAGES, TOOL_HOLD_FILES } from '#cli/config/generation/file-edits.ts';
 
 /**
  * Add the hold to the lockfile run of the tool project. npm takes flags; Bun and pnpm read a settings file in the
@@ -32,17 +32,16 @@ export function addToolReleaseHold(
         ];
     if (packageManager.name === 'bun') {
         const install = {
-            minimumReleaseAge: formatHold('seconds', days),
+            minimumReleaseAge: days * SECONDS_PER_DAY,
             minimumReleaseAgeExcludes: [...GSPOT_PACKAGES],
         };
         writeFileSync(join(work, TOOL_HOLD_FILES.bun), stringifyToml({ install }));
         return [...command];
     }
     if (packageManager.name === 'pnpm') {
-        const hold = { minimumReleaseAge: formatHold('minutes', days), minimumReleaseAgeExclude: [...GSPOT_PACKAGES] };
+        const hold = { minimumReleaseAge: days * MINUTES_PER_DAY, minimumReleaseAgeExclude: [...GSPOT_PACKAGES] };
         writeFileSync(join(work, TOOL_HOLD_FILES.pnpm), stringify(hold));
-        // pnpm skips pnpm-workspace.yaml with this flag; the file in the run folder already marks the project root.
-        return command.filter((part) => part !== PNPM_IGNORE_WORKSPACE);
+        return [...command];
     }
     return [...command];
 }

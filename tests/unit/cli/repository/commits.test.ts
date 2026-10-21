@@ -94,6 +94,9 @@ test('a shallow clone reports incomplete history and skips commits the remote al
 test('a gspot.toml below the Git root keeps paths relative to its folder for updated and new branches', async () => {
     await using sandbox = await testdir();
     const { project, base, commitId } = await prepareNestedRepository(sandbox.path);
+    expect(
+        readGitOutput(sandbox.path, ['diff', '--name-status', base, commitId, '--', 'nested settings/source.txt']),
+    ).toBe('M\tnested settings/source.txt');
     const protocol = `refs/heads/main ${commitId} refs/heads/main ${base}\n`;
     const updated = await selectPush(project, protocol);
     expect(updated.revisions[0]?.paths).toStrictEqual(['source.txt']);
@@ -102,5 +105,5 @@ test('a gspot.toml below the Git root keeps paths relative to its folder for upd
     const createdRef = `refs/heads/new ${commitId} refs/heads/new ${'0'.repeat(commitId.length)}\n`;
     const created = await selectPush(project, createdRef, 'example');
     expect(created.revisions[0]?.paths).toStrictEqual(['source.txt']);
-    expect(await Bun.file(join(project, 'source.txt')).text()).toBe('working');
+    expect(await readFile(join(project, 'source.txt'), 'utf8')).toBe('working');
 });

@@ -1,9 +1,10 @@
 import { join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { listRequiredTools, listCompanionTools } from '#cli/planning/needed-tools.ts';
@@ -12,11 +13,11 @@ import { COVERAGE_LIMITS, NODE_REQUIREMENTS, ARCHITECTURE_REQUIREMENTS } from '#
 test.each([...NODE_REQUIREMENTS])(
     'the needed tools include Node only when an npm tool needs it: $name',
     async ({ configurations, tables, files, node }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(configurations, { tables }),
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(configurations, { tables }),
             ...files,
         });
+
         const session = await openSession(sandbox.path);
         const names = session.neededToolManifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name));
         expect(names.includes('node')).toBe(node);
@@ -36,7 +37,7 @@ test.each(ARCHITECTURE_REQUIREMENTS.flatMap((entry) => LEVELS.map((level) => ({ 
     'eslint-plugin-boundaries is needed for $name at the levels that use it (%j)',
     async ({ tables, boundary, level }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['javascript'], {
+            'gspot.toml': buildSandboxSettings(['javascript'], {
                 level,
                 tables: `${tables}\n[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n`,
             }),
@@ -68,7 +69,7 @@ describe.each([...COVERAGE_LIMITS])(
             const sandbox = resources.use(await testdir());
             await createFileTree(sandbox.path, { [file]: '', ['app/' + file]: '' });
             const tables = `[coverage]\nlines = ${String(lines)}\n[[scope]]\npath = "app"\nconfigurations = ${JSON.stringify(configurations)}\n`;
-            await Bun.write(join(sandbox.path, 'gspot.toml'), buildSettingsText(configurations, { tables }));
+            await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(configurations, { tables }));
             session = await openSession(sandbox.path);
             checks = planRun(session, { stage: 'push', only: [configuration + '/coverage'] });
         });
@@ -80,3 +81,34 @@ describe.each([...COVERAGE_LIMITS])(
         });
     },
 );
+
+test('omitting coverage keeps unrelated system libraries required by another configuration', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'vitest'], {
+            tables: '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n',
+        }),
+        'math.test.js': '',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planRun(session, { stage: 'push', only: ['vitest/coverage'] })[0]!;
+    const provider = planned.selection.selected
+        .flatMap((manifest) => manifest.tools)
+        .find((tool) => tool.name === '@vitest/coverage-v8')!;
+    const check = { ...planned.check, tool: 'eslint' };
+    const selection = {
+        ...planned.selection,
+        selected: planned.selection.selected.map((manifest) =>
+            manifest.configuration.name === 'vitest'
+                ? {
+                      ...manifest,
+                      checks: manifest.checks.map((entry) => (entry === planned.check ? check : entry)),
+                      tools: [...manifest.tools, { ...provider, name: 'independent-support' }],
+                      eslint: { ...manifest.eslint, fragment: true, required_tools: ['independent-support'] },
+                  }
+                : manifest,
+        ),
+    };
+    const companions = listCompanionTools(selection, check, ['vitest', 'run']);
+    expect(companions).toContain('independent-support');
+    expect(companions).not.toContain('@vitest/coverage-v8');
+});

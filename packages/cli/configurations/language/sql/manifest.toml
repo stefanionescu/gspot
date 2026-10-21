@@ -2,17 +2,14 @@ allowed_words = ["SQL"]
 
 [configuration]
 description = "SQL files: layout and style in your dialect, and at level all, comments and file length."
-suggests = []
 title = "SQL"
 
 [files]
 extensions = [".sql", ".pgsql", ".psql"]
 
 [[tool]]
-brew = "sqlfluff"
 crash_pattern = '^Traceback \(most recent call last\):$'
 min_version = "3.0.0"
-mise = "pipx:sqlfluff"
 name = "sqlfluff"
 pypi = "sqlfluff"
 replace = [".sqlfluff", ".sqlfluffignore"]

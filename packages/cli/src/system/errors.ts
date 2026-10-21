@@ -59,11 +59,12 @@ export function parseFileFields<Value>(path: string, value: unknown, schema: z.Z
 }
 
 /**
- * Check whether a file operation failed because the path does not exist.
+ * Check whether an operation failed with an operating-system error code.
  *
  * @param error the caught value.
- * @returns whether the error says the file does not exist.
+ * @param code the operating-system error code to match.
+ * @returns whether the error carries that code.
  */
-export function isMissingFileError(error: unknown): boolean {
-    return error instanceof Error && 'code' in error && error.code === 'ENOENT';
+export function hasErrorCode(error: unknown, code: string): boolean {
+    return error instanceof Error && 'code' in error && error.code === code;
 }

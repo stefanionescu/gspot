@@ -134,17 +134,15 @@ communication and locks or conditions for shared state, which stays small and ex
 
 ## Naming
 
-### Command inputs and external names
-
 <!-- level: all -->
+
+### Command inputs and external names
 
 - Avoid single-letter names except loop counters and math notation.
 - Preserve provider capitalization in external names such as `AWS_REGION` and
   resource IDs.
 
 ### Python modules and imports
-
-<!-- level: all -->
 
 - Name test files `test_<behavior>.py`, grouped by behavior.
 - Keep `__all__` names accurate and ordered according to local lint rules.
@@ -153,8 +151,6 @@ Import `AccountSettings` under its declared name. An alias such as `Thing`
 hides the contract and provides no collision information.
 
 ### Python types and dataclasses
-
-<!-- level: all -->
 
 - Dataclass names describe the domain value they represent.
 - Field names describe the value inside the owning type without repeating it.
@@ -171,8 +167,6 @@ hides the contract and provides no collision information.
 | `Shipment.shipment_date` | `Shipment.date`  | The shipment date.  |
 
 ### Python boundary names
-
-<!-- level: all -->
 
 - Keep raw provider or CLI names at the boundary.
 - Translate an external name into the domain term before passing values inward when

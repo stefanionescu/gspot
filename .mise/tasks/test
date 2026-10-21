@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-#MISE description="Run one test suite: unit (the default), integration, or e2e."
+#MISE description="Run one test suite: unit, integration, or e2e. With no suite, run unit."
 #MISE depends=["build"]
-# A direct bun test of an integration or e2e file needs bun tests/setup/prepare-run.ts <suite> first, and again after
-# changes under packages/.
+# To run one integration or e2e file: bun `tests/setup/prepare-run.ts` <suite>, then
+# bun test --preload `./tests/setup/integration.ts` <file>. Prepare again after a change under `packages/`.
 set -euo pipefail
 
 suite=${1:-unit}
 if [[ ${suite} == unit ]]; then
-    bun test --parallel tests/unit
+    bun test --parallel --preload ./tests/setup/offline.ts tests/unit
 else
     bun tests/setup/prepare-run.ts "${suite}"
     bun test --parallel --preload ./tests/setup/integration.ts "tests/${suite}"

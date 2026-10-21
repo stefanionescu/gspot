@@ -47,6 +47,3 @@ export const CODE_TOKENS =
 export const SUMMARY_SENTENCE_BREAK = /(?<=\.) /u;
 /** The places a long URL may wrap: after each slash that ends a part of the address. */
 export const URL_BREAK = /(?<=\/)(?!\/)/u;
-export const COMMIT_RECORD = '[main 066501e] feat: Add checkout';
-
-export const INLINE_CODE_SPAN = /(`[^`]+`)/u;

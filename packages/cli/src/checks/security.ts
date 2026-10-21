@@ -1,9 +1,11 @@
 import { join } from 'node:path';
 import { buildBaseResult } from '#cli/runs/report.ts';
+import { getTable } from '#cli/settings/scope-view.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { buildScopeTarget } from '#cli/repository/scopes.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { SEMGREP_TOOL } from '#cli/config/checks/security.ts';
+import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 
 /**
@@ -19,9 +21,9 @@ function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[]
         manifest.toolFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
             .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
-            .map((file) => buildScopeTarget(scope.path, file, session.toolFiles().targets)),
+            .map((file) => buildScopeTarget(scope.path, file, getToolFiles(session).targets)),
     );
-    return [...new Set([...declared, ...view.options('tools.semgrep').rule_files])];
+    return [...new Set([...declared, ...getTable(view, 'tools.semgrep').rule_files])];
 }
 
 /**
@@ -38,6 +40,7 @@ export async function checkSemgrep(session: Session, planned: PlannedCheck): Pro
         return {
             ...buildBaseResult(planned, session),
             status: 'skipped',
+            cause: 'setting',
             note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
         };
     return runCheckCommand(session, planned, {

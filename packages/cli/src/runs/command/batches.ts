@@ -1,6 +1,6 @@
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { Substitutions, CommandInvocation } from '#cli/types/runs/command.ts';
-import { expandToolCommand, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
+import { expandCommand, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
 
 import {
     UNIX_COMMAND_LIMIT,
@@ -31,19 +31,16 @@ export function buildInvocations(
     invocation: { session: Session; command: string[]; substitutions: Substitutions; toolPath: string },
 ): CommandInvocation[] {
     const { session, command, substitutions, toolPath } = invocation;
-    const fixed = expandToolCommand(session, planned, command, {
-        substitutions: { ...substitutions, files: [] },
-        toolPath,
-    });
+    const fixed = expandCommand(session, planned, command, { ...substitutions, files: [] }).with(0, toolPath);
     return splitFileArguments(
         substitutions.files,
         fixed.filter((part) => typeof part === 'string'),
         process.platform,
     ).flatMap((files) => {
-        const commandArguments = expandToolCommand(session, planned, command, {
-            substitutions: { ...substitutions, files },
+        const commandArguments = expandCommand(session, planned, command, { ...substitutions, files }).with(
+            0,
             toolPath,
-        });
+        );
         return buildFileInvocations(commandArguments, files);
     });
 }

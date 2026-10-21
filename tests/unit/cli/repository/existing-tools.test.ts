@@ -10,20 +10,23 @@ import { LINKED_RULE_FOLDERS } from '#tests/data/repository/existing-tools.ts';
 import { readLintJobs, readExistingTools } from '#cli/repository/existing-tools.ts';
 
 test('tool discovery finds nested tool files and skips root .gspot and vendored folders', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'src/.prettierrc.json': '{"semi":false}',
         'vendor/.prettierrc.json': '{"semi":true}',
         '.gspot/.prettierrc.json': '{"tabWidth":8}',
         '.gspot/package.json': 'unowned malformed output',
         'nested/.gspot/package.json': '{}',
     });
+
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopes: [],
-        manifests: readManifests(createReadCache(process.cwd())),
+        manifests: readManifests(),
     });
-    const discovered = readExistingTools(sandbox.path, repository.files, [], createReadCache(sandbox.path));
+    const discovered = readExistingTools(createReadCache(sandbox.path), {
+        files: repository.files,
+        dependencyFiles: [],
+    });
     expect(discovered.toolFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
 });
 
@@ -75,8 +78,8 @@ test.each([
     { name: 'null document', path: '.gitlab-ci.yml', document: null, expected: [] },
     { name: 'non-object jobs', path: '.github/workflows/check.yml', document: { jobs: 12 }, expected: [] },
 ])('CI discovery recognizes $name', async ({ path, document, expected }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { [path]: JSON.stringify(document) });
+    await using sandbox = await testdir({ [path]: JSON.stringify(document) });
+
     expect(readLintJobs(sandbox.path, [path, 'missing.yml'])).toStrictEqual(expected.map((name) => `${path}: ${name}`));
 });
 
@@ -84,7 +87,7 @@ test('CI discovery reports malformed YAML', async () => {
     await using sandbox = await testdir();
     const path = '.gitlab-ci.yml';
     await createFileTree(sandbox.path, { [path]: 'quality: [unterminated' });
-    expect(() => readLintJobs(sandbox.path, [path])).toThrow(`Cannot read CI configuration ${path}:`);
+    expect(() => readLintJobs(sandbox.path, [path])).toThrow(`${path} is not valid YAML:`);
 });
 
 test('tool discovery reads tool sections through a link inside the repository', async () => {
@@ -92,7 +95,7 @@ test('tool discovery reads tool sections through a link inside the repository', 
     const source = '[tool.ruff]\nline-length = 100\n';
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
-    const existingTools = readExistingTools(sandbox.path, [], [], createReadCache(sandbox.path));
+    const existingTools = readExistingTools(createReadCache(sandbox.path), { files: [], dependencyFiles: [] });
     expect(existingTools.toolFiles).toContainEqual({
         tool: 'ruff',
         path: 'pyproject.toml',
@@ -104,18 +107,22 @@ test('tool discovery reads tool sections through a link inside the repository', 
 test.each([...LINKED_RULE_FOLDERS])(
     'a linked %s counts as present without reading a rules folder outside',
     async (path) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'project/source.ts': 'export {};\n',
             'outside/guide.md': 'external rules\n',
         });
+
         const root = join(sandbox.path, 'project');
         await mkdir(dirname(join(root, path)), { recursive: true });
         await symlink(join(sandbox.path, 'outside'), join(root, path), 'dir');
-        expect(readExistingTools(root, [], [], createReadCache(root)).ruleFolders).toStrictEqual([path]);
+        expect(readExistingTools(createReadCache(root), { files: [], dependencyFiles: [] }).ruleFolders).toStrictEqual([
+            path,
+        ]);
         await unlink(join(root, path));
         await createFileTree(root, { [`${path}/guide.md`]: 'authored rules\n' });
-        expect(readExistingTools(root, [], [], createReadCache(root)).ruleFolders).toStrictEqual([path]);
+        expect(readExistingTools(createReadCache(root), { files: [], dependencyFiles: [] }).ruleFolders).toStrictEqual([
+            path,
+        ]);
     },
 );
 

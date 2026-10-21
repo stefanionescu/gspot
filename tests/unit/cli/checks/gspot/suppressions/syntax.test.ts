@@ -1,12 +1,12 @@
-import { openSession } from '#cli/session.ts';
+import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { checkSuppressions } from '#cli/checks/gspot/suppressions.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
+import { checkFindings } from '#tests/setup/check-input.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import { SUPPRESSION_KIND_MESSAGES } from '#cli/config/checks/gspot.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
-import { SUPPRESSION_DIRECTIVE_MESSAGES } from '#cli/config/checks/gspot.ts';
-import { checkFindings, buildCheckInput } from '#tests/setup/check-input.ts';
 import { LIMIT_SUPPRESSION_CASES } from '#tests/data/checks/gspot/suppression-limits.ts';
 
 import {
@@ -50,15 +50,14 @@ describe.each([
         source: `${comment}\n${body}\n`,
     }));
     let sandbox: Awaited<ReturnType<typeof testdir>>;
-    let comments: Awaited<ReturnType<typeof checkSuppressions>>;
+    let comments: readonly Finding[];
     beforeAll(async () => {
         sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText([configuration], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
             ...Object.fromEntries(sources.map(({ path, source }) => [path, source])),
         });
-        const session = await openSession(sandbox.path);
-        comments = await checkSuppressions(buildCheckInput(session, 'gspot/suppressions'));
+        comments = await checkFindings(sandbox.path, 'gspot/suppressions');
     });
     afterAll(async () => {
         await sandbox[Symbol.asyncDispose]();
@@ -76,17 +75,16 @@ test.each(['js', 'ts'])(
         await using sandbox = await testdir();
         const path = `source.${extension}`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['typescript', 'structure'], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['typescript', 'structure'], { level: 'all' }),
             [path]: QUOTED_ESLINT_COMMENTS,
         });
-        const session = await openSession(sandbox.path);
-        const comments = await checkSuppressions(buildCheckInput(session, 'gspot/suppressions'));
+        const comments = await checkFindings(sandbox.path, 'gspot/suppressions');
         expect(comments.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
             { line: 1, rule: 'eslint-no-reason' },
             { line: 9, rule: 'eslint-no-reason' },
             { line: 10, rule: 'eslint-no-reason' },
         ]);
-        const parsed = await parseComments(path, await Bun.file(`${sandbox.path}/${path}`).text(), []);
+        const parsed = await parseComments(path, await readFile(`${sandbox.path}/${path}`, 'utf8'), []);
         expect(
             parsed.flatMap(({ text, line }) =>
                 /^(?:\/\/|#|--|<!--) ?marker:/u.test(stripCommentEnd(text)) ? [line] : [],
@@ -96,13 +94,12 @@ test.each(['js', 'ts'])(
 );
 
 test('eslint comments in JSX text and quoted attributes are not directives; an empty expression comment is', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript', 'structure'], { level: 'all' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript', 'structure'], { level: 'all' }),
         'source.tsx': JSX_COMMENTS,
     });
-    const session = await openSession(sandbox.path);
-    const comments = await checkSuppressions(buildCheckInput(session, 'gspot/suppressions'));
+
+    const comments = await checkFindings(sandbox.path, 'gspot/suppressions');
     expect(comments.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
         { line: 3, rule: 'eslint-no-reason' },
         { line: 5, rule: 'eslint-no-reason' },
@@ -113,14 +110,14 @@ test.each([...LIMIT_SUPPRESSION_CASES])(
     '$configuration refuses suppression of $name',
     async ({ configuration, file, source, rule }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText([configuration], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
             [file]: source,
         });
         expect(await checkFindings(sandbox.path, 'gspot/suppressions')).toContainEqual(
             matchFields({
                 file,
                 rule,
-                message: SUPPRESSION_DIRECTIVE_MESSAGES[rule.endsWith('-all') ? 'all' : 'limit'],
+                message: SUPPRESSION_KIND_MESSAGES[rule.endsWith('-all') ? 'all' : 'limit'],
             }),
         );
     },

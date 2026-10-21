@@ -1,17 +1,14 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { stripUndefined } from '#cli/system/values.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
-import { limitsSchema } from '#cli/settings/schema/limits.ts';
-import { namingSchema } from '#cli/settings/schema/naming.ts';
+import { limitsSchema } from '#cli/schemas/settings/limits.ts';
+import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
-import { readVersionPin } from '#cli/repository/version-pin.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { isRecord, stripUndefined } from '#cli/system/values.ts';
-import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
+import { COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/values.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
 import { type Settings, type SettingsFile } from '#cli/types/settings/values.ts';
 import { type TomlTable, type ParsedSettings } from '#cli/types/settings/file.ts';
-import { SCOPE_EMPTY_RECORDS, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/values.ts';
 import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/settings.ts';
 
 /**
@@ -19,73 +16,27 @@ import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/
  *
  * @param text the gspot.toml contents.
  * @param repositoryRoot the optional folder for validating declared scope paths.
- * @param reads the run cache.
  * @returns the normalized settings.
  */
-function parseSettings(text: string, repositoryRoot: string | undefined, reads: ReadCache): Settings {
-    const written = parseTomlText(text, SETTINGS_FILE, 'settings');
-    const words = written['allowed_words'];
-    if (isRecord(words) && Array.isArray(words['value']))
-        throw new GspotError(
-            'settings',
-            `${SETTINGS_FILE}: allowed_words: Write allowed_words as a table of word = reason, such as allowed_words = { Nebulix = "The product name." }.`,
-        );
+function parseSettings(text: string, repositoryRoot: string | undefined): Settings {
+    const written = parseTomlText(text, SETTINGS_FILE);
     const result = settingsSchema.safeParse(written);
     if (!result.success)
         throw new GspotError('settings', result.error.issues.flatMap((issue) => formatSettingsIssue(issue)).join('\n'));
     const settings = buildSettings(result.data, written);
-    validateSettings(settings, repositoryRoot, reads);
+    validateSettings(settings, repositoryRoot);
     return settings;
 }
 
 /**
- * Read gspot.toml from a repository root. When the repository last ran another gspot version, a refusal names both
- * versions.
+ * Read gspot.toml from a repository root.
  *
  * @param repositoryRoot the folder that contains gspot.toml.
- * @param reads the run cache.
  * @returns the settings and the file text.
  */
-function readSettings(repositoryRoot: string, reads: ReadCache): SettingsFile {
+function readSettings(repositoryRoot: string): SettingsFile {
     const { text } = readSettingsFile(repositoryRoot);
-    try {
-        return { settings: parseSettings(text, repositoryRoot, reads), text };
-    } catch (error) {
-        const pinned = readVersionPin(repositoryRoot);
-        const { version } = packageManifest;
-        if (!(error instanceof GspotError) || error.code !== 'settings' || pinned === undefined || pinned === version)
-            throw error;
-        throw new GspotError(
-            'settings',
-            `${error.message}\nThis repository last ran gspot ${pinned}, and this run uses ${version}.`,
-        );
-    }
-}
-
-function normalizeScopeTables(
-    parsed: NonNullable<ParsedSettings['scope']>[number],
-    written: TomlTable,
-): Settings['scopes'][string] {
-    const { tools, naming, coverage, docs, licenses, site, ...table } = parsed;
-    const normalized = Object.fromEntries(
-        SCOPE_EMPTY_RECORDS.flatMap(([name, field]) => {
-            const value = { naming, coverage, docs, licenses, site }[name];
-            return value === undefined ? [] : [[name, { ...value, [field]: [] }]];
-        }),
-    );
-    const normalizedTools =
-        tools === undefined
-            ? undefined
-            : stripUndefined({
-                  ...tools,
-                  eslint: tools.eslint === undefined ? undefined : { ...tools.eslint, override: [] },
-              });
-    return stripUndefined({
-        ...table,
-        ...normalized,
-        written,
-        tools: normalizedTools,
-    });
+    return { settings: parseSettings(text, repositoryRoot), text };
 }
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
@@ -105,14 +56,7 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
                     summary: entry.summary ?? `Runs the repository's own check ${name}.`,
                     why: 'The repository declared this command in gspot.toml as part of its gate.',
                     help: entry.help ?? 'Read the command output; this repository declares the check.',
-                    files: {
-                        ...COMMAND_CHECK_DEFAULTS.files,
-                        extensions: [...COMMAND_CHECK_DEFAULTS.files.extensions],
-                        filenames: [...COMMAND_CHECK_DEFAULTS.files.filenames],
-                        tags: [...COMMAND_CHECK_DEFAULTS.files.tags],
-                        paths,
-                        kinds: [...COMMAND_CHECK_DEFAULTS.files.kinds],
-                    },
+                    files: { ...structuredClone(COMMAND_CHECK_DEFAULTS.files), paths },
                 },
             ];
         }),
@@ -138,7 +82,7 @@ function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
     const scopeTables = Object.fromEntries(
         scopes.map(([path, scope], index) => [
             trimTrailingSlashes(path),
-            normalizeScopeTables(scope, writtenScopes[index] as TomlTable),
+            stripUndefined({ ...scope, written: writtenScopes[index] as TomlTable }),
         ]),
     );
     return {

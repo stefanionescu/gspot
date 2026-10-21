@@ -1,7 +1,6 @@
 import { parse } from '@decimalturn/toml-patch';
 import { planRun } from '#cli/planning/checks.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { stripUndefined } from '#cli/system/values.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import type { RunOptions } from '#cli/types/runs/check.ts';
 import type { ToolSearch } from '#cli/types/tools/find.ts';
@@ -11,21 +10,23 @@ import { buildScopeView } from '#cli/settings/scope-view.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { SampleChanges } from '#tests/types/samples.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { NamingCase } from '#cli/types/settings/tables.ts';
-import { readManifests } from '#cli/configurations/manifests.ts';
+import { SOURCE_KIND } from '#cli/config/repository/inventory.ts';
 import type { NamingSettings } from '#cli/types/checks/naming.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { readNamingSettings } from '#cli/checks/naming/settings.ts';
-import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
-import { manifestSchema } from '#cli/configurations/schema/manifest.ts';
+import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
 import { selectCheckImplementation } from '#cli/checks/implementations.ts';
+import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
+import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import { MOBILE_SOURCE_FILES } from '#tests/data/generation/eslint/framework.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { ToolDeclaration, ManifestDeclaration } from '#cli/types/configurations.ts';
 import { EXPO_DEPENDENCIES, REACT_NATIVE_DEPENDENCIES } from '#tests/data/checks/react.ts';
 import { NAMING_TEST_LIMITS, NAMING_TEST_SETTINGS } from '#tests/data/checks/naming/settings.ts';
+import { type ToolDeclaration, type CheckDeclaration, type ManifestDeclaration } from '#cli/types/configurations.ts';
 
 /**
  * List the shipped configurations that gspot selects in every repository.
@@ -33,7 +34,7 @@ import { NAMING_TEST_LIMITS, NAMING_TEST_SETTINGS } from '#tests/data/checks/nam
  * @returns their names.
  */
 export function listAlwaysSelected(): string[] {
-    return [...readManifests(createReadCache(process.cwd())).values()]
+    return [...readManifests().values()]
         .filter(({ configuration }) => configuration.always_selected)
         .map(({ configuration }) => configuration.name);
 }
@@ -84,8 +85,9 @@ export function buildManifest(
     name: string,
     project: { requires?: string[]; tables?: string; group?: ManifestDeclaration['configuration']['group'] } = {},
 ): ManifestDeclaration {
-    const declared = manifestSchema.parse({
+    return manifestSchema.parse({
         ...parse(project.tables ?? ''),
+        folder: `configurations/${project.group ?? 'language'}/${name}`,
         configuration: {
             name,
             title: name,
@@ -94,11 +96,6 @@ export function buildManifest(
             description: 'A configuration for the tests, long enough.',
         },
     });
-    return {
-        ...declared,
-        checks: declared.checks.map((check) => stripUndefined({ ...check, name: `${name}/${check.name}` })),
-        folder: `configurations/${project.group ?? 'language'}/${name}`,
-    };
 }
 
 /**
@@ -119,7 +116,7 @@ export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
  * @returns a one-byte source file for the inventory.
  */
 export function buildTrackedFile(path: string, tags: string[] = ['text']): TrackedFile {
-    return { path, kind: 'source', tags, executable: false, size: 1 };
+    return { path, kind: 'source', kindOrigin: SOURCE_KIND.origin, tags, executable: false, size: 1 };
 }
 
 /**
@@ -153,7 +150,12 @@ stage = "commit"
 }
 /** The tool search state for tests that inspect installed tools. */
 export function buildInspectionContext(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
-    return { root, timeoutSeconds: SETTING_DEFAULTS.tool_timeout_seconds, inspections: new Map(), ...fields };
+    return {
+        root,
+        timeoutSeconds: SETTING_DECLARATIONS['tool_timeout_seconds'].default,
+        inspections: new Map(),
+        ...fields,
+    };
 }
 
 /** Compile the path patterns of the naming test data. */
@@ -179,19 +181,15 @@ export function buildNamingSettings(): NamingSettings {
 
 /** Read the naming settings that apply in one scope of this settings text. */
 export function buildScopeNamingSettings(text: string, scope = ''): NamingSettings {
-    const reads = createReadCache(process.cwd());
-    const settings = parseSettings(text, undefined, reads);
-    const selected = selectForScope(settings, scope, readManifests(reads));
-    const view = buildScopeView(
-        buildKnownSettings(selected, 'recommended', createReadCache(process.cwd())),
-        settings,
+    const settings = parseSettings(text, undefined);
+    const selected = selectForScope(settings, scope, readManifests());
+    const known = buildKnownSettings(selected, 'recommended');
+    const view = buildScopeView(known, settings, selected, scope);
+    return readNamingSettings(settings, {
+        view,
+        known,
         selected,
-        scope,
-    );
-    return readNamingSettings({
-        selection: { view, scope: { path: scope }, selected },
-        settingsFile: { settings },
-        reads,
+        scope: { path: scope, configurations: view.configurations, origin: scope === '' ? 'root' : SETTINGS_FILE },
     });
 }
 
@@ -212,7 +210,7 @@ export function readTestRepository(root: string): Promise<Repository> {
     return readRepository(createReadCache(root), {
         declarations: [],
         scopes: [],
-        manifests: readManifests(createReadCache(process.cwd())),
+        manifests: readManifests(),
     });
 }
 
@@ -229,4 +227,11 @@ export function buildMobileFiles(): Record<string, string> {
             dependencies: { react: testsPackage.devDependencies.react, ...EXPO_DEPENDENCIES },
         }),
     };
+}
+
+/** Read one shipped check by ID, rejecting unknown names. */
+export function getShippedCheck(name: string): CheckDeclaration {
+    const declaration = listChecksById(readManifests().values()).get(name);
+    if (declaration === undefined) throw new Error(`The shipped check ${name} does not exist.`);
+    return declaration.check;
 }

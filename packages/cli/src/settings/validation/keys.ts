@@ -1,9 +1,5 @@
-import { z } from 'zod';
-import { isRecord } from '#cli/system/values.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
-import { findSettingSchema } from '#cli/settings/schema/gspot-toml.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { isLoosening, validateReason, isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 
@@ -12,13 +8,13 @@ import type {
     KnownSettings,
     SettingsTable,
     WrittenSetting,
-    EffectiveSetting,
     DeclarationMatch,
 } from '#cli/types/settings/values.ts';
 import {
     getSettingTable,
     getSettingValue,
     findDeclaration,
+    listWrittenKeys,
     getWrittenSetting,
     listSettingsTables,
     findSettingDefault,
@@ -76,12 +72,7 @@ function validateWrittenKey(
     if (!match) return [{ path: key.split('.'), message: formatUnknownSetting(known, key) }];
     const written = getWrittenSetting(table, key);
     if (!written) return [];
-    const shipped = findSettingDefault(
-        known,
-        match,
-        scope ?? '',
-        (dependentKey) => (getSettingValue(known, settings, dependentKey, scope) as EffectiveSetting).value,
-    )?.value;
+    const shipped = findSettingDefault(known, settings, match, scope)?.value;
     if (written.reason !== undefined && !isLoosening(match.declaration, written.value, shipped))
         return [
             {
@@ -91,22 +82,6 @@ function validateWrittenKey(
         ];
     if (match.declaration.type === 'list') return listErrors(key, written, match, shipped);
     return validateScalar(key, written, match, scope, shipped);
-}
-
-function validateExtraKeys(known: KnownSettings, table: SettingsTable): SettingsError[] {
-    const errors: SettingsError[] = [];
-    const { tools = {} } = table;
-    for (const [tool, toolTable] of Object.entries(tools)) {
-        const extra = isRecord(toolTable['extra']) ? toolTable['extra'] : {};
-        for (const key of Object.keys(extra)) {
-            if (known.declarations.has(`tools.${tool}.${key}`))
-                errors.push({
-                    path: ['tools', tool, 'extra', key],
-                    message: `\`${key}\` under [tools.${tool}.extra] already has a declared setting. Move it up to \`tools.${tool}.${key}\` and remove it from extra.`,
-                });
-        }
-    }
-    return errors;
 }
 
 // Configuration defaults that conflict in the root or a scope. No written table settles them.
@@ -131,46 +106,6 @@ function listUnsettledConflicts(
                 errors.push({ path, message: text });
     }
     return errors;
-}
-
-// Check whether a written tool table groups exposed keys instead of exposing one key.
-function isKeyGroup(known: KnownSettings, key: string, value: unknown): value is Record<string, unknown> {
-    if (known.declarations.has(key) || !isRecord(value)) return false;
-    let schema = findSettingSchema(key);
-    if (schema !== undefined) schema = unwrapSettingSchema(schema);
-    return schema instanceof z.ZodObject;
-}
-
-/**
- * List every setting key that a settings table writes, in dotted form.
- *
- * @param settings the root table or one scope.
- * @param known the declarations, with nested tool keys.
- * @returns all known written keys, plus unknown keys from open settings tables.
- */
-function listWrittenKeys(settings: SettingsTable, known: KnownSettings): string[] {
-    const keys: string[] = [];
-    const pending = (settings.tools === undefined ? [] : Object.entries(settings.tools)).flatMap(([tool, table]) =>
-        Object.entries(table)
-            .filter(([field]) => field !== 'extra')
-            .map(([field, value]) => ({ key: `tools.${tool}.${field}`, value })),
-    );
-    pending.push(
-        ...Object.entries(settings.written).flatMap(([name, table]) => {
-            if (known.declarations.has(name)) return [{ key: name, value: table }];
-            if (isRecord(table) && name !== 'tools')
-                return Object.entries(table).map(([field, value]) => ({ key: `${name}.${field}`, value }));
-            return [];
-        }),
-    );
-    for (const { key, value } of pending) {
-        if (isKeyGroup(known, key, value))
-            pending.push(...Object.entries(value).map(([field, child]) => ({ key: `${key}.${field}`, value: child })));
-        else keys.push(key);
-    }
-    const format = (settings.format === undefined ? [] : Object.keys(settings.format)).map((key) => `format.${key}`);
-    const knownKeys = [...known.declarations.keys()].filter((key) => getWrittenSetting(settings, key) !== undefined);
-    return [...new Set([...knownKeys, ...keys, ...format])];
 }
 
 /**
@@ -246,7 +181,6 @@ function validateKeys(
             ...listWrittenKeys(table, selectedKnown).flatMap((key) =>
                 validateWrittenKey(selectedKnown, settings, table, scope, key),
             ),
-            ...validateExtraKeys(selectedKnown, table),
         ];
         errors.push(...found.map((error) => ({ ...error, path: [...path, ...error.path] })));
     }

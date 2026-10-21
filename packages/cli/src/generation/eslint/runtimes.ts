@@ -1,15 +1,13 @@
-import { escapeGlob } from '#cli/repository/matchers.ts';
+import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { splitGlobSelectors } from '#cli/generation/eslint/files.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import type { EslintContext, EslintRuntimeBlock } from '#cli/types/generation/eslint.ts';
+import type { EslintRuntimeBlock } from '#cli/types/generation/eslint.ts';
+import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations.ts';
+import { buildScopeGlob, splitGlobSelectors, listNestedScopeGlobs } from '#cli/generation/eslint/files.ts';
 
 import {
     COMMONJS_FILES,
     MISE_SCRIPT_PATH,
-    NEXTJS_CONFIGURATION,
     ESLINT_SETTINGS_TABLE,
-    REACT_NATIVE_CONFIGURATION,
     ESLINT_BROWSER_CONFIGURATIONS,
 } from '#cli/config/generation/eslint.ts';
 
@@ -22,14 +20,13 @@ function selectFrameworkRuntime(configurations: string[]): string | undefined {
 /**
  * List your own script paths and the mise task files in the scope.
  *
- * @param context the scope to read.
- * @param context.selection the project scope.
+ * @param selection the project scope.
  *
  * @returns repository-relative paths whose files use script rules.
  */
-export function listScriptPaths({ selection }: Pick<EslintContext, 'selection'>): string[] {
+export function listScriptPaths(selection: ScopeSelection): string[] {
     const scripts = selection.view.values.javascript?.script_files ?? [];
-    return [...scripts, joinScope(escapeGlob(selection.scope.path), MISE_SCRIPT_PATH)];
+    return [...scripts, buildScopeGlob(selection.scope.path, MISE_SCRIPT_PATH)];
 }
 
 /**
@@ -43,27 +40,26 @@ export function listScriptPaths({ selection }: Pick<EslintContext, 'selection'>)
  */
 export function buildRuntimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock[] {
     const blocks: EslintRuntimeBlock[] = [];
-    for (const selection of scopes.toSorted((left, right) => left.scope.path.length - right.scope.path.length)) {
+    for (const selection of scopes.toSorted((left, right) => compareScopeDepth(left.scope.path, right.scope.path))) {
         const scope = selection.scope.path;
-        const children = listNestedScopes(
+        const children = listNestedScopeGlobs(
             scopes.map((entry) => entry.scope.path),
             scope,
-        ).map((path) => `!${escapeGlob(path)}/**`);
-        const prefix = joinScope(escapeGlob(scope), '');
+        ).map((path) => `!${path}`);
         const tool = selection.view.values[ESLINT_SETTINGS_TABLE];
         blocks.push(
-            { scope, runtime: 'node', ...splitGlobSelectors([`${prefix}**/*`, ...children]) },
-            { scope, runtime: 'commonjs', ...splitGlobSelectors([`${prefix}${COMMONJS_FILES}`, ...children]) },
+            { scope, runtime: 'node', ...splitGlobSelectors([buildScopeGlob(scope, '**/*'), ...children]) },
+            { scope, runtime: 'commonjs', ...splitGlobSelectors([buildScopeGlob(scope, COMMONJS_FILES), ...children]) },
         );
         const runtime = selectFrameworkRuntime(selection.view.configurations);
         if (runtime !== undefined) {
-            const scripts = listScriptPaths({ selection });
+            const scripts = listScriptPaths(selection);
             blocks.push({
                 scope,
                 runtime,
                 ...splitGlobSelectors([
-                    `${prefix}**/*`,
-                    `!${prefix}${COMMONJS_FILES}`,
+                    buildScopeGlob(scope, '**/*'),
+                    `!${buildScopeGlob(scope, COMMONJS_FILES)}`,
                     ...scripts.map((path) => `!${path}`),
                     ...children,
                 ]),

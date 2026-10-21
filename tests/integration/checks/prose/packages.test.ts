@@ -2,10 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
 import { GOOGLE_TERMS_FILE } from '#tests/data/checks/prose.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { updateSandbox, shareProseSandbox } from '#tests/setup/sandbox.ts';
 
 const installedSandbox = shareProseSandbox();
@@ -31,17 +30,19 @@ test('gspot install restores deleted Vale dictionaries, and prose/vale passes ag
     await rm(join(sandbox, '.gspot', 'vale', 'config', 'dictionaries'), {
         recursive: true,
     });
-    const broken = await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
+    const broken = parseCheckReport(
+        await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment),
+    );
     expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
-    expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([{ check: 'prose/vale', status: 'missing' }]);
+    expect(broken.report.checks).toMatchObject([{ check: 'prose/vale', status: 'missing' }]);
     // The install command that the finding names gets the missing dictionaries again.
     const installed = await spawnGspot(sandbox, ['install'], environment);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    const corrected = await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
+    const corrected = parseCheckReport(
+        await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment),
+    );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'prose/vale', status: 'passed', findings: [] },
-    ]);
+    expect(corrected.report.checks).toMatchObject([{ check: 'prose/vale', status: 'passed', findings: [] }]);
 });
 test('Vale package install deletes a package gspot no longer ships', async () => {
     const sandbox = installedSandbox();

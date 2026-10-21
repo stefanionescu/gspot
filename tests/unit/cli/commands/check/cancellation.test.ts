@@ -6,32 +6,31 @@ import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { type RunReport } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { type PausedGit } from '#tests/types/processes.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { MILLISECONDS_PER_SECOND } from '#tests/data/test-setup.ts';
 import { SLOW_TOOL_PROGRAM } from '#tests/data/runs/command-checks.ts';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
-import { CLI_MAIN, runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { CLI_BIN, runGspot, CLI_MAIN, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { waitForExit, waitForFile, captureChild, startCommand, prepareCommand } from '#tests/setup/processes.ts';
 
 // Windows does not deliver these process signals like POSIX systems.
 test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     'check passes %s to a running tool and reports the run as canceled',
     async (signal) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText([], {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([], {
                 tables: `[[command_check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', SLOW_TOOL_PROGRAM])}\n`,
             }),
             'source.txt': 'input\n',
         });
-        await using capture = startCommand([process.execPath, CLI_MAIN, 'check', '--only', 'project/slow', '--json'], {
+
+        await using capture = startCommand([process.execPath, CLI_BIN, 'check', '--only', 'project/slow', '--json'], {
             cwd: sandbox.path,
             env: { ...buildSpawnEnvironment(), NO_COLOR: '1', CI: '1' },
         });
@@ -41,7 +40,11 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
         const toolPid = Number(await readFile(started, 'utf8'));
         child.kill(signal);
         expect(await child.exited, await capture.errors).toBe(signal === 'SIGINT' ? 130 : 143);
-        const report = JSON.parse(await capture.output) as RunReport;
+        const report = parseCheckReport({
+            code: await child.exited,
+            stdout: await capture.output,
+            stderr: await capture.errors,
+        }).report;
         expect(report.exitCode).toBe(signal === 'SIGINT' ? 130 : 143);
         expect(report.checks).toHaveLength(1);
         expect(report.checks[0]!.status).toBe('error');
@@ -81,13 +84,13 @@ process.exit(await child.exited);
 test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
     'staged cancellation during %s preserves source content and permits retry',
     async (operation) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
             'source.sh': 'echo indexed\n',
             scratch: {},
             bin: {},
         });
+
         readGitOutput(sandbox.path, ['init', '-q']);
         readGitOutput(sandbox.path, ['add', '-A']);
         const indexed = readGitOutput(sandbox.path, ['ls-files', '--stage', '-z']);
@@ -99,7 +102,7 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
         const bin = join(sandbox.path, 'bin');
         const environment = await fakeGit(bin, { operation, marker, pauseOnCall: 1, executable: nativeGit! });
         await using capture = startCommand(
-            [process.execPath, CLI_MAIN, 'check', '--staged', '--only', 'project/bash-syntax', '--json'],
+            [process.execPath, CLI_BIN, 'check', '--staged', '--only', 'project/bash-syntax', '--json'],
             {
                 cwd: sandbox.path,
                 env: { ...buildSpawnEnvironment(), NO_COLOR: '1', CI: '1', ...environment, TMPDIR: scratch },
@@ -124,7 +127,9 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
         expect(await readdir(scratch)).toStrictEqual([]);
         expect(readGitOutput(sandbox.path, ['ls-files', '--stage', '-z'])).toBe(indexed);
         expect(await readFile(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
-        const retry = await checkReport(sandbox.path, ['check', '--staged', '--only', 'project/bash-syntax', '--json']);
+        const retry = parseCheckReport(
+            await runGspot(sandbox.path, ['check', '--staged', '--only', 'project/bash-syntax', '--json']),
+        );
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
         expect(retry.report.checks[0]!.status).toBe('passed');
     },
@@ -132,11 +137,11 @@ test.skipIf(isWindows).each(['diff', 'clone', 'cat-file'] as const)(
 
 // Windows does not deliver these process signals like POSIX systems.
 test.skipIf(isWindows)('push cancellation retains completed reports and names references not checked', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'source.sh': 'echo first\n',
     });
+
     commitAll(sandbox.path);
     const first = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     await writeFile(join(sandbox.path, 'source.sh'), 'echo second\n');
@@ -149,7 +154,7 @@ test.skipIf(isWindows)('push cancellation retains completed reports and names re
     await mkdir(binaryFolder);
     const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
     await using capture = startCommand(
-        [process.execPath, CLI_MAIN, 'check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json'],
+        [process.execPath, CLI_BIN, 'check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json'],
         {
             cwd: sandbox.path,
             env: {
@@ -190,7 +195,7 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+            'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
             'source.sh': 'echo indexed\n',
         });
         commitAll(root);
@@ -253,7 +258,7 @@ test('an aborted run stops its command and reports cancellation on every system'
     const marker = join(sandbox.path, 'command-ready');
     const program = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); setInterval(() => {}, 1000);`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([], {
+        'gspot.toml': buildSandboxSettings([], {
             tables: `[[command_check]]\nname = "project/cancel"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\n`,
         }),
         'source.txt': 'Input.\n',
@@ -261,14 +266,12 @@ test('an aborted run stops its command and reports cancellation on every system'
     const controller = new AbortController();
     const session = await openSession(sandbox.path);
     using _resources = session.resources;
-    const running = runChecks(
-        { ...session, cancelSignal: controller.signal },
-        buildRunOptions({ only: ['project/cancel'] }),
-    );
+    session.cancelSignal = controller.signal;
+    const running = runChecks(session, buildRunOptions({ only: ['project/cancel'] }));
     expect(await waitForFile(marker)).toBe(true);
     controller.abort();
     const result = await running;
     expect(result.report.checks).toMatchObject([{ check: 'project/cancel', status: 'error' }]);
     expect(result.report.checks[0]?.note).toContain('canceled');
-    await waitForExit(Number(await Bun.file(marker).text()));
+    await waitForExit(Number(await readFile(marker, 'utf8')));
 });

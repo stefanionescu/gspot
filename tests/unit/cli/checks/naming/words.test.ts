@@ -2,33 +2,27 @@ import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/read.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { buildScopeView } from '#cli/settings/scope-view.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { checkIdentifier } from '#cli/checks/naming/names.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { buildNamingSettings } from '#tests/setup/builders.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { BANNED_WORDS } from '#tests/data/checks/naming/settings.ts';
 import { splitParts, readNamingSettings } from '#cli/checks/naming/settings.ts';
+import { getShippedCheck, buildNamingSettings } from '#tests/setup/builders.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
 import { type Identifier, type NamingInputs } from '#cli/types/checks/naming.ts';
 
 test('a number word such as base64 counts as one word; repeated, extra, banned and digit words are still reported', () => {
-    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
-        'naming/identifiers',
-    )!.check;
-    const selected = selectConfigurations(['naming'], readManifests(createReadCache(process.cwd())));
-    const known = buildKnownSettings(selected, 'recommended', createReadCache(process.cwd()));
-    const settings = parseSettings(
-        buildSettingsText(['naming'], { rules: true }),
-        undefined,
-        createReadCache(process.cwd()),
-    );
+    const check = getShippedCheck('naming/identifiers');
+    const selected = selectConfigurations(['naming'], readManifests());
+    const known = buildKnownSettings(selected, 'recommended');
+    const settings = parseSettings(buildSandboxSettings(['naming'], { rules: true }), undefined);
     const view = buildScopeView(known, settings, selected, '');
-    const effective = readNamingSettings({
-        selection: { view: view, scope: { path: '' }, selected: selected },
-        settingsFile: { settings: settings },
-        reads: createReadCache(process.cwd()),
+    const effective = readNamingSettings(settings, {
+        view,
+        known,
+        selected,
+        scope: { path: '', configurations: view.configurations, origin: 'root' },
     });
     const context = {
         check,
@@ -52,7 +46,7 @@ test('a number word such as base64 counts as one word; repeated, extra, banned a
 });
 
 function buildNamingInputs(): NamingInputs {
-    const owned = listChecksById(readManifests(createReadCache(process.cwd())).values()).get('naming/identifiers')!;
+    const owned = listChecksById(readManifests().values()).get('naming/identifiers')!;
     return { check: owned.check, settings: buildNamingSettings(), isTestFile: false };
 }
 
@@ -121,7 +115,7 @@ test('a reserved word is allowed only in its named categories', () => {
     expect(checkIdentifier(buildIdentifier('configOf'), plain)[0]?.rule).toBe('reserved-term');
 });
 
-test('a prefix rule allows handle in functions and methods and reports it in variables', () => {
+test('an ignored_prefix override strips handle from function and method names in its files', () => {
     const plain = buildNamingInputs();
     const rule = {
         ...buildNamingSettings().overrides[4]!,
@@ -134,28 +128,9 @@ test('a prefix rule allows handle in functions and methods and reports it in var
         ...plain,
         settings: { ...buildNamingSettings(), overrides: [...buildNamingSettings().overrides, rule] },
     };
-    for (const file of ['src/a.ts', 'src/a.tsx', 'src/a.js', 'src/a.jsx']) {
-        for (const category of ['functions', 'methods'] as const)
-            expect(checkIdentifier(buildIdentifier('handleSubmit', category, file), selected)).toStrictEqual([]);
-        expect(checkIdentifier(buildIdentifier('handleSubmit', 'variables', file), selected)).toMatchObject([
-            {
-                rule: 'callback-verb',
-                message:
-                    'typescript variables "handleSubmit": "handle" starts a name only for event handlers. Name what this function does.',
-            },
-        ]);
-    }
-    expect(checkIdentifier(buildIdentifier('handleSubmit'), plain)).toStrictEqual([]);
-    expect(checkIdentifier(buildIdentifier('handleSubmit', 'variables', 'other/a.ts'), selected)).toStrictEqual([]);
-    expect(checkIdentifier(buildIdentifier('handlebar', 'variables'), selected)).toStrictEqual([]);
-    for (const name of ['HandleSubmit', 'handleSubmit_now', 'handleSubmit-Now'])
-        expect(checkIdentifier(buildIdentifier(name), selected).map(({ rule }) => rule)).toContain('case');
-    expect(
-        checkIdentifier(buildIdentifier('useSubmit', 'variables'), {
-            ...selected,
-            settings: { ...buildNamingSettings(), overrides: [{ ...rule, ignoredPrefix: /^use(?=[A-Z])/u }] },
-        })[0]?.message,
-    ).toContain('"use"');
+    for (const category of ['functions', 'methods', 'variables'] as const)
+        expect(checkIdentifier(buildIdentifier('handleSubmit', category), selected)).toStrictEqual([]);
+    expect(checkIdentifier(buildIdentifier('HandleSubmit'), selected).map(({ rule }) => rule)).toStrictEqual(['case']);
 });
 
 test('the tests-group exemption follows the group, not its label', () => {

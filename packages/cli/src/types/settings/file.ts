@@ -69,6 +69,57 @@ type WrittenStructure = Optional<{
     environment_readers: string[];
 }>;
 
+type WrittenReasonedTables = {
+    coverage: WrittenCoverage;
+    dependencies: WrittenDependencies;
+    docs: WrittenDocs;
+    site: WrittenSite;
+    duplication: { min_lines?: SettingValue<number> | undefined; min_tokens?: SettingValue<number> | undefined };
+    prose: {
+        max_sentence_words?: SettingValue<number> | undefined;
+        max_list_item_words?: SettingValue<number> | undefined;
+        max_paragraph_sentences?: SettingValue<number> | undefined;
+    };
+    repository: { max_file_kilobytes?: SettingValue<number> | undefined };
+};
+
+type WrittenConfigurationTables = {
+    [Name in keyof ConfigurationTables]?:
+        | (Name extends keyof WrittenReasonedTables ? WrittenReasonedTables[Name] : Optional<ConfigurationTables[Name]>)
+        | undefined;
+};
+
+type RootOnlyFields =
+    | 'scope'
+    | 'level'
+    | 'allowed_words'
+    | 'tool_timeout_seconds'
+    | 'ignore'
+    | 'command_check'
+    | 'hooks'
+    | 'ci'
+    | 'rules'
+    | 'import_rule';
+
+type ParsedScopeTables = {
+    coverage: Omit<ConfigurationTables['coverage'], 'swift_target'>;
+    docs: Omit<ConfigurationTables['docs'], 'banned_headings'>;
+    licenses: Omit<ConfigurationTables['licenses'], 'allowed_package'>;
+    site: Omit<ConfigurationTables['site'], 'size_limit'>;
+    naming: Omit<ParsedNaming, 'override'>;
+    structure: Pick<ParsedStructure, 'environment_readers'>;
+    tools: Omit<ParsedTools, 'eslint' | 'v8r'> & {
+        eslint?: Omit<NonNullable<ParsedTools['eslint']>, 'override'> | undefined;
+    };
+    format: Omit<ParsedFormat, 'override'>;
+};
+
+type ParsedScope = Omit<ParsedSettings, RootOnlyFields | 'test_files' | keyof ParsedScopeTables> &
+    Optional<ParsedScopeTables> & {
+        path: string;
+        test_files?: string[] | undefined;
+    };
+
 export type ReasonedValue<Value> = { value: Value; reason: string };
 
 export type SettingValue<Value> = Value | ReasonedValue<Value>;
@@ -108,12 +159,10 @@ export type WrittenFormat = Optional<ParsedFormat>;
 export type WrittenSettings = Optional<
     Omit<
         ParsedSettings,
+        | keyof ConfigurationTables
         | 'allowed_words'
+        | 'removed_configurations'
         | 'scope'
-        | 'coverage'
-        | 'dependencies'
-        | 'docs'
-        | 'site'
         | 'limits'
         | 'naming'
         | 'import_rule'
@@ -123,133 +172,29 @@ export type WrittenSettings = Optional<
         | 'structure'
         | 'hooks'
         | 'ci'
-        | 'licenses'
         | 'rules'
-        | 'cloudflare'
-        | 'drizzle'
-        | 'javascript'
-        | 'python'
-        | 'trpc'
-        | 'zustand'
-        | 'openapi'
-        | 'postgres'
-        | 'secrets'
-        | 'spelling'
-        | 'supabase'
-        | 'translations'
-        | 'xcode'
-        | 'swift'
-        | 'duplication'
-        | 'prose'
-        | 'repository'
     >
-> & {
-    licenses?: WrittenLicenses | undefined;
-    cloudflare?: Optional<ConfigurationTables['cloudflare']> | undefined;
-    drizzle?: Optional<ConfigurationTables['drizzle']> | undefined;
-    javascript?: Optional<ConfigurationTables['javascript']> | undefined;
-    python?: Optional<ConfigurationTables['python']> | undefined;
-    trpc?: Optional<ConfigurationTables['trpc']> | undefined;
-    zustand?: Optional<ConfigurationTables['zustand']> | undefined;
-    openapi?: Optional<ConfigurationTables['openapi']> | undefined;
-    postgres?: Optional<ConfigurationTables['postgres']> | undefined;
-    secrets?: Optional<ConfigurationTables['secrets']> | undefined;
-    spelling?: Optional<ConfigurationTables['spelling']> | undefined;
-    supabase?: Optional<ConfigurationTables['supabase']> | undefined;
-    translations?: Optional<ConfigurationTables['translations']> | undefined;
-    xcode?: Optional<ConfigurationTables['xcode']> | undefined;
-    swift?: Optional<ConfigurationTables['swift']> | undefined;
-    duplication?:
-        | { min_lines?: SettingValue<number> | undefined; min_tokens?: SettingValue<number> | undefined }
-        | undefined;
-    prose?:
-        | {
-              max_sentence_words?: SettingValue<number> | undefined;
-              max_list_item_words?: SettingValue<number> | undefined;
-              max_paragraph_sentences?: SettingValue<number> | undefined;
-          }
-        | undefined;
-    repository?: { max_file_kilobytes?: SettingValue<number> | undefined } | undefined;
-    allowed_words?: Record<string, string> | undefined;
-    scope?: WrittenScope[] | undefined;
-    coverage?: WrittenCoverage | undefined;
-    dependencies?: WrittenDependencies | undefined;
-    docs?: WrittenDocs | undefined;
-    site?: WrittenSite | undefined;
-    limits?: WrittenLimits | undefined;
-    naming?: WrittenNaming | undefined;
-    import_rule?: WrittenImportRule[] | undefined;
-    tools?: WrittenTools | undefined;
-    format?: WrittenFormat | undefined;
-    command_check?: (CommandCheckFields & { output?: OutputInput | undefined })[] | undefined;
-    structure?: WrittenStructure | undefined;
-    hooks?: Optional<ParsedHooks> | undefined;
-    ci?: Optional<ParsedCi> | undefined;
-    rules?: Optional<ParsedRules> | undefined;
-};
+> &
+    WrittenConfigurationTables & {
+        removed_configurations?: SettingValue<string[]> | undefined;
+        allowed_words?: Record<string, string> | undefined;
+        scope?: WrittenScope[] | undefined;
+        limits?: WrittenLimits | undefined;
+        naming?: WrittenNaming | undefined;
+        import_rule?: WrittenImportRule[] | undefined;
+        tools?: WrittenTools | undefined;
+        format?: WrittenFormat | undefined;
+        command_check?: (CommandCheckFields & { output?: OutputInput | undefined })[] | undefined;
+        structure?: WrittenStructure | undefined;
+        hooks?: Optional<ParsedHooks> | undefined;
+        ci?: Optional<ParsedCi> | undefined;
+        rules?: Optional<ParsedRules> | undefined;
+    };
 
 export type ParsedSettings = ParsedRoot & {
-    scope?:
-        | {
-              path: string;
-              configurations: string[];
-              removed_configurations: string[];
-              test_files?: string[] | undefined;
-              cloudflare?: ConfigurationTables['cloudflare'] | undefined;
-              coverage?: Omit<ConfigurationTables['coverage'], 'swift_target'> | undefined;
-              dependencies?: ConfigurationTables['dependencies'] | undefined;
-              docs?: Omit<ConfigurationTables['docs'], 'banned_headings'> | undefined;
-              drizzle?: ConfigurationTables['drizzle'] | undefined;
-              javascript?: ConfigurationTables['javascript'] | undefined;
-              python?: ConfigurationTables['python'] | undefined;
-              trpc?: ConfigurationTables['trpc'] | undefined;
-              zustand?: ConfigurationTables['zustand'] | undefined;
-              structure?: Pick<ParsedStructure, 'environment_readers'> | undefined;
-              licenses?: Omit<ConfigurationTables['licenses'], 'allowed_package'> | undefined;
-              openapi?: ConfigurationTables['openapi'] | undefined;
-              postgres?: ConfigurationTables['postgres'] | undefined;
-              duplication?: ConfigurationTables['duplication'] | undefined;
-              prose?: ConfigurationTables['prose'] | undefined;
-              repository?: ConfigurationTables['repository'] | undefined;
-              secrets?: ConfigurationTables['secrets'] | undefined;
-              site?: Omit<ConfigurationTables['site'], 'size_limit'> | undefined;
-              spelling?: ConfigurationTables['spelling'] | undefined;
-              supabase?: ConfigurationTables['supabase'] | undefined;
-              translations?: ConfigurationTables['translations'] | undefined;
-              xcode?: ConfigurationTables['xcode'] | undefined;
-              swift?: ConfigurationTables['swift'] | undefined;
-              limits?: ParsedLimits | undefined;
-              naming?: Omit<ParsedNaming, 'override'> | undefined;
-              tools?:
-                  | (Omit<ParsedTools, 'eslint' | 'v8r'> & {
-                        eslint?: Omit<NonNullable<ParsedTools['eslint']>, 'override' | 'plugins'> | undefined;
-                    })
-                  | undefined;
-              format?: Omit<ParsedFormat, 'override'> | undefined;
-          }[]
-        | undefined;
-    cloudflare?: ConfigurationTables['cloudflare'] | undefined;
-    coverage?: ConfigurationTables['coverage'] | undefined;
-    dependencies?: ConfigurationTables['dependencies'] | undefined;
-    docs?: ConfigurationTables['docs'] | undefined;
-    drizzle?: ConfigurationTables['drizzle'] | undefined;
-    javascript?: ConfigurationTables['javascript'] | undefined;
-    python?: ConfigurationTables['python'] | undefined;
-    trpc?: ConfigurationTables['trpc'] | undefined;
-    zustand?: ConfigurationTables['zustand'] | undefined;
-    licenses?: ConfigurationTables['licenses'] | undefined;
-    openapi?: ConfigurationTables['openapi'] | undefined;
-    postgres?: ConfigurationTables['postgres'] | undefined;
-    duplication?: ConfigurationTables['duplication'] | undefined;
-    prose?: ConfigurationTables['prose'] | undefined;
-    repository?: ConfigurationTables['repository'] | undefined;
-    secrets?: ConfigurationTables['secrets'] | undefined;
-    site?: ConfigurationTables['site'] | undefined;
-    spelling?: ConfigurationTables['spelling'] | undefined;
-    supabase?: ConfigurationTables['supabase'] | undefined;
-    translations?: ConfigurationTables['translations'] | undefined;
-    xcode?: ConfigurationTables['xcode'] | undefined;
-    swift?: ConfigurationTables['swift'] | undefined;
+    [Name in keyof ConfigurationTables]?: ConfigurationTables[Name] | undefined;
+} & {
+    scope?: ParsedScope[] | undefined;
     limits?: ParsedLimits | undefined;
     naming?: ParsedNaming | undefined;
     import_rule: ImportRule[];
@@ -279,29 +224,7 @@ export type SettingsError = { path: KeyPath; message: string };
 export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['format']>, 'override' | 'quotes'>>> &
     Pick<NonNullable<ParsedSettings['format']>, 'quotes'>;
 
-export type ToolTable = Record<string, unknown>;
-
-export type WrittenScope = Omit<
-    WrittenSettings,
-    | 'scope'
-    | 'level'
-    | 'allowed_words'
-    | 'tool_timeout_seconds'
-    | 'ignore'
-    | 'command_check'
-    | 'structure'
-    | 'hooks'
-    | 'ci'
-    | 'rules'
-    | 'coverage'
-    | 'docs'
-    | 'licenses'
-    | 'site'
-    | 'naming'
-    | 'import_rule'
-    | 'tools'
-    | 'format'
-> & {
+export type WrittenScope = Omit<WrittenSettings, RootOnlyFields | keyof ParsedScopeTables> & {
     path: string;
     coverage?: Omit<WrittenCoverage, 'swift_target'> | undefined;
     docs?: Omit<WrittenDocs, 'banned_headings'> | undefined;
@@ -311,14 +234,12 @@ export type WrittenScope = Omit<
     structure?: { environment_readers?: string[] | undefined } | undefined;
     tools?:
         | (Omit<WrittenTools, 'eslint' | 'v8r'> & {
-              eslint?: Omit<NonNullable<WrittenTools['eslint']>, 'override' | 'plugins'> | undefined;
+              eslint?: Omit<NonNullable<WrittenTools['eslint']>, 'override'> | undefined;
           })
         | undefined;
     format?: Omit<WrittenFormat, 'override'> | undefined;
 };
 
 export type TomlTable = Record<string, unknown>;
-
-export type RuleExcludeError = { index: number; message: string };
 
 export type StylelintOptions = { severity?: 'error' | undefined };

@@ -11,11 +11,7 @@ dependencies = ["express"]
 message = "A message a client reads names no identifier; put the value in its own field."
 selector = "CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]"
 
-[eslint]
-fragment = true
-
 [[tool_file]]
 per_scope = true
 target = "semgrep.yml"
 tool = "semgrep"
-when = { configuration = "security" }

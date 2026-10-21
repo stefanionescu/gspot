@@ -2,11 +2,10 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { testRunFolder } from '#tests/setup/install.ts';
+import { TEST_RUN_FOLDER } from '#tests/setup/install.ts';
 import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/packages.ts';
 
 import {
-    HTTP_REDIRECT,
     REGISTRY_HOST,
     NPM_PACK_FLAGS,
     UPSTREAM_REGISTRY,
@@ -51,7 +50,7 @@ export async function createNpmRegistry(
     work: string,
     options: { declarations: readonly RegistryPackage[]; token?: string },
 ): Promise<NpmRegistry> {
-    const folder = testRunFolder();
+    const folder = TEST_RUN_FOLDER;
     const files = [join(folder, PACKED_PACKAGES_FILE)];
     if (options.declarations.length > 0) files.push(await runNpmPack(work, options.declarations));
 
@@ -63,7 +62,7 @@ export async function createNpmRegistry(
     const server = Bun.serve({
         hostname: REGISTRY_HOST,
         port: 0,
-        fetch(request) {
+        async fetch(request) {
             requests++;
             if (options.token !== undefined && request.headers.get('authorization') !== `Bearer ${options.token}`)
                 return Response.json({ error: 'Authentication required' }, { status: 401 });
@@ -74,11 +73,11 @@ export async function createNpmRegistry(
             if (entry === undefined)
                 return name.startsWith(GSPOT_PACKAGE_SCOPE)
                     ? Response.json({ error: 'Package not found' }, { status: 404 })
-                    : Response.redirect(new URL(url.pathname, UPSTREAM_REGISTRY), HTTP_REDIRECT);
+                    : Response.redirect(new URL(url.pathname, UPSTREAM_REGISTRY));
             const tarball = `${name}/-/${name.slice(name.lastIndexOf('/') + 1)}-${entry.version}.tgz`;
             if (pathname.includes('/-/'))
                 return pathname === tarball
-                    ? new Response(Bun.file(entry.filename))
+                    ? new Response(await readFile(entry.filename))
                     : Response.json({ error: 'Package not found' }, { status: 404 });
             const { filename: _filename, integrity, ...manifest } = entry;
             return Response.json({

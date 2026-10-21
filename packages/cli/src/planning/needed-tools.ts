@@ -1,29 +1,26 @@
 import { basename } from 'node:path';
 import { findScope } from '#cli/repository/scopes.ts';
+import { getTable } from '#cli/settings/scope-view.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/licenses.ts';
-import { stripCoverageArguments } from '#cli/planning/checks.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { PIP_LICENSES_COMMAND } from '#cli/config/tools/python.ts';
+import { STYLELINT_TOOL } from '#cli/config/generation/settings.ts';
 import { PRETTIER_TOOL } from '#cli/config/generation/formatting.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
+import { LICENSES_CONFIGURATION } from '#cli/config/configurations.ts';
 import type { StylelintComponent } from '#cli/types/generation/files.ts';
 import { isSettingEmpty, findSettingsSkip } from '#cli/planning/skips.ts';
 import type { PrettierPlugin } from '#cli/types/generation/formatting.ts';
+import { STYLELINT_COMPONENTS } from '#cli/config/generation/stylelint.ts';
+import { isCoverageOff, hasCoverageArguments } from '#cli/planning/checks.ts';
 import type { Settings, ScopeSelection } from '#cli/types/settings/values.ts';
 import type { Session, PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
 import { getToolDeclaration, findToolProjectPackage } from '#cli/configurations/tools.ts';
-import { FLAG_VALUE, COVERAGE_FLAGS, LICENSES_CONFIGURATION } from '#cli/config/planning.ts';
 import type { Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
-
-import {
-    STYLELINT_TOOL,
-    VUE_STYLELINT_OVERRIDE,
-    SVELTE_STYLELINT_OVERRIDE,
-} from '#cli/config/generation/tool-files.ts';
 
 function isToolSelected(scope: ScopeSelection, conditions: ToolDeclaration['when']): boolean {
     return (
@@ -34,20 +31,6 @@ function isToolSelected(scope: ScopeSelection, conditions: ToolDeclaration['when
             return !isSettingEmpty(scope.view.settings[condition.setting]);
         })
     );
-}
-
-/**
- * List the plugin tools that active formatter checks need.
- *
- * @param scopes every project selection.
- * @param programs the tools that the manifests declare.
- *
- * @returns the package names of the plugins.
- */
-function listPrettierPluginNames(scopes: ScopeSelection[], programs: ReadonlySet<string>): string[] {
-    return programs.has(PRETTIER_TOOL)
-        ? [...listPrettierPlugins(scopes.flatMap(({ selected }) => selected)).keys()].map(({ name }) => name)
-        : [];
 }
 
 // Add the packages that each tool package requires. A Set visits the names that the loop adds, too.
@@ -67,41 +50,27 @@ function addRequiredPackages(names: Set<string>, manifests: readonly Manifest[])
  * @returns each extra tool once.
  */
 export function listCompanionTools(scope: ScopeSelection, check: CheckDeclaration, command?: string[]): string[] {
-    const manifest = scope.selected.find((owner) => owner.checks.includes(check));
-    const gated = stripCoverageArguments(
-        { selection: scope, check, ...(manifest === undefined ? {} : { manifest }) },
-        {},
-    );
     const withoutCoverage =
-        gated !== check.command && command?.some((part) => COVERAGE_FLAGS.has(part.replace(FLAG_VALUE, ''))) !== true;
+        hasCoverageArguments(check.command, check.coverage_arguments) &&
+        isCoverageOff(scope) &&
+        !hasCoverageArguments(command, check.coverage_arguments);
+    const otherTools = withoutCoverage ? [] : (check.other_tools ?? []);
     const tools = new Set([
         check.tool,
         ...[check.command, check.fix].flatMap((commandArguments) =>
             commandArguments === undefined ? [] : [commandArguments[0]],
         ),
-        ...(check.other_tools ?? []),
+        ...otherTools,
     ]);
-    const companions = scope.selected
-        .flatMap((manifest) => manifest.toolFiles)
-        .filter((config) => config.tool.length === 0 || config.tool.some((name) => tools.has(name)))
-        .filter((config) => config.check.length === 0 || config.check.includes(check.name))
-        .filter((config) => config.when === undefined || scope.view.configurations.includes(config.when.configuration))
-        .flatMap((config) => config.required_tools);
     // ESLint loads the packages of every configuration that adds a block to its tool file.
-    const plugins = tools.has(ESLINT_TOOL)
-        ? scope.selected
-              .filter((manifest) => manifest.eslint.fragment)
-              .flatMap((manifest) => manifest.eslint.required_tools)
-        : [];
+    const plugins = tools.has(ESLINT_TOOL) ? scope.selected.flatMap((manifest) => manifest.eslint.required_tools) : [];
     const syntax =
         check.tool === STYLELINT_TOOL
             ? selectStylelintComponents(scope.view.configurations).map((dialect) => dialect.customSyntax)
             : [];
-    return [...new Set([...(check.other_tools ?? []), ...companions, ...plugins, ...syntax])].filter((name) => {
+    return [...new Set([...otherTools, ...plugins, ...syntax])].filter((name) => {
         const pin = getToolDeclaration(scope.selected, name);
-        if (!isToolSelected(scope, pin.when)) return false;
-        if (!withoutCoverage) return true;
-        return pin.system !== true || pin.kind !== 'library';
+        return isToolSelected(scope, pin.when);
     });
 }
 
@@ -156,7 +125,9 @@ export function selectNeededManifests(session: Session, checks: PlannedCheck[]):
             basename(project.dependencyFile) === PACKAGE_JSON ? LICENSE_CHECKER : PIP_LICENSES_COMMAND[0],
         );
     const needed = new Set([...checks.flatMap((check) => listRequiredTools(check)), ...licenses]);
-    for (const name of listPrettierPluginNames(session.scopes, needed)) needed.add(name);
+    if (needed.has(PRETTIER_TOOL))
+        for (const { name } of listPrettierPlugins(session.scopes.flatMap(({ selected }) => selected)).keys())
+            needed.add(name);
     const selected = listSelectedManifests(session.scopes);
     const selectedTools = new Set(selected.flatMap((manifest) => manifest.tools.map(({ name }) => name)));
     addRequiredPackages(needed, [...session.manifests.values()]);
@@ -211,7 +182,7 @@ export function listLicenseProjects(
                     )
                 )
                     return [];
-                const options = selection.view.options('licenses');
+                const options = getTable(selection.view, 'licenses');
                 const configuration = { allowed: options.allowed, allowed_package: options.allowed_package };
                 return configuration.allowed.length === 0 && configuration.allowed_package.length === 0
                     ? []
@@ -255,8 +226,5 @@ export function listPrettierPlugins(manifests: Iterable<Manifest>): Map<ToolDecl
  * @returns the dialects and their parser declarations.
  */
 export function selectStylelintComponents(configurations: string[]): StylelintComponent[] {
-    return [
-        ...(configurations.includes('vue') ? [VUE_STYLELINT_OVERRIDE] : []),
-        ...(configurations.includes('svelte') ? [SVELTE_STYLELINT_OVERRIDE] : []),
-    ];
+    return configurations.flatMap((name) => STYLELINT_COMPONENTS[name] ?? []);
 }

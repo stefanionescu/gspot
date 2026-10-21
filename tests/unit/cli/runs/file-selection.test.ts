@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { unlink } from 'node:fs/promises';
 import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { checkReport } from '#tests/setup/run-gspot.ts';
+import { unlink, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/builders.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakeTool, fakeNpmTool } from '#tests/setup/fakes.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { EDITORCONFIG_FILES } from '#tests/data/checks/format.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 import {
     PROJECT_OPTIONS,
@@ -29,8 +29,7 @@ async function prepareCompiler(root: string): Promise<void> {
     );
 }
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'gspot.toml': TYPESCRIPT_SCOPES_SETTINGS,
         'api/source.ts': 'export {};\n',
         'api/caller.ts': 'export {};\n',
@@ -38,6 +37,7 @@ test("a file named on the command line runs its scope's project check on every f
         'web/tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
         'web/source.ts': 'export {};\n',
     });
+
     await prepareCompiler(sandbox.path);
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { ...PROJECT_OPTIONS, only: [...PROJECT_OPTIONS.only], paths: ['api/source.ts'] });
@@ -73,7 +73,6 @@ reason = "This input is evaluated by its owning pipeline."
             ...(present ? { 'api/ignored.ts': 'export {};\n' } : {}),
         });
         const session = await openSession(sandbox.path);
-        await prepareCompiler(sandbox.path);
         const planned = planRun(session, {
             ...PROJECT_OPTIONS,
             only: [...PROJECT_OPTIONS.only],
@@ -84,12 +83,12 @@ reason = "This input is evaluated by its owning pipeline."
     },
 );
 test('EditorConfig checks source files beyond the Prettier extensions and skips binary files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['format']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['format']),
         ...EDITORCONFIG_FILES,
         'binary.dat': Buffer.from([0, 255, 0]),
     });
+
     const session = await openSession(sandbox.path);
     const [planned] = planRun(session, { stage: 'commit', only: ['format/editorconfig-checker'] });
     expect(planned!.files.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
@@ -106,16 +105,10 @@ test('dependencies/osv-scanner runs only when a declared trigger file changes', 
             ]),
         ),
         'ignored/uv.lock': '',
-        'gspot.toml': buildSettingsText(['dependencies'], {
+        'gspot.toml': buildSandboxSettings(['dependencies'], {
             level: 'all',
-            tables: `[[ignore]]
-check = "dependencies/osv-scanner"
-paths = ["ignored/**"]
-reason = "This external project has its own installation."
-[[scope]]
-path = "app"
-configurations = ["dependencies"]
-`,
+            tables: '[[ignore]]\ncheck = "dependencies/osv-scanner"\npaths = ["ignored/**"]\nreason = "This external project has its own installation."\n',
+            scopes: [{ path: 'app', configurations: ['dependencies'] }],
         }),
         'package.json': '{"name":"root","private":true}\n',
         'bun.lock': 'Root lockfile.\n',
@@ -147,7 +140,7 @@ configurations = ["dependencies"]
 
 test('a project-wide TypeScript check counts source and configuration inputs without unrelated files', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['typescript']),
+        'gspot.toml': buildSandboxSettings(['typescript']),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
         'source.ts': 'export const value = 1;\n',
         ...Object.fromEntries(
@@ -161,12 +154,14 @@ test('a project-wide TypeScript check counts source and configuration inputs wit
         '.gspot/node_modules/.bin/tsc',
         `if (process.argv.includes('--version')) console.log(${JSON.stringify(declaration.version)});`,
     );
-    const all = await checkReport(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']);
+    const all = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
     expect(all.code, all.stdout + all.stderr).toBe(0);
     expect(all.report.checks).toMatchObject([{ check: 'typescript/tsc', fileCount: 2 }]);
-    await Bun.write(join(sandbox.path, 'source.ts'), 'export const value = 2;\n');
+    await writeFile(join(sandbox.path, 'source.ts'), 'export const value = 2;\n');
     readGitOutput(sandbox.path, ['add', 'source.ts']);
-    const staged = await checkReport(sandbox.path, ['check', '--only', 'typescript/tsc', '--staged', '--json']);
+    const staged = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--staged', '--json']),
+    );
     expect(staged.code, staged.stdout + staged.stderr).toBe(0);
     expect(staged.report.checks).toMatchObject([{ check: 'typescript/tsc', fileCount: 2 }]);
 });

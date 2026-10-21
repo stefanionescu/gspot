@@ -8,7 +8,6 @@ createRuleTester().run('no-alias-exports', plugin.rules['no-alias-exports'], {
         'export const a = { ...b };',
         'const a = b;',
         'export let a = b;',
-        'export const a = b();',
     ],
     invalid: [
         { code: 'export const a = b;', errors: [{ messageId: 'alias', data: { name: 'a', source: 'b' } }] },

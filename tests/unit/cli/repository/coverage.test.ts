@@ -2,9 +2,8 @@ import { testdir } from 'testdirs';
 import { openSession } from '#cli/session.ts';
 import { test, expect, describe } from 'bun:test';
 import { buildTrackedFile } from '#tests/setup/builders.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { selectForScope, buildFileMatcher, listCoveredFiles } from '#cli/repository/coverage.ts';
@@ -20,7 +19,7 @@ import {
 } from '#tests/data/configurations/detection.ts';
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
-    const manifests = readManifests(createReadCache(process.cwd()));
+    const manifests = readManifests();
 
     const bash = manifests.get('bash')!;
     expect(buildFileMatcher(bash.files)(buildTrackedFile('scripts/build.sh'))).toBe(true);
@@ -36,7 +35,7 @@ test('files are covered by extension, file name at any depth, tag and glob', () 
 });
 
 test('a configuration that covers the language files gets them', () => {
-    const manifests = readManifests(createReadCache(process.cwd()));
+    const manifests = readManifests();
 
     const selected = selectConfigurations(['bash'], manifests);
     const structure = manifests.get('structure')!;
@@ -59,7 +58,7 @@ test.each([
         ['src/App.svelte', 'src/index.ts'],
     ],
 ])('the Prettier plugin files follow the selected configurations %j', (configurations, expected) => {
-    const manifests = readManifests(createReadCache(process.cwd()));
+    const manifests = readManifests();
 
     const files = [
         buildTrackedFile('src/Page.astro'),
@@ -78,7 +77,7 @@ test.each([
 test.each(MIGRATION_CASES)(
     'migration paths in scope "%s" are covered and other file kinds are not',
     (scope, expected) => {
-        const manifests = readManifests(createReadCache(process.cwd()));
+        const manifests = readManifests();
 
         const selected = selectConfigurations(['postgres'], manifests);
         const files = MIGRATION_PATHS.map((path) => buildTrackedFile(path));
@@ -108,7 +107,7 @@ test.each(MIGRATION_CASES)(
 );
 
 test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope"', ({ scope, tests, expected }) => {
-    const manifests = readManifests(createReadCache(process.cwd()));
+    const manifests = readManifests();
 
     const selected = selectConfigurations(['jest'], manifests);
     const files = JEST_PATHS.map((path) => buildTrackedFile(path));
@@ -137,7 +136,7 @@ test.each(PROJECT_SELECTIONS)('scope %s selects configuration %s: %s', (scope, n
             ),
         },
         scope,
-        readManifests(createReadCache(process.cwd())),
+        readManifests(),
     ).map((manifest) => manifest.configuration.name);
     expect(names.includes(name)).toBe(selected);
     expect(names).toContain('gspot');
@@ -147,7 +146,7 @@ test.each([...GENERATED_SELECTIONS])(
     'the configurations each scope selects mark their generated files: $configurations $tables',
     async ({ configurations, tables, generated }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(configurations, { tables }),
+            'gspot.toml': buildSandboxSettings(configurations, { tables }),
             ...DECLARATION_FILES,
         });
         const session = await openSession(sandbox.path);

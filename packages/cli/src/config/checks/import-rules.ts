@@ -23,7 +23,6 @@ export const PYTHON_SOURCE_ROOTS = ['', 'src'] as const;
 export const PYTHON_IMPORT_STATEMENT = 'import_statement';
 export const PYTHON_FROM_STATEMENT = 'import_from_statement';
 export const RELATIVE_IMPORT = 'relative_import';
-export const SWIFT_IMPORT_NODE = 'import_declaration';
 
 /** The folders where SwiftPM looks for a target without a path, in its order, by target kind. */
 export const SWIFTPM_TARGET_FOLDERS: Readonly<Record<string, readonly string[]>> = {

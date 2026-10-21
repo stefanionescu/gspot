@@ -1,20 +1,20 @@
-import { z } from 'zod';
+import { parseReport } from '#cli/parsers/json.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { hasValePackages } from '#cli/install/vale.ts';
-import { parseReport } from '#cli/runs/output/json.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { VALE_ERROR_LINE } from '#cli/config/checks/prose.ts';
+import { valeReportSchema } from '#cli/schemas/checks/prose.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { type SpawnResult } from '#cli/types/system/processes.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { VALE_TOOL_FILE_PATH } from '#cli/config/system/locations.ts';
 import { VALE_TOOL, VALE_ARGUMENTS } from '#cli/config/tools/vale.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
-import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { PROSE_GRAMMARS, SCRIPT_GRAMMAR } from '#cli/config/generation/vale.ts';
 import { type ValeAlert, type ProseRoute, type ProseRouteGroup } from '#cli/types/checks/prose.ts';
@@ -37,20 +37,6 @@ function parseValeAlerts(stdout: string): ValeAlert[] {
     );
 }
 
-const valeReportSchema = z.record(
-    z.string().min(1),
-    z.array(
-        z.object({
-            Line: z.number().int().positive(),
-            Span: z.tuple([z.number().int().positive(), z.number().int().positive()]),
-            Check: z.string().min(1),
-            Message: z.string().min(1),
-        } satisfies SchemaShape<
-            Record<string, { Line: number; Span: [number, number]; Check: string; Message: string }[]>[string][number]
-        >),
-    ),
-) satisfies z.ZodType<Record<string, { Line: number; Span: [number, number]; Check: string; Message: string }[]>>;
-
 // Vale runs with --no-exit, so alerts leave the exit code at 0. Any other code means Vale itself failed, which never counts as a pass.
 function assertValeRan(result: SpawnResult): void {
     if (result.code === 0 && !result.missing) return;
@@ -59,20 +45,25 @@ function assertValeRan(result: SpawnResult): void {
     throw new Error(`Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
 }
 
-function buildValeCommand(input: CheckInput): string[] {
-    return [VALE_TOOL, '--config', join(input.root, VALE_TOOL_FILE_PATH), ...VALE_ARGUMENTS];
+function buildValeCommand(session: Session): string[] {
+    return [VALE_TOOL, '--config', join(session.root, VALE_TOOL_FILE_PATH), ...VALE_ARGUMENTS];
 }
 
-async function runValeOnPaths(input: CheckInput, routes: ProseRoute[]): Promise<ValeAlert[]> {
-    const base = buildValeCommand(input);
+async function runValeOnPaths(
+    session: Session,
+    planned: PlannedCheck,
+    routes: ProseRoute[],
+    folder: string,
+): Promise<ValeAlert[]> {
+    const base = buildValeCommand(session);
     const alerts: ValeAlert[] = [];
     for (const batch of splitFileArguments(
-        routes.map((route) => join(input.root, route.path)),
+        routes.map((route) => join(session.root, route.path)),
         base,
         process.platform,
     )) {
-        const result = await runCheckTool(input, [...base, ...batch], {
-            cwd: dirname(join(input.root, VALE_TOOL_FILE_PATH)),
+        const result = await runCheckTool(session, planned, [...base, ...batch], {
+            cwd: folder,
         });
         assertValeRan(result);
         alerts.push(...parseValeAlerts(result.stdout));
@@ -80,25 +71,28 @@ async function runValeOnPaths(input: CheckInput, routes: ProseRoute[]): Promise<
     return alerts.map((alert) => ({
         ...alert,
         file: convertToPosixPath(
-            relative(
-                input.root,
-                isAbsolute(alert.file) ? alert.file : join(input.root, dirname(VALE_TOOL_FILE_PATH), alert.file),
-            ),
+            relative(session.root, isAbsolute(alert.file) ? alert.file : join(folder, alert.file)),
         ),
     }));
 }
 
-async function runValeOnStdin(input: CheckInput, route: ProseRoute): Promise<ValeAlert[]> {
-    const text = readCachedBytes(input.reads, route.path).toString('utf8');
+async function runValeOnStdin(
+    session: Session,
+    planned: PlannedCheck,
+    route: ProseRoute,
+    folder: string,
+): Promise<ValeAlert[]> {
+    const text = readCachedText(session.reads, route.path);
     const result = await runCheckTool(
-        input,
+        session,
+        planned,
         [
-            ...buildValeCommand(input),
+            ...buildValeCommand(session),
             `--ext=${route.extension}`,
-            `--path=${join(input.root, route.path)}${route.extension}`,
+            `--path=${join(session.root, route.path)}${route.extension}`,
         ],
         {
-            cwd: dirname(join(input.root, VALE_TOOL_FILE_PATH)),
+            cwd: folder,
             stdin: text,
         },
     );
@@ -131,15 +125,13 @@ function selectRoute(file: TrackedFile): ProseRoute | undefined {
  */
 function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
     const routes = files.map((file) => selectRoute(file)).filter((route) => route !== undefined);
-    const byExtension = new Map<string, ProseRouteGroup>();
     const pathRoutes = routes.filter((entry) => entry.mode === 'path');
-    for (const route of pathRoutes) {
-        const group = byExtension.get(route.extension);
-        if (group === undefined) byExtension.set(route.extension, [route]);
-        else group.push(route);
-    }
+    // Map.groupBy creates a group only when its first route exists.
+    const byExtension = [...Map.groupBy(pathRoutes, (route) => route.extension).values()].map(
+        (group) => group as ProseRouteGroup,
+    );
     return [
-        ...byExtension.values(),
+        ...byExtension,
         ...routes.filter((entry) => entry.mode === 'stdin').map((route): ProseRouteGroup => [route]),
     ];
 }
@@ -147,21 +139,26 @@ function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
 /**
  * Runs Vale on the scope files, by path where Vale has a grammar and through stdin elsewhere.
  *
- * @param input the scope to check.
+ * @param session the repository and its tools.
+ * @param planned the scope to check.
  * @returns the findings.
  */
-export async function checkVale(input: CheckInput): Promise<Finding[]> {
-    if (!hasValePackages(input.installedRoot, input.settingsFile.settings.level))
+export async function checkVale(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    if (!hasValePackages(session.installedRoot, session.settingsFile.settings.level))
         throw new GspotError('tool', 'The Vale packages are not installed. Run: gspot install');
-    const groups = groupRoutes(input.files.filter((file) => file.kind === 'source'));
+    const folder = dirname(join(session.root, VALE_TOOL_FILE_PATH));
+    const groups = groupRoutes(planned.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];
     for (const group of groups) {
         const [first] = group;
-        const alerts = first.mode === 'path' ? await runValeOnPaths(input, group) : await runValeOnStdin(input, first);
+        const alerts =
+            first.mode === 'path'
+                ? await runValeOnPaths(session, planned, group, folder)
+                : await runValeOnStdin(session, planned, first, folder);
         findings.push(
             ...alerts.map((alert) =>
                 buildFinding(
-                    input,
+                    planned,
                     { file: alert.file, line: alert.line, column: alert.column },
                     alert.check,
                     alert.message,

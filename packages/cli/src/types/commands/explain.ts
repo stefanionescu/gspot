@@ -1,6 +1,6 @@
+import type { Manifest } from '#cli/types/configurations.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
-import type { Manifest, ConfigurationCheck } from '#cli/types/configurations.ts';
-import type { CommandCheck, EffectiveSetting } from '#cli/types/settings/values.ts';
+import type { EffectiveSetting } from '#cli/types/settings/values.ts';
 
 export type Explanation = {
     kind: 'check' | 'lint-rule' | 'configuration' | 'setting' | 'path';
@@ -37,8 +37,6 @@ export type ConfigurationExplanation = {
     rules: string[];
     alwaysSelected: boolean;
 };
-
-export type ExplainedCheck = ConfigurationCheck | { check: CommandCheck; configuration: undefined };
 
 export type CheckFacts = {
     source: string;

@@ -1,9 +1,8 @@
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { checkFindings } from '#tests/setup/check-input.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { CLOUDFLARE_HEADERS, CLOUDFLARE_REDIRECTS } from '#tests/data/checks/cloudflare.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { CLOUDFLARE_HEADERS, CLOUDFLARE_REDIRECTS, CLOUDFLARE_SCOPE_SETTINGS } from '#tests/data/checks/cloudflare.ts';
 
 test.each(['', 'app'])(
     'Cloudflare redirects refuse Netlify-only status codes in root and child scopes (%j)',
@@ -11,17 +10,13 @@ test.each(['', 'app'])(
         await using sandbox = await testdir();
         const text = CLOUDFLARE_REDIRECTS;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['cloudflare'], {
-                level: 'all',
-                tables: '[[scope]]\npath = "app"\nconfigurations = ["cloudflare"]\n',
-            }),
+            'gspot.toml': buildSandboxSettings(['cloudflare'], { level: 'all', scopes: CLOUDFLARE_SCOPE_SETTINGS }),
             _redirects: text,
             'app/_redirects': text,
         });
-        const session = await openSession(sandbox.path);
 
         const path = scope === '' ? '_redirects' : `${scope}/_redirects`;
-        const findings = await checkFindings(session.root, 'cloudflare/redirects', { scope });
+        const findings = await checkFindings(sandbox.path, 'cloudflare/redirects', { scope });
         expect(
             findings.map(({ file, line, message }) => ({
                 file,
@@ -40,17 +35,13 @@ test.each(['', 'app'])('_headers syntax is checked in both scopes (%j)', async (
     await using sandbox = await testdir();
     const text = CLOUDFLARE_HEADERS;
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['cloudflare'], {
-            level: 'all',
-            tables: '[[scope]]\npath = "app"\nconfigurations = ["cloudflare"]\n',
-        }),
+        'gspot.toml': buildSandboxSettings(['cloudflare'], { level: 'all', scopes: CLOUDFLARE_SCOPE_SETTINGS }),
         _headers: text,
         'app/_headers': text,
     });
-    const session = await openSession(sandbox.path);
 
     const path = scope === '' ? '_headers' : 'app/_headers';
-    const headerFindings = await checkFindings(session.root, 'cloudflare/headers', { scope });
+    const headerFindings = await checkFindings(sandbox.path, 'cloudflare/headers', { scope });
     expect(
         headerFindings.map(({ file, line, message }) => ({
             file,

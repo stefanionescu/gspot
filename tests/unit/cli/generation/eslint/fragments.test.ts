@@ -1,15 +1,14 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/setup/tool-files.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { FRAGMENT_SCOPE_CASES } from '#tests/data/generation/eslint/fragments.ts';
 
 test.each([...FRAGMENT_SCOPE_CASES])('$configuration fragment appears once in each selected scope', async (row) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
             tables: `[[scope]]\npath = "first"\nconfigurations = ["${row.configuration}"]\ntest_files = ["first/unit/**"]\n[[scope]]\npath = "second"\nconfigurations = ["${row.configuration}"]\ntest_files = ["second/specs/**"]\n`,
         }),
@@ -21,6 +20,7 @@ test.each([...FRAGMENT_SCOPE_CASES])('$configuration fragment appears once in ea
         [join('first', row.file)]: row.source,
         [join('second', row.file.replace('unit/', 'specs/'))]: row.source,
     });
+
     const eslint = await createEslint(sandbox.path);
     const first = (await eslint.calculateConfigForFile(join('first', row.file))) as EslintConfiguration;
     const second = (await eslint.calculateConfigForFile(

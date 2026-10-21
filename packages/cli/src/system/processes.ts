@@ -10,8 +10,8 @@ import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { findPathKey, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import type {
-    StdoutRead,
     SpawnResult,
+    StdoutReader,
     SpawnOptions,
     RunningProcess,
     SpawnCompletion,
@@ -235,7 +235,7 @@ async function completeProcess(
 async function readProcessOutput(
     child: RunningProcess,
     options: AsyncSpawnOptions,
-    readStdout: Exclude<StdoutRead, 'utf8'>,
+    readStdout: StdoutReader,
 ): Promise<SpawnCompletion> {
     await readStdout({
         async *[Symbol.asyncIterator]() {
@@ -244,6 +244,27 @@ async function readProcessOutput(
         },
     });
     return child;
+}
+
+function splitCommand(command: readonly string[], cwd: string, started: number): [string, string[]] | SpawnResult {
+    const [executable, ...commandArguments] = command;
+    if (executable === undefined) throw new Error('An empty command cannot run.');
+    return isExecutableAbsent(executable, cwd)
+        ? buildSpawnResult(buildNotFoundCompletion(executable), started)
+        : [executable, commandArguments];
+}
+
+function watchProcess(
+    child: Omit<ChildProcess, 'stdout' | 'stderr'> & {
+        stdout: RunningProcess['stdout'];
+        stderr: RunningProcess['stdout'];
+    },
+    options: AsyncSpawnOptions,
+): ProcessTreeControl {
+    const supervision = trackProcessTree(child, options);
+    if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
+    if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
+    return supervision;
 }
 
 /**
@@ -255,14 +276,11 @@ async function readProcessOutput(
  */
 export async function spawnProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const started = performance.now();
-    const [executable, ...commandArguments] = command;
-    if (executable === undefined) throw new Error('An empty command cannot run.');
-    if (isExecutableAbsent(executable, options.cwd))
-        return buildSpawnResult(buildNotFoundCompletion(executable), started);
+    const split = splitCommand(command, options.cwd, started);
+    if (!Array.isArray(split)) return split;
+    const [executable, commandArguments] = split;
     const child = execa(executable, commandArguments, buildAsyncExecaOptions(options, executable));
-    const supervision = trackProcessTree(child, options);
-    if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
-    if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
+    const supervision = watchProcess(child, options);
     return completeProcess(child, supervision, started, child);
 }
 
@@ -277,20 +295,17 @@ export async function spawnProcess(command: readonly string[], options: AsyncSpa
 export async function streamProcess(
     command: readonly string[],
     options: AsyncSpawnOptions,
-    readStdout: Exclude<StdoutRead, 'utf8'>,
+    readStdout: StdoutReader,
 ): Promise<SpawnResult> {
     const started = performance.now();
-    const [executable, ...commandArguments] = command;
-    if (executable === undefined) throw new Error('An empty command cannot run.');
-    if (isExecutableAbsent(executable, options.cwd))
-        return buildSpawnResult(buildNotFoundCompletion(executable), started);
+    const split = splitCommand(command, options.cwd, started);
+    if (!Array.isArray(split)) return split;
+    const [executable, commandArguments] = split;
     const child = execa(executable, commandArguments, {
         ...buildAsyncExecaOptions(options, executable),
         buffer: { stdout: false },
     });
-    const supervision = trackProcessTree(child, options);
-    if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
-    if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
+    const supervision = watchProcess(child, options);
     return completeProcess(child, supervision, started, readProcessOutput(child, options, readStdout));
 }
 
@@ -303,10 +318,9 @@ export async function streamProcess(
  */
 export function spawnProcessBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {
     const started = performance.now();
-    const [executable, ...commandArguments] = command;
-    if (executable === undefined) throw new Error('An empty command cannot run.');
-    if (isExecutableAbsent(executable, options.cwd))
-        return buildSpawnResult(buildNotFoundCompletion(executable), started);
+    const split = splitCommand(command, options.cwd, started);
+    if (!Array.isArray(split)) return split;
+    const [executable, commandArguments] = split;
     const deadline =
         options.timeoutSeconds === undefined ? {} : { timeout: options.timeoutSeconds * MILLISECONDS_PER_SECOND };
     const result = execaSync(executable, commandArguments, { ...buildExecaOptions(options, executable), ...deadline });

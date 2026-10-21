@@ -1,13 +1,13 @@
-import { createTable } from '#cli/system/values.ts';
 import { isScopeCovered } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { getValueAt, createTable } from '#cli/system/values.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
-import { ISO_DATE_LENGTH } from '#cli/config/settings/values.ts';
-import { tableValuesSchema } from '#cli/settings/schema/tables.ts';
-import { rootSettingSchemas } from '#cli/settings/schema/gspot-toml.ts';
-import { limitTableSchema, namingCategorySchema } from '#cli/settings/schema/parts.ts';
+import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
+import { namingCategorySchema } from '#cli/schemas/settings/parts.ts';
+import type { TableValues, TableSettings } from '#cli/types/settings/tables.ts';
+import { listSettings, getSettingValue, getSettingTable } from '#cli/settings/inherit.ts';
+import { findSettingSchema, rootSettingSchemas } from '#cli/schemas/settings/gspot-toml.ts';
 import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
-import { listSettings, getSettingValue, getSettingTable, listApplicableTables } from '#cli/settings/inherit.ts';
 
 import {
     type Settings,
@@ -30,15 +30,17 @@ function listNamingVariants(known: KnownSettings, settings: Settings, scope: str
         .filter((row) => row !== undefined);
 }
 
-/**
- * Select saved ignores whose expiry date has not arrived.
- *
- * @param settings the parsed gspot.toml, with expired ignores.
- * @returns the ignores that apply today in UTC.
- */
-function listActiveIgnores(settings: Settings): IgnoreRecord[] {
-    const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
-    return settings.ignore.filter((entry) => entry.until === undefined || today < entry.until.toISOString());
+function listLimitVariants(known: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
+    return [...known.declarations.values()]
+        .filter((declaration) => declaration.name.startsWith('limits.') && declaration.type === 'number')
+        .flatMap((declaration) =>
+            (declaration.languages ?? []).map(
+                (language) => `limits.${language}.${declaration.name.slice(declaration.name.lastIndexOf('.') + 1)}`,
+            ),
+        )
+        .filter((key) => !known.declarations.has(key))
+        .map((key) => getSettingValue(known, settings, key, scope))
+        .filter((row) => row !== undefined);
 }
 
 /**
@@ -51,48 +53,71 @@ function listActiveIgnores(settings: Settings): IgnoreRecord[] {
  * @returns the view the templates read.
  */
 function buildScopeView(known: KnownSettings, settings: Settings, selected: Manifest[], scope: string): ScopeView {
-    const {
-        settings: entries,
-        values,
-        limits,
-        test_files: testFiles,
-    } = buildScopeSettings(known, settings, selected, scope);
-    const ignores = listActiveIgnores(settings).map((entry) => ({ ...entry, paths: entry.paths ?? [] }));
-    const format = values.format;
+    const { settings: entries, values, test_files: testFiles } = buildScopeSettings(known, settings, scope);
+    const ignores = settings.ignore.map((entry) => ({ ...entry, paths: entry.paths ?? [] }));
     return {
         configurations: selected.map((manifest) => manifest.configuration.name),
         test_files: testFiles,
         settings: entries,
         values,
-        format,
-        limit: (key, language) => {
-            const value = limits[`${language ?? ''}.${key}`] ?? limits[`.${key}`];
-            if (value === undefined)
-                throw new Error(
-                    `The selected scope has no ${[language, key].filter((part) => part !== undefined).join('.')} limit.`,
-                );
-            return value;
-        },
-        options: (name) => {
-            const value = values[name];
-            if (value === undefined) throw new Error(`The selected scope has no ${name} settings.`);
-            return value;
-        },
-        ignoresFor: (check) => ignores.filter((entry) => entry.check === check || entry.check === undefined),
-        rulesOff: (check) =>
-            ignores
-                .filter((entry) => entry.check === check)
-                .filter((entry) => entry.paths.length === 0 || isScopeCovered(entry.paths, scope))
-                .map((entry) => entry.rule)
-                .filter((rule) => rule !== undefined),
-        extra: (name) => {
-            const found = listApplicableTables(settings, scope)
-                .map(({ table }) => table.tools?.[name]?.['extra'])
-                .filter((value): value is Record<string, unknown> => typeof value === 'object');
-            if (found.length === 0) return undefined;
-            return Object.fromEntries(found.flatMap((value) => Object.entries(value)));
-        },
+        ignores,
     };
+}
+
+/**
+ * Read one validated table from the scope's merged values.
+ *
+ * @param view the merged scope data.
+ * @param name the table's dotted name.
+ * @returns the requested table.
+ */
+function getTable<Name extends keyof TableValues>(view: ScopeView, name: Name): TableSettings<Name> {
+    const value = view.values[name];
+    if (value === undefined) throw new Error(`The selected scope has no ${name} settings.`);
+    return value;
+}
+
+/**
+ * Read a language's limit, falling back to the scope's general limit.
+ *
+ * @param view the merged scope data.
+ * @param key the limit name.
+ * @param language the language, if the check reads a language-specific value.
+ * @returns the numeric limit.
+ */
+function getLimit(view: ScopeView, key: string, language?: string): number {
+    const value = getValueAt(view.values.limits, [language ?? '', key]) ?? getValueAt(view.values.limits, [key]);
+    if (typeof value !== 'number')
+        throw new Error(
+            `The selected scope has no ${[language, key].filter((part) => part !== undefined).join('.')} limit.`,
+        );
+    return value;
+}
+
+/**
+ * List the written ignores that apply to a check or to every check.
+ *
+ * @param view the merged scope data.
+ * @param check the check name.
+ * @returns the matching ignores with normalized paths.
+ */
+function listIgnores(view: ScopeView, check: string): ScopeView['ignores'] {
+    return view.ignores.filter((entry) => entry.check === check || entry.check === undefined);
+}
+
+/**
+ * List the lint rules disabled throughout the selected scope.
+ *
+ * @param selection the scope and its merged data.
+ * @param check the check name.
+ * @returns the disabled rule names.
+ */
+function listIgnoredRules(selection: ScopeSelection, check: string): string[] {
+    return selection.view.ignores
+        .filter((entry) => entry.check === check)
+        .filter((entry) => entry.paths.length === 0 || isScopeCovered(entry.paths, selection.scope.path))
+        .map((entry) => entry.rule)
+        .filter((rule) => rule !== undefined);
 }
 
 /**
@@ -100,61 +125,20 @@ function buildScopeView(known: KnownSettings, settings: Settings, selected: Mani
  *
  * @param known the declarations and defaults.
  * @param settings the written gspot.toml.
- * @param selected the configurations of the scope.
  * @param scope the folder to resolve for.
  * @returns typed execution values without adding defaults to written tables.
  */
-function buildScopeSettings(
-    known: KnownSettings,
-    settings: Settings,
-    selected: Manifest[],
-    scope: string,
-): ScopeSettings {
+function buildScopeSettings(known: KnownSettings, settings: Settings, scope: string): ScopeSettings {
     const listed = listSettings(known, settings, scope);
     const entries = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
     fillTableValues(namespaces, listed);
     const variants = listNamingVariants(known, settings, scope);
     fillTableValues(namespaces, variants);
-    const declarations = [...known.declarations.values()].filter(
-        (entry) => entry.name.startsWith('limits.') && entry.type === 'number',
-    );
-    const keys = [...new Set(declarations.map((entry) => entry.name.slice(entry.name.lastIndexOf('.') + 1)))];
-    const languages = [
-        ...new Set([
-            '',
-            ...selected.map((manifest) => manifest.configuration.name),
-            ...declarations.flatMap((entry) => entry.name.split('.').slice(1, -1)),
-            ...listApplicableTables(settings, scope).flatMap(({ table }) =>
-                table.limits === undefined
-                    ? []
-                    : Object.entries(table.limits)
-                          .filter(([, value]) => typeof value === 'object')
-                          .map(([language]) => language),
-            ),
-        ]),
-    ];
-    const limits = limitTableSchema.parse(
-        Object.fromEntries(
-            keys.flatMap((key) =>
-                languages
-                    .map((language) => [
-                        `${language}.${key}`,
-                        getSettingValue(
-                            known,
-                            settings,
-                            language === '' ? `limits.${key}` : `limits.${language}.${key}`,
-                            scope,
-                        )?.value,
-                    ])
-                    .filter(([, value]) => value !== undefined),
-            ),
-        ),
-    );
+    fillTableValues(namespaces, listLimitVariants(known, settings, scope));
     return {
         settings: entries,
         values: tableValuesSchema.parse(namespaces),
-        limits,
         test_files: rootSettingSchemas.test_files.unwrap().parse(entries['test_files']),
     };
 }
@@ -167,7 +151,11 @@ function buildScopeSettings(
  */
 function fillTableValues(namespaces: Record<string, unknown>, rows: EffectiveSetting[]): void {
     const entries = rows
-        .filter((row) => Object.hasOwn(tableValuesSchema.in.shape, getSettingTable(row.key)))
+        .filter(
+            (row) =>
+                Object.hasOwn(tableValuesSchema.in.shape, getSettingTable(row.key)) &&
+                findSettingSchema(row.key) !== undefined,
+        )
         .map((row) => {
             const segments = row.key.split('.');
             const name = getSettingTable(row.key);
@@ -207,4 +195,4 @@ function isFileIgnore(entry: Pick<IgnoreRecord, 'rule' | 'names'>): boolean {
     return entry.rule === undefined && entry.names === undefined;
 }
 
-export { isFileIgnore, buildScopeView, findRootSelection, listActiveIgnores };
+export { getTable, getLimit, listIgnores, isFileIgnore, buildScopeView, listIgnoredRules, findRootSelection };

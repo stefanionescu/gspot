@@ -1,29 +1,27 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { buildSandboxPath } from '#tests/setup/install.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { type GitleaksHistory } from '#tests/types/secrets.ts';
-import { overrideEnvironment } from '#tests/setup/environment.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { type RunReport, type CheckResult } from '#cli/types/runs/check.ts';
 import { API_TOKEN, AWS_KEY_ID, SECRET_FILES, FIXED_SECRET_FILES } from '#tests/data/checks/secrets.ts';
 
 async function readSecretChecks(root: string): Promise<RunReport['checks']> {
-    const result = await spawnGspot(root, ['check', '--only', 'secrets/gitleaks-staged', '--json']);
-    return (JSON.parse(result.stdout) as RunReport).checks;
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'secrets/gitleaks-staged', '--json']));
+    return result.report.checks;
 }
 
 test('the staged scan skips a folder without Git and checks staged changes once Git exists', async () => {
-    using _tools = overrideEnvironment({ PATH: buildSandboxPath() });
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['secrets']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['secrets']),
         'src/config.js': `const token = "${API_TOKEN}";\n`,
     });
+
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
     const withoutGit = await readSecretChecks(sandbox.path);
     expect(withoutGit.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('skipped');
@@ -46,7 +44,7 @@ test('the staged scan skips a folder without Git and checks staged changes once 
 async function prepareSecrets(root: string, environment: Record<string, string>): Promise<void> {
     readGitOutput(root, ['init', '-q']);
     await createFileTree(root, {
-        'gspot.toml': buildSettingsText(['secrets']),
+        'gspot.toml': buildSandboxSettings(['secrets']),
     });
     const applied = await spawnGspot(root, ['apply'], environment);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -85,19 +83,17 @@ function assertSecretFindings(check: CheckResult | undefined, output: string, pr
 
 test('gitleaks reports both staged secrets, hides the tokens, and passes after the fix', async () => {
     await using sandbox = await testdir();
-    const environment = { PATH: buildSandboxPath() };
+    const environment = {};
     await prepareSecrets(sandbox.path, environment);
     await createFileTree(sandbox.path, FIXED_SECRET_FILES);
     commitAll(sandbox.path);
     await createFileTree(sandbox.path, SECRET_FILES);
     expect(runGit(sandbox.path, ['add', '-A']).code).toBe(0);
-    const staged = await spawnGspot(
-        sandbox.path,
-        ['check', '--only', 'secrets/gitleaks-staged', '--json'],
-        environment,
+    const staged = parseCheckReport(
+        await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json'], environment),
     );
     expect(staged.code, staged.stdout + staged.stderr).toBe(1);
-    assertSecretFindings((JSON.parse(staged.stdout) as RunReport).checks[0], staged.stdout + staged.stderr, '');
+    assertSecretFindings(staged.report.checks[0], staged.stdout + staged.stderr, '');
     await createFileTree(sandbox.path, FIXED_SECRET_FILES);
     expect(runGit(sandbox.path, ['add', '-A']).code).toBe(0);
     const corrected = await spawnGspot(
@@ -110,7 +106,7 @@ test('gitleaks reports both staged secrets, hides the tokens, and passes after t
 
 test('the pushed-history check reports the secrets of the pushed commits only', async () => {
     await using sandbox = await testdir();
-    const environment = { PATH: buildSandboxPath() };
+    const environment = {};
     const { base, leaked, removed } = await prepareHistory(sandbox.path, environment);
     const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-pushed', '--json'];
     const history = await spawnGspot(sandbox.path, command, environment, {
@@ -130,17 +126,17 @@ test('the pushed-history check reports the secrets of the pushed commits only', 
 
 test('the pushed-history check passes only the ignored fingerprints and never prints a token', async () => {
     await using sandbox = await testdir();
-    const environment = { PATH: buildSandboxPath() };
+    const environment = {};
     const { base, leaked } = await prepareHistory(sandbox.path, environment);
     const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-pushed', '--json'];
-    const settings = buildSettingsText(['secrets']);
+    const settings = buildSandboxSettings(['secrets']);
     const identityIgnore = `
 [[ignore]]
 check = "secrets/gitleaks-pushed"
 rule = "${leaked}:identity.py:aws-access-token:1"
 reason = "The exact historical token is an inert example."
 `;
-    await Bun.write(join(sandbox.path, 'gspot.toml'), settings + identityIgnore);
+    await writeFile(join(sandbox.path, 'gspot.toml'), settings + identityIgnore);
     readGitOutput(sandbox.path, ['add', 'gspot.toml']);
     readGitOutput(sandbox.path, ['commit', '-qm', 'docs: review historical token']);
     const reviewedRevision = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
@@ -153,7 +149,7 @@ reason = "The exact historical token is an inert example."
         { file: 'credential,é.py', rule: `${leaked}:credential,é.py:generic-api-key:1`, line: 1 },
     ]);
     for (const token of [AWS_KEY_ID, API_TOKEN]) expect(reviewed.stdout + reviewed.stderr).not.toContain(token);
-    await Bun.write(
+    await writeFile(
         join(sandbox.path, 'gspot.toml'),
         settings +
             identityIgnore +

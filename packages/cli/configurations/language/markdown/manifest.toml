@@ -1,4 +1,4 @@
-allowed_words = ["Markdown", "lychee"]
+allowed_words = ["Markdown"]
 
 [configuration]
 description = "Markdown files: one style and layout, and code blocks that parse."
@@ -8,7 +8,6 @@ title = "Markdown"
 extensions = [".md", ".mdx"]
 
 [[tool]]
-mise = "npm:markdownlint-cli2"
 name = "markdownlint-cli2"
 npm = "markdownlint-cli2"
 replace = [".markdownlint-cli2.jsonc", ".markdownlint-cli2.yaml", ".markdownlint-cli2.cjs", ".markdownlint-cli2.mjs", ".markdownlint.json", ".markdownlint.jsonc", ".markdownlint.yaml", ".markdownlint.yml"]

@@ -1,3 +1,5 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+
 /** Declared file kinds and check path ignores must reach the Prettier ignore patterns. */
 export const PRETTIER_IGNORE_SETTINGS = {
     configurations: ['format', 'javascript'],
@@ -27,30 +29,36 @@ export const PRETTIER_IGNORE_CASES = [
 export const LANGUAGE_IGNORES = [
     {
         name: 'Python without JavaScript',
-        settings: 'configurations = ["format", "markdown", "python"]\n',
-        ignored: ['.venv/'],
+        settings: buildSandboxSettings(['format', 'markdown', 'python'], { rules: true }),
+        ignored: [{ path: '.venv/', pattern: '**/.venv/**' }],
         absent: ['.build/', 'Package.resolved'],
     },
     {
         name: 'Swift without JavaScript',
-        settings: 'configurations = ["format", "markdown", "swift"]\n',
-        ignored: ['.build/', 'DerivedData/', 'Pods/'],
-        absent: ['node_modules/', 'package-lock.json', '.venv/', 'uv.lock'],
+        settings: buildSandboxSettings(['format', 'markdown', 'swift'], { rules: true }),
+        ignored: [
+            { path: '.build/', pattern: '.build/' },
+            { path: 'DerivedData/', pattern: 'DerivedData/' },
+            { path: 'Pods/', pattern: '**/Pods/**' },
+        ],
+        absent: ['**/node_modules/**', 'package-lock.json', '**/.venv/**', 'uv.lock'],
     },
     {
         name: 'JavaScript',
-        settings: 'configurations = ["format", "markdown", "javascript"]\n',
-        ignored: ['node_modules/'],
-        absent: ['.build/', 'Package.resolved', '.venv/', 'uv.lock'],
+        settings: buildSandboxSettings(['format', 'markdown', 'javascript'], { rules: true }),
+        ignored: [{ path: 'node_modules/', pattern: '**/node_modules/**' }],
+        absent: ['.build/', 'Package.resolved', '**/.venv/**', 'uv.lock'],
     },
     {
         name: 'a JavaScript child of Python',
-        settings: `configurations = ["format", "markdown", "python"]
-[[scope]]
-path = "web"
-configurations = ["javascript"]
-`,
-        ignored: ['.venv/', 'node_modules/'],
+        settings: buildSandboxSettings(['format', 'markdown', 'python'], {
+            rules: true,
+            scopes: [{ path: 'web', configurations: ['javascript'] }],
+        }),
+        ignored: [
+            { path: '.venv/', pattern: '**/.venv/**' },
+            { path: 'node_modules/', pattern: '**/node_modules/**' },
+        ],
         absent: ['.build/', 'Package.resolved'],
     },
 ] as const;
@@ -81,8 +89,14 @@ export const PRETTIER_IGNORE_ATTRIBUTES = '/generated/** linguist-generated\n/ve
 
 /** A repository whose scopes select different tools, so each scope writes different pointers. */
 export const IGNORE_LIST_REPOSITORY = {
-    'gspot.toml':
-        'level = "all"\nconfigurations = ["javascript", "python", "markdown"]\n\n[[scope]]\npath = "apps/web"\nconfigurations = ["javascript", "css"]\n\n[[scope]]\npath = "services/api"\nconfigurations = ["python"]\n',
+    'gspot.toml': buildSandboxSettings(['javascript', 'python', 'markdown'], {
+        level: 'all',
+        rules: true,
+        scopes: [
+            { path: 'apps/web', configurations: ['javascript', 'css'] },
+            { path: 'services/api', configurations: ['python'] },
+        ],
+    }),
     'apps/web/package.json': '{"name":"web","private":true}\n',
     'apps/web/source.js': 'export const value = 1;\n',
     'apps/web/style.css': 'a { color: red; }\n',

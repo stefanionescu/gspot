@@ -1,4 +1,4 @@
-allowed_words = ["Semgrep"]
+allowed_words = ["Semgrep", "CSRF"]
 
 [configuration]
 always_selected = true
@@ -10,10 +10,8 @@ extensions = [".plist"]
 languages = true
 
 [[tool]]
-brew = "semgrep"
 builds = ["macos", "linux"]
 min_version = "1.100.0"
-mise = "pipx:semgrep"
 name = "semgrep"
 pypi = "semgrep"
 suppression = { marker = "\\bnosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }

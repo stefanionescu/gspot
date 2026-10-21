@@ -1,61 +1,30 @@
 // Check pinned dependencies and remove registry URLs from tool-project lockfiles.
-import { z } from 'zod';
 import semver from 'semver';
-import { writeFileSync } from 'node:fs';
-import { join, posix } from 'node:path';
-import { parse as parseYaml } from 'yaml';
+import { posix } from 'node:path';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
-import { parseJsonc } from '#cli/parsers/json.ts';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
+import { parseJsonFile } from '#cli/parsers/json.ts';
+import { parseYamlFile } from '#cli/parsers/yaml.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { HTTP_URL } from '#cli/config/tools/credentials.ts';
+import { isRecord, getValueAt } from '#cli/system/values.ts';
+import type { BunPackage } from '#cli/types/tools/project.ts';
 import { isYarnBerry } from '#cli/repository/package-manager.ts';
+import type { YarnPackage } from '#cli/types/parsers/lockfiles.ts';
 import { PNPM_ROOT_IMPORTER } from '#cli/config/parsers/lockfiles.ts';
 import { selectLockfileName } from '#cli/install/npm/tool-project.ts';
-import type { BunPackage, PackageCommandResult } from '#cli/types/tools/project.ts';
-import type { DependencyMap, PackageManager } from '#cli/types/parsers/dependency-files.ts';
-import { INTEGRITY, NPM_SETTING_PREFIX, YARN_DESCRIPTOR_SEPARATOR } from '#cli/config/tools/npm.ts';
+import type { DependencyMap, PackageManager } from '#cli/types/parsers/dependencies.ts';
+import { bunPackageSchema, npmToolLockSchemas } from '#cli/schemas/install/npm/lockfiles.ts';
+import { bunLockSchema, yarnLockSchema, yarnPackageSchema } from '#cli/schemas/parsers/lockfiles.ts';
 
-const devDependenciesSchema = z.object({
-    devDependencies: z.record(z.string(), z.string()).default({}),
-} satisfies SchemaShape<{ devDependencies: Record<string, string> }>);
-
-const npmLockfileSchema = z.object({ packages: z.record(z.string(), devDependenciesSchema) } satisfies SchemaShape<{
-    packages: Record<string, { devDependencies: Record<string, string> }>;
-}>);
-
-const bunLockfileSchema = z.object({ workspaces: z.record(z.string(), devDependenciesSchema) } satisfies SchemaShape<{
-    workspaces: Record<string, { devDependencies: Record<string, string> }>;
-}>);
-
-const pnpmLockfileSchema = z.object({
-    importers: z.record(
-        z.string(),
-        z.object({
-            devDependencies: z
-                .record(z.string(), z.object({ specifier: z.string() } satisfies SchemaShape<{ specifier: string }>))
-                .default({}),
-        } satisfies SchemaShape<{ devDependencies: Record<string, { specifier: string }> }>),
-    ),
-} satisfies SchemaShape<{
-    importers: Record<string, { devDependencies: Record<string, { specifier: string }> }>;
-}>);
-
-const yarnLockfileSchema = z.record(
-    z.string(),
-    z.looseObject({ version: z.string().optional(), resolved: z.string().optional() } satisfies SchemaShape<{
-        version?: string | undefined;
-        resolved?: string | undefined;
-    }>),
-) satisfies z.ZodType<Record<string, { version?: string | undefined; resolved?: string | undefined }>>;
-
-const bunPackagesSchema = z.looseObject({ packages: z.record(z.string(), z.array(z.unknown())) } satisfies SchemaShape<{
-    packages: Record<string, unknown[]>;
-}>);
-
-const bunPackageSchema = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]);
+import {
+    INTEGRITY,
+    NPM_SETTING_PREFIX,
+    LOCKFILE_WORKSPACE_KEYS,
+    YARN_DESCRIPTOR_SEPARATOR,
+} from '#cli/config/tools/npm.ts';
 
 // Check whether a parsed Yarn lockfile resolves each requested descriptor to its pinned version.
 function isYarnLockfileCurrent(
@@ -112,8 +81,10 @@ function stripRegistryPrefix(address: string, base: URL): string | undefined {
  * @returns the lockfile text with registry-relative references.
  */
 function stripYarnRegistryUrls(content: string, registry: string): string {
-    const entries = yarnLockfileSchema.parse(parseSyml(content));
-    const expected = structuredClone(entries);
+    const entries = yarnLockSchema.parse(parseSyml(content));
+    const expected = Object.fromEntries(
+        Object.entries(entries).map(([key, entry]) => [key, yarnPackageSchema.parse(entry)]),
+    );
     const base = new URL(registry.endsWith('/') ? registry : `${registry}/`);
     let edited = content;
     for (const entry of Object.values(expected)) {
@@ -122,7 +93,7 @@ function stripYarnRegistryUrls(content: string, registry: string): string {
         edited = edited.replaceAll(JSON.stringify(entry.resolved), JSON.stringify(relative));
         entry.resolved = relative;
     }
-    if (!isDeepStrictEqual(yarnLockfileSchema.parse(parseSyml(edited)), expected))
+    if (!isDeepStrictEqual(yarnLockSchema.parse(parseSyml(edited)), expected))
         throw new GspotError(
             'installation',
             'Cannot preserve Yarn lockfile entries while removing local registry routing. Existing files were preserved.',
@@ -139,7 +110,7 @@ function stripYarnRegistryUrls(content: string, registry: string): string {
  * @returns the lockfile text without the registry tarball URLs.
  */
 function stripBunRegistryUrls(content: string, env: Record<string, string>): string {
-    const parsed = bunPackagesSchema.parse(parseJsonc(content));
+    const parsed = parseJsonFile('bun.lock', content, bunLockSchema);
     let edited = content;
     for (const [key, entry] of Object.entries(parsed.packages)) {
         const npm = bunPackageSchema.safeParse(entry);
@@ -147,6 +118,50 @@ function stripBunRegistryUrls(content: string, env: Record<string, string>): str
         edited = applyEdits(edited, modify(edited, ['packages', key, 1], '', {}));
     }
     return edited;
+}
+
+// Validate the tool project's development pins over the shared loose lockfile shape.
+function parseDevelopmentDependencies(
+    name: Exclude<PackageManager['name'], 'yarn'>,
+    entry: unknown,
+): DependencyMap | undefined {
+    if (!isRecord(entry)) return undefined;
+    const dependencies = entry['devDependencies'];
+    if (dependencies === undefined) return {};
+    if (!isRecord(dependencies)) return undefined;
+    const pins: DependencyMap = {};
+    for (const [dependency, value] of Object.entries(dependencies)) {
+        const specifier = name === 'pnpm' ? getValueAt(value, ['specifier']) : value;
+        if (typeof specifier !== 'string') return undefined;
+        pins[dependency] = specifier;
+    }
+    return pins;
+}
+
+// Select the workspace entries after validating the package manager's lockfile shape.
+function parseWorkspaceEntries(
+    name: Exclude<PackageManager['name'], 'yarn'>,
+    content: string,
+): Record<string, unknown> | undefined {
+    const path = selectLockfileName(name);
+    const schema = npmToolLockSchemas[name];
+    const document =
+        name === 'pnpm'
+            ? parseYamlFile<Record<string, unknown>>(path, content, schema)
+            : parseJsonFile<Record<string, unknown>>(path, content, schema);
+    const entries = document[LOCKFILE_WORKSPACE_KEYS[name]];
+    return isRecord(entries) ? entries : undefined;
+}
+
+// Require valid package entries before checking Yarn's requested descriptors.
+function parseYarnEntries(content: string): Record<string, YarnPackage> | undefined {
+    const parsed = yarnLockSchema.safeParse(parseSyml(content));
+    if (!parsed.success) return undefined;
+    const entries = Object.entries(parsed.data).map(
+        ([key, entry]) => [key, yarnPackageSchema.safeParse(entry)] as const,
+    );
+    if (entries.some(([, entry]) => !entry.success)) return undefined;
+    return Object.fromEntries(entries.flatMap(([key, entry]) => (entry.success ? [[key, entry.data]] : [])));
 }
 
 /**
@@ -161,30 +176,25 @@ function parseRootDependencies(
     name: Exclude<PackageManager['name'], 'yarn'>,
     content: string,
 ): DependencyMap | undefined {
-    let parsed;
-    switch (name) {
-        case 'npm': {
-            parsed = npmLockfileSchema.safeParse(JSON.parse(content));
-            break;
-        }
-        case 'bun': {
-            parsed = bunLockfileSchema.safeParse(parseJsonc(content));
-            break;
-        }
-        default: {
-            parsed = pnpmLockfileSchema.safeParse(parseYaml(content));
-            break;
-        }
+    const entries = parseWorkspaceEntries(name, content);
+    if (entries === undefined) return undefined;
+    let root: DependencyMap = {};
+    for (const [key, entry] of Object.entries(entries)) {
+        const dependencies = parseDevelopmentDependencies(name, entry);
+        if (dependencies === undefined) return undefined;
+        if (key === (name === 'pnpm' ? PNPM_ROOT_IMPORTER : '')) root = dependencies;
     }
-    if (!parsed.success) return undefined;
-    if ('importers' in parsed.data) {
-        const root = parsed.data.importers[PNPM_ROOT_IMPORTER];
-        if (root === undefined) return {};
-        return Object.fromEntries(Object.entries(root.devDependencies).map(([key, value]) => [key, value.specifier]));
-    }
-    const roots = 'packages' in parsed.data ? parsed.data.packages : parsed.data.workspaces;
-    const root = roots[''];
-    return root === undefined ? {} : root.devDependencies;
+    return root;
+}
+
+// Treat malformed stored lockfiles as stale, while preserving unrelated process failures.
+function isInvalidLockfile(error: unknown): boolean {
+    if (error instanceof GspotError) return error.code === 'filesystem';
+    return (
+        error instanceof Error &&
+        (['SyntaxError', 'YAMLParseError', 'YAMLException'].includes(error.name) ||
+            error.message.startsWith('Expected an indexed object, got '))
+    );
 }
 
 /**
@@ -200,18 +210,13 @@ function parseRootDependencies(
 export function isLockfileCurrent(name: PackageManager['name'], content: string, dependencies: DependencyMap): boolean {
     try {
         if (name === 'yarn') {
-            const parsed = yarnLockfileSchema.safeParse(parseSyml(content));
-            return parsed.success && isYarnLockfileCurrent(parsed.data, dependencies);
+            const entries = parseYarnEntries(content);
+            return entries !== undefined && isYarnLockfileCurrent(entries, dependencies);
         }
         const parsed = parseRootDependencies(name, content);
         return parsed !== undefined && isDeepStrictEqual(parsed, dependencies);
     } catch (error) {
-        if (
-            error instanceof Error &&
-            (['SyntaxError', 'YAMLParseError', 'YAMLException'].includes(error.name) ||
-                error.message.startsWith('Expected an indexed object, got '))
-        )
-            return false;
+        if (isInvalidLockfile(error)) return false;
         throw error;
     }
 }
@@ -219,15 +224,16 @@ export function isLockfileCurrent(name: PackageManager['name'], content: string,
 /**
  * Remove registry locations from portable lockfile bytes.
  *
- * @param work the tool project folder.
+ * @param lockfilePath the portable lockfile to read and rewrite.
  * @param packageManager the tool that wrote the lockfile.
- * @param options the result of the package manager run.
- * @param options.env variables for the tool process.
- * @param options.lockfile the resolved bytes to clean.
+ * @param env variables for the tool process.
  */
-export function stripRegistryUrls(work: string, packageManager: PackageManager, options: PackageCommandResult): void {
-    const { env, lockfile } = options;
-    const lockfilePath = join(work, selectLockfileName(packageManager.name));
+export function stripRegistryUrls(
+    lockfilePath: string,
+    packageManager: PackageManager,
+    env: Record<string, string>,
+): void {
+    const lockfile = readFileSync(lockfilePath, 'utf8');
     if (packageManager.name === 'bun') writeFileSync(lockfilePath, stripBunRegistryUrls(lockfile, env));
     if (packageManager.name !== 'yarn' || isYarnBerry(packageManager)) return;
     const registry = env[`${NPM_SETTING_PREFIX}registry`];

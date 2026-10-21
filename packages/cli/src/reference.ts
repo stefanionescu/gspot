@@ -1,28 +1,17 @@
 import { posix } from 'node:path';
 import { buildProgram } from '#cli/main.ts';
 import { isDeepStrictEqual } from 'node:util';
-import { SCHEMA_FILE } from '#cli/config/settings/file.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
-import { GROUP_LABELS } from '#cli/config/configurations.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import packageManifest from '#cli-package' with { type: 'json' };
-import { buildJsonSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { buildJsonSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
-import { COMMAND_HELP, PROGRAM_EXIT_CODES } from '#cli/config/commands/help.ts';
 import { buildKnownSettings, listConfigurationSettings } from '#cli/settings/known.ts';
 import type { ReferenceData, SettingVariant, CommandReference } from '#cli/types/reference.ts';
 import { readManifests, listRuleFiles, listChecksById } from '#cli/configurations/manifests.ts';
 
-import {
-    PURGECSS_EXTRACTOR,
-    PURGECSS_TOKEN_END,
-    PURGECSS_PSEUDO_CLASS_PATTERN,
-} from '#cli/config/generation/tool-files.ts';
-
-function groupSettingVariants(configurations: ReferenceData['configurations'], reads: ReadCache): SettingVariant[] {
+function groupSettingVariants(configurations: ReferenceData['configurations']): SettingVariant[] {
     const settings = new Map<string, SettingVariant[]>();
     const declarations = [
-        ...[...buildKnownSettings([], 'recommended', reads).declarations.values()].map((setting) => ({
+        ...[...buildKnownSettings([], 'recommended').declarations.values()].map((setting) => ({
             setting,
             owner: 'gspot',
         })),
@@ -84,25 +73,15 @@ function buildCommandReference(command: ReturnType<typeof buildProgram>['command
  * @returns the data for the reference pages.
  */
 export function readReferenceData(): ReferenceData {
-    const reads = createReadCache(process.cwd());
-    const configurations = [...readManifests(reads).values()].toSorted((first, second) =>
+    const configurations = [...readManifests().values()].toSorted((first, second) =>
         first.configuration.name.localeCompare(second.configuration.name),
     );
     return {
         commands: buildProgram(() => {}).commands.map((command) => buildCommandReference(command)),
-        exitCodes: PROGRAM_EXIT_CODES,
         configurations,
         checks: [...listChecksById(configurations).values()],
-        settings: groupSettingVariants(configurations, reads),
+        settings: groupSettingVariants(configurations),
         schema: buildJsonSchema(),
-        schemaFile: SCHEMA_FILE,
-        version: packageManifest.version,
-        styles: {
-            extractor: PURGECSS_EXTRACTOR,
-            tokenEnd: PURGECSS_TOKEN_END,
-            pseudoClasses: PURGECSS_PSEUDO_CLASS_PATTERN,
-        },
-        groups: GROUP_LABELS,
         ruleFiles: Object.fromEntries(
             configurations.map((manifest) => [
                 manifest.configuration.name,

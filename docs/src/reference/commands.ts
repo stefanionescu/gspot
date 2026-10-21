@@ -1,7 +1,8 @@
 import type { ReferencePage } from '../types/reference.ts';
 import type { ReferenceData } from '#cli/types/reference.ts';
-import { escapeCell, formatTable, formatSection, buildReferencePage } from './markdown.ts';
-import { EXIT_CODE_ROW, REFERENCE_FOLDERS, ENVIRONMENT_VARIABLES } from '../config/reference.ts';
+import { REFERENCE_FOLDERS, ENVIRONMENT_VARIABLES } from '../config/reference.ts';
+import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/commands/help.ts';
+import { formatCode, escapeCell, formatTable, formatSection, buildReferencePage } from './markdown.ts';
 
 type Command = ReferenceData['commands'][number];
 
@@ -9,44 +10,32 @@ function formatOptionValues(option: { choices?: string[]; default?: unknown }): 
     return (
         (option.choices === undefined
             ? ''
-            : ' Choices: ' + option.choices.map((value) => '`' + value + '`').join(', ') + '.') +
-        (option.default === undefined ? '' : ` Default: \`${JSON.stringify(option.default)}\`.`)
-    );
-}
-
-// The help text lists one status per line, and a long meaning continues on the next lines.
-function formatExitCodes(text: string): string {
-    const rows: [string, string][] = [];
-    for (const line of text.split('\n')) {
-        const row = EXIT_CODE_ROW.exec(line)?.groups;
-        const last = rows.at(-1);
-        if (row?.['codes'] !== undefined && row['meaning'] !== undefined) rows.push([row['codes'], row['meaning']]);
-        else if (last !== undefined && line.trim() !== '') last[1] += ` ${line.trim()}`;
-    }
-    return formatTable(
-        ['Exit code', 'Meaning'],
-        rows.map(([codes, meaning]) => [`\`${codes}\``, escapeCell(meaning)]),
+            : ' Choices: ' + option.choices.map((value) => formatCode(value)).join(', ') + '.') +
+        (option.default === undefined ? '' : ` Default: ${formatCode(JSON.stringify(option.default))}.`)
     );
 }
 
 // One section per command: what it does, how to call it, its arguments and options, and how it exits.
 function formatCommand(command: Command): string {
     const argumentRows = command.arguments.map((argument) => [
-        `\`${argument.name}\``,
+        formatCode(argument.name),
         escapeCell(
             `${argument.description}. ${argument.required ? 'Required.' : 'Optional.'}` + formatOptionValues(argument),
         ),
     ]);
     // The global options list --help once for every command.
     const optionRows = command.options
-        .filter((option) => option.flags !== '-h, --help')
-        .map((option) => [`\`${option.flags}\``, escapeCell(`${option.description}.` + formatOptionValues(option))]);
+        .filter((option) => !(option.flags in GLOBAL_OPTIONS))
+        .map((option) => [formatCode(option.flags), escapeCell(`${option.description}.` + formatOptionValues(option))]);
     return formatSection(
         `gspot ${command.name}`,
         `${command.description}\n\n\`\`\`shell\n${command.usage}\n\`\`\`\n` +
             (argumentRows.length === 0 ? '' : `\n${formatTable(['Argument', 'What it is'], argumentRows)}\n`) +
             (optionRows.length === 0 ? '' : `\n${formatTable(['Option', 'What it does'], optionRows)}\n`) +
-            `\n${formatExitCodes(command.exitCodes)}\n\nFor example:\n\n\`\`\`shell\n${command.example}\n\`\`\``,
+            `\n${formatTable(
+                ['Exit code', 'Meaning'],
+                command.exitCodes.map(([codes, meaning]) => [formatCode(codes), escapeCell(meaning)]),
+            )}\n\nFor example:\n\n\`\`\`shell\n${command.example}\n\`\`\``,
     );
 }
 
@@ -55,13 +44,9 @@ function formatCommand(command: Command): string {
  *
  * @param data the CLI reference data
  * @param data.commands the help data the CLI registers
- * @param data.exitCodes the exit codes of every command
  * @returns the page, keyed by its Markdown path
  */
-export function buildCommandPages({
-    commands,
-    exitCodes,
-}: Pick<ReferenceData, 'commands' | 'exitCodes'>): Map<string, ReferencePage> {
+export function buildCommandPages({ commands }: Pick<ReferenceData, 'commands'>): Map<string, ReferencePage> {
     const page = buildReferencePage(
         'Commands',
         'Every gspot command, its options, and its exit codes.',
@@ -69,7 +54,7 @@ export function buildCommandPages({
             formatTable(
                 ['Command', 'What it does'],
                 commands.map((command) => [
-                    `[\`gspot ${command.name}\`](#gspot-${command.name})`,
+                    `[${formatCode('gspot ' + command.name)}](#gspot-${command.name})`,
                     escapeCell(command.summary),
                 ]),
             ) +
@@ -79,15 +64,18 @@ export function buildCommandPages({
                 'Global options',
                 formatTable(
                     ['Option', 'What it does'],
-                    [
-                        ['`--version`', 'Print the version.'],
-                        ['`--help`', 'Print help.'],
-                    ],
+                    Object.entries(GLOBAL_OPTIONS).map(([flags, description]) => [
+                        formatCode(flags),
+                        escapeCell(description + '.'),
+                    ]),
                 ),
             ) +
             formatSection(
                 'Exit codes',
-                `Every command exits with one of these codes.\n\n${formatExitCodes(exitCodes)}`,
+                `Every command exits with one of these codes.\n\n${formatTable(
+                    ['Exit code', 'Meaning'],
+                    PROGRAM_EXIT_CODES.map(([codes, meaning]) => [formatCode(codes), escapeCell(meaning)]),
+                )}`,
             ) +
             formatSection(
                 'Environment variables',

@@ -3,8 +3,7 @@ import { createFileTree } from 'testdirs';
 import { join, relative } from 'node:path';
 import { fakeTool } from '#tests/setup/fakes.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 
@@ -22,7 +21,7 @@ export async function prepareLicenseSandbox(
     root: string,
     plan: string | (typeof ALLOWED_PACKAGE_SCOPE_CASES)[number] = LICENSE_SETTINGS,
 ): Promise<void> {
-    const version = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'pip-licenses').version;
+    const version = getToolDeclaration(readManifests().values(), 'pip-licenses').version;
     if (version === undefined) throw new Error('The pip-licenses test requires a pinned version.');
     let settings = typeof plan === 'string' ? plan : LICENSE_SETTINGS;
     let files: Record<string, string> = {
@@ -44,7 +43,7 @@ export async function prepareLicenseSandbox(
         );
     }
     await createFileTree(root, {
-        'gspot.toml': buildSettingsText(['licenses'], { tables: settings }),
+        'gspot.toml': buildSandboxSettings(['licenses'], { tables: settings }),
         ...files,
         ...(typeof plan === 'string' ? {} : { 'uv.lock': ABSENT_PACKAGE_LOCKFILE, ...LICENSE_TOOL_PROJECT_FILES }),
     });

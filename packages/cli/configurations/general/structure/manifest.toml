@@ -9,7 +9,7 @@ languages = true
 [[check]]
 example = "With `[[import_rule]]` records, a Python file under `app/` that imports `storage.models` from a rule it may not import reports `refused-import`. A code file that no rule covers reports `uncovered-file`."
 files = { extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".py", ".pyi", ".swift"], kinds = ["source"] }
-help = "Move the code into a rule that may import it, add the rule to `can_also_import` or `can_import`, or add the file to the paths of a rule."
+help = "Move the code into a rule that may import it, move that rule above, list the rule in `can_import`, or add the file to the paths of a rule."
 level = "recommended"
 name = "import-rules"
 runs = "scope"
@@ -29,11 +29,10 @@ why = "A folder with one file adds a level to every import path and groups nothi
 
 [[check]]
 example = "Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` share a repeated prefix. Move them into `asset/` with names `card.ts`, `list.ts`, and `row.ts`, then update imports."
-help = "Move the files into a folder named after the shared prefix, or allow the set with a reason."
+help = "Move the files into a folder named after the shared prefix, or raise `limits.shared_prefix_files` with a reason."
 level = "all"
 name = "shared-prefixes"
 runs = "scope"
-settings = ["limits.shared_prefix_files"]
 stage = "commit"
 summary = "Finds sibling files that share a name prefix, such as `asset-card`, `asset-list`, and `asset-row`."
 why = "Sibling files with one prefix split a single concept by suffix, and a folder of that name groups them."
@@ -50,7 +49,7 @@ why = "An import of ./turn names both, and a reader cannot tell which one loads.
 
 [[check]]
 example = "A Python file over its line limit reports the count. Split it by responsibility."
-files = { extensions = [".sh", ".bash", ".zsh", ".bats", ".py", ".pyi", ".sql", ".pgsql", ".psql"], tags = ["shebang:shell"], kinds = ["source"] }
+files = { extensions = [".py", ".pyi", ".sql", ".pgsql", ".psql"], tags = ["shell"], kinds = ["source"] }
 help = "Split the file by responsibility, or raise `limits.<language>.file_lines` with a reason."
 level = "all"
 name = "long-files"
@@ -61,7 +60,7 @@ why = "A long file hides independent responsibilities from the reader."
 
 [[check]]
 example = "A Bash function that only calls another reports a finding. Inline the call at each caller, and delete the wrapper."
-files = { extensions = [".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+files = { extensions = [".ts", ".tsx", ".js", ".mjs", ".cjs", ".py", ".swift"], tags = ["shell"], kinds = ["source"] }
 help = "Inline a forwarding function at its calls and delete it. Split independent statements into the files that use them."
 level = "all"
 name = "trivial-functions"
@@ -72,7 +71,7 @@ why = "A function of one statement makes the reader jump for nothing."
 
 [[check]]
 example = "A Python file that uses `os.environ` outside `structure.environment_readers` reports a finding. Move that access into an environment reader, and pass the value to callers."
-files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+files = { extensions = [".py", ".swift"], tags = ["shell"], kinds = ["source"] }
 help = "Move the environment read into a file listed in structure.environment_readers, then pass the value to callers."
 level = "all"
 name = "environment-readers"

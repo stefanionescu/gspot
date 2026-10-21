@@ -38,8 +38,6 @@ createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-im
         // A decorator above export belongs to the class, so the doc comment above it leads the class.
         "import { Injectable } from './a';\n\n/** Builds greetings. */\n@Injectable()\nexport class Greeter {}",
 
-        "// The file header.\nimport { a } from './a';\nimport { b } from './b';\n\nexport const c = a + b;",
-        "import { a } from './a';\nimport { b } from './b';\n\n// Explains c.\nexport const c = a + b;",
         "import { a } from './a';",
         "import { a } from './a';\n\nconst value = 1;\n// A note between two blocks is not inside either.\nimport { b } from './b';",
     ],
@@ -108,7 +106,7 @@ createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-im
     ],
 });
 
-createRuleTester('/repo', { sourceType: 'commonjs' }).run(
+createRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(
     'no-comments-in-imports CommonJS',
     plugin.rules['no-comments-in-imports'],
     {

@@ -24,6 +24,9 @@ test, a budget for one suite or system, an environment switch, and an option for
 
 When you rename or move a file, update every reference: imports, documentation, configuration, and scripts.
 
+Treat stored data and wire formats as contracts. Rename a stored key together with a migration of the stored data.
+During a rolling deploy, readers accept both shapes until no old writer runs.
+
 Before you add a module, folder, or helper, identify the code that implements
 the behavior. When you add a file, tell the user why that code needs it.
 
@@ -84,9 +87,6 @@ When you replace or rename something:
 
 - Delete the old implementation entirely.
 - Update every call site to use the new version.
-
-Treat stored data and wire formats as contracts. Rename a stored key together with a migration of the stored data.
-During a rolling deploy, readers accept both shapes until no old writer runs.
 
 ## Structure
 

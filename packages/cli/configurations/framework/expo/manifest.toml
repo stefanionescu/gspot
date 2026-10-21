@@ -22,7 +22,6 @@ npm = "expo-doctor"
 version = "1.20.4"
 
 [eslint]
-fragment = true
 required_tools = ["eslint-plugin-expo"]
 all_level_rules = ["expo/prefer-box-shadow"]
 

@@ -1,9 +1,9 @@
 import { NODE_TOOL } from '#cli/config/tools/npm.ts';
+import type { System } from '#cli/types/planning.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
+import { PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
-import { MISE_BACKENDS, PYTHON_CONFIGURATION } from '#cli/config/configurations.ts';
 import { readManifests, buildManifestError } from '#cli/configurations/manifests.ts';
 
 import {
@@ -24,31 +24,34 @@ import {
  */
 function findMiseInstaller(tool: ToolDeclaration): InstallerPin | undefined {
     if (tool.system === true) return undefined;
-    for (const { installer, prefix } of MISE_BACKENDS) {
-        const pin = tool.installers[installer];
-        if (pin !== undefined) return { ...pin, name: `${prefix}${pin.name}` };
-    }
-    return undefined;
+    return tool.installers['mise'];
+}
+
+/**
+ * Check whether gspot installs a tool through mise or a pinned tool project.
+ *
+ * @param tool the declaration to read.
+ * @returns whether gspot uses one of its installers.
+ */
+export function isInstalledByGspot(tool: ToolDeclaration): boolean {
+    return findToolProjectPackage(tool) !== undefined || findMiseInstaller(tool) !== undefined;
 }
 
 /**
  * Select the tools that mise installs, apart from those in the npm and Python tool projects.
  *
  * @param manifests the configurations in use.
- * @param reads the run cache.
  * @returns the name and version of each mise tool.
  */
-export function listMisePins(manifests: Manifest[], reads: ReadCache): MisePin[] {
+export function listMisePins(manifests: Manifest[]): MisePin[] {
     const tools = listDistinctTools(manifests);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
     if (
         tools.some((tool) => findToolProjectPackage(tool)?.kind === 'python') &&
         !tools.some((tool) => tool.name === UV_TOOL)
     ) {
-        const tool = readManifests(reads)
-            .get(PYTHON_CONFIGURATION)
-            ?.tools.find((entry) => entry.name === UV_TOOL);
-        const pin = tool === undefined ? undefined : findMisePin(tool);
+        const tool = getToolDeclaration(readManifests().values(), UV_TOOL);
+        const pin = findMisePin(tool);
         if (pin === undefined)
             throw buildManifestError(PYTHON_CONFIGURATION, ['tool uv requires a pinned mise installer version.']);
         pins.push(pin);
@@ -82,11 +85,10 @@ export function listToolProjectPins(manifests: Manifest[]): ToolProjectPins {
         const installation = findToolProjectPackage(tool);
         if (installation === undefined) continue;
         if (installation.kind === 'npm') npm.push([installation.name, installation.version]);
-        if (installation.kind !== 'python') continue;
-        python.push(`${installation.name}==${installation.version}`);
+        else python.push(`${installation.name}==${installation.version}`);
     }
     return {
-        npm: Object.fromEntries(npm.toSorted(([a], [b]) => a.localeCompare(b))),
+        npm: Object.fromEntries(npm.toSorted(([first], [second]) => first.localeCompare(second))),
         python,
     };
 }
@@ -106,7 +108,7 @@ export function listDistinctTools(manifests: Manifest[]): ToolDeclaration[] {
     return tools
         .values()
         .toArray()
-        .toSorted((a, b) => a.name.localeCompare(b.name));
+        .toSorted((first, second) => first.name.localeCompare(second.name));
 }
 
 /**
@@ -114,12 +116,9 @@ export function listDistinctTools(manifests: Manifest[]): ToolDeclaration[] {
  *
  * @param manifests the configurations that may declare the tool.
  * @param name the executable to find.
- * @param owner the configuration whose check or fixer runs the tool.
  * @returns the declaration, or a system command when no configuration declares the tool.
  */
-export function getToolDeclaration(manifests: Iterable<Manifest>, name: string, owner?: Manifest): ToolDeclaration {
-    const own = owner?.tools.find((tool) => tool.name === name);
-    if (own !== undefined) return own;
+export function getToolDeclaration(manifests: Iterable<Manifest>, name: string): ToolDeclaration {
     for (const manifest of manifests) {
         const pin = manifest.tools.find((tool) => tool.name === name);
         if (pin !== undefined) return pin;
@@ -178,15 +177,26 @@ export function listNpmToolNames(manifests: Iterable<Manifest>): Set<string> {
  * Find the build that a tool lacks on a system such as Windows or arm64 Linux.
  *
  * @param tool the declaration with its builds.
- * @param platform the system name: macos, linux, or windows.
- * @param arch x64 or arm64.
+ * @param host the system name and architecture.
  * @returns the words for the missing build, or undefined when the tool has a build.
  */
-export function findMissingBuild(tool: ToolDeclaration, platform: string, arch: string): string | undefined {
-    const named: readonly string[] = tool.builds ?? [];
-    if (tool.builds === undefined || named.includes(platform) || named.includes(`${platform}-${arch}`))
-        return undefined;
+export function findMissingBuild(tool: ToolDeclaration, host: System): string | undefined {
+    if (tool.builds === undefined) return undefined;
+    const { platform, arch } = host;
+    const named: readonly string[] = tool.builds;
+    if (named.includes(platform) || named.includes(`${platform}-${arch}`)) return undefined;
     const label = OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform;
     // A pin that names the system with another architecture lacks only this architecture.
     return named.some((entry) => entry.startsWith(`${platform}-`)) ? `${arch} ${label}` : label;
+}
+
+/**
+ * Read the plugin prefix of a qualified lint rule.
+ *
+ * @param rule the rule name, optionally prefixed by its plugin.
+ * @returns the prefix before the last slash, or undefined for an unqualified rule.
+ */
+export function extractRulePrefix(rule: string): string | undefined {
+    const slash = rule.lastIndexOf('/');
+    return slash === -1 ? undefined : rule.slice(0, slash);
 }

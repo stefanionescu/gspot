@@ -3,6 +3,7 @@ import { type Command } from '@commander-js/extra-typings';
 import { saveSettings } from '#cli/apply/save-settings.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { UnsetOptions } from '#cli/types/commands/settings.ts';
 import { isRecord, getValueAt, stripUndefined } from '#cli/system/values.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
@@ -35,6 +36,14 @@ function registerUnset(program: Command, onResult: CommandCompletion): void {
         });
 }
 
+// Remove entries from a written table, and drop the setting when no entries remain.
+function removeTableItems(scopeTable: TomlTable, key: string, items: string[]): void {
+    const table = getWrittenValue(getValueAt(scopeTable, key.split('.')));
+    if (!isRecord(table)) return;
+    for (const item of items) Reflect.deleteProperty(table, item);
+    if (Object.keys(table).length === 0) deleteKey(scopeTable, key);
+}
+
 /**
  * Run the unset command and return its output.
  *
@@ -48,32 +57,21 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { root, input } = edit;
     const { match } = await findSettingDeclaration(edit, setting, options.scope);
 
-    if (items.length > 0 && match.declaration.type !== 'list' && match.declaration.type !== 'table')
+    if (items.length > 0 && !['list', 'table'].includes(match.declaration.type))
         throw new GspotError(
             'arguments',
             `${setting} is not a list or a table, so it takes no items. Run gspot unset ${setting}.`,
         );
+    const scopeTable = findScopeTable(input.table, options.scope);
+    if (items.length === 0) deleteKey(scopeTable, setting);
+    else if (match.declaration.type === 'list') removeFromList(scopeTable, setting, items);
+    else removeTableItems(scopeTable, setting, items);
     return await saveSettings(root, {
         input,
         summary:
             items.length === 0
                 ? `Removed your value for ${setting}.`
                 : `Removed ${items.join(' and ')} from ${setting}.`,
-        change: (written) => {
-            const scopeTable = findScopeTable(written, options.scope);
-            if (items.length === 0) {
-                deleteKey(scopeTable, setting);
-                return;
-            }
-            if (match.declaration.type === 'list') {
-                removeFromList(scopeTable, setting, items);
-                return;
-            }
-            const table = getWrittenValue(getValueAt(scopeTable, setting.split('.')));
-            if (!isRecord(table)) return;
-            for (const item of items) Reflect.deleteProperty(table, item);
-            if (Object.keys(table).length === 0) deleteKey(scopeTable, setting);
-        },
     });
 }
 

@@ -1,17 +1,19 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { runChecks } from '#cli/runs/run.ts';
+import { writeFile } from 'node:fs/promises';
+import { openSession } from '#cli/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
+import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { commitAll, markExecutable } from '#tests/setup/git.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { NESTED_CONDITION } from '#tests/data/checks/bash/tool-checks.ts';
-import { BASH_HEADER, CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { BASH_TRIVIAL_FUNCTION_CASES } from '#tests/data/checks/structure/trivial-functions.ts';
-import { runBashSample, expectedSummary, summarizeSample, registerBashSandbox } from '#tests/setup/sample-checks.ts';
+import { BASH_HEADER, BASH_SANDBOX, CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
+import { runCheckSample, expectedSummary, summarizeSample, registerBashSandbox } from '#tests/setup/sample-checks.ts';
 
 import {
     FIXED_LOOPS,
@@ -27,6 +29,7 @@ import {
     SAFETY_SOURCES,
     BASH_SAFETY_CASES,
     SCOPE_READER_FILES,
+    PASSED_BASH_RESULTS,
     INLINE_SCRIPT_CASES,
     SCRIPT_LAYOUT_CASES,
     RIGHT_CLEANUP_SOURCE,
@@ -38,11 +41,11 @@ test.each([...SAFETY_SOURCES])(
     'safety: a trap that removes its own temporary file is allowed and other recursive removals are reported: $source',
     async ({ source, unsafeLines }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['bash']),
+            'gspot.toml': buildSandboxSettings(['bash']),
             'source.sh': '#!/usr/bin/env bash\nset -euo pipefail\n' + source,
         });
-        const result = await checkReport(sandbox.path, ['check', '--only', 'bash/safety', '--json']);
-        expect(result.code, result.stdout + result.stderr).toBe(unsafeLines.length === 0 ? 0 : 1);
+        const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['bash/safety'] }));
+
         expect(result.report.checks[0]?.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual(
             unsafeLines.map((line) => ({ file: 'source.sh', line, rule: 'recursive-remove' })),
         );
@@ -51,32 +54,37 @@ test.each([...SAFETY_SOURCES])(
 
 test('safety: the Bash contract and safety agree on the specific temporary path that a trap removes', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['bash'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
         'source.sh': WRONG_CLEANUP_SOURCE,
     });
     commitAll(sandbox.path);
     await markExecutable(sandbox.path, 'source.sh');
-    const command = ['check', '--only', 'bash/script-layout,bash/safety', '--json'];
-    const wrong = await checkReport(sandbox.path, command);
-    expect(wrong.code, wrong.stdout + wrong.stderr).toBe(1);
+
+    const wrong = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['bash/script-layout', 'bash/safety'] }),
+    );
+
     expect(
         wrong.report.checks.flatMap(({ findings }) => findings.map(({ rule, line }) => ({ rule, line }))),
     ).toStrictEqual([
         { rule: 'mktemp-trap', line: 3 },
         { rule: 'recursive-remove', line: 4 },
     ]);
-    await Bun.write(join(sandbox.path, 'source.sh'), RIGHT_CLEANUP_SOURCE);
-    const corrected = await checkReport(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual([
-        { status: 'passed', findings: [] },
-        { status: 'passed', findings: [] },
-    ]);
+    await writeFile(join(sandbox.path, 'source.sh'), RIGHT_CLEANUP_SOURCE);
+    const corrected = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['bash/script-layout', 'bash/safety'] }),
+    );
+
+    expect(corrected.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual(
+        PASSED_BASH_RESULTS,
+    );
 });
 test('script-layout: script-layout permits top-level commands in an environment reader declared only by its scope', async () => {
     await using sandbox = await testdir({
         ...SCOPE_READER_FILES,
-        'gspot.toml': buildSettingsText(['bash'], { level: 'all', tables: SCOPE_READER_SETTINGS }),
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', tables: SCOPE_READER_SETTINGS }),
     });
     expect(await checkFindings(sandbox.path, 'bash/script-layout', { scope: 'tools' })).toStrictEqual([]);
 });
@@ -91,7 +99,7 @@ test.each([
     ...UNUSED_FUNCTION_CASES,
     ...BASH_TRIVIAL_FUNCTION_CASES,
 ])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runBashSample(bashSandbox(), entry);
+    const result = await runCheckSample(bashSandbox(), entry, BASH_SANDBOX);
     expect(summarizeSample(result)).toStrictEqual(expectedSummary(entry));
 });
 
@@ -139,9 +147,10 @@ function buildSizeCases() {
     const branches = getDefaultLimit('limits.bash.function_branches');
     const nesting = getDefaultLimit('limits.bash.block_nesting');
     const assignments = getDefaultLimit('limits.bash.function_assignments');
-    const bodyAtLimit = Array.from({ length: functionLines }, (_, index) => `    echo "line ${String(index)}"`).join(
-        '\n',
-    );
+    const bodyAtLimit = Array.from(
+        { length: functionLines - 2 },
+        (_, index) => `    echo "line ${String(index)}"`,
+    ).join('\n');
     const branchesAtLimit = Array.from(
         { length: branches },
         (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo "$1"; fi`,
@@ -192,38 +201,33 @@ test.each(BASH_SIZE_LOCATIONS.map((expected, index) => ({ expected, index })))(
         const entry = buildSizeCases()[index]!;
         const check = entry.expected.rule === 'file-lines' ? 'structure/long-files' : 'bash/function-size';
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['bash'], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
             [entry.expected.file]: entry.source,
         });
-        const command = ['check', '--only', check, '--json'];
-        const failed = await runGspot(sandbox.path, command);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toContainEqual(
-            matchFields(entry.expected),
-        );
-        await Bun.write(join(sandbox.path, entry.expected.file), entry.corrected);
-        const corrected = await runGspot(sandbox.path, command);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual(
-            [],
-        );
+
+        const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+
+        expect(failed.report.checks.flatMap(({ findings }) => findings)).toContainEqual(matchFields(entry.expected));
+        await writeFile(join(sandbox.path, entry.expected.file), entry.corrected);
+        const corrected = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
+
+        expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     },
 );
 test('Bash function-size counts C-style loops as branches and nesting, not their header assignments, in each scope', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['bash'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], {
             level: 'all',
-            tables: '[limits.bash]\nfunction_branches = 3\nblock_nesting = 3\nfunction_assignments = 1\n[[scope]]\npath = "api"\n\n',
+            tables: '[limits.bash]\nfunction_branches = 3\nblock_nesting = 3\nfunction_assignments = 1\n',
+            scopes: [{ path: 'api' }],
         }),
         'source.sh': COUNTED_LOOPS,
         'api/source.sh': COUNTED_LOOPS,
     });
-    const environment = {};
-    const command = ['check', '--only', 'bash/function-size', '--json'];
-    const broken = await runGspot(sandbox.path, command, environment);
-    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const checks = (JSON.parse(broken.stdout) as RunReport).checks;
+
+    const broken = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['bash/function-size'] }));
+
+    const checks = broken.report.checks;
     expect(checks.map(({ scope, fileCount }) => ({ scope, fileCount }))).toStrictEqual([
         { scope: '', fileCount: 1 },
         { scope: 'api', fileCount: 1 },
@@ -237,29 +241,28 @@ test('Bash function-size counts C-style loops as branches and nesting, not their
             })),
         );
     }
-    for (const path of ['source.sh', 'api/source.sh']) await Bun.write(join(sandbox.path, path), FIXED_LOOPS);
-    const corrected = await runGspot(sandbox.path, command, environment);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(
-        (JSON.parse(corrected.stdout) as RunReport).checks.map(({ status, findings }) => ({ status, findings })),
-    ).toStrictEqual([
-        { status: 'passed', findings: [] },
-        { status: 'passed', findings: [] },
-    ]);
+    for (const path of ['source.sh', 'api/source.sh']) await writeFile(join(sandbox.path, path), FIXED_LOOPS);
+    const corrected = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['bash/function-size'] }),
+    );
+
+    expect(corrected.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual(
+        PASSED_BASH_RESULTS,
+    );
 });
 
 test('inline-scripts: a heredoc that writes a data file is not reported', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['bash'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
         'source.sh': '#!/usr/bin/env bash\ncat > settings.json <<EOF\n{ "name": "example" }\nEOF\n',
     });
-    const result = await checkReport(sandbox.path, ['check', '--only', 'bash/inline-scripts', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(await checkFindings(sandbox.path, 'bash/inline-scripts')).toStrictEqual([]);
 });
 
 test('a function that only a trap runs is not reported', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['bash']),
+        'gspot.toml': buildSandboxSettings(['bash']),
         'source.sh': TRAP_FUNCTION_SOURCE,
     });
     expect(await checkFindings(sandbox.path, 'bash/unused-functions')).toStrictEqual([]);
@@ -267,7 +270,7 @@ test('a function that only a trap runs is not reported', async () => {
 
 test('main "$@" with a main that reads no argument is not reported', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['bash'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
         'source.sh': CLEAN_BASH_SCRIPT,
     });
     commitAll(sandbox.path);

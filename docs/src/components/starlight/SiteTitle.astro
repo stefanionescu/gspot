@@ -7,13 +7,11 @@ import { DOCS_PATH } from '../../config/site.ts';
         <img class="brand-mark" src="/brand/mark.webp" alt="" width="28" height="28" />
         <span>gspot</span>
     </a>
-    {
-        Astro.url.pathname !== '/' && (
-            <a href={DOCS_PATH} aria-current="location">
-                Docs
-            </a>
-        )
-    }
+    {Astro.url.pathname !== '/' && (
+        <a href={DOCS_PATH} aria-current="location">
+            Docs
+        </a>
+    )}
 </div>
 <style>
 .brand-navigation {
@@ -25,7 +23,7 @@ a {
     color: var(--sl-color-gray-2);
     text-decoration: none;
     font-size: 0.9375rem;
-    min-height: 44px;
+    min-height: var(--target-size);
     display: inline-flex;
     align-items: center;
 }
@@ -47,8 +45,6 @@ a[aria-current] {
     width: 28px;
     height: 28px;
 }
-</style>
 
-<style>
 @media (hover: hover) { a:hover { color: var(--sl-color-white); } }
 </style>

@@ -4,7 +4,7 @@ import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
-import { GspotError, isMissingFileError } from '#cli/system/errors.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
 
 // Close the descriptor even when a bounded read fails.
@@ -29,7 +29,11 @@ function readUtf8(path: string, read: () => Buffer): string | undefined {
     try {
         return decodeUtf8Text(path, read());
     } catch (error) {
-        if (isMissingFileError(error)) return undefined;
+        if (hasErrorCode(error, 'ENOENT')) return undefined;
+        if (hasErrorCode(error, 'EACCES') || hasErrorCode(error, 'EPERM') || hasErrorCode(error, 'EISDIR'))
+            throw new GspotError('filesystem', `${path} could not be read. Check the file and its permissions.`, {
+                cause: error,
+            });
         throw error;
     }
 }
@@ -42,7 +46,7 @@ function readUtf8(path: string, read: () => Buffer): string | undefined {
  * @param limit the maximum byte count.
  * @returns the bytes read.
  */
-function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer {
+export function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer {
     const held = reads.sources.get(path);
     return held === undefined ? readFilePrefix(readContainedPath(reads.root, path), limit) : held.subarray(0, limit);
 }
@@ -54,7 +58,7 @@ function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer
  * @param path the root-relative file.
  * @returns the file bytes.
  */
-function readBytes(sourceFolder: string, path: string): Buffer {
+export function readBytes(sourceFolder: string, path: string): Buffer {
     return readFileSync(readContainedPath(realpathSync(sourceFolder), path));
 }
 
@@ -65,7 +69,7 @@ function readBytes(sourceFolder: string, path: string): Buffer {
  * @param path the root-relative file.
  * @returns the first bytes read during this run.
  */
-function readCachedBytes(reads: ReadCache, path: string): Buffer {
+export function readCachedBytes(reads: ReadCache, path: string): Buffer {
     const held = reads.sources.get(path);
     if (held !== undefined) return held;
     const bytes = readFileSync(readContainedPath(reads.root, path));
@@ -80,7 +84,7 @@ function readCachedBytes(reads: ReadCache, path: string): Buffer {
  * @param path the root-relative file.
  * @returns the file text.
  */
-function readText(sourceFolder: string, path: string): string | undefined {
+export function findText(sourceFolder: string, path: string): string | undefined {
     return readUtf8(path, () => readBytes(sourceFolder, path));
 }
 
@@ -91,8 +95,36 @@ function readText(sourceFolder: string, path: string): string | undefined {
  * @param path the root-relative file.
  * @returns the cached file text.
  */
-function readCachedText(reads: ReadCache, path: string): string | undefined {
+export function findCachedText(reads: ReadCache, path: string): string | undefined {
     return readUtf8(path, () => readCachedBytes(reads, path));
+}
+
+/**
+ * Read tracked UTF-8 text and refuse a missing file.
+ *
+ * @param root the repository folder.
+ * @param path the tracked file path.
+ * @returns the file text.
+ */
+export function readText(root: string, path: string): string {
+    const text = findText(root, path);
+    if (text === undefined)
+        throw new GspotError('filesystem', `${path} is tracked but missing. Restore it or commit its deletion.`);
+    return text;
+}
+
+/**
+ * Read tracked UTF-8 text through the run cache and refuse a missing file.
+ *
+ * @param reads the run cache.
+ * @param path the tracked file path.
+ * @returns the cached file text.
+ */
+export function readCachedText(reads: ReadCache, path: string): string {
+    const text = findCachedText(reads, path);
+    if (text === undefined)
+        throw new GspotError('filesystem', `${path} is tracked but missing. Restore it or commit its deletion.`);
+    return text;
 }
 
 /**
@@ -102,7 +134,7 @@ function readCachedText(reads: ReadCache, path: string): string | undefined {
  * @param path the root-relative file.
  * @returns the resolved file location after the boundary check.
  */
-function readContainedPath(sourceFolder: string, path: string): string {
+export function readContainedPath(sourceFolder: string, path: string): string {
     const target = realpathSync(join(sourceFolder, ...splitSystemPath(path)));
     if (!isInside(relative(sourceFolder, target))) throw new Error(`Source link leaves the repository: ${path}`);
     return target;
@@ -114,7 +146,7 @@ function readContainedPath(sourceFolder: string, path: string): string {
  * @param bytes the source buffer to validate before decoding.
  * @returns the text, or undefined for invalid UTF-8.
  */
-function decodeUtf8(bytes: Uint8Array): string | undefined {
+export function decodeUtf8(bytes: Uint8Array): string | undefined {
     return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }
 
@@ -125,20 +157,9 @@ function decodeUtf8(bytes: Uint8Array): string | undefined {
  * @param bytes the file contents to decode.
  * @returns the UTF-8 text.
  */
-function decodeUtf8Text(path: string, bytes: Buffer): string {
+export function decodeUtf8Text(path: string, bytes: Buffer): string {
     const text = decodeUtf8(bytes);
     if (text === undefined)
         throw new GspotError('filesystem', `${path} is not UTF-8 text. Save it as UTF-8, then run the command again.`);
     return text;
 }
-
-export {
-    readText,
-    readBytes,
-    decodeUtf8,
-    readCachedText,
-    decodeUtf8Text,
-    readCachedBytes,
-    readCachedPrefix,
-    readContainedPath,
-};

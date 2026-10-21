@@ -2,10 +2,10 @@ import { formatCount } from '#cli/system/text.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { saveSettings } from '#cli/apply/save-settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
 import { startSettingsEdit } from '#cli/commands/settings.ts';
 import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
+import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
 import type { IgnoreOptions, IgnoreRemoval } from '#cli/types/commands/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
@@ -22,9 +22,14 @@ function registerUnignore(program: Command, onResult: CommandCompletion): void {
         .summary(COMMAND_HELP.unignore.summary)
         .description(COMMAND_HELP.unignore.description)
         .option('--rule <rule>', COMMAND_HELP.unignore.options['--rule <rule>'])
-        .option('--paths <glob...>', COMMAND_HELP.unignore.options['--paths <glob...>'])
+        .option('--paths <path...>', COMMAND_HELP.unignore.options['--paths <path...>'])
         .action(async (check, flags) => {
-            onResult(await runUnignoreCommand({ cwd: process.cwd(), ...stripUndefined({ check }), ...flags }));
+            onResult(
+                await runUnignoreCommand({
+                    cwd: process.cwd(),
+                    ...stripUndefined({ check, rule: flags.rule, paths: flags.paths }),
+                }),
+            );
         });
 }
 
@@ -45,7 +50,7 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
     let everywhere = 0;
     const kept = entries.flatMap(({ entry, matching }) => {
         if (!matching) return [entry];
-        const record = entry as Record<string, unknown>;
+        const record = entry as IgnoreRecord;
         if (removed.size === 0) {
             deleted += 1;
             return [];
@@ -54,8 +59,7 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
             everywhere += 1;
             return [entry];
         }
-        if (!Array.isArray(record['paths'])) return [entry];
-        const paths = record['paths'].filter((path) => !removed.has(String(path)));
+        const paths = record['paths'].filter((path) => !removed.has(path));
         if (paths.length === record['paths'].length) return [entry];
         if (paths.length === 0) {
             deleted += 1;
@@ -77,8 +81,8 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
 async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
-    const { root, input, settings, reads } = startSettingsEdit(options.cwd);
-    if (options.check !== undefined) assertKnownCheck(options.check, settings, reads);
+    const { root, input, settings } = startSettingsEdit(options.cwd);
+    if (options.check !== undefined) assertKnownCheck(options.check, settings);
     const target = options.check ?? 'every check';
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
     const [verb, pronoun] = everywhere === 1 ? ['covers', 'it'] : ['cover', 'them'];
@@ -87,7 +91,7 @@ async function runUnignoreCommand(
             ? ''
             : `Kept ${formatCount(everywhere, 'ignore')} that ${verb} every path. To delete ${pronoun}, run gspot unignore without --paths.\n`;
     const warningFields = stripUndefined({ warning: everywhere === 0 ? undefined : warning.trim() });
-    if (deleted === 0 && changedIgnores === 0) {
+    if (deleted + changedIgnores === 0) {
         return {
             text: `No change: ${target} has no matching ignore.\n${warning}`,
             json: { changed: false, ...warningFields },
@@ -104,14 +108,9 @@ async function runUnignoreCommand(
         .filter(({ count }) => count !== 0)
         .map(({ message }) => message)
         .join('\n');
-    const result = await saveSettings(root, {
-        input,
-        summary,
-        change: (written) => {
-            if (kept.length === 0) Reflect.deleteProperty(written, 'ignore');
-            else written['ignore'] = kept;
-        },
-    });
+    if (kept.length === 0) Reflect.deleteProperty(input.table, 'ignore');
+    else input.table['ignore'] = kept;
+    const result = await saveSettings(root, { input, summary });
     return { ...result, text: result.text + warning, json: { ...result.json, ...warningFields } };
 }
 

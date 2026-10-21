@@ -35,7 +35,6 @@ export const SIDEBAR = [
             { slug: 'configure/import-rules' },
             { slug: 'configure/monorepos' },
             { slug: 'configure/command-checks' },
-            { slug: 'configure/share-settings' },
         ],
     },
     {
@@ -57,7 +56,7 @@ export const SIDEBAR = [
         collapsed: false,
         items: [
             { slug: 'reference/commands/index' },
-            { label: 'Checks', slug: 'reference/checks/index' },
+            { slug: 'reference/checks/index' },
             { slug: 'reference/configurations/index' },
             { slug: 'reference/gspot-toml/index' },
             { slug: 'reference/eslint-plugin' },

@@ -4,13 +4,14 @@ import { findRoot } from '#cli/repository/read.ts';
 import { listStaleFiles } from '#cli/apply/stale.ts';
 import { type StaleFile } from '#cli/types/apply.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
-import { formatNotes } from '#cli/system/terminal.ts';
 import { type Session } from '#cli/types/planning.ts';
+import { DRY_RUN_NOTE } from '#cli/config/terminal.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { readVersionPin } from '#cli/repository/version-pin.ts';
+import { readVersionPin } from '#cli/repository/version.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { formatUpToDate, formatApplyReport } from '#cli/apply/save-settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/settings.ts';
@@ -34,11 +35,10 @@ function planApply(session: Session): CommandResult {
     const staleFiles = listStaleFiles(session, generated);
     const summary =
         staleFiles.length === 0 ? `${formatUpToDate(generated.files.length)}\n` : formatStaleFiles(staleFiles);
-    const text = summary + formatNotes(generated.notes);
-    const pin = { from: readVersionPin(session.root), to: session.version };
-    const json: DryRunJson = { dryRun: true, pin, stale: staleFiles, notes: generated.notes };
+    const pin = { from: readVersionPin(session.root), to: packageManifest.version };
+    const json: DryRunJson = { dryRun: true, pin, stale: staleFiles };
     const version = pin.from === pin.to ? '' : `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n`;
-    return { text: `${version}${text}`, json, exitCode: 0 };
+    return { text: `${version}${summary}${DRY_RUN_NOTE}\n`, json, exitCode: 0 };
 }
 
 /**
@@ -72,10 +72,7 @@ function registerApply(program: Command, onResult: CommandCompletion): void {
 async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     const session = await openSession(root);
-    if (options.isDryRun) {
-        const result = planApply(session);
-        return { ...result, text: `${result.text}Dry run: nothing was written.\n` };
-    }
+    if (options.isDryRun) return planApply(session);
     using log = openWriter(root);
     const report = writeGeneratedFiles(session, generate(session), log);
     return { text: formatApplyReport(report), json: report, exitCode: 0 };

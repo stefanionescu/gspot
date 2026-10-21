@@ -1,14 +1,14 @@
 import { join, posix } from 'node:path';
+import { copyIntoScratch } from '#cli/runs/copy/files.ts';
 import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { GIT_FOLDER } from '#cli/config/repository/tracked.ts';
-import { copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { ACTION_FILES, SELF_REPOSITORY_MARKER } from '#cli/config/checks/github-actions.ts';
 import { isMap, isSeq, isAlias, isScalar, type Scalar, parseDocument, type Document } from 'yaml';
+import { ACTION_FILES, GITHUB_FOLDER, SELF_REPOSITORY_MARKER } from '#cli/config/checks/github-actions.ts';
 
 function listStepReferences(steps: unknown): unknown[] {
     if (!isSeq(steps)) return [];
@@ -82,15 +82,16 @@ export async function checkActionlint(session: Session, planned: PlannedCheck): 
         ].map((file) => [file.path, file]),
     );
     for (const file of inputs.values()) {
-        const source = readCachedBytes(session.reads, file.path).toString('utf8');
+        const source = readCachedText(session.reads, file.path);
         const prepared = prepareActionlintText(source);
         if (prepared !== source) replacements.set(file.path, prepared);
     }
     if (replacements.size === 0) return runCheckCommand(session, planned);
     using scratch = await copyIntoScratch({
         root: session.root,
-        paths: session.repository.files.filter((file) => file.path.startsWith('.github/')).map((file) => file.path),
+        paths: session.repository.files.filter((file) => file.path.startsWith(GITHUB_FOLDER)).map((file) => file.path),
         dependencies: [],
+        cancelSignal: session.cancelSignal,
     });
     // Actionlint discovers local reusable workflows only inside a Git project.
     mkdirSync(join(scratch.path, GIT_FOLDER));

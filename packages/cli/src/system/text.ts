@@ -11,7 +11,7 @@ import {
     NOT_LINE_BREAK,
     PLAIN_ARGUMENT,
     DIGEST_ALGORITHM,
-    SUGGESTION_LIMIT,
+    SIMILAR_NAME_LIMIT,
 } from '#cli/config/text.ts';
 
 /**
@@ -32,7 +32,7 @@ export function selectSimilarNames(name: string, candidates: string[]): string[]
                 score <= limit || candidate.toLowerCase().includes(lower) || lower.includes(candidate.toLowerCase()),
         )
         .toSorted((a, b) => a.score - b.score)
-        .slice(0, SUGGESTION_LIMIT)
+        .slice(0, SIMILAR_NAME_LIMIT)
         .map(({ candidate }) => candidate);
 }
 
@@ -51,6 +51,18 @@ export function formatCodeList(items: readonly string[]): string {
 }
 
 /**
+ * Format the close names of an unknown name, or an empty string when none match.
+ *
+ * @param name the unknown name.
+ * @param knownNames the declared names.
+ * @returns the Did-you-mean clause.
+ */
+export function formatSimilarNames(name: string, knownNames: string[]): string {
+    const near = selectSimilarNames(name, knownNames);
+    return near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
+}
+
+/**
  * Name an unknown check or configuration, and suggest close names.
  *
  * @param noun what the name stands for.
@@ -59,8 +71,7 @@ export function formatCodeList(items: readonly string[]): string {
  * @returns the sentence, with the close names it suggests.
  */
 export function formatUnknownName(noun: 'check' | 'configuration', name: string, known: string[]): string {
-    const suggestions = selectSimilarNames(name, known);
-    return `There is no ${noun} called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + formatCodeList(suggestions) + '?' : ''}`;
+    return `There is no ${noun} called \`${name}\`.${formatSimilarNames(name, known)}`;
 }
 
 /**

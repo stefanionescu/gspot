@@ -1,16 +1,17 @@
 // Find the tool files that init replaces, and read them before init writes anything.
 import { openFiles } from '#cli/system/files/open.ts';
-import type { FileEdit } from '#cli/types/ownership.ts';
+import type { FileSettings } from '#cli/types/ownership.ts';
 import type { ReplacedFiles } from '#cli/types/commands/init.ts';
 import type { ExistingTools, FoundToolFile } from '#cli/types/repository/inventory.ts';
+import { isEditedInPlace, getToolFileSection } from '#cli/repository/existing-tools.ts';
 
 // Record what init does with one file: a shared file stays for you, and init deletes an owned one.
 function recordReplacedFile(entry: FoundToolFile, replaced: ReplacedFiles): void {
-    const { tool, path, shared, table, key } = entry;
+    const { tool, path, shared } = entry;
     if (shared)
         replaced.retained.push({
             path,
-            note: `${table ?? key ?? tool} settings stay here, and the generated ${tool} tool file takes over. Delete the section when ready.`,
+            note: `${getToolFileSection(entry)} settings stay here, and the generated ${tool} tool file takes over. Delete the section when ready.`,
         });
     else replaced.deleted.push({ path, note: `replaced by the generated ${tool} tool file` });
 }
@@ -28,7 +29,7 @@ export function planReplacedFiles(
     repositoryRoot: string,
     existingTools: ExistingTools,
     tools: Set<string>,
-    toolFiles: FileEdit[],
+    toolFiles: FileSettings[],
 ): ReplacedFiles {
     const replaced: ReplacedFiles = { read: new Map(), deleted: [], retained: [], changed: [] };
     const owned = existingTools.toolFiles.filter(({ tool }) => tools.has(tool));
@@ -44,14 +45,8 @@ export function planReplacedFiles(
         });
     }
     for (const entry of owned) {
-        if (
-            entry.shared &&
-            toolFiles.some(
-                (output) => output.path === entry.path && output.changes.some((field) => field.path[0] === entry.key),
-            )
-        )
-            continue;
-        if (entry.shared || replaced.read.has(entry.path)) recordReplacedFile(entry, replaced);
+        if (entry.shared && isEditedInPlace(entry, toolFiles)) continue;
+        recordReplacedFile(entry, replaced);
     }
     return replaced;
 }

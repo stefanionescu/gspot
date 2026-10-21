@@ -184,7 +184,7 @@ export const VALE_INSTALL_FAILURES = [
     [
         'timeout',
         'setInterval(() => {}, 1000);',
-        'Vale sync ran longer than tool_timeout_seconds (1s).',
+        'ran longer than tool_timeout_seconds (1s).',
         'tool_timeout_seconds = 1\n',
     ],
     [
@@ -234,3 +234,22 @@ export const PROSE_SANDBOX = {
 } as const;
 
 export const GOOGLE_TERMS_FILE = '.gspot/vale/Google/terms.yml';
+
+export const VERSION_RANGE_SOURCE = [
+    'Use Node.js 24.2.0 or later.',
+    'Use Git 2.40 or newer.',
+    'Use version 3 or higher.',
+    'Use version 3.x.',
+    'Use version 3+ or later.',
+    'Use the current version or newer.',
+    'Use version 1.2.0-beta.1 or later.',
+    'Use version 3.2.0  or newer.',
+    'Use version 3.2.0\nor later.',
+    '',
+].join('\n');
+
+export const VERSION_RANGE_FINDINGS = [
+    { file: 'versions.md', line: 4, rule: 'Example.Versions' },
+    { file: 'versions.md', line: 5, rule: 'Example.Versions' },
+    { file: 'versions.md', line: 6, rule: 'Example.Versions' },
+] as const;

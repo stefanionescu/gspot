@@ -1,9 +1,7 @@
 export const IGNORE_COMMENT_CASES = [
     {
-        name: `first ignore with provenance`,
-        source: `# Copied from template team, sha256 abc.
-
-# Root owner
+        name: `first ignore`,
+        source: `# Root owner
 level="all"
 `,
         target: `level="all"
@@ -13,9 +11,7 @@ paths=["docs/**"]
 reason="Private documentation"
 until=2026-12-31
 `,
-        expected: `# Copied from template team, sha256 abc.
-
-# Root owner
+        expected: `# Root owner
 level = "all"
 
 [[ignore]]
@@ -27,9 +23,7 @@ until = 2026-12-31
     },
     {
         name: `merged ignores date array comments`,
-        source: `# Copied from template team, sha256 abc.
-
-allowed_words={BannedWord="The project uses this reviewed name."}
+        source: `allowed_words={BannedWord="The project uses this reviewed name."}
 
 # First ignore
 [[ignore]] # First header inline
@@ -63,9 +57,7 @@ paths = [ "b.ts" ]
 reason="Reviewed findings stay ignored intentionally."
 until = 2026-12-31
 `,
-        expected: `# Copied from template team, sha256 abc.
-
-[allowed_words]
+        expected: `[allowed_words]
 BannedWord = "The project uses this reviewed name."
 
 # First ignore

@@ -9,7 +9,9 @@ import { type CheckResult } from '#cli/types/runs/check.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { listIgnoredRules } from '#cli/settings/scope-view.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import { NESTJS_CONFIGURATION } from '#cli/config/configurations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { type Level, type Manifest } from '#cli/types/configurations.ts';
 import { type TsconfigInput } from '#cli/types/generation/typescript.ts';
@@ -21,19 +23,18 @@ import { isInside, extractExtension, convertToPosixPath } from '#cli/system/path
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 
 import {
+    COMPILER_OPTIONS,
+    RECOMMENDED_OPTIONS,
+    TYPESCRIPT_DEFAULTS,
+    NESTJS_COMPILER_OPTIONS,
+} from '#cli/config/generation/typescript.ts';
+import {
     TSCONFIG_FILE,
     TSC_PLAIN_OUTPUT,
     TSC_BUILD_COMMAND,
     TSC_PROJECT_COMMAND,
     TSCONFIG_TSBUILDINFO,
 } from '#cli/config/parsers/tsconfig.ts';
-import {
-    COMPILER_OPTIONS,
-    RECOMMENDED_OPTIONS,
-    TYPESCRIPT_DEFAULTS,
-    NESTJS_CONFIGURATION,
-    NESTJS_COMPILER_OPTIONS,
-} from '#cli/config/generation/typescript.ts';
 import {
     TSBUILDINFO_FLAG,
     TSC_REFERENCE_BUNDLE,
@@ -190,12 +191,13 @@ async function runTsc(
             check: planned.check.name,
             path: target,
             scope: planned.selection.scope.path,
-            required: required,
+            required,
         })
     )
         return {
             ...buildBaseResult(planned, session),
             status: 'skipped',
+            cause: 'replaced',
             note: 'An ancestor compiler check covers this project.',
         };
     const command: string[] = [];
@@ -334,7 +336,7 @@ function selectRequiredTsconfigOptions(level: Level, selected: Manifest[]): Reco
 function selectCheckedTsconfigOptions(level: Level, selection: ScopeSelection): Record<string, boolean> {
     return Object.fromEntries(
         Object.entries(selectRequiredTsconfigOptions(level, selection.selected)).filter(
-            ([name]) => !selection.view.rulesOff(TYPESCRIPT_TSCONFIG_CHECK).includes(name),
+            ([name]) => !listIgnoredRules(selection, TYPESCRIPT_TSCONFIG_CHECK).includes(name),
         ),
     );
 }

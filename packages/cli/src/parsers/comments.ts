@@ -6,13 +6,13 @@ import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
-import { parse as parseToml } from '@decimalturn/toml-patch';
+import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
+import type { GrammarName } from '#cli/types/parsers/grammars.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import type { GrammarName } from '#cli/types/parsers/tree-sitter.ts';
 import { convertToSpaces, computePosition } from '#cli/system/text.ts';
 import { getTomlRange, parseTomlSyntax } from '#cli/parsers/toml/comments.ts';
-import { parseSource, findGrammarByExtension } from '#cli/parsers/tree-sitter.ts';
+import { parseSource, findGrammarByExtension } from '#cli/parsers/grammars.ts';
 import type { CommentReader, SourceComment } from '#cli/types/parsers/comments.ts';
 
 import {
@@ -128,8 +128,8 @@ function extractMarkdownHtml(text: string): string {
 }
 
 // TOML comments retain the source positions of strings and multiline values.
-function parseTomlComments(text: string): SourceComment[] {
-    return parseTomlSyntax(text, parseToml(text) as Record<string, unknown>).comments.map((comment) => {
+function parseTomlComments(text: string, path: string): SourceComment[] {
+    return parseTomlSyntax(text, parseTomlFile(path, text)).comments.map((comment) => {
         const [start, end] = getTomlRange(comment);
         return buildComment(text, start, end, comment.loc.start.line);
     });

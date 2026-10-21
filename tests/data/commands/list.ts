@@ -23,9 +23,9 @@ tools.sqlfluff.dialect = "postgres"
 `;
 
 export const LIST_SCOPE_ROWS = [
-    'dependencies.allowed_registries     ["registry.npmjs.org","regi… adding              gspot.toml',
-    'dependencies.min_release_age_days   14                           lowering            gspot.toml',
-    'limits.file_lines                   250                          raising             gspot.toml',
-    'test_files                          ["**/test/**","**/tests/**"…                     gspot.toml',
-    'limits.file_lines                   200                          raising             [scope "api"]  [scope api]',
+    'dependencies.allowed_registries          ["registry.npmjs.org","regi… adding              gspot.toml',
+    'dependencies.min_release_age_days        14                           lowering            gspot.toml',
+    'limits.file_lines                        250                          raising             gspot.toml',
+    'test_files                               ["**/test/**","**/tests/**"…                     gspot.toml',
+    'limits.file_lines                        200                          raising             [scope "api"]  [scope api]',
 ] as const;

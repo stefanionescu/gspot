@@ -19,11 +19,11 @@ test.each([
     ['linked.ts', '../outside/secret.ts'],
     ['linked-directory', '../outside'],
 ])('the repository file list leaves out the outside link %s', async (name, target) => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
+    await using folder = await testdir({
         'project/local.ts': 'export const local = true;\n',
         'outside/secret.ts': 'private outside bytes\n',
     });
+
     const root = join(folder.path, 'project');
     readGitOutput(root, ['init', '-q']);
     await symlink(target, join(root, name));
@@ -31,7 +31,7 @@ test.each([
     const repository = await readRepository(createReadCache(root), {
         declarations: [],
         scopes: [],
-        manifests: readManifests(createReadCache(process.cwd())),
+        manifests: readManifests(),
     });
     expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
     await unlink(join(root, name));
@@ -41,23 +41,23 @@ test.each([
     const corrected = await readRepository(createReadCache(root), {
         declarations: [],
         scopes: [],
-        manifests: readManifests(createReadCache(process.cwd())),
+        manifests: readManifests(),
     });
     expect(corrected.files.find((file) => file.path === 'linked.ts')?.tags).toContain('symlink');
 });
 
 // Windows does not provide the POSIX named pipe created by mkfifo.
 test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+
     expect(processes.spawnProcessBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
     const entries = await listTrackedFiles(sandbox.path, [], { hasGit: false });
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
 });
 
 test('deleted tracked files are left out of the file list', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+
     readGitOutput(sandbox.path, ['init']);
     readGitOutput(sandbox.path, ['add', 'source.ts']);
     await rm(join(sandbox.path, 'source.ts'));
@@ -74,7 +74,7 @@ test('a dangling tracked link is listed without reading its target', async () =>
     const repository = await readRepository(createReadCache(sandbox.path), {
         declarations: [],
         scopes: [],
-        manifests: readManifests(createReadCache(process.cwd())),
+        manifests: readManifests(),
     });
     expect(repository.files).toHaveLength(1);
     expect(repository.files[0]?.tags).toContain('symlink');
@@ -82,8 +82,8 @@ test('a dangling tracked link is listed without reading its target', async () =>
 });
 
 test('a broken Git index is reported instead of a folder walk', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+
     const cwd = sandbox.path;
     readGitOutput(cwd, ['init']);
     expect(isGitRepository(cwd)).toBe(true);
@@ -95,19 +95,19 @@ test('a broken Git index is reported instead of a folder walk', async () => {
 });
 
 test('invalid Git metadata is reported instead of treating the folder as non-Git', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         '.git': 'gitdir: missing\n',
         'source.ts': 'export {};\n',
     });
+
     expect(await captureRejection(readIndexEntries(sandbox.path))).toContain('Git ls-files failed');
     expect(() => findRoot(sandbox.path)).toThrow('Git root discovery failed');
-    expect(() => isGitRepository(sandbox.path)).toThrow('Git work-tree discovery failed');
+    expect(() => isGitRepository(sandbox.path)).toThrow('Git rev-parse failed');
 });
 
 test('a missing git program is reported instead of a successful walk', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+
     await using empty = await testdir();
     using resources = new DisposableStack();
     resources.use(overrideEnvironment({ PATH: empty.path }));
@@ -115,14 +115,12 @@ test('a missing git program is reported instead of a successful walk', async () 
         /Git ls-files failed.*(?:not found|not recognized)/su,
     );
     expect(() => findRoot(sandbox.path)).toThrow(/Git root discovery failed.*(?:not found|not recognized)/su);
-    expect(() => isGitRepository(sandbox.path)).toThrow(
-        /Git work-tree discovery failed.*(?:not found|not recognized)/su,
-    );
+    expect(() => isGitRepository(sandbox.path)).toThrow(/Git rev-parse failed.*(?:not found|not recognized)/su);
 });
 
 test('on Windows the executable bit comes from the Git index', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'indexed.sh': '#!/bin/sh\n', 'local.sh': '#!/bin/sh\n' });
+    await using sandbox = await testdir({ 'indexed.sh': '#!/bin/sh\n', 'local.sh': '#!/bin/sh\n' });
+
     for (const commandArguments of [
         ['init', '-q'],
         ['add', '-A'],
@@ -141,8 +139,8 @@ test('on Windows the executable bit comes from the Git index', async () => {
 });
 
 test('an unmerged index keeps the working file readable but refuses a staged revision', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'source.txt': 'working content\n' });
+    await using sandbox = await testdir({ 'source.txt': 'working content\n' });
+
     readGitOutput(sandbox.path, ['init', '-q']);
     const hash = readGitOutput(sandbox.path, ['hash-object', '-w', 'source.txt']);
     const update = runCommandBlocking(['git', 'update-index', '--index-info'], {
@@ -216,8 +214,8 @@ for (const folder of ['nested', 'source\nfiles'])
 
 test('the index keeps deleted tracked paths and encoded names and leaves out untracked files', async () => {
     const path = 'folder % café/file.env';
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { [path]: 'TOKEN=example', 'untracked.ts': 'export {};\n' });
+    await using sandbox = await testdir({ [path]: 'TOKEN=example', 'untracked.ts': 'export {};\n' });
+
     readGitOutput(sandbox.path, ['init', '-q']);
     readGitOutput(sandbox.path, ['add', '--', path]);
     await rm(join(sandbox.path, path));

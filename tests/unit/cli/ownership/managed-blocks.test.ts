@@ -55,8 +55,8 @@ describe('blocks', () => {
     });
 
     test('removing the only block deletes the file', async () => {
-        await using folder = await testdir();
-        await createFileTree(folder.path, { 'AGENTS.md': '' });
+        await using folder = await testdir({ 'AGENTS.md': '' });
+
         {
             using log = openWriter(folder.path);
 

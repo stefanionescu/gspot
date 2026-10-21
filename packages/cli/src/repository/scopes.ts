@@ -1,12 +1,11 @@
 // Discovers project scopes and resolves paths within them.
-import picomatch from 'picomatch';
-import { escapeGlob } from '#cli/repository/matchers.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
 import { LINT_FOLDERS } from '#cli/config/repository/existing-tools.ts';
 import type { ToolFileGeneration } from '#cli/types/generation/files.ts';
+import type { DependencyFile } from '#cli/types/parsers/dependencies.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import { escapeGlob, buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Scope, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS, WHOLE_TREE_GLOBS } from '#cli/config/system/paths.ts';
@@ -157,10 +156,7 @@ export function findProjectFolder(path: string, pattern: string): string | undef
         if (
             wanted.every((part, index) => {
                 const segment = window[index];
-                return (
-                    segment !== undefined &&
-                    (picomatch.scan(part).isGlob ? picomatch.isMatch(segment, part, { dot: true }) : part === segment)
-                );
+                return segment !== undefined && buildPathMatcher([part])(segment);
             })
         )
             return segments.slice(0, start).join('/');

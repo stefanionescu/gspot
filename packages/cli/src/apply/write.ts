@@ -1,14 +1,15 @@
+import { writePlans } from '#cli/ownership/writer.ts';
 import type { Session } from '#cli/types/planning.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { listExpectedPaths } from '#cli/apply/stale.ts';
+import { listStaleLockfiles } from '#cli/install/lockfiles.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
-import { listStaleLockfiles } from '#cli/install/project-lockfiles.ts';
+import { planSettingsWrite } from '#cli/ownership/file-settings.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
-import { writePlans, buildPreservedFilesError } from '#cli/ownership/writer.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import { planBlock, planRemoval, listStrayPaths, planManagedKeys, planReplacement } from '#cli/ownership/plans.ts';
+import { FILE_EDITS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
+import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/ownership/plans.ts';
 
 import {
     HOOKS_PATH,
@@ -53,7 +54,6 @@ function buildReplacementPlans(
         const plan = planReplacement(writer, {
             path: file.path,
             next: replacement,
-            canReplace: read !== undefined,
             expected: read,
         });
         return authorized.has(file.path) ? { ...plan, before: authorized.get(file.path) } : plan;
@@ -82,11 +82,11 @@ export function writeGeneratedFiles(
         unchanged: [],
         removed: [],
         updated: [],
-        notes: [...generated.notes],
+        notes: [],
     };
     const paths = listExpectedPaths(session, generated);
-    const fileEditPlans = generated.fileEdits.map((output) => {
-        const plan = planManagedKeys(writer, output.path, output.changes);
+    const fileEditPlans = generated.fileSettings.map((output) => {
+        const plan = planSettingsWrite(writer, output.path, output.changes);
         return reviewedOriginals?.has(output.path) === true
             ? { ...plan, before: reviewedOriginals.get(output.path) }
             : plan;
@@ -97,26 +97,17 @@ export function writeGeneratedFiles(
     // Remove generated files that no configuration needs.
     const pruning = listStrayPaths(session, paths).map((path) => planRemoval(writer, path));
     const plans = [...generatedPlans, ...pruning];
-    const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
-    if (reviewedOriginals !== undefined && conflicts.length > 0) throw buildPreservedFilesError(conflicts);
-    writePlans(
-        writer,
-        plans.filter((plan) => plan.status !== 'preserved'),
-    );
+    writePlans(writer, plans);
     removeUnusedToolFolders(writer, paths);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
     report.updated.push(
         ...[...blocks, ...fileEditPlans].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
     );
-    report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
+    report.removed.push(...pruning.map(({ path }) => path));
     if ([...report.removed, ...report.written].some((path) => path.startsWith(`${HOOKS_PATH}/`)))
         report.notes.push(HOOKS_CHANGED_NOTE);
-    if (conflicts.length > 0) throw buildPreservedFilesError(conflicts);
     addInstallationNote(session, generated, report);
-    if (generated.fileEdits.length > 0)
-        report.notes.push(
-            'Keys that gspot no longer manages stay in your files. Review shared tool files after removing a configuration.',
-        );
+    if (generated.fileSettings.length > 0) report.notes.push(FILE_EDITS_NOTE);
     return report;
 }

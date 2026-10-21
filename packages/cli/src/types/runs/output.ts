@@ -1,5 +1,6 @@
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { KNIP_ISSUE_TYPES, OUTPUT_FILE_TYPES, MARKDOWNLINT_SEVERITIES } from '#cli/config/runs/output.ts';
+import type { CHECK_RUNS } from '#cli/config/configurations.ts';
+import type { KNIP_ISSUE_TYPES } from '#cli/config/runs/output.ts';
 
 export type ReportInput = OutputPaths & {
     check: string;
@@ -11,22 +12,10 @@ export type ReportInput = OutputPaths & {
 
 /** The output table accepted by configuration and command checks. */
 export type OutputInput = {
-    format:
-        | 'regex'
-        | 'grouped'
-        | 'sarif'
-        | 'knip'
-        | 'semgrep'
-        | 'trufflehog'
-        | 'typos'
-        | 'markdownlint'
-        | 'json'
-        | 'lines'
-        | 'none';
+    format: 'regex' | 'grouped' | 'sarif' | 'knip' | 'semgrep' | 'typos' | 'markdownlint' | 'json' | 'lines' | 'none';
     items?: string | undefined;
     children?: string | undefined;
     line_base?: 0 | 1 | undefined;
-    file_type?: (typeof OUTPUT_FILE_TYPES)[number] | undefined;
     fields?:
         | {
               file?: string | undefined;
@@ -44,9 +33,8 @@ export type OutputInput = {
 };
 
 /** Output patterns after the parsing schema supplies the defaults of each format. */
-export type OutputSpec = Omit<OutputInput, 'format' | 'pattern' | 'file_pattern' | 'file_type'> & {
-    file_type: (typeof OUTPUT_FILE_TYPES)[number];
-} & (
+export type OutputSpec = Omit<OutputInput, 'format' | 'pattern' | 'file_pattern'> &
+    (
         | { format: 'regex'; pattern: string; file_pattern?: string | undefined }
         | { format: 'grouped'; pattern: string; file_pattern: string }
         | {
@@ -65,7 +53,6 @@ export type MarkdownlintResult = {
     errorContext: string | null;
     errorRange: [number, number] | null;
     fixInfo: Record<string, unknown> | null;
-    severity: (typeof MARKDOWNLINT_SEVERITIES)[number];
 };
 
 export type KnipReport = {
@@ -83,68 +70,60 @@ export type ReportedTypo = {
     line_num?: number | undefined;
 };
 
-/** Output patterns and metadata owned by the parsing boundary. */
-export type RegexParser = { output: OutputSpec; fixable: RegExp | undefined; help: string };
-
 export type OutputPaths = { cwd: string; root: string };
 
 /** Check identity, output declaration, and fixer command consumed by output parsing. */
-export type ParsingCheck = { name: string; help: string; output: OutputSpec; fix?: string[] | undefined };
+export type ParsingCheck = {
+    name: string;
+    help: string;
+    runs: (typeof CHECK_RUNS)[number];
+    output: OutputSpec;
+    fix?: string[] | undefined;
+};
 
-/** Manifest field mappings and public metadata for one JSON finding. */
-export type JsonFindingSpec = { check: string; help: string; output: OutputSpec };
-
-/** The parser of one format, its source-file checks, and the protection of captured output. */
+/** The parser of one format and its source-file checks. */
 export type OutputDescriptor = {
     read: (input: ReportInput) => Finding[];
     namesFiles: (output: OutputSpec) => boolean;
-    redactsOutput: boolean;
+};
+
+export type SarifMessage = { text?: string | undefined };
+
+export type SarifArtifactLocation = {
+    uri?: string | undefined;
+    uriBaseId?: string | undefined;
+    index?: number | undefined;
+};
+
+export type SarifRegion = { startLine?: number | undefined; startColumn?: number | undefined };
+
+export type SarifPhysicalLocation =
+    | { artifactLocation?: SarifArtifactLocation | undefined; region?: SarifRegion | undefined }
+    | undefined;
+
+export type SarifResultLocation = { physicalLocation?: SarifPhysicalLocation };
+
+export type SarifResult = {
+    ruleId?: string | undefined;
+    message?: SarifMessage | undefined;
+    locations?: SarifResultLocation[] | undefined;
+};
+
+export type SarifArtifact = { location?: SarifArtifactLocation | undefined };
+
+export type SarifNotification = { level?: string | undefined; message?: SarifMessage | undefined };
+
+export type SarifInvocation = {
+    executionSuccessful?: boolean | undefined;
+    toolExecutionNotifications?: SarifNotification[] | undefined;
 };
 
 export type SarifRun = {
-    results: {
-        ruleId?: string | undefined;
-        message?: { text?: string | undefined } | undefined;
-        locations?:
-            | {
-                  physicalLocation?:
-                      | {
-                            artifactLocation?:
-                                | {
-                                      uri?: string | undefined;
-                                      uriBaseId?: string | undefined;
-                                      index?: number | undefined;
-                                  }
-                                | undefined;
-                            region?: { startLine?: number | undefined; startColumn?: number | undefined } | undefined;
-                        }
-                      | undefined;
-              }[]
-            | undefined;
-    }[];
-    artifacts?:
-        | {
-              location?:
-                  | { uri?: string | undefined; uriBaseId?: string | undefined; index?: number | undefined }
-                  | undefined;
-          }[]
-        | undefined;
-    originalUriBaseIds?:
-        | Record<string, { uri?: string | undefined; uriBaseId?: string | undefined; index?: number | undefined }>
-        | undefined;
-    invocations?:
-        | {
-              executionSuccessful?: boolean | undefined;
-              toolExecutionNotifications?:
-                  | { level?: string | undefined; message?: { text?: string | undefined } | undefined }[]
-                  | undefined;
-          }[]
-        | undefined;
+    results: SarifResult[];
+    artifacts?: SarifArtifact[] | undefined;
+    originalUriBaseIds?: Record<string, SarifArtifactLocation> | undefined;
+    invocations?: SarifInvocation[] | undefined;
 };
-
-export type SarifArtifactLocation = NonNullable<NonNullable<SarifRun['artifacts']>[number]['location']>;
-
-export type SarifPhysicalLocation = NonNullable<SarifRun['results'][number]['locations']>[number]['physicalLocation'];
 
 /** The rule matches and scanner errors that Semgrep reports. */
 export type SemgrepReport = {
@@ -162,26 +141,9 @@ export type SemgrepReport = {
 export type KnipSymbol = {
     name: string;
     namespace?: string | undefined;
-    kind?: string | undefined;
-    specifier?: string | undefined;
     line?: number | undefined;
     col?: number | undefined;
-    pos?: number | undefined;
 };
 
 /** The Static Analysis Results Interchange Format (SARIF) version and reports from its runs. */
 export type SarifLog = { version: '2.1.0'; runs: SarifRun[] };
-
-export type TrufflehogResult = {
-    DetectorName: string;
-    Verified: true;
-    SourceMetadata: {
-        Data: {
-            Git: {
-                commit: string;
-                file: string;
-                line: number;
-            };
-        };
-    };
-};

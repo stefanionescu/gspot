@@ -1,13 +1,14 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { createEslint, generateFile, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { HOST_MODULE, LOCAL_PLUGIN, LOCAL_PLUGIN_TABLES } from '#tests/data/generation/externals.ts';
 
 test('javascript.externals reach the import boundaries rule and the Knip unresolved imports', async () => {
-    const settings = buildSettingsText(['javascript'], {
+    const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
         tables: `[javascript]\nexternals = ["${HOST_MODULE}"]\n`,
     });
@@ -25,7 +26,7 @@ test('javascript.externals reach the import boundaries rule and the Knip unresol
 test('python.extra_paths reach the basedpyright search paths', async () => {
     const config = JSON.parse(
         await generateFile(
-            buildSettingsText(['python'], { tables: '[python]\nextra_paths = ["vendor/host"]\n' }),
+            buildSandboxSettings(['python'], { tables: '[python]\nextra_paths = ["vendor/host"]\n' }),
             '.gspot/configurations/language/python/basedpyright.json',
             { 'main.py': 'VALUE = 1\n' },
         ),
@@ -34,22 +35,22 @@ test('python.extra_paths reach the basedpyright search paths', async () => {
 });
 
 test('tools.eslint.plugins loads your plugin by its path and turns its rules on as errors', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], { tables: LOCAL_PLUGIN_TABLES }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES }),
         '.gitignore': 'node_modules/\n',
         'package.json': '{"private":true,"type":"module"}\n',
         'tools/lint/plugin.mjs': LOCAL_PLUGIN,
         'source.js': 'export const forbidden = 1;\n',
     });
+
     commitAll(sandbox.path);
     const eslint = await createEslint(sandbox.path);
     expect(await collectLintFindings(eslint, sandbox.path, ['source.js'], ['local/no-forbidden'])).toStrictEqual([
         { file: 'source.js', rule: 'local/no-forbidden', line: 1 },
     ]);
-    await Bun.write(
+    await writeFile(
         `${sandbox.path}/gspot.toml`,
-        buildSettingsText(['javascript'], { tables: LOCAL_PLUGIN_TABLES.replace('"local"', '"gspot"') }),
+        buildSandboxSettings(['javascript'], { tables: LOCAL_PLUGIN_TABLES.replace('"local"', '"gspot"') }),
     );
     const refused = await runGspot(sandbox.path, ['apply']);
     expect(refused.code).toBe(2);
@@ -63,7 +64,7 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         const config = JSON.parse(
             await generateFile(
-                buildSettingsText(['python'], { level }),
+                buildSandboxSettings(['python'], { level }),
                 '.gspot/configurations/language/python/basedpyright.json',
                 { 'main.py': 'VALUE = 1\n' },
             ),

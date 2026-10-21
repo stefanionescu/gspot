@@ -1,9 +1,6 @@
-/** The folder that holds the npm tools of a repository. */
-export const NPM_TOOL_FOLDER = '.gspot/node_modules';
-
 /** Tool folders installed as a whole, which refuse, recover, and prune the same way. */
 export const TOOL_FOLDERS = [
-    { kind: 'npm', folder: NPM_TOOL_FOLDER },
+    { kind: 'npm', folder: '.gspot/node_modules' },
     { kind: 'vale', folder: '.gspot/vale' },
 ] as const;
 

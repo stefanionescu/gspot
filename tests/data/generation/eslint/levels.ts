@@ -54,4 +54,20 @@ export const TYPED_RULE_PROJECTS = [
 ] as const;
 
 export const LEVEL_RULE_OPTIONS =
-    '[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n"gspot/no-trivial-functions" = [{trivialStatements = 4}]\n';
+    '[limits.javascript]\ntrivial_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n';
+
+export const PACKAGE_MANAGER_LEVELS = [
+    { level: 'recommended', severity: 0 },
+    { level: 'all', severity: 2 },
+] as const;
+
+/** Typed promise statements distinguish accepted void expressions from an unhandled promise. */
+export const CONFIGURATION_RULE_OPTIONS = {
+    tables: '[tools.eslint.rules]\n"@typescript-eslint/no-floating-promises" = [{ ignoreVoid = true }]\n',
+    files: {
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json':
+            '{"compilerOptions":{"strict":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[]},"include":["source.ts"]}\n',
+        'source.ts': 'void Promise.resolve();\nPromise.resolve();\n',
+    },
+} as const;

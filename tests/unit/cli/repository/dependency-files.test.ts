@@ -6,7 +6,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildTrackedFile, readTestRepository } from '#tests/setup/builders.ts';
 import { PYTHON_WORKSPACE_FILES } from '#tests/data/install/python-tool-project.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
@@ -21,10 +21,10 @@ import {
 } from '#tests/data/repository/dependency-files.ts';
 
 test('Python dependency groups with includes keep every dependency', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'pyproject.toml': '[dependency-groups]\ntest = ["pytest>=8"]\ndev = [{include-group = "test"}, "ruff>=1"]\n',
     });
+
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(dependencyFiles[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
@@ -42,8 +42,8 @@ test('a pytest table counts as a pytest dependency', async () => {
 test.each(INVALID_DEPENDENCY_FILES)(
     'invalid %s content %s is a dependency file error',
     async (path, content, message) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
+        await using sandbox = await testdir({ [path]: content, 'source.ts': 'export {};\n' });
+
         const files = [buildTrackedFile(path)];
         expect(readDependencyFiles(createReadCache(sandbox.path), files)).rejects.toMatchObject({
             name: 'GspotError',
@@ -55,8 +55,8 @@ test.each(INVALID_DEPENDENCY_FILES)(
 );
 
 test('Python dependency file reads keep their dependencies and report invalid text', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, PYTHON_WORKSPACE_FILES);
+    await using sandbox = await testdir(PYTHON_WORKSPACE_FILES);
+
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     expect(dependencyFiles.find((entry) => entry.path === 'api/pyproject.toml')?.dependencies).toStrictEqual({
@@ -66,15 +66,15 @@ test('Python dependency file reads keep their dependencies and report invalid te
     expect(readDependencyFiles(createReadCache(sandbox.path), repository.files)).rejects.toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
-        message: 'pyproject.toml is not valid TOML. Fix the file, then run gspot apply.',
+        message: 'pyproject.toml:1:9 is not valid TOML: Error parsing TOML (1, 9):. Fix the file.',
         cause: expect.any(Error) as Error,
     });
 });
 
 test('a dependency file that disappears after the repository read is an error', async () => {
     const path = 'pyproject.toml';
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { [path]: '' });
+    await using sandbox = await testdir({ [path]: '' });
+
     const repository = await readTestRepository(sandbox.path);
     await rm(join(sandbox.path, path));
     expect(readDependencyFiles(createReadCache(sandbox.path), repository.files)).rejects.toMatchObject({
@@ -103,13 +103,13 @@ test('package.json reads keep your own fields and tell a missing file from inval
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'filesystem',
-            message: 'package.json is not valid JSON. Fix the file.',
+            message: 'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',
         }),
     );
     expect(readDependencyFiles(createReadCache(sandbox.path), repository.files)).rejects.toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
-        message: 'package.json is not valid JSON. Fix the file.',
+        message: 'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',
     });
     await writeFile(join(sandbox.path, 'package.json'), '{"dependencies":{"next":16}}');
     expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow(
@@ -128,30 +128,30 @@ test('package.json reads keep your own fields and tell a missing file from inval
 });
 
 test('declared framework dependencies follow the nearest npm project', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, PROJECT_DEPENDENCY_FILES);
+    await using sandbox = await testdir(PROJECT_DEPENDENCY_FILES);
+
     const repository = await readTestRepository(sandbox.path);
     const manifests = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-    for (const { scope, dependencies } of PROJECT_DEPENDENCY_SCOPES) {
-        expect(listProjectDependencyNames(manifests, scope), scope).toStrictEqual(Object.keys(dependencies));
+    for (const { scope, names } of PROJECT_DEPENDENCY_SCOPES) {
+        expect(listProjectDependencyNames(manifests, scope), scope).toStrictEqual([...names]);
     }
 });
 
 test('a broken package.json stops the next session and a fixed one changes the scope dependencies', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         ...REACT_VUE_PACKAGES,
-        'gspot.toml': buildSettingsText(['javascript'], {
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             rules: true,
-            tables: '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n',
+            scopes: [{ path: 'app', configurations: ['javascript'] }],
         }),
     });
+
     await openSession(sandbox.path);
     await writeFile(join(sandbox.path, 'package.json'), '{');
     expect(openSession(sandbox.path)).rejects.toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
-        message: 'package.json is not valid JSON. Fix the file.',
+        message: 'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',
     });
     await writeFile(join(sandbox.path, 'package.json'), ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
     const current = await openSession(sandbox.path);

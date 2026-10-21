@@ -1,7 +1,8 @@
 import { test, expect } from 'bun:test';
-import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { openTomlFile } from '#cli/parsers/toml/document.ts';
+import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
+import { openTomlFile, parseTomlFile } from '#cli/parsers/toml/document.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
 
 test('adding a root key keeps the leading comments on their table', () => {
     const document = openTomlFile({
@@ -42,7 +43,7 @@ test('a TOML syntax error is a GspotError that names the file and keeps the pars
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'filesystem',
-            message: 'apps/api/bunfig.toml is not valid TOML. Fix the file, then run gspot apply.',
+            message: 'apps/api/bunfig.toml:1:9 is not valid TOML: Error parsing TOML (1, 9):. Fix the file.',
             cause: expect.any(Error),
         }),
     );
@@ -69,4 +70,10 @@ test('TOML edits keep dates, array order and keys named like object properties',
     expect(text.startsWith(source)).toBe(true);
     expect(Reflect.get(Bun.TOML.parse(text), 'metadata')).toStrictEqual({ entries });
     expect(document.getValue(['copied'])).toBeInstanceOf(Date);
+});
+
+test('TOML schema failures name the source file and the field', () => {
+    expect(() => parseTomlFile('package.toml', 'name = 42', packageJsonSchema)).toThrow(
+        matchFields<GspotError>({ code: 'filesystem', message: matchSubstring('package.toml: name:') }),
+    );
 });

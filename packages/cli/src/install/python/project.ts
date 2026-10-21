@@ -1,56 +1,52 @@
 // Prepare and install the Python tool project.
-import { z } from 'zod';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { parse } from '@decimalturn/toml-patch';
+import { getUvPath } from '#cli/tools/locate.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
+import { runInstallStep } from '#cli/install/steps.ts';
 import type { InstallContext } from '#cli/types/install.ts';
-import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import { statSync, readFileSync, writeFileSync } from 'node:fs';
-import { readManifests } from '#cli/configurations/manifests.ts';
+import { uvLockSchema } from '#cli/schemas/parsers/lockfiles.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
-import { buildLockfileResult } from '#cli/generation/projects.ts';
+import type { UvLockfile } from '#cli/types/parsers/lockfiles.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
-import { normalizePythonPackage } from '#cli/parsers/dependency-files.ts';
-import { parsePythonSettings, writePythonSettings } from '#cli/install/python/settings.ts';
+import { pythonToolProjectSchema } from '#cli/schemas/install/python/project.ts';
+import type { UvExecution, PythonToolProject } from '#cli/types/tools/project.ts';
+import { readPythonSettings, writePythonSettings } from '#cli/install/python/settings.ts';
+import { PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/dependencies.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
-import { DOT_GSPOT, UV_LOCKFILE, PYTHON_TOOL_PROJECT_FILE } from '#cli/config/system/locations.ts';
 
-import type {
-    UvExecution,
-    PythonRequirement,
-    PythonToolProject,
-    PythonToolLockfile,
-} from '#cli/types/tools/project.ts';
+import {
+    DOT_GSPOT,
+    UV_LOCKFILE,
+    PROJECT_UV_LOCKFILE,
+    PYTHON_TOOL_PROJECT_FILE,
+    GSPOT_PYTHON_ENVIRONMENT_PATH,
+} from '#cli/config/system/locations.ts';
 import {
     UV_TOOL,
+    UV_PROJECT_FLAGS,
     UV_SETTINGS_FILE,
     UV_RUN_ARGUMENTS,
     UV_VENV_ARGUMENTS,
     PINNED_PACKAGE_NAME,
     UV_INSTALL_ARGUMENTS,
     UV_LOCKFILE_ARGUMENTS,
+    UV_ENVIRONMENT_VARIABLE,
     PYTHON_ENVIRONMENT_FOLDER,
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/tools/python.ts';
 
 // A temporary lockfile must not publish credentials supplied through repository index settings.
 function readPythonLockfile(work: string, credentials: string[], project: PythonToolProject): string {
-    const row = LOCKFILES.find(({ packageManager }) => packageManager === 'uv') as Extract<
-        (typeof LOCKFILES)[number],
-        { packageManager: 'uv' }
-    >;
-    const lockfile = readFileSync(join(work, row.file), 'utf8');
-    assertCredentialFreeLockfile(lockfile, credentials, new GspotError('installation', UV_LOCKFILE_CREDENTIAL_MESSAGE));
+    const lockfile = readFileSync(join(work, PROJECT_UV_LOCKFILE), 'utf8');
+    assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
     if (!isPythonLockfileCurrent(project, lockfile))
         throw new GspotError(
             'installation',
@@ -63,36 +59,29 @@ async function runUv(
     context: InstallContext,
     { work, commandArguments, executable, credentials, configFile = join(work, UV_SETTINGS_FILE) }: UvExecution,
 ): Promise<SpawnResult> {
-    const { steps } = context;
-    const { timeoutSeconds } = context.session;
     const command = [
         executable,
         ...commandArguments,
-        '--project',
+        UV_PROJECT_FLAGS.project,
         work,
-        '--directory',
+        UV_PROJECT_FLAGS.directory,
         work,
-        '--config-file',
+        UV_PROJECT_FLAGS.configFile,
         configFile,
     ];
-    steps.push(command);
-    const result = await runTool(command, {
-        cancelSignal: context.cancelSignal,
+    const result = await runInstallStep(context, command, {
         cwd: work,
-        timeoutSeconds,
         // The repository's interpreter choice belongs to its own project, not to the tool project of gspot.
-        env: { UV_PROJECT_ENVIRONMENT: join(work, PYTHON_ENVIRONMENT_FOLDER), UV_PYTHON: undefined },
+        env: { [UV_ENVIRONMENT_VARIABLE]: join(work, PYTHON_ENVIRONMENT_FOLDER), UV_PYTHON: undefined },
     });
-    context.cancelSignal?.throwIfAborted();
     if (result.missing)
         throw new GspotError(
             'tool',
-            formatUnavailableNote(getToolDeclaration(readManifests(context.session.reads).values(), UV_TOOL), {
+            formatUnavailableNote(getToolDeclaration(context.session.neededToolManifests, UV_TOOL), {
                 name: UV_TOOL,
                 state: 'missing',
             }),
         );
-    assertWithinTimeLimit(`UV ${String(commandArguments[0])}`, result, timeoutSeconds);
     if (result.code !== 0)
         throw new GspotError(
             'installation',
@@ -100,50 +89,6 @@ async function runUv(
         );
     return result;
 }
-
-// Requirements as one text each, with the package name normalized, in order, so a project and its lockfile compare.
-function normalizeRequirements(requirements: PythonRequirement[]): string[] {
-    return requirements
-        .map(({ name, specifier }) => `${normalizePythonPackage(name)}${specifier}`)
-        .toSorted((left, right) => left.localeCompare(right));
-}
-
-const requirementSchema = z.object({
-    name: z.string(),
-    specifier: z.string(),
-} satisfies SchemaShape<PythonRequirement>);
-
-const uvLockSchema = z.object({
-    version: z.literal(1),
-    'requires-python': z.string(),
-    package: z.array(
-        z.object({
-            name: z.string(),
-            version: z.string(),
-            source: z.looseObject({ virtual: z.string().optional() } satisfies SchemaShape<
-                Pick<PythonToolLockfile['package'][number]['source'], 'virtual'>
-            >),
-            metadata: z
-                .object({ 'requires-dist': z.array(requirementSchema).default([]) } satisfies SchemaShape<
-                    PythonToolLockfile['package'][number]['metadata']
-                >)
-                .default({ 'requires-dist': [] }),
-        } satisfies SchemaShape<PythonToolLockfile['package'][number]>),
-    ),
-} satisfies SchemaShape<PythonToolLockfile>) satisfies z.ZodType<PythonToolLockfile>;
-
-/** Validate the generated Python tool project before matching or creating a lockfile. */
-const pythonToolProjectSchema = z.object({
-    project: z.object({
-        name: z.string(),
-        version: z.string(),
-        'requires-python': z.string(),
-        dependencies: z.array(z.string()),
-    } satisfies SchemaShape<PythonToolProject['project']>),
-    tool: z.object({
-        uv: z.object({ package: z.literal(false) } satisfies SchemaShape<PythonToolProject['tool']['uv']>),
-    } satisfies SchemaShape<PythonToolProject['tool']>),
-} satisfies SchemaShape<PythonToolProject>) satisfies z.ZodType<PythonToolProject>;
 
 /**
  * Resolve the Python tool lockfile outside the repository before writing it.
@@ -154,36 +99,28 @@ const pythonToolProjectSchema = z.object({
  * @returns credential-free lockfile bytes.
  */
 async function preparePythonLockfile(context: InstallContext, toolProjectFile: GeneratedFile): Promise<GeneratedFile> {
-    const { root, uvPath } = context.session;
+    const { root } = context.session;
     const owner = context.writer.files;
     const project = pythonToolProjectSchema.parse(parse(toolProjectFile.content));
     const original = owner.read(UV_LOCKFILE);
     const recorded = original?.bytes.toString('utf8');
     if (isPythonLockfileCurrent(project, recorded)) {
-        const { credentials } = parsePythonSettings(root, {
-            uv: readText(root, UV_SETTINGS_FILE),
-            project: readText(root, PYPROJECT_TOML),
-        });
-        assertCredentialFreeLockfile(
-            recorded,
-            credentials,
-            new GspotError('installation', UV_LOCKFILE_CREDENTIAL_MESSAGE),
-        );
-        return buildLockfileResult(UV_LOCKFILE, recorded, original);
+        const { credentials } = readPythonSettings(root);
+        assertCredentialFreeLockfile(recorded, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
+        return { path: UV_LOCKFILE, content: recorded, kind: 'lock', read: original };
     }
     using scratch = createScratchFolder();
     const work = scratch.path;
     writeFileSync(join(work, PYPROJECT_TOML), toolProjectFile.content);
 
     const credentials = writePythonSettings(root, work);
-    const executable = uvPath;
     await runUv(context, {
         work,
         commandArguments: UV_LOCKFILE_ARGUMENTS,
-        executable,
+        executable: getUvPath(context.session),
         credentials,
     });
-    return buildLockfileResult(UV_LOCKFILE, readPythonLockfile(work, credentials, project), original);
+    return { path: UV_LOCKFILE, content: readPythonLockfile(work, credentials, project), kind: 'lock', read: original };
 }
 
 /**
@@ -213,7 +150,7 @@ async function installPythonTools(context: InstallContext, executable: string): 
         });
     }
     const project = pythonToolProjectSchema.parse(parse(toolProjectFile.bytes.toString('utf8')));
-    return `installed ${formatCount(project.project.dependencies.length, 'Python tool')} in .gspot/.venv`;
+    return `installed ${formatCount(project.project.dependencies.length, 'Python tool')} in ${GSPOT_PYTHON_ENVIRONMENT_PATH}`;
 }
 
 /**
@@ -233,7 +170,7 @@ function buildUvRunCommand(selection: ScopeSelection, scopeRoot: string, command
     return [
         UV_TOOL,
         ...UV_RUN_ARGUMENTS,
-        '--project',
+        UV_PROJECT_FLAGS.project,
         scopeRoot,
         '--with',
         `${packagePin.name}==${packagePin.version}`,
@@ -241,14 +178,37 @@ function buildUvRunCommand(selection: ScopeSelection, scopeRoot: string, command
     ];
 }
 
-/**
- * Check whether an error comes from the TOML parser with a syntax location.
- *
- * @param error the failed lockfile parse.
- * @returns whether the failure reports a TOML syntax location.
- */
-function isTomlSyntaxError(error: unknown): boolean {
-    return error instanceof Error && 'line' in error && typeof error.line === 'number';
+// Require pinned specifiers and normalize the requirement names before comparing them.
+function parsePinnedRequirements(entry: UvLockfile['package'][number]): string[] | undefined {
+    const requirements = entry.metadata?.['requires-dist'] ?? [];
+    const pins: string[] = [];
+    for (const { name, specifier } of requirements) {
+        if (specifier === undefined) return undefined;
+        pins.push(`${name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}${specifier}`);
+    }
+    return pins;
+}
+
+// Validate the fields installation needs without making the shared uv schema stricter.
+function parsePythonToolLockfile(lockfile: string): UvLockfile | undefined {
+    let parsed;
+    try {
+        parsed = uvLockSchema.safeParse(parse(lockfile));
+    } catch (error) {
+        if (!(error instanceof Error && 'line' in error && typeof error.line === 'number')) throw error;
+        return undefined;
+    }
+    if (!parsed.success || parsed.data.version !== 1) return undefined;
+    if (
+        parsed.data.package.some(
+            (entry) =>
+                entry.version === undefined ||
+                entry.source === undefined ||
+                entry.metadata?.['requires-dist']?.some(({ specifier }) => specifier === undefined) === true,
+        )
+    )
+        return undefined;
+    return parsed.data;
 }
 
 /**
@@ -262,24 +222,23 @@ function isTomlSyntaxError(error: unknown): boolean {
 function isPythonLockfileCurrent(project: PythonToolProject, lockfile: string | undefined): lockfile is string {
     if (lockfile === undefined) return false;
     const projectTable = project.project;
-    let document: unknown;
-    try {
-        document = parse(lockfile);
-    } catch (error) {
-        if (!isTomlSyntaxError(error)) throw error;
-        return false;
-    }
-    const validated = uvLockSchema.safeParse(document);
-    if (!validated.success) return false;
-    const recorded = validated.data;
+    const recorded = parsePythonToolLockfile(lockfile);
+    if (recorded === undefined) return false;
     const projectEntry = recorded.package.find(
-        (entry) => entry.name === projectTable.name && entry.source.virtual === '.',
+        (entry) => entry.name === projectTable.name && entry.source?.virtual === '.',
     );
     if (projectEntry === undefined || recorded['requires-python'] !== projectTable['requires-python']) return false;
+    const pins = parsePinnedRequirements(projectEntry);
+    if (pins === undefined) return false;
     const expected = projectTable.dependencies
-        .map((value) => value.replace(PINNED_PACKAGE_NAME, normalizePythonPackage))
+        .map((value) =>
+            value.replace(PINNED_PACKAGE_NAME, (name) => name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')),
+        )
         .toSorted((left, right) => left.localeCompare(right));
-    return isDeepStrictEqual(normalizeRequirements(projectEntry.metadata['requires-dist']), expected);
+    return isDeepStrictEqual(
+        pins.toSorted((left, right) => left.localeCompare(right)),
+        expected,
+    );
 }
 
 /**
@@ -299,7 +258,7 @@ function buildScratchPythonEnvironment(
     if (roots.root === roots.installedRoot) return {};
     const environment = join(roots.installedRoot, scope, PYTHON_ENVIRONMENT_FOLDER);
     return statSync(environment, { throwIfNoEntry: false })?.isDirectory() === true
-        ? { UV_PROJECT_ENVIRONMENT: environment }
+        ? { [UV_ENVIRONMENT_VARIABLE]: environment }
         : {};
 }
 
@@ -307,7 +266,6 @@ export {
     buildUvRunCommand,
     installPythonTools,
     preparePythonLockfile,
-    pythonToolProjectSchema,
     isPythonLockfileCurrent,
     buildScratchPythonEnvironment,
 };

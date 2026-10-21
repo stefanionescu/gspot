@@ -1,3 +1,6 @@
+import { stringify } from '@decimalturn/toml-patch';
+import { FINDINGS_SHOWN } from '#cli/config/terminal.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { PUSH_CHECK_ARGUMENTS } from '#tests/data/parsers/git.ts';
 
 const FAILED_CHECK_REPORT = {
@@ -38,8 +41,7 @@ const FAILED_CHECK_REPORT = {
             reproduce: 'gspot check api --only format/prettier',
         },
     ],
-    ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why', matched: 1 }],
-    skips: [],
+    ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why' }],
     unstagedChanges: 0,
     partial: false,
     failed: ['bash/shellcheck', 'format/prettier'],
@@ -51,8 +53,6 @@ const CHECK_REPORT_COMPARISONS = [
     { content: 'index', header: 'Checked the staged files.\n' },
     { content: 'commit', header: 'Checked commit main.\n' },
 ] as const;
-
-const CHECK_REPORT_STATUSES = ['passed', 'skipped', 'failed', 'missing', 'error'] as const;
 
 const NO_COLOR_SETTINGS = `configurations = []
 [[ignore]]
@@ -75,24 +75,6 @@ const FIXER_FEEDBACK_CASES = [
         paths: ['source.txt', 'other.txt'],
         preview: '2 files would change.',
         applied: 'fixed 2 files: other.txt, source.txt. The changes are not staged.',
-    },
-    {
-        name: 'ten changed files',
-        paths: [
-            'file-0.txt',
-            'file-1.txt',
-            'file-2.txt',
-            'file-3.txt',
-            'file-4.txt',
-            'file-5.txt',
-            'file-6.txt',
-            'file-7.txt',
-            'file-8.txt',
-            'file-9.txt',
-        ],
-        preview: '10 files would change.',
-        applied:
-            'fixed 10 files: file-0.txt, file-1.txt, file-2.txt, file-3.txt, file-4.txt, file-5.txt, file-6.txt, file-7.txt, file-8.txt, file-9.txt. The changes are not staged.',
     },
 ] as const;
 
@@ -129,11 +111,6 @@ const ARGUMENT_REFUSALS = [
     ],
 ] as const;
 
-const VERBOSITY_CASES = [
-    { name: 'normal output', flags: [], verbosity: 'normal' },
-    { name: 'verbose output', flags: ['--verbose'], verbosity: 'verbose' },
-] as const;
-
 /** Arguments that run only the failing and the passing check of the output sandbox. */
 const VERBOSITY_ARGUMENTS = ['check', '--only', 'example/findings,example/passing', '--changed', 'HEAD'] as const;
 
@@ -141,7 +118,6 @@ const PUSH_CHECK_COMMAND = [...PUSH_CHECK_ARGUMENTS, 'origin', 'unused'] as cons
 
 export {
     FIX_REFUSALS,
-    VERBOSITY_CASES,
     ARGUMENT_REFUSALS,
     NO_COLOR_SETTINGS,
     PUSH_CHECK_COMMAND,
@@ -149,6 +125,32 @@ export {
     PUSH_INPUT_REFUSALS,
     VERBOSITY_ARGUMENTS,
     FIXER_FEEDBACK_CASES,
-    CHECK_REPORT_STATUSES,
     CHECK_REPORT_COMPARISONS,
+};
+
+export const VERBOSITY_FILES = {
+    'gspot.toml': buildSandboxSettings([], {
+        rules: true,
+        tables: stringify({
+            command_check: [
+                {
+                    name: 'example/findings',
+                    command: [process.execPath, 'findings.ts'],
+                    output: { format: 'lines' },
+                    paths: ['source.txt'],
+                    stage: 'commit',
+                },
+                {
+                    name: 'example/passing',
+                    command: [process.execPath, '-e', 'process.exitCode=0;'],
+                    paths: ['source.txt'],
+                    stage: 'commit',
+                },
+            ],
+        }),
+    }),
+    'source.txt': 'before',
+    'findings.ts': 'process.stdout.write(await Bun.file("findings.txt").text()); process.exitCode=1;',
+    'findings.txt':
+        Array.from({ length: FINDINGS_SHOWN + 1 }, (_, index) => `finding ${String(index + 1)}.`).join('\n') + '\n',
 };

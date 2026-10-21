@@ -7,12 +7,11 @@ import { stringify } from '@decimalturn/toml-patch';
 import { SQL_CHECK } from '#tests/data/checks/sql.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { checkReport } from '#tests/setup/run-gspot.ts';
 import { type RunOptions } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { DECLARATION_FILES } from '#tests/data/repository/file-classification.ts';
 import { TEXT_FIX, TEXT_CHECK, FIX_LINTER_CASES } from '#tests/data/runs/fixes.ts';
@@ -21,7 +20,7 @@ import { REACT_VUE_PACKAGES, ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/da
 
 test('fix preserves discovered project scopes when checking each project task', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['docs'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
         'package.json': '{"name":"root","private":true,"scripts":{"root":"true"}}',
         'README.md': 'Run `bun run root`.\n',
         'app/package.json': '{"name":"app","private":true,"scripts":{"child":"true"}}',
@@ -44,7 +43,7 @@ test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
     async (entry) => {
         await using sandbox = await testdir();
-        const check = readManifests(createReadCache(process.cwd()))
+        const check = readManifests()
             .get(entry.configuration)!
             .checks.find((check) => check.name === `${entry.configuration}/${entry.tool}`)!;
         const executable = join(
@@ -54,19 +53,21 @@ test.each([...FIX_LINTER_CASES])(
         );
         const command = [process.execPath, executable, '--config', entry.config];
         await createFileTree(sandbox.path, {
-            'gspot.toml': stringify({
-                configurations: [],
-                command_check: [
-                    {
-                        name: 'project/native',
-                        command: [...command, ...entry.formatter, '{files}'],
-                        fix: [...command, '--fix', '{files}'],
-                        exit_codes: check.exit_codes!,
-                        output: check.output,
-                        paths: [entry.path],
-                        stage: 'commit',
-                    },
-                ],
+            'gspot.toml': buildSandboxSettings([], {
+                rules: true,
+                tables: stringify({
+                    command_check: [
+                        {
+                            name: 'project/native',
+                            command: [...command, ...entry.formatter, '{files}'],
+                            fix: [...command, '--fix', '{files}'],
+                            exit_codes: check.exit_codes!,
+                            output: check.output,
+                            paths: [entry.path],
+                            stage: 'commit',
+                        },
+                    ],
+                }),
             }),
             [entry.config]: entry.nativeConfiguration,
             [entry.path]: entry.sample,
@@ -84,7 +85,7 @@ test.each([...FIX_LINTER_CASES])(
         expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
         expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [entry.path] }]);
         expect(await readFile(join(sandbox.path, entry.path), 'utf8')).toBe(entry.partial);
-        await Bun.write(join(sandbox.path, entry.path), entry.corrected);
+        await writeFile(join(sandbox.path, entry.path), entry.corrected);
         const corrected = await runChecks(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode, JSON.stringify(corrected)).toBe(0);
     },
@@ -123,28 +124,32 @@ format = "none"
         { check: 'project/correct-sql', status: 'passed', findings: [] },
         { check: 'project/read-sql', status: 'passed', findings: [] },
     ]);
-    expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe('select 1;\n');
-    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(settings + SQL_CHECK);
-    expect(await Bun.file(join(sandbox.path, 'notes.txt')).text()).toBe('Authored notes.\n');
+    expect(await readFile(join(sandbox.path, 'query.sql'), 'utf8')).toBe('select 1;\n');
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings + SQL_CHECK);
+    expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('Authored notes.\n');
 });
 
 test('a later pass formats what a fix after the formatter wrote', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'source.txt': 'var x\n',
-        'gspot.toml': `configurations = []
-[[command_check]]\nname = "project/format"
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: `[[command_check]]
+name = "project/format"
 stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, '  ', '{files}'])}
 fix = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, '  ', ' ', '{files}'])}
-[[command_check]]\nname = "project/codemod"
+[[command_check]]
+name = "project/codemod"
 stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, 'var', '{files}'])}
 fix = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ', '{files}'])}
 `,
+        }),
     });
+
     const options = buildRunOptions({ stage: 'commit', fix: true, only: ['project/format', 'project/codemod'] });
     const result = await runChecks(await openSession(sandbox.path), options);
     expect(result.report.exitCode, JSON.stringify(result.report.checks)).toBe(0);
@@ -160,20 +165,22 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
         const script = String.raw`const fs = require('node:fs'); fs.appendFileSync('order.log', '${name}\n'); fs.writeFileSync('${name}.txt', 'fixed\n'); process.exitCode = ${index === 0 ? '3' : '0'};`;
         return `[[command_check]]\nname = "sandbox/${name}"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}\nfix = ${JSON.stringify([process.execPath, '-e', script])}\npaths = ["${name}.txt"]\nstage = "commit"\n`;
     });
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `configurations = []\n${entries.join('')}`,
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables: entries.join('') }),
         'first.txt': 'original\n',
         'second.txt': 'original\n',
         'third.txt': 'original\n',
     });
-    const fixed = await checkReport(sandbox.path, [
-        'check',
-        '--only',
-        'sandbox/first,sandbox/second,sandbox/third',
-        '--fix',
-        '--json',
-    ]);
+
+    const fixed = parseCheckReport(
+        await runGspot(sandbox.path, [
+            'check',
+            '--only',
+            'sandbox/first,sandbox/second,sandbox/third',
+            '--fix',
+            '--json',
+        ]),
+    );
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(2);
     expect(fixed.report.failed).toStrictEqual(['sandbox/first']);
     // A second pass reruns the fixers whose files the first pass changed; the failed fixer does not run again.
@@ -183,27 +190,31 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
 });
 
 test('checks refresh the file inventory after a fixer creates a source', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'source.txt': 'input',
-        'gspot.toml': `configurations = []
-[[command_check]]\nname = "project/inventory"
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: `[[command_check]]
+name = "project/inventory"
 stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = process.argv.includes("added.txt") ? 0 : 1', '{files}'])}
 fix = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.txt", "created")'])}
 `,
+        }),
     });
-    const session = await openSession(sandbox.path);
+
+    using resources = new DisposableStack();
+    const session = await openSession(sandbox.path, { resources });
     const options = buildRunOptions({ stage: 'commit', fix: true, only: ['project/inventory'] });
     const result = await runChecks(session, options);
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks[0]!.fileCount).toBe(2);
-    expect(session.repository.files.map((file) => file.path)).not.toContain('added.txt');
+    expect(session.repository.files.map((file) => file.path)).toContain('added.txt');
 });
 
 test('a fix run keeps the generated-file list', async () => {
-    const text = buildSettingsText(['nextjs', 'cloudflare'], {
+    const text = buildSandboxSettings(['nextjs', 'cloudflare'], {
         tables: `[[command_check]]
 name = "project/correct"
 paths = ["marker.txt"]
@@ -233,11 +244,10 @@ configurations = ["nextjs", "cloudflare"]
     );
 });
 
-test('fix verification preserves the caller session and its child package facts', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+test('fix verification refreshes the caller facts and preserves child package dependencies', async () => {
+    await using sandbox = await testdir({
         ...REACT_VUE_PACKAGES,
-        'gspot.toml': buildSettingsText(['javascript'], {
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             tables: `[[scope]]
 path = "app"
 configurations = ["javascript"]
@@ -251,24 +261,28 @@ format = "none"
 `,
         }),
     });
-    const session = await openSession(sandbox.path);
+
+    using resources = new DisposableStack();
+    const session = await openSession(sandbox.path, { resources });
     const result = await runChecks(session, buildRunOptions({ only: ['project/update-package'], fix: true }));
     expect(result.report.exitCode).toBe(0);
     expect(result.fixes?.results).toMatchObject([
         { check: 'project/update-package', status: 'changed', changed: ['package.json'] },
     ]);
-    expect(listProjectDependencyNames(session.repository.dependencyFiles, '')).toStrictEqual(['react']);
+    expect(listProjectDependencyNames(session.repository.dependencyFiles, '')).toStrictEqual([]);
     expect(listProjectDependencyNames(session.repository.dependencyFiles, 'app')).toStrictEqual(['vue']);
-    expect(await Bun.file(join(sandbox.path, 'package.json')).text()).toBe(ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
-    expect(await Bun.file(join(sandbox.path, 'app/package.json')).text()).toBe(REACT_VUE_PACKAGES['app/package.json']);
+    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
+    expect(await readFile(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(REACT_VUE_PACKAGES['app/package.json']);
 });
 
 test('a fixer that leaves a code file that fails to parse is named in the fix report', async () => {
     await using sandbox = await testdir();
     const breaker = String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "import Hls, type { A } from 'hls.js';\n");`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': `configurations = []
-[[command_check]]\nname = "project/merge-imports"
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: `[[command_check]]
+name = "project/merge-imports"
 stage = "commit"
 paths = ["*.ts"]
 command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]
@@ -276,6 +290,7 @@ fix = [${JSON.stringify(process.execPath)}, "breaker.cjs", "{files}"]
 [command_check.output]
 format = "none"
 `,
+        }),
         'client.ts': "import Hls from 'hls.js';\nexport { Hls };\n",
         'notes.ts': "export const note = 'kept';\n",
         'breaker.cjs': breaker,

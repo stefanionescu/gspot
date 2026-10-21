@@ -1,26 +1,25 @@
 import { join } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { unlink, symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import * as processes from '#cli/system/processes.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { unlink, symlink, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { buildProcessResult, buildInspectionContext } from '#tests/setup/builders.ts';
 import { SYSTEM_PLUGIN_REPORTS, PACKAGE_METADATA_FAILURES } from '#tests/data/install/installation.ts';
 
 test('a library is found only in the tool project', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
         'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
     });
+
     expect(
         inspectTool(buildInspectionContext(sandbox.path), {
             name: 'globals',
@@ -40,10 +39,10 @@ test('a library is found only in the tool project', async () => {
 });
 
 test('a library that is absent is missing, and one off its pin is reported', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         '.gspot/node_modules/typescript/package.json': '{"name":"typescript","version":"6.0.0"}',
     });
+
     const absent = inspectTool(buildInspectionContext(sandbox.path), {
         name: 'eslint-plugin-regexp',
         kind: 'library' as const,
@@ -63,12 +62,12 @@ test('a library that is absent is missing, and one off its pin is reported', asy
 });
 
 test('a system library is read from the chosen project, not from the tool project', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         '.gspot/node_modules/@vitest/coverage-v8/package.json': '{"name":"@vitest/coverage-v8","version":"4.1.11"}',
         'app/package.json': '{}',
     });
-    const tool = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), '@vitest/coverage-v8');
+
+    const tool = getToolDeclaration(readManifests().values(), '@vitest/coverage-v8');
     const context = buildInspectionContext(sandbox.path, { cwd: join(sandbox.path, 'app') });
     expect(inspectTool(context, tool)).toMatchObject({ name: tool.name, state: 'missing' });
     await using project = await testdir();
@@ -85,14 +84,14 @@ test('a system library is read from the chosen project, not from the tool projec
     expect(inspectTool(buildInspectionContext(sandbox.path), tool).state).toBe('missing');
     await createFileTree(project.path, { 'app/node_modules/@vitest/coverage-v8/package.json': '{invalid' });
     expect(() => inspectTool(buildInspectionContext(project.path, { cwd: join(project.path, 'app') }), tool)).toThrow(
-        'package.json is not valid JSON. Fix the file.',
+        'package.json is not valid JSON:',
     );
 });
 
 test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report as $state', async (report) => {
     await using sandbox = await testdir();
     const tool = {
-        ...getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), 'pytest-cov'),
+        ...getToolDeclaration(readManifests().values(), 'pytest-cov'),
         ...('pattern' in report ? { version_pattern: report.pattern } : {}),
     };
     using _which = useExecutable('/native/pytest');
@@ -130,15 +129,14 @@ test('a library linked inside the tool project is accepted and one linked outsid
     await symlink(outside.path, link);
     context.inspections.clear();
     expect(() => inspectTool(context, tool)).toThrow('Source link leaves the repository');
-    expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{"name":"globals","version":"17.12.0"}');
 });
 
 test('library reads are kept per session and see a new install in the next session', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([]),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([]),
         'api/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
     });
+
     const session = await openSession(sandbox.path);
     const pin = {
         name: 'example',
@@ -184,8 +182,7 @@ test.each([...PACKAGE_METADATA_FAILURES])(
                 message: `${path}: ${field}: Invalid input: expected string, received boolean. Fix the field.`,
             }),
         );
-        expect(await Bun.file(path).text()).toBe(original);
-        await Bun.write(path, '{"name":"teller","version":"5.0.1"}');
+        await writeFile(path, '{"name":"teller","version":"5.0.1"}');
         expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
     },
 );

@@ -41,17 +41,23 @@ type CheckOptions = {
 };
 
 /** What a scratch copy stands for: the staged index or a pushed commit, and the repository whose tools it runs. */
-type RevisionSource = {
-    base?: string;
-    commits?: string[];
-    historyComplete?: boolean;
-    content: 'index' | 'commit';
-    installedRoot: string;
-    reference: string;
-    reportRoot?: string;
-    staged?: StagedPaths;
-    changed?: string[];
-};
+type RevisionSource =
+    | {
+          content: 'index';
+          installedRoot: string;
+          reference: string;
+          reportRoot: string;
+          staged: StagedPaths;
+      }
+    | {
+          content: 'commit';
+          installedRoot: string;
+          reference: string;
+          base?: string;
+          commits: string[];
+          historyComplete: boolean;
+          changed?: string[];
+      };
 
 export type { PushReport, RunFilters, CheckOptions, RevisionSource };
 

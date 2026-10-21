@@ -54,4 +54,3 @@ export const TYPESCRIPT_DEFAULTS = {
 export const JAVASCRIPT_BUNDLED_IMPORTS = { module: 'ESNext', moduleResolution: 'Bundler' } as const;
 
 export const NESTJS_COMPILER_OPTIONS = { experimentalDecorators: true, emitDecoratorMetadata: true } as const;
-export const NESTJS_CONFIGURATION = 'nestjs';

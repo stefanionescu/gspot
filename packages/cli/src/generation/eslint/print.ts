@@ -3,12 +3,11 @@ import ts from 'typescript';
 import { isDeepStrictEqual } from 'node:util';
 import type { Level } from '#cli/types/configurations.ts';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
-import { ESLINT_INDENT, ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint.ts';
+import { ESLINT_INDENT, COMPONENT_MATCHERS, ESLINT_BASE_IMPORTS } from '#cli/config/generation/eslint.ts';
 
 import type {
-    EslintParts,
-    BlockWriter,
     EslintPlugins,
+    EslintRuntimeBlock,
     EslintFileSelector,
     EslintSettingsBlock,
     EslintRuleExpression,
@@ -16,9 +15,8 @@ import type {
 
 function serializeSelector(selector: EslintFileSelector): string {
     if (typeof selector === 'string') return JSON.stringify(selector);
-    if ('component' in selector)
-        return `componentMatches(${selector.component}Parser, ${JSON.stringify(selector.component)}, tseslint.parser)`;
-    return `runtimeMatches(${String(selector.runtime.index)}, runtimeDeclarations)`;
+    if ('component' in selector) return COMPONENT_MATCHERS[selector.component];
+    return `runtimeMatches(${String(selector.runtime)}, runtimeDeclarations)`;
 }
 
 function serializeRules(rules: EslintSettingsBlock['rules'], level: Level | undefined): string {
@@ -43,38 +41,39 @@ function serializePresetRules(
     rules: EslintSettingsBlock['rules'],
     preset: EslintRuleExpression,
     level: Level | undefined,
-): string[] {
+): string {
     const entries = rules === undefined ? [] : Object.entries(rules);
     const changed = Object.fromEntries(
         entries.filter(([name, value]) => !isDeepStrictEqual(value, preset.rules?.[name])),
     );
     const additions = Object.keys(changed).length === 0 ? '' : ', ' + serializeRules(changed, level);
-    return [`rules: { ...${preset.expression}${additions} }`];
+    return `rules: { ...${preset.expression}${additions} }`;
 }
 
 /**
  * Serialize the lint rule and file fields that the generation baseline keeps.
  *
  * @param block the ESLint rule fields.
- * @param runtime plugin, parser, and settings expressions that contain no rule fields.
- * @param preset the declared ESLint export to spread.
- * @param level the ESLint plugin settings for recommended or all.
+ * @param options plugin and preset expressions and the selected rule level.
+ * @param options.properties plugin, parser, and settings expressions with no rule fields.
+ * @param options.preset the declared ESLint export to spread.
+ * @param options.level the selected ESLint rule level.
  *
  * @returns a JavaScript configuration block.
  */
 function serializeBlock(
     block: EslintSettingsBlock,
-    runtime: string,
-    preset: EslintRuleExpression | undefined,
-    level?: Level,
+    options: {
+        properties?: string | undefined;
+        preset?: EslintRuleExpression | undefined;
+        level?: Level | undefined;
+    } = {},
 ): string {
     const { files, rules, ...fields } = block;
-    const content = {
-        ...fields,
-    };
-    const parts = runtime === '' ? [] : [runtime];
-    parts.push(...Object.entries(content).map(([name, value]) => `${JSON.stringify(name)}: ${JSON.stringify(value)}`));
-    if (preset !== undefined) parts.push(...serializePresetRules(rules, preset, level));
+    const { properties, preset, level } = options;
+    const parts = properties === undefined || properties === '' ? [] : [properties];
+    parts.push(...Object.entries(fields).map(([name, value]) => `${JSON.stringify(name)}: ${JSON.stringify(value)}`));
+    if (preset !== undefined) parts.push(serializePresetRules(rules, preset, level));
     else if (rules !== undefined && Object.keys(rules).length > 0)
         parts.push(`rules: { ${serializeRules(rules, level)} }`);
     if (files !== undefined) {
@@ -138,7 +137,7 @@ function printConfiguration(literal: string): string {
  * @param runtimes the ordered runtime declarations and their file selectors.
  * @returns the JavaScript declaration shared by runtime file matchers.
  */
-function serializeRuntimeSelectors(runtimes: EslintParts['runtimes']): string {
+function serializeRuntimeSelectors(runtimes: EslintRuntimeBlock[]): string {
     return `const runtimeDeclarations = ${JSON.stringify(runtimes, null, JSON_INDENT)};\n`;
 }
 
@@ -166,31 +165,22 @@ function serializePresetAccess(variable: string, source: string): string {
  * Serialize the fixed imports and the plugins before the fragment imports.
  *
  * @param plugins the import names and packages to load.
- * @param fragments the extra import lines.
+ * @param fragments additional imported bindings and packages.
  *
  * @returns the imports of the generated file.
  */
-function serializeImports(plugins: EslintPlugins, fragments: string): string {
-    return (
-        [...ESLINT_BASE_IMPORTS, ...Object.values(plugins)]
-            .map(([importName, source]) => `import ${importName} from ${JSON.stringify(source)};`)
-            .join('\n') +
-        '\n' +
-        fragments +
-        '\n'
+function serializeImports(plugins: EslintPlugins, fragments: EslintPlugins): string {
+    const imports = new Map(
+        [...ESLINT_BASE_IMPORTS, ...Object.values(plugins), ...Object.values(fragments)].map((entry) => [
+            JSON.stringify(entry),
+            entry,
+        ]),
     );
-}
-
-/**
- * Serialize the blocks in order with the block writer of the scope.
- *
- * @param module the block writer of the scope.
- * @param blocks the block arguments, in order.
- *
- * @returns the serialized ESLint blocks.
- */
-function serializeBlocks(module: BlockWriter, blocks: Parameters<BlockWriter['block']>[]): string {
-    return blocks.map((block) => '\n' + module.block(...block) + ',\n').join('');
+    return (
+        [...imports.values()]
+            .map(([importName, source]) => `import ${importName} from ${JSON.stringify(source)};`)
+            .join('\n') + '\n'
+    );
 }
 
 /**
@@ -206,11 +196,4 @@ function indentEslintBlock(source: string): string {
         .join('\n');
 }
 
-export {
-    serializeBlock,
-    serializeBlocks,
-    serializeImports,
-    indentEslintBlock,
-    serializePresetAccess,
-    serializeRuntimeSelectors,
-};
+export { serializeBlock, serializeImports, indentEslintBlock, serializePresetAccess, serializeRuntimeSelectors };

@@ -1,16 +1,17 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { planRun } from '#cli/planning/checks.ts';
 import { TSC_REPLACEMENTS } from '#tests/data/runs/plan.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 test.each([...TSC_REPLACEMENTS])(
     '$check replaces typescript/tsc only while it runs',
     async ({ configuration, check, source, text }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['typescript', configuration]),
+            'gspot.toml': buildSandboxSettings(['typescript', configuration]),
             'source.ts': 'export const port = 8080;\n',
             [source]: text,
         });
@@ -22,9 +23,9 @@ test.each([...TSC_REPLACEMENTS])(
             cause: 'replaced',
             note: `${check} runs it here`,
         });
-        await Bun.write(
+        await writeFile(
             join(sandbox.path, 'gspot.toml'),
-            buildSettingsText(['typescript', configuration], {
+            buildSandboxSettings(['typescript', configuration], {
                 tables: `[[ignore]]
 check = ${JSON.stringify(check)}
 reason = "The separate compiler checks this source."
@@ -45,8 +46,8 @@ reason = "The separate compiler checks this source."
 
 test('a nested Next.js check replaces TypeScript only in its own scope', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['typescript'], {
-            tables: '[[scope]]\npath = "app"\nconfigurations = ["typescript", "nextjs"]',
+        'gspot.toml': buildSandboxSettings(['typescript'], {
+            scopes: [{ path: 'app', configurations: ['typescript', 'nextjs'] }],
         }),
         'source.ts': 'export const port = 8080;\n',
         'app/source.ts': 'export const port = 3000;\n',

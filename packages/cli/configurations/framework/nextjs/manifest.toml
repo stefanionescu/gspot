@@ -41,7 +41,6 @@ rule_prefix = "@next/next"
 version = "16.3.8"
 
 [eslint]
-fragment = true
 required_tools = ["@next/eslint-plugin-next"]
 all_level_rules = ["@next/next/next-script-for-ga", "@next/next/no-html-link-for-pages", "@next/next/no-img-element", "@next/next/no-page-custom-font"]
 

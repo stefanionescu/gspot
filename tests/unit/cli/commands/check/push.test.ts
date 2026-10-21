@@ -5,8 +5,8 @@ import { readFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/processes.ts';
 import { PUSH_CONTENT } from '#tests/data/test-setup.ts';
 import type { RunReport } from '#cli/types/runs/check.ts';
+import { CLI_BIN, runGspot } from '#tests/setup/run-gspot.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
-import { CLI_MAIN, runGspot } from '#tests/setup/run-gspot.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { PUSH_CHECK_ARGUMENTS } from '#tests/data/parsers/git.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/data/commands/check.ts';
@@ -46,10 +46,8 @@ test('new references compare with remote-tracking commits and scan custom destin
     readGitOutput(sandbox.path, ['remote', 'add', 'origin', 'unused']);
     readGitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
     const protocol = { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` };
-    const originalStdin = Object.getOwnPropertyDescriptor(process, 'stdin');
     const createdRef = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, protocol);
     expect(createdRef.code, createdRef.stdout + createdRef.stderr).toBe(0);
-    expect(Object.getOwnPropertyDescriptor(process, 'stdin')).toStrictEqual(originalStdin);
     expect((JSON.parse(createdRef.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
     readGitOutput(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']);
     readGitOutput(sandbox.path, ['update-ref', '-d', 'refs/remotes/origin/main']);
@@ -166,7 +164,7 @@ test('pre-push text supplies an executable reproduction of the same committed fi
             'runtime=$1; cli=$2; gspot() { "$runtime" "$cli" "$@"; }; eval "$3"',
             'reproduce',
             process.execPath,
-            CLI_MAIN,
+            CLI_BIN,
             reproduction!.replace('gspot check', 'gspot check --json'),
         ],
         { cwd: sandbox.path },

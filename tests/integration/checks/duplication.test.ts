@@ -1,18 +1,20 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
-import { testdir, createFileTree } from 'testdirs';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { installSandbox } from '#tests/setup/install.ts';
 import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildInitArguments } from '#tests/setup/builders.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
-import { installSandbox, buildSandboxPath } from '#tests/setup/install.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 /** Run the jscpd check, check its exit code, and return its report. */
 async function checkDuplication(root: string, environment: Record<string, string>, code: number): Promise<RunReport> {
-    const result = await spawnGspot(root, ['check', '--only', 'duplication/jscpd', '--json'], environment);
+    const result = parseCheckReport(
+        await spawnGspot(root, ['check', '--only', 'duplication/jscpd', '--json'], environment),
+    );
     expect(result.code, result.stdout + result.stderr).toBe(code);
-    return JSON.parse(result.stdout) as RunReport;
+    return result.report;
 }
 
 test('a block copied between two files is a finding on the file that holds it', async () => {
@@ -26,19 +28,20 @@ test('a block copied between two files is a finding on the file that holds it', 
         (_, index) =>
             `    printf 'step %s of %s\\n' "${String(index)}" "$total"\n    total=$((total + ${String(index)}))`,
     ).join('\n');
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'scripts/first.sh': `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_first() {\n    local total=0\n${steps}\n    printf '%s\\n' "$total"\n}\n\ncount_first\n`,
         'metadata/first.json': metadata,
         'metadata/second.json': metadata,
     });
+
     commitAll(sandbox.path);
-    const environment = {
-        PATH: buildSandboxPath(),
-    };
-    await installSandbox(sandbox.path, buildInitArguments(['bash']), environment, { level: 'all' });
+    const environment = {};
+    await installSandbox(
+        { root: sandbox.path, environment: environment, run: spawnGspot },
+        { configurations: ['bash'], level: 'all' },
+    );
     await checkDuplication(sandbox.path, environment, 0);
-    await Bun.write(
+    await writeFile(
         `${sandbox.path}/scripts/second.sh`,
         `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_second() {\n    local total=0\n${steps}\n    printf '%s\\n' "$total"\n}\n\ncount_second\n`,
     );
@@ -53,7 +56,7 @@ test('a block copied between two files is a finding on the file that holds it', 
             message: matchSubstring('lines repeat scripts/first.sh:4.'),
         }),
     ]);
-    await Bun.write(join(sandbox.path, 'scripts/second.sh'), '#!/usr/bin/env bash\nprintf "Independent task\\n"\n');
+    await writeFile(join(sandbox.path, 'scripts/second.sh'), '#!/usr/bin/env bash\nprintf "Independent task\\n"\n');
     const corrected = await checkDuplication(sandbox.path, environment, 0);
     expect(corrected.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
 });

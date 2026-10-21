@@ -1,13 +1,14 @@
 import type { ToolDeclaration, InstalledToolFolder } from '#cli/types/configurations.ts';
 
 type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'system' | 'error';
-export type Inspected = {
+export type InspectedTool = {
     timeoutSeconds: number;
     root: string;
     cwd: string;
     tool: ToolDeclaration;
-    path: string;
     hint: string;
+    want: string | undefined;
+    miseBinPaths: string[] | undefined;
 };
 export type ToolInspection = {
     name: string;
@@ -33,7 +34,6 @@ export type LocateOptions = {
     searchFolders: string[];
     miseBinPaths?: string[] | undefined;
     toolProjectKind?: InstalledToolFolder | undefined;
-    installedRoot?: string | undefined;
 };
 
 /** The classified version or failure of a completed version command. */

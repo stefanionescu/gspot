@@ -1,40 +1,29 @@
 import { z } from 'zod';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { selectForScope } from '#cli/repository/coverage.ts';
-import { listSettingsTables } from '#cli/settings/inherit.ts';
+import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
-import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { type SettingsError } from '#cli/types/settings/file.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { unwrapSettingSchema } from '#cli/settings/schema/parts.ts';
+import type { LimitLanguage } from '#cli/types/settings/tables.ts';
+import { unwrapSettingSchema } from '#cli/schemas/settings/parts.ts';
+import { SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import type { ConfigurationDeclaration } from '#cli/types/configurations.ts';
 import { listCheckIds, readManifests } from '#cli/configurations/manifests.ts';
-import { scopeSchema, settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
-import { LIMITS_DECLARATIONS } from '#cli/config/settings/limits-declarations.ts';
 import { type Settings, type KnownSettings } from '#cli/types/settings/values.ts';
-import { RECORD_FIELDS, SETTINGS_REFERENCE_URL } from '#cli/config/settings/file.ts';
-import { formatCodeList, formatUnknownName, selectSimilarNames } from '#cli/system/text.ts';
+import { formatCodeList, formatUnknownName, formatSimilarNames } from '#cli/system/text.ts';
+import { scopeSchema, settingsSchema, listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
 
 import {
     validateScopePaths,
-    validatePluginPaths,
-    validateExtraOptions,
-    validateDisabledRules,
+    validateSettingRules,
+    validateRuleExcludes,
+    validateRuleFilePaths,
 } from '#cli/settings/validation/values.ts';
-
-// The limit fields that some code reads for one language.
-function listLanguageLimits(language: string): string[] {
-    return Object.entries(LIMITS_DECLARATIONS).flatMap(([key, declaration]) =>
-        'languages' in declaration && (declaration.languages as readonly string[]).includes(language)
-            ? [key.slice(key.indexOf('.') + 1)]
-            : [],
-    );
-}
 
 /**
  * Name the invalid setting, and keep the message of the validator.
@@ -66,13 +55,12 @@ function selectChildSchema(schema: z.ZodType | undefined, part: KeyPath[number])
 }
 
 // Suggest the keys of the same table that look like an unknown key. The path starts at the root, or at a scope.
-function suggestTableKeys(segments: KeyPath, key: string): string {
+function formatSimilarKeys(segments: KeyPath, key: string): string {
     const [record, , ...scopeFields] = segments;
     let schema: z.ZodType | undefined = record === 'scope' ? scopeSchema : settingsSchema;
     for (const part of record === 'scope' ? scopeFields : segments) schema = selectChildSchema(schema, part);
     const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    const near = table instanceof z.ZodObject ? selectSimilarNames(key, Object.keys(table.shape)) : [];
-    return near.length > 0 ? ` Did you mean ${formatCodeList(near)}?` : '';
+    return table instanceof z.ZodObject ? formatSimilarNames(key, Object.keys(table.shape)) : '';
 }
 
 // Name one key that a table does not accept. Say where it belongs, or which keys the table has.
@@ -80,12 +68,12 @@ function formatUnknownKey(segments: KeyPath, key: string): string {
     const [record, , ...scopeFields] = segments;
     const [table, language] = record === 'scope' ? scopeFields : segments;
     if (table === 'limits' && typeof language === 'string')
-        return `\`limits.${language}.${key}\` is not a limit any check reads. The limits that ${language} reads are ${formatCodeList(listLanguageLimits(language))}.`;
-    const fields: Readonly<Record<string, readonly string[]>> = RECORD_FIELDS;
+        return `\`limits.${language}.${key}\` is not a limit any check reads. The limits that ${language} reads are ${formatCodeList(Object.keys(limitsSchema.shape[language as LimitLanguage].unwrap().shape))}.`;
+    const fields: Readonly<Record<string, readonly string[]>> = listRecordFields();
     const recordName = [...scopeFields, key].map(String).join('.');
     if (record === 'scope' && Object.hasOwn(fields, recordName))
         return `Write [[${recordName}]] at the root.${fields[recordName]?.includes('paths') === true ? ' Its paths say where it applies.' : ''}`;
-    return `${describeKeyPlace(segments)}: \`${key}\` is not a gspot.toml setting.${suggestTableKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every key.`;
+    return `${describeKeyPlace(segments)}: \`${key}\` is not a gspot.toml setting.${formatSimilarKeys(segments, key)} See ${SETTINGS_REFERENCE_URL} for every key.`;
 }
 
 function describeKeyPlace(segments: KeyPath): string {
@@ -108,10 +96,9 @@ function throwErrors(errors: SettingsError[]): never {
  *
  * @param settings the parsed gspot.toml.
  * @param repositoryRoot the optional folder for checking declared scope paths.
- * @param reads the run cache.
  */
-function validateSettings(settings: Settings, repositoryRoot: string | undefined, reads: ReadCache): void {
-    const manifests = readManifests(reads);
+function validateSettings(settings: Settings, repositoryRoot: string | undefined): void {
+    const manifests = readManifests();
     const declarations: ConfigurationDeclaration[] = [
         ...settings.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
         ...Object.values(settings.scopes).flatMap((scope, scopeIndex) =>
@@ -120,9 +107,8 @@ function validateSettings(settings: Settings, repositoryRoot: string | undefined
     ];
     const unknown = listUnknownConfigurations(declarations, manifests);
     if (unknown.length > 0) throwErrors(unknown);
-    const tools = listDistinctTools([...manifests.values()]);
-    const bundledChecks = listCheckIds([], reads);
-    const checks = listCheckIds(Object.values(settings.commandChecks), reads);
+    const bundledChecks = listCheckIds([]);
+    const checks = listCheckIds(Object.values(settings.commandChecks));
     const knownBySelection = new Map<string, KnownSettings>();
     const scopes = new Map(
         ['', ...Object.keys(settings.scopes)].map((scope) => {
@@ -130,7 +116,7 @@ function validateSettings(settings: Settings, repositoryRoot: string | undefined
             const key = JSON.stringify(selected.map((manifest) => manifest.configuration.name));
             let known = knownBySelection.get(key);
             if (known === undefined) {
-                known = buildKnownSettings(selected, settings.level, reads);
+                known = buildKnownSettings(selected, settings.level);
                 knownBySelection.set(key, known);
             }
             return [scope, known];
@@ -140,6 +126,7 @@ function validateSettings(settings: Settings, repositoryRoot: string | undefined
     scopes.delete('');
     const errors: SettingsError[] = [
         ...validateSettingReasons(settings),
+        ...validateSettingRules(settings),
         ...Object.values(settings.commandChecks).flatMap((entry, index) =>
             bundledChecks.includes(entry.name)
                 ? [
@@ -155,13 +142,10 @@ function validateSettings(settings: Settings, repositoryRoot: string | undefined
                 ? []
                 : [{ path: ['ignore', index, 'check'], message: formatUnknownName('check', entry.check, checks) }],
         ),
-        ...validateDisabledRules(settings, manifests),
+        ...validateRuleExcludes(settings.rules.exclude, manifests),
         ...(repositoryRoot === undefined ? [] : validateScopePaths(repositoryRoot, settings)),
-        ...(repositoryRoot === undefined ? [] : validatePluginPaths(repositoryRoot, settings)),
-        ...listSettingsTables(settings).flatMap(({ table, path }) =>
-            validateExtraOptions(table, tools).map((error) => ({ ...error, path: [...path, ...error.path] })),
-        ),
-        ...validateKeys(known, settings, scopes, buildKnownSettings([...manifests.values()], settings.level, reads)),
+        ...(repositoryRoot === undefined ? [] : validateRuleFilePaths(repositoryRoot, settings)),
+        ...validateKeys(known, settings, scopes, buildKnownSettings([...manifests.values()], settings.level)),
     ];
     if (errors.length > 0) throwErrors(errors);
 }

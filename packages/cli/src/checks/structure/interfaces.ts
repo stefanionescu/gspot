@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import { isDocstring } from '#cli/parsers/python.ts';
+import { isDocstring, getLastName } from '#cli/parsers/python.ts';
 
 import {
     PYTHON_INTERFACE_BASES,
@@ -14,10 +14,6 @@ function listDecorators(node: Node): string[] {
     return parent.namedChildren
         .filter((child) => child.type === 'decorator')
         .map((decorator) => decorator.text.slice(1).split('(', 1)[0]?.trim() ?? '');
-}
-
-function readLastName(text: string): string {
-    return text.split('.').at(-1) ?? '';
 }
 
 function findOwnerClass(node: Node): Node | undefined {
@@ -46,9 +42,9 @@ function isStub(node: Node): boolean {
 export function isInterfaceClass(node: Node): boolean {
     return (node.childForFieldName('superclasses')?.namedChildren ?? []).some((base) => {
         if (base.type === 'keyword_argument')
-            return readLastName(base.childForFieldName('value')?.text ?? '') === PYTHON_ABSTRACT_METACLASS;
+            return getLastName(base.childForFieldName('value')?.text ?? '') === PYTHON_ABSTRACT_METACLASS;
         const named = base.type === 'subscript' ? base.childForFieldName('value') : base;
-        return PYTHON_INTERFACE_BASES.has(readLastName(named?.text ?? ''));
+        return PYTHON_INTERFACE_BASES.has(getLastName(named?.text ?? ''));
     });
 }
 
@@ -64,7 +60,7 @@ export function isPythonInterface(node: Node): boolean {
     if (
         decorators.some(
             (decorator) =>
-                PYTHON_INTERFACE_DECORATORS.has(readLastName(decorator)) || PYTHON_ACCESSOR_DECORATOR.test(decorator),
+                PYTHON_INTERFACE_DECORATORS.has(getLastName(decorator)) || PYTHON_ACCESSOR_DECORATOR.test(decorator),
         )
     )
         return true;

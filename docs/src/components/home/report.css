@@ -1,6 +1,6 @@
 .terminal {
     padding: 12px 16px 16px;
-    font-size: 12.5px;
+    font-size: 0.7813rem;
     line-height: 1.6;
 }
 
@@ -61,7 +61,7 @@
 
 .findings .message {
     color: var(--sl-color-gray-2);
-    font-size: 13.5px;
+    font-size: 0.8438rem;
     line-height: 1.5;
 }
 
@@ -87,7 +87,7 @@
 
 @media (width >= 50rem) {
     .code {
-        font-size: 13px;
+        font-size: 0.8125rem;
     }
 
     .line {

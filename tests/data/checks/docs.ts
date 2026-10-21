@@ -1,3 +1,5 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+
 /** The mise tasks and package scripts of each scope, and documents that run them. */
 export const DOC_TASK_FILES = {
     'root.md': `Run \`mise run root-mise\`, \`npm run root-js\`, \`pnpm run root-js\`, \`yarn run root-js\`, and \`bun run root-js\`.
@@ -147,6 +149,7 @@ export const MISE_TASK_SOURCES = [
 export const MALFORMED_TASK_FILES = [
     {
         path: 'package.json',
+        message: 'package.json is not valid JSON: Invalid JSON at offset 1: InvalidSymbol. Fix the file.',
         text: '{broken',
         document: 'a.md',
         tables: '',
@@ -154,6 +157,7 @@ export const MALFORMED_TASK_FILES = [
     },
     {
         path: 'mise.toml',
+        message: 'mise.toml:1:7 is not valid TOML:',
         text: '[tasks',
         document: 'a.md',
         tables: '',
@@ -161,6 +165,7 @@ export const MALFORMED_TASK_FILES = [
     },
     {
         path: 'app/package.json',
+        message: 'app/package.json is not valid JSON: Invalid JSON at offset 1: InvalidSymbol. Fix the file.',
         text: '{broken',
         document: 'app/nested/guide.md',
         tables: DOC_TASK_SCOPES,
@@ -168,6 +173,7 @@ export const MALFORMED_TASK_FILES = [
     },
     {
         path: 'app/mise.toml',
+        message: 'app/mise.toml:1:7 is not valid TOML:',
         text: '[tasks',
         document: 'app/nested/guide.md',
         tables: DOC_TASK_SCOPES,
@@ -185,16 +191,12 @@ export const LICENSE_FILE_CASES = [
 ] as const;
 
 export const ROOT_LINK_FILES = {
-    'gspot.toml': `level = "recommended"
-configurations = []
-
-[[scope]]
-path = "web"
-configurations = ["site"]
-
-[scope.site]
-build_command = ["node", "build.mjs"]
-`,
+    'gspot.toml': buildSandboxSettings([], {
+        level: 'recommended',
+        rules: true,
+        scopes: [{ path: 'web', configurations: ['site'] }],
+        tables: '[scope.site]\nbuild_command = ["node", "build.mjs"]\n',
+    }),
     'root.md': '# Links\n\nRead [the setup guide](/guides/setup.md#setup).\n',
     'guides/setup.md': '# Setup\n',
     'guides/shop.mdx': '# Shop\n\n<a href={link}>Open the shop</a>\n',

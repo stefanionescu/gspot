@@ -1,34 +1,25 @@
 // Reads repository dependency files and selects project dependencies.
-
 import { posix } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
+import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
 import { listNpmToolNames } from '#cli/configurations/tools.ts';
 import { isInstalledToolPath } from '#cli/repository/classify.ts';
-import { readText, readCachedText } from '#cli/system/files/reads.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import { type PackageJson, type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
-import { packageJsonSchema, selectDependencyFileParser } from '#cli/parsers/dependency-files.ts';
+import { DEPENDENCY_SECTIONS } from '#cli/config/parsers/lockfiles.ts';
+import { parseRequirements, DEPENDENCY_PARSERS } from '#cli/parsers/dependencies.ts';
+import { PACKAGE_JSON, REQUIREMENTS_FILE } from '#cli/config/parsers/dependencies.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
+import { findText, findCachedText, readCachedText } from '#cli/system/files/reads.ts';
+import { type PackageJson, type DependencyFile } from '#cli/types/parsers/dependencies.ts';
 
 // Keep each parser failure tied to the dependency file that caused it.
 async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<DependencyFile | undefined> {
-    const parse = selectDependencyFileParser(file.path);
+    const parse = REQUIREMENTS_FILE.test(file.path) ? parseRequirements : DEPENDENCY_PARSERS[posix.basename(file.path)];
     if (parse === undefined) return undefined;
-    let text: string | undefined;
-    try {
-        text = readCachedText(reads, file.path);
-    } catch (error) {
-        if (!(error instanceof Error && 'code' in error && 'syscall' in error)) throw error;
-        throw new GspotError('filesystem', `${file.path} could not be read. Check the file and its permissions.`, {
-            cause: error,
-        });
-    }
-    if (text === undefined)
-        throw new GspotError('filesystem', `${file.path} is tracked but missing. Restore it or commit its deletion.`);
+    const text = readCachedText(reads, file.path);
     return await parse(file.path, text);
 }
 
@@ -56,9 +47,39 @@ export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]
  * @returns the validated package fields, or undefined when the file does not exist.
  */
 export function readPackageJson(repositoryRoot: string, path: string): PackageJson | undefined {
-    const text = readText(repositoryRoot, path);
+    const text = findText(repositoryRoot, path);
     if (text === undefined) return undefined;
     return parseJsonFile(path, text, packageJsonSchema);
+}
+
+/**
+ * Read the package.json fields used by repository checks through the run cache.
+ *
+ * @param reads the cache rooted at the repository.
+ * @param path the repository-relative package.json path.
+ * @returns the validated fields, or undefined when the file does not exist.
+ */
+export function readCachedPackageJson(reads: ReadCache, path: string): PackageJson | undefined {
+    const text = findCachedText(reads, path);
+    return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
+}
+
+/**
+ * Read the dependency specifiers declared for installation.
+ *
+ * @param reads the cache rooted at the repository.
+ * @param path the repository-relative package.json path.
+ * @returns the specifiers by name, or undefined when the file does not exist.
+ */
+export function readDeclaredSpecifiers(reads: ReadCache, path: string): Map<string, string> | undefined {
+    const fields = readCachedPackageJson(reads, path);
+    if (fields === undefined) return undefined;
+    return new Map(
+        DEPENDENCY_SECTIONS.flatMap((section) => {
+            const dependencies = fields[section];
+            return dependencies === undefined ? [] : Object.entries(dependencies);
+        }),
+    );
 }
 
 /**
@@ -73,7 +94,7 @@ export function listToolOnlyPackages(dependencyFiles: DependencyFile[], manifest
     return new Set(
         dependencyFiles
             .filter((dependencyFile) => {
-                if (dependencyFile.kind !== 'package.json') return false;
+                if (dependencyFile.kind !== PACKAGE_JSON) return false;
                 const names = Object.keys(dependencyFile.installed);
                 return names.length > 0 && names.every((name) => npmNames.has(name) || HOOK_PACKAGES.has(name));
             })
@@ -89,12 +110,11 @@ export function listToolOnlyPackages(dependencyFiles: DependencyFile[], manifest
  * @returns the declared dependency names. Child and sibling projects keep their own.
  */
 export function listProjectDependencyNames(dependencyFiles: DependencyFile[], scope: string): string[] {
-    const owner = dependencyFiles
-        .filter((dependencyFile) => {
-            if (dependencyFile.kind !== PACKAGE_JSON) return false;
-            const folder = dependencyFile.path === PACKAGE_JSON ? '' : posix.dirname(dependencyFile.path);
-            return folder === '' || scope === folder || scope.startsWith(`${folder}/`);
-        })
-        .toSorted((first, second) => second.path.length - first.path.length)[0];
+    const projects = new Map(
+        dependencyFiles.filter((file) => file.kind === PACKAGE_JSON).map((file) => [file.path, file]),
+    );
+    const owner = listEnclosingFolders(scope)
+        .map((folder) => projects.get(posix.join(folder, PACKAGE_JSON)))
+        .find((file) => file !== undefined);
     return owner === undefined ? [] : Object.keys(owner.dependencies);
 }

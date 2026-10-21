@@ -14,4 +14,3 @@ recommended = ["FAST001", "FAST002", "FAST003"]
 per_scope = true
 target = "semgrep.yml"
 tool = "semgrep"
-when = { configuration = "security" }

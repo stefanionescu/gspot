@@ -1,56 +1,42 @@
-import { createRule, buildOptionsSchema } from '../create-rule.ts';
-import type { RuleContext, ClientEnvOptions } from '../types/rules.ts';
+import { createRule } from '../schemas/rules/options.ts';
+import type { ClientEnvOptions } from '../types/rules.ts';
 import { PUBLIC_PREFIXES, CLIENT_DIRECTIVE } from '../config/nextjs.ts';
-import { ENVIRONMENT_HOSTS, ENVIRONMENT_ALLOWED } from '../config/environment.ts';
+import { clientEnvOptionsSchema } from '../schemas/rules/no/client-env.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ENVIRONMENT_HOSTS, ENVIRONMENT_ALLOWED, ENVIRONMENT_PROPERTY } from '../config/environment.ts';
 
 // Undeclared hosts have no local binding; direct member reads and destructuring use the same property test.
 function listDirectEnvironmentReads(identifier: TSESTree.Identifier): TSESTree.Node[] {
     const hosts: readonly string[] = ENVIRONMENT_HOSTS;
     if (!hosts.includes(identifier.name)) return [];
     const { parent } = identifier;
-    if (parent.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(parent) === 'env') return [parent];
+    if (parent.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(parent) === ENVIRONMENT_PROPERTY)
+        return [parent];
     if (parent.type !== AST_NODE_TYPES.VariableDeclarator || parent.id.type !== AST_NODE_TYPES.ObjectPattern) return [];
     return parent.id.properties.filter(
-        (property) => property.type === AST_NODE_TYPES.Property && ASTUtils.getPropertyName(property) === 'env',
+        (property) =>
+            property.type === AST_NODE_TYPES.Property && ASTUtils.getPropertyName(property) === ENVIRONMENT_PROPERTY,
     );
 }
 
 /**
- * Find environment access through global hosts, aliases, destructuring, and `import.meta`.
+ * List environment reads through global hosts, aliases, and destructuring.
  *
- * @param context the running rule, with its source scopes
- * @param inspect the callback that checks each access
- * @returns listeners that pass each access to the callback once
+ * @param scope the source scope with unresolved global references
+ * @returns the nodes that read a global environment object
  */
-function buildEnvironmentListeners(
-    context: RuleContext,
-    inspect: (node: TSESTree.Node) => void,
-): TSESLint.RuleListener {
-    return {
-        MemberExpression(node) {
-            if (
-                node.object.type === AST_NODE_TYPES.MetaProperty &&
-                node.object.meta.name === 'import' &&
-                node.object.property.name === 'meta' &&
-                ASTUtils.getPropertyName(node) === 'env'
-            )
-                inspect(node);
-        },
-        'Program:exit'(node) {
-            const scope = context.sourceCode.getScope(node);
-            for (const reference of scope.through) {
-                if (reference.resolved !== null) continue;
-                for (const access of listDirectEnvironmentReads(reference.identifier as TSESTree.Identifier))
-                    inspect(access);
-            }
-            const tracker = new ASTUtils.ReferenceTracker(scope);
-            const trace = Object.fromEntries(
-                ENVIRONMENT_HOSTS.map((host) => [host, { env: { [ASTUtils.ReferenceTracker.READ]: true } }]),
-            );
-            for (const reference of tracker.iterateGlobalReferences(trace)) inspect(reference.node);
-        },
-    };
+function listGlobalEnvironmentReads(scope: TSESLint.Scope.Scope): TSESTree.Node[] {
+    const reads: TSESTree.Node[] = [];
+    for (const reference of scope.through) {
+        if (reference.resolved !== null) continue;
+        reads.push(...listDirectEnvironmentReads(reference.identifier as TSESTree.Identifier));
+    }
+    const tracker = new ASTUtils.ReferenceTracker(scope);
+    const trace = Object.fromEntries(
+        ENVIRONMENT_HOSTS.map((host) => [host, { [ENVIRONMENT_PROPERTY]: { [ASTUtils.ReferenceTracker.READ]: true } }]),
+    );
+    for (const reference of tracker.iterateGlobalReferences(trace)) reads.push(reference.node);
+    return reads;
 }
 
 /**
@@ -84,54 +70,47 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
             why: 'Client code needs public configuration. Private environment values are unavailable in the browser by default, and exposing a secret to satisfy the read is unsafe.',
             fix: 'Keep private configuration and the work that needs it in a server-only module. Pass only public results to client code, or use NEXT_PUBLIC_ variables for values intended for the browser.',
         },
-        schema: [
-            buildOptionsSchema({
-                isClient: {
-                    description: 'Treat selected files as client code without a use-client directive.',
-                    type: 'boolean',
-                },
-                publicPrefixes: {
-                    description: 'Prefixes allowed for public environment variables.',
-                    type: 'array',
-                    items: { type: 'string' },
-                },
-                allowed: {
-                    description: 'Environment variable names allowed in client code.',
-                    type: 'array',
-                    items: { type: 'string' },
-                },
-            }),
-        ],
+        schema: [clientEnvOptionsSchema],
         messages: {
             private:
                 'A client module may read only public environment variables ({{public}}). Keep private configuration in a server-only module.',
         },
     },
     create(context, [options]) {
+        const isClient =
+            options.isClient ||
+            context.sourceCode.ast.body.some(
+                (statement) =>
+                    statement.type === AST_NODE_TYPES.ExpressionStatement && statement.directive === CLIENT_DIRECTIVE,
+            );
+        if (!isClient) return {};
         const prefixes = options.publicPrefixes;
         const allowed = new Set(options.allowed);
         const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowed].join(', ');
-        let isClient = options.isClient;
-        return {
-            ...buildEnvironmentListeners(context, (node) => {
-                if (!isClient) return;
-                const names = listEnvironmentNames(node);
-                if (
-                    names.length > 0 &&
-                    names.every(
-                        (name) =>
-                            name !== null && (allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix))),
-                    )
+        const report = (node: TSESTree.Node): void => {
+            const names = listEnvironmentNames(node);
+            if (
+                names.length > 0 &&
+                names.every(
+                    (name) =>
+                        name !== null && (allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix))),
                 )
-                    return;
-                context.report({ node, messageId: 'private', data: { public: publicText } });
-            }),
-            Program(node) {
-                isClient ||= node.body.some(
-                    (statement) =>
-                        statement.type === AST_NODE_TYPES.ExpressionStatement &&
-                        statement.directive === CLIENT_DIRECTIVE,
-                );
+            )
+                return;
+            context.report({ node, messageId: 'private', data: { public: publicText } });
+        };
+        return {
+            MemberExpression(node) {
+                if (
+                    node.object.type === AST_NODE_TYPES.MetaProperty &&
+                    node.object.meta.name === 'import' &&
+                    node.object.property.name === 'meta' &&
+                    ASTUtils.getPropertyName(node) === ENVIRONMENT_PROPERTY
+                )
+                    report(node);
+            },
+            'Program:exit'(node) {
+                for (const access of listGlobalEnvironmentReads(context.sourceCode.getScope(node))) report(access);
             },
         };
     },

@@ -3,7 +3,6 @@ export type KeyPath = readonly (string | number)[];
 
 /** A structured document that preserves comments and layout when reading and editing keys. */
 export type EditableFile = {
-    format: 'toml' | 'json' | 'yaml' | 'npmrc';
     getValue(path: KeyPath): unknown;
     set(path: KeyPath, value: unknown): void;
     getText(): string;

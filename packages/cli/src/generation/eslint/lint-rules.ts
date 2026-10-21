@@ -1,29 +1,28 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isRecord } from '#cli/system/values.ts';
-import { escapeGlob } from '#cli/repository/matchers.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { listActiveIgnores } from '#cli/settings/scope-view.ts';
-import { isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { BASE_RULES, NODE_RULES, ALL_LEVEL_RULES } from '#cli/config/generation/eslint-rules.ts';
-import { type Settings, type ScopeView, type ScopeSelection } from '#cli/types/settings/values.ts';
+import { getTable, getLimit } from '#cli/settings/scope-view.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
+import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { type Settings, type ScopeSelection } from '#cli/types/settings/values.ts';
 
 import {
     buildScopeFiles,
     buildNodePatterns,
     splitGlobSelectors,
     buildSourcePattern,
+    listNestedScopeGlobs,
 } from '#cli/generation/eslint/files.ts';
 import {
-    type SelectorGroup,
     type EslintContext,
     type EslintRuleBlock,
-    type EslintLevelRules,
     type EslintRuleOptions,
     type EslintSettingsBlock,
     type ScopeEslintSettings,
 } from '#cli/types/generation/eslint.ts';
 import {
     ESLINT_CHECK,
+    CODE_LANGUAGES,
     TYPED_LANGUAGES,
     ENVIRONMENT_RULES,
     TRIVIAL_FILES_RULE,
@@ -33,7 +32,6 @@ import {
     TRIVIAL_FUNCTIONS_RULE,
     TRIVIAL_FUNCTION_LIMIT,
     RESTRICTED_IMPORT_RULES,
-    DEFAULT_TRIVIAL_FUNCTION_LIMIT,
 } from '#cli/config/generation/eslint.ts';
 
 // ESLint replaces the options of a rule in each later block, so an option list of no-restricted-imports keeps the
@@ -66,15 +64,19 @@ function mergeRestrictedImports(rules: EslintRuleOptions['rules'], restricted: u
  * @returns one option block per scope and path override, in the order they apply.
  */
 function buildRuleOptions(settings: Settings, scopes: ScopeSelection[]): EslintRuleOptions[] {
+    const selections = new Map(scopes.map((selection) => [selection.scope.path, selection]));
     const tables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scope ?? '', second.scope ?? ''),
     );
     const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) =>
         table.tools?.['eslint'] === undefined ? [] : [{ scope, settings: table.tools['eslint'] }],
     );
-    const restrictedFor = (scope: string): unknown[] =>
-        scopes.find((selection) => selection.scope.path === scope)?.view.options(ESLINT_SETTINGS_TABLE)
-            .restricted_imports ?? [];
+    const restrictedFor = (scope: string): unknown[] => {
+        const selection = selections.get(scope);
+        if (selection === undefined)
+            throw new Error(`No scope selection for ESLint rule options at ${JSON.stringify(scope)}.`);
+        return getTable(selection.view, ESLINT_SETTINGS_TABLE).restricted_imports;
+    };
     const base = scopeSettings.flatMap(({ scope, settings }): EslintRuleOptions[] =>
         settings.rules === undefined
             ? []
@@ -104,7 +106,7 @@ function buildRuleOptions(settings: Settings, scopes: ScopeSelection[]): EslintR
  * @returns the lint rule ignores with their path selectors.
  */
 function buildIgnoreBlocks(settings: Settings): EslintRuleBlock[] {
-    return listActiveIgnores(settings).flatMap((entry): EslintRuleBlock[] =>
+    return settings.ignore.flatMap((entry): EslintRuleBlock[] =>
         entry.rule === undefined || entry.check !== ESLINT_CHECK
             ? []
             : [
@@ -130,11 +132,10 @@ function buildIgnoreBlocks(settings: Settings): EslintRuleBlock[] {
 function buildRulesOffBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
     return scopes.flatMap((selection) => {
         const scope = selection.scope.path;
-        const children = listNestedScopes(
+        const excluded = listNestedScopeGlobs(
             scopes.map((entry) => entry.scope.path),
             scope,
-        );
-        const excluded = children.map((path) => `!${escapeGlob(path)}/**`);
+        ).map((path) => `!${path}`);
         return selection.selected
             .flatMap((manifest) => manifest.eslint.rules_off)
             .map(({ files, rules }) => ({
@@ -143,53 +144,6 @@ function buildRulesOffBlocks(scopes: ScopeSelection[]): EslintRuleBlock[] {
                 rules: Object.fromEntries(rules.map((rule) => [rule, 'off'])),
             }));
     });
-}
-
-// The size and complexity rules with the limits of one language.
-function buildLimitRules(limit: ScopeView['limit'], language: 'typescript' | 'javascript'): Record<string, unknown> {
-    return {
-        'max-lines': ['error', { max: limit('file_lines', language), skipBlankLines: true, skipComments: true }],
-        'max-lines-per-function': [
-            'error',
-            { max: limit('function_lines', language), skipBlankLines: true, skipComments: true, IIFEs: true },
-        ],
-        'max-params': ['error', { max: limit('function_parameters', language), countVoidThis: false }],
-        'max-depth': ['error', limit('block_nesting', language)],
-        'max-statements': ['error', limit('function_statements', language)],
-        'max-nested-callbacks': ['error', limit('callback_nesting', language)],
-        complexity: ['error', limit('cyclomatic_complexity', language)],
-        'sonarjs/cognitive-complexity': ['error', limit('cognitive_complexity', language)],
-    };
-}
-
-/**
- * Calculate the ESLint limit options from the settings. JavaScript files get the JavaScript limits in their own
- * block, which comes after the block for every code file.
- *
- * @param view the settings that the limits read.
- * @param view.limit reads one numeric setting.
- * @param view.options reads the extra settings of a tool.
- * @param selectors the syntax patterns and their paths.
- *
- * @returns the lint rules at this level.
- */
-function buildLevelRules(
-    view: Pick<ScopeView, 'limit' | 'options'>,
-    selectors: Readonly<SelectorGroup['selectors']>,
-): EslintLevelRules {
-    const { limit, options } = view;
-    return {
-        code: {
-            ...BASE_RULES,
-            ...ALL_LEVEL_RULES.code,
-            'no-restricted-syntax': ['error', ...selectors],
-            ...buildLimitRules(limit, 'typescript'),
-            'sonarjs/no-identical-functions': ['error', options('duplication').min_lines],
-        },
-        javascript: buildLimitRules(limit, 'javascript'),
-        node: { ...NODE_RULES, ...ALL_LEVEL_RULES.node },
-        console: ALL_LEVEL_RULES.console,
-    };
 }
 
 /**
@@ -244,25 +198,25 @@ function findParentSelection(scopes: ScopeSelection[], path: string): ScopeSelec
  * @param input every scope and the code selectors of the generated file.
  * @returns one block per changed list, excluding scopes with their own lists.
  */
-function buildRestrictedImportBlocks(input: Pick<EslintContext, 'scopes' | 'eslintFiles'>): EslintSettingsBlock[] {
-    const scopes = input.scopes.filter(({ view }) => view.configurations.includes('javascript'));
+function buildRestrictedImportBlocks(input: Pick<EslintContext, 'session' | 'eslintFiles'>): EslintSettingsBlock[] {
+    const scopes = input.session.scopes.filter(({ view }) => view.configurations.includes(JAVASCRIPT_CONFIGURATION));
     const restrictedScopes = scopes.filter((selection) => {
         const parent = findParentSelection(scopes, selection.scope.path);
         return !isDeepStrictEqual(
-            selection.view.options(ESLINT_SETTINGS_TABLE).restricted_imports,
-            parent?.view.options(ESLINT_SETTINGS_TABLE).restricted_imports ?? [],
+            getTable(selection.view, ESLINT_SETTINGS_TABLE).restricted_imports,
+            parent === undefined ? [] : getTable(parent.view, ESLINT_SETTINGS_TABLE).restricted_imports,
         );
     });
     return restrictedScopes.map((selection) => ({
         files: buildScopeFiles(input.eslintFiles.code, selection.scope.path, ['**/*']),
-        ignores: listNestedScopes(
+        ignores: listNestedScopeGlobs(
             restrictedScopes.map(({ scope }) => scope.path),
             selection.scope.path,
-        ).map((path) => `${escapeGlob(path)}/**`),
+        ),
         rules: {
             'no-restricted-imports': [
                 'error',
-                { paths: selection.view.options(ESLINT_SETTINGS_TABLE).restricted_imports },
+                { paths: getTable(selection.view, ESLINT_SETTINGS_TABLE).restricted_imports },
             ],
         },
     }));
@@ -275,11 +229,10 @@ function buildRestrictedImportBlocks(input: Pick<EslintContext, 'scopes' | 'esli
  *
  * @returns the lint blocks at level all, or none.
  */
-function buildEnvironmentRuleBlocks(
-    input: Pick<EslintContext, 'scopes' | 'repositorySettings' | 'nodeFiles'>,
-): EslintRuleBlock[] {
-    const { scopes, repositorySettings: settings, nodeFiles } = input;
-    if (settings.level !== 'all') return [];
+function buildEnvironmentRuleBlocks(input: Pick<EslintContext, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
+    const { session, nodeFiles } = input;
+    if (session.settingsFile.settings.level !== 'all') return [];
+    const { scopes } = session;
     const environmentScopes = scopes.filter((selection) => {
         const parent = findParentSelection(scopes, selection.scope.path);
         return (
@@ -301,10 +254,10 @@ function buildEnvironmentRuleBlocks(
                           buildSourcePattern(...ENVIRONMENT_LANGUAGES),
                           ...buildNodePatterns(nodeFiles, selection.scope.path),
                           ...owners.map((path) => `!${path}`),
-                          ...listNestedScopes(
+                          ...listNestedScopeGlobs(
                               environmentScopes.map(({ scope }) => scope.path),
                               selection.scope.path,
-                          ).map((path) => `!${escapeGlob(path)}/**`),
+                          ).map((path) => `!${path}`),
                       ]),
                       rules: ENVIRONMENT_RULES,
                   },
@@ -319,26 +272,21 @@ function buildEnvironmentRuleBlocks(
  *
  * @returns the lint rules that detect needless forwarding functions.
  */
-function buildTrivialRuleBlocks(
-    input: Pick<EslintContext, 'scopes' | 'repositorySettings' | 'nodeFiles'>,
-): EslintRuleBlock[] {
-    const { scopes, repositorySettings: settings, nodeFiles } = input;
-    if (settings.level !== 'all') return [];
+function buildTrivialRuleBlocks(input: Pick<EslintContext, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
+    const { session, nodeFiles } = input;
+    if (session.settingsFile.settings.level !== 'all') return [];
+    const { scopes } = session;
     const blocks: EslintRuleBlock[] = [];
-    const allowIndex = settings.structure.reexports === 'index-only';
+    const allowIndex = session.settingsFile.settings.structure.reexports === 'index-only';
     for (const selection of scopes.toSorted((a, b) => compareScopeDepth(a.scope.path, b.scope.path))) {
         const parent = findParentSelection(scopes, selection.scope.path);
-        const limits = ['javascript', 'typescript']
-            .map((language) => ({
-                language,
-                value: selection.view.limit(TRIVIAL_FUNCTION_LIMIT, language),
-            }))
-            .filter(({ language, value }) =>
-                selection.scope.path === ''
-                    ? value !== DEFAULT_TRIVIAL_FUNCTION_LIMIT || allowIndex
-                    : value !==
-                      (parent?.view.limit(TRIVIAL_FUNCTION_LIMIT, language) ?? DEFAULT_TRIVIAL_FUNCTION_LIMIT),
-            );
+        const limits = CODE_LANGUAGES.map((language) => ({
+            language,
+            value: getLimit(selection.view, TRIVIAL_FUNCTION_LIMIT, language),
+        })).filter(
+            ({ language, value }) =>
+                parent === undefined || value !== getLimit(parent.view, TRIVIAL_FUNCTION_LIMIT, language),
+        );
         const groups = new Map<number, string[]>();
         for (const { language, value } of limits) groups.set(value, [...(groups.get(value) ?? []), language]);
         for (const [trivialStatements, languages] of groups) {
@@ -361,7 +309,6 @@ function buildTrivialRuleBlocks(
 }
 
 export {
-    buildLevelRules,
     buildRuleOptions,
     buildIgnoreBlocks,
     buildRulesOffBlocks,

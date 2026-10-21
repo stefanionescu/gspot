@@ -1,7 +1,7 @@
 // Reads HTML tags and attribute values.
 import type { Node } from 'web-tree-sitter';
 import { SURROUNDING_QUOTES } from '#cli/config/text.ts';
-import type { MarkupAttribute } from '#cli/types/parsers/tree-sitter.ts';
+import type { MarkupAttribute } from '#cli/types/parsers/grammars.ts';
 
 /**
  * Read the tag attributes while the source tree still exists.

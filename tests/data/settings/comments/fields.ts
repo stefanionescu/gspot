@@ -54,7 +54,6 @@ until = 2026-12-31
     {
         name: `maps dotted and blank lines`,
         source: `# schema note
-# Copied from template team, sha256 abc.
 # Root
 level="all" # Level inline
 # Dotted hook
@@ -89,9 +88,7 @@ paths=["src/**"]
 stage="manual"
 summary="Changed task"
 `,
-        expected: `# Copied from template team, sha256 abc.
-
-# schema note
+        expected: `# schema note
 # Root
 # Level inline
 level = "all"
@@ -121,10 +118,10 @@ summary = "Changed task"
     {
         name: `inline tool options and Unicode tables`,
         source: `# Native options
-[tools.eslint]
-extra={value={a=1,b=["x","y"],note="""First line
+[tools.eslint.rules]
+options = [{a=1,b=["x","y"],note="""First line
 # String data
-Last line"""},reason="Reviewed native options keep these values."} # Native inline
+Last line"""}] # Native inline
 
 # Unicode scope
 [[scope]]
@@ -132,24 +129,19 @@ path="apps/前言"
 configurations=[]
 `,
         // eslint-disable-next-line unicorn/prefer-string-raw -- Bun escapes Unicode in raw templates and changes this TOML value.
-        target: `[tools.eslint]
-extra={value={a=1,b=["x","y"],note="First line\\n# String data\\nLast line"},reason="Reviewed native options keep these values."}
+        target: `[tools.eslint.rules]
+options = [{a=1,b=["x","y"],note="First line\\n# String data\\nLast line"}]
 [[scope]]
 path="apps/前言"
 configurations=[]
 `,
         // eslint-disable-next-line unicorn/prefer-string-raw -- Bun escapes Unicode in raw templates and changes this expected TOML value.
         expected: `# Native options
-[tools.eslint]
-
-# Native inline
-[tools.eslint.extra]
-reason = "Reviewed native options keep these values."
-
-[tools.eslint.extra.value]
-a = 1
-b = ["x", "y"]
-note = "First line\\n# String data\\nLast line"
+[tools.eslint.rules]
+options = [
+    # Native inline
+    { a = 1, b = ["x", "y"], note = "First line\\n# String data\\nLast line" },
+]
 
 # Unicode scope
 [[scope]]
@@ -158,17 +150,11 @@ path = "apps/前言"
     },
     {
         name: `inline field`,
-        source: `[tools.eslint]
-extra.reason = "The project keeps reviewed native options."
-extra.value={
+        source: `[tools.eslint.rules]
  # Field comment
  values=[1,2]
- }
 `,
-        expected: `[tools.eslint.extra]
-reason = "The project keeps reviewed native options."
-
-[tools.eslint.extra.value]
+        expected: `[tools.eslint.rules]
 # Field comment
 values = [1, 2]
 `,

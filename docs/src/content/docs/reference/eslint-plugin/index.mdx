@@ -3,6 +3,7 @@ title: ESLint plugin
 description: Lint rules for the code that AI coding agents write, for ESLint with or without gspot.
 ---
 
+import InlineText from '../../../../components/InlineText.astro';
 import { listPluginRules } from '../../../../reference/eslint-plugin.ts';
 
 `@gspothq/eslint-plugin` adds lint rules for code that AI coding agents often write. They flag files and functions that
@@ -73,7 +74,7 @@ Each rule page gives the options, defaults, and an example.
                     </a>
                 </td>
                 <td>{configs.length === 0 ? 'None' : <code>{configs.join(', ')}</code>}</td>
-                <td>{summary}</td>
+                <td><InlineText text={summary} /></td>
             </tr>
         ))}
     </tbody>

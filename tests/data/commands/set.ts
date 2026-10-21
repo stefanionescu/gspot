@@ -6,10 +6,10 @@ path = "api"
 configurations = ["bash"]
 `;
 
-/** The root and a child scope, where set writes extra Taplo options. */
-const EXTRA_OPTION_SCOPES = [
-    { name: 'root', scope: '', source: 'gspot.toml' },
-    { name: 'child', scope: 'app', source: '[scope "app"]' },
+/** The root and a child scope, where set writes banned words. */
+const BANNED_WORD_SCOPES = [
+    { name: 'root', scope: '' },
+    { name: 'child', scope: 'app' },
 ] as const;
 
 /** List settings that loosen a check; each needs a reason, and set and unset edit them the same way. */
@@ -28,30 +28,11 @@ const LOOSENED_SETTINGS = [
     } as const,
 ] as const;
 
-const TWO_SCOPES = `[rules]
-enabled = false
-[[scope]]
-path = "app"
-[[scope]]
-path = "sibling"
-`;
-
 const RESTRICTED_IMPORTS = `[{name = "unreviewed-module", message = "Import the reviewed entrypoint for this dependency."}]`;
 
 const SETTING_REASON = 'The project contract requires this reviewed exception.';
 
-/** Taplo options for the set and explain command tests. */
-const TAPLO_OPTIONS = { compact_inline_tables: true } as const;
+/** The banned word written by the set command tests. */
+const SCOPE_BANNED_WORDS = ['discardedword'] as const;
 
-const TAPLO_REASON = 'The project uses compact inline tables in TOML.';
-
-export {
-    TWO_SCOPES,
-    SET_SETTINGS,
-    TAPLO_REASON,
-    TAPLO_OPTIONS,
-    SETTING_REASON,
-    LOOSENED_SETTINGS,
-    RESTRICTED_IMPORTS,
-    EXTRA_OPTION_SCOPES,
-};
+export { SET_SETTINGS, SETTING_REASON, LOOSENED_SETTINGS, SCOPE_BANNED_WORDS, RESTRICTED_IMPORTS, BANNED_WORD_SCOPES };

@@ -1,9 +1,15 @@
-import { joinScope, isInScope } from '#cli/repository/scopes.ts';
 import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
+import { joinScope, isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { CODE_LANGUAGES, COMPONENT_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
 import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/repository/matchers.ts';
 import type { EslintFiles, EslintFileInputs, EslintSettingsBlock } from '#cli/types/generation/eslint.ts';
+
+// Component selectors carry the parser discriminator for the declared component configurations.
+function isComponentConfiguration(name: string): name is (typeof COMPONENT_CONFIGURATIONS)[number] {
+    const names: readonly string[] = COMPONENT_CONFIGURATIONS;
+    return names.includes(name);
+}
 
 /**
  * Calculate the exact file sets that base blocks and every framework fragment share.
@@ -15,11 +21,11 @@ import type { EslintFiles, EslintFileInputs, EslintSettingsBlock } from '#cli/ty
 export function buildFilePatterns(input: EslintFileInputs): EslintFiles {
     const { scopes, nodeFiles } = input;
     const source = buildSourcePattern(...CODE_LANGUAGES);
-    const matchesSource = buildPathMatcher([source]);
+    const codeExtensions = listTaggedExtensions(...CODE_LANGUAGES);
     const selected = input.components.flatMap(({ configuration, tools }) =>
         tools
             .flatMap(({ eslint }) => eslint?.extensions ?? [])
-            .filter((extension) => !matchesSource(`component${extension}`))
+            .filter((extension) => !codeExtensions.includes(extension))
             .map((extension) => ({ pattern: `**/*${extension}`, configuration: configuration.name })),
     );
     const components = selected.map(({ pattern }) => pattern);
@@ -37,17 +43,15 @@ export function buildFilePatterns(input: EslintFileInputs): EslintFiles {
         typescript: [
             typescript,
             ...selected.map(({ pattern, configuration }): EslintFiles['typescript'][number] =>
-                configuration === COMPONENT_CONFIGURATIONS[0] || configuration === COMPONENT_CONFIGURATIONS[1]
-                    ? [pattern, { component: configuration }]
-                    : pattern,
+                isComponentConfiguration(configuration) ? [pattern, { component: configuration }] : pattern,
             ),
         ],
         javascript: [javascript, ...node],
         tests: scopes.flatMap(({ scope, tests }) =>
-            tests.flatMap((test) => code.map((pattern) => [test, joinScope(escapeGlob(scope), '**/*'), pattern])),
+            buildTestFiles(tests, code).map(([test, pattern]) => [test, buildScopeGlob(scope, '**/*'), pattern]),
         ),
         scripts: scopes.flatMap(({ scope, scripts }) =>
-            scripts.flatMap((script) => code.map((pattern) => [script, joinScope(escapeGlob(scope), '**/*'), pattern])),
+            scripts.flatMap((script) => code.map((pattern) => [script, buildScopeGlob(scope, '**/*'), pattern])),
         ),
     };
 }
@@ -109,8 +113,41 @@ export function buildScopeFiles(
     return files.flatMap((file) =>
         paths.map((path) => [
             ...(Array.isArray(file) ? file : [file]),
-            joinScope(escapeGlob(scope), '**/*'),
+            buildScopeGlob(scope, '**/*'),
             ...(Array.isArray(path) ? path : [path]),
         ]),
     );
+}
+
+/**
+ * Build a glob inside one literal repository scope.
+ *
+ * @param scope the project folder.
+ * @param pattern the relative selector.
+ * @returns the selector with a literal scope prefix.
+ */
+export function buildScopeGlob(scope: string, pattern: string): string {
+    return joinScope(escapeGlob(scope), pattern);
+}
+
+/**
+ * Exclude nested scopes with the same literal escaping used for includes.
+ *
+ * @param paths the project folders.
+ * @param scope the parent folder.
+ * @returns the child scope globs.
+ */
+export function listNestedScopeGlobs(paths: string[], scope: string): string[] {
+    return listNestedScopes(paths, scope).map((path) => buildScopeGlob(path, '**'));
+}
+
+/**
+ * Intersect each authored test selector with the generated code selectors.
+ *
+ * @param tests the test selectors.
+ * @param code the code selectors.
+ * @returns one intersection per test and code selector.
+ */
+export function buildTestFiles(tests: string[], code: string[]): [string, string][] {
+    return tests.flatMap((test) => code.map((pattern): [string, string] => [test, pattern]));
 }

@@ -1,39 +1,35 @@
 import { posix } from 'node:path';
-import { readGitText } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { parseSource } from '#cli/parsers/grammars.ts';
+import { getTable } from '#cli/settings/scope-view.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { readPythonEnvironment } from '#cli/parsers/python.ts';
 import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import { readJavascriptEnvironment } from '#cli/parsers/typescript.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { readPushBase, readPushedCommits } from '#cli/repository/revisions/push.ts';
-import { type Finding, type CheckInput, type CheckResult } from '#cli/types/runs/check.ts';
-import { getSiblingCommand, buildHistoryResult, runOverPushedCommits } from '#cli/runs/commits.ts';
+import { type Finding, type CheckResult } from '#cli/types/runs/check.ts';
+import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/commits.ts';
 
 import {
     ENV_KEY_LINE,
-    TRUFFLEHOG_FLAGS,
     GITLEAKS_LOG_FLAG,
     ENV_READ_LANGUAGES,
     GITLEAKS_LOG_OPTIONS,
     GITLEAKS_STAGED_FLAG,
     GITLEAKS_STAGED_CHECK,
-    TRUFFLEHOG_GIT_COMMAND,
 } from '#cli/config/checks/secrets.ts';
 
 async function readEnvironmentReferences(
-    input: CheckInput,
+    session: Session,
     path: string,
     readers: string[],
 ): Promise<EnvironmentRead[]> {
-    const text = readCachedBytes(input.reads, path).toString('utf8');
+    const text = readCachedText(session.reads, path);
     if (!path.endsWith('.py')) return readJavascriptEnvironment(path, text, readers);
-    const tree = await parseSource('python', text, input);
+    const tree = await parseSource('python', text, session);
     try {
         return readPythonEnvironment(tree.rootNode, readers);
     } finally {
@@ -42,7 +38,7 @@ async function readEnvironmentReferences(
 }
 
 function findMissingEnvironmentKeys(
-    input: CheckInput,
+    planned: PlannedCheck,
     path: string,
     reads: EnvironmentRead[],
     known: Set<string>,
@@ -56,7 +52,7 @@ function findMissingEnvironmentKeys(
         seen.add(key);
         findings.push(
             buildFinding(
-                input,
+                planned,
                 { file: path, line },
                 'missing-key',
                 `${key} is read here and appears in no example environment file.`,
@@ -85,46 +81,23 @@ export async function checkSecretsGitleaksPushed(session: Session, planned: Plan
 }
 
 /**
- * Scans the pushed commits with TruffleHog.
- *
- * @param session the repository and its tools.
- * @param planned the TruffleHog check and commit range.
- * @returns the check result.
- */
-export async function checkSecretsTrufflehogPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const started = performance.now();
-    const base = buildHistoryResult(session, planned);
-    if (base.status === 'skipped') return base;
-    const commits = await readPushedCommits(session.root, planned.commits, session.cancelSignal);
-    if (!Array.isArray(commits)) return { ...base, status: 'error', note: commits.error };
-    if (commits.length === 0) return { ...base, note: 'No selected commits to scan.' };
-    const head = await readGitText(session.root, ['rev-parse', 'HEAD'], { cancelSignal: session.cancelSignal });
-    const since = planned.base ?? (await readPushBase(session.root, session.cancelSignal));
-    const result = await runCheckCommand(session, planned, {
-        command: [...TRUFFLEHOG_GIT_COMMAND, '--branch', head.trim(), '--since-commit', since, ...TRUFFLEHOG_FLAGS],
-    });
-    return { ...result, duration: performance.now() - started };
-}
-
-/**
  * Reports environment reads that no env example lists, or skips the check without an env example.
  *
- * @param input the scope to check.
+ * @param session the repository and its tools.
+ * @param planned the scope to check.
  * @returns the findings.
  */
-export async function checkSecretsEnvExamples(input: CheckInput): Promise<Finding[]> {
-    const { env_examples: names, environment_functions: readers } = input.selection.view.options('secrets');
-    // Env examples list the names, and code anywhere in the scope reads them.
-    const inScope = input.files.filter((file) => isInScope(file.path, input.selection.scope.path));
-    const examples = inScope.filter((file) => names.includes(posix.basename(file.path)));
+export async function checkSecretsEnvExamples(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const { env_examples: names, environment_functions: readers } = getTable(planned.selection.view, 'secrets');
+    const examples = planned.files.filter((file) => names.includes(posix.basename(file.path)));
     if (examples.length === 0)
         throw new GspotError(
             'skip',
-            `No example environment file exists in ${input.selection.scope.path === '' ? 'the repository root' : input.selection.scope.path}. Declare the example environment files under secrets.env_examples.`,
+            `No example environment file exists in ${planned.selection.scope.path === '' ? 'the repository root' : planned.selection.scope.path}. Declare the example environment files under secrets.env_examples.`,
         );
     const known = new Set(
         examples.flatMap((file) => {
-            const lines = readCachedBytes(input.reads, file.path).toString('utf8').split('\n');
+            const lines = readCachedText(session.reads, file.path).split('\n');
             return lines.flatMap((line) => {
                 const key = ENV_KEY_LINE.exec(line.trim())?.groups?.['key'];
                 return key === undefined ? [] : [key];
@@ -132,13 +105,13 @@ export async function checkSecretsEnvExamples(input: CheckInput): Promise<Findin
         }),
     );
     const extensions = listTaggedExtensions(...ENV_READ_LANGUAGES);
-    const candidates = inScope.filter(
+    const candidates = planned.files.filter(
         (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),
     );
     const findings: Finding[] = [];
     for (const file of candidates) {
-        const reads = await readEnvironmentReferences(input, file.path, readers);
-        findings.push(...findMissingEnvironmentKeys(input, file.path, reads, known));
+        const reads = await readEnvironmentReferences(session, file.path, readers);
+        findings.push(...findMissingEnvironmentKeys(planned, file.path, reads, known));
     }
     return findings;
 }

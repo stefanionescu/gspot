@@ -1,11 +1,11 @@
-export const INLINE_FIELD_COMMENT = `[tools.eslint]
-extra={ value={ mixed=[
+export const INLINE_FIELD_COMMENT = `[tools.markdownlint.rules.MD001]
+mixed=[
  {
  # Field-owned comment
  enabled=true
  },
  2
-] }, reason="Reviewed native settings need these values." }
+]
 `;
 
 export const LAYOUT_CASES = [
@@ -34,10 +34,7 @@ reason = "Private documentation"
         name: `authored space indentation`,
         source: `[format]
 indent_width=2
-[tools.eslint.extra]
-reason = "These options exercise the written indentation."
-
-[tools.eslint.extra.value]
+[tools.eslint.rules]
 values=[
  # Item owner
  1
@@ -45,19 +42,13 @@ values=[
 `,
         target: `[format]
 indent_width=2
-[tools.eslint.extra]
-reason = "These options exercise the written indentation."
-
-[tools.eslint.extra.value]
+[tools.eslint.rules]
 values=[1]
 `,
         expected: `[format]
 indent_width = 2
 
-[tools.eslint.extra]
-reason = "These options exercise the written indentation."
-
-[tools.eslint.extra.value]
+[tools.eslint.rules]
 values = [
   # Item owner
   1,
@@ -68,10 +59,7 @@ values = [
         name: `authored tab indentation`,
         source: `[format]
 indent_style="tab"
-[tools.eslint.extra]
-reason = "These options exercise the written indentation."
-
-[tools.eslint.extra.value]
+[tools.eslint.rules]
 values=[
  # Item owner
  1
@@ -79,19 +67,13 @@ values=[
 `,
         target: `[format]
 indent_style="tab"
-[tools.eslint.extra]
-reason = "These options exercise the written indentation."
-
-[tools.eslint.extra.value]
+[tools.eslint.rules]
 values=[1]
 `,
         expected: `[format]
 indent_style = "tab"
 
-[tools.eslint.extra]
-reason = "These options exercise the written indentation."
-
-[tools.eslint.extra.value]
+[tools.eslint.rules]
 values = [
 	# Item owner
 	1,
@@ -210,16 +192,16 @@ paths = ["src/**"]
 [[import_rule]]
 name="core"
 paths=["src/**"]
-can_also_import = ["core"] # Limit inline
+can_import = ["core"] # Limit inline
 `,
-        target: `import_rule = [ { name = "core", paths = [ "src/**" ], can_also_import = ["core"] } ]
+        target: `import_rule = [ { name = "core", paths = [ "src/**" ], can_import = ["core"] } ]
 `,
         expected: `# Import rule owner
 [[import_rule]]
 name = "core"
 paths = ["src/**"]
 # Limit inline
-can_also_import = ["core"]
+can_import = ["core"]
 `,
     },
 ] as const;

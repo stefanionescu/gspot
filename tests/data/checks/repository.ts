@@ -36,13 +36,13 @@ export const TRACKED_PATTERNS = {
     scopes: `[[scope]]
 path = "python"
 configurations = ["python"]
-removed_configurations = ["javascript"]
+removed_configurations = { value = ["javascript"], reason = "This scope uses its own language tools without JavaScript dependencies." }
 [[scope]]
 path = "python/deep"
 [[scope]]
 path = "swift"
 configurations = ["swift"]
-removed_configurations = ["javascript"]
+removed_configurations = { value = ["javascript"], reason = "This scope uses its own language tools without JavaScript dependencies." }
 [[scope]]
 path = "sibling"
 `,

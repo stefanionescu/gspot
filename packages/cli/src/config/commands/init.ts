@@ -1,5 +1,6 @@
 import { HOOKS_PATH } from '#cli/config/system/locations.ts';
 import { SETTINGS_COMMANDS } from '#cli/config/settings/file.ts';
+import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 
@@ -23,7 +24,7 @@ export const PREFACE_BODY = `# gspot settings for this repository. Change them w
 
 /** The shared attributes row in every initialization plan. */
 export const ATTRIBUTES_ROW = {
-    path: '.gitattributes',
+    path: GITATTRIBUTES_FILE,
     note: 'managed generated-file classification and LF line endings',
 } as const;
 
@@ -40,17 +41,9 @@ export const CI_FILE_NOTES = {
 export const REMOTE_URL_SCHEME = /^(?:https?|ssh):\/\//u;
 export const REMOTE_URL_USER = /^[^@/]+@/u;
 
-export const EDITORCONFIG_NUMBER = /^\d+$/u;
 export const PRETTIER_JSON_FILES = ['.prettierrc', '.prettierrc.json'] as const;
 
 export const EDITORCONFIG_COMMENT = /^\s*[#;]/u;
-
-/** The init answers before a template gives its choices. */
-export const INIT_TEMPLATE_DEFAULTS = {
-    hooks: { enabled: true },
-    rules: { enabled: true },
-    ci: undefined,
-} as const;
 
 export const EDITORCONFIG_SECTION = /^\s*\[(.+)\]\s*$/u;
 
@@ -67,13 +60,10 @@ export const BUNDLER_PACKAGES: ReadonlySet<string> = new Set([
 
 export const IMPORT_STYLE_SETTING = 'tools.eslint.import_extension';
 
-export const COUNT = /^\d+$/u;
-
 /** The settings files where Ruff keeps its quote style, in the order Ruff reads them. */
 export const RUFF_SETTINGS_FILES = ['.ruff.toml', 'ruff.toml', 'pyproject.toml'] as const;
 
 export const PYTHON_FILES = ['**/*.py'] as const;
-export const PYTHON_EXTENSION = '.py';
 
 export const ESLINT_DIRECTIVE = /eslint-(?:disable|enable)(?:-next-line|-line)?(?<rules>[^\n]*)/gu;
 

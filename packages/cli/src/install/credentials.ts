@@ -1,4 +1,5 @@
 // Check lockfiles for credentials and redact package manager output.
+import { GspotError } from '#cli/system/errors.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 
 import {
@@ -13,12 +14,13 @@ import {
  *
  * @param lockfile the text that the package manager wrote.
  * @param credentials the raw and decoded registry secrets.
- * @param failure the error to throw, without credential values.
+ * @param message the failure to report, without credential values.
  */
-export function assertCredentialFreeLockfile(lockfile: string, credentials: string[], failure: Error): void {
-    if (LOCKFILE_URL_PASSWORD.test(lockfile)) throw failure;
+export function assertCredentialFreeLockfile(lockfile: string, credentials: string[], message: string): void {
+    if (LOCKFILE_URL_PASSWORD.test(lockfile)) throw new GspotError('installation', message);
     for (const credential of credentials) {
-        if (lockfile.includes(credential) || lockfile.includes(encodeURIComponent(credential))) throw failure;
+        if (lockfile.includes(credential) || lockfile.includes(encodeURIComponent(credential)))
+            throw new GspotError('installation', message);
     }
 }
 

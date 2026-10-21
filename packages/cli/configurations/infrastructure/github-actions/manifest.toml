@@ -8,8 +8,6 @@ title = "GitHub Actions"
 paths = ["**/.github/workflows/*.{yml,yaml}", "**/action.{yml,yaml}"]
 
 [[tool]]
-brew = "actionlint"
-github = { name = "rhysd/actionlint", version = "v1.7.12" }
 mise = "actionlint"
 name = "actionlint"
 version = "1.7.12"
@@ -18,9 +16,6 @@ version = "1.7.12"
 name = "shellcheck"
 
 [[tool]]
-brew = "zizmor"
-cargo = "zizmor"
-mise = "zizmor"
 name = "zizmor"
 pypi = "zizmor"
 version = "1.30.1"

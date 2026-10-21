@@ -1,31 +1,30 @@
-import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/repository/inventory.ts';
-import { detectConfigurations } from '#cli/repository/detect.ts';
-import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
-import { selectConfigurations, listUnknownConfigurations } from '#cli/configurations/select.ts';
+import { hasDetectionRules, detectConfigurations } from '#cli/repository/detect.ts';
+import { selectConfigurations, assertKnownConfigurations } from '#cli/configurations/select.ts';
+import { type ConfigurationEvidence, type ConfigurationSelection } from '#cli/types/repository/selection.ts';
 
-import type {
-    InitInputs,
-    InitDetection,
-    InitSelection,
-    ConfigurationReason,
-    ConfigurationChoices,
+import {
+    type InitInputs,
+    type SettingsDraft,
+    type InitSelection,
+    type ConfigurationReason,
+    type ConfigurationChoices,
 } from '#cli/types/commands/init.ts';
 
-function findCandidate(context: InitDetection, configuration: string): Manifest | undefined {
+function findCandidate(context: InitInputs, configuration: string): Manifest | undefined {
     const manifest = context.manifests.get(configuration);
     if (!manifest) return undefined;
-    if (manifest.configuration.when?.git === true && !context.hasGit) return undefined;
+    if (manifest.configuration.when?.git === true && !context.repository.hasGit) return undefined;
     return manifest;
 }
 
 function selectRootConfigurations(
-    context: InitDetection,
+    context: InitInputs,
     detected: Pick<ConfigurationEvidence, 'configuration'>[],
-    hasScopes: boolean,
 ): string[] {
+    const hasScopes = context.repository.scopes.length > 1;
     const named = context.options.configurations;
     const detectedConfigurations = detected
         .filter((evidence) => {
@@ -35,20 +34,11 @@ function selectRootConfigurations(
             return !hasScopes || group === 'general' || group === 'language';
         })
         .map((evidence) => evidence.configuration);
-    const template = context.options.template;
-    if (template !== undefined)
-        return [...new Set([...detectedConfigurations, ...(named ?? []), ...(template.tables.configurations ?? [])])];
     return [...new Set(named ?? detectedConfigurations)];
 }
 
-function selectScopeConfigurations(context: InitDetection, scope: Scope, rootIds: string[]): string[] {
-    const ids = detectConfigurations(
-        context.root,
-        context.files,
-        context.manifests,
-        context.dependencyFiles,
-        scope.path,
-    )
+function selectScopeConfigurations(context: InitInputs, scope: Scope, rootIds: string[]): string[] {
+    const ids = detectConfigurations(context.repository, context.manifests, scope.path)
         .filter((evidence) => {
             const manifest = findCandidate(context, evidence.configuration);
             return manifest !== undefined && manifest.configuration.group !== 'general';
@@ -59,20 +49,13 @@ function selectScopeConfigurations(context: InitDetection, scope: Scope, rootIds
     return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.configuration.group !== 'language');
 }
 
-function hasSourceOutsideScopes(context: InitDetection, manifest: Manifest, scopes: Scope[]): boolean {
-    return context.files.some(
+function hasSourceOutsideScopes(context: InitInputs, manifest: Manifest, scopes: Scope[]): boolean {
+    return context.repository.files.some(
         (file) =>
             file.kind === 'source' &&
             scopes.every((scope) => scope.path === '' || !isInScope(file.path, scope.path)) &&
             manifest.files.extensions.some((extension) => file.path.endsWith(extension)),
     );
-}
-
-function assertKnown(options: InitInputs['options'], manifests: Map<string, Manifest>): void {
-    const configurations = options.configurations ?? [];
-    const declarations = configurations.map((name) => ({ name }));
-    const unknown = listUnknownConfigurations(declarations, manifests).map(({ message }) => message);
-    if (unknown.length > 0) throw new GspotError('arguments', unknown.join('\n'));
 }
 
 function expandSuggestions(ids: string[], manifests: Map<string, Manifest>, detected: Set<string>): string[] {
@@ -83,9 +66,7 @@ function expandSuggestions(ids: string[], manifests: Map<string, Manifest>, dete
             ...suggestions.filter((id) => {
                 const manifest = manifests.get(id);
                 // A suggestion without detection rules needs no source match.
-                const hasDetection =
-                    manifest !== undefined &&
-                    Object.values(manifest.detect).some((entry) => Object.keys(entry).length > 0);
+                const hasDetection = manifest !== undefined && hasDetectionRules(manifest);
                 return !hasDetection || detected.has(id);
             }),
         ]),
@@ -105,34 +86,26 @@ function getSelectionReason(id: string, sets: ConfigurationChoices): Configurati
  * @returns the scopes and the configurations of each.
  */
 export function selectForInit(inputs: InitInputs): InitSelection {
-    const { root, repository, dependencyFiles, manifests, options } = inputs;
-    const context: InitDetection = {
-        root,
-        manifests,
-        files: repository.files,
-        dependencyFiles,
-        options,
-        hasGit: repository.hasGit,
-    };
-    assertKnown(options, manifests);
-    const scopes = inputs.scopes;
+    const { repository, manifests, options } = inputs;
+    assertKnownConfigurations(options.configurations ?? [], manifests);
+    const scopes = repository.scopes;
     const hasScopes = scopes.length > 1;
-    const detected = detectConfigurations(root, repository.files, manifests, dependencyFiles);
-    const proposedRoot = selectRootConfigurations(context, detected, hasScopes);
+    const detected = detectConfigurations(repository, manifests);
+    const proposedRoot = selectRootConfigurations(inputs, detected);
     const scopeConfigurations = new Map<string, string[]>();
     const heldAtRoot = proposedRoot.filter((id) => {
         const manifest = manifests.get(id);
         return (
             manifest?.configuration.group !== 'language' ||
             !hasScopes ||
-            hasSourceOutsideScopes(context, manifest, scopes)
+            hasSourceOutsideScopes(inputs, manifest, scopes)
         );
     });
     for (const scope of scopes)
         if (scope.path !== '')
-            scopeConfigurations.set(scope.path, selectScopeConfigurations(context, scope, heldAtRoot));
+            scopeConfigurations.set(scope.path, selectScopeConfigurations(inputs, scope, heldAtRoot));
     const inScopes = new Set(scopeConfigurations.values().toArray().flat());
-    const named = new Set([...(options.configurations ?? []), ...(options.template?.tables.configurations ?? [])]);
+    const named = new Set(options.configurations);
     const automatic = new Set(
         [...manifests.values()]
             .filter((manifest) => manifest.configuration.group === 'general' && manifest.configuration.always_selected)
@@ -155,4 +128,18 @@ export function selectForInit(inputs: InitInputs): InitSelection {
     };
     const how = new Map([...selectedIds].map((id) => [id, getSelectionReason(id, sets)]));
     return { scopes, rootIds, scopeConfigurations, selectedIds, detected, how };
+}
+
+/**
+ * Read the configuration choices from the draft.
+ *
+ * @param draft the choices.
+ * @returns the configuration choices for the root and each scope.
+ */
+export function buildDraftSelection(draft: SettingsDraft): ConfigurationSelection {
+    return {
+        configurations: draft.configurations,
+        removed_configurations: [],
+        scopes: Object.fromEntries(draft.scopes.map((scope) => [scope.path, { ...scope, removed_configurations: [] }])),
+    };
 }

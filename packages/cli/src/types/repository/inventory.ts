@@ -3,7 +3,7 @@ import type { Dirent } from 'node:fs';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
 import type { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import type { FILE_KINDS } from '#cli/config/repository/inventory.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import type { DependencyFile } from '#cli/types/parsers/dependencies.ts';
 
 export type PathIgnore = { base: string; matcher: Ignore };
 
@@ -14,7 +14,7 @@ export type ListedFile = { path: string; size: number; executable: boolean; syml
 export type TrackedFile = {
     path: string;
     kind: FileKind;
-    kindOrigin?: string;
+    kindOrigin: string;
     tags: string[];
     executable: boolean;
     size: number;

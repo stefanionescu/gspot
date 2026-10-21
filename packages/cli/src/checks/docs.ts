@@ -1,31 +1,33 @@
 import { join, posix } from 'node:path';
-import { visit } from 'unist-util-visit';
 import { statSync, readdirSync } from 'node:fs';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
-import { fromMarkdown } from 'mdast-util-from-markdown';
+import type { Finding } from '#cli/types/runs/check.ts';
+import { listCodeFences } from '#cli/parsers/markdown.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/find.ts';
 import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/runs/output.ts';
-import { listMatchingPaths } from '#cli/system/files/folders.ts';
+import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { listGeneratedPaths } from '#cli/repository/classify.ts';
+import { findScope, joinScope } from '#cli/repository/scopes.ts';
 import { buildGitignoreTest } from '#cli/repository/gitignore.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { PathIndex, TaskNames } from '#cli/types/checks/docs.ts';
-import { findScope, isInScope, joinScope } from '#cli/repository/scopes.ts';
-import { readCachedText, readCachedBytes } from '#cli/system/files/reads.ts';
-import { listExecutableNames, includeParentFolders } from '#cli/system/paths.ts';
-import { MISE_FILES, RUNNER_NAMES, MISE_TASKS_FOLDER } from '#cli/config/repository/existing-tools.ts';
+import { readCachedPackageJson } from '#cli/repository/dependency-files.ts';
+import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
+import { MISE_FILES, MISE_TASKS_FOLDER } from '#cli/config/repository/existing-tools.ts';
+import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 
 import {
     BUN_RUN,
     MISE_RUN,
     PATH_CHARS,
+    RUN_COMMAND,
     README_FILE,
     LICENSE_PATH,
     COMMAND_FENCES,
@@ -37,18 +39,18 @@ import {
     TOKEN_SEPARATORS,
     MARKDOWN_EXTENSIONS,
     TRAILING_PUNCTUATION,
-    OPTIONAL_GENERATED_PATHS,
+    RELATIVE_PATH_PREFIXES,
 } from '#cli/config/checks/docs.ts';
 
-function listGeneratorPaths(input: CheckInput): string[] {
+function listGeneratorPaths(planned: PlannedCheck): string[] {
     const paths: string[] = [];
-    const generatorOutputs = input.selection.selected.flatMap((manifest) =>
+    const generatorOutputs = planned.selection.selected.flatMap((manifest) =>
         manifest.checks.flatMap((check) => check.generator_outputs ?? []),
     );
     for (const output of generatorOutputs) {
         if (output.kind === 'pattern') continue;
         const path = output.path.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-            const value = input.selection.view.settings[name];
+            const value = planned.selection.view.settings[name];
             return typeof value === 'string' ? value : '';
         });
         if (path !== '') paths.push(path);
@@ -56,63 +58,42 @@ function listGeneratorPaths(input: CheckInput): string[] {
     return paths;
 }
 
-function listKnownPaths(input: CheckInput): Set<string> {
-    const known = includeParentFolders(input.repositoryFiles.map((file) => file.path));
-    for (const path of includeParentFolders([...input.generatedPaths()])) known.add(path);
-    for (const path of includeParentFolders([...OPTIONAL_GENERATED_PATHS])) known.add(path);
-    for (const toolFile of input.selection.selected.flatMap((manifest) => manifest.toolFiles))
+function listKnownPaths(session: Session, planned: PlannedCheck): Set<string> {
+    const known = includeParentFolders(session.repository.files.map((file) => file.path));
+    for (const path of includeParentFolders([...listGeneratedPaths(session.repository.files)])) known.add(path);
+    for (const toolFile of planned.selection.selected.flatMap((manifest) => manifest.toolFiles))
         known.add(toolFile.target);
-    for (const path of listGeneratorPaths(input)) known.add(path);
+    for (const path of listGeneratorPaths(planned)) known.add(path);
     // A check ID such as postgres/migration-order looks like a path, so count it as known.
-    for (const check of input.manifests.values().flatMap((manifest) => manifest.checks)) known.add(check.name);
-    for (const check of Object.values(input.settingsFile.settings.commandChecks)) known.add(check.name);
+    for (const check of session.manifests.values().flatMap((manifest) => manifest.checks)) known.add(check.name);
+    for (const check of Object.values(session.settingsFile.settings.commandChecks)) known.add(check.name);
     return known;
 }
 
-function readMiseTasks(input: CheckInput, file: string): string[] {
-    const text = readCachedText(input.reads, file);
+function readMiseTasks(session: Session, file: string): string[] {
+    const text = findCachedText(session.reads, file);
     if (text === undefined) return [];
-    try {
-        return parseMiseTasks(text);
-    } catch (error) {
-        throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
-    }
-}
-
-function readPackageScripts(input: CheckInput, file: string): string[] | undefined {
-    const text = readCachedText(input.reads, file);
-    if (text === undefined) return undefined;
-    try {
-        const packageJson = parseJsonFile(file, text, packageJsonSchema);
-        return packageJson.scripts === undefined ? [] : Object.keys(packageJson.scripts);
-    } catch (error) {
-        throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
-    }
-}
-
-function isPresent(relative: string, clean: string, index: PathIndex): boolean {
-    return index.known.has(relative) || index.isIgnored(relative) || index.isIgnored(clean);
+    return parseMiseTasks(text, file);
 }
 
 function isMissing(token: string, file: string, index: PathIndex): boolean {
     const clean = token.replace(LEADING_DOT_SLASH, '').replace(TRAILING_SLASH, '');
     const relative = posix.normalize(posix.join(posix.dirname(file), clean));
-    if (isPresent(relative, clean, index)) return false;
-    if (token.startsWith('./') || token.startsWith('../')) return true;
+    if (index.known.has(relative) || [relative, clean].some((path) => index.isIgnored(path))) return false;
+    if (RELATIVE_PATH_PREFIXES.some((prefix) => token.startsWith(prefix))) return true;
     const first = clean.split('/', 1)[0] ?? '';
     return !index.known.has(clean) && (index.known.has(first) || (!first.includes('.') && FILE_EXTENSION.test(clean)));
 }
 
-function checkProseLine(input: CheckInput, file: string, prose: NumberedLine, index: PathIndex): Finding[] {
+function checkProseLine(planned: PlannedCheck, file: string, prose: NumberedLine, index: PathIndex): Finding[] {
     const { number, text: line } = prose;
     const paths = extractPathTokens(line)
         .filter((token) => isMissing(token, file, index))
         .map((token) =>
-            buildFinding(input, { file, line: number }, 'missing-path', `${token} names no tracked file or folder.`),
+            buildFinding(planned, { file, line: number }, 'missing-path', `${token} names no tracked file or folder.`),
         );
-    const runToken = new RegExp(String.raw`\b(?:${RUNNER_NAMES.join('|')}) run (?:--[\w-]+\s+)*[\w][\w:.-]*`, 'gu');
     const runs = line
-        .matchAll(runToken)
+        .matchAll(RUN_COMMAND)
         .filter((match) => {
             const command = match[0];
             const names = command.startsWith(MISE_RUN) ? index.tasks.mise : index.tasks.packages;
@@ -124,45 +105,48 @@ function checkProseLine(input: CheckInput, file: string, prose: NumberedLine, in
             );
         })
         .map((match) =>
-            buildFinding(input, { file, line: number }, 'missing-task', `${match[0]} names no task or script.`),
+            buildFinding(planned, { file, line: number }, 'missing-task', `${match[0]} names no task or script.`),
         )
         .toArray();
     return [...paths, ...runs];
 }
 
-function readTaskNames(input: CheckInput, scope: string): TaskNames {
-    const ancestors = input.scopes
-        .filter((entry) => isInScope(scope, entry.path))
-        .toSorted((left, right) => right.path.length - left.path.length);
+function readTaskNames(session: Session, scope: string): TaskNames {
+    const ancestors = listEnclosingFolders(scope).flatMap((folder) =>
+        session.repository.scopes.filter((entry) => entry.path === folder),
+    );
     const files = [
         ...new Set(
             ancestors.flatMap(({ path }) => [
                 ...MISE_FILES.map((file) => posix.join(path, file)),
-                ...listMatchingPaths(input.root, posix.join(path, MISE_CONF_FILES)),
+                ...session.repository.files
+                    .map(({ path }) => path)
+                    .filter(buildPathMatcher([posix.join(path, MISE_CONF_FILES)])),
             ]),
         ),
     ];
     let scripts: string[] = [];
     for (const { path } of ancestors) {
-        const found = readPackageScripts(input, posix.join(path, 'package.json'));
+        const found = readCachedPackageJson(session.reads, posix.join(path, PACKAGE_JSON));
         if (found === undefined) continue;
-        scripts = found;
+        scripts = found.scripts === undefined ? [] : Object.keys(found.scripts);
         break;
     }
     return {
         mise: new Set([
-            ...files.flatMap((file) => readMiseTasks(input, file)),
+            ...files.flatMap((file) => readMiseTasks(session, file)),
             ...ancestors.flatMap(({ path }) => {
                 const folder = posix.join(path, MISE_TASKS_FOLDER);
-                return listMatchingPaths(input.root, posix.join(folder, '**')).map((file) =>
-                    posix.relative(folder, file).replaceAll('/', ':'),
-                );
+                return session.repository.files
+                    .map(({ path }) => path)
+                    .filter(buildPathMatcher([`${folder}/**`]))
+                    .map((file) => posix.relative(folder, file).replaceAll('/', ':'));
             }),
         ]),
         packages: new Set(scripts),
         binaries: new Set(
             ancestors.flatMap(({ path }) => {
-                const folder = join(input.root, path, NPM_BIN_FOLDER);
+                const folder = join(session.root, path, NPM_BIN_FOLDER);
                 return statSync(folder, { throwIfNoEntry: false })?.isDirectory() === true ? readdirSync(folder) : [];
             }),
         ),
@@ -177,14 +161,12 @@ function readTaskNames(input: CheckInput, scope: string): TaskNames {
  */
 function extractProseLines(text: string): NumberedLine[] {
     const ignored = new Set<number>();
-    visit(fromMarkdown(text), 'code', (node) => {
-        if (node.position === undefined) return;
-        const titled = node.meta?.split(/\s+/u).some((attribute) => attribute.startsWith(TITLE_ATTRIBUTE)) === true;
-        const { start, end } = node.position;
-        for (let line = start.line; line <= end.line; line += 1)
-            if ([start.line, end.line].includes(line) || !COMMAND_FENCES.has(node.lang ?? '') || titled)
+    for (const fence of listCodeFences(text)) {
+        const titled = fence.meta.split(/\s+/u).some((attribute) => attribute.startsWith(TITLE_ATTRIBUTE));
+        for (let line = fence.startLine; line <= fence.endLine; line += 1)
+            if ([fence.startLine, fence.endLine].includes(line) || !COMMAND_FENCES.has(fence.language) || titled)
                 ignored.add(line);
-    });
+    }
     return text
         .split('\n')
         .flatMap((line, index) => (ignored.has(index + 1) ? [] : [{ number: index + 1, text: line }]));
@@ -218,24 +200,25 @@ function extractPathTokens(line: string): string[] {
 /**
  * Reports each path that names no tracked file, and each run command that names no task.
  *
- * @param input the scope whose Markdown files to read.
+ * @param session the repository and its tools.
+ * @param planned the scope whose Markdown files to read.
  * @returns the findings.
  */
-export function checkDocsMissingPaths(input: CheckInput): Finding[] {
-    const files = input.files.filter(
+export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): Finding[] {
+    const files = planned.files.filter(
         (file) => file.kind === 'source' && MARKDOWN_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
-    const known = listKnownPaths(input);
+    const known = listKnownPaths(session, planned);
     const isIgnored = buildGitignoreTest(
-        input.reads,
-        input.repositoryFiles.map((file) => file.path),
+        session.reads,
+        session.repository.files.map((file) => file.path),
     );
-    const projects = Map.groupBy(files, (file) => findScope(file.path, input.scopes).path);
+    const projects = Map.groupBy(files, (file) => findScope(file.path, session.repository.scopes).path);
     return [...projects].flatMap(([scope, sources]) => {
-        const index: PathIndex = { known, isIgnored, tasks: readTaskNames(input, scope) };
+        const index: PathIndex = { known, isIgnored, tasks: readTaskNames(session, scope) };
         return sources.flatMap((file) => {
-            const text = readCachedBytes(input.reads, file.path).toString('utf8');
-            return extractProseLines(text).flatMap((prose) => checkProseLine(input, file.path, prose, index));
+            const text = readCachedText(session.reads, file.path);
+            return extractProseLines(text).flatMap((prose) => checkProseLine(planned, file.path, prose, index));
         });
     });
 }
@@ -243,26 +226,29 @@ export function checkDocsMissingPaths(input: CheckInput): Finding[] {
 /**
  * Reports a scope without a README.md, and a root without a license file.
  *
- * @param input the scope to search.
+ * @param session the repository and its tools.
+ * @param planned the scope to search.
  * @returns the findings.
  */
-export function checkDocsRequiredFiles(input: CheckInput): Finding[] {
+export function checkDocsRequiredFiles(session: Session, planned: PlannedCheck): Finding[] {
     const findings: Finding[] = [];
-    const repositoryPaths = new Set(input.repositoryFiles.map(({ path }) => path));
-    const readme = joinScope(input.selection.scope.path, README_FILE);
+    const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));
+    const readme = joinScope(planned.selection.scope.path, README_FILE);
     if (!repositoryPaths.has(readme))
         findings.push(
             buildFinding(
-                input,
+                planned,
                 { file: readme },
                 'missing-readme',
-                `The scope ${formatScopeLabel(input.selection.scope.path)} has no README.md.`,
+                `The scope ${formatScopeLabel(planned.selection.scope.path)} has no README.md.`,
             ),
         );
     if (
-        input.selection.scope.path === '' &&
+        planned.selection.scope.path === '' &&
         ![...repositoryPaths].some((path) => !path.includes('/') && LICENSE_FILE.test(path))
     )
-        findings.push(buildFinding(input, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'));
+        findings.push(
+            buildFinding(planned, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'),
+        );
     return findings;
 }

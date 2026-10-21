@@ -1,14 +1,14 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isRecord } from '#cli/system/values.ts';
-import { parseTomlText } from '#cli/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { dropDefaults } from '#cli/settings/write/defaults.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { parseTomlSyntax } from '#cli/parsers/toml/comments.ts';
-import { tableValuesSchema } from '#cli/settings/schema/tables.ts';
-import { settingsSchema } from '#cli/settings/schema/gspot-toml.ts';
+import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
+import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';
+import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/file.ts';
 import { encodeSettings, collectKeptComments } from '#cli/settings/write/layout.ts';
-import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES, RECORD_FIELDS } from '#cli/config/settings/file.ts';
+import { settingsSchema, listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
 
 function sortTable(table: TomlTable): TomlTable {
     const order = [
@@ -27,9 +27,10 @@ function sortTable(table: TomlTable): TomlTable {
 function sortValue(value: unknown, path: string[]): unknown {
     if (Array.isArray(value)) return value.map((entry: unknown) => sortValue(entry, path));
     if (!isRecord(value)) return value;
-    const fields: Readonly<Record<string, readonly string[]>> = RECORD_FIELDS;
-    const isReasonedValue = ['value', 'reason'].every((field) => Object.hasOwn(value, field));
-    const recordOrder: readonly string[] | undefined = isReasonedValue ? ['value', 'reason'] : fields[path.join('.')];
+    const fields: Readonly<Record<string, readonly string[]>> = listRecordFields();
+    const recordOrder: readonly string[] | undefined = isReasonedValue(value)
+        ? ['value', 'reason']
+        : fields[path.join('.')];
     const names = Object.keys(value);
     let order = names;
     if (recordOrder !== undefined)
@@ -38,7 +39,7 @@ function sortValue(value: unknown, path: string[]): unknown {
             ...names.filter((key) => !recordOrder.includes(key)),
         ];
     else if (path[0] === 'tools') {
-        const sortsNames = path.at(-1) === 'rules' || path.includes('extra');
+        const sortsNames = path.at(-1) === 'rules';
         if (sortsNames) order = names.toSorted((left, right) => left.localeCompare(right));
     }
     return Object.fromEntries(order.map((key) => [key, sortValue(value[key], [...path, key])]));
@@ -105,7 +106,7 @@ function formatSettingsText(previousText: string, settings: TomlTable): string {
         target['ignore'] = mergeIgnores(settingsSchema.shape.ignore.unwrap().parse(target['ignore']));
     const format = tableValuesSchema.in.shape.format.parse(target['format']);
     const indent = format.indent_style === 'tab' ? '\t' : ' '.repeat(format.indent_width);
-    const syntax = parseTomlSyntax(previousText, parseTomlText(previousText, SETTINGS_FILE, 'settings'));
+    const syntax = parseTomlSyntax(previousText, parseTomlText(previousText, SETTINGS_FILE));
     const comments = collectKeptComments(syntax, target, settings);
     target = sortTable(target);
     return encodeSettings(target, indent, comments);

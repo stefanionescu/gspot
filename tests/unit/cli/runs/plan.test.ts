@@ -15,8 +15,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildRunOptions, listAlwaysSelected } from '#tests/setup/builders.ts';
 import { planRun, isActive, stripCoverageArguments } from '#cli/planning/checks.ts';
 import { HISTORY_TABLES, TOOL_FILE_PLANNING_CASES } from '#tests/data/runs/plan.ts';
@@ -26,9 +26,11 @@ test('coverage arguments leave other commands, your own checks, and given argume
     await using sandbox = await testdir();
     const command = [process.execPath, '--coverage', '', 'two words'];
     await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: [],
-            command_check: [{ name: 'project/tests', command, stage: 'push', paths: ['sample.test.cjs'] }],
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: stringify({
+                command_check: [{ name: 'project/tests', command, stage: 'push', paths: ['sample.test.cjs'] }],
+            }),
         }),
         'sample.test.cjs': 'const authored = true;\n',
     });
@@ -51,19 +53,20 @@ test('coverage arguments leave other commands, your own checks, and given argume
 });
 
 test('a project check without its own inputs is inactive even when its scope holds another language', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['python', 'bash']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python', 'bash']),
         'source.sh': 'echo example\n',
     });
+
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({ only: ['python/ruff'] });
     const planned = planRun(session, options);
     expect(planned.every((entry) => entry.files.length === 0)).toBe(true);
     const result = await runChecks(session, options);
     expect(result.report.exitCode).toBe(0);
-    expect(result.report.checks).toMatchObject([{ check: 'python/ruff', status: 'skipped', findings: [] }]);
-    expect(result.report.skips).toStrictEqual([{ check: 'python/ruff', cause: 'inputs' }]);
+    expect(result.report.checks).toMatchObject([
+        { check: 'python/ruff', status: 'skipped', cause: 'inputs', findings: [] },
+    ]);
 });
 
 test.each([
@@ -73,10 +76,10 @@ test.each([
 ])(
     'an ignore of a whole scope keeps the replaced check running there and nowhere else: %j',
     async ({ paths, ignored }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': `configurations = ["typescript"]
-[[scope]]
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['typescript'], {
+                rules: true,
+                tables: `[[scope]]
 path = "api"
 configurations = ["nextjs"]
 [[scope]]
@@ -87,9 +90,11 @@ check = "nextjs/tsc"
 paths = ${JSON.stringify(paths)}
 reason = "The API check is provided by its own native build pipeline."
 `,
+            }),
             'api/app/page.tsx': 'export default function Page() { return null; }',
             'web/app/page.tsx': 'export default function Page() { return null; }',
         });
+
         const session = await openSession(sandbox.path);
         const planned = planRun(session, { stage: 'all', only: ['nextjs/tsc', 'typescript/tsc'] });
         const scopes = planned.filter((check) => ['api', 'web'].includes(check.selection.scope.path));
@@ -110,7 +115,7 @@ reason = "The API check is provided by its own native build pipeline."
 test.each([...LEVELS])(
     '%s selects general checks from a stored empty manual list without changing settings',
     async (level) => {
-        const settings = buildSettingsText([], { level });
+        const settings = buildSandboxSettings([], { level });
         await using sandbox = await testdir({
             'gspot.toml': settings,
             'source.js': 'export const port = 8080;\n',
@@ -149,13 +154,12 @@ Release on 03/04/2026.
         );
         expect(checks.some((check) => check.check.name === 'duplication/jscpd')).toBe(level === 'all');
         expect(checks.find((check) => check.check.name === 'licenses/allowed')?.skip).toBeUndefined();
-        expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(settings);
     },
 );
 
 test('a check ignored on all its paths leaves the plan, the needed tools, and its generated files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
+    await using sandbox = await testdir({ 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
+
     const initial = await openSession(sandbox.path);
     using log = openWriter(initial.root);
     writeGeneratedFiles(initial, generate(initial), log);
@@ -187,7 +191,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
 
 test.each([...LEVELS])('%s plans history checks once at the root and only for pushed commits', async (level) => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['commits', 'secrets'], {
+        'gspot.toml': buildSandboxSettings(['commits', 'secrets'], {
             level,
             tables: `${HISTORY_TABLES}
 [[command_check]]
@@ -202,11 +206,7 @@ stage = "push"
     });
     readGitOutput(sandbox.path, ['init']);
     const session = await openSession(sandbox.path);
-    const names = [
-        ...(level === 'all' ? ['commits/commitlint-pushed'] : []),
-        'secrets/gitleaks-pushed',
-        'secrets/trufflehog-pushed',
-    ];
+    const names = [...(level === 'all' ? ['commits/commitlint-pushed'] : []), 'secrets/gitleaks-pushed'];
     const planned = planRun(session, {
         stage: 'push',
         only: [...names, 'sandbox/once'],
@@ -228,19 +228,18 @@ stage = "push"
 });
 
 test('Xcode plutil and general xmllint checks select their Apple and XML files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `level = "recommended"
-configurations = []
-[[scope]]
-path = "api"
-configurations = ["xcode"]
-`,
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            level: 'recommended',
+            rules: true,
+            scopes: [{ path: 'api', configurations: ['xcode'] }],
+        }),
         'root.plist': '<plist><dict/></plist>\n',
         'api/app.plist': '<plist><dict/></plist>\n',
         'api/app.storyboard': '<document/>\n',
         'api/data.xml': '<document/>\n',
     });
+
     const session = await openSession(sandbox.path);
     const checks = planRun(session, {
         stage: 'all',

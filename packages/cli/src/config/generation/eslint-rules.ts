@@ -10,6 +10,8 @@ const ESLINT_RULES = {
     eqeqeq: ['error', 'always'],
     'prefer-const': 'error',
     'no-empty': ['error', { allowEmptyCatch: false }],
+
+    'no-param-reassign': 'error',
 } as const;
 
 const SORTING_RULES = {
@@ -61,6 +63,11 @@ const SONAR_RULES = {
     'sonarjs/no-hardcoded-secrets': 'off',
     'sonarjs/no-empty-test-file': 'off',
     'sonarjs/no-collapsible-if': 'error',
+
+    'sonarjs/no-nested-switch': 'error',
+    'sonarjs/prefer-object-literal': 'error',
+    'sonarjs/no-commented-code': 'error',
+    'sonarjs/prefer-immediate-return': 'error',
 } as const;
 
 const UNICORN_RULES = {
@@ -78,6 +85,9 @@ const UNICORN_RULES = {
     'unicorn/import-style': 'off',
     // A forwarding export contradicts declaration exports.
     'unicorn/prefer-export-from': 'off',
+
+    'unicorn/prefer-ternary': ['error', 'only-single-line'],
+    'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
 } as const;
 
 const SECURITY_RULES = {
@@ -95,6 +105,9 @@ const SECURITY_RULES = {
     // variable; those operations alone do not show that the input causes a defect.
     'security/detect-object-injection': 'off',
     'security/detect-non-literal-fs-filename': 'off',
+
+    'security/detect-child-process': 'error',
+    'security/detect-possible-timing-attacks': 'error',
 } as const;
 
 const JSDOC_RULES = {
@@ -102,6 +115,39 @@ const JSDOC_RULES = {
     'jsdoc/check-param-names': 'error',
     'jsdoc/check-tag-names': 'error',
     'jsdoc/no-types': 'off',
+
+    'jsdoc/require-jsdoc': [
+        'error',
+        {
+            // The fixer writes an empty /** */ block, which documents nothing.
+            enableFixer: false,
+            publicOnly: true,
+            require: {
+                FunctionDeclaration: true,
+                ArrowFunctionExpression: true,
+                FunctionExpression: true,
+                MethodDefinition: true,
+            },
+        },
+    ],
+    'jsdoc/require-description': 'error',
+    'jsdoc/require-param': ['error', { enableFixer: false }],
+    'jsdoc/match-name': [
+        'error',
+        {
+            match: [
+                {
+                    tags: ['param'],
+                    disallowName: String.raw`/^root\d+$/`,
+                    message: 'Name the parameter for its role, such as options.',
+                },
+            ],
+        },
+    ],
+    'jsdoc/informative-docs': 'error',
+    'jsdoc/require-param-description': 'error',
+    // A blank line before the tags makes them their own paragraph, so Vale reads the description alone.
+    'jsdoc/tag-lines': ['error', 'any', { startLines: 1 }],
 } as const;
 
 const REGEXP_RULES = {
@@ -191,66 +237,7 @@ export const BASE_SELECTORS = [
     },
 ] as const;
 
-export const ALL_LEVEL_RULES = {
-    code: {
-        'no-param-reassign': 'error',
-        'sonarjs/no-nested-switch': 'error',
-        'sonarjs/prefer-object-literal': 'error',
-        'sonarjs/no-commented-code': 'error',
-        'sonarjs/prefer-immediate-return': 'error',
-        'unicorn/prefer-ternary': ['error', 'only-single-line'],
-        'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
-        'security/detect-child-process': 'error',
-        'security/detect-possible-timing-attacks': 'error',
-        'jsdoc/require-jsdoc': [
-            'error',
-            {
-                // The fixer writes an empty /** */ block, which documents nothing.
-                enableFixer: false,
-                publicOnly: true,
-                require: {
-                    FunctionDeclaration: true,
-                    ArrowFunctionExpression: true,
-                    FunctionExpression: true,
-                    MethodDefinition: true,
-                },
-            },
-        ],
-        'jsdoc/require-description': 'error',
-        'jsdoc/require-param': ['error', { enableFixer: false }],
-        'jsdoc/match-name': [
-            'error',
-            {
-                match: [
-                    {
-                        tags: ['param'],
-                        disallowName: String.raw`/^root\d+$/`,
-                        message: 'Name the parameter for its role, such as options.',
-                    },
-                ],
-            },
-        ],
-        'jsdoc/informative-docs': 'error',
-        'jsdoc/require-param-description': 'error',
-        'jsdoc/require-returns': 'error',
-        'jsdoc/require-returns-description': 'error',
-        // A blank line before the tags makes them their own paragraph, so Vale reads the description alone.
-        'jsdoc/tag-lines': ['error', 'any', { startLines: 1 }],
-    },
-    node: {
-        'n/prefer-global/url-search-params': ['error', 'always'],
-        'n/prefer-global/url': ['error', 'always'],
-        'n/prefer-global/process': ['error', 'always'],
-        'n/prefer-global/console': ['error', 'always'],
-        'n/prefer-global/buffer': ['error', 'always'],
-        'n/no-process-exit': 'error',
-        'n/prefer-promises/dns': 'error',
-        'n/prefer-promises/fs': 'error',
-    },
-    console: {
-        'no-console': 'error',
-    },
-} as const;
+export const CONSOLE_RULES = { 'no-console': 'error' } as const;
 
 export const NODE_RULES = {
     'n/no-unsupported-features/node-builtins': ['error', { allowExperimental: true }],
@@ -270,9 +257,21 @@ export const NODE_RULES = {
     'n/no-unpublished-require': 'error',
     'n/no-extraneous-import': 'error',
     'n/no-extraneous-require': 'error',
+
+    'n/prefer-global/url-search-params': ['error', 'always'],
+    'n/prefer-global/url': ['error', 'always'],
+    'n/prefer-global/process': ['error', 'always'],
+    'n/prefer-global/console': ['error', 'always'],
+    'n/prefer-global/buffer': ['error', 'always'],
+    'n/no-process-exit': 'error',
+    'n/prefer-promises/dns': 'error',
+    'n/prefer-promises/fs': 'error',
 } as const;
 
-export const REEXPORT_SELECTORS = ['ExportAllDeclaration', 'ExportNamedDeclaration[source!=null]'] as const;
+export const REEXPORT_SELECTORS = ['ExportAllDeclaration', 'ExportNamedDeclaration[source!=null]'].map((selector) => ({
+    selector,
+    message: 'Export values at their declaration instead of re-exporting them.',
+}));
 
 export const JAVASCRIPT_RULES = {
     'no-unused-vars': [

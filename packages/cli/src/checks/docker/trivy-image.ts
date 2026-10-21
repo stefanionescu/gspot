@@ -1,21 +1,23 @@
-import { z } from 'zod';
 import { join } from 'node:path';
+import { parseReport } from '#cli/parsers/json.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { parseReport } from '#cli/runs/output/json.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
+import type { ImageFinding } from '#cli/types/checks/docker.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
 import { selectToolFilePath } from '#cli/runs/command/placeholders.ts';
-import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import { TRIVY_EXIT, TRIVY_TOOL_FILE, TRIVY_IMAGE_COMMAND, TRIVY_SCHEMA_VERSION } from '#cli/config/checks/docker.ts';
+import { imageReportSchema } from '#cli/schemas/checks/docker/trivy-image.ts';
+import { TRIVY_EXIT, TRIVY_TOOL_FILE, TRIVY_IMAGE_COMMAND } from '#cli/config/checks/docker.ts';
 
 // The tool's exit status and parsed findings must agree before a scan can count as clean.
-async function scanImage(input: CheckInput, image: string, path: string): Promise<Finding[]> {
+async function scanImage(session: Session, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
     const result = await runCheckTool(
-        input,
-        [...TRIVY_IMAGE_COMMAND, join(input.root, selectToolFilePath(input, input, TRIVY_TOOL_FILE)), image],
-        { cwd: input.root },
+        session,
+        planned,
+        [...TRIVY_IMAGE_COMMAND, join(session.root, selectToolFilePath(session, planned, TRIVY_TOOL_FILE)), image],
+        { cwd: session.root },
     );
     if (result.code !== 0 && result.code !== TRIVY_EXIT) {
         const detail = formatOutputTail(result, `exit ${String(result.code)}`);
@@ -23,75 +25,31 @@ async function scanImage(input: CheckInput, image: string, path: string): Promis
     }
     const report = parseReport('Trivy', result.stdout, imageReportSchema);
     const findings = (report.Results ?? []).flatMap((entry) => [
-        ...(entry.Vulnerabilities ?? []).map((vulnerability) =>
-            buildFinding(
-                input,
-                { file: path, line: 1 },
-                vulnerability.VulnerabilityID,
-                `${image}: ${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
-            ),
-        ),
-        ...(entry.Secrets ?? []).map((secret) =>
-            buildFinding(input, { file: path, line: 1 }, 'secret', `${image}: ${secret.RuleID}: ${secret.Title}`),
-        ),
+        ...(entry.Vulnerabilities ?? []).map((vulnerability) => ({
+            rule: vulnerability.VulnerabilityID,
+            message: `${image}: ${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
+        })),
+        ...(entry.Secrets ?? []).map((secret) => ({
+            rule: 'secret',
+            message: `${image}: ${secret.RuleID}: ${secret.Title}`,
+        })),
     ]);
     if ((result.code === TRIVY_EXIT) !== findings.length > 0)
         throw new Error(`Trivy returned an inconsistent image report for ${image}.`);
     return findings;
 }
 
-const imageReportSchema = z.object({
-    SchemaVersion: z.literal(TRIVY_SCHEMA_VERSION),
-    ArtifactName: z.string().min(1),
-    Results: z
-        .array(
-            z.object({
-                Target: z.string().min(1),
-                Vulnerabilities: z
-                    .array(
-                        z.object({
-                            VulnerabilityID: z.string().min(1),
-                            PkgName: z.string().min(1),
-                        } satisfies SchemaShape<{ VulnerabilityID: string; PkgName: string }>),
-                    )
-                    .optional(),
-                Secrets: z
-                    .array(
-                        z.object({ RuleID: z.string().min(1), Title: z.string().min(1) } satisfies SchemaShape<{
-                            RuleID: string;
-                            Title: string;
-                        }>),
-                    )
-                    .optional(),
-            } satisfies SchemaShape<{
-                Target: string;
-                Vulnerabilities?: { VulnerabilityID: string; PkgName: string }[] | undefined;
-                Secrets?: { RuleID: string; Title: string }[] | undefined;
-            }>),
-        )
-        .optional(),
-} satisfies SchemaShape<{
-    SchemaVersion: typeof TRIVY_SCHEMA_VERSION;
-    ArtifactName: string;
-    Results?:
-        | {
-              Target: string;
-              Vulnerabilities?: { VulnerabilityID: string; PkgName: string }[] | undefined;
-              Secrets?: { RuleID: string; Title: string }[] | undefined;
-          }[]
-        | undefined;
-}>);
-
 /**
  * Scans each literal service image once and reports its findings in every Compose file that names it.
  *
- * @param input the scope files to read.
+ * @param session the repository and its tools.
+ * @param planned the scope files to read.
  * @returns the findings.
  */
-export async function checkDockerTrivyImage(input: CheckInput): Promise<Finding[]> {
-    const scanned = new Map<string, Finding[]>();
+export async function checkDockerTrivyImage(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const scanned = new Map<string, ImageFinding[]>();
     const findings: Finding[] = [];
-    const files = Map.groupBy(readComposeDocuments(input).declarations, ({ path }) => path);
+    const files = Map.groupBy(readComposeDocuments(session, planned).declarations, ({ path }) => path);
     for (const [path, services] of files) {
         const images = new Set(
             services
@@ -101,10 +59,12 @@ export async function checkDockerTrivyImage(input: CheckInput): Promise<Finding[
         for (const image of images) {
             let report = scanned.get(image);
             if (report === undefined) {
-                report = await scanImage(input, image, path);
+                report = await scanImage(session, planned, image);
                 scanned.set(image, report);
             }
-            findings.push(...report.map((finding) => ({ ...finding, file: path })));
+            findings.push(
+                ...report.map(({ rule, message }) => buildFinding(planned, { file: path, line: 1 }, rule, message)),
+            );
         }
     }
     return findings;

@@ -1,5 +1,5 @@
 import { unwrap } from '../syntax.ts';
-import { createRule } from '../create-rule.ts';
+import { createRule } from '../schemas/rules/options.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isAlias(node: TSESTree.Expression | null): boolean {

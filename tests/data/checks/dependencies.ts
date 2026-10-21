@@ -97,20 +97,6 @@ export const TWO_WEEKS_SECONDS = 1_209_600;
 /** The two gspot packages, which every package manager leaves out of the hold. */
 export const OWN_PACKAGES = ['@gspothq/cli', '@gspothq/eslint-plugin'] as const;
 
-/** The file that shows each installer in use, and the settings file that gets no release hold from gspot. */
-export const INSTALLER_FILES = [
-    {
-        installer: 'Bun',
-        files: { 'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}' },
-        path: 'bunfig.toml',
-    },
-    { installer: 'npm', files: { 'package-lock.json': '{"lockfileVersion":3,"packages":{}}' }, path: '.npmrc' },
-    { installer: 'pnpm', files: { 'pnpm-lock.yaml': "lockfileVersion: '9.0'\n" }, path: 'pnpm-workspace.yaml' },
-    { installer: 'Yarn', files: { 'yarn.lock': '__metadata:\n  version: 8\n' }, path: '.yarnrc.yml' },
-    { installer: 'uv', files: { 'uv.lock': 'version = 1\n' }, path: 'pyproject.toml' },
-    { installer: 'mise', files: { 'mise.toml': '[tools]\nnode = "24"\n' }, path: 'mise.toml' },
-] as const;
-
 /** Syncpack filenames for replacement checks. */
 export const SYNCPACK_FILES = [
     {
@@ -141,10 +127,6 @@ export const SYNCPACK_FILES = [
     },
 ] as const;
 
-/** An .npmrc with Windows line endings, a list written with `[]`, and a comment. */
-export const NPMRC_LIST_CRLF =
-    '; registry settings\r\nmin-release-age-exclude[]=@acme/tools\r\nregistry=https://registry.npmjs.org/\r\n';
-
 export const MISE_PIN_FILES = [
     { file: 'mise.toml' },
     { file: '.mise.toml' },
@@ -155,3 +137,9 @@ export const MISE_PIN_FILES = [
     { file: 'mise.local.toml' },
     { file: '.mise.local.toml' },
 ] as const;
+
+/** A binary Bun lockfile whose URL the scanner must not read as text. */
+export const BINARY_BUN_LOCKFILE = Buffer.concat([
+    Buffer.from([0xff, 0]),
+    Buffer.from('https://untrusted.invalid/package.tgz'),
+]);

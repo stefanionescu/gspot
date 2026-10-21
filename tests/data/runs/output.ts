@@ -15,11 +15,10 @@ export const OUTPUTS = [
     { format: 'knip' },
     { format: 'semgrep' },
     { format: 'typos' },
-    { format: 'trufflehog' },
     { format: 'markdownlint' },
 ] as const;
 
-export const JSON_FORMATS = new Set(['json', 'sarif', 'knip', 'semgrep', 'typos', 'trufflehog', 'markdownlint']);
+export const JSON_FORMATS = new Set(['json', 'sarif', 'knip', 'semgrep', 'typos', 'markdownlint']);
 
 export const OTHER_TOOL_OUTPUT = 'not the output of any tool {\n';
 

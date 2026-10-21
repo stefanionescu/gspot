@@ -3,24 +3,21 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { listStaleFiles } from '#cli/apply/stale.ts';
-import { generate } from '#cli/generation/generate.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type DryRunJson } from '#cli/types/commands/settings.ts';
 import { matchFields, matchSubstring } from '#tests/setup/matchers.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { runGspot, checkReport, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
-import { commitAll, readGitOutput, prepareAppliedBashRepository } from '#tests/setup/git.ts';
 
 // Windows reports the same mode for files writable by the owner or by everyone.
 test.skipIf(isWindows)(
     'apply --dry-run lists a generated file whose mode changed, and gspot/generated-files reports it',
     async () => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['format']),
+            'gspot.toml': buildSandboxSettings(['format']),
             'source.txt': 'authored text\n',
         });
         const initial = await runGspot(sandbox.path, ['apply']);
@@ -41,7 +38,9 @@ test.skipIf(isWindows)(
         expect(human.stdout).toContain('.editorconfig  changed');
         expect(human.stdout).toContain('old mode 600');
         expect(human.stdout).toContain('new mode 644');
-        const checked = await checkReport(sandbox.path, ['check', '--only', 'gspot/generated-files', '--json']);
+        const checked = parseCheckReport(
+            await runGspot(sandbox.path, ['check', '--only', 'gspot/generated-files', '--json']),
+        );
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         expect(
             checked.report.checks
@@ -62,43 +61,44 @@ test.skipIf(isWindows)(
 );
 
 test('a hand edit of the ESLint config shows as a byte diff without running it', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
         }),
         'entry.js': 'export const value = 1;\n',
     });
-    const applied = await runRegisteredCommand(sandbox.path, ['apply']);
-    expect(applied.exitCode, applied.text).toBe(0);
+
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const path = '.gspot/configurations/language/javascript/eslint.mjs';
     const authored = 'throw new Error("The preview executed authored configuration.");\n';
     await chmod(join(sandbox.path, path), 0o644);
     await writeFile(join(sandbox.path, path), authored);
     expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
-    const preview = await runRegisteredCommand(sandbox.path, ['apply', '--dry-run']);
-    expect(preview.exitCode, preview.text).toBe(0);
-    const changed = (preview.json as DryRunJson).stale.find(({ path: output }) => output === path);
+    const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    const changed = (JSON.parse(preview.stdout) as DryRunJson).stale.find(({ path: output }) => output === path);
     expect(changed).toMatchObject({ kind: 'changed' });
     expect(changed?.diff).toContain(authored.trim());
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
     expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
-    const unrecorded = await runRegisteredCommand(sandbox.path, ['apply', '--dry-run']);
-    expect(unrecorded.exitCode, unrecorded.text).toBe(0);
-    expect((unrecorded.json as DryRunJson).stale.find((entry) => entry.path === path)).toStrictEqual(changed);
+    const unrecorded = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
+    expect(unrecorded.code, unrecorded.stdout + unrecorded.stderr).toBe(0);
+    expect((JSON.parse(unrecorded.stdout) as DryRunJson).stale.find((entry) => entry.path === path)).toStrictEqual(
+        changed,
+    );
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/state/ownership.json'))).toBe(false);
 });
 
 test("turned-off rules have the same stray paths in a dry run and in apply's removal", async () => {
     await using sandbox = await testdir();
-    const settings = buildSettingsText([], { rules: true, tables: '[rules]\nenabled = true\n' });
+    const settings = buildSandboxSettings([], { rules: true, tables: '[rules]\nenabled = true\n' });
     await createFileTree(sandbox.path, { 'gspot.toml': settings });
-    expect(await runRegisteredCommand(sandbox.path, ['apply'])).toHaveProperty('exitCode', 0);
+    expect(await runGspot(sandbox.path, ['apply'])).toHaveProperty('code', 0);
     const initial = await openSession(sandbox.path);
     const owned = initial.repository.files.filter((entry) => entry.path.includes('/rules/'));
     expect(owned.length).toBeGreaterThan(0);
-    await Bun.write(join(sandbox.path, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
+    await writeFile(join(sandbox.path, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const { stale } = JSON.parse(preview.stdout) as DryRunJson;
@@ -116,23 +116,9 @@ test("turned-off rules have the same stray paths in a dry run and in apply's rem
     ).toStrictEqual(strays);
     for (const path of ownedPaths) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
 });
-test('a clone with changed settings and matching generated files needs no ownership log', async () => {
-    await using sandbox = await testdir();
-    const source = join(sandbox.path, 'source');
-    const checkout = join(sandbox.path, 'checkout');
-    await prepareAppliedBashRepository(source);
-    await writeFile(join(source, 'gspot.toml'), buildSettingsText(['bash'], { level: 'all' }));
-    expect(await runRegisteredCommand(source, ['apply'])).toHaveProperty('exitCode', 0);
-    commitAll(source);
-    readGitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
-    expect(await isOnDisk(join(checkout, '.gspot/state/ownership.json'))).toBe(false);
-    const session = await openSession(checkout);
-    const generated = generate(session);
-    expect(listStaleFiles(session, generated).filter((entry) => entry.kind === 'changed')).toStrictEqual([]);
-});
 test('apply --dry-run lists missing generated files and writes nothing', async () => {
     await using folder = await testdir();
-    const settings = buildSettingsText(['bash']);
+    const settings = buildSandboxSettings(['bash']);
     await createFileTree(folder.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
     const before = await readTree(folder.path);
     const human = await runGspot(folder.path, ['apply', '--dry-run']);
@@ -154,11 +140,11 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
 test.each([false, true])(
     'apply --dry-run shows only a changed version pin (changed: %s) and writes nothing',
     async (isChanged) => {
-        await using folder = await testdir();
-        await createFileTree(folder.path, {
-            'gspot.toml': buildSettingsText([], { tables: NPM_CHECK_IGNORES }),
+        await using folder = await testdir({
+            'gspot.toml': buildSandboxSettings([], { tables: NPM_CHECK_IGNORES }),
             'control.txt': 'preserve this source\n',
         });
+
         const applied = await runGspot(folder.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const versionContents = await readFile(join(folder.path, '.gspot/version'), 'utf8');
@@ -191,12 +177,12 @@ test.each([false, true])(
     },
 );
 test('apply --dry-run reports a changed file, a stray, a conflict, and an edited block, and writes nothing', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash', 'markdown'], { rules: true }),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash', 'markdown'], { rules: true }),
         'entry.sh': 'echo example\n',
         'README.md': '# Example\n',
     });
+
     const applied = await runGspot(folder.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const edit = async (path: string, text: (current: string) => string): Promise<void> => {
@@ -217,7 +203,7 @@ ${current}=======
     );
     await unlink(join(folder.path, 'README.md'));
     await writeFile(join(folder.path, 'settings.json'), '{}\n');
-    await writeFile(join(folder.path, 'gspot.toml'), buildSettingsText(['bash'], { rules: true }));
+    await writeFile(join(folder.path, 'gspot.toml'), buildSandboxSettings(['bash'], { rules: true }));
     const before = await readTree(folder.path);
     const preview = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);

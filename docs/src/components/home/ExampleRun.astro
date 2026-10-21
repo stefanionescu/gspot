@@ -1,0 +1,62 @@
+---
+import example from '../../config/example.json';
+import { SUMMARY_SENTENCE_BREAK } from '../../config/home.ts';
+
+type Props = { status: string; summary: string };
+const { status, summary } = Astro.props;
+const [first, ...sentences] = summary.split(SUMMARY_SENTENCE_BREAK);
+const rest = sentences.join(' ');
+const failedChecks = [...new Set(example.findings.map(({ check }) => check))].map((check) => ({
+    name: check,
+    findings: example.findings
+        .filter((finding) => finding.check === check)
+        .map((finding) => ({
+            ...finding,
+            problem: example.problems.findIndex(({ rules }) => rules.includes(finding.rule)) + 1,
+            location: [finding.file, finding.line, 'column' in finding ? finding.column : undefined]
+                .filter((part) => part !== undefined)
+                .join(':'),
+        })),
+}));
+---
+
+<figure class:list={['panel', { blocked: status === 'failed', passed: status !== 'failed' }]}>
+    <figcaption class="panel-head">
+        <span class="run">
+            <span class="prompt">$ </span>git commit
+        </span>
+        <span class:list={['status', status]}>{status === 'failed' ? 'Blocked' : 'Committed'}</span>
+    </figcaption>
+    <div class="panel-body terminal">
+        <p class="muted">{example.checked}</p>
+        {status === 'failed' &&
+            failedChecks.map(({ name, findings }) => (
+                <>
+                    <p class="check-row">
+                        <span>{name}</span>
+                        <span class="failed">failed</span>
+                    </p>
+                    <ol class="findings">
+                        {findings.map(({ problem, location, rule, message }) => (
+                            <li>
+                                <span class="badge">
+                                    <span class="sr-only">Problem </span>
+                                    {problem}
+                                </span>
+                                <span class="where">
+                                    <span class="loc">{location}</span>
+                                    <span>{rule}</span>
+                                </span>
+                                <span class="message">{message}</span>
+                            </li>
+                        ))}
+                    </ol>
+                </>
+            ))}
+        <p class="summary">
+            <strong class:list={status}>{first}</strong>
+            {rest === '' ? '' : ` ${rest}`}
+        </p>
+        {status === 'passed' && <p class="muted">{example.commit_record}</p>}
+    </div>
+</figure>

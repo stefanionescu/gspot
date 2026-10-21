@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { join } from 'node:path';
+import { setKey } from '#cli/settings/edit.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -8,6 +9,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
 import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 import { BUNDLER_PACKAGES, IMPORT_STYLE_SETTING } from '#cli/config/commands/init.ts';
@@ -48,10 +50,13 @@ export function buildImportStyleTables(
     const reads = createReadCache(repository.root);
     return new Map(
         selections.flatMap(({ scope, selected }): [string, TomlTable][] => {
-            if (!selected.some((manifest) => manifest.configuration.name === 'javascript')) return [];
+            if (!selected.some((manifest) => manifest.configuration.name === JAVASCRIPT_CONFIGURATION)) return [];
             if (selected.some((manifest) => Object.hasOwn(manifest.defaults, IMPORT_STYLE_SETTING))) return [];
             const style = detectImportStyle(repository, scope, reads);
-            return style === undefined ? [] : [[scope, { tools: { eslint: { import_extension: style } } }]];
+            if (style === undefined) return [];
+            const table: TomlTable = {};
+            setKey(table, IMPORT_STYLE_SETTING, style);
+            return [[scope, table]];
         }),
     );
 }

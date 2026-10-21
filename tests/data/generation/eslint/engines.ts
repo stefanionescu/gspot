@@ -33,14 +33,14 @@ const ENGINE_PATHS = [
 const ENGINE_SOURCE = 'export const grouped = Object.groupBy([1], String);\nprocess.loadEnvFile();\n';
 
 const ENGINE_FINDINGS = [
-    { ruleId: 'n/no-unsupported-features/es-builtins', line: 1, severity: 2 },
-    { ruleId: 'n/no-unsupported-features/node-builtins', line: 2, severity: 2 },
+    { ruleId: 'n/no-unsupported-features/es-builtins', line: 1 },
+    { ruleId: 'n/no-unsupported-features/node-builtins', line: 2 },
 ] as const;
 
 /** Package engine findings, then source corrections using supported APIs. */
 const ENGINE_PHASES = [
-    { tables: ENGINE_SCOPES, reported: ['old/source.js', 'old/source.cjs', 'forced/source.js'], corrections: [] },
-    { tables: ENGINE_SCOPES, reported: [], corrections: ['old/source.js', 'old/source.cjs', 'forced/source.js'] },
+    { reported: ['old/source.js', 'old/source.cjs', 'forced/source.js'], corrections: [] },
+    { reported: [], corrections: ['old/source.js', 'old/source.cjs', 'forced/source.js'] },
 ] as const;
 
-export { ENGINE_PATHS, ENGINE_PHASES, ENGINE_SOURCE, ENGINE_FINDINGS, ENGINE_PACKAGES };
+export { ENGINE_PATHS, ENGINE_SCOPES, ENGINE_PHASES, ENGINE_SOURCE, ENGINE_FINDINGS, ENGINE_PACKAGES };

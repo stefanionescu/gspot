@@ -4,7 +4,19 @@
 
 level = "all"
 configurations = ["typescript", "markdown", "github-actions", "bash"]
-allowed_words = { capitalisation = "SQLFluff spells its rule capitalisation.", IIF = "ESLint names immediately invoked functions IIFEs.", LICENCE = "Tests use the British LICENCE file name.", next-intl = "The next-intl package name.", udid = "Apple names the device identifier udid.", NGINX = "Official product name.", Stylelint = "Official product name.", markdownlint = "Official product name.", React = "Official product name.", Native = "Part of the React Native product name.", Simple = "Part of the Simple Icons product name.", Icons = "Part of the Simple Icons product name." }
+
+[allowed_words]
+axe = "Part of the published axe-core license name."
+optin = "Zod names its optional input marker optin."
+IIF = "ESLint names immediately invoked functions IIFEs."
+next-intl = "The next-intl package name."
+udid = "Apple names the device identifier udid."
+NGINX = "Official product name."
+Stylelint = "Official product name."
+markdownlint = "Official product name."
+React = "Official product name."
+Native = "Part of the React Native product name."
+Simple = "Part of the Simple Icons product name."
 
 [hooks]
 enabled = true
@@ -15,12 +27,12 @@ enabled = true
 
 [naming]
 # Words this repository does not use in names.
-banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "violations", "problem", "problems", "tooling"]
+banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling"]
 
 [[naming.override]]
 paths = ["packages/cli/src/types/settings/**"]
-allowed_names = ["can_also_import", "tool_timeout_seconds", "test_files", "removed_configurations", "final_newline", "v8r", "ParsedV8r"]
-reason = "These fields carry the gspot.toml key names."
+allowed_names = ["final_newline", "v8r", "ParsedV8r"]
+reason = "gspot.toml names the key final_newline, and v8r is the name of the tool."
 
 [[naming.override]]
 paths = ["docs/src/content/docs/404.md"]
@@ -38,15 +50,10 @@ allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output.ts", "packages/cli/src/types/repository/selection.ts", "packages/cli/src/types/rules.ts", "packages/cli/src/types/settings/**"]
+paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output.ts", "packages/cli/src/types/repository/selection.ts", "packages/cli/src/types/settings/**"]
 categories = ["properties"]
 cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
-
-[[naming.override]]
-paths = ["packages/cli/src/checks/site/linkinator-process.ts"]
-allowed_names = ["LinkChecker"]
-reason = "Linkinator exports LinkChecker under this exact name."
 
 [[naming.override]]
 paths = ["packages/cli/src/checks/site/purgecss-process.ts"]
@@ -54,53 +61,53 @@ allowed_names = ["PurgeCSS"]
 reason = "PurgeCSS exports its class under this exact name."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/licenses.ts"]
+paths = ["packages/cli/src/types/checks/licenses.ts"]
 allowed_names = ["Name", "Version"]
 reason = "pip-licenses identifies these JSON fields with this exact capitalization."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/prose.ts"]
+paths = ["packages/cli/src/schemas/checks/prose.ts", "packages/cli/src/types/checks/prose.ts"]
 allowed_names = ["Check", "Line", "Message", "Span"]
 reason = "Vale identifies these JSON diagnostic fields with this exact capitalization."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/docker/trivy-image.ts", "packages/cli/src/checks/docker/dockerignore.ts"]
-allowed_names = ["ArtifactName", "PkgName", "Results", "RuleID", "SchemaVersion", "Secrets", "Target", "Title", "Vulnerabilities", "VulnerabilityID"]
+paths = ["packages/cli/src/types/checks/docker.ts", "packages/cli/src/schemas/checks/docker/trivy-image.ts"]
+allowed_names = ["PkgName", "Results", "RuleID", "SchemaVersion", "Secrets", "Title", "Vulnerabilities", "VulnerabilityID"]
 reason = "Trivy identifies these JSON report fields with these exact names."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/xcode/resources.ts"]
+paths = ["packages/cli/src/types/checks/xcode.ts", "packages/cli/src/schemas/checks/xcode.ts"]
 allowed_names = ["shouldTranslate"]
 reason = "The Xcode string format names its translation control shouldTranslate."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/python/deptry.ts"]
+paths = ["packages/cli/src/types/checks/python.ts", "packages/cli/src/schemas/checks/python/deptry.ts"]
 allowed_names = ["extend_exclude", "known_first_party"]
 reason = "deptry names these TOML settings extend_exclude and known_first_party."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/swift/coverage.ts", "packages/cli/src/checks/swift/skip-reasons.ts"]
+paths = ["packages/cli/src/types/checks/swift.ts", "packages/cli/src/schemas/checks/swift.ts"]
 allowed_names = ["module_type"]
 reason = "Swift coverage JSON names the module type field module_type."
 
 [[naming.override]]
-paths = ["packages/cli/src/parsers/xcode.ts"]
+paths = ["packages/cli/src/schemas/parsers/xcode.ts"]
 allowed_names = ["rootObject", "objects"]
 reason = "Xcode project files name the object table objects."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/checks/supabase.ts"]
 categories = ["properties"]
-allowed_names = ["diagnostics", "file_path"]
+allowed_names = ["diagnostics"]
 reason = "Deno names its lint findings diagnostics; Supabase names its inventory file_path."
 
 [[naming.override]]
 paths = ["packages/cli/src/types/runs/output.ts"]
-allowed_names = ["Data", "DetectorName", "SourceMetadata", "Verified", "fixInfo", "Git"]
-reason = "These tool report properties retain the exact TruffleHog, Semgrep, markdownlint and typos JSON field names."
+allowed_names = ["fixInfo"]
+reason = "markdownlint names its fix field fixInfo."
 
 [[naming.override]]
-paths = ["tests/unit/cli/generation/tool-files/v8r.test.ts"]
+paths = ["tests/unit/cli/generation/settings/v8r.test.ts"]
 allow_digits = true
 reason = "v8r is the name of the tool."
 
@@ -116,12 +123,12 @@ allowed_names = ["when"]
 reason = "The shipped configuration manifest format names its selection condition when."
 
 [[naming.override]]
-paths = ["packages/cli/src/generation/tool-files/plain.ts"]
+paths = ["packages/cli/src/generation/settings/plain.ts"]
 allowed_names = ["buildV8rFile"]
 reason = "v8r is the name of the tool."
 
 [[naming.override]]
-paths = ["packages/cli/src/install/npm/lockfiles.ts"]
+paths = ["packages/cli/src/types/parsers/lockfiles.ts", "packages/cli/src/schemas/parsers/lockfiles.ts"]
 allowed_names = ["resolved"]
 reason = "The npm lockfile format names each package download URL resolved."
 
@@ -146,127 +153,17 @@ allowed_names = ["ARBITRARY_LOADS"]
 reason = "Apple names the key NSAllowsArbitraryLoads."
 
 [[naming.override]]
-paths = ["packages/cli/src/config/tools/npm.ts"]
-allowed_names = ["MISSING_PACKAGE_MANAGER_MESSAGE"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+paths = ["packages/cli/src/types/package-copies.ts"]
+allowed_names = ["resolveConfig"]
+reason = "Prettier and Stylelint name their configuration methods resolveConfig."
 
 [[naming.override]]
-paths = ["packages/cli/src/config/parsers/dependency-files.ts"]
-allowed_names = ["PACKAGE_MANAGERS", "PACKAGE_MANAGER_HASH_SUFFIX"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/install/npm/release-hold.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/generation/generate.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/generation/hooks.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/session.ts"]
-allowed_names = ["buildPackageManagerAccess", "getPackageManagerIdentity", "packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/install/npm/lockfiles.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/repository/package-manager.ts"]
-allowed_names = ["detectPackageManager", "package-manager", "packageManager", "packageManagerDeclarationSchema", "packageManagerSchema", "parsePackageManagerField", "readPackageManagerDeclaration", "readPackageManagerVersion", "selectPackageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/install/npm/project.ts"]
-allowed_names = ["assertPackageManagerVersion", "packageManager", "runPackageManager", "selectPackageManagerArguments", "verifyPackageManagerVersion"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/install/npm/tool-project.ts"]
-allowed_names = ["packageManager", "packageManagerName"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/install/python/project.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/generation/ci.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/parsers/dependency-files.ts"]
-allowed_names = ["PackageManager", "PackageManagerDeclaration", "packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/planning.ts"]
-allowed_names = ["getPackageManager", "getPackageManagerName", "requirePackageManager", "requirePackageManagerName"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["packages/cli/src/types/tools/project.ts"]
-allowed_names = ["PackageManagerArguments", "PackageManagerCommand", "packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/data/checks/site/build.ts"]
-allowed_names = ["SITE_PACKAGE_MANAGER_CASES"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/data/install/npm-tool-project.ts"]
-allowed_names = ["PACKAGE_MANAGER_DECLARATIONS", "PACKAGE_MANAGER_ROWS"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/integration/tool-projects/npm.test.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/setup/install.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/setup/package-manager-sandboxes.ts"]
-allowed_names = ["createPackageManagerSandbox", "package-manager-sandboxes", "packageManager", "writePackageManagerSandbox"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/types/packages.ts"]
-allowed_names = ["PackageManagerSandbox"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/unit/cli/generation/ci.test.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/unit/cli/generation/hooks.test.ts"]
-allowed_names = ["packageManager"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
-
-[[naming.override]]
-paths = ["tests/unit/cli/repository/package-manager.test.ts"]
-allowed_names = ["package-manager.test"]
-reason = "The repository Names table requires package manager for npm, pnpm, Yarn, and Bun."
+paths = ["packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs"]
+allowed_names = ["markdownlint-cli2"]
+reason = "The manifest loader reads this source by the external markdownlint-cli2 target filename."
 
 [structure]
-environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/environment.ts"]
+environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/environment.ts", "tests/setup/offline.ts"]
 
 [dependencies]
 bun_scanner = "@socketsecurity/bun-security-scanner"
@@ -275,12 +172,8 @@ bun_scanner = "@socketsecurity/bun-security-scanner"
 allowed_urls = { value = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$"], reason = "The npm package page returns HTTP 403 to automated requests." }
 
 [licenses]
-allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
-
-[[licenses.allowed_package]]
-name = "@csstools/selector-specificity"
-version = "5.0.0"
-reason = "The CSS tooling dependency uses the MIT No Attribution license; its installed package retains the license text."
+# MIT-0 is MIT without the notice condition.
+allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0", "MIT-0"]
 
 [[licenses.allowed_package]]
 name = "@fontsource-variable/geist-mono"
@@ -310,22 +203,26 @@ reason = "Vite depends on it to build the docs site; the license binds changes t
 [tools.eslint]
 import_extension = "ts"
 
-[tools.knip]
-ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build imports these packages through CSS or copies their grammar files by path." }
-entry = ["tests/setup/prepare-run.ts", "tests/setup/integration.ts", "packages/cli/src/checks/site/linkinator-process.ts", "packages/cli/src/checks/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/tool-files/eslint-runtime.mjs", "docs/src/route-data.ts", "packages/cli/src/bin.ts"]
+[[tools.eslint.plugins]]
+name = "repository"
+path = "packages/eslint-plugin/repository.mjs"
 
-[tools.typos]
-extra = { value = { type = { license_names = { extend-glob = ["gspot.toml"], extend-words = { axe = "axe" } }, zod_types = { extend-glob = ["shapes.ts"], extend-words = { optin = "optin" } } } }, reason = "Typos splits the published axe-core license name; Zod names its optional input marker optin." }
+[tools.eslint.plugins.rules]
+schema-location = [{ folders = ["packages/cli/src/schemas", "packages/eslint-plugin/src/schemas", "tests/schemas"] }]
+
+[tools.knip]
+entry = ["tests/setup/offline.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/prepare-run.ts", "tests/setup/integration.ts", "packages/cli/src/checks/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/tool-files/eslint-runtime.mjs", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs", "packages/cli/src/configurations/package-copies.ts"]
 
 [[scope]]
 path = "docs"
 configurations = ["css", "astro", "zod", "cloudflare", "site"]
 site.build_command = ["bun", "--bun", "astro", "build"]
-tools.knip.ignore_dependencies = { value = ["satteri"], reason = "Astro prerender externalizes this native Markdown loader in astro.config.ts. A direct dependency keeps Bun’s package lookup at the installed loader origin; the site build verifies native resolution." }
+tools.knip.ignore_dependencies = { value = ["@fontsource-variable/geist", "@fontsource-variable/geist-mono", "satteri"], reason = "The site imports the fonts through CSS, and Astro prerender externalizes the native satteri loader in astro.config.ts." }
 
 [[scope]]
 path = "packages/cli"
 configurations = ["zod"]
+tools.knip.ignore_dependencies = { value = ["tree-sitter-bash", "tree-sitter-css", "tree-sitter-html", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"], reason = "The build copies these grammar files by path." }
 
 [[scope]]
 path = "tests"
@@ -333,59 +230,33 @@ configurations = ["zod"]
 removed_configurations = ["astro", "jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue", "cloudflare"]
 tools.knip.ignore_dependencies = { value = ["@darraghor/eslint-plugin-nestjs-typed", "@next/eslint-plugin-next", "@react-native/eslint-plugin", "@vitest/eslint-plugin", "bats", "eslint-plugin-drizzle", "eslint-plugin-expo", "eslint-plugin-i18next", "eslint-plugin-jest", "eslint-plugin-react", "eslint-plugin-react-hooks", "eslint-plugin-react-native", "eslint-plugin-react-refresh", "eslint-plugin-svelte", "eslint-plugin-testing-library", "eslint-plugin-vue", "eslint-plugin-vuejs-accessibility", "pnpm", "supabase", "svelte-eslint-parser", "vue-eslint-parser", "yarn", "@nestjs/common", "@nestjs/core", "@tanstack/eslint-plugin-query", "eslint-plugin-jsx-a11y", "reflect-metadata", "rxjs", "vue"], reason = "Native sandbox commands load these packages from the linked tests installation." }
 
-# Code may import its own files and the files of every import rule above it; can_also_import names rules below.
-[[import_rule]]
-name = "tool-files"
-paths = ["packages/cli/configurations/**/tool-files/**"]
-
+# Code may import its own files and the files of every import rule above it. can_import gives an exact list instead.
 [[import_rule]]
 name = "cli-config"
 paths = ["packages/cli/src/config/**"]
+can_import = ["cli-types"]
 
 [[import_rule]]
 name = "cli-types"
 paths = ["packages/cli/src/types/**"]
 
 [[import_rule]]
-name = "plugin-config"
-paths = ["packages/eslint-plugin/src/config/**"]
-
-[[import_rule]]
-name = "plugin-types"
-paths = ["packages/eslint-plugin/src/types/**"]
-
-[[import_rule]]
-name = "docs-config"
-paths = ["docs/src/config/**"]
-
-[[import_rule]]
-name = "docs-types"
-paths = ["docs/src/types/**"]
-can_also_import = ["reference"]
-
-[[import_rule]]
-name = "tests-data"
-paths = ["tests/data/**"]
-
-[[import_rule]]
-name = "tests-types"
-paths = ["tests/types/**"]
-
-[[import_rule]]
 name = "system"
 paths = ["packages/cli/src/system/**"]
+can_import = ["cli-config", "cli-types", "repository"]
 
 [[import_rule]]
 name = "parsers"
-paths = ["packages/cli/src/parsers/**"]
+paths = ["packages/cli/src/parsers/**", "packages/cli/src/schemas/parsers/**"]
 
 [[import_rule]]
 name = "configurations"
-paths = ["packages/cli/src/configurations/**"]
+paths = ["packages/cli/src/configurations/**", "packages/cli/src/schemas/configurations/**"]
+can_import = ["cli-config", "cli-types", "system", "parsers", "repository"]
 
 [[import_rule]]
 name = "repository"
-paths = ["packages/cli/src/repository/**"]
+paths = ["packages/cli/src/repository/**", "packages/cli/src/schemas/repository/**"]
 
 [[import_rule]]
 name = "ownership"
@@ -393,7 +264,7 @@ paths = ["packages/cli/src/ownership/**"]
 
 [[import_rule]]
 name = "settings"
-paths = ["packages/cli/src/settings/**"]
+paths = ["packages/cli/src/settings/**", "packages/cli/src/schemas/settings/**"]
 
 [[import_rule]]
 name = "planning"
@@ -401,7 +272,7 @@ paths = ["packages/cli/src/planning/**"]
 
 [[import_rule]]
 name = "generation"
-paths = ["packages/cli/src/generation/**"]
+paths = ["packages/cli/src/generation/**", "packages/cli/src/schemas/generation.ts"]
 
 [[import_rule]]
 name = "tools"
@@ -413,7 +284,7 @@ paths = ["packages/cli/src/session.ts"]
 
 [[import_rule]]
 name = "install"
-paths = ["packages/cli/src/install/**"]
+paths = ["packages/cli/src/install/**", "packages/cli/src/schemas/install/**"]
 
 [[import_rule]]
 name = "apply"
@@ -421,58 +292,88 @@ paths = ["packages/cli/src/apply/**"]
 
 [[import_rule]]
 name = "runs"
-paths = ["packages/cli/src/runs/**"]
+paths = ["packages/cli/src/runs/**", "packages/cli/src/schemas/runs/**"]
 
 [[import_rule]]
 name = "checks"
-paths = ["packages/cli/src/checks/**"]
+paths = ["packages/cli/src/checks/**", "packages/cli/src/schemas/checks/**"]
 
 [[import_rule]]
 name = "commands"
-paths = ["packages/cli/src/commands/**"]
+paths = ["packages/cli/src/commands/**", "packages/cli/src/schemas/commands.ts"]
 
 [[import_rule]]
 name = "main"
 paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts"]
 
 [[import_rule]]
-name = "plugin"
-paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/plugin.d.ts"]
-
-[[import_rule]]
 name = "reference"
 paths = ["packages/cli/src/reference.ts"]
+
+[[import_rule]]
+name = "plugin-config"
+paths = ["packages/eslint-plugin/src/config/**"]
+can_import = []
+
+[[import_rule]]
+name = "plugin-types"
+paths = ["packages/eslint-plugin/src/types/**"]
+can_import = []
+
+[[import_rule]]
+name = "plugin"
+paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/src/schemas/**", "packages/eslint-plugin/plugin.d.ts", "packages/eslint-plugin/repository.mjs"]
+can_import = ["plugin-config", "plugin-types"]
+
+[[import_rule]]
+name = "docs-config"
+paths = ["docs/src/config/**"]
+can_import = ["cli-config"]
+
+[[import_rule]]
+name = "docs-types"
+paths = ["docs/src/types/**"]
+can_import = ["cli-types"]
 
 [[import_rule]]
 name = "docs"
 paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
 
 [[import_rule]]
+name = "tests-data"
+paths = ["tests/data/**"]
+can_import = ["cli-config", "tests"]
+
+[[import_rule]]
+name = "tests-types"
+paths = ["tests/types/**"]
+can_import = ["cli-types", "plugin-types", "tests-data"]
+
+[[import_rule]]
 name = "tests"
-paths = ["tests/{unit,integration,e2e,setup}/**"]
+paths = ["tests/{unit,integration,e2e,setup,schemas}/**"]
+
+[[import_rule]]
+name = "tool-files"
+paths = ["packages/cli/configurations/**/tool-files/**"]
+can_import = []
 
 [[ignore]]
 check = "dependencies/osv-scanner"
 rule = "GHSA-ch52-4w7c-c8xp"
-reason = "As checked on 2026-10-09, http-cache-semantics 4.3.0 has no patched release and is used only in development without sharing cached responses between users."
-until = 2026-11-08
+reason = "As checked on 2026-10-20, http-cache-semantics 4.3.0 has no patched release and is used only in development without sharing cached responses between users."
+until = 2026-11-19
 
 [[ignore]]
 check = "dependencies/osv-scanner"
 rule = "GHSA-vfj7-8cjw-p6xm"
-reason = "As checked on 2026-10-09, braces 3.0.3 has no patched release and is used only by development tools to expand patterns written in this repository."
-until = 2026-11-08
+reason = "As checked on 2026-10-20, braces 3.0.3 has no patched release and is used only by development tools to expand patterns written in this repository."
+until = 2026-11-19
 
 [[ignore]]
 check = "docs/missing-paths"
-paths = ["packages/cli/configurations/*/*/rules/**"]
+paths = ["packages/cli/configurations/infrastructure/docker/rules/DOCKER.md", "packages/cli/configurations/language/html/rules/HTML.md", "packages/cli/configurations/platform/supabase/rules/SUPABASE.md"]
 reason = "Paths in shipped rules are examples for user projects."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "gspot/no-magic-numbers"
-paths = ["tests/data/**"]
-reason = "These declarations hold fixed test data; giving each literal another constant would duplicate the same data."
 
 [[ignore]]
 check = "javascript/eslint"
@@ -484,72 +385,12 @@ reason = "A published library uses ranges for dependencies and peers."
 check = "javascript/eslint"
 rule = "package-json/specify-peers-locally"
 paths = ["packages/eslint-plugin/package.json"]
-reason = "The tests workspace declares TypeScript and checks the packed plugin declaration. The plugin builds with Bun."
+reason = "The tests workspace installs TypeScript and typescript-eslint, which the plugin tests load. The plugin builds with Bun and needs neither to build."
 
 [[ignore]]
 check = "prose/vale"
 paths = ["packages/cli/configurations/general/prose/tool-files/styles/LICENSES.md"]
 reason = "This file reproduces upstream license notices and terms whose wording must remain unchanged."
-
-[[ignore]]
-check = "prose/vale"
-rule = "Google.Parens"
-paths = [".mise/tasks/test"]
-reason = "Required #MISE assignments contain task metadata. The corrected token pattern handles them after the final pin upgrade."
-
-[[ignore]]
-check = "prose/vale"
-rule = "Google.Parens"
-paths = ["packages/cli/configurations/language/javascript/tool-files/eslint-runtime.mjs"]
-reason = "Nested JSDoc type syntax is machine metadata. The corrected token pattern handles it after the final pin upgrade."
-
-[[ignore]]
-check = "prose/vale"
-rule = "Google.Quotes"
-paths = [".mise/tasks/build"]
-reason = "Required #MISE assignments contain task metadata. The corrected token pattern handles them after the final pin upgrade."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.acronyms"
-paths = [".mise/tasks/build", ".mise/tasks/docs/build", ".mise/tasks/docs/deploy", ".mise/tasks/docs/serve", ".mise/tasks/packages/cli/build", ".mise/tasks/packages/eslint-plugin/build", ".mise/tasks/release", ".mise/tasks/setup", ".mise/tasks/test"]
-reason = "Required #MISE assignments contain task metadata. The corrected token pattern handles them after the final pin upgrade."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.alt-text"
-paths = ["tests/integration/checks/markdown.test.ts"]
-reason = "The markdownlint test needs an image without alt text. gspot 0.3.0 runs this markup rule on markup files only."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.file-paths"
-paths = [".mise/tasks/packages/eslint-plugin/build", ".mise/tasks/test"]
-reason = "Required #MISE assignments contain task metadata. The corrected token pattern handles them after the final pin upgrade."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.placeholders"
-paths = [".mise/tasks/docs/build", ".mise/tasks/docs/deploy", ".mise/tasks/docs/serve", ".mise/tasks/packages/cli/build", ".mise/tasks/packages/eslint-plugin/build"]
-reason = "Required #MISE assignments contain task metadata. The corrected token pattern handles them after the final pin upgrade."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.sentence-length"
-paths = ["packages/cli/configurations/language/javascript/tool-files/eslint-runtime.mjs"]
-reason = "Nested JSDoc type syntax is machine metadata. The corrected token pattern handles it after the final pin upgrade."
-
-[[ignore]]
-check = "prose/vale"
-rule = "gspot.session-identifiers"
-paths = ["tests/data/checks/prose.ts"]
-reason = "The sample for the session-identifier rule is a URL with a session id."
-
-[[ignore]]
-check = "prose/vale"
-rule = "Harper.NumericRangeEnDash"
-paths = ["docs/README.md"]
-reason = "CC0-1.0 is the official license identifier for the supplied Simple Icons assets, not a numeric range."
 
 [[ignore]]
 check = "prose/vale"
@@ -587,26 +428,22 @@ paths = ["tests/data/checks/spelling.ts"]
 reason = "This literal supplies a deliberate misspelling to the spelling checks and their corrections."
 
 [[ignore]]
+check = "structure/lone-files"
+rule = "lone-file"
+paths = ["packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs"]
+reason = "The manifest loader discovers tool files in tool-files/ and reads this module by its external markdownlint-cli2 target filename."
+
+[[ignore]]
 check = "structure/shared-prefixes"
 paths = ["docs/src/content.config.ts"]
 reason = "Astro fixes this name beside the content folder."
 
 [[ignore]]
 check = "structure/shared-prefixes"
-paths = ["packages/cli/src/config/generation/tool-files.ts", "packages/cli/src/generation/eslint/fragments/react*.ts"]
+paths = ["packages/cli/src/config/generation/settings.ts", "packages/cli/src/generation/eslint/fragments/react*.ts"]
 reason = "The files are named after their topic and their npm packages."
 
 [[ignore]]
 check = "structure/shared-prefixes"
-paths = ["packages/eslint-plugin/src/rules/**", "tests/unit/eslint-plugin/**"]
+paths = ["packages/eslint-plugin/src/rules/**", "tests/unit/eslint-plugin/rules/**"]
 reason = "ESLint rule IDs are the file names, and they share their first word by convention."
-
-[[ignore]]
-check = "structure/trivial-functions"
-paths = ["packages/cli/src/system/environment.ts"]
-reason = "normalizeEnvironmentKey holds the Windows rule for environment names, which environment.ts and git.ts both apply."
-
-[[ignore]]
-check = "structure/trivial-functions"
-paths = ["packages/cli/src/system/git.ts"]
-reason = "isOutsideGit names the not-a-repository answer of Git, which git.ts and repository/read.ts both test."

@@ -1,7 +1,6 @@
 [configuration]
 description = "NestJS services: the compiler options that decorators need, correct providers, routes, and DTOs, and no circular modules."
 requires = ["typescript"]
-suggests = []
 title = "NestJS"
 
 [detect]
@@ -22,7 +21,6 @@ rule_prefix = "@darraghor/nestjs-typed"
 version = "7.5.5"
 
 [eslint]
-fragment = true
 required_tools = ["@darraghor/eslint-plugin-nestjs-typed"]
 all_level_rules = ["@darraghor/nestjs-typed/api-operation-summary-description-capitalized"]
 

@@ -8,7 +8,7 @@ import { join, dirname, delimiter } from 'node:path';
 import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import { CLI_MAIN, spawnGspot } from '#tests/setup/run-gspot.ts';
+import { CLI_BIN, spawnGspot } from '#tests/setup/run-gspot.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
@@ -72,7 +72,7 @@ if (args[0] === 'exec' && args.some((arg) => arg.startsWith('npm:@gspothq/cli@')
         process.exit(1);
     }
     const separator = args.indexOf('--');
-    const child = Bun.spawnSync([process.execPath, ${JSON.stringify(CLI_MAIN)}, ...args.slice(separator + 2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
+    const child = Bun.spawnSync([process.execPath, ${JSON.stringify(CLI_BIN)}, ...args.slice(separator + 2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
     process.exit(child.exitCode);
 }
 const env = { ...process.env };

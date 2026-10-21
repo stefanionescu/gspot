@@ -4,14 +4,12 @@ import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { type Manifest } from '#cli/types/configurations.ts';
 import { JSON_INDENT } from '#cli/config/generation/files.ts';
-import { formatHold } from '#cli/generation/release-holds.ts';
-import { TOML_FORMAT } from '#cli/config/generation/tool-files.ts';
+import { TOML_FORMAT } from '#cli/config/generation/settings.ts';
+import { NEXTJS_CONFIGURATION } from '#cli/config/configurations.ts';
 import { findInstalledDependency } from '#cli/repository/packages.ts';
-import { NEXTJS_CONFIGURATION } from '#cli/config/generation/eslint.ts';
-import type { ReadCache, FileContents } from '#cli/types/system/files.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { type GeneratedFile, type NpmProjectInputs } from '#cli/types/generation/files.ts';
-import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN, PYTHON_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
+import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN, PYTHON_TOOL_PROJECT } from '#cli/config/parsers/dependencies.ts';
 import { NEXT_PACKAGE, UV_PROJECT_TABLE, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/generation/tool-projects.ts';
 
 import {
@@ -25,13 +23,12 @@ import {
  * Generate the mise tool project without the runtime pins of the repository.
  *
  * @param manifests the configurations in use.
- * @param reads the run cache.
  *
  * @returns the mise tool project.
  */
-export function buildMiseProject(manifests: Manifest[], reads: ReadCache): GeneratedFile {
+export function buildMiseProject(manifests: Manifest[]): GeneratedFile {
     const tools = Object.fromEntries(
-        listMisePins(manifests, reads)
+        listMisePins(manifests)
             .toSorted((left, right) => left.name.localeCompare(right.name))
             .map((pin) => [
                 pin.name,
@@ -41,7 +38,6 @@ export function buildMiseProject(manifests: Manifest[], reads: ReadCache): Gener
     return {
         path: MISE_TOOL_PROJECT_FILE,
         content: stringify({ tools }, { ...TOML_FORMAT, inlineTableStart: 1 }),
-        kind: 'tool_project',
     };
 }
 
@@ -66,7 +62,7 @@ export function buildNpmProject({ root, scopes, manifests, isYarnBerry }: NpmPro
         });
     const majors = new Set(nextVersions.map(({ major }) => major));
     const requirements = nextVersions
-        .map(({ scope, major }) => `${scope || 'the root'} requires ^${String(major)}`)
+        .map(({ scope, major }) => `${scope === '' ? 'the root' : scope} requires ^${String(major)}`)
         .join('; ');
     if (majors.size > 1)
         throw new GspotError('installation', `Tool pin ${NEXT_ESLINT_PLUGIN} conflicts: ${requirements}.`);
@@ -83,14 +79,12 @@ export function buildNpmProject({ root, scopes, manifests, isYarnBerry }: NpmPro
                 null,
                 JSON_INDENT,
             )}\n`,
-            kind: 'tool_project',
         },
     ];
     if (isYarnBerry)
         files.push({
             path: YARN_SETTINGS,
             content: YARN_TOOL_PROJECT_SETTINGS,
-            kind: 'tool_project',
         });
     return files;
 }
@@ -112,20 +106,7 @@ export function buildPythonProject(manifests: Manifest[], days: number): Generat
             content:
                 stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOML_FORMAT) +
                 `\n${UV_PROJECT_TABLE}\n` +
-                stringify({ package: false, 'exclude-newer': formatHold('uv-duration', days) }, TOML_FORMAT),
-            kind: 'tool_project',
+                stringify({ package: false, 'exclude-newer': `${String(days)} days` }, TOML_FORMAT),
         },
     ];
-}
-
-/**
- * Build a generated lockfile with the file contents that it replaces.
- *
- * @param path the repository-relative destination for the replacement bytes.
- * @param content the credential-free lockfile.
- * @param original the file contents on disk, if any.
- * @returns the replacement bytes with the previous file attached for write validation.
- */
-export function buildLockfileResult(path: string, content: string, original: FileContents | undefined): GeneratedFile {
-    return { path, content, kind: 'lock', ...(original === undefined ? {} : { read: original }) };
 }

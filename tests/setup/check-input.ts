@@ -1,20 +1,17 @@
 // Builds check inputs for tests and keeps compiler state in a temporary folder.
 import { spyOn } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { checkInput } from '#cli/runs/built-in.ts';
 import { findScope } from '#cli/repository/scopes.ts';
-import { type Session } from '#cli/types/planning.ts';
-import { buildCheckRun } from '#cli/runs/check-run.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import * as environment from '#cli/system/environment.ts';
-import { normalizeOutputPath } from '#cli/system/paths.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
+import { runCheckImplementation } from '#cli/runs/check-run.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
+import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { selectCheckImplementation } from '#cli/checks/implementations.ts';
-import type { Finding, CheckInput, RunnableCheck } from '#cli/types/runs/check.ts';
+import { getToolName, getToolDeclaration } from '#cli/configurations/tools.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**
@@ -30,67 +27,69 @@ async function createCompilerCache(): Promise<AsyncDisposableStack> {
 }
 
 /**
- * Build the input of one check, with its files and the full file list of the repository.
+ * Plan one sandbox check with its complete repository and selected scope files.
  *
  * @param session the sandbox the test opened.
  * @param checkId for example bash/shellcheck.
  * @param options which files to include and what to clean up.
  * @param options.scope a folder to check; the root by default.
  * @param options.paths files to check; every file by default.
- * @param options.resources what to dispose of with the check.
  * @returns the files and settings that the check reads.
  */
-function buildCheckInput(
+function planSandboxCheck(
     session: Session,
     checkId: string,
-    options: { scope?: string; paths?: string[]; resources?: DisposableStack } = {},
-): CheckInput {
-    const path = normalizeOutputPath(options.scope ?? '');
+    options: { scope?: string; paths?: string[] } = {},
+): PlannedCheck {
+    const path = options.scope ?? '';
     const scope = session.scopes.find((entry) => entry.scope.path === path);
     if (scope === undefined) throw new Error(`The sandbox has no scope at ${path || 'the root'}.`);
-    const check = scope.selected.flatMap((manifest) => manifest.checks).find((entry) => entry.name === checkId);
-    if (check === undefined) throw new Error(`The sandbox selects no check called ${checkId}.`);
-    const paths = options.paths?.map((source) => normalizeOutputPath(source));
+    const entry = scope.selected
+        .flatMap((manifest) => manifest.checks.map((check) => ({ manifest, check })))
+        .find(({ check }) => check.name === checkId);
+    if (entry === undefined) throw new Error(`The sandbox selects no check called ${checkId}.`);
+    const { manifest, check } = entry;
+    const paths = options.paths;
     const files = session.repository.files.filter(
         (file) =>
             (check.runs === 'once' || findScope(file.path, session.repository.scopes).path === path) &&
             (paths === undefined || paths.includes(file.path)),
     );
+    const tool = getToolName(check);
     return {
-        ...checkInput(session, { selection: scope, check, files }),
-        repositoryFiles: session.repository.files,
-        ...(options.resources === undefined ? {} : { resources: options.resources }),
+        selection: scope,
+        manifest,
+        check,
+        files,
+        triggerPaths: [],
+        ...(tool === undefined ? {} : { tool: getToolDeclaration(session.manifests.values(), tool) }),
     };
 }
 
 /**
- * Create a Swift sandbox and build the input of one check. The input uses fake tool versions and a temporary compiler cache.
+ * Create a Swift sandbox with fake tool versions and a temporary compiler cache.
  *
  * @param sandbox folder that the test removes.
  * @param checkId for example swift/swiftlint.
  * @param files paths and text to add or replace.
- * @returns the input, the session, and what to dispose.
+ * @returns the session, planned check, and their cleanup.
  */
 async function prepareSwiftInput(
     sandbox: TestdirResult,
     checkId: string,
     files: DirectoryJSON = {},
-): Promise<{ input: CheckInput; session: Session; resources: AsyncDisposableStack }> {
+): Promise<AsyncDisposable & { session: Session; planned: PlannedCheck }> {
     await using resources = new AsyncDisposableStack();
     resources.use(spyOn(environment, 'getOperatingSystem').mockReturnValue('macos'));
-    resources.use(
-        fakePinnedExecutables(
-            [...readManifests(createReadCache(process.cwd())).values()].flatMap((manifest) => manifest.tools),
-        ),
-    );
+    resources.use(fakePinnedExecutables([...readManifests().values()].flatMap((manifest) => manifest.tools)));
     resources.use(await createCompilerCache());
     await createFileTree(sandbox.path, {
         'Package.swift': SWIFT_PACKAGE,
-        'gspot.toml': buildSettingsText(['swift']),
+        'gspot.toml': buildSandboxSettings(['swift']),
         ...files,
     });
-    const session = await openSession(sandbox.path);
-    return { session, input: buildCheckInput(session, checkId), resources: resources.move() };
+    const session = await openSession(sandbox.path, { resources: resources.use(new DisposableStack()) });
+    return Object.assign(resources.move(), { session, planned: planSandboxCheck(session, checkId) });
 }
 
 /** Open the sandbox, run one built-in check, and return its findings. */
@@ -100,18 +99,9 @@ async function checkFindings(
     options: { scope?: string; paths?: string[]; resources?: DisposableStack } = {},
 ): Promise<readonly Finding[]> {
     using resources = new DisposableStack();
-    const session = await openSession(root);
-    resources.use(session.resources);
-    const input = buildCheckInput(session, checkId, { ...options, resources: options.resources ?? resources });
-    const planned = session.configuredChecks.find(
-        (entry) => entry.check.name === checkId && entry.selection.scope.path === input.selection.scope.path,
-    );
-    if (planned === undefined)
-        throw new Error(`The sandbox does not plan ${checkId} in ${input.selection.scope.path || 'the root'}.`);
-    const result = await buildCheckRun(selectCheckImplementation(input.check))(
-        { ...session, resources: options.resources ?? resources },
-        { ...planned, files: input.files },
-    );
+    const session = await openSession(root, { resources: options.resources ?? resources });
+    const planned = planSandboxCheck(session, checkId, options);
+    const result = await runCheckImplementation(session, planned, selectCheckImplementation(planned.check));
     return result.findings;
 }
 
@@ -130,33 +120,15 @@ async function openPinnedSession(
  * Find the code of a built-in check, as a function that resolves to its findings.
  *
  * @param checkId a check with built-in code, such as `structure/lone-files`.
- * @returns a function that runs the check on an input and resolves to its findings.
+ * @returns a function that runs the planned check in its session and resolves to its findings.
  */
-function findBuiltInCheck(checkId: string): (input: CheckInput) => Promise<Finding[]> {
+function findBuiltInCheck(checkId: string): (session: Session, planned: PlannedCheck) => Promise<Finding[]> {
     const check = selectCheckImplementation({ name: checkId })?.check;
     if (check === undefined) throw new Error(`${checkId} has no built-in check.`);
-    return async (input) => {
-        const result = await check(input);
+    return async (session, planned) => {
+        const result = await check(session, planned);
         return Array.isArray(result) ? result : result.findings;
     };
 }
 
-/**
- * Build the run of a check from its check implementation.
- *
- * @param checkId a shipped check, such as `bash/shellcheck`.
- * @returns the run function.
- */
-function findCheckRun(checkId: string): RunnableCheck['run'] {
-    return buildCheckRun(selectCheckImplementation({ name: checkId }));
-}
-
-export {
-    findCheckRun,
-    checkFindings,
-    buildCheckInput,
-    findBuiltInCheck,
-    openPinnedSession,
-    prepareSwiftInput,
-    createCompilerCache,
-};
+export { checkFindings, planSandboxCheck, findBuiltInCheck, openPinnedSession, prepareSwiftInput, createCompilerCache };

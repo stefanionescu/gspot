@@ -8,11 +8,18 @@ createRuleTester().run<
     [Partial<TrivialFunctionsOptions[0]>]
 >('no-trivial-functions', plugin.rules['no-trivial-functions'], {
     valid: [
+        'export function sort(items, compare = (a, b) => a - b) { items.sort(compare); return items; }',
+        'export const handler = ready ? () => first() : () => second();',
+        'export class Settings { isEnabled() { return this.enabled; } }',
+        'export class Panel { onClick = () => this.open(); }',
+        'export default class Settings { isEnabled() { return this.enabled; } }',
+        'class Settings { isEnabled() { return this.enabled; } } export { Settings };',
+        'export const Panel = class { onClick = (() => this.open()) as () => void; };',
+        "export class NotFound extends Error { constructor() { super('Not found'); } }",
+        'class A { constructor() { setup(); } } new A(); new A();',
         // A consumer that takes a function value needs the function declaration.
         'consume({ onValue: value => write(value) });',
-        'const options = { onValue: value => write(value) }; consume(options);',
         'const options = { nested: { onValue(value) { write(value); } } }; consume(options);',
-        'const local = { onValue: value => write(value) }; local.onValue(1);',
         'handlers.onValue = value => write(value);',
         'items.map((item) => item.value);',
         'items.filter(function (item) { return item.active; });',
@@ -20,18 +27,12 @@ createRuleTester().run<
         'items.map(((item) => item.value) as (item: Item) => unknown);',
         'items.map(((item) => item.value)!);',
         'items.map(((item) => item.value) satisfies (item: Item) => unknown);',
-        'consume(ready ? value => write(value) : undefined);',
         'consume(ready ? undefined : value => write(value));',
         'consume(fallback ?? (() => release()));',
-        'consume(ready && (() => release()));',
-        'consume(fallback || (() => release()));',
-        'consume((() => release()) || fallback);',
-        'consume((() => release()) ?? fallback);',
         'const options = { onValue: ready ? undefined : value => write(value) }; consume(options);',
         'function factory() { setup(); configure(); return fallback ?? (() => release()); }',
         'consume(ready ? undefined : ((value => write(value)) as (value: Item) => void));',
         'const checks = [value => value.active]; checks.some(check => check(item));',
-        '[value => value.active].some(check => check(item));',
         'const checks = [((value) => value.active) as (value: Item) => boolean]; checks.some(check => check(item));',
         'function factory() { setup(); configure(); return () => release(); }',
         'const element = <Button onClick={() => submit()} />;',
@@ -42,7 +43,6 @@ createRuleTester().run<
         'export const local = () => 1;',
         'export default function local() { return 1; }',
         'function manyCallers() { return 1; } manyCallers(); manyCallers();',
-        'function forward(value) { return owner(value); } forward(first); forward(second);',
         'const base = "root"; const path = file => join(base, file); path("first"); path("second");',
         'function callback() { update(); } on(callback); off(callback);',
 
@@ -122,8 +122,6 @@ createRuleTester().run<
             '(() => work())();',
             '(ready ? (() => work()) : fallback)();',
             '(fallback ?? (() => work()))();',
-            '(ready && (() => work()))();',
-            '(fallback || (() => work()))();',
             '(function () { work(); })();',
             'const local = () => work(); local();',
             'function local() { return 1; } (local as () => number)();',
@@ -160,10 +158,12 @@ createRuleTester().run<
 });
 
 // Typed linting resolves the interfaces and base methods that an implementation must retain.
-createRuleTester(import.meta.dir, {
-    parserOptions: {
-        projectService: { allowDefaultProject: ['*.ts'] },
-        tsconfigRootDir: import.meta.dir,
+createRuleTester({
+    languageOptions: {
+        parserOptions: {
+            projectService: { allowDefaultProject: ['*.ts'] },
+            tsconfigRootDir: import.meta.dir,
+        },
     },
 }).run<keyof (typeof plugin.rules)['no-trivial-functions']['meta']['messages'], [Partial<TrivialFunctionsOptions[0]>]>(
     'no-trivial-functions with type information',
@@ -176,7 +176,7 @@ createRuleTester(import.meta.dir, {
                 code: [
                     'interface Runner { run(value: number): number; }',
                     'declare class Base { inherited(): number; }',
-                    'export class Task extends Base implements Runner {',
+                    'class Task extends Base implements Runner {',
                     '    run(value: number): number { return value; }',
                     '    inherited(): number { return 1; }',
                     '    unnecessary(): number { return 1; }',

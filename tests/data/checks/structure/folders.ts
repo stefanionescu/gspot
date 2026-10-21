@@ -55,6 +55,13 @@ export const PREFIX_TREE = {
 export const FILE_FOLDER_CLASH_CASES = [
     {
         check: 'structure/file-folder-clashes',
+        corrected: {
+            files: {
+                'jobs/turned.sh': CLEAN_BASH_SCRIPT,
+                'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
+                'jobs/turn/second.sh': CLEAN_BASH_SCRIPT,
+            },
+        },
         files: {
             'jobs/turn.sh': CLEAN_BASH_SCRIPT,
             'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
@@ -67,3 +74,14 @@ export const FILE_FOLDER_CLASH_CASES = [
         },
     },
 ] as const;
+
+export const PREFIX_CHECK_OPTIONS = { only: ['structure/shared-prefixes'] };
+
+export const NEST_SUFFIX_FILES = {
+    'app/jsx.view.tsx': '',
+    'app/jsx.service.tsx': '',
+    'app/jsx.controller.tsx': '',
+    'app/custom.one.ts': '',
+    'app/custom.two.ts': '',
+    'app/custom.three.ts': '',
+};

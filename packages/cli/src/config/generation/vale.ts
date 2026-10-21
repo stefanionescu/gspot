@@ -145,7 +145,7 @@ export const LENGTH_STYLES = {
 export const VALE_SKIPPED_SCOPES = 'script, style, pre, figure, table';
 export const VALE_MARKUP_RULES = ['gspot.merge-conflict-markers', 'gspot.tree-blocks'] as const;
 
-export const VALE_MARKUP_FILES = '*.{md,mdx,html,htm,astro,svelte,vue}';
+export const VALE_MARKUP_FILES = '*.{md,mdx}';
 
 /** Punctuation escaped in human-readable Go regular-expression word lists. */
 export const VALE_REGEX_SYMBOLS = /[.*+?^${}()|[\]\\/-]/gu;

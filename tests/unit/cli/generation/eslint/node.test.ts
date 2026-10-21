@@ -2,12 +2,15 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
+import { PACKAGE_MANAGER_LEVELS } from '#tests/data/generation/eslint/levels.ts';
 import { createEslint, listScriptFindings, collectLintFindings } from '#tests/setup/tool-files.ts';
 
 import {
     ENGINE_PATHS,
+    ENGINE_SCOPES,
     ENGINE_PHASES,
     ENGINE_SOURCE,
     ENGINE_FINDINGS,
@@ -24,8 +27,7 @@ import {
 } from '#tests/data/generation/eslint/node-scripts.ts';
 
 test.each([...ENGINE_PHASES])('engines > Node checks follow package engines (%j)', async (phase) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         ...ENGINE_PACKAGES,
         ...Object.fromEntries(
             ENGINE_PATHS.map((path) => [
@@ -37,13 +39,13 @@ test.each([...ENGINE_PHASES])('engines > Node checks follow package engines (%j)
         ),
     });
 
-    await Bun.write(
+    await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        buildSettingsText(['javascript'], { level: 'all', tables: phase.tables }),
+        buildSandboxSettings(['javascript'], { level: 'all', tables: ENGINE_SCOPES }),
     );
     for (const path of phase.corrections) {
-        const source = await Bun.file(join(sandbox.path, path)).text();
-        await Bun.write(
+        const source = await readFile(join(sandbox.path, path), 'utf8');
+        await writeFile(
             join(sandbox.path, path),
             source
                 .replace('Object.groupBy([1], String)', 'Object.fromEntries([["group", [1]]])')
@@ -69,17 +71,17 @@ test.each([...ENGINE_PHASES])('engines > Node checks follow package engines (%j)
 test.each([...LEVELS])(
     'node-scripts > ESLint lints Node script files by role and shebang, and skips generated, vendored and other files (%s)',
     async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             ...NODE_SCRIPT_FILES,
-            'gspot.toml': buildSettingsText(['typescript'], { level, tables: NODE_SCRIPT_TABLES }),
+            'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: NODE_SCRIPT_TABLES }),
         });
+
         const eslint = await createEslint(sandbox.path);
         const paths = NODE_SCRIPT_CASES.map(({ file }) => file);
         for (const corrected of [false, true]) {
             if (corrected)
                 for (const { file, corrected } of NODE_SCRIPT_CASES)
-                    await Bun.write(join(sandbox.path, file), corrected);
+                    await writeFile(join(sandbox.path, file), corrected);
             const configurations = await Promise.all(
                 UNLINTED_FILES.map(async (file) => ({
                     file,
@@ -101,18 +103,18 @@ test.each([...LEVELS])(
 test.each([...LEVELS])(
     'node-scripts > Node scripts without an extension get syntax, global, engine, import and scope limit findings (%s)',
     async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             ...NODE_SCRIPT_FILES,
-            'gspot.toml': buildSettingsText(['typescript'], { level, tables: NODE_SCRIPT_TABLES }),
+            'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: NODE_SCRIPT_TABLES }),
             ...Object.fromEntries(EXTENSIONLESS_SCRIPT_CASES.map(({ file, source }) => [file, source])),
             'source.js': 'export const value = 1;\n',
         });
+
         const eslint = await createEslint(sandbox.path);
         for (const corrected of [false, true]) {
             if (corrected)
                 for (const contract of EXTENSIONLESS_SCRIPT_CASES)
-                    await Bun.write(join(sandbox.path, contract.file), contract.corrected);
+                    await writeFile(join(sandbox.path, contract.file), contract.corrected);
             const paths = EXTENSIONLESS_SCRIPT_CASES.map(({ file }) => file);
             const findings = await collectLintFindings(eslint, sandbox.path, paths, EXTENSIONLESS_SCRIPT_RULES);
             expect(findings).toStrictEqual(corrected ? [] : listScriptFindings(EXTENSIONLESS_SCRIPT_CASES, level));
@@ -121,14 +123,17 @@ test.each([...LEVELS])(
 );
 
 test('package-json > every package.json gets the package-json rules and no code rules, and only the root names its package manager', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `level = "all"\nconfigurations = ["typescript", "vitest"]\n[rules]\nenabled = false\n`,
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript', 'vitest'], {
+            level: 'all',
+            tables: '[rules]\nenabled = false\n',
+        }),
         'package.json':
             '{"name":"example","version":"1.0.0","private":true,"type":"module","dependencies":{"b":"1.0.0","a":"1.0.0"}}\n',
         'tests/package.json':
             '{"name":"test-tests","version":"1.0.0","private":true,"dependencies":{"b":"1.0.0","a":"1.0.0"}}\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     const files = ['package.json', 'tests/package.json'];
     const configuration = await Promise.all(
@@ -150,16 +155,10 @@ test('package-json > an ignore of a package-json rule for one file keeps the fin
     await using sandbox = await testdir();
     const manifest = { name: 'example', version: '0.0.0', type: 'module' };
     await createFileTree(sandbox.path, {
-        'gspot.toml': `level = "all"
-configurations = ["typescript"]
-[[ignore]]
-check = "javascript/eslint"
-rule = "package-json/require-exports"
-paths = ["cli/package.json"]
-reason = "The command package exposes no module API."
-[rules]
-enabled = false
-`,
+        'gspot.toml': buildSandboxSettings(['typescript'], {
+            level: 'all',
+            tables: '[[ignore]]\ncheck = "javascript/eslint"\nrule = "package-json/require-exports"\npaths = ["cli/package.json"]\nreason = "The command package exposes no module API."\n[rules]\nenabled = false\n',
+        }),
         'package.json': JSON.stringify({ ...manifest, private: true }),
         'cli/package.json': JSON.stringify(manifest),
         'library/package.json': JSON.stringify(manifest),
@@ -174,3 +173,16 @@ enabled = false
         ),
     ).toStrictEqual([{ file: 'library/package.json', rule: 'package-json/require-exports', line: 1 }]);
 });
+
+test.each([...PACKAGE_MANAGER_LEVELS])(
+    'the root package manager rule follows the manifest level ($level)',
+    async ({ level, severity }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['javascript'], { level }),
+            'package.json': '{"private":true,"type":"module"}',
+        });
+        const eslint = await createEslint(sandbox.path);
+        const configuration = (await eslint.calculateConfigForFile('package.json')) as EslintConfiguration;
+        expect(configuration.rules['package-json/require-packageManager']).toStrictEqual([severity]);
+    },
+);

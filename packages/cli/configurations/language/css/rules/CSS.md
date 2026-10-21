@@ -31,9 +31,9 @@ Read this rule when you change a stylesheet.
 
 ## Naming
 
-### Selector and file names
-
 <!-- level: all -->
+
+### Selector and file names
 
 - Name classes for the component or state, such as `order-card`, `order-card-title`, `is-active`, or `has-error`.
 - A state class starts with `is-` or `has-`. A script toggles it. Never style it alone.

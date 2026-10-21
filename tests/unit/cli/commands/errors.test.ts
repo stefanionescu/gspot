@@ -1,18 +1,18 @@
+import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { readTree } from '#tests/setup/files.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import * as processes from '#cli/system/processes.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { ARGUMENT_ERRORS, COMMAND_VALUE_ERRORS, COMMAND_VALUE_SETTINGS } from '#tests/data/commands/errors.ts';
 
 test.each([...ARGUMENT_ERRORS])(
     'text output for $name exits 2 and names the argument problem',
     async ({ arguments: commandArguments, message }) => {
-        await using folder = await testdir();
-        await createFileTree(folder.path, { 'gspot.toml': 'malformed = [' });
+        await using folder = await testdir({ 'gspot.toml': 'malformed = [' });
+
         const failed = await runGspot(folder.path, commandArguments);
         expect(failed.code, failed.stdout + failed.stderr).toBe(2);
         expect(failed.stdout).toBe('');
@@ -24,13 +24,12 @@ test.each([...ARGUMENT_ERRORS])(
 test.each(
     ARGUMENT_ERRORS.map(({ arguments: commandArguments, ...entry }) => ({
         ...entry,
-        position: 'after',
         commandArguments: [...commandArguments, '--json'],
         message: 'jsonAfterMessage' in entry ? entry.jsonAfterMessage : entry.message,
     })),
-)('JSON output for $name with --json $position gives one error object', async ({ commandArguments, message }) => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, { 'gspot.toml': 'malformed = [' });
+)('JSON output for $name with --json gives one error object', async ({ commandArguments, message }) => {
+    await using folder = await testdir({ 'gspot.toml': 'malformed = [' });
+
     const failed = await runGspot(folder.path, commandArguments);
     expect(failed.code, failed.stdout + failed.stderr).toBe(2);
     expect(failed.stderr).toBe('');
@@ -55,11 +54,11 @@ test('help works and exits 0 after an argument error', async () => {
 });
 
 test('apply starts no npm, and install reports a failed npm version lookup in text and JSON', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash']),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
     });
+
     const run = processes.spawnProcessBlocking;
     using boundary = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
         if (command[0] !== 'npm' || command[1] !== '--version') return run(command, options);

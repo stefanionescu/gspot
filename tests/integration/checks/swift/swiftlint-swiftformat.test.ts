@@ -3,14 +3,13 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { hasToolBuild } from '#tests/setup/system.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { stat, chmod, readFile } from 'node:fs/promises';
-import type { RunReport } from '#cli/types/runs/check.ts';
 import { checkChanges } from '#tests/setup/sample-checks.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { SWIFT_FORMAT_CHECK } from '#tests/data/checks/swift/projects.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { updateSandbox, applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {
     CAST_SWIFT,
@@ -45,9 +44,9 @@ test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header w
 });
 
 async function readDocumentationFindings(root: string, code: 0 | 1, scope: string) {
-    const result = await spawnGspot(root, SWIFT_FORMAT_CHECK);
+    const result = parseCheckReport(await spawnGspot(root, SWIFT_FORMAT_CHECK));
     expect(result.code, result.stdout + result.stderr).toBe(code);
-    const report = JSON.parse(result.stdout) as RunReport;
+    const report = result.report;
     expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
         ...(scope === '' ? [] : [{ scope: '', status: 'skipped' as const }]),
         { scope, status: code === 0 ? 'passed' : 'failed' },
@@ -57,15 +56,15 @@ async function readDocumentationFindings(root: string, code: 0 | 1, scope: strin
 
 // SwiftFormat has no Windows build.
 test.skipIf(!hasToolBuild('swiftformat'))('recommended leaves Swift block comments unchecked', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['swift'], { level: 'recommended' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['swift'], { level: 'recommended' }),
         'Value.swift': SWIFT_DOCS_SOURCE,
     });
+
     const configured = await spawnGspot(sandbox.path, ['apply']);
     expect(configured.code, configured.stdout + configured.stderr).toBe(0);
     expect(await readDocumentationFindings(sandbox.path, 1, '')).toStrictEqual([]);
-    expect(await Bun.file(join(sandbox.path, 'Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
+    expect(await readFile(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
 });
 
 // The pinned SwiftFormat tool has no Windows build.
@@ -74,7 +73,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
     async () => {
         await using sandbox = await testdir();
         const root = sandbox.path;
-        const settings = buildSettingsText(['swift'], { level: 'all' });
+        const settings = buildSandboxSettings(['swift'], { level: 'all' });
         await createFileTree(root, { 'gspot.toml': settings, 'Value.swift': SWIFT_DOCS_SOURCE });
         const configured = await spawnGspot(root, ['apply']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);
@@ -83,12 +82,12 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             ['Value.swift', 1, 1],
             ['Value.swift', 9, 1],
         ]);
-        expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
+        expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
         const corrected = await spawnGspot(root, [...SWIFT_FORMAT_CHECK, '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await readDocumentationFindings(root, 0, '')).toStrictEqual([]);
-        expect(await Bun.file(join(root, 'Value.swift')).text()).toContain('"/** not documentation */"');
-        await Bun.write(join(root, 'Value.swift'), SWIFT_DOCS_SOURCE);
+        expect(await readFile(join(root, 'Value.swift'), 'utf8')).toContain('"/** not documentation */"');
+        await writeFile(join(root, 'Value.swift'), SWIFT_DOCS_SOURCE);
         const ignored = await spawnGspot(root, [
             'ignore',
             'swift/swiftformat',
@@ -99,7 +98,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         ]);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
         expect(await readDocumentationFindings(root, 1, '')).toStrictEqual([]);
-        expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
+        expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
     },
 );
 
@@ -110,7 +109,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': buildSettingsText(['swift'], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
             'Value.swift': SWIFT_INLINE_DOCS,
         });
         const configured = await spawnGspot(root, ['apply']);
@@ -126,11 +125,11 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             [8, 1],
             [11, 1],
         ]);
-        expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_INLINE_DOCS);
+        expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_INLINE_DOCS);
         const corrected = await spawnGspot(root, [...SWIFT_FORMAT_CHECK, '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await readDocumentationFindings(root, 0, '')).toStrictEqual([]);
-        const correctedText = await Bun.file(join(root, 'Value.swift')).text();
+        const correctedText = await readFile(join(root, 'Value.swift'), 'utf8');
         expect(correctedText).toContain('"/** literal */"');
         expect(correctedText).toContain('/// An inline /** example */ remains documentation.');
         expect(correctedText).toContain('/** A retained declaration. */');
@@ -143,13 +142,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
     async () => {
         await using sandbox = await testdir();
         const root = sandbox.path;
-        const settings = buildSettingsText(['swift'], {
-            tables: `[[scope]]
-path = "nested"
-
-`,
-            level: 'all',
-        });
+        const settings = buildSandboxSettings(['swift'], { level: 'all', scopes: [{ path: 'nested' }] });
         await createFileTree(root, { 'gspot.toml': settings, 'nested/Value.swift': SWIFT_DOCS_SOURCE });
         const applied = await spawnGspot(root, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -179,7 +172,7 @@ path = "nested"
             ['nested/Value.swift', 1, 1],
             ['nested/Value.swift', 9, 1],
         ]);
-        expect(await Bun.file(join(root, 'nested/Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
+        expect(await readFile(join(root, 'nested/Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
     },
 );
 
@@ -187,7 +180,7 @@ test.skipIf(!hasToolBuild('swiftlint'))(
     'SwiftLint and SwiftFormat read the configuration of their scope, and the findings keep the scope path',
     async () => {
         const { root, environment } = installedSandbox();
-        await using _change = await updateSandbox(
+        await using _change = await applySandboxChanges(
             { root, environment: {}, run: spawnGspot },
             {
                 check: 'swift/swiftlint',
@@ -196,37 +189,37 @@ test.skipIf(!hasToolBuild('swiftlint'))(
                     'ios/Sources/App/Greeting.swift': CLEAN_SWIFT,
                     'README.md': '# test\n',
                     'ios/Sources/App/Cast.swift': '',
-                    'gspot.toml': buildSettingsText([], {
+                    'gspot.toml': buildSandboxSettings([], {
                         level: 'all',
-                        tables: `[[scope]]
-path = "ios"
-configurations = ["swift"]
-`,
+                        scopes: [{ path: 'ios', configurations: ['swift'] }],
                     }),
                 },
             },
         );
-        const applied = await spawnGspot(root, ['apply'], environment);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+
         for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
             const clean = await spawnGspot(root, ['check', '--only', id], environment);
             expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
         }
-        const result = await checkChanges(
-            root,
-            { check: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST_SWIFT } },
-            environment,
+        const result = parseCheckReport(
+            await checkChanges(
+                root,
+                { check: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST_SWIFT } },
+                environment,
+            ),
         );
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        const failed = JSON.parse(result.stdout) as RunReport;
+        const failed = result.report;
         expect(failed.checks).toMatchObject([{ check: 'swift/swiftlint', scope: 'ios', status: 'failed' }]);
         expect(failed.checks[0]!.findings).toContainEqual(
             matchFields({ file: 'ios/Sources/App/Cast.swift', rule: 'force_cast', line: 5 }),
         );
-        await Bun.write(join(root, 'ios/Sources/App/Cast.swift'), CLEAN_SWIFT.replace('greeting', 'correctedGreeting'));
-        const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json'], environment);
+        await writeFile(join(root, 'ios/Sources/App/Cast.swift'), CLEAN_SWIFT.replace('greeting', 'correctedGreeting'));
+        const corrected = parseCheckReport(
+            await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json'], environment),
+        );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+        expect(corrected.report.checks).toMatchObject([
             { check: 'swift/swiftlint', scope: 'ios', status: 'passed', findings: [] },
         ]);
     },

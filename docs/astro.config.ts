@@ -6,14 +6,15 @@ import starlightLlmsTxt from 'starlight-llms-txt';
 import { pruneUnusedStyles } from './src/styles.ts';
 import { SIDEBAR } from './src/config/navigation.ts';
 import { readReferenceData } from '#cli/reference.ts';
+import { SCHEMA_FILE } from '#cli/config/settings/file.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
-import { description } from '@gspothq/cli/package.json' with { type: 'json' };
-import { LLMS_PAGES, AGENT_STEPS, LLMS_DESCRIPTION } from './src/config/setup.ts';
+import { LLMS_PAGES, AGENT_STEPS } from './src/config/setup.ts';
 
 import {
     FAVICON,
     EDIT_URL,
     SITE_URL,
+    DESCRIPTION,
     SOCIAL_IMAGE,
     FONT_PACKAGES,
     REPOSITORY_URL,
@@ -48,8 +49,8 @@ export default defineConfig({
             name: 'settings-schema',
             hooks: {
                 'astro:build:done': async ({ dir }) => {
-                    const { schema, schemaFile } = readReferenceData();
-                    await writeFile(new URL(schemaFile, dir), JSON.stringify(schema) + '\n');
+                    const { schema } = readReferenceData();
+                    await writeFile(new URL(SCHEMA_FILE, dir), JSON.stringify(schema) + '\n');
                 },
             },
         },
@@ -81,7 +82,7 @@ export default defineConfig({
             plugins: [
                 starlightLlmsTxt({
                     projectName: 'gspot',
-                    description: LLMS_DESCRIPTION,
+                    description: DESCRIPTION,
                     details: AGENT_STEPS,
                     ...LLMS_PAGES,
                 }),
@@ -126,7 +127,6 @@ export default defineConfig({
                 },
             },
             editLink: { baseUrl: EDIT_URL },
-            description,
             customCss: ['./src/theme.css'],
             social: [{ icon: 'github', label: 'GitHub', href: REPOSITORY_URL }],
             sidebar: SIDEBAR,

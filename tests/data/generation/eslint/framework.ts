@@ -1,3 +1,5 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+
 const SELECTOR_FILES = {
     'native/App.jsx': `const list = <FlatList data={items} />;
 const scroll = <ScrollView>{items.map(renderItem)}</ScrollView>;
@@ -9,6 +11,11 @@ const text = <input type="text" value="a" {...register("choice")} />;
 } as const;
 
 const SERVER_FILES = {
+    'gspot.toml': buildSandboxSettings(['javascript'], {
+        level: 'all',
+        rules: true,
+        scopes: [{ path: 'app', configurations: ['nextjs'] }],
+    }),
     'app/lib/widget/server.js': 'export const value = 1;\n',
     'app/lib/widget/data.server.js': 'export const value = 1;\n',
     'app/server/data.js': 'export const value = 1;\n',

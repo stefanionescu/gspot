@@ -95,20 +95,27 @@ You can edit the other keys of that file.
 - Commit straight to `main`. Do not open branches or pull requests.
 - Name a tool check after its tool. Name a built-in check after what it checks.
 - Unit tests make no network calls.
+- In unit check tests, choose the entrypoint for the assertion:
+    - Use `checkFindings` for one check's findings or error.
+    - Use `planSandboxCheck` with `findBuiltInCheck` when files or the read cache change after the session opens.
+    - Use `runCheckImplementation` for a command check whose plan the test changes.
+    - Use `runChecks` with `buildRunOptions` for status, notes, exit codes, skips, or cancellation.
+    - Use `runCheckSample` for a sample that fails and passes after its fix.
+- Keep CLI calls and direct imports of check functions out of `tests/unit/cli/checks/`.
+  CLI behavior belongs to `tests/unit/cli/commands/`.
 - Do not use subagents or parallel agents unless asked in the conversation.
 - Keep the owner's descriptions word for word: the first sentence of `README.md`, and the `description` in
   `packages/cli/package.json`. Their copies in the docs, `llms.txt`, and `gspot --help` match them.
 
 ## Folders
 
-These folder rules apply to this repository only.
+These folder rules apply to `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/` in this repository.
 
-- Each package keeps its fixed values in `config/` and its TypeScript types in `types/`, one file per topic:
-  `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/`. `tests/` keeps its values in
-  `data/`.
+- Each package keeps fixed values in `config/`, TypeScript types in `types/`, and runtime schemas in `schemas/`.
+- Group subfolders and files by topic. Keep test values in `tests/data/`.
 - Other files take their constants from `config/` and their types from `types/`. They declare no module-level
-  literal constants and export no types. A Zod schema, a value computed at import time, or a type that one file
-  uses stays in that file.
+  literal constants or types. Declare schemas only in `schemas/`, including schemas used by one file.
+  A value computed at import time stays with the behavior that uses it.
 - Write each exported type in plain TypeScript. Check each Zod schema against its type with
   `satisfies z.ZodType<T>`. Do not export a `z.infer` type.
 - Declare a list of allowed names as an `as const` array in `config/`, its type as `(typeof LIST)[number]` in
@@ -118,10 +125,10 @@ These folder rules apply to this repository only.
 
 The root `package.json` overrides keep transitive packages on security fixes.
 
-| Override                  | Version  | Advisory and reason                                                                                                                                      |
-| ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `handlebars`              | `4.7.10` | [GHSA-xw65-4hp5-5hc7](https://github.com/advisories/GHSA-xw65-4hp5-5hc7) — Prevents JavaScript injection from precompiled templates.                     |
-| `js-yaml@3`               | `4.3.2`  | [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh) — Bounds empty merge-source processing; Jest requests major 3.                  |
-| `postcss-selector-parser` | `7.1.6`  | [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf) — Bounds flat-selector processing; PurgeCSS and postcss-nested request major 6. |
-| `sharp`                   | `0.35.5` | [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w) — Fixes the bundled librsvg vulnerability; Miniflare pins 0.35.4.               |
-| `undici@7`                | `7.29.1` | [GHSA-w293-vg96-wgc3](https://github.com/advisories/GHSA-w293-vg96-wgc3) — Preserves TLS validation options in BalancedPool.                             |
+| Override                  | Version  | Advisory and reason                                                                                                                                                                     |
+| ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `handlebars`              | `4.7.10` | [GHSA-xw65-4hp5-5hc7](https://github.com/advisories/GHSA-xw65-4hp5-5hc7) — Prevents JavaScript injection from precompiled templates.                                                    |
+| `js-yaml@3`               | `4.3.2`  | [GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c) — Removes the unpatched sprintf-js dependency chain that @istanbuljs/load-nyc-config receives through major 3. |
+| `postcss-selector-parser` | `7.1.6`  | [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf) — Bounds flat-selector processing; PurgeCSS and postcss-nested request major 6.                                |
+| `sharp`                   | `0.35.5` | [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w) — Fixes the bundled librsvg vulnerability; Miniflare pins 0.35.4.                                              |
+| `undici@7`                | `7.29.1` | [GHSA-w293-vg96-wgc3](https://github.com/advisories/GHSA-w293-vg96-wgc3) — Preserves TLS validation options in BalancedPool.                                                            |

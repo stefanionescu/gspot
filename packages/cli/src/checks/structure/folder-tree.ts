@@ -1,22 +1,19 @@
 import { extractParentFolder } from '#cli/system/paths.ts';
-import type { CheckInput } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { FolderEntry } from '#cli/types/checks/structure.ts';
+import { listTaggedExtensions } from '#cli/repository/classify.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { isInGspotFolder, listTaggedExtensions } from '#cli/repository/classify.ts';
 
 /**
- * Lists the source files that the folder checks read: no Markdown, and nothing under .gspot.
+ * Lists the source files that the folder checks read: no Markdown.
  *
- * @param input the scope files.
- * @returns the scope files without Markdown or .gspot files.
+ * @param planned the scope files.
+ * @returns the source files without Markdown.
  */
-export function listCodeFiles(input: CheckInput): TrackedFile[] {
+export function listCodeFiles(planned: PlannedCheck): TrackedFile[] {
     const documents = listTaggedExtensions('markdown');
-    return input.files.filter(
-        (file) =>
-            file.kind === 'source' &&
-            !isInGspotFolder(file.path) &&
-            documents.every((extension) => !file.path.endsWith(extension)),
+    return planned.files.filter(
+        (file) => file.kind === 'source' && documents.every((extension) => !file.path.endsWith(extension)),
     );
 }
 

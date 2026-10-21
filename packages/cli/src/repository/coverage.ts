@@ -1,13 +1,19 @@
 // Selects the tracked files that each check and configuration covers.
 import { posix } from 'node:path';
 import { extractExtension } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { SETTING_PLACEHOLDER, TEST_FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
-import { selectConfigurations, filterSourceConfigurations } from '#cli/configurations/select.ts';
 import { escapeGlob, buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
 import type { FileMatch, FileCoverageOptions, ConfigurationSelection } from '#cli/types/repository/selection.ts';
+
+import {
+    selectConfigurations,
+    filterSourceConfigurations,
+    listAutomaticConfigurations,
+} from '#cli/configurations/select.ts';
 
 // Add the file types of the Prettier or ESLint plugins in use to the owners, when the table takes them.
 function addPluginExtensions(owners: FileMatch, selected: Manifest[]): FileMatch {
@@ -109,16 +115,7 @@ export function selectForScope(
     scope: string,
     manifests: Map<string, Manifest>,
 ): Manifest[] {
-    const automatic = manifests
-        .values()
-        .filter(
-            (manifest) =>
-                manifest.configuration.group === 'general' &&
-                manifest.configuration.always_selected &&
-                manifest.configuration.when === undefined,
-        )
-        .map((manifest) => manifest.configuration.name)
-        .toArray();
+    const automatic = listAutomaticConfigurations(manifests);
     const choices = new Set<string>();
     const tables = [
         settings,
@@ -141,17 +138,37 @@ export function selectForScope(
  * @param endings the file extensions to select.
  * @returns the matching source paths.
  */
-export function listSourcePaths(files: TrackedFile[], endings?: readonly string[]): string[] {
+export function listSourcePaths(files: TrackedFile[], endings: readonly string[]): string[] {
     return files
         .filter(
             (file) =>
                 file.kind === 'source' &&
-                (endings === undefined ||
-                    endings.some((ending) =>
-                        ending.startsWith('.')
-                            ? file.path.endsWith(ending)
-                            : file.path === ending || file.path.endsWith(`/${ending}`),
-                    )),
+                endings.some((ending) =>
+                    ending.startsWith('.')
+                        ? file.path.endsWith(ending)
+                        : file.path === ending || file.path.endsWith(`/${ending}`),
+                ),
         )
         .map((file) => file.path);
+}
+
+/**
+ * List the files covered by another check in the selected configurations.
+ *
+ * @param planned the planned scope and its candidate files.
+ * @param checkId the declaration whose coverage to apply.
+ * @returns the matching tracked files.
+ */
+export function listCheckFiles(planned: PlannedCheck, checkId: string): TrackedFile[] {
+    return planned.selection.selected.flatMap((manifest) =>
+        manifest.checks
+            .filter((check) => check.name === checkId)
+            .flatMap((check) =>
+                listCoveredFiles(check.files ?? manifest.files, planned.files, {
+                    selected: planned.selection.selected,
+                    scope: planned.selection.scope.path,
+                    view: planned.selection.view,
+                }),
+            ),
+    );
 }

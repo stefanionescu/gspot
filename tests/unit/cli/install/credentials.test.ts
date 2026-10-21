@@ -8,7 +8,7 @@ test.each(REGISTRY_PASSWORDS)('registry passwords are read in both encodings fro
 });
 
 test.each(LEAKED_LOCKFILES)('a lockfile that holds %s is refused', (lockfile) => {
-    const failure = new Error('Existing files were preserved.');
+    const failure = 'Existing files were preserved.';
     expect(() => {
         assertCredentialFreeLockfile(lockfile, ['synthetic/password+with spaces'], failure);
     }).toThrow(failure);

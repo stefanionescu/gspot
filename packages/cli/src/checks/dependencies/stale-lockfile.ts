@@ -1,19 +1,19 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import { readLockedSpecifiers } from '#cli/parsers/locked-specifiers.ts';
-import { readDeclaredSpecifiers } from '#cli/checks/dependencies/package-json.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
+import { findCachedText } from '#cli/system/files/reads.ts';
+import { listEnclosingFolders } from '#cli/system/paths.ts';
+import { parseLockedSpecifiers } from '#cli/parsers/lockfiles.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { readDeclaredSpecifiers } from '#cli/repository/dependency-files.ts';
 import { IMPORTER_LOCKFILES, LOCKFILE_UPDATE_COMMANDS } from '#cli/config/parsers/lockfiles.ts';
 
-function findImporterLockfile(input: CheckInput, folder: string) {
-    const segments = folder === '' ? [] : folder.split('/');
-    for (let depth = segments.length; depth >= 0; depth -= 1) {
-        const base = segments.slice(0, depth).join('/');
+function findImporterLockfile(session: Session, folder: string) {
+    for (const base of listEnclosingFolders(folder)) {
         for (const lockfile of IMPORTER_LOCKFILES) {
             const path = posix.join(base, lockfile);
-            const text = readCachedText(input.reads, path);
+            const text = findCachedText(session.reads, path);
             if (text !== undefined) return { lockfile, path, base, text };
         }
     }
@@ -39,21 +39,24 @@ function compareSpecifiers(declared: Map<string, string>, locked: Map<string, st
 /**
  * Reports a package.json whose dependencies differ from what its lockfile records, which a frozen install refuses.
  *
- * @param input the scope and the run cache.
+ * @param session the repository and its tools.
+ * @param planned the scope and the run cache.
  * @returns one finding per dependency out of step with the lockfile.
  */
-export function checkStaleLockfile(input: CheckInput): Finding[] {
-    const folder = input.selection.scope.path;
+export function checkStaleLockfile(session: Session, planned: PlannedCheck): Finding[] {
+    const folder = planned.selection.scope.path;
     const manifest = posix.join(folder, PACKAGE_JSON);
-    const declared = readDeclaredSpecifiers(input, manifest);
-    const found = findImporterLockfile(input, folder);
+    const declared = readDeclaredSpecifiers(session.reads, manifest);
+    const found = findImporterLockfile(session, folder);
     if (declared === undefined || found === undefined) return [];
-    const locked = readLockedSpecifiers(found.lockfile, found.text).get(posix.relative(found.base, folder));
+    const locked = parseLockedSpecifiers(found.lockfile, found.text, posix.join(found.base, found.lockfile)).get(
+        posix.relative(found.base, folder),
+    );
     if (locked === undefined) return [];
     const command = LOCKFILE_UPDATE_COMMANDS[found.lockfile];
     return compareSpecifiers(declared, locked, found.path).map((message) =>
         buildFinding(
-            input,
+            planned,
             { file: manifest, line: 1 },
             'stale-lockfile',
             `${message} Run ${command} and commit the lockfile.`,

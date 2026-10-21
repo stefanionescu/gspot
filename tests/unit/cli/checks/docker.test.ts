@@ -4,11 +4,13 @@ import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
+import { runCheckImplementation } from '#cli/runs/check-run.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import { selectCheckImplementation } from '#cli/checks/implementations.ts';
 import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { findCheckRun, checkFindings, openPinnedSession } from '#tests/setup/check-input.ts';
+import { checkFindings, openPinnedSession } from '#tests/setup/check-input.ts';
 
 import {
     MIXED_REPORT,
@@ -24,11 +26,11 @@ import {
 } from '#tests/data/checks/docker.ts';
 
 test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', async ({ source }) => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['docker']),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': source,
     });
+
     using resources = new DisposableStack();
     const session = await openPinnedSession(folder.path, ['trivy'], resources);
     const nativeRun = processes.spawnProcess;
@@ -58,7 +60,7 @@ test('a fatal registry failure is reported with its diagnostic', async () => {
     await using folder = await testdir();
     const source = 'services: {app: {image: nginx:1.27.2}}\n';
     await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['docker']),
+        'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': source,
     });
     using resources = new DisposableStack();
@@ -67,35 +69,31 @@ test('a fatal registry failure is reported with its diagnostic', async () => {
     expect(await captureRejection(checkFindings(session.root, 'docker/trivy-image'))).toContain(message);
 });
 
-test.each([...INVALID_COMPOSE])('Trivy refuses $name before scanning an image', async ({ source }) => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['docker']),
+test.each([...INVALID_COMPOSE])('Trivy refuses $name before scanning an image', async ({ source, message }) => {
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': source,
     });
-    const session = await openSession(folder.path);
+
     using scan = spyOn(processes, 'spawnProcess');
-    expect(await captureRejection(checkFindings(session.root, 'docker/trivy-image'))).toContain(
-        'Cannot read Compose service images in compose.yaml.',
-    );
+    expect(await captureRejection(checkFindings(folder.path, 'docker/trivy-image'))).toContain(message);
     expect(scan).not.toHaveBeenCalled();
 });
 
 test('Trivy leaves build-only services unscanned', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['docker']),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': 'services: {app: {build: .}}\n',
     });
-    const session = await openSession(folder.path);
+
     using scan = spyOn(processes, 'spawnProcess');
-    expect(await checkFindings(session.root, 'docker/trivy-image')).toStrictEqual([]);
+    expect(await checkFindings(folder.path, 'docker/trivy-image')).toStrictEqual([]);
     expect(scan).not.toHaveBeenCalled();
 });
 
 test.each([...DOCKERIGNORE_CASES])('Docker ignore requirements follow $name', async ({ settings, text, missing }) => {
     await using sandbox = await testdir({
-        'gspot.toml': `level = "all"\n${settings}`,
+        'gspot.toml': settings,
         Dockerfile: 'FROM scratch\n',
         '.dockerignore': text,
     });
@@ -111,7 +109,7 @@ test.each([...DOCKER_CONTEXT_CASES])(
     'a Dockerfile needs an ignore file that lists .git and .env: $name',
     async ({ files, findings: expectedFindings }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['docker'], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['docker'], { level: 'all' }),
             ...files,
         });
 
@@ -128,7 +126,7 @@ test.each([...DOCKER_CONTEXT_CASES])(
 
 test('Trivy scans a repeated image once and reports each advisory and secret in every Compose file that names it', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['docker']),
+        'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': 'services: {app: {image: nginx:1.27.2}}\n',
         'docker-compose.prod.yml': 'services: {app: {image: nginx:1.27.2}}\n',
     });
@@ -155,7 +153,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
     'Compose $override runs after $base in one docker compose call',
     async ({ base, override }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(['docker']),
+            'gspot.toml': buildSandboxSettings(['docker']),
             [base]: 'services: {app: {image: nginx:1.27.2}}\n',
             [override]: 'services: {app: {environment: {FEATURE: enabled}}}\n',
         });
@@ -168,7 +166,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
         );
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));
         const planned = planRun(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        expect(await findCheckRun('docker/compose')(session, planned)).toMatchObject({
+        expect(await runCheckImplementation(session, planned, selectCheckImplementation(planned.check))).toMatchObject({
             status: 'passed',
             findings: [],
         });

@@ -1,8 +1,8 @@
 // Links installed npm packages into test projects.
 import { join, dirname } from 'node:path';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { isWindows } from '#tests/setup/system.ts';
-import type { PackageJson } from '#cli/types/parsers/dependency-files.ts';
+import { FOLDER_LINK_TYPE } from '#tests/setup/system.ts';
+import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import { mkdir, readdir, symlink, readFile, realpath } from 'node:fs/promises';
 
 /** The node_modules folder of the repository root, where each package sits beside its dependencies. */
@@ -39,7 +39,6 @@ async function listPackageNames(store: string): Promise<string[]> {
  * @param target the node_modules folder to create.
  */
 async function linkInstalledModules(target: string): Promise<void> {
-    const kind = isWindows ? 'junction' : 'dir';
     const packages = await Promise.all(
         [testModules, installedModules].map(async (store) => {
             const names = await listPackageNames(store);
@@ -52,7 +51,7 @@ async function linkInstalledModules(target: string): Promise<void> {
         if (await isOnDisk(destination)) continue;
         await mkdir(dirname(destination), { recursive: true });
         const original = await realpath(join(store, name));
-        await symlink(original, destination, kind);
+        await symlink(original, destination, FOLDER_LINK_TYPE);
     }
 }
 /**
@@ -63,7 +62,6 @@ async function linkInstalledModules(target: string): Promise<void> {
  * @param names packages that the sandbox project declares.
  */
 async function linkPackages(target: string, names: readonly string[]): Promise<void> {
-    const kind = isWindows ? 'junction' : 'dir';
     const pending = await Promise.all(
         names.map(
             async (name) =>
@@ -89,7 +87,7 @@ async function linkPackages(target: string, names: readonly string[]): Promise<v
     for (const [name, real] of found) {
         const destination = join(target, name);
         await mkdir(dirname(destination), { recursive: true });
-        await symlink(real, destination, kind);
+        await symlink(real, destination, FOLDER_LINK_TYPE);
     }
 }
 

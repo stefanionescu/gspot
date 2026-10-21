@@ -34,22 +34,22 @@ export const RUNNERS = {
     npm: {
         command: 'npm exec --no -- gspot',
         missing: 'Install Node.js and npm, then run: npm install.',
-        pin: 'npm install --save-dev --save-exact',
+        pin: 'npm install --save-dev --save-exact <package>@<version>',
     },
     pnpm: {
         command: 'pnpm exec gspot',
         missing: 'Install pnpm, then run: pnpm install.',
-        pin: 'pnpm add --save-dev --save-exact',
+        pin: 'pnpm add --save-dev --save-exact <package>@<version>',
     },
     yarn: {
         command: 'yarn exec gspot',
         missing: 'Install Yarn, then run: yarn install.',
-        pin: 'yarn add --dev --exact',
+        pin: 'yarn add --dev --exact <package>@<version>',
     },
     bun: {
         command: 'bun run --no-install gspot',
         missing: 'Install Bun, then run: bun install.',
-        pin: 'bun add --dev --exact',
+        pin: 'bun add --dev --exact <package>@<version>',
     },
     mise: {
         command: 'mise exec -- gspot',

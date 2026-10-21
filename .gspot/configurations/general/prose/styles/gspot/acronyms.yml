@@ -98,9 +98,9 @@ exceptions:
   - HTML
   - linkinator
   - purgecss
-  - capitalisation
+  - axe
+  - optin
   - IIF
-  - LICENCE
   - next\-intl
   - udid
   - NGINX
@@ -109,7 +109,6 @@ exceptions:
   - React
   - Native
   - Simple
-  - Icons
   - API
   - CLI
   - HTTP

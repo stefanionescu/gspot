@@ -1,4 +1,5 @@
 import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 export const SWIFT_PROJECT_SELECTION_CASES = [
     {
@@ -52,12 +53,10 @@ enabled = false
 
 /** The swift-tools-version header of each package sets the Swift version its formatter uses. */
 export const SWIFT_VERSION_FILES = {
-    'gspot.toml': `configurations = ["swift"]
-[[scope]]
-path = "nested"
-
-configurations = ["swift"]
-`,
+    'gspot.toml': buildSandboxSettings(['swift'], {
+        rules: true,
+        scopes: [{ path: 'nested', configurations: ['swift'] }],
+    }),
     'Package.swift': '// swift-tools-version:5.9\nimport PackageDescription\n',
     'nested/Package.swift': '// swift-tools-version:6.3.2\nimport PackageDescription\n',
 } as const;
@@ -68,7 +67,7 @@ path = "nested"
 swift = {xcode_project = "nested/Chosen.xcodeproj"}
 [[scope]]
 path = "disabled"
-removed_configurations = ["swift"]
+removed_configurations = { value = ["swift"], reason = "This scope does not build Swift projects." }
 
 [swift]
 xcode_project = "Chosen.xcodeproj"

@@ -1,28 +1,14 @@
+import { JSON_INDENT } from '#cli/config/generation/files.ts';
+
 /** The ESLint runtime helper, which the ESLint tool file imports from its own folder. */
 const ESLINT_RUNTIME_FILE = 'eslint-runtime.mjs';
-const ESLINT_INDENT_WIDTH = 4;
-const FRAGMENT_BLANK_LINES = 3;
 
-export const ESLINT_RULE_NAMES_FILE = 'eslint-rule-names.json';
-export const ESLINT_RUNTIME_NAMES_FILE = 'eslint-runtime-names.json';
+export const ESLINT_RULE_NAMES_FILE = 'configurations/language/javascript/eslint-rule-names.json';
+export const ESLINT_RUNTIME_NAMES_FILE = 'configurations/language/javascript/eslint-runtime-names.json';
 export const ESLINT_PRESETS_FILE = 'eslint-presets.json';
 
 /** Mise task files use the script runtime and process rules. */
 export const MISE_SCRIPT_PATH = '.mise/tasks/**';
-
-/** Test correctness rules shared by the two test plugins, without their namespace. */
-export const TEST_RULE_NAMES = [
-    'no-focused-tests',
-    'no-disabled-tests',
-    'no-identical-title',
-    'no-standalone-expect',
-    'no-commented-out-tests',
-    'expect-expect',
-    'valid-describe-callback',
-    'no-conditional-expect',
-    'valid-expect',
-    'prefer-strict-equal',
-] as const;
 
 // The check that runs ESLint, whose ignores with a rule become blocks of the generated tool file.
 export const ESLINT_CHECK = 'javascript/eslint';
@@ -142,14 +128,16 @@ export const ESLINT_PLUGIN_IMPORTS = {
     security: ['security', 'eslint-plugin-security'],
 } as const;
 
+export const TEST_BOUNDARY_CATEGORY = 'tests';
+export const OTHER_BOUNDARY_ELEMENTS = [{ type: 'other', pattern: '**', partialMatch: false }] as const;
+
 export const OTHER_BOUNDARY_FILE = { category: 'other', pattern: ['**/*'] } as const;
 
 export const TEST_IMPORT_POLICY = {
-    from: { file: { categories: { noneOf: ['tests'] } } },
-    disallow: { to: { file: { categories: 'tests' } } },
+    from: { file: { categories: { noneOf: [TEST_BOUNDARY_CATEGORY] } } },
+    disallow: { to: { file: { categories: TEST_BOUNDARY_CATEGORY } } },
 } as const;
 
-export const TRPC_CONFIGURATION = 'trpc';
 export const IMPORT_BOUNDARIES_RULE = 'gspot/import-boundaries';
 export const EXPORTS_LAST_RULE = 'import-x/exports-last';
 export const BARREL_FILES_RULE = 'barrel-files/avoid-barrel-files';
@@ -163,11 +151,9 @@ export const RESTRICTED_IMPORT_RULES: ReadonlySet<string> = new Set([
     'no-restricted-imports',
     '@typescript-eslint/no-restricted-imports',
 ]);
-export const NODE_SHEBANG_TAG = 'shebang:node';
 export const TRIVIAL_FILES_RULE = 'gspot/no-trivial-files';
 export const TRIVIAL_FUNCTIONS_RULE = 'gspot/no-trivial-functions';
 export const TRIVIAL_FUNCTION_LIMIT = 'trivial_function_statements';
-export const DEFAULT_TRIVIAL_FUNCTION_LIMIT = 2;
 export const ENVIRONMENT_LANGUAGES = ['javascript', 'typescript', 'vue', 'svelte', 'astro'] as const;
 export const TYPED_LANGUAGES = ['typescript', 'vue', 'svelte', 'astro'] as const;
 export const FILE_EXTENSION_RULE = 'n/file-extension-in-import';
@@ -189,8 +175,6 @@ export const CODE_LANGUAGES = ['javascript', 'typescript'] as const;
 /** CommonJS file extensions preserve their module globals. */
 export const COMMONJS_FILES = '**/*.{cjs,cts}';
 
-export const REACT_NATIVE_CONFIGURATION = 'react-native';
-export const NEXTJS_CONFIGURATION = 'nextjs';
 export const ESLINT_TOOL = 'eslint';
 
 export const CODE_PRESETS = [
@@ -205,18 +189,46 @@ export const FILE_PRESETS = [
 export const PACKAGE_JSON_PATTERN = '**/package.json';
 
 export const ESLINT_BASE_IMPORTS = [
-    ['{ root, runtimeMatches, stripRuntimeGlobals, componentMatches }', './' + ESLINT_RUNTIME_FILE],
-    ['{ join }', 'node:path'],
-    ['eslint', '@eslint/js'],
-    ['sonarjs', 'eslint-plugin-sonarjs'],
-    ['unicorn', 'eslint-plugin-unicorn'],
-    ['packageJson', 'eslint-plugin-package-json'],
-    ['prettierConfig', 'eslint-config-prettier'],
+    [
+        '{ root, joinRoot, runtimeMatches, mergePresetRules, stripRuntimeGlobals, vueComponentMatches, svelteComponentMatches }',
+        './' + ESLINT_RUNTIME_FILE,
+    ],
     ['globals', 'globals'],
 ] as const;
 
 /** The indent of each generated ESLint block. */
-export const ESLINT_INDENT = ' '.repeat(ESLINT_INDENT_WIDTH);
+export const ESLINT_INDENT = ' '.repeat(JSON_INDENT);
 
-/** The blank lines before each framework preset block. */
-export const FRAGMENT_SPACING = '\n'.repeat(FRAGMENT_BLANK_LINES);
+/** The source label of shared ESLint blocks. */
+export const ESLINT_BASE_LABEL = 'JavaScript and repository settings';
+
+export const COMPONENT_MATCHERS = {
+    vue: 'vueComponentMatches(vueParser)',
+    svelte: 'svelteComponentMatches(svelteParser, tseslint.parser)',
+} as const;
+
+export const ESLINT_LIMIT_RULES = {
+    'max-lines': { limit: 'file_lines', options: { skipBlankLines: true, skipComments: true } },
+    'max-lines-per-function': {
+        limit: 'function_lines',
+        options: { skipBlankLines: true, skipComments: true, IIFEs: true },
+    },
+    'max-params': { limit: 'function_parameters', options: { countVoidThis: false } },
+    'max-depth': { limit: 'block_nesting' },
+    'max-statements': { limit: 'function_statements' },
+    'max-nested-callbacks': { limit: 'callback_nesting' },
+    complexity: { limit: 'cyclomatic_complexity' },
+    'sonarjs/cognitive-complexity': { limit: 'cognitive_complexity' },
+} as const;
+
+export const RUNTIME_GLOBALS: Readonly<Record<string, string>> = { node: 'nodeBuiltin', commonjs: 'node' };
+export const NODE_RUNTIMES: readonly string[] = ['node', 'nodeBuiltin', 'commonjs'] as const;
+
+/** Plugins loaded by the all level and its permitted barrel exports. */
+export const LEVEL_ALL_PLUGIN_IMPORTS = {
+    perfectionist: ['perfectionist', 'eslint-plugin-perfectionist'],
+    'barrel-files': ['barrelFiles', 'eslint-plugin-barrel-files'],
+} as const;
+
+/** The boundaries plugin accompanies emitted dependency policies. */
+export const BOUNDARIES_PLUGIN_IMPORT = { boundaries: ['boundaries', 'eslint-plugin-boundaries'] } as const;

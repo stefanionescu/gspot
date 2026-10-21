@@ -1,24 +1,15 @@
 // Proposes configurations from repository files and dependencies; it never selects them.
-import { readText } from '#cli/system/files/reads.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
+import type { DependencyFile } from '#cli/types/parsers/dependencies.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
 import { isInScope, joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
-import type { TrackedFile, ScopeContents } from '#cli/types/repository/inventory.ts';
+import type { Repository, TrackedFile, ScopeContents } from '#cli/types/repository/inventory.ts';
 import type { DetectionEvidence, ConfigurationEvidence } from '#cli/types/repository/selection.ts';
-
-function collectDependencies(dependencyFiles: DependencyFile[], scope: string): Map<string, string> {
-    const dependencies = new Map<string, string>();
-    for (const dependencyFile of dependencyFiles) {
-        if (!isInScope(dependencyFile.path, scope)) continue;
-        for (const name of Object.keys(dependencyFile.dependencies)) dependencies.set(name, dependencyFile.path);
-    }
-    return dependencies;
-}
 
 function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scope: string): ScopeContents {
     const candidates = files.filter(
@@ -51,7 +42,9 @@ function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFil
         extensionCounts,
         shebangs,
         runtimes,
-        dependencies: collectDependencies(scopeDependencyFiles, scope),
+        dependencies: new Map(
+            scopeDependencyFiles.flatMap((file) => Object.keys(file.dependencies).map((name) => [name, file.path])),
+        ),
         scope,
     };
 }
@@ -72,7 +65,7 @@ function findContentEvidence(
         const target = joinScope(contents.scope, path);
         const file = contents.candidates.find((candidate) => candidate.path === target);
         if (file === undefined) continue;
-        const text = readText(root, file.path);
+        const text = findText(root, file.path);
         if (text !== undefined && new RegExp(pattern, 'u').test(text)) return { evidence: file.path };
     }
     return undefined;
@@ -93,17 +86,6 @@ function findConfigurationEvidence(
         ? { configuration: configuration.name, group: configuration.group, evidence: 'every repository' }
         : undefined;
 }
-
-const EVIDENCE_FINDERS = [
-    findExtensionEvidence,
-    findProjectEvidence,
-    findFilenameEvidence,
-    findDependencyEvidence,
-    findShebangEvidence,
-    findRuntimeEvidence,
-    findTagEvidence,
-    findPathEvidence,
-];
 
 function findFilenameEvidence(detect: Manifest['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     const matches = buildFilenameMatcher(detect.filenames);
@@ -154,23 +136,31 @@ function findTagEvidence(detect: Manifest['detect'], contents: ScopeContents): D
     return file === undefined ? undefined : { evidence: file.path };
 }
 
+const EVIDENCE_FINDERS = [
+    findExtensionEvidence,
+    findProjectEvidence,
+    findFilenameEvidence,
+    findDependencyEvidence,
+    findShebangEvidence,
+    findRuntimeEvidence,
+    findTagEvidence,
+    findPathEvidence,
+];
+
 /**
  * Propose configurations from the files and the dependencies, with the evidence for each.
  *
- * @param repositoryRoot the folder to read.
- * @param files the tracked inventory.
+ * @param repository the inventory and parsed package declarations.
  * @param manifests every configuration manifest.
- * @param dependencyFiles the parsed package declarations.
  * @param scope the folder, '' for the root.
  * @returns each matching configuration with its repository evidence.
  */
 export function detectConfigurations(
-    repositoryRoot: string,
-    files: TrackedFile[],
+    repository: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
     manifests: Map<string, Manifest>,
-    dependencyFiles: DependencyFile[],
     scope = '',
 ): ConfigurationEvidence[] {
+    const { root, files, dependencyFiles } = repository;
     const toolOnlyPackages = listToolOnlyPackages(dependencyFiles, manifests.values());
     const contents = buildScopeContents(
         files.filter((file) => !toolOnlyPackages.has(file.path)),
@@ -179,7 +169,7 @@ export function detectConfigurations(
     );
     return manifests
         .values()
-        .map((manifest) => findConfigurationEvidence(repositoryRoot, manifest, contents))
+        .map((manifest) => findConfigurationEvidence(root, manifest, contents))
         .filter((evidence) => evidence !== undefined)
         .toArray();
 }
@@ -205,4 +195,14 @@ export function detectConditions(
                 EVIDENCE_FINDERS.some((source) => source(condition, contents) !== undefined),
         ),
     );
+}
+
+/**
+ * Check whether a configuration declares any source detection patterns.
+ *
+ * @param manifest the configuration to inspect.
+ * @returns whether at least one detection dimension has patterns.
+ */
+export function hasDetectionRules(manifest: Manifest): boolean {
+    return Object.values(manifest.detect).some((patterns) => Object.keys(patterns).length > 0);
 }

@@ -7,18 +7,18 @@ import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { NEXT_INTL_PROJECTS } from '#tests/data/runs/plan.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { simulateOperatingSystem } from '#tests/setup/system.ts';
 
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
-    const settings = buildSettingsText(['xcode'], { level: 'all' });
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    const settings = buildSandboxSettings(['xcode'], { level: 'all' });
+    await using sandbox = await testdir({
         'gspot.toml': settings,
         'App.entitlements':
             '<?xml version="1.0"?><plist><dict><key>aps-environment</key><string>development</string></dict></plist>',
     });
+
     const options = buildRunOptions({ only: ['xcode/entitlements'] });
     const session = await openSession(sandbox.path);
     const result = await runChecks(session, options);
@@ -33,7 +33,7 @@ test('a check whose required setting is missing is skipped with a note naming th
 
 test('a commits check outside Git is skipped because there is no history to read', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['commits'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['commits'], { level: 'all' }),
         'source.py': 'PORT = 8080\n',
     });
     const planned = planRun(await openSession(sandbox.path), {
@@ -48,16 +48,9 @@ test('a commits check outside Git is skipped because there is no history to read
 test.each([...NEXT_INTL_PROJECTS])('next-intl dependency condition: $name', async ({ scope, files, selected }) => {
     await using sandbox = await testdir({
         ...files,
-        'gspot.toml': buildSettingsText(['translations'], {
-            tables: `[translations]
-messages_folder = "messages"
-[[scope]]
-path = "app"
-[[scope]]
-path = "app/deep"
-[[scope]]
-path = "sibling"
-`,
+        'gspot.toml': buildSandboxSettings(['translations'], {
+            tables: '[translations]\nmessages_folder = "messages"\n',
+            scopes: [{ path: 'app' }, { path: 'app/deep' }, { path: 'sibling' }],
         }),
         'source.ts': 'export {};\n',
         'app/source.ts': 'export {};\n',
@@ -74,7 +67,7 @@ path = "sibling"
 
 test('vue/vue-tsc without the typescript configuration is skipped with its condition', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['javascript', 'vue']),
+        'gspot.toml': buildSandboxSettings(['javascript', 'vue']),
         'src/App.vue': '<template><p>App</p></template>',
     });
     expect(
@@ -94,7 +87,7 @@ test('Prettier filters its files through a linked ignore file inside the reposit
     await using sandbox = await testdir();
     const ignored = 'ignored.md\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['markdown']),
+        'gspot.toml': buildSandboxSettings(['markdown']),
         'settings/format.ignore': ignored,
         '.gspot/configurations/.keep': '',
         'ignored.md': '# Ignored\n',
@@ -110,7 +103,7 @@ test('Prettier filters its files through a linked ignore file inside the reposit
 test('a check whose tool has no Windows build is skipped on Windows', async () => {
     using mockResources = new DisposableStack();
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['python'], { tables: '[tools.semgrep]\nrule_files = ["rules.yml"]\n' }),
+        'gspot.toml': buildSandboxSettings(['python'], { tables: '[tools.semgrep]\nrule_files = ["rules.yml"]\n' }),
         'rules.yml': 'rules: []\n',
         'source.py': 'PORT = 8080\n',
     });

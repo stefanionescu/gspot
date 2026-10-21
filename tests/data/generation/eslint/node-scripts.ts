@@ -14,51 +14,51 @@ const NODE_SCRIPT_OUTPUT = 'console.log("result");\nprocess.exit(0);\n';
 const NODE_SCRIPT_CASES = [
     {
         file: 'scripts/run[one]',
-        recommended: [{ ruleId: 'no-unused-vars', line: 2, severity: 2 }],
+        recommended: [{ ruleId: 'no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_FIXED,
     },
     {
         file: 'scripts/run{one,two}',
-        recommended: [{ ruleId: 'no-unused-vars', line: 2, severity: 2 }],
+        recommended: [{ ruleId: 'no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_FIXED,
     },
     {
         file: 'scripts/run.task',
-        recommended: [{ ruleId: 'no-unused-vars', line: 2, severity: 2 }],
+        recommended: [{ ruleId: 'no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_FIXED,
     },
     {
         file: 'child/scripts/run',
-        recommended: [{ ruleId: 'no-unused-vars', line: 2, severity: 2 }],
+        recommended: [{ ruleId: 'no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_FIXED,
     },
     {
         file: 'scripts/run.ts',
-        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 2, severity: 2 }],
+        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 2 }],
         corrected: NODE_SCRIPT_FIXED,
     },
     {
         file: 'scripts/typed.ts',
-        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1, severity: 2 }],
+        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
         corrected: NODE_SCRIPT_OUTPUT,
     },
     {
         file: 'scripts/run.js',
-        recommended: [{ ruleId: 'no-unused-vars', line: 1, severity: 2 }],
+        recommended: [{ ruleId: 'no-unused-vars', line: 1 }],
         corrected: NODE_SCRIPT_OUTPUT,
     },
     {
         file: 'build.config.ts',
-        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1, severity: 2 }],
+        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
         corrected: NODE_SCRIPT_OUTPUT,
     },
     {
         file: 'src/source.ts',
-        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1, severity: 2 }],
+        recommended: [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }],
         corrected: 'export const result = 1;\n',
         all: [
-            { ruleId: 'n/no-process-exit', line: 3, severity: 2 },
-            { ruleId: 'no-console', line: 2, severity: 2 },
+            { ruleId: 'n/no-process-exit', line: 3 },
+            { ruleId: 'no-console', line: 2 },
         ],
     },
 ] as const;
@@ -133,13 +133,13 @@ const EXTENSIONLESS_SCRIPT_CASES = [
         file: 'scripts/syntax',
         source: '#!/usr/bin/env node\nconst =;\n',
         corrected: '#!/usr/bin/env node\nconsole.log(process.cwd());\n',
-        recommended: [{ ruleId: null, line: 2, severity: 2 }],
+        recommended: [{ ruleId: null, line: 2 }],
     },
     {
         file: 'scripts/globals',
         source: '#!/usr/bin/env node\nconsole.log(document.title);\n',
         corrected: '#!/usr/bin/env node\nconsole.log(process.cwd());\n',
-        recommended: [{ ruleId: 'no-undef', line: 2, severity: 2 }],
+        recommended: [{ ruleId: 'no-undef', line: 2 }],
     },
     {
         file: 'scripts/engine',
@@ -151,7 +151,7 @@ const EXTENSIONLESS_SCRIPT_CASES = [
         file: 'child/scripts/engine',
         source: '#!/usr/bin/env node\nconsole.log(Object.groupBy([1], String));\n',
         corrected: '#!/usr/bin/env node\nconsole.log(Object.fromEntries([["group", [1]]]));\n',
-        recommended: [{ ruleId: 'n/no-unsupported-features/es-builtins', line: 2, severity: 2 }],
+        recommended: [{ ruleId: 'n/no-unsupported-features/es-builtins', line: 2 }],
     },
     {
         file: 'scripts/structural',
@@ -161,7 +161,7 @@ console.log(value());
 `,
         corrected: '#!/usr/bin/env node\nconsole.log(process.cwd());\n',
         recommended: [],
-        all: [{ ruleId: 'gspot/no-trivial-functions', line: 2, severity: 2 }],
+        all: [{ ruleId: 'gspot/no-trivial-functions', line: 2 }],
     },
     {
         file: 'child/scripts/structural',
@@ -180,7 +180,7 @@ console.log(value());
         source: '#!/usr/bin/env node\nexport function sum(first, second, third) { return first + second + third; }\n',
         corrected: '#!/usr/bin/env node\nexport function sum(first, second) { return first + second; }\n',
         recommended: [],
-        all: [{ ruleId: 'max-params', line: 2, severity: 2 }],
+        all: [{ ruleId: 'max-params', line: 2 }],
     },
     {
         file: 'scripts/imports',
@@ -192,7 +192,7 @@ console.log(value);
 import { value } from "../source.js";
 console.log(value);
 `,
-        recommended: [{ ruleId: 'n/file-extension-in-import', line: 2, severity: 2 }],
+        recommended: [{ ruleId: 'n/file-extension-in-import', line: 2 }],
     },
 ] as const;
 

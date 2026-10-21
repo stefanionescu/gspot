@@ -1,22 +1,24 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
+import { findCachedText } from '#cli/system/files/reads.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
-import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 import { DOCKERFILE_NAME, DOCKERFILE_EXTENSION } from '#cli/config/repository/inventory.ts';
 import { DOCKERIGNORE, EDGE_SLASHES, DOCKERIGNORE_ENTRIES, IGNORE_PATTERN_FORMS } from '#cli/config/checks/docker.ts';
 
 /**
  * Reports each Dockerfile with no ignore file, or with one that misses a required pattern.
  *
- * @param input the scope files to read.
+ * @param session the repository and its tools.
+ * @param planned the scope files to read.
  * @returns the findings.
  */
-export function checkDockerignore(input: CheckInput): Finding[] {
-    const { contexts } = readComposeDocuments(input);
-    return input.files
+export function checkDockerignore(session: Session, planned: PlannedCheck): Finding[] {
+    const { contexts } = readComposeDocuments(session, planned);
+    return planned.files
         .filter((file) => {
             const name = posix.basename(file.path);
             return (
@@ -27,11 +29,11 @@ export function checkDockerignore(input: CheckInput): Finding[] {
             );
         })
         .flatMap(({ path: dockerfile }): Finding[] => {
-            const scope = findScope(dockerfile, input.scopes);
-            const selection = input.selections.find((entry) => entry.scope.path === scope.path) as ScopeSelection;
+            const scope = findScope(dockerfile, session.repository.scopes);
+            const selection = session.scopes.find((entry) => entry.scope.path === scope.path) as ScopeSelection;
             const required = [
                 ...DOCKERIGNORE_ENTRIES,
-                ...selection.selected.flatMap((manifest) => manifest.ignored_folders),
+                ...selection.selected.flatMap((manifest) => manifest.ignored_paths),
             ];
             const paths = [
                 ...new Set([
@@ -42,15 +44,12 @@ export function checkDockerignore(input: CheckInput): Finding[] {
             ];
             const ignore = paths
                 .values()
-                .flatMap((path) => {
-                    const text = readCachedText(input.reads, path);
-                    return text === undefined ? [] : [{ path, text }];
-                })
-                .next().value;
+                .map((path) => ({ path, text: findCachedText(session.reads, path) }))
+                .find((entry): entry is typeof entry & { text: string } => entry.text !== undefined);
             if (ignore === undefined)
                 return [
                     buildFinding(
-                        input,
+                        planned,
                         { file: dockerfile, line: 1 },
                         'missing-file',
                         `Add an ignore file at ${paths.join(' or ')} that lists ${required.join(', ')}.`,
@@ -64,7 +63,7 @@ export function checkDockerignore(input: CheckInput): Finding[] {
                 ? []
                 : [
                       buildFinding(
-                          input,
+                          planned,
                           { file: ignore.path, line: 1 },
                           'missing-entry',
                           `Add these entries to ${ignore.path}: ${missing.join(', ')}.`,

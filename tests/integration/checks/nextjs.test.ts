@@ -1,15 +1,17 @@
-import { z } from 'zod';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { isOnDisk } from '#tests/setup/files.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import type { RunReport } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { pathsSchema } from '#tests/schemas/checks/typescript.ts';
 import workspacePackage from '#root-package' with { type: 'json' };
 import nextManifest from 'next/package.json' with { type: 'json' };
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import reactManifest from 'react/package.json' with { type: 'json' };
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import reactDomManifest from 'react-dom/package.json' with { type: 'json' };
 import type { Sandbox, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
@@ -17,13 +19,11 @@ import { NEXT_PACKAGE, NEXTJS_SANDBOX, REFERENCE_PROJECT_FILES } from '#tests/da
 
 // Runs the named checks alone, expects the exit code, and returns the report.
 async function readCheckReport(repository: Sandbox, checks: string[], code: number): Promise<RunReport> {
-    const result = await spawnGspot(
-        repository.root,
-        ['check', '--only', checks.join(','), '--json'],
-        repository.environment,
+    const result = parseCheckReport(
+        await spawnGspot(repository.root, ['check', '--only', checks.join(','), '--json'], repository.environment),
     );
     expect(result.code, result.stdout + result.stderr).toBe(code);
-    return JSON.parse(result.stdout) as RunReport;
+    return result.report;
 }
 
 const installedSandbox = registerSharedSandbox(buildNextjsPlan());
@@ -64,7 +64,7 @@ test('nextjs/tsc generates types and checks a referenced project without writing
     const authored = JSON.stringify({
         ...parsed,
         references: [{ path: './compiler-ref' }],
-        exclude: [...z.array(z.string()).parse(parsed['exclude'] ?? []), 'compiler-ref/**'],
+        exclude: [...pathsSchema.parse(parsed['exclude'] ?? []), 'compiler-ref/**'],
     });
     await using _sourceChange = await updateSandbox(installedSandbox(), {
         check: 'nextjs/tsc',
@@ -80,13 +80,13 @@ test('nextjs/tsc generates types and checks a referenced project without writing
             column: 14,
         }),
     );
-    await Bun.write(join(root, 'compiler-ref/source.ts'), 'export const value: number = 1;\n');
+    await writeFile(join(root, 'compiler-ref/source.ts'), 'export const value: number = 1;\n');
     const passed = await readCheckReport(installedSandbox(), ['nextjs/tsc'], 0);
     expect(passed.checks).toMatchObject([{ check: 'nextjs/tsc', status: 'passed', findings: [] }]);
-    expect(await Bun.file(join(root, 'tsconfig.json')).text()).toBe(authored);
-    expect(await Bun.file(join(root, 'compiler-ref/tsconfig.json')).text()).toBe(
+    expect(await readFile(join(root, 'tsconfig.json'), 'utf8')).toBe(authored);
+    expect(await readFile(join(root, 'compiler-ref/tsconfig.json'), 'utf8')).toBe(
         REFERENCE_PROJECT_FILES['compiler-ref/tsconfig.json'],
     );
-    expect(await Bun.file(join(root, 'compiler-ref/dist/source.js')).exists()).toBe(false);
-    expect(await Bun.file(join(root, 'compiler-ref/tsconfig.tsbuildinfo')).exists()).toBe(false);
+    expect(await isOnDisk(join(root, 'compiler-ref/dist/source.js'))).toBe(false);
+    expect(await isOnDisk(join(root, 'compiler-ref/tsconfig.tsbuildinfo'))).toBe(false);
 });

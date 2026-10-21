@@ -18,6 +18,7 @@ main() {
 main "$@"
 `;
 export const BASH_SANDBOX = {
+    cleanSource: CLEAN_BASH_SCRIPT,
     configurations: ['bash', 'javascript'],
     files: {
         'scripts/a.sh': CLEAN_BASH_SCRIPT,

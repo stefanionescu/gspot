@@ -14,6 +14,7 @@ import regexp from "eslint-plugin-regexp";
 import security from "eslint-plugin-security";
 import perfectionist from "eslint-plugin-perfectionist";
 import boundaries from "eslint-plugin-boundaries";
+import localPlugin0 from "../../../../packages/eslint-plugin/repository.mjs";
 import tseslint from 'typescript-eslint';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 import astroPlugin from 'eslint-plugin-astro';
@@ -142,6 +143,8 @@ export default [
             "docs/.stylelintrc.json",
             "packages/cli/.markdownlint.jsonc",
             "packages/eslint-plugin/.markdownlint.jsonc",
+            "packages/cli/configurations/**/eslint-presets.json",
+            "packages/cli/configurations/**/*-names.json",
             "docs/worker-configuration.d.ts",
             "docs/cloudflare-env.d.ts",
             "**/bower_components/**",
@@ -196,7 +199,8 @@ export default [
             "regexp": regexp,
             "security": security,
             "perfectionist": perfectionist,
-            "boundaries": boundaries
+            "boundaries": boundaries,
+            "repository": localPlugin0
         },
         linterOptions: {
             reportUnusedDisableDirectives: 'error'
@@ -1003,12 +1007,6 @@ export default [
                         "stopMatching": true
                     },
                     {
-                        "category": "import-rule:tool-files",
-                        "pattern": [
-                            "packages/cli/configurations/**/tool-files/**"
-                        ]
-                    },
-                    {
                         "category": "import-rule:cli-config",
                         "pattern": [
                             "packages/cli/src/config/**"
@@ -1021,42 +1019,6 @@ export default [
                         ]
                     },
                     {
-                        "category": "import-rule:plugin-config",
-                        "pattern": [
-                            "packages/eslint-plugin/src/config/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:plugin-types",
-                        "pattern": [
-                            "packages/eslint-plugin/src/types/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:docs-config",
-                        "pattern": [
-                            "docs/src/config/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:docs-types",
-                        "pattern": [
-                            "docs/src/types/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:tests-data",
-                        "pattern": [
-                            "tests/data/**"
-                        ]
-                    },
-                    {
-                        "category": "import-rule:tests-types",
-                        "pattern": [
-                            "tests/types/**"
-                        ]
-                    },
-                    {
                         "category": "import-rule:system",
                         "pattern": [
                             "packages/cli/src/system/**"
@@ -1065,19 +1027,22 @@ export default [
                     {
                         "category": "import-rule:parsers",
                         "pattern": [
-                            "packages/cli/src/parsers/**"
+                            "packages/cli/src/parsers/**",
+                            "packages/cli/src/schemas/parsers/**"
                         ]
                     },
                     {
                         "category": "import-rule:configurations",
                         "pattern": [
-                            "packages/cli/src/configurations/**"
+                            "packages/cli/src/configurations/**",
+                            "packages/cli/src/schemas/configurations/**"
                         ]
                     },
                     {
                         "category": "import-rule:repository",
                         "pattern": [
-                            "packages/cli/src/repository/**"
+                            "packages/cli/src/repository/**",
+                            "packages/cli/src/schemas/repository/**"
                         ]
                     },
                     {
@@ -1089,7 +1054,8 @@ export default [
                     {
                         "category": "import-rule:settings",
                         "pattern": [
-                            "packages/cli/src/settings/**"
+                            "packages/cli/src/settings/**",
+                            "packages/cli/src/schemas/settings/**"
                         ]
                     },
                     {
@@ -1101,7 +1067,8 @@ export default [
                     {
                         "category": "import-rule:generation",
                         "pattern": [
-                            "packages/cli/src/generation/**"
+                            "packages/cli/src/generation/**",
+                            "packages/cli/src/schemas/generation.ts"
                         ]
                     },
                     {
@@ -1119,7 +1086,8 @@ export default [
                     {
                         "category": "import-rule:install",
                         "pattern": [
-                            "packages/cli/src/install/**"
+                            "packages/cli/src/install/**",
+                            "packages/cli/src/schemas/install/**"
                         ]
                     },
                     {
@@ -1131,19 +1099,22 @@ export default [
                     {
                         "category": "import-rule:runs",
                         "pattern": [
-                            "packages/cli/src/runs/**"
+                            "packages/cli/src/runs/**",
+                            "packages/cli/src/schemas/runs/**"
                         ]
                     },
                     {
                         "category": "import-rule:checks",
                         "pattern": [
-                            "packages/cli/src/checks/**"
+                            "packages/cli/src/checks/**",
+                            "packages/cli/src/schemas/checks/**"
                         ]
                     },
                     {
                         "category": "import-rule:commands",
                         "pattern": [
-                            "packages/cli/src/commands/**"
+                            "packages/cli/src/commands/**",
+                            "packages/cli/src/schemas/commands.ts"
                         ]
                     },
                     {
@@ -1154,17 +1125,43 @@ export default [
                         ]
                     },
                     {
+                        "category": "import-rule:reference",
+                        "pattern": [
+                            "packages/cli/src/reference.ts"
+                        ]
+                    },
+                    {
+                        "category": "import-rule:plugin-config",
+                        "pattern": [
+                            "packages/eslint-plugin/src/config/**"
+                        ]
+                    },
+                    {
+                        "category": "import-rule:plugin-types",
+                        "pattern": [
+                            "packages/eslint-plugin/src/types/**"
+                        ]
+                    },
+                    {
                         "category": "import-rule:plugin",
                         "pattern": [
                             "packages/eslint-plugin/src/*.ts",
                             "packages/eslint-plugin/src/rules/**",
-                            "packages/eslint-plugin/plugin.d.ts"
+                            "packages/eslint-plugin/src/schemas/**",
+                            "packages/eslint-plugin/plugin.d.ts",
+                            "packages/eslint-plugin/repository.mjs"
                         ]
                     },
                     {
-                        "category": "import-rule:reference",
+                        "category": "import-rule:docs-config",
                         "pattern": [
-                            "packages/cli/src/reference.ts"
+                            "docs/src/config/**"
+                        ]
+                    },
+                    {
+                        "category": "import-rule:docs-types",
+                        "pattern": [
+                            "docs/src/types/**"
                         ]
                     },
                     {
@@ -1175,9 +1172,27 @@ export default [
                         ]
                     },
                     {
+                        "category": "import-rule:tests-data",
+                        "pattern": [
+                            "tests/data/**"
+                        ]
+                    },
+                    {
+                        "category": "import-rule:tests-types",
+                        "pattern": [
+                            "tests/types/**"
+                        ]
+                    },
+                    {
                         "category": "import-rule:tests",
                         "pattern": [
-                            "tests/{unit,integration,e2e,setup}/**"
+                            "tests/{unit,integration,e2e,setup,schemas}/**"
+                        ]
+                    },
+                    {
+                        "category": "import-rule:tool-files",
+                        "pattern": [
+                            "packages/cli/configurations/**/tool-files/**"
                         ]
                     },
                     {
@@ -1242,39 +1257,6 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:tool-files"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"tool-files\" may import only its own files, not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tool-files"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:tool-files"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
                                     "categories": "import-rule:cli-config"
                                 }
                             },
@@ -1285,7 +1267,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"cli-config\" may import its own files and \"tool-files\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"cli-config\" may import its own files and \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1298,77 +1280,6 @@ export default [
                                     "file": {
                                         "categories": {
                                             "anyOf": [
-                                                "import-rule:cli-config",
-                                                "import-rule:tool-files"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:cli-types"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"cli-types\" may import its own files and \"tool-files\", \"cli-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:cli-types"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:cli-types",
-                                                "import-rule:tool-files",
-                                                "import-rule:cli-config"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:plugin-config"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"plugin-config\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:plugin-config"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:plugin-config",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types"
                                             ]
@@ -1380,7 +1291,7 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:plugin-types"
+                                    "categories": "import-rule:cli-types"
                                 }
                             },
                             "disallow": {
@@ -1390,12 +1301,12 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"plugin-types\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"cli-types\" may import its own files and \"cli-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:plugin-types"
+                                    "categories": "import-rule:cli-types"
                                 }
                             },
                             "allow": {
@@ -1403,170 +1314,8 @@ export default [
                                     "file": {
                                         "categories": {
                                             "anyOf": [
-                                                "import-rule:plugin-types",
-                                                "import-rule:tool-files",
-                                                "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:docs-config"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"docs-config\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:docs-config"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:docs-config",
-                                                "import-rule:tool-files",
-                                                "import-rule:cli-config",
-                                                "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:docs-types"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"docs-types\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"reference\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:docs-types"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:docs-types",
-                                                "import-rule:tool-files",
-                                                "import-rule:cli-config",
-                                                "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:reference"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tests-data"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"tests-data\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tests-data"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:tests-data",
-                                                "import-rule:tool-files",
-                                                "import-rule:cli-config",
-                                                "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types"
-                                            ]
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tests-types"
-                                }
-                            },
-                            "disallow": {
-                                "to": {
-                                    "file": {
-                                        "path": "**/*"
-                                    }
-                                }
-                            },
-                            "message": "Import rule \"tests-types\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
-                        },
-                        {
-                            "from": {
-                                "file": {
-                                    "categories": "import-rule:tests-types"
-                                }
-                            },
-                            "allow": {
-                                "to": {
-                                    "file": {
-                                        "categories": {
-                                            "anyOf": [
-                                                "import-rule:tests-types",
-                                                "import-rule:tool-files",
-                                                "import-rule:cli-config",
-                                                "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data"
+                                                "import-rule:cli-config"
                                             ]
                                         }
                                     }
@@ -1586,7 +1335,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"system\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"system\" may import its own files and \"cli-config\", \"cli-types\", \"repository\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1600,15 +1349,9 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:system",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types"
+                                                "import-rule:repository"
                                             ]
                                         }
                                     }
@@ -1628,7 +1371,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"parsers\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"parsers\" may import its own files and \"cli-config\", \"cli-types\", \"system\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1642,15 +1385,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:parsers",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system"
                                             ]
                                         }
@@ -1671,7 +1407,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"configurations\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"configurations\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"repository\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1685,17 +1421,11 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:configurations",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
-                                                "import-rule:parsers"
+                                                "import-rule:parsers",
+                                                "import-rule:repository"
                                             ]
                                         }
                                     }
@@ -1715,7 +1445,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"repository\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"repository\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1729,15 +1459,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:repository",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations"
@@ -1760,7 +1483,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"ownership\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"ownership\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1774,15 +1497,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:ownership",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -1806,7 +1522,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"settings\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"settings\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1820,15 +1536,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:settings",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -1853,7 +1562,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"planning\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"planning\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1867,15 +1576,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:planning",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -1901,7 +1603,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"generation\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"generation\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1915,15 +1617,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:generation",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -1950,7 +1645,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tools\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"tools\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -1964,15 +1659,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:tools",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2000,7 +1688,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"session\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"session\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2014,15 +1702,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:session",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2051,7 +1732,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"install\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"install\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2065,15 +1746,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:install",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2103,7 +1777,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"apply\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"apply\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2117,15 +1791,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:apply",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2156,7 +1823,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"runs\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"runs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2170,15 +1837,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:runs",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2210,7 +1870,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"checks\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"checks\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2224,15 +1884,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:checks",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2265,7 +1918,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"commands\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"commands\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2279,15 +1932,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:commands",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2321,7 +1967,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"main\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"main\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2335,15 +1981,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:main",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2368,7 +2007,7 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:plugin"
+                                    "categories": "import-rule:reference"
                                 }
                             },
                             "disallow": {
@@ -2378,12 +2017,12 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"plugin\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"reference\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:plugin"
+                                    "categories": "import-rule:reference"
                                 }
                             },
                             "allow": {
@@ -2391,16 +2030,9 @@ export default [
                                     "file": {
                                         "categories": {
                                             "anyOf": [
-                                                "import-rule:plugin",
-                                                "import-rule:tool-files",
+                                                "import-rule:reference",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2426,7 +2058,7 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:reference"
+                                    "categories": "import-rule:plugin-config"
                                 }
                             },
                             "disallow": {
@@ -2436,12 +2068,12 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"reference\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"plugin-config\" may import only its own files, not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:reference"
+                                    "categories": "import-rule:plugin-config"
                                 }
                             },
                             "allow": {
@@ -2449,33 +2081,143 @@ export default [
                                     "file": {
                                         "categories": {
                                             "anyOf": [
-                                                "import-rule:reference",
-                                                "import-rule:tool-files",
-                                                "import-rule:cli-config",
-                                                "import-rule:cli-types",
+                                                "import-rule:plugin-config"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:plugin-types"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"plugin-types\" may import only its own files, not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:plugin-types"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "import-rule:plugin-types"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:plugin"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"plugin\" may import its own files and \"plugin-config\", \"plugin-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:plugin"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "import-rule:plugin",
                                                 "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
+                                                "import-rule:plugin-types"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:docs-config"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"docs-config\" may import its own files and \"cli-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:docs-config"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
                                                 "import-rule:docs-config",
+                                                "import-rule:cli-config"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:docs-types"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"docs-types\" may import its own files and \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:docs-types"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
                                                 "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
-                                                "import-rule:system",
-                                                "import-rule:parsers",
-                                                "import-rule:configurations",
-                                                "import-rule:repository",
-                                                "import-rule:ownership",
-                                                "import-rule:settings",
-                                                "import-rule:planning",
-                                                "import-rule:generation",
-                                                "import-rule:tools",
-                                                "import-rule:session",
-                                                "import-rule:install",
-                                                "import-rule:apply",
-                                                "import-rule:runs",
-                                                "import-rule:checks",
-                                                "import-rule:commands",
-                                                "import-rule:main",
-                                                "import-rule:plugin"
+                                                "import-rule:cli-types"
                                             ]
                                         }
                                     }
@@ -2495,7 +2237,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin\", \"reference\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"docs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"reference\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2509,15 +2251,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:docs",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2534,8 +2269,83 @@ export default [
                                                 "import-rule:checks",
                                                 "import-rule:commands",
                                                 "import-rule:main",
+                                                "import-rule:reference",
+                                                "import-rule:plugin-config",
+                                                "import-rule:plugin-types",
                                                 "import-rule:plugin",
-                                                "import-rule:reference"
+                                                "import-rule:docs-config",
+                                                "import-rule:docs-types"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:tests-data"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"tests-data\" may import its own files and \"cli-config\", \"tests\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:tests-data"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "import-rule:tests-data",
+                                                "import-rule:cli-config",
+                                                "import-rule:tests"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:tests-types"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"tests-types\" may import its own files and \"cli-types\", \"plugin-types\", \"tests-data\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:tests-types"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "import-rule:tests-types",
+                                                "import-rule:cli-types",
+                                                "import-rule:plugin-types",
+                                                "import-rule:tests-data"
                                             ]
                                         }
                                     }
@@ -2555,7 +2365,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests\" may import its own files and \"tool-files\", \"cli-config\", \"cli-types\", \"plugin-config\", \"plugin-types\", \"docs-config\", \"docs-types\", \"tests-data\", \"tests-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin\", \"reference\", \"docs\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"tests\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"reference\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2569,15 +2379,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:tests",
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2594,9 +2397,48 @@ export default [
                                                 "import-rule:checks",
                                                 "import-rule:commands",
                                                 "import-rule:main",
-                                                "import-rule:plugin",
                                                 "import-rule:reference",
-                                                "import-rule:docs"
+                                                "import-rule:plugin-config",
+                                                "import-rule:plugin-types",
+                                                "import-rule:plugin",
+                                                "import-rule:docs-config",
+                                                "import-rule:docs-types",
+                                                "import-rule:docs",
+                                                "import-rule:tests-data",
+                                                "import-rule:tests-types"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:tool-files"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"tool-files\" may import only its own files, not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:tool-files"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "import-rule:tool-files"
                                             ]
                                         }
                                     }
@@ -2756,15 +2598,8 @@ export default [
                                 "file": {
                                     "categories": {
                                         "noneOf": [
-                                            "import-rule:tool-files",
                                             "import-rule:cli-config",
                                             "import-rule:cli-types",
-                                            "import-rule:plugin-config",
-                                            "import-rule:plugin-types",
-                                            "import-rule:docs-config",
-                                            "import-rule:docs-types",
-                                            "import-rule:tests-data",
-                                            "import-rule:tests-types",
                                             "import-rule:system",
                                             "import-rule:parsers",
                                             "import-rule:configurations",
@@ -2781,10 +2616,17 @@ export default [
                                             "import-rule:checks",
                                             "import-rule:commands",
                                             "import-rule:main",
-                                            "import-rule:plugin",
                                             "import-rule:reference",
+                                            "import-rule:plugin-config",
+                                            "import-rule:plugin-types",
+                                            "import-rule:plugin",
+                                            "import-rule:docs-config",
+                                            "import-rule:docs-types",
                                             "import-rule:docs",
-                                            "import-rule:tests"
+                                            "import-rule:tests-data",
+                                            "import-rule:tests-types",
+                                            "import-rule:tests",
+                                            "import-rule:tool-files"
                                         ]
                                     }
                                 }
@@ -2803,15 +2645,8 @@ export default [
                                     "file": {
                                         "categories": {
                                             "noneOf": [
-                                                "import-rule:tool-files",
                                                 "import-rule:cli-config",
                                                 "import-rule:cli-types",
-                                                "import-rule:plugin-config",
-                                                "import-rule:plugin-types",
-                                                "import-rule:docs-config",
-                                                "import-rule:docs-types",
-                                                "import-rule:tests-data",
-                                                "import-rule:tests-types",
                                                 "import-rule:system",
                                                 "import-rule:parsers",
                                                 "import-rule:configurations",
@@ -2828,10 +2663,17 @@ export default [
                                                 "import-rule:checks",
                                                 "import-rule:commands",
                                                 "import-rule:main",
-                                                "import-rule:plugin",
                                                 "import-rule:reference",
+                                                "import-rule:plugin-config",
+                                                "import-rule:plugin-types",
+                                                "import-rule:plugin",
+                                                "import-rule:docs-config",
+                                                "import-rule:docs-types",
                                                 "import-rule:docs",
-                                                "import-rule:tests"
+                                                "import-rule:tests-data",
+                                                "import-rule:tests-types",
+                                                "import-rule:tests",
+                                                "import-rule:tool-files"
                                             ]
                                         }
                                     }
@@ -5582,6 +5424,11 @@ export default [
                 "tests/setup/environment.ts"
             ],
             [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "**/*",
+                "tests/setup/offline.ts"
+            ],
+            [
                 "**/*.astro",
                 "**/*",
                 "packages/cli/src/system/environment.ts"
@@ -5590,6 +5437,11 @@ export default [
                 "**/*.astro",
                 "**/*",
                 "tests/setup/environment.ts"
+            ],
+            [
+                "**/*.astro",
+                "**/*",
+                "tests/setup/offline.ts"
             ]
         ]
     },
@@ -5602,7 +5454,8 @@ export default [
             "packages/eslint-plugin/**",
             "tests/**",
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts"
+            "tests/setup/environment.ts",
+            "tests/setup/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -5767,6 +5620,11 @@ export default [
                 "tests/setup/environment.ts"
             ],
             [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "docs/**/*",
+                "tests/setup/offline.ts"
+            ],
+            [
                 "**/*.astro",
                 "docs/**/*",
                 "packages/cli/src/system/environment.ts"
@@ -5775,6 +5633,11 @@ export default [
                 "**/*.astro",
                 "docs/**/*",
                 "tests/setup/environment.ts"
+            ],
+            [
+                "**/*.astro",
+                "docs/**/*",
+                "tests/setup/offline.ts"
             ]
         ]
     },
@@ -5783,7 +5646,8 @@ export default [
     {
         "ignores": [
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts"
+            "tests/setup/environment.ts",
+            "tests/setup/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -5948,6 +5812,11 @@ export default [
                 "tests/setup/environment.ts"
             ],
             [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "packages/cli/**/*",
+                "tests/setup/offline.ts"
+            ],
+            [
                 "**/*.astro",
                 "packages/cli/**/*",
                 "packages/cli/src/system/environment.ts"
@@ -5956,6 +5825,11 @@ export default [
                 "**/*.astro",
                 "packages/cli/**/*",
                 "tests/setup/environment.ts"
+            ],
+            [
+                "**/*.astro",
+                "packages/cli/**/*",
+                "tests/setup/offline.ts"
             ]
         ]
     },
@@ -5964,7 +5838,8 @@ export default [
     {
         "ignores": [
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts"
+            "tests/setup/environment.ts",
+            "tests/setup/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6129,6 +6004,11 @@ export default [
                 "tests/setup/environment.ts"
             ],
             [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "packages/eslint-plugin/**/*",
+                "tests/setup/offline.ts"
+            ],
+            [
                 "**/*.astro",
                 "packages/eslint-plugin/**/*",
                 "packages/cli/src/system/environment.ts"
@@ -6137,6 +6017,11 @@ export default [
                 "**/*.astro",
                 "packages/eslint-plugin/**/*",
                 "tests/setup/environment.ts"
+            ],
+            [
+                "**/*.astro",
+                "packages/eslint-plugin/**/*",
+                "tests/setup/offline.ts"
             ]
         ]
     },
@@ -6145,7 +6030,8 @@ export default [
     {
         "ignores": [
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts"
+            "tests/setup/environment.ts",
+            "tests/setup/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6310,6 +6196,11 @@ export default [
                 "tests/setup/environment.ts"
             ],
             [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "tests/**/*",
+                "tests/setup/offline.ts"
+            ],
+            [
                 "**/*.astro",
                 "tests/**/*",
                 "packages/cli/src/system/environment.ts"
@@ -6318,6 +6209,11 @@ export default [
                 "**/*.astro",
                 "tests/**/*",
                 "tests/setup/environment.ts"
+            ],
+            [
+                "**/*.astro",
+                "tests/**/*",
+                "tests/setup/offline.ts"
             ]
         ]
     },
@@ -6326,7 +6222,8 @@ export default [
     {
         "ignores": [
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts"
+            "tests/setup/environment.ts",
+            "tests/setup/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6674,7 +6571,9 @@ export default [
             "packages/cli/src/system/environment.ts",
             "packages/cli/src/system/environment.ts/**",
             "tests/setup/environment.ts",
-            "tests/setup/environment.ts/**"
+            "tests/setup/environment.ts/**",
+            "tests/setup/offline.ts",
+            "tests/setup/offline.ts/**"
         ],
         rules: {
             "n/no-process-env": [
@@ -6755,26 +6654,6 @@ export default [
     {
         "ignores": [],
         rules: {
-            "gspot/no-magic-numbers": "off"
-        },
-        files: [
-            [
-                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
-                "**/*",
-                "tests/data/**"
-            ],
-            [
-                "**/*.astro",
-                "**/*",
-                "tests/data/**"
-            ]
-        ]
-    },
-
-    // JavaScript and repository settings
-    {
-        "ignores": [],
-        rules: {
             "package-json/restrict-dependency-ranges": "off"
         },
         files: [
@@ -6807,6 +6686,130 @@ export default [
                 "**/package.json",
                 "**/*",
                 "packages/eslint-plugin/package.json/**"
+            ]
+        ]
+    },
+
+    // JavaScript and repository settings
+    {
+        rules: {
+            "repository/schema-location": [
+                "error",
+                {
+                    "folders": [
+                        "packages/cli/src/schemas",
+                        "packages/eslint-plugin/src/schemas",
+                        "tests/schemas"
+                    ]
+                }
+            ]
+        },
+        files: [
+            "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+            "**/*.astro"
+        ]
+    },
+
+    // JavaScript and repository settings
+    {
+        rules: {
+            "repository/schema-location": [
+                "error",
+                {
+                    "folders": [
+                        "packages/cli/src/schemas",
+                        "packages/eslint-plugin/src/schemas",
+                        "tests/schemas"
+                    ]
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "docs/**/*"
+            ],
+            [
+                "**/*.astro",
+                "docs/**/*"
+            ]
+        ]
+    },
+
+    // JavaScript and repository settings
+    {
+        rules: {
+            "repository/schema-location": [
+                "error",
+                {
+                    "folders": [
+                        "packages/cli/src/schemas",
+                        "packages/eslint-plugin/src/schemas",
+                        "tests/schemas"
+                    ]
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "packages/cli/**/*"
+            ],
+            [
+                "**/*.astro",
+                "packages/cli/**/*"
+            ]
+        ]
+    },
+
+    // JavaScript and repository settings
+    {
+        rules: {
+            "repository/schema-location": [
+                "error",
+                {
+                    "folders": [
+                        "packages/cli/src/schemas",
+                        "packages/eslint-plugin/src/schemas",
+                        "tests/schemas"
+                    ]
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "packages/eslint-plugin/**/*"
+            ],
+            [
+                "**/*.astro",
+                "packages/eslint-plugin/**/*"
+            ]
+        ]
+    },
+
+    // JavaScript and repository settings
+    {
+        rules: {
+            "repository/schema-location": [
+                "error",
+                {
+                    "folders": [
+                        "packages/cli/src/schemas",
+                        "packages/eslint-plugin/src/schemas",
+                        "tests/schemas"
+                    ]
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "tests/**/*"
+            ],
+            [
+                "**/*.astro",
+                "tests/**/*"
             ]
         ]
     },

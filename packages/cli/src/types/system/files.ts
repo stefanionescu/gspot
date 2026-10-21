@@ -12,7 +12,7 @@ export type Files = {
     /** Return the resolved path after checking containment inside this root. */
     readRealPath(path: string): string;
     /** Return the sorted entry names of a folder, or an empty list if the folder does not exist. */
-    list(path?: string): string[];
+    list(path: string): string[];
     /** Return metadata for an entry excluding symbolic links, or undefined if absent. */
     readStats(path: string): Stats | undefined;
     /** Read file bytes or the target bytes of a symbolic link, or return undefined if absent. */

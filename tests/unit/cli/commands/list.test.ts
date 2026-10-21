@@ -4,13 +4,13 @@ import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { LIST_SCOPE_ROWS, LIST_SCOPE_SETTINGS } from '#tests/data/commands/list.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 test('list shows selected settings and available configurations', async () => {
     await using folder = await testdir();
-    const settings = buildSettingsText(['bash', 'nextjs'], {
+    const settings = buildSandboxSettings(['bash', 'nextjs'], {
         tables: `[[ignore]]
 check = "bash/shfmt"
 reason = "Review this separately."
@@ -48,11 +48,11 @@ reason = "Review this separately."
 });
 
 test('the text configuration list shows the selected names of the JSON list', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash']),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
     });
+
     const before = await readTree(folder.path);
     const structured = await runGspot(folder.path, ['list', 'configurations', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
@@ -67,23 +67,16 @@ test('the text configuration list shows the selected names of the JSON list', as
 });
 
 test('the text check list puts the states of all scopes in one row', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash'], {
-            tables: `[[ignore]]
-check = "bash/shfmt"
-paths = ["api/**"]
-reason = "Review scoped syntax separately."
-[[scope]]
-path = "api"
-[[scope]]
-path = "api/worker"
-`,
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], {
+            tables: '[[ignore]]\ncheck = "bash/shfmt"\npaths = ["api/**"]\nreason = "Review scoped syntax separately."\n',
+            scopes: [{ path: 'api' }, { path: 'api/worker' }],
         }),
         'entry.sh': 'echo root\n',
         'api/entry.sh': 'echo api\n',
         'api/worker/entry.sh': 'echo worker\n',
     });
+
     const before = await readTree(folder.path);
     const structured = await runGspot(folder.path, ['list', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
@@ -105,12 +98,12 @@ path = "api/worker"
 });
 
 test('the text settings list shows scope values while JSON keeps inherited values', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
+    await using folder = await testdir({
         'gspot.toml': LIST_SCOPE_SETTINGS,
         'api/entry.sh': 'echo api\n',
         'api/worker/query.sql': 'SELECT 1;\n',
     });
+
     const before = await readTree(folder.path);
     const human = await runGspot(folder.path, ['list', 'settings']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
@@ -133,15 +126,10 @@ test('the text settings list shows scope values while JSON keeps inherited value
     expect(await readTree(folder.path)).toStrictEqual(before);
 });
 
-test('the text settings list shortens long values and names extra tool options', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash'], {
-            tables: `[naming]
-banned_words = ["generated-long-name-one/**", "generated-long-name-two/**"]
-[tools.shellcheck]
-extra = { value = { external_sources = true }, reason = "ShellCheck follows the authored external sources." }
-`,
+test('the text settings list shortens long values', async () => {
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], {
+            tables: '[naming]\nbanned_words = ["generated-long-name-one/**", "generated-long-name-two/**"]\n',
         }),
         'entry.sh': 'echo example\n',
     });
@@ -151,30 +139,15 @@ extra = { value = { external_sources = true }, reason = "ShellCheck follows the 
     expect(human.stderr).toBe('');
     expect(human.stdout).toMatch(/^naming\.banned_words\s+\["generated-long-name-one\/\*… /mu);
     expect(human.stdout).not.toContain('generated-long-name-two');
-    expect(human.stdout).toContain('\nextra tool options (gspot passes them on unchecked)\n');
-    expect(human.stdout).toContain(
-        'tools.shellcheck.extra  external_sources  ShellCheck follows the authored external sources.',
-    );
+    expect(human.stdout).not.toContain('extra tool options');
     const structured = await runGspot(folder.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
-    const { settings, extras } = JSON.parse(structured.stdout) as SettingsListJson;
-    expect(settings.find((row) => row.key === 'naming.banned_words')?.value).toStrictEqual([
+    const report = JSON.parse(structured.stdout) as SettingsListJson;
+    expect(report.settings.find((row) => row.key === 'naming.banned_words')?.value).toStrictEqual([
         'generated-long-name-one/**',
         'generated-long-name-two/**',
     ]);
-    expect(settings.find((row) => row.key === 'tools.shellcheck.extra')).toMatchObject({
-        value: { external_sources: true },
-        source: 'gspot.toml',
-    });
-    expect(settings.some((row) => row.key === 'tools.eslint.extra')).toBe(false);
-    expect(extras).toStrictEqual([
-        {
-            tool: 'shellcheck',
-            keys: ['external_sources'],
-            reason: 'ShellCheck follows the authored external sources.',
-            scope: '',
-        },
-    ]);
+    expect(Object.keys(report)).toStrictEqual(['settings']);
     expect(await readTree(folder.path)).toStrictEqual(before);
 });

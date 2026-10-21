@@ -13,7 +13,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { generateFile } from '#tests/setup/tool-files.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 
 import {
@@ -24,30 +24,25 @@ import {
 
 test.each([...EDITORCONFIG_SELECTOR_ERRORS])(
     'a format override selector that EditorConfig cannot express is a settings error ($pattern)',
-    async ({ pattern, message }) => {
+    ({ pattern, message }) => {
         const format = { override: [{ paths: [pattern], indent_width: 2 }] };
-        await using sandbox = await testdir({
-            'gspot.toml': stringify({
-                configurations: ['javascript'],
-                format,
-            }),
-            'app/source.js': 'export {};\n',
-        });
-        const session = await openSession(sandbox.path);
-        expect(() => generate(session)).toThrow(
-            matchFields<GspotError>({ name: 'GspotError', code: 'settings', message }),
-        );
+        expect(
+            generateFile(
+                buildSandboxSettings(['javascript'], { rules: true, tables: stringify({ format }) }),
+                'eslint.config.mjs',
+                { 'app/source.js': 'export {};\n' },
+            ),
+        ).rejects.toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'settings', message }));
     },
 );
 
 test('format.indent_width reaches EditorConfig, Prettier and each tool file', async () => {
     const width = 6;
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': stringify({
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['format', 'files', 'python', 'swift', 'sql', 'markdown', 'bash'], {
             level: 'all',
-            configurations: ['format', 'files', 'python', 'swift', 'sql', 'markdown', 'bash'],
-            format: { indent_width: width },
+            rules: true,
+            tables: stringify({ format: { indent_width: width } }),
         }),
         'sample.yaml': 'parent:\n child: value\n',
         'sample.sh': 'echo example\n',
@@ -56,10 +51,11 @@ test('format.indent_width reaches EditorConfig, Prettier and each tool file', as
         'sample.sql': 'SELECT 1;\n',
         'Sample.swift': 'let value = 1\n',
     });
+
     const session = await openSession(folder.path);
     const generated = new Map(generate(session).files.map((file) => [file.path, file.content]));
     // Write only .editorconfig, so Prettier resolves its options from EditorConfig alone.
-    await Bun.write(join(folder.path, '.editorconfig'), generated.get('.editorconfig')!);
+    await writeFile(join(folder.path, '.editorconfig'), generated.get('.editorconfig')!);
     const path = join(folder.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     expect(editor?.tabWidth).toBe(width);
@@ -85,14 +81,14 @@ test('format.indent_width reaches EditorConfig, Prettier and each tool file', as
 });
 
 test('a YAML indent override gives EditorConfig and Prettier the same width', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': stringify({
-            configurations: ['format', 'javascript'],
-            format: { indent_width: 6, override: [{ paths: ['**/*.yaml'], indent_width: 2 }] },
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['format', 'javascript'], {
+            rules: true,
+            tables: stringify({ format: { indent_width: 6, override: [{ paths: ['**/*.yaml'], indent_width: 2 }] } }),
         }),
         'sample.yaml': 'parent:\n child: value\n',
     });
+
     const session = await openSession(folder.path);
     const generated = generate(session);
     using log = openWriter(folder.path);
@@ -141,7 +137,7 @@ test('Prettier overrides agree in the root pointer and editor lookup', async () 
 
 test('Prettier loads the selected plugin through the root pointer', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['svelte']),
+        'gspot.toml': buildSandboxSettings(['svelte']),
         'source.svelte': '<h1>Example</h1>\n',
     });
     const generated = generate(await openSession(sandbox.path));
@@ -184,18 +180,4 @@ test('Prettier plugin overrides precede your overrides, and no plugin adds no ke
     ) as Options;
     expect(without).not.toHaveProperty('plugins');
     expect(without['overrides']).toMatchObject([{ files: ['docs/**'] }]);
-});
-
-test('extra editorconfig-checker options reach .editorconfig', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['format'], {
-            level: 'all',
-            tables: '[tools.editorconfig-checker.extra]\nvalue = { "*.txt" = { end_of_line = "crlf" } }\nreason = "The text export uses the reviewed native line-ending contract."\n',
-        }),
-        'source.txt': 'text\n',
-    });
-    const session = await openSession(sandbox.path);
-    const editorconfig = generate(session).files.find(({ path }) => path === '.editorconfig');
-    expect(editorconfig?.content).toContain('[*.txt]\nend_of_line = crlf');
 });

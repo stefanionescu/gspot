@@ -29,6 +29,8 @@
         "docs/.stylelintrc.json",
         "packages/cli/.markdownlint.jsonc",
         "packages/eslint-plugin/.markdownlint.jsonc",
+        "packages/cli/configurations/**/eslint-presets.json",
+        "packages/cli/configurations/**/*-names.json",
         "docs/worker-configuration.d.ts",
         "docs/cloudflare-env.d.ts",
         "**/bower_components/**",
@@ -77,15 +79,7 @@
         "typescript-eslint",
         "v8r",
         "wrangler",
-        "@socketsecurity/bun-security-scanner",
-        "@fontsource-variable/geist",
-        "@fontsource-variable/geist-mono",
-        "tree-sitter-bash",
-        "tree-sitter-css",
-        "tree-sitter-html",
-        "tree-sitter-javascript",
-        "tree-sitter-python",
-        "tree-sitter-typescript"
+        "@socketsecurity/bun-security-scanner"
     ],
     "ignoreBinaries": [
         "actionlint",
@@ -125,13 +119,16 @@
     "workspaces": {
         ".": {
             "entry": [
+                "tests/setup/offline.ts",
+                "packages/eslint-plugin/repository.mjs",
                 "tests/setup/prepare-run.ts",
                 "tests/setup/integration.ts",
-                "packages/cli/src/checks/site/linkinator-process.ts",
                 "packages/cli/src/checks/site/purgecss-process.ts",
                 "packages/cli/configurations/language/javascript/tool-files/eslint-runtime.mjs",
                 "docs/src/route-data.ts",
                 "packages/cli/src/bin.ts",
+                "packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs",
+                "packages/cli/src/configurations/package-copies.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",
@@ -165,21 +162,16 @@
             "ignoreDependencies": [
                 "@fontsource-variable/geist",
                 "@fontsource-variable/geist-mono",
-                "tree-sitter-bash",
-                "tree-sitter-css",
-                "tree-sitter-html",
-                "tree-sitter-javascript",
-                "tree-sitter-python",
-                "tree-sitter-typescript",
                 "satteri"
             ]
         },
         "packages/cli": {
             "entry": [
-                "src/checks/site/linkinator-process.ts",
                 "src/checks/site/purgecss-process.ts",
                 "configurations/language/javascript/tool-files/eslint-runtime.mjs",
                 "src/bin.ts",
+                "configurations/language/markdown/tool-files/markdownlint-cli2.mjs",
+                "src/configurations/package-copies.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",
@@ -194,8 +186,6 @@
                 "**/*Tests.swift"
             ],
             "ignoreDependencies": [
-                "@fontsource-variable/geist",
-                "@fontsource-variable/geist-mono",
                 "tree-sitter-bash",
                 "tree-sitter-css",
                 "tree-sitter-html",
@@ -206,6 +196,7 @@
         },
         "packages/eslint-plugin": {
             "entry": [
+                "repository.mjs",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",
@@ -219,19 +210,11 @@
                 "**/Tests/**",
                 "**/*Tests.swift"
             ],
-            "ignoreDependencies": [
-                "@fontsource-variable/geist",
-                "@fontsource-variable/geist-mono",
-                "tree-sitter-bash",
-                "tree-sitter-css",
-                "tree-sitter-html",
-                "tree-sitter-javascript",
-                "tree-sitter-python",
-                "tree-sitter-typescript"
-            ]
+            "ignoreDependencies": []
         },
         "tests": {
             "entry": [
+                "setup/offline.ts",
                 "setup/prepare-run.ts",
                 "setup/integration.ts",
                 "src/main.{ts,js}",
@@ -248,14 +231,6 @@
                 "**/*Tests.swift"
             ],
             "ignoreDependencies": [
-                "@fontsource-variable/geist",
-                "@fontsource-variable/geist-mono",
-                "tree-sitter-bash",
-                "tree-sitter-css",
-                "tree-sitter-html",
-                "tree-sitter-javascript",
-                "tree-sitter-python",
-                "tree-sitter-typescript",
                 "@darraghor/eslint-plugin-nestjs-typed",
                 "@next/eslint-plugin-next",
                 "@react-native/eslint-plugin",

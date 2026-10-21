@@ -1,8 +1,8 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import { listStaleFiles } from '#cli/apply/stale.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { buildBuiltInResult } from '#cli/runs/built-in.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
-import { checkInput, buildBuiltInResult } from '#cli/runs/built-in.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { GENERATED_FILE_HELP, GENERATED_FILE_MESSAGES } from '#cli/config/checks/gspot.ts';
 
@@ -20,5 +20,5 @@ export function checkGeneratedFiles(session: Session, planned: PlannedCheck): Ch
             help: GENERATED_FILE_HELP[entry.kind],
         }),
     );
-    return buildBuiltInResult(planned, { input: checkInput(session, planned), result: findings, started });
+    return buildBuiltInResult(planned, session, { result: findings, started });
 }

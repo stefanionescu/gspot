@@ -31,7 +31,6 @@ message = "Raw SQL skips the types of the schema. Use the query builder, or acce
 selector = "TaggedTemplateExpression[tag.name='sql']"
 
 [eslint]
-fragment = true
 required_tools = ["eslint-plugin-drizzle"]
 
 [[check]]

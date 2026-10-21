@@ -61,13 +61,13 @@ export const JSDOC_FINDINGS = [
     {
         file: 'missing.js',
         findings: [
-            { ruleId: 'jsdoc/require-param-type', line: 3, column: 1, severity: 2 },
-            { ruleId: 'jsdoc/require-returns-type', line: 4, column: 1, severity: 2 },
+            { ruleId: 'jsdoc/require-param-type', line: 3 },
+            { ruleId: 'jsdoc/require-returns-type', line: 4 },
         ],
     },
-    { file: 'malformed.js', findings: [{ ruleId: 'jsdoc/valid-types', line: 3, column: 1, severity: 2 }] },
-    { file: 'capitalized.js', findings: [{ ruleId: 'jsdoc/check-types', line: 3, column: 1, severity: 2 }] },
-    { file: 'undefined.js', findings: [{ ruleId: 'jsdoc/no-undefined-types', line: 3, column: 1, severity: 2 }] },
+    { file: 'malformed.js', findings: [{ ruleId: 'jsdoc/valid-types', line: 3 }] },
+    { file: 'capitalized.js', findings: [{ ruleId: 'jsdoc/check-types', line: 3 }] },
+    { file: 'undefined.js', findings: [{ ruleId: 'jsdoc/no-undefined-types', line: 3 }] },
     { file: 'typed.ts', findings: [] },
 ] as const;
 

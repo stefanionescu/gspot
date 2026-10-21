@@ -5,15 +5,15 @@ import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { startCommand } from '#tests/setup/processes.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { commitAll, readGitOutput } from '#tests/setup/git.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 
 test('init deletes a replaced file and apply regenerates owned files without changing settings', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, { '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
+    await using folder = await testdir({ '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
+
     commitAll(folder.path);
     const initialized = await runGspot(folder.path, buildInitArguments(['bash']));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
@@ -41,7 +41,7 @@ test('a broken managed block stops apply before generated files change', async (
 Unclosed instructions.
 `;
     await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash'], { rules: true }),
+        'gspot.toml': buildSandboxSettings(['bash'], { rules: true }),
         'AGENTS.md': authored,
         'entry.sh': 'echo example\n',
     });
@@ -63,7 +63,7 @@ test.each([
     await using sleeper = holder === undefined ? startCommand(command, { cwd: folder.path }) : undefined;
     const lock = holder ?? `${String(sleeper!.child.pid)}:held`;
     await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText([]),
+        'gspot.toml': buildSandboxSettings([]),
         '.gspot/state/writer.lock': lock,
     });
     const refused = await runGspot(folder.path, ['apply']);
@@ -72,11 +72,11 @@ test.each([
     expect(await readFile(join(folder.path, '.gspot/state/writer.lock'), 'utf8')).toBe(lock);
 });
 test('apply --json prints one error object when an unowned file blocks generation', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash']),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
     });
+
     const applied = await runGspot(folder.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const generated = join(folder.path, '.editorconfig');
@@ -84,7 +84,7 @@ test('apply --json prints one error object when an unowned file blocks generatio
     await writeFile(generated, 'root = true\n');
     await writeFile(
         join(folder.path, 'gspot.toml'),
-        buildSettingsText(['bash'], { tables: '[limits]\nfile_lines = 100\n' }),
+        buildSandboxSettings(['bash'], { tables: '[limits]\nfile_lines = 100\n' }),
     );
     const refused = await runGspot(folder.path, ['apply', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -94,7 +94,7 @@ test('apply --json prints one error object when an unowned file blocks generatio
 });
 test('a malformed reason reports a settings error and apply preserves the authored settings', async () => {
     await using sandbox = await testdir();
-    const source = buildSettingsText(['site'], {
+    const source = buildSandboxSettings(['site'], {
         tables: '[limits]\nfile_lines = { value = 1000, reason = 42 }\n',
     });
     await createFileTree(sandbox.path, { 'gspot.toml': source });
@@ -113,13 +113,13 @@ test('removing rules from a fresh clone removes the managed AGENTS.md block', as
     const source = join(sandbox.path, 'source');
     const checkout = join(sandbox.path, 'checkout');
     const authored = '# Your instructions\n';
-    await createFileTree(source, { 'gspot.toml': buildSettingsText([], { rules: true }), 'AGENTS.md': authored });
+    await createFileTree(source, { 'gspot.toml': buildSandboxSettings([], { rules: true }), 'AGENTS.md': authored });
     commitAll(source);
     expect(await runGspot(source, ['apply'])).toHaveProperty('code', 0);
     commitAll(source);
     readGitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
     expect(await runGspot(checkout, ['apply'])).toHaveProperty('code', 0);
-    await writeFile(join(checkout, 'gspot.toml'), buildSettingsText([]));
+    await writeFile(join(checkout, 'gspot.toml'), buildSandboxSettings([]));
     expect(await runGspot(checkout, ['apply'])).toHaveProperty('code', 0);
     expect(await readFile(join(checkout, 'AGENTS.md'), 'utf8')).toBe(authored);
 });

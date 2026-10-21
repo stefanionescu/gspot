@@ -12,9 +12,9 @@ Read this rule when you write SQL.
 
 ## Naming
 
-### SQL case rules
-
 <!-- level: all -->
+
+### SQL case rules
 
 - SQL schemas, tables, columns, functions, parameters, indexes,
   triggers, constraints, and policies use `lower_snake_case`.
@@ -32,13 +32,9 @@ does not establish ownership checks or enable Row Level Security.
 
 ### Migration filenames
 
-<!-- level: all -->
-
 Follow the migration tool's file names. Name each migration for its durable database change.
 
 ### SQL tables and columns
-
-<!-- level: all -->
 
 - Table names identify the domain set stored by the relation.
 - Column names identify the value, not the application layer that reads it.
@@ -58,8 +54,6 @@ Follow the migration tool's file names. Name each migration for its durable data
 
 ### SQL functions and parameters
 
-<!-- level: all -->
-
 - SQL function names use the verbs of `NAMING.md`. These verbs apply to functions, not migration
   filenames.
 - Parameter names never collide with table columns.
@@ -72,8 +66,6 @@ expired orders. Name its user argument `target_user_id` when the affected tables
 operation, and an unqualified `id` can obscure column ownership.
 
 ### Indexes, constraints, triggers, and policies
-
-<!-- level: all -->
 
 - Name constraints and scope them to their table or concept.
 - Name indexes by table plus their columns or purpose.

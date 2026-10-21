@@ -12,10 +12,7 @@ extensions = [".svg"]
 filenames = ["site.webmanifest", "sitemap.xml", "robots.txt"]
 
 [[tool]]
-name = "linkinator"
-npm = "linkinator"
-replace = ["linkinator.config.json"]
-version = "8.1.0"
+name = "lychee"
 
 [[tool]]
 name = "purgecss"
@@ -74,12 +71,13 @@ why = "Visitors download an unused selector, and maintainers still read it."
 example = "A link to `/missing/` reports a broken destination when that page does not exist. Point it at an existing page, or add the page."
 help = "Fix the link, or the page it points at."
 level = "recommended"
-name = "linkinator"
+name = "lychee"
 needs = ["build"]
+output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 runs = "scope"
 stage = "push"
-summary = "Serves the built site and follows every link between its pages, stylesheets, and fragments."
-tool = "linkinator"
+summary = "Checks the links between built pages, stylesheets, and fragments without a server or network requests."
+tool = "lychee"
 why = "A visitor hits a broken internal link before the author notices it."
 
 [[check]]

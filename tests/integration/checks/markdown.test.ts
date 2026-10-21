@@ -1,12 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { isOnDisk } from '#tests/setup/files.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {
@@ -27,12 +28,12 @@ test.each([...LEVELS])(
             check: 'markdown/markdownlint',
             files: {
                 ...MARKDOWN_FILES,
-                'gspot.toml': buildSettingsText(['markdown'], { level, tables: MARKDOWNLINT_SETTINGS }),
+                'gspot.toml': buildSandboxSettings(['markdown'], { level, tables: MARKDOWNLINT_SETTINGS }),
             },
         });
-        const failed = await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']);
+        const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = JSON.parse(failed.stdout) as RunReport;
+        const report = failed.report;
         const findings = report.checks.flatMap((check) => check.findings);
         expect(findings).toContainEqual(matchFields({ file: 'root.md', line: 7, rule: 'MD045' }));
         expect(findings.filter(({ rule }) => rule === 'MD041').map(({ file }) => file)).toStrictEqual(
@@ -40,14 +41,16 @@ test.each([...LEVELS])(
         );
         expect(findings.filter(({ rule }) => rule === 'MD044')).toStrictEqual([]);
         expect(findings.filter(({ rule }) => ['MD013', 'MD033'].includes(rule ?? ''))).toStrictEqual([]);
-        await Bun.write(join(root, 'root.md'), MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'));
-        await Bun.write(
+        await writeFile(join(root, 'root.md'), MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'));
+        await writeFile(
             join(root, 'app/guide.md'),
             MARKDOWN_FILES['app/guide.md'].replace('Nested label.', 'nested label.'),
         );
-        const changed = await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']);
+        const changed = parseCheckReport(
+            await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']),
+        );
         expect(changed.code, changed.stdout + changed.stderr).toBe(1);
-        const changedReport = JSON.parse(changed.stdout) as RunReport;
+        const changedReport = changed.report;
         expect(changedReport.checks.flatMap(({ findings: entries }) => entries)).toContainEqual(
             matchFields({ file: 'app/guide.md', line: 5, rule: 'MD044' }),
         );
@@ -60,11 +63,11 @@ test.each([...LEVELS])(
             '--json',
         ]);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-        expect(await Bun.file(join(root, 'app/guide.md')).text()).toBe(MARKDOWN_FILES['app/guide.md']);
-        expect(await Bun.file(join(root, 'root.md')).text()).toBe(
+        expect(await readFile(join(root, 'app/guide.md'), 'utf8')).toBe(MARKDOWN_FILES['app/guide.md']);
+        expect(await readFile(join(root, 'root.md'), 'utf8')).toBe(
             MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'),
         );
-        await Bun.write(join(root, 'root.md'), MARKDOWN_FILES['root.md']);
+        await writeFile(join(root, 'root.md'), MARKDOWN_FILES['root.md']);
     },
 );
 
@@ -74,7 +77,7 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
         check: 'markdown/markdownlint',
         files: {
             ...MARKDOWN_FILES,
-            'gspot.toml': buildSettingsText(['markdown', 'javascript'], {
+            'gspot.toml': buildSandboxSettings(['markdown', 'javascript'], {
                 level: 'all',
                 tables: MARKDOWNLINT_SETTINGS,
             }),
@@ -109,7 +112,7 @@ test('markdownlint honors a lint rule ignore in the root and scope tool files', 
 
 A document with a title.
 `,
-            'gspot.toml': buildSettingsText(['markdown'], {
+            'gspot.toml': buildSandboxSettings(['markdown'], {
                 level: 'all',
                 tables: `${MARKDOWNLINT_SETTINGS}[[ignore]]
 check = "markdown/markdownlint"
@@ -119,9 +122,9 @@ reason = "The sample demonstrates an empty alternative."
             }),
         },
     });
-    const ignored = await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']);
+    const ignored = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const ignoredReport = JSON.parse(ignored.stdout) as RunReport;
+    const ignoredReport = ignored.report;
     expect(ignoredReport.checks).toMatchObject([
         { check: 'markdown/markdownlint', scope: '', status: 'passed', findings: [] },
         { check: 'markdown/markdownlint', scope: 'app', status: 'passed', findings: [] },
@@ -134,7 +137,7 @@ test('markdownlint JSON keeps file name delimiters, positions, and fixability', 
     await using _change = await applySandboxChanges(installedSandbox(), {
         check: 'markdown/markdownlint',
         files: {
-            'gspot.toml': buildSettingsText(['markdown'], {
+            'gspot.toml': buildSandboxSettings(['markdown'], {
                 level: 'all',
             }),
             ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png">   \n'])),
@@ -142,35 +145,35 @@ test('markdownlint JSON keeps file name delimiters, positions, and fixability', 
     });
     const environment = installedSandbox().environment;
     const configuration = '.gspot/configurations/language/markdown/markdownlint-cli2.mjs';
-    expect(await Bun.file(join(root, configuration)).exists()).toBe(true);
+    expect(await isOnDisk(join(root, configuration))).toBe(true);
     const command = ['check', ...paths, '--only', 'markdown/markdownlint', '--json'];
-    const failed = await spawnGspot(root, command, environment);
+    const failed = parseCheckReport(await spawnGspot(root, command, environment));
     expect(failed.code, failed.stderr).toBe(1);
-    const findings = (JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings);
+    const findings = failed.report.checks.flatMap((check) => check.findings);
     for (const file of paths) {
         expect(findings).toContainEqual(matchFields({ file, line: 1, column: 6, rule: 'MD045', fixable: false }));
         expect(findings).toContainEqual(matchFields({ file, line: 1, rule: 'MD009', fixable: true }));
         expect(findings).toContainEqual(matchFields({ file, line: 1, rule: 'MD041', fixable: false }));
     }
-    for (const path of paths) await Bun.write(join(root, path), '# Title\n');
-    const corrected = await spawnGspot(root, command, environment);
+    for (const path of paths) await writeFile(join(root, path), '# Title\n');
+    const corrected = parseCheckReport(await spawnGspot(root, command, environment));
     expect(corrected.code, corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
+    expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
 });
 
 test('markdownlint reads an MDX page from after its import and export blocks', async () => {
     const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
         check: 'markdown/markdownlint',
-        files: { 'gspot.toml': buildSettingsText(['markdown'], { level: 'all' }), ...MDX_FILES },
+        files: { 'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all' }), ...MDX_FILES },
     });
     const command = ['check', ...Object.keys(MDX_FILES), '--only', 'markdown/markdownlint', '--json'];
-    const failed = await spawnGspot(root, command);
+    const failed = parseCheckReport(await spawnGspot(root, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
+    expect(failed.report.checks.flatMap((check) => check.findings)).toStrictEqual([
         matchFields({ file: 'untitled.mdx', line: 3, rule: 'MD041' }),
     ]);
-    await Bun.write(join(root, 'untitled.mdx'), MDX_FILES['untitled.mdx'].replace('The page', '# Notice\n\nThe page'));
+    await writeFile(join(root, 'untitled.mdx'), MDX_FILES['untitled.mdx'].replace('The page', '# Notice\n\nThe page'));
     const corrected = await spawnGspot(root, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

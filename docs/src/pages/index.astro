@@ -1,6 +1,6 @@
 ---
 import Example from '../components/home/Example.astro';
-import InlineText from '../components/home/InlineText.astro';
+import InlineText from '../components/InlineText.astro';
 import { TOOLS, USE_CASES, HOME_TITLE } from '../config/home.ts';
 import '../components/home/page.css';
 import { DOCS_PATH, DESCRIPTION, REPOSITORY_URL } from '../config/site.ts';
@@ -17,17 +17,6 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
         lastUpdated: false,
         prev: false,
         next: false,
-        head: [
-            {
-                tag: 'link',
-                attrs: {
-                    rel: 'alternate',
-                    type: 'text/plain',
-                    href: '/llms.txt',
-                    title: 'Instructions for coding agents',
-                },
-            },
-        ],
     }}
 >
     <div class="landing not-content">
@@ -76,7 +65,9 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
                             stroke-linecap="round"
                             stroke-linejoin="round"
                         >
-                            {icon.map((path) => <path d={path} />)}
+                            {icon.map((path) => (
+                                <path d={path} />
+                            ))}
                         </svg>
                         <h3>{title}</h3>
                         <p>
@@ -85,7 +76,9 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
                     </li>
                 ))}
             </ul>
-            <p class="more"><a href="/reference/checks/">See every check →</a></p>
+            <p class="more">
+                <a href="/reference/checks/">See every check →</a>
+            </p>
         </section>
         <footer class="home-footer">
             <div class="home-footer-content">

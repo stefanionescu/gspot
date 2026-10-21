@@ -1,20 +1,12 @@
 import { createRequire } from 'node:module';
-import { createRule } from '../create-rule.ts';
+import { FUNCTIONS } from '../config/syntax.ts';
+import { createRule } from '../schemas/rules/options.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';
+import { UPSTREAM_RULE, UPSTREAM_PACKAGE } from '../config/magic-numbers.ts';
+import { magicNumbersOptionsSchema } from '../schemas/rules/no/magic-numbers.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { UPSTREAM_RULE, FUNCTION_NODES, UPSTREAM_PACKAGE } from '../config/magic-numbers.ts';
 
 const requireModule = createRequire(import.meta.url);
-
-// The rule loads only where gspot turns it on, in TypeScript scopes, which install typescript-eslint.
-function findUpstreamRule(): TSESLint.RuleModule<string, unknown[]> {
-    const upstream = requireModule(UPSTREAM_PACKAGE) as {
-        rules: Record<string, TSESLint.RuleModule<string, unknown[]>>;
-    };
-    const rule = upstream.rules[UPSTREAM_RULE];
-    if (rule === undefined) throw new Error(`${UPSTREAM_PACKAGE} has no ${UPSTREAM_RULE} rule.`);
-    return rule;
-}
 
 function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
     if (declaration.kind !== 'const') return false;
@@ -29,13 +21,13 @@ function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
 // has a name. A number inside a function of that initializer still counts.
 function isConstantValue(node: TSESTree.Node): boolean {
     for (let current: TSESTree.Node = node; current.type !== AST_NODE_TYPES.Program; current = current.parent) {
-        if (FUNCTION_NODES.has(current.type)) return false;
+        if (FUNCTIONS.has(current.type)) return false;
         if (current.type === AST_NODE_TYPES.VariableDeclarator) return isModuleConstant(current.parent);
     }
     return false;
 }
 
-export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic'>({
+export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useConst'>({
     name: 'no-magic-numbers',
     meta: {
         defaultOptions: [{}],
@@ -49,16 +41,23 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic'>({
             why: 'A bare number hides what it measures, and a module-level constant gives it a name that callers share.',
             fix: 'Move the number into a module-level constant whose name says what it measures.',
         },
-        schema: [{ type: 'object', additionalProperties: true }],
-        messages: { noMagic: 'No magic number: {{raw}}. Name it in a module-level constant.' },
+        schema: [magicNumbersOptionsSchema],
+        messages: {
+            noMagic: 'No magic number: {{raw}}. Name it in a module-level constant.',
+            useConst: 'Declare this number with const at module level, and name it.',
+        },
     },
     create(context) {
-        return findUpstreamRule().create(
+        // The rule loads only where gspot turns it on, in TypeScript scopes, which install typescript-eslint.
+        const upstream = requireModule(UPSTREAM_PACKAGE) as {
+            rules: Record<typeof UPSTREAM_RULE, TSESLint.RuleModule<string, unknown[]>>;
+        };
+        return upstream.rules[UPSTREAM_RULE].create(
             Object.create(context, {
                 report: {
                     value: (descriptor: TSESLint.ReportDescriptor<string>) => {
                         if ('node' in descriptor && isConstantValue(descriptor.node as TSESTree.Node)) return;
-                        context.report(descriptor as TSESLint.ReportDescriptor<'noMagic'>);
+                        context.report(descriptor as TSESLint.ReportDescriptor<'noMagic' | 'useConst'>);
                     },
                 },
             }) as TSESLint.RuleContext<string, unknown[]>,

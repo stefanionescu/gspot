@@ -1,8 +1,8 @@
 // Parses Python sources: functions, docstrings, and the names that read environment variables.
 import { type Node } from 'web-tree-sitter';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
-import type { ParseCache, SourceInput } from '#cli/types/parsers/tree-sitter.ts';
+import { parseSource } from '#cli/parsers/grammars.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
+import type { ParseCache, SourceInput } from '#cli/types/parsers/grammars.ts';
 import { PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/python.ts';
 import type { PythonFiles, PythonModule, PythonFunction } from '#cli/types/parsers/python.ts';
 
@@ -66,7 +66,7 @@ async function readPython(input: SourceInput): Promise<PythonFiles> {
     try {
         for (const file of input.files) {
             if (file.kind !== 'source' || !file.path.endsWith(PYTHON_EXTENSION)) continue;
-            const text = readCachedBytes(input.reads, file.path).toString('utf8');
+            const text = readCachedText(input.reads, file.path);
             modules.push(await parsePythonModule(file.path, text, input));
         }
         return { modules, functions: modules.flatMap((module) => listFunctions(module)) };
@@ -283,3 +283,13 @@ function readPythonEnvironment(syntaxRoot: Node, readers: readonly string[]): En
 }
 
 export { isDocstring, findDocstring, PYTHON_SOURCES, parsePythonModule, readPythonEnvironment };
+
+/**
+ * Get the final name of a dotted Python expression.
+ *
+ * @param text the expression as written.
+ * @returns its final component, empty for an empty expression.
+ */
+export function getLastName(text: string): string {
+    return text.split('.').at(-1) ?? '';
+}

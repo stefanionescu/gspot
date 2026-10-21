@@ -1,24 +1,26 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { join, relative, normalize } from 'node:path';
+import { getTable } from '#cli/settings/scope-view.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { type SiteBuild } from '#cli/types/checks/site.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
+import { copyCheckIntoScratch } from '#cli/runs/copy/files.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
-import { checkCopyInputs, copyIntoScratch } from '#cli/runs/scratch-copy/scratch.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 const SITE_BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 
-async function runSiteBuild(input: CheckInput, scratch: string): Promise<SiteBuild> {
-    const site = input.selection.view.options('site');
+async function runSiteBuild(session: Session, planned: PlannedCheck, scratch: string): Promise<SiteBuild> {
+    const site = getTable(planned.selection.view, 'site');
     const folderPath = site['build_folder'];
-    const cwd = join(scratch, input.selection.scope.path);
+    const cwd = join(scratch, planned.selection.scope.path);
     const command = site['build_command'];
-    const result = await runCheckTool(input, command, { cwd });
+    const result = await runCheckTool(session, planned, command, { cwd });
     const folder = join(scratch, folderPath);
     const built = result.code === 0 ? lstatSync(folder, { throwIfNoEntry: false }) : undefined;
     if (built?.isSymbolicLink() === true)
@@ -31,19 +33,20 @@ async function runSiteBuild(input: CheckInput, scratch: string): Promise<SiteBui
 /**
  * Builds the site once per scope and shares the build with later checks.
  *
- * @param input the scope to build.
+ * @param session the repository and its tools.
+ * @param planned the scope to build.
  * @returns the build, shared by every caller.
  */
-function getSiteBuild(input: CheckInput): Promise<SiteBuild> {
-    const key = join(input.root, input.selection.scope.path);
-    const scopeBuilds = getCachedValue(input.reads, SITE_BUILD_MEMO);
+function getSiteBuild(session: Session, planned: PlannedCheck): Promise<SiteBuild> {
+    const key = join(session.root, planned.selection.scope.path);
+    const scopeBuilds = getCachedValue(session.reads, SITE_BUILD_MEMO);
     const held = scopeBuilds.get(key);
     if (held !== undefined) return held;
     const running = (async () => {
-        const resources = input.resources;
+        const resources = session.resources;
         resources.defer(() => scopeBuilds.delete(key));
-        const folder = await copyIntoScratch(checkCopyInputs(input));
-        return runSiteBuild(input, resources.use(folder).path);
+        const folder = await copyCheckIntoScratch(session, planned);
+        return runSiteBuild(session, planned, resources.use(folder).path);
     })();
     scopeBuilds.set(key, running);
     return running;
@@ -75,22 +78,23 @@ export function listBuiltFiles(folder: string): string[] {
 /**
  * Maps a built file to its repository path.
  *
- * @param input the scope with the build folder setting.
+ * @param planned the scope with the build folder setting.
  * @param path the file path inside the build folder.
  * @returns the repository-relative path.
  */
-export function deriveBuiltFilePath(input: Pick<CheckInput, 'selection'>, path: string): string {
-    return `${input.selection.view.options('site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
+export function deriveBuiltFilePath(planned: Pick<PlannedCheck, 'selection'>, path: string): string {
+    return `${getTable(planned.selection.view, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
 }
 
 /**
  * Returns the site build, or skips the check when the build failed.
  *
- * @param input the scope to build.
+ * @param session the repository and its tools.
+ * @param planned the scope to build.
  * @returns the built site, when the build succeeded.
  */
-export async function getSuccessfulBuild(input: CheckInput): Promise<SiteBuild> {
-    const build = await getSiteBuild(input);
+export async function getSuccessfulBuild(session: Session, planned: PlannedCheck): Promise<SiteBuild> {
+    const build = await getSiteBuild(session, planned);
     if (!build.isBuilt) throw new GspotError('skip', 'The site did not build.');
     return build;
 }
@@ -98,15 +102,16 @@ export async function getSuccessfulBuild(input: CheckInput): Promise<SiteBuild> 
 /**
  * Reports a build command that fails or writes no build folder.
  *
- * @param input the scope to build.
+ * @param session the repository and its tools.
+ * @param planned the scope to build.
  * @returns the findings.
  */
-export async function checkSiteBuild(input: CheckInput): Promise<Finding[]> {
-    const build = await getSiteBuild(input);
+export async function checkSiteBuild(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const build = await getSiteBuild(session, planned);
     if (build.isBuilt) return [];
     return [
         buildFinding(
-            input,
+            planned,
             { file: '', line: 1 },
             'build',
             `${JSON.stringify(build.command)} did not build the site: ${build.outputTail}`,

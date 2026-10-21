@@ -1,11 +1,7 @@
-import { PYPROJECT_TOML } from '#cli/config/parsers/dependency-files.ts';
-
 /** The pinned tool reads unclassified docstrings as NumPy style. */
 export const PYDOCLINT_DEFAULT_STYLE = 'numpy';
 
 export const PYDOCLINT_COMMAND = ['pydoclint', '--allow-init-docstring', 'true', '--quiet', '{files}'] as const;
-
-export const BROKEN_CONTRACT = /^(?<name>.+?) BROKEN(?: \(| \[|$)/u;
 
 export const PIP_INSTALL = /\bpip3? install\b/u;
 
@@ -24,9 +20,6 @@ export const GOOGLE_DOCSTRING = /^[ \t]*(?:Args|Arguments|Keyword Args):[ \t]*$/
 
 export const NUMPY_DOCSTRING = /^[ \t]*Parameters[ \t]*\r?\n[ \t]*-{3,}[ \t]*$/mu;
 
-/** Import-linter precedence: INI configurations first, then the Python project table. */
-export const IMPORT_LINTER_FILES = ['setup.cfg', '.importlinter', PYPROJECT_TOML] as const;
-
 export const DOCSTRING_STYLES = ['google', 'numpy', 'sphinx'] as const;
 
 export const PYDOCLINT_STYLE_FLAG = '--style';
@@ -37,8 +30,6 @@ export const DEPTRY_FIRST_PARTY_FLAG = '--known-first-party';
 export const NON_WORD_RUN = /[^a-z\d]+/gu;
 
 export const DEPTRY_COMMAND = ['deptry', '.', '--no-ansi'] as const;
-
-export const LINT_IMPORTS_COMMAND = ['lint-imports', '--no-cache', '--verbose', '--config'] as const;
 
 export const VULTURE_COMMAND = ['vulture'] as const;
 

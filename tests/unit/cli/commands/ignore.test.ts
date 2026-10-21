@@ -1,59 +1,51 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
+import { commitAll } from '#tests/setup/git.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
+import { checkFindings } from '#tests/setup/check-input.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
-import { TWO_IGNORE_RECORDS } from '#tests/data/commands/ignore.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
+
+import {
+    TWO_IGNORE_RECORDS,
+    IGNORE_HOOK_TABLES,
+    PATH_IGNORE_ARGUMENTS,
+    MERGED_EXPIRY_IGNORES,
+    FUNCTION_NAME_IGNORES,
+    DATED_IGNORE_ARGUMENTS,
+    UNKNOWN_IGNORE_ARGUMENTS,
+    REMAINING_EXPIRY_IGNORES,
+} from '#tests/data/commands/ignore.ts';
 
 test('ignore of an unknown check exits 2 and leaves gspot.toml byte for byte', async () => {
     await using folder = await testdir({ 'gspot.toml': TWO_IGNORE_RECORDS, 'entry.sh': 'echo example\n' });
-    const result = await runGspot(folder.path, [
-        'ignore',
-        'bash/shelcheck',
-        '--reason',
-        'The sample check name is misspelled.',
-    ]);
+    const result = await runGspot(folder.path, UNKNOWN_IGNORE_ARGUMENTS);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain('bash/shellcheck');
     expect(await readFile(join(folder.path, 'gspot.toml'), 'utf8')).toBe(TWO_IGNORE_RECORDS);
 });
 
 test('ignore merges paths into one entry and prints them, and unignore removes one path', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
+    await using folder = await testdir({
         'gspot.toml':
             '# Comment on configurations.\n' +
-            buildSettingsText(['bash'], {
+            buildSandboxSettings(['bash'], {
                 rules: true,
-                tables:
-                    BASH_SYNTAX_CHECK +
-                    `[rules]
-enabled = false
-[hooks]
-# Keep the push selection.
-enabled = false
-`,
+                tables: BASH_SYNTAX_CHECK + IGNORE_HOOK_TABLES,
             }),
         'a.sh': 'echo a\n',
         'b.sh': 'echo b\n',
     });
-    const commandArguments = [
-        'ignore',
-        'bash/shellcheck',
-        '--reason',
-        'The inputs demonstrate word splitting.',
-        '--paths',
-    ];
-    const first = await runGspot(folder.path, [...commandArguments, 'a.sh']);
+
+    const first = await runGspot(folder.path, [...PATH_IGNORE_ARGUMENTS, 'a.sh']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
-    const added = await runGspot(folder.path, [...commandArguments, 'b.sh']);
+    const added = await runGspot(folder.path, [...PATH_IGNORE_ARGUMENTS, 'b.sh']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
     expect(added.stdout).toContain('a.sh');
     expect(added.stdout).toContain('b.sh');
@@ -68,9 +60,8 @@ enabled = false
 });
 
 test('ignore merges entries with the same --until date, keeps other dates apart, and unignore removes one path', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash'], {
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], {
             rules: true,
             tables: BASH_SYNTAX_CHECK + '[rules]\nenabled = false\n',
         }),
@@ -78,57 +69,28 @@ test('ignore merges entries with the same --until date, keeps other dates apart,
         'b.sh': 'echo b\n',
         'c.sh': 'echo c\n',
     });
-    const commandArguments = [
-        'ignore',
-        'bash/shellcheck',
-        '--rule',
-        'SC2086',
-        '--reason',
-        'The sandbox preserves word splitting.',
-    ];
+
     for (const [until, path] of [
         ['2099-05-20', 'a.sh'],
         ['2099-05-20', 'b.sh'],
         ['2099-05-21', 'c.sh'],
     ]) {
-        const saved = await runGspot(folder.path, [...commandArguments, '--until', until!, '--paths', path!]);
+        const saved = await runGspot(folder.path, [...DATED_IGNORE_ARGUMENTS, '--until', until!, '--paths', path!]);
         expect(saved.code, saved.stdout + saved.stderr).toBe(0);
     }
-    const entry = { check: 'bash/shellcheck', rule: 'SC2086', reason: 'The sandbox preserves word splitting.' };
-    expect(await readIgnoreRecords(folder.path)).toStrictEqual([
-        {
-            ...entry,
-            until: '2099-05-20',
-            paths: ['a.sh', 'b.sh'],
-        },
-        {
-            ...entry,
-            until: '2099-05-21',
-            paths: ['c.sh'],
-        },
-    ]);
+
+    expect(await readIgnoreRecords(folder.path)).toStrictEqual(MERGED_EXPIRY_IGNORES);
     const removed = await runGspot(folder.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086', '--paths', 'b.sh']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(await readIgnoreRecords(folder.path)).toStrictEqual([
-        {
-            ...entry,
-            until: '2099-05-20',
-            paths: ['a.sh'],
-        },
-        {
-            ...entry,
-            until: '2099-05-21',
-            paths: ['c.sh'],
-        },
-    ]);
+    expect(await readIgnoreRecords(folder.path)).toStrictEqual(REMAINING_EXPIRY_IGNORES);
 });
 
 test('ignore refuses an invalid --until date and leaves gspot.toml unchanged', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'example.sh': 'echo ready\n',
     });
+
     const before = await readFile(join(folder.path, 'gspot.toml'), 'utf8');
     const invalid = await runGspot(folder.path, [
         'ignore',
@@ -151,13 +113,13 @@ test('ignore refuses an invalid --until date and leaves gspot.toml unchanged', a
 });
 
 test('ignore merges matching paths, keeps different reasons apart, and an entry without paths covers the scope', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'a.sh': 'echo a\n',
         'b.sh': 'echo b\n',
         'other.sh': 'echo other\n',
     });
+
     const reason = 'Generated samples repeat on purpose.';
     const commandArguments = ['ignore', 'bash/shellcheck', '--rule', 'SC2312'];
     for (const [paths, explanation] of [
@@ -189,7 +151,7 @@ test('an ignore without paths stops a command check and its fixer until unignore
     await using folder = await testdir();
     const command = [process.execPath, '-e', "await Bun.write('read.txt', 'executed'); process.exitCode = 1;"];
     const fix = [process.execPath, '-e', "await Bun.write('corrected.txt', 'corrected');"];
-    const settings = buildSettingsText([], {
+    const settings = buildSandboxSettings([], {
         tables: `[[command_check]]
 name = "project/quality"
 output = { format = "none" }
@@ -208,12 +170,12 @@ stage = "commit"
     const reason = 'The sandbox preserves the command failure.';
     const ignored = await runGspot(folder.path, ['ignore', 'project/quality', '--reason', reason]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const skipped = await checkReport(folder.path, [...commandArguments, '--fix']);
+    const skipped = parseCheckReport(await runGspot(folder.path, [...commandArguments, '--fix']));
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     const report = skipped.report;
+    expect(report.checks).toMatchObject([{ check: 'project/quality', status: 'skipped', cause: 'ignore' }]);
     expect(report.checks[0]).toMatchObject({ check: 'project/quality', status: 'skipped', findings: [] });
-    expect(report.skips).toStrictEqual([{ check: 'project/quality', cause: 'ignore' }]);
-    expect(report.ignores).toStrictEqual([{ check: 'project/quality', reason, matched: 0 }]);
+    expect(report.ignores).toStrictEqual([{ check: 'project/quality', reason }]);
     expect(await isOnDisk(join(folder.path, 'read.txt'))).toBe(false);
     expect(await isOnDisk(join(folder.path, 'corrected.txt'))).toBe(false);
     const removed = await runGspot(folder.path, ['unignore', 'project/quality']);
@@ -224,13 +186,13 @@ stage = "commit"
 });
 
 test('an ignored folder covers its subfolders, and a negated file in it is still checked', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'legacy scripts/nested/example.sh': 'if then\n',
         'legacy scripts/required.sh': 'if then\n',
         'entry.sh': 'echo example\n',
     });
+
     const ignored = await runGspot(folder.path, [
         'ignore',
         'project/bash-syntax',
@@ -242,13 +204,12 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
     ]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const command = ['check', '--only', 'project/bash-syntax', '--json'];
-    const checked = await checkReport(folder.path, command);
+    const checked = parseCheckReport(await runGspot(folder.path, command));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = checked.report;
     expect(new Set(report.checks[0]?.findings.map(({ file }) => file))).toStrictEqual(
         new Set(['legacy scripts/required.sh']),
     );
-    expect(report.ignores[0]?.matched).toBe(0);
     await writeFile(join(folder.path, 'legacy scripts/required.sh'), 'echo corrected\n');
     const corrected = await runGspot(folder.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -260,7 +221,7 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
         '!legacy scripts/required.sh',
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const restored = await checkReport(folder.path, command);
+    const restored = parseCheckReport(await runGspot(folder.path, command));
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
     expect(new Set(restored.report.checks[0]?.findings.map(({ file }) => file))).toStrictEqual(
         new Set(['legacy scripts/nested/example.sh']),
@@ -269,20 +230,19 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
 
 /** Read saved ignore records with their dates serialized for the assertions. */
 async function readIgnoreRecords(root: string) {
-    return parseSettings(
-        await readFile(join(root, 'gspot.toml'), 'utf8'),
-        undefined,
-        createReadCache(process.cwd()),
-    ).ignore.map((entry) => ({ ...entry, until: entry.until?.toISOString() }));
+    return parseSettings(await readFile(join(root, 'gspot.toml'), 'utf8'), undefined).ignore.map((entry) => ({
+        ...entry,
+        until: entry.until?.toISOString(),
+    }));
 }
 
 test('ignore without a check keeps the paths out of every check and every tool file', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash'], { rules: true, tables: '[rules]\nenabled = false\n' }),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { rules: true, tables: '[rules]\nenabled = false\n' }),
         'entry.sh': 'echo entry\n',
         'data/facts.txt': 'Nebulix\n',
     });
+
     const refused = await runGspot(folder.path, ['ignore', '--rule', 'SC2086', '--paths', 'data/**', '--reason', 'x']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toContain('An ignore without a check cannot take --rule.');
@@ -297,4 +257,55 @@ test('ignore without a check keeps the paths out of every check and every tool f
     const removed = await runGspot(folder.path, ['unignore', '--paths', 'data/**']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(parse(await readFile(join(folder.path, 'gspot.toml'), 'utf8'))).not.toHaveProperty('ignore');
+});
+
+test('gspot ignore escapes a route folder in its paths, and a pattern with a bare group gets the escape hint', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], {}),
+        'app/(legal)/terms/page.tsx': 'export default function Terms() { return null; }\n',
+    });
+    commitAll(sandbox.path);
+    const ignored = await runGspot(sandbox.path, [
+        'ignore',
+        'structure/lone-files',
+        '--paths',
+        'app/(legal)/**',
+        '--reason',
+        'Next.js route groups hold one page each.',
+    ]);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['ignore']).toMatchObject([{ paths: [String.raw`app/\(legal\)/**`] }]);
+    expect(await checkFindings(sandbox.path, 'gspot/unmatched-patterns')).toStrictEqual([]);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['typescript'], {
+            tables: '[[ignore]]\ncheck = "structure/lone-files"\npaths = ["app/(missing)/**"]\nreason = "A route group."\n',
+        }),
+    );
+    const unmatched = await checkFindings(sandbox.path, 'gspot/unmatched-patterns');
+    expect(unmatched.map(({ message }) => message)).toStrictEqual([
+        String.raw`app/(missing)/** under [[ignore]] matches no tracked file or folder. If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`,
+    ]);
+});
+
+test('gspot ignore --names writes the function names of a structure/trivial-functions ignore', async () => {
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
+        'main.py': '',
+    });
+    const result = await runGspot(folder.path, [
+        'ignore',
+        'structure/trivial-functions',
+        '--names',
+        'define_schema',
+        'execute',
+        '--paths',
+        'nodes/**',
+        '--reason',
+        'The host application calls these hooks by name.',
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const written = parse(await readFile(join(folder.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(written['ignore']).toStrictEqual(FUNCTION_NAME_IGNORES);
 });

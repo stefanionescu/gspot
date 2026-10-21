@@ -1,14 +1,12 @@
-// Collect what the fragments add to a generated file: text, imports, file globs, and selectors.
+// Build the scoped block data, imports, and selectors of the selected configurations.
+import { isDeepStrictEqual } from 'node:util';
 import type { Session } from '#cli/types/planning.ts';
-import { escapeGlob } from '#cli/repository/matchers.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
-import { isInScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
 import { buildVueFragment } from '#cli/generation/eslint/fragments/vue.ts';
-import { buildJestFragment } from '#cli/generation/eslint/fragments/jest.ts';
 import { groupFragmentSelectors } from '#cli/generation/eslint/selectors.ts';
 import { buildAstroFragment } from '#cli/generation/eslint/fragments/astro.ts';
 import { buildReactFragment } from '#cli/generation/eslint/fragments/react.ts';
+import { buildTestFiles, buildScopeGlob } from '#cli/generation/eslint/files.ts';
 import { buildNestjsFragment } from '#cli/generation/eslint/fragments/nestjs.ts';
 import { buildNextjsFragment } from '#cli/generation/eslint/fragments/nextjs.ts';
 import { buildSvelteFragment } from '#cli/generation/eslint/fragments/svelte.ts';
@@ -18,11 +16,20 @@ import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts
 import { buildDrizzleFragment } from '#cli/generation/eslint/fragments/drizzle.ts';
 import { buildZustandFragment } from '#cli/generation/eslint/fragments/zustand.ts';
 import { buildReactDomFragment } from '#cli/generation/eslint/fragments/react-dom.ts';
+import { PLUGIN_LINT_RULE_FRAGMENTS } from '#cli/config/generation/eslint-fragments.ts';
 import { buildTypescriptFragment } from '#cli/generation/eslint/fragments/typescript.ts';
-import { type EslintContext, type EslintFragment } from '#cli/types/generation/eslint.ts';
+import { isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildLintRuleFragment } from '#cli/generation/eslint/fragments/plugin-lint-rules.ts';
 import { buildTanstackQueryFragment } from '#cli/generation/eslint/fragments/tanstack-query.ts';
 import { buildTestingLibraryFragment } from '#cli/generation/eslint/fragments/testing-library.ts';
+
+import {
+    type EslintContext,
+    type EslintPlugins,
+    type EslintFragment,
+    type EslintBlockInput,
+    type EslintFragmentContext,
+} from '#cli/types/generation/eslint.ts';
 
 /**
  * Select the configurations whose fragments add to this tool file.
@@ -43,107 +50,147 @@ function listFragmentConfigurations(
     return new Map(every.map((manifest) => [manifest.configuration.name, manifest])).values().toArray();
 }
 
-function buildFragment(manifest: Manifest, inputs: EslintContext): EslintFragment {
-    const builders: Record<string, (inputs: EslintContext, configuration: string) => EslintFragment> = {
-        astro: buildAstroFragment,
-        vue: buildVueFragment,
-        svelte: buildSvelteFragment,
-        expo: buildLintRuleFragment,
-        nextjs: buildNextjsFragment,
-        typescript: buildTypescriptFragment,
-        zustand: buildZustandFragment,
-        'testing-library': buildTestingLibraryFragment,
-        jest: buildJestFragment,
-        vitest: buildVitestFragment,
-        react: buildReactFragment,
-        'react-dom': buildReactDomFragment,
-        'react-native': buildLintRuleFragment,
-        nestjs: buildNestjsFragment,
-        express: buildLintRuleFragment,
-        drizzle: buildDrizzleFragment,
-        zod: buildLintRuleFragment,
-        'tanstack-query': buildTanstackQueryFragment,
-        translations: buildLintRuleFragment,
-    };
-    const builder = builders[manifest.configuration.name];
-    if (builder === undefined) throw new Error(`No ESLint fragment builder for ${manifest.configuration.name}.`);
-    return builder(inputs, manifest.configuration.name);
+// Scope inputs determine block data before the builder attaches labels and inclusion masks.
+function buildScopeFragment(
+    session: Session,
+    manifest: Manifest,
+    builder: (inputs: EslintFragmentContext, configuration: string) => EslintFragment,
+    selection: ScopeSelection,
+    inputs: EslintContext,
+): EslintFragment {
+    const scope = selection.scope.path;
+    const children = listNestedScopes(
+        inputs.session.scopes.map((entry) => entry.scope.path),
+        scope,
+    );
+    const testFiles = selection.view.test_files.map((pattern) =>
+        scope !== '' && pattern.startsWith(`${scope}/**/`) ? pattern.slice(scope.length + 1) : pattern,
+    );
+    return builder(
+        {
+            view: selection.view,
+            projects: inputs.projects,
+            eslintPresets: inputs.eslintPresets,
+            scope,
+            presets: inputs.eslintPresets.get(manifest.configuration.name),
+            scopeDependencies: listProjectDependencyNames(session.repository.dependencyFiles, scope),
+            eslintFiles: {
+                ...inputs.eslintFiles,
+                tests: buildTestFiles(testFiles, inputs.eslintFiles.code),
+            },
+            sourceFiles: session.repository.files
+                .filter((file) => file.kind === 'source')
+                .map((file) => file.path)
+                .filter((path) => isInScope(path, scope) && children.every((child) => !isInScope(path, child))),
+        },
+        manifest.configuration.name,
+    );
 }
 
-// Build the text of each ESLint fragment.
-function buildSelectedFragments(session: Session, fragments: Manifest[], inputs: EslintContext): EslintFragment[] {
-    const { scopes } = inputs;
-    const blockText: EslintFragment[] = [];
-    for (const manifest of fragments) {
-        for (const selection of scopes.filter((entry) => entry.selected.includes(manifest))) {
-            const scope = selection.scope.path;
-            const children = listNestedScopes(
-                scopes.map((entry) => entry.scope.path),
-                scope,
-            );
-            const selectedFiles = inputs.sourceFiles.filter(
-                (path) => isInScope(path, scope) && children.every((child) => !isInScope(path, child)),
-            );
-            const module = createBlockWriter({
-                source: manifest.configuration.name,
-                allRules: inputs.eslintAllRules,
-                isAll: inputs.isAll,
-                codeFiles: inputs.eslintFiles.code,
-                ruleOptions: inputs.ruleOptions,
-                scope: { path: scope, excluded: children.map((path) => `${escapeGlob(path)}/**`) },
+// A scope can share only its immediate parent's configuration data, including when that parent has no fragment.
+function listMatchingFragmentScopes(
+    entries: { path: string; fragment: EslintFragment }[],
+    scopes: ScopeSelection[],
+): Set<string> {
+    return new Set(
+        entries
+            .filter(({ path, fragment }) => {
+                const parent = scopes
+                    .filter((entry) => entry.scope.path !== path && isInScope(path, entry.scope.path))
+                    .toSorted((a, b) => compareScopeDepth(b.scope.path, a.scope.path))[0];
+                const previous = entries.find((entry) => entry.path === parent?.scope.path);
+                return previous !== undefined && isDeepStrictEqual(fragment.blocks, previous.fragment.blocks);
+            })
+            .map(({ path }) => path),
+    );
+}
+
+// Keep one set of block data for matching nested scopes, with differing scopes excluded from their parent.
+function buildSelectedFragments(
+    session: Session,
+    fragments: {
+        manifest: Manifest;
+        builder: (inputs: EslintFragmentContext, configuration: string) => EslintFragment;
+    }[],
+    inputs: EslintContext,
+): { imports: EslintPlugins; blocks: EslintBlockInput[] }[] {
+    const result: { imports: EslintPlugins; blocks: EslintBlockInput[] }[] = [];
+    for (const { manifest, builder } of fragments) {
+        const entries = inputs.session.scopes
+            .filter((entry) => entry.selected.includes(manifest))
+            .map((selection) => ({
+                path: selection.scope.path,
+                fragment: buildScopeFragment(session, manifest, builder, selection, inputs),
+            }));
+        const matching = listMatchingFragmentScopes(entries, inputs.session.scopes);
+        for (const { path, fragment } of entries.filter((entry) => !matching.has(entry.path))) {
+            const excluded = listNestedScopes(
+                inputs.session.scopes.map((entry) => entry.scope.path),
+                path,
+            )
+                .filter((child) => !matching.has(child))
+                .map((child) => buildScopeGlob(child, '**'));
+            result.push({
+                imports: fragment.imports,
+                blocks: fragment.blocks.map((block) => ({
+                    ...block,
+                    scope: { path, excluded },
+                    label: manifest.configuration.name,
+                })),
             });
-            const fragment = buildFragment(manifest, {
-                ...inputs,
-                ...selection.view,
-                selection,
-                scope,
-                testFiles: selection.view.test_files,
-                scopeDependencies: listProjectDependencyNames(session.repository.dependencyFiles, scope),
-                blockWriter: module,
-                eslintFiles: {
-                    ...inputs.eslintFiles,
-                    tests: selection.view.test_files.flatMap((test) =>
-                        inputs.eslintFiles.code.map((pattern) => [test, pattern]),
-                    ),
-                },
-                sourceFiles: selectedFiles,
-            });
-            blockText.push(fragment);
         }
     }
-    return blockText;
+    return result;
 }
 
 /**
- * Collect the imports, lint blocks, and selectors that the ESLint fragments add.
+ * Collect imported bindings, scoped block data, and configuration selectors.
  *
  * @param session the repository.
- * @param target the tool file to build.
- * @param inputs the typed source facts of the scope, with every scope and the one that gets the tool file.
- *
- * @returns the fragments with their imports, file globs, and selector groups.
+ * @param inputs the source facts and resolved scopes.
+ * @returns the configuration data before serialization.
  */
 function collectFragments(
     session: Session,
-    target: ToolFileDeclaration,
     inputs: EslintContext,
 ): {
-    fragmentParts: string[];
-    fragmentImports: string;
+    fragmentParts: EslintBlockInput[];
+    fragmentImports: EslintPlugins;
     fragmentSelectors: ReturnType<typeof groupFragmentSelectors>;
 } {
-    const { scopes, selection } = inputs;
-    const fragments = listFragmentConfigurations(scopes, selection, target).filter(
-        (manifest) => manifest.eslint.fragment,
-    );
-    const blockText = buildSelectedFragments(session, fragments, inputs);
-    const imports = blockText.flatMap((fragment) => fragment.imports);
-    const bodies = blockText.map((fragment) => fragment.blocks);
+    const fragments = inputs.configurations.flatMap((manifest) => {
+        const builder = Object.hasOwn(FRAGMENT_BUILDERS, manifest.configuration.name)
+            ? FRAGMENT_BUILDERS[manifest.configuration.name]
+            : undefined;
+        return builder === undefined ? [] : [{ manifest, builder }];
+    });
+    const selected = buildSelectedFragments(session, fragments, inputs);
     return {
-        fragmentParts: bodies,
-        fragmentImports: [...new Set(imports)].join('\n'),
-        fragmentSelectors: groupFragmentSelectors(scopes, inputs.isAll, inputs.repositorySettings.structure.reexports),
+        fragmentParts: selected.flatMap((fragment) => fragment.blocks),
+        fragmentImports: Object.fromEntries(selected.flatMap((fragment) => Object.entries(fragment.imports))),
+        fragmentSelectors: groupFragmentSelectors(
+            inputs.session.scopes,
+            inputs.level,
+            inputs.session.settingsFile.settings.structure.reexports,
+        ),
     };
 }
+
+const FRAGMENT_BUILDERS: Record<string, (inputs: EslintFragmentContext, configuration: string) => EslintFragment> = {
+    ...Object.fromEntries(Object.keys(PLUGIN_LINT_RULE_FRAGMENTS).map((name) => [name, buildLintRuleFragment])),
+    astro: buildAstroFragment,
+    vue: buildVueFragment,
+    svelte: buildSvelteFragment,
+    nextjs: buildNextjsFragment,
+    typescript: buildTypescriptFragment,
+    zustand: buildZustandFragment,
+    'testing-library': buildTestingLibraryFragment,
+    vitest: buildVitestFragment,
+    react: buildReactFragment,
+    'react-dom': buildReactDomFragment,
+    nestjs: buildNestjsFragment,
+    drizzle: buildDrizzleFragment,
+    'tanstack-query': buildTanstackQueryFragment,
+};
 
 export { collectFragments, listFragmentConfigurations };

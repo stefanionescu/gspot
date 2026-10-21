@@ -2,7 +2,7 @@
 import { Icon } from '@astrojs/starlight/components';
 ---
 
-<button popovertarget="starlight__sidebar" class="menu-button print:hidden">
+<button type="button" popovertarget="starlight__sidebar" class="menu-button print:hidden">
     <Icon name="bars" size="1.25rem" class="when-closed" />
     <Icon name="close" size="1.25rem" class="when-open" />
     <span class="when-closed">Menu</span>
@@ -18,7 +18,7 @@ import { Icon } from '@astrojs/starlight/components';
     display: flex;
     align-items: center;
     gap: 8px;
-    height: 44px;
+    height: var(--target-size);
     padding-inline: 12px;
     border: 0;
     border-radius: 8px;

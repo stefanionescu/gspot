@@ -1,9 +1,11 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import { getTable } from '#cli/settings/scope-view.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { findLockfile } from '#cli/repository/classify.ts';
-import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD } from '#cli/config/checks/dependencies.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
@@ -11,8 +13,8 @@ function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     return hosts.has(url.host) ? undefined : `${url.host} is not an allowed registry host.`;
 }
 
-function checkFileHosts(input: CheckInput, path: string, hosts: Set<string>): Finding[] {
-    const lines = readCachedBytes(input.reads, path).toString('utf8').split('\n');
+function checkFileHosts(session: Session, planned: PlannedCheck, path: string, hosts: Set<string>): Finding[] {
+    const lines = readCachedText(session.reads, path).split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
     const isNpm = findLockfile(path)?.packageManager === 'npm';
     return lines.flatMap((text, index) =>
@@ -23,15 +25,15 @@ function checkFileHosts(input: CheckInput, path: string, hosts: Set<string>): Fi
             .flatMap((url) => {
                 const message = URL.canParse(url) ? validateUrl(new URL(url), hosts) : undefined;
                 if (message === undefined) return [];
-                return [buildFinding(input, { file: path, line: index + 1 }, 'host', message)];
+                return [buildFinding(planned, { file: path, line: index + 1 }, 'host', message)];
             })
             .toArray(),
     );
 }
 
-function checkForeignLockfiles(input: CheckInput): Finding[] {
+function checkForeignLockfiles(planned: PlannedCheck): Finding[] {
     const kinds = new Map<string, string>();
-    for (const file of input.files) {
+    for (const file of planned.files) {
         const lockfile = findLockfile(file.path);
         const kind =
             lockfile !== undefined && 'configuration' in lockfile && lockfile.configuration === 'javascript'
@@ -47,7 +49,7 @@ function checkForeignLockfiles(input: CheckInput): Finding[] {
         .slice(1)
         .map((path) =>
             buildFinding(
-                input,
+                planned,
                 { file: path, line: 1 },
                 'foreign-lockfile',
                 `The repository holds lockfiles of ${String(kinds.size)} package managers: ${listed}. Keep one.`,
@@ -58,27 +60,16 @@ function checkForeignLockfiles(input: CheckInput): Finding[] {
 /**
  * Checks the registry hosts in tracked npm, pnpm, Yarn, and text Bun lockfiles.
  *
- * @param input the scope files and allowed registries.
+ * @param session the repository and its tools.
+ * @param planned the scope files and allowed registries.
  * @returns the findings.
  */
-export function checkLockfiles(input: CheckInput): Finding[] {
-    const hosts = new Set(input.selection.view.options('dependencies')['allowed_registries']);
-    const paths = input.files
-        .map((file) => file.path)
-        .filter((path) => {
-            const name = posix.basename(path);
-            const entry = findLockfile(name);
-            return (
-                entry !== undefined &&
-                'configuration' in entry &&
-                entry.configuration === 'javascript' &&
-                name !==
-                    (
-                        LOCKFILES.find(
-                            ({ packageManager, file }) => packageManager === 'bun' && file.endsWith('b'),
-                        ) as (typeof LOCKFILES)[number]
-                    ).file
-            );
-        });
-    return [...checkForeignLockfiles(input), ...paths.flatMap((path) => checkFileHosts(input, path, hosts))];
+export function checkLockfiles(session: Session, planned: PlannedCheck): Finding[] {
+    const hosts = new Set(getTable(planned.selection.view, 'dependencies')['allowed_registries']);
+    const lockfiles = new Set<string>(JAVASCRIPT_LOCKFILES);
+    const paths = planned.files.map((file) => file.path).filter((path) => lockfiles.has(posix.basename(path)));
+    return [
+        ...checkForeignLockfiles(planned),
+        ...paths.flatMap((path) => checkFileHosts(session, planned, path, hosts)),
+    ];
 }

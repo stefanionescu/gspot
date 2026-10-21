@@ -53,31 +53,31 @@ safelist = { value = ["reviewed"], reason = "The script adds this reviewed class
 const OUTPUT_CASES = [
     {
         name: 'links',
-        check: 'site/linkinator',
+        check: 'site/lychee',
         body: '<a href="/missing.html">Missing</a>',
         finding: {
-            check: 'site/linkinator',
+            check: 'site/lychee',
             file: 'dist/index.html',
-            rule: 'broken-link',
+            rule: 'ERROR',
             line: 1,
-            message: 'missing.html answers 404.',
+            message: 'file://missing.html (at 1:104) | File not found. Check if file exists and path is correct',
         },
     },
     {
         name: 'fragments',
-        check: 'site/linkinator',
+        check: 'site/lychee',
         body: '<h1 id="good">Good</h1><a href="#good">Good</a><a href="#missing">Missing</a><a name="encoded id"></a><a href="#encoded%20id">Encoded</a>',
         finding: {
-            check: 'site/linkinator',
+            check: 'site/lychee',
             file: 'dist/index.html',
-            rule: 'broken-link',
+            rule: 'ERROR',
             line: 1,
-            message: 'index.html#missing has no matching fragment.',
+            message: 'file://index.html#missing (at 1:151) | Cannot find fragment',
         },
     },
     {
         name: 'public origins and orphan pages',
-        check: 'site/linkinator',
+        check: 'site/lychee',
         body: '<p>Landing page</p>',
         files: {
             'sitemap.xml': STATIC_SITE_FILES['sitemap.xml'],
@@ -85,11 +85,12 @@ const OUTPUT_CASES = [
                 '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Orphan</title></head><body><h1 id="good">Good</h1><a href="https://example.test/orphan.html#missing">Missing</a><a href="https://example.test/orphan.html#good">Good</a></body></html>',
         },
         finding: {
-            check: 'site/linkinator',
+            check: 'site/lychee',
             file: 'dist/orphan.html',
-            rule: 'broken-link',
+            rule: 'ERROR',
             line: 1,
-            message: 'orphan.html#missing has no matching fragment.',
+            message:
+                'file://orphan.html#missing (at 1:126) | Cannot find fragment | Remaps: https://example.test/orphan.html#missing --> file://orphan.html#missing',
         },
     },
     {

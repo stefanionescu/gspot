@@ -1,11 +1,11 @@
 import picomatch from 'picomatch';
-import { parse as parseYaml } from 'yaml';
 import { posix, extname } from 'node:path';
 import { isRecord } from '#cli/system/values.ts';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { parse as parseToml } from '@decimalturn/toml-patch';
+import { parseYamlFile } from '#cli/parsers/yaml.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { findProjectFolder } from '#cli/repository/scopes.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
@@ -39,7 +39,7 @@ function findReplacedToolFiles(
     if (
         !picomatch.scan(replacement.path).isGlob &&
         !candidates.has(replacement.path) &&
-        readText(root, replacement.path) !== undefined
+        findText(root, replacement.path) !== undefined
     )
         candidates.add(replacement.path);
     return [...candidates]
@@ -49,7 +49,7 @@ function findReplacedToolFiles(
                 (isDotfile || projectFolders.has(candidate.split('/').slice(0, -depth).join('/'))),
         )
         .filter((path) => {
-            const source = readText(root, path);
+            const source = findText(root, path);
             if (source === undefined) return false;
             return (
                 (replacement.table === undefined && replacement.key === undefined) ||
@@ -67,8 +67,8 @@ function findReplacedToolFiles(
 
 function parseSharedFile(text: string, extension: string, path: string): unknown {
     if (extension === '.json') return parseJsonFile(path, text);
-    if (YAML_EXTENSIONS.includes(extension)) return parseYaml(text) as unknown;
-    if (extension === '.toml') return parseToml(text);
+    if (YAML_EXTENSIONS.includes(extension)) return parseYamlFile(path, text);
+    if (extension === '.toml') return parseTomlFile(path, text);
     throw new Error(`${path}: shared configuration format is unsupported.`);
 }
 

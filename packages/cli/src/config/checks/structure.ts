@@ -1,21 +1,10 @@
-/** Declarations and reads used by the two source convention checks. */
+/** Function and assignment captures used by source checks. */
 export const CONVENTION_QUERIES = {
     bash: `(function_definition) @function
-(command) @import
-(variable_assignment) @assignment
-[(simple_expansion (variable_name) @read) (expansion (variable_name) @read)]`,
-    python: `(function_definition) @function
-[(import_statement) (import_from_statement) (future_import_statement)] @import
-[(attribute) (call) (identifier)] @read
-(attribute object: (identifier) attribute: (identifier) @environment_name
-(#eq? @environment_name "environ")) @environment
-(call function: (attribute object: (identifier) attribute: (identifier) @getter_name
-(#eq? @getter_name "getenv")) @environment)
-[(assignment) (for_statement) (function_definition) (class_definition) (parameters)] @binding`,
+(variable_assignment) @assignment`,
+    python: '(function_definition) @function',
     swift: `[(function_declaration body: (function_body)) (init_declaration) (deinit_declaration) (computed_getter)
-(computed_setter) (computed_property (statements)) (willset_clause) (didset_clause)] @function
-(import_declaration) @import
-(navigation_expression) @read`,
+(computed_setter) (computed_property (statements)) (willset_clause) (didset_clause)] @function`,
 } as const;
 
 export const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
@@ -79,7 +68,7 @@ export const BARE_NAME_NODES = new Set(['identifier', 'simple_identifier', 'attr
 
 export const TYPE_REFERENCE_NODES = new Set(['type', 'user_type', 'identifier', 'type_identifier']);
 
-export const SWIFT_FUNCTION_LABELS = {
+export const SWIFT_FUNCTION_LABELS: Readonly<Record<string, string>> = {
     init_declaration: 'init',
     deinit_declaration: 'deinit',
     lambda_literal: 'closure',

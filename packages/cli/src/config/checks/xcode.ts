@@ -10,8 +10,6 @@ export const PLIST_KEY = /<key>(?<name>[^<]+)<\/key>/gu;
 
 export const ARBITRARY_LOADS = /<key>NSAllowsArbitraryLoads<\/key>\s*<true\s*\/>/u;
 
-export const XCODEPROJ_SUFFIX = '.xcodeproj';
-
 export const ASSET_CONTENTS = 'Contents.json';
 
 export const XCASSETS_FOLDER = '.xcassets/';

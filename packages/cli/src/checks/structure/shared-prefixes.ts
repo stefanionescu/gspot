@@ -1,8 +1,9 @@
-import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
+import { getTable } from '#cli/settings/scope-view.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { HOOK_FOLDERS } from '#cli/config/repository/hooks.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import { isInScope, joinScope } from '#cli/repository/scopes.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
 import { listTaggedExtensions, isInDependencyFolder } from '#cli/repository/classify.ts';
@@ -32,20 +33,21 @@ function extractPrefix(stem: string): string {
 /**
  * Reports each prefix that at least `limits.shared_prefix_files` siblings in a folder share.
  *
- * @param input the scope files and limit.
+ * @param _session the repository and its tools.
+ * @param planned the scope files and limit.
  * @returns the findings.
  */
-export function checkSharedPrefixes(input: CheckInput): Finding[] {
-    const limit = input.selection.view.options('limits').shared_prefix_files;
-    const prefixes = new Set(input.selection.selected.flatMap((manifest) => manifest.shared_prefixes.prefixes));
-    const kinds = new Set(input.selection.selected.flatMap((manifest) => manifest.shared_prefixes.kinds));
-    const tree = buildFolderTree(input.files);
+export function checkSharedPrefixes(_session: Session, planned: PlannedCheck): Finding[] {
+    const limit = getTable(planned.selection.view, 'limits').shared_prefix_files;
+    const prefixes = new Set(planned.selection.selected.flatMap((manifest) => manifest.shared_prefixes.prefixes));
+    const kinds = new Set(planned.selection.selected.flatMap((manifest) => manifest.shared_prefixes.kinds));
+    const tree = buildFolderTree(planned.files);
     const seen = new Set<string>();
 
-    const files = listCodeFiles(input).filter((file) => {
+    const files = listCodeFiles(planned).filter((file) => {
         const folder = extractParentFolder(file.path);
         return (
-            !HOOK_FOLDERS.some((hook) => isInScope(folder, posix.join(input.selection.scope.path, hook))) &&
+            !HOOK_FOLDERS.some((hook) => isInScope(folder, joinScope(planned.selection.scope.path, hook))) &&
             !isInDependencyFolder(folder)
         );
     });
@@ -79,7 +81,7 @@ export function checkSharedPrefixes(input: CheckInput): Finding[] {
         const names = peers.map((entry) => (entry.kind === 'folder' ? `${entry.name}/` : entry.name)).join(', ');
         return [
             buildFinding(
-                input,
+                planned,
                 { file: file.path, line: 1 },
                 'shared-prefix',
                 `${names} share the prefix "${prefix}". Group them in a folder named ${prefix} and drop the prefix, or use gspot ignore structure/shared-prefixes with paths and a reason.`,

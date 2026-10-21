@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
@@ -14,18 +14,20 @@ import { EXPLAIN_SETTINGS, CHECK_TOOL_MINIMUMS, CONFIGURATION_DETECTION_LINES } 
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await testdir();
-    const settings = `configurations = []
-[[scope]]
-path = "api"
-configurations = []
-[[command_check]]
+    const tables = `[[command_check]]
 name = "project/syntax"
 command = ["bash", "-n", "{files}"]
 paths = ["**/*.sh"]
 stage = "manual"
 `;
+    const settings = buildSandboxSettings([], { rules: true, scopes: [{ path: 'api', configurations: [] }], tables });
     await createFileTree(sandbox.path, {
-        'gspot.toml': `${settings}\n[[ignore]]\ncheck = "project/syntax"\nreason = "The sandbox tests a disabled check."\n`,
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            scopes: [{ path: 'api', configurations: [] }],
+            tables,
+            ignore: { checks: ['project/syntax'], reason: 'The sandbox tests a disabled check.' },
+        }),
         'api/build.sh': CLEAN_BASH_SCRIPT,
     });
     const ignored = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
@@ -55,13 +57,13 @@ stage = "manual"
     expect(remaining.map((entry) => entry.check)).toContain('format/editorconfig-checker');
 });
 test('a configuration name stays a name, and a tracked or ./ path explains the file', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'gspot.toml': EXPLAIN_SETTINGS,
         bash: CLEAN_BASH_SCRIPT,
         'api/build.sh': CLEAN_BASH_SCRIPT,
         'shellcheck/run.sh': CLEAN_BASH_SCRIPT,
     });
+
     commitAll(sandbox.path);
     const configuration = await runGspot(sandbox.path, ['explain', 'bash', '--json']);
     expect(configuration.code, configuration.stdout + configuration.stderr).toBe(0);
@@ -79,11 +81,11 @@ test('a configuration name stays a name, and a tracked or ./ path explains the f
     expect(JSON.parse(tracked.stdout)).toMatchObject({ kind: 'path', subject: 'shellcheck/run.sh' });
 });
 test('a file path reports its scope, checks, and ignores', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'gspot.toml': EXPLAIN_SETTINGS,
         'api/build.sh': CLEAN_BASH_SCRIPT,
     });
+
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -108,8 +110,8 @@ test.each([
     ['./missing.sh', 'missing.sh'],
     ['unknown-configuration', 'gspot cannot explain unknown-configuration.'],
 ])('explain of %s fails with an arguments error that names the subject', async (subject, message) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': EXPLAIN_SETTINGS, 'api/build.sh': CLEAN_BASH_SCRIPT });
+    await using sandbox = await testdir({ 'gspot.toml': EXPLAIN_SETTINGS, 'api/build.sh': CLEAN_BASH_SCRIPT });
+
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
@@ -119,8 +121,8 @@ test.each([
     ['bash', 'configuration'],
     ['bash/shellcheck', 'check'],
 ] as const)('configuration and check explanations still resolve without settings (%j)', async (subject, kind) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'README.md': '# Example\n' });
+    await using sandbox = await testdir({ 'README.md': '# Example\n' });
+
     commitAll(sandbox.path);
 
     const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
@@ -144,7 +146,7 @@ test.each([...CHECK_TOOL_MINIMUMS])(
     'explain <check> lists the minimum versions of the tools that the check runs, not of every tool of its configuration: $check',
     async ({ check, tools }) => {
         await using sandbox = await testdir();
-        const manifests = readManifests(createReadCache(process.cwd()));
+        const manifests = readManifests();
         const expected = tools.map((name) => {
             const minimum = getToolDeclaration(manifests.values(), name).min_version;
             return `Needs ${name} ${String(minimum)} or newer`;

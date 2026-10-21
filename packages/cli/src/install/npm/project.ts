@@ -4,25 +4,23 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { runInstallStep } from '#cli/install/steps.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
 import type { InstallContext } from '#cli/types/install.ts';
 import { writeYarnSettings } from '#cli/install/npm/yarn.ts';
 import { rmSync, readFileSync, writeFileSync } from 'node:fs';
-import { isYarnBerry } from '#cli/repository/package-manager.ts';
 import { REINSTALL_HINT } from '#cli/config/tools/credentials.ts';
-import { buildLockfileResult } from '#cli/generation/projects.ts';
-import type { SpawnResult } from '#cli/types/system/processes.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { createScratchFolder } from '#cli/system/files/folders.ts';
-import { runTool, assertWithinTimeLimit } from '#cli/tools/run.ts';
-import { readRootHoldDays } from '#cli/generation/release-holds.ts';
+import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { addToolReleaseHold } from '#cli/install/npm/release-hold.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
+import type { PackageManager } from '#cli/types/parsers/dependencies.ts';
+import { getTable, findRootSelection } from '#cli/settings/scope-view.ts';
 import { isLockfileCurrent, stripRegistryUrls } from '#cli/install/npm/lockfiles.ts';
-import { parseToolProject, selectLockfileName } from '#cli/install/npm/tool-project.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/install/npm/registry.ts';
+import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
 
 import {
     DOT_GSPOT,
@@ -32,7 +30,7 @@ import {
 } from '#cli/config/system/locations.ts';
 import {
     type NpmToolProject,
-    type PackageCommandResult,
+    type PackageManagerRun,
     type PackageManagerCommand,
     type PackageManagerArguments,
 } from '#cli/types/tools/project.ts';
@@ -43,8 +41,10 @@ import {
     INSTALL_ARGUMENTS,
     LOCKFILE_ARGUMENTS,
     NPM_SETTING_PREFIX,
+    YARN_REGISTRY_VARIABLE,
     YARN_INSTALL_SETTINGS_FILE,
     NPM_CONFIG_FOLDER_VARIABLE,
+    YARN_SETTINGS_FILE_VARIABLE,
 } from '#cli/config/tools/npm.ts';
 
 // Resolve in a scratch folder, and keep repository credentials out of the portable result.
@@ -55,7 +55,12 @@ async function createNpmLockfile(
     recorded: string | undefined,
     yarn: string | undefined,
 ): Promise<string> {
-    const packageManager = context.session.requirePackageManager();
+    const packageManager = readPackageManagerVersion(
+        context.session.installedRoot,
+        assertPackageManager(context.session.packageManager),
+        context.session.timeoutSeconds,
+        context.session.reads,
+    );
     if (which.sync(NODE_TOOL, { nothrow: true }) === null)
         throw new GspotError(
             'installation',
@@ -69,16 +74,22 @@ async function createNpmLockfile(
     if (recorded !== undefined && isLockfileCurrent(packageManager.name, recorded, project.dependencies))
         writeFileSync(join(work, project.lockfile), recorded);
     const lockfileArguments = selectPackageManagerArguments(packageManager).lockfile;
-    const days = readRootHoldDays(context.session.scopes);
+    const days = getTable(findRootSelection(context.session.scopes).view, 'dependencies').min_release_age_days;
     // The hold goes where versions get chosen. A frozen install takes them from the lockfile, and npm ci ignores
     // min-release-age-exclude for lockfile entries without a URL.
-    const env = await runPackageManager(context, {
+    const run = await runPackageManager(context, {
         work,
         packageManager,
         arguments: addToolReleaseHold(work, lockfileArguments, packageManager, days),
         failure: 'lockfile resolution failed',
     });
-    stripRegistryUrls(work, packageManager, env);
+    const lockfilePath = join(work, project.lockfile);
+    assertCredentialFreeLockfile(
+        readFileSync(lockfilePath, 'utf8'),
+        run.credentials,
+        'The package manager included registry credentials in its lockfile. Existing files were preserved.',
+    );
+    stripRegistryUrls(lockfilePath, packageManager, run.env);
     const lockfile = readFileSync(join(work, project.lockfile), 'utf8');
     if (!isLockfileCurrent(packageManager.name, lockfile, project.dependencies))
         throw new GspotError(
@@ -105,19 +116,15 @@ function selectPackageManagerArguments(packageManager: PackageManager): PackageM
 }
 
 /**
- * Run a package manager operation, and validate its full lockfile before it gets written.
+ * Run a package manager operation with private registry routing.
  *
  * @param context what install needs for this step.
  * @param request the package-manager operation and routing.
  *
- * @returns validated lockfile bytes and the private routing environment.
+ * @returns the private routing environment and credentials to keep out of lockfiles.
  */
-async function runPackageManager(
-    context: InstallContext,
-    request: PackageManagerCommand,
-): Promise<PackageCommandResult> {
-    const { root, timeoutSeconds } = context.session;
-    const { steps } = context;
+async function runPackageManager(context: InstallContext, request: PackageManagerCommand): Promise<PackageManagerRun> {
+    const { root } = context.session;
     const { work, packageManager, arguments: commandArguments, failure } = request;
     const env = await readRegistryEnvironment(root);
     const credentials = extractRegistryCredentials(env);
@@ -127,48 +134,44 @@ async function runPackageManager(
         env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
         env[NPM_CONFIG_FOLDER_VARIABLE] = settings.path;
         const berry = isYarnBerry(packageManager);
-        if (berry) delete env['YARN_REGISTRY'];
         if (berry) {
+            Reflect.deleteProperty(env, YARN_REGISTRY_VARIABLE);
             credentials.push(...(await writeYarnSettings(context, work, env)));
-            env['YARN_RC_FILENAME'] = YARN_INSTALL_SETTINGS_FILE;
+            env[YARN_SETTINGS_FILE_VARIABLE] = YARN_INSTALL_SETTINGS_FILE;
         }
-        steps.push(commandArguments);
-        const result = await runTool(commandArguments, {
-            cancelSignal: context.cancelSignal,
-            cwd: work,
-            env,
-            timeoutSeconds,
-        });
-        context.cancelSignal?.throwIfAborted();
-        assertWithinTimeLimit(packageManager.name, result, timeoutSeconds);
+        const result = await runInstallStep(context, commandArguments, { cwd: work, env });
         if (result.code !== 0) {
             throw new GspotError(
                 'installation',
                 `${packageManager.name} ${failure} (exit ${String(result.code)}). ${REINSTALL_HINT}.\n${redactInstallOutput(result, credentials)}`,
             );
         }
-        const lockfile = readFileSync(join(work, selectLockfileName(packageManager.name)), 'utf8');
-        assertCredentialFreeLockfile(
-            lockfile,
-            credentials,
-            new GspotError(
-                'installation',
-                'The package manager included registry credentials in its lockfile. Existing files were preserved.',
-            ),
-        );
-        return { env, lockfile };
+        return { env, credentials };
     } finally {
         rmSync(join(work, YARN_INSTALL_SETTINGS_FILE), { force: true });
     }
 }
 
 /**
- * Verify the declared package manager against its executable before writing project inputs.
+ * Verify the package manager executable before install changes any tool inputs.
  *
- * @param packageManager the declaration to verify.
- * @param version what the executable printed.
+ * @param context what install needs for this step.
  */
-function assertPackageManagerVersion(packageManager: PackageManager, version: SpawnResult): void {
+async function assertPackageManagerVersion(context: InstallContext): Promise<void> {
+    const { session } = context;
+    const packageManager =
+        session.packageManager === undefined
+            ? undefined
+            : readPackageManagerVersion(
+                  session.installedRoot,
+                  assertPackageManager(session.packageManager),
+                  session.timeoutSeconds,
+                  session.reads,
+              );
+    if (packageManager === undefined) return;
+    const { root } = session;
+    const versionCommand = [packageManager.name, VERSION_FLAG];
+    const version = await runInstallStep(context, versionCommand, { cwd: root });
     const requirement = `${String(semver.major(packageManager.version))}.x`;
     const found = version.stdout.trim();
     if (version.code === 0 && semver.satisfies(found, requirement, { includePrerelease: true })) return;
@@ -180,23 +183,6 @@ function assertPackageManagerVersion(packageManager: PackageManager, version: Sp
         'tool',
         `The tool project requires ${packageManager.name}@${requirement}, and ${result}. Install that package manager version first.`,
     );
-}
-
-/**
- * Verify the package manager executable before install changes any tool inputs.
- *
- * @param context what install needs for this step.
- */
-async function verifyPackageManagerVersion(context: InstallContext): Promise<void> {
-    const { session, steps } = context;
-    const packageManager = session.getPackageManager();
-    if (packageManager === undefined) return;
-    const { root, timeoutSeconds } = session;
-    const versionCommand = [packageManager.name, VERSION_FLAG];
-    steps.push(versionCommand);
-    const version = await runTool(versionCommand, { cancelSignal: context.cancelSignal, cwd: root, timeoutSeconds });
-    context.cancelSignal?.throwIfAborted();
-    assertPackageManagerVersion(packageManager, version);
 }
 
 /**
@@ -215,7 +201,12 @@ async function prepareNpmLockfile(
 ): Promise<GeneratedFile> {
     const { root } = context.session;
     const owner = context.writer.files;
-    const packageManager = context.session.requirePackageManager();
+    const packageManager = readPackageManagerVersion(
+        context.session.installedRoot,
+        assertPackageManager(context.session.packageManager),
+        context.session.timeoutSeconds,
+        context.session.reads,
+    );
     const project = parseToolProject(toolProjectFile.content, packageManager.name);
     const original = owner.read(project.lockfilePath);
     const recorded = original?.bytes.toString('utf8');
@@ -227,15 +218,12 @@ async function prepareNpmLockfile(
         assertCredentialFreeLockfile(
             recorded,
             extractRegistryCredentials(await readRegistryEnvironment(root)),
-            new GspotError(
-                'installation',
-                'The npm lockfile includes repository registry credentials. Existing files were preserved. Remove credentials from the registry URL and run: gspot install',
-            ),
+            'The npm lockfile includes repository registry credentials. Existing files were preserved. Remove credentials from the registry URL and run: gspot install',
         );
-        return buildLockfileResult(project.lockfilePath, recorded, original);
+        return { path: project.lockfilePath, content: recorded, kind: 'lock', read: original };
     }
     const lockfile = await createNpmLockfile(context, toolProjectFile, project, recorded, yarn);
-    return buildLockfileResult(project.lockfilePath, lockfile, original);
+    return { path: project.lockfilePath, content: lockfile, kind: 'lock', read: original };
 }
 
 /**
@@ -250,11 +238,13 @@ async function installNpmTools(context: InstallContext): Promise<string> {
     const owner = context.writer.files;
     const toolProjectFile = owner.read(NPM_TOOL_PROJECT_FILE);
     if (toolProjectFile === undefined) return '';
-    const packageManager = session.requirePackageManager();
-    const project = parseToolProject(toolProjectFile.bytes.toString('utf8'), session.requirePackageManagerName());
-    const lockfile = owner.read(project.lockfilePath)?.bytes.toString('utf8');
-    if (lockfile === undefined || !isLockfileCurrent(packageManager.name, lockfile, project.dependencies))
-        throw new GspotError('installation', 'Run: gspot install');
+    const packageManager = readPackageManagerVersion(
+        session.installedRoot,
+        assertPackageManager(session.packageManager),
+        session.timeoutSeconds,
+        session.reads,
+    );
+    const project = parseToolProject(toolProjectFile.bytes.toString('utf8'), packageManager.name);
     owner.deleteTree(GSPOT_NODE_MODULES_PATH);
     const work = join(root, DOT_GSPOT);
     await runPackageManager(context, {
@@ -263,7 +253,7 @@ async function installNpmTools(context: InstallContext): Promise<string> {
         arguments: selectPackageManagerArguments(packageManager).install,
         failure: 'installation failed',
     });
-    return `installed ${formatCount(Object.keys(project.dependencies).length, 'npm tool')} in .gspot/node_modules (${packageManager.name} ${packageManager.version})`;
+    return `installed ${formatCount(Object.keys(project.dependencies).length, 'npm tool')} in ${GSPOT_NODE_MODULES_PATH} (${packageManager.name} ${packageManager.version})`;
 }
 
-export { installNpmTools, prepareNpmLockfile, verifyPackageManagerVersion };
+export { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion };

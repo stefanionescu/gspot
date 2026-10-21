@@ -62,11 +62,9 @@ export async function parseCached<Input extends CachedParseInput, Value extends 
     key: ParseKey<Input, Value>,
 ): Promise<Value> {
     // This key decides both the result type of the reader and its entries for each path list.
-    let entries = input.reads.memo.get(key) as Map<string, Promise<Value>> | undefined;
-    if (entries === undefined) {
-        entries = new Map();
-        input.reads.memo.set(key, entries);
-    }
+    const entries =
+        (input.reads.memo.get(key) as Map<string, Promise<Value>> | undefined) ?? new Map<string, Promise<Value>>();
+    input.reads.memo.set(key, entries);
     const paths = JSON.stringify(input.files.map((file) => file.path));
     let pending = entries.get(paths);
     if (pending === undefined) {
@@ -74,9 +72,8 @@ export async function parseCached<Input extends CachedParseInput, Value extends 
         entries.set(paths, pending);
         try {
             const value = await pending;
-            const values = entries;
             input.resources.defer(() => {
-                values.delete(paths);
+                entries.delete(paths);
                 key.dispose(value);
             });
         } catch (error) {

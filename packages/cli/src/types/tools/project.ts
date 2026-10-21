@@ -1,4 +1,4 @@
-import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
+import type { PackageManager } from '#cli/types/parsers/dependencies.ts';
 import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
 /** One package-manager operation with its repository routing and process limits. */
@@ -18,32 +18,14 @@ export type UvExecution = {
     configFile?: string;
 };
 
-/** The isolated execution and credential-free lockfile output. */
-export type PackageCommandResult = {
+/** The private routing environment and credentials of a package manager run. */
+export type PackageManagerRun = {
     env: Record<string, string>;
-    lockfile: string;
+    credentials: string[];
 };
 
 /** The lockfile and install arguments for the major version of a package manager. */
 export type PackageManagerArguments = { lockfile: string[]; install: string[] };
-
-/** The validated uv lockfile of the Python tool project. */
-export type PythonToolLockfile = {
-    version: 1;
-    'requires-python': string;
-    package: {
-        name: string;
-        version: string;
-        source: Record<string, unknown> & { virtual?: string | undefined };
-        metadata: { 'requires-dist': PythonRequirement[] };
-    }[];
-};
-
-/** A dependency requirement recorded by uv for root metadata. */
-export type PythonRequirement = { name: string; specifier: string };
-
-/** Authored uv configuration sources, with uv.toml taking precedence over pyproject.toml. */
-export type PythonSettingsSources = { uv: string | undefined; project: string | undefined };
 
 /** Repository index settings and credentials that lockfiles must omit. */
 export type PythonIndexSettings = { settings: Record<string, unknown>; credentials: string[] };
@@ -71,3 +53,9 @@ export type NpmProjectFile = {
     private: true;
     devDependencies: Record<string, string> & { '@next/eslint-plugin-next'?: string | undefined };
 };
+
+export type PythonProjectSettings = { tool: { uv: PythonIndexSettings['settings'] } };
+
+export type PythonIndex = { url: string; [key: string]: unknown };
+
+export type YarnSetting = { key: string };

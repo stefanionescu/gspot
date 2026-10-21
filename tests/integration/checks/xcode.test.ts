@@ -1,14 +1,14 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { chmod } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { planRun } from '#cli/planning/checks.ts';
-import { testdir, createFileTree } from 'testdirs';
+import { chmod, writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
 import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { XCODE_CASES, XCODE_SANDBOX } from '#tests/data/checks/xcode.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
@@ -26,12 +26,12 @@ test.skipIf(!isMacos).each([...XCODE_CASES])(
 test.skipIf(!hasToolBuild('plutil'))(
     'xcode/plutil reports mixed parse and input failures as execution errors',
     async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['xcode']),
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['xcode']),
             'bad.plist': '<plist><dict>',
             'private.plist': '<plist><dict/></plist>\n',
         });
+
         const session = await openSession(sandbox.path);
         const [planned] = planRun(session, { stage: 'commit', only: ['xcode/plutil'] });
         const paths = { cwd: sandbox.path, root: sandbox.path };
@@ -54,7 +54,7 @@ test.skipIf(!hasToolBuild('plutil'))(
         expect(parseCommandFindings(planned!, failed, paths).findings).toContainEqual(
             matchFields({ file: 'bad.plist' }),
         );
-        await Bun.write(join(sandbox.path, 'bad.plist'), '<plist><dict/></plist>\n');
+        await writeFile(join(sandbox.path, 'bad.plist'), '<plist><dict/></plist>\n');
         const corrected = await runCommand(['plutil', '-lint', 'bad.plist', 'private.plist'], {
             cwd: sandbox.path,
         });

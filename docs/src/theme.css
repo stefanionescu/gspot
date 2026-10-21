@@ -2,9 +2,10 @@
 @import '@fontsource-variable/geist-mono/index.css';
 
 :root {
-    --home-finding-bg: color-mix(in srgb, #ff7a1a 14%, transparent);
+    --target-size: 44px;
+    --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 14%, transparent);
     --home-fixed-bg: color-mix(in srgb, #88a5ff 16%, transparent);
-    --home-pass: #88a5ff;
+    --home-pass: var(--sl-color-accent);
     --code-text: #d6deeb;
     --code-keyword: #c792ea;
     --code-string: #ecc48d;
@@ -54,9 +55,9 @@
 }
 
 :root[data-theme='light'] {
-    --home-finding-bg: color-mix(in srgb, #ff7a1a 12%, transparent);
+    --home-finding-bg: color-mix(in srgb, var(--brand-tangerine) 12%, transparent);
     --home-fixed-bg: color-mix(in srgb, #2457ff 10%, transparent);
-    --home-pass: #2457ff;
+    --home-pass: var(--sl-color-accent);
     --code-text: #403f53;
     --code-keyword: #994cc3;
     --code-string: #a2453f;
@@ -157,13 +158,13 @@ mobile-starlight-toc summary {
 
 mobile-starlight-toc .toggle {
     gap: 4px;
-    min-height: 44px;
+    min-height: var(--target-size);
     padding: 0 8px;
     border: 0;
     border-radius: 8px;
     background: transparent;
     color: var(--sl-color-gray-2);
-    line-height: 44px;
+    line-height: var(--target-size);
 }
 
 mobile-starlight-toc details[open] .toggle {
@@ -389,7 +390,7 @@ mobile-starlight-toc .display-current {
 
 /* Tabs: 44 px targets that fit five labels on a phone. */
 starlight-tabs .tab > [role='tab'] {
-    min-height: 44px;
+    min-height: var(--target-size);
     padding: 0 12px;
     font-size: var(--sl-text-sm);
 }
@@ -426,7 +427,7 @@ starlight-tabs .tab > [role='tab'] {
 }
 
 footer .meta a {
-    min-height: 44px;
+    min-height: var(--target-size);
 }
 
 /* Search: Pagefind draws its own border, so the focus ring sits on it. */
@@ -438,8 +439,8 @@ site-search input:focus-visible {
 .mobile-preferences .social-icons a {
     display: inline-grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
+    width: var(--target-size);
+    height: var(--target-size);
     margin: 0;
     padding: 0;
     color: var(--sl-color-gray-1);

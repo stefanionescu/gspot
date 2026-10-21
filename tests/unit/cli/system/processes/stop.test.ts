@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { pathToFileURL } from 'node:url';
-import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
+import { readFile, writeFile } from 'node:fs/promises';
 import { streamProcess } from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { CLI_SOURCE_PATH } from '#tests/setup/run-gspot.ts';
@@ -141,7 +141,7 @@ test('live output arrives before the process ends while capture keeps the output
         expect(completed).toBe(false);
         expect(stdout.join('')).toContain('ready');
     } finally {
-        await Bun.write(release, 'continue');
+        await writeFile(release, 'continue');
     }
     const result = await running;
     expect(result.code).toBe(7);

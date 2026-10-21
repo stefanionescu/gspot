@@ -1,5 +1,12 @@
 import type { ReferencePage } from '../types/reference.ts';
-import { MARKDOWN_ESCAPES, FLAGS_OUTSIDE_CODE, HTML_BRACKET_ENTITIES } from '../config/reference.ts';
+
+import {
+    REFERENCE_PATH,
+    MARKDOWN_ESCAPES,
+    REFERENCE_FOLDERS,
+    FLAGS_OUTSIDE_CODE,
+    HTML_BRACKET_ENTITIES,
+} from '../config/reference.ts';
 
 // Lists names the way a sentence does, with a serial comma before the last one.
 const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
@@ -18,7 +25,7 @@ export function buildReferencePage(title: string, description: string, body: str
         // A flag outside code goes into a code span, so Markdown does not turn its two hyphens into a dash.
         body: `\n${body
             .replaceAll(MARKDOWN_ESCAPES, (text) => HTML_BRACKET_ENTITIES[text] ?? text)
-            .replaceAll(FLAGS_OUTSIDE_CODE, (text) => (text.startsWith('`') ? text : '`' + text + '`'))}`,
+            .replaceAll(FLAGS_OUTSIDE_CODE, (text) => (text.startsWith('`') ? text : formatCode(text)))}`,
     };
 }
 /**
@@ -62,4 +69,36 @@ export function escapeCell(text: string): string {
  */
 export function formatList(names: string[]): string {
     return LIST_FORMAT.format(names);
+}
+
+/**
+ * Format one code span in generated reference text.
+ *
+ * @param text the literal code text.
+ * @returns the Markdown code span.
+ */
+export function formatCode(text: string): string {
+    return '`' + text + '`';
+}
+
+/**
+ * Build the canonical route of a reference index or named page.
+ *
+ * @param folder the reference section.
+ * @param name the page name, or empty for the index.
+ * @returns the absolute site path.
+ */
+export function formatReferencePath(folder: keyof typeof REFERENCE_FOLDERS, name: string): string {
+    return `${REFERENCE_PATH}${REFERENCE_FOLDERS[folder]}/${name === '' ? '' : name + '/'}`;
+}
+
+/**
+ * Link a reference page with its exact name as code.
+ *
+ * @param folder the reference section.
+ * @param name the page and its link text.
+ * @returns the Markdown link.
+ */
+export function formatReferenceLink(folder: keyof typeof REFERENCE_FOLDERS, name: string): string {
+    return `[${formatCode(name)}](${formatReferencePath(folder, name)})`;
 }

@@ -7,14 +7,11 @@ These configurations hold security checks. gspot always selects `secrets`, `depe
 
 | Configuration    | What it checks                                                                                                                                      |
 | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `secrets`        | Gitleaks scans staged changes and pushed commits. TruffleHog scans pushed commits.                                                                  |
+| `secrets`        | Gitleaks scans staged changes and pushed commits.                                                                                                   |
 | `dependencies`   | OSV-Scanner checks lockfiles for known vulnerable packages at push.                                                                                 |
 | `security`       | Semgrep runs shipped and local rules at push, including the rules of the Next.js and Swift configurations, and selected public rule packs manually. |
 | `docker`         | Trivy checks container settings and a selected image. See [Docker checks](/reference/configurations/docker/).                                       |
 | `github-actions` | zizmor finds unsafe workflows and unpinned actions at commit.                                                                                       |
-
-At push, TruffleHog sends possible secrets to their issuing service to check whether they still work. This needs
-network access.
 
 If gspot finds a real secret, revoke or rotate it first, then remove it from the code. Deleting
 the line leaves the secret in Git history.

@@ -3,7 +3,6 @@ allowed_words = ["TypeScript"]
 [configuration]
 description = "TypeScript files: the strict compiler and the shipped lint and structure rules."
 requires = ["javascript"]
-suggests = []
 title = "TypeScript"
 
 [detect]
@@ -30,7 +29,6 @@ version = "8.70.0"
 extensions = [".ts", ".tsx", ".mts", ".cts"]
 
 [eslint]
-fragment = true
 required_tools = ["typescript-eslint"]
 all_level_rules = ["@typescript-eslint/ban-ts-comment", "@typescript-eslint/consistent-type-definitions", "@typescript-eslint/consistent-type-exports", "@typescript-eslint/consistent-type-imports", "@typescript-eslint/explicit-module-boundary-types", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-extraneous-class", "@typescript-eslint/no-mixed-enums", "@typescript-eslint/no-namespace", "@typescript-eslint/no-non-null-assertion", "@typescript-eslint/no-require-imports", "@typescript-eslint/no-this-alias", "@typescript-eslint/no-unnecessary-type-parameters", "@typescript-eslint/prefer-readonly", "@typescript-eslint/prefer-reduce-type-parameter", "@typescript-eslint/prefer-return-this-type", "@typescript-eslint/strict-boolean-expressions", "@typescript-eslint/triple-slash-reference", "@typescript-eslint/unified-signatures", "gspot/no-magic-numbers"]
 

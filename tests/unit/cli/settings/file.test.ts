@@ -1,19 +1,16 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { COMMENTED_SETTINGS } from '#tests/data/settings/edits.ts';
 import { link, stat, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, updateSettings, readSettingsEdit } from '#cli/settings/edit.ts';
 import { parseTomlText, writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 
 test('a TOML syntax error names the file, line and column', () => {
-    expect(() => parseTomlText('"🚦前言"=2026-04-31\n', 'https://example.com/team.toml', 'template')).toThrow(
-        'https://example.com/team.toml:1:8 is not valid TOML:',
-    );
-    expect(() => parseTomlText('level="all"\nlevel="all"\n', 'gspot.toml', 'settings')).toThrow(
+    expect(() => parseTomlText('"🚦前言"=2026-04-31\n', 'gspot.toml')).toThrow('gspot.toml:1:8 is not valid TOML:');
+    expect(() => parseTomlText('level="all"\nlevel="all"\n', 'gspot.toml')).toThrow(
         'gspot.toml:2:1 is not valid TOML:',
     );
 });
@@ -33,9 +30,8 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, COMMENTED_SETTINGS);
     const input = readSettingsEdit(sandbox.path);
-    const result = updateSettings(sandbox.path, input, (written) => {
-        setKey(written, 'level', 'all');
-    });
+    setKey(input.table, 'level', 'all');
+    const result = updateSettings(sandbox.path, input);
     await writeFile(path, `${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     using log = openWriter(sandbox.path);
     expect(() => {
@@ -43,16 +39,15 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     }).toThrow();
     expect(await readFile(path, 'utf8')).toBe(`${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     const fresh = readSettingsEdit(sandbox.path);
-    const next = updateSettings(sandbox.path, fresh, (written) => {
-        setKey(written, 'level', 'all');
-    });
+    setKey(fresh.table, 'level', 'all');
+    const next = updateSettings(sandbox.path, fresh);
     writeSettings(log, next.text, fresh.original);
-    expect(readSettings(sandbox.path, createReadCache(process.cwd())).settings.level).toBe('all');
+    expect(readSettings(sandbox.path).settings.level).toBe('all');
 });
 
 test('reading or editing a missing gspot.toml is refused and creates nothing', async () => {
     await using sandbox = await testdir();
-    expect(() => readSettings(sandbox.path, createReadCache(process.cwd()))).toThrow('Run `gspot init`');
+    expect(() => readSettings(sandbox.path)).toThrow('Run `gspot init`');
     expect(() => readSettingsEdit(sandbox.path)).toThrow('Run `gspot init`');
     expect(await stat(join(sandbox.path, 'gspot.toml')).catch(() => undefined)).toBeUndefined();
 });
@@ -71,23 +66,17 @@ test('writing an unchanged file does not touch it', async () => {
 test.each(['symlink inside', 'symlink outside', 'hardlink'])(
     'an edit of a gspot.toml that is a link is refused and the link target is unchanged: %s',
     async (kind) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'project/source.toml': COMMENTED_SETTINGS,
             'outside.toml': COMMENTED_SETTINGS,
         });
+
         const root = join(sandbox.path, 'project');
         const target = join(sandbox.path, kind === 'symlink outside' ? 'outside.toml' : 'project/source.toml');
         await (kind === 'hardlink'
             ? link(target, join(root, 'gspot.toml'))
             : symlink(target, join(root, 'gspot.toml')));
-        let evaluated = false;
-        expect(() =>
-            updateSettings(root, readSettingsEdit(root), () => {
-                evaluated = true;
-            }),
-        ).toThrow('regular file with one link');
-        expect(evaluated).toBe(false);
+        expect(() => readSettingsEdit(root)).toThrow('regular file with one link');
         expect(await readFile(target, 'utf8')).toBe(COMMENTED_SETTINGS);
     },
 );

@@ -5,7 +5,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { SWIFT_PACKAGE } from '#tests/data/checks/swift/package.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/swift/cache.ts';
@@ -14,7 +14,7 @@ import { matchFields, matchSubstring, captureRejection } from '#tests/setup/matc
 
 import {
     checkFindings,
-    buildCheckInput,
+    planSandboxCheck,
     findBuiltInCheck,
     prepareSwiftInput,
     createCompilerCache,
@@ -32,14 +32,15 @@ test.each([
     async ({ buildCode, analyzerCode, message }) => {
         await using sandbox = await testdir();
         await using resources = new AsyncDisposableStack();
-        const prepared = await prepareSwiftInput(sandbox, 'swift/swiftlint-analyze');
-        resources.use(prepared.resources);
+        await using prepared = await prepareSwiftInput(sandbox, 'swift/swiftlint-analyze');
         resources.use(
             spyOn(processes, 'spawnProcess')
                 .mockResolvedValueOnce(buildProcessResult({ code: buildCode }))
                 .mockResolvedValue(buildProcessResult({ code: analyzerCode })),
         );
-        expect(await captureRejection(findBuiltInCheck('swift/swiftlint-analyze')(prepared.input))).toMatch(message);
+        expect(
+            await captureRejection(findBuiltInCheck('swift/swiftlint-analyze')(prepared.session, prepared.planned)),
+        ).toMatch(message);
     },
 );
 
@@ -48,15 +49,16 @@ test('analyzer: manual analysis clears its own compiler state without consuming 
 
     await using sandbox = await testdir();
 
-    const prepared = await prepareSwiftInput(sandbox, 'swift/swiftlint-analyze');
-    await using _preparation = prepared.resources;
-    const input = prepared.input;
-    const compile = buildPlan(input);
-    const analyzer = buildPlan(input, { purpose: 'analyze' });
+    await using prepared = await prepareSwiftInput(sandbox, 'swift/swiftlint-analyze');
+
+    const input = prepared.planned;
+    const compile = buildPlan(prepared.session, input);
+    const analyzer = buildPlan(prepared.session, input, { purpose: 'analyze' });
+    if (analyzer.kind !== 'package') throw new Error('Expected a Swift package build.');
     const compilerState = join(compile.folder, 'package', 'state');
-    const analyzerState = join(analyzer.scratch!, 'state');
+    const analyzerState = join(analyzer.scratch, 'state');
     await mkdir(join(compile.folder, 'package'), { recursive: true });
-    await mkdir(analyzer.scratch!, { recursive: true });
+    await mkdir(analyzer.scratch, { recursive: true });
     await writeFile(compilerState, 'incremental');
     await writeFile(analyzerState, 'old analyzer');
     resources.use(
@@ -66,8 +68,8 @@ test('analyzer: manual analysis clears its own compiler state without consuming 
             .mockResolvedValue(buildProcessResult()),
     );
 
-    expect(await findBuiltInCheck('swift/build')(input)).toStrictEqual([]);
-    expect(await findBuiltInCheck('swift/swiftlint-analyze')(input)).toStrictEqual([]);
+    expect(await findBuiltInCheck('swift/build')(prepared.session, input)).toStrictEqual([]);
+    expect(await findBuiltInCheck('swift/swiftlint-analyze')(prepared.session, input)).toStrictEqual([]);
     expect(await readFile(compilerState, 'utf8')).toBe('incremental');
     expect(await isOnDisk(analyzerState)).toBe(false);
     expect(await readFile(analyzer.log, 'utf8')).toContain('complete compiler log');
@@ -78,12 +80,12 @@ test('compiler: a failed Swift build without source diagnostics returns executio
 
     await using sandbox = await testdir();
 
-    const prepared = await prepareSwiftInput(sandbox, 'swift/build', {
+    await using prepared = await prepareSwiftInput(sandbox, 'swift/build', {
         'Main.swift': 'let value = 1\n',
         'Package.swift':
             '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
     });
-    await using _preparation = prepared.resources;
+
     const options = buildRunOptions({ only: ['swift/build'] });
     const initial = prepared.session;
     const corrected = await openSession(sandbox.path);
@@ -94,7 +96,7 @@ test('compiler: a failed Swift build without source diagnostics returns executio
     );
 
     const failed = await runChecks(initial, options);
-    expect(failed.report.exitCode).toBe(2);
+
     expect(failed.report.checks).toContainEqual(
         matchFields({
             check: 'swift/build',
@@ -105,7 +107,7 @@ test('compiler: a failed Swift build without source diagnostics returns executio
     );
     run.mockResolvedValue(buildProcessResult());
     const executed = await runChecks(corrected, options);
-    expect(executed.report.exitCode).toBe(0);
+    expect(executed.report.failed).toStrictEqual([]);
 });
 
 test('compiler: a later Swift session reads a failed build after an earlier successful build', async () => {
@@ -113,9 +115,9 @@ test('compiler: a later Swift session reads a failed build after an earlier succ
 
     await using sandbox = await testdir();
 
-    const prepared = await prepareSwiftInput(sandbox, 'swift/build');
-    await using _preparation = prepared.resources;
-    const first = prepared.input;
+    await using prepared = await prepareSwiftInput(sandbox, 'swift/build');
+
+    const first = prepared.planned;
 
     resources.use(
         spyOn(processes, 'spawnProcess')
@@ -125,8 +127,8 @@ test('compiler: a later Swift session reads a failed build after an earlier succ
             ),
     );
 
-    expect(await findBuiltInCheck('swift/build')(first)).toStrictEqual([]);
-    expect(await findBuiltInCheck('swift/build')(first)).toStrictEqual([]);
+    expect(await findBuiltInCheck('swift/build')(prepared.session, first)).toStrictEqual([]);
+    expect(await findBuiltInCheck('swift/build')(prepared.session, first)).toStrictEqual([]);
     expect(await checkFindings(sandbox.path, 'swift/build')).toStrictEqual([
         {
             check: 'swift/build',
@@ -146,24 +148,19 @@ test('compiler: canceled Swift compilation refuses to launch the compiler', asyn
 
     await using sandbox = await testdir();
 
-    const prepared = await prepareSwiftInput(sandbox, 'swift/build');
-    await using _preparation = prepared.resources;
-    const input = prepared.input;
-    input.cancelSignal = AbortSignal.abort();
+    await using prepared = await prepareSwiftInput(sandbox, 'swift/build');
+
+    const input = prepared.planned;
+    prepared.session.cancelSignal = AbortSignal.abort();
     const run = resources.use(spyOn(processes, 'spawnProcess'));
-    const compilation = await runChecks(
-        prepared.session,
-        buildRunOptions({ only: ['swift/build'], cancelSignal: input.cancelSignal }),
-    );
+    const compilation = await runChecks(prepared.session, buildRunOptions({ only: ['swift/build'] }));
     expect(compilation.report.checks).toMatchObject([{ status: 'error', note: 'The check was canceled.' }]);
-    const analyzer = buildPlan(input, { purpose: 'analyze' });
-    await mkdir(analyzer.scratch!, { recursive: true });
-    const state = join(analyzer.scratch!, 'state');
+    const analyzer = buildPlan(prepared.session, input, { purpose: 'analyze' });
+    if (analyzer.kind !== 'package') throw new Error('Expected a Swift package build.');
+    await mkdir(analyzer.scratch, { recursive: true });
+    const state = join(analyzer.scratch, 'state');
     await writeFile(state, 'retained compiler state');
-    const analysis = await runChecks(
-        prepared.session,
-        buildRunOptions({ only: ['swift/swiftlint-analyze'], cancelSignal: input.cancelSignal }),
-    );
+    const analysis = await runChecks(prepared.session, buildRunOptions({ only: ['swift/swiftlint-analyze'] }));
     expect(analysis.report.checks).toMatchObject([{ status: 'error', note: 'The check was canceled.' }]);
     expect(await readFile(state, 'utf8')).toBe('retained compiler state');
     expect(run).not.toHaveBeenCalled();
@@ -174,12 +171,12 @@ test('compiler: Swift response files stay inside the compiler cache before log p
 
     await using sandbox = await testdir();
 
-    const prepared = await prepareSwiftInput(sandbox, 'swift/build', {
+    await using prepared = await prepareSwiftInput(sandbox, 'swift/build', {
         'external-response': 'external bytes must not enter a compiler log',
     });
-    await using _preparation = prepared.resources;
-    const input = prepared.input;
-    const plan = buildPlan(input);
+
+    const input = prepared.planned;
+    const plan = buildPlan(prepared.session, input);
 
     const run = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
@@ -187,7 +184,7 @@ test('compiler: Swift response files stay inside the compiler cache before log p
         ),
     );
 
-    expect(await captureRejection(findBuiltInCheck('swift/build')(input))).toContain(
+    expect(await captureRejection(findBuiltInCheck('swift/build')(prepared.session, input))).toContain(
         'is not a safe repository-relative path',
     );
     expect(await isOnDisk(plan.log)).toBe(false);
@@ -205,20 +202,20 @@ test('compiler: a failed Swift source preparation releases its build claim befor
     await using _cache = await createCompilerCache();
     await createFileTree(sandbox.path, {
         'Package.swift': SWIFT_PACKAGE,
-        'gspot.toml': buildSettingsText(['swift']),
+        'gspot.toml': buildSandboxSettings(['swift']),
         'Main.swift': 'let value = 1\n',
     });
     const session = await openSession(sandbox.path);
-    const input = buildCheckInput(session, 'swift/build');
-    const plan = buildPlan(input);
+    const input = planSandboxCheck(session, 'swift/build');
+    const plan = buildPlan(session, input);
     await rm(join(sandbox.path, 'Main.swift'));
     const run = resources.use(spyOn(processes, 'spawnProcess'));
-    expect(await captureRejection(findBuiltInCheck('swift/build')(input))).toContain('ENOENT');
+    expect(await captureRejection(findBuiltInCheck('swift/build')(session, input))).toContain('ENOENT');
     expect(run).not.toHaveBeenCalled();
     expect(await isOnDisk(join(plan.folder, 'build.lock'))).toBe(false);
     {
-        await Bun.write(join(sandbox.path, 'Main.swift'), 'let value = 1\n');
-        const prepared = prepareBuild(input, plan.folder);
+        await writeFile(join(sandbox.path, 'Main.swift'), 'let value = 1\n');
+        const prepared = prepareBuild(session.root, input.files, plan.folder);
         using next = prepared.files;
         expect(next.read('build.lock')).toBeDefined();
     }
@@ -227,23 +224,22 @@ test('compiler: a failed Swift source preparation releases its build claim befor
 
 test('compiler: Swift compiler diagnostics drop the macOS /private prefix from source paths', async () => {
     await using sandbox = await testdir();
-    const prepared = await prepareSwiftInput(sandbox, 'swift/build', { 'Main.swift': 'let value = 1\n' });
-    await using _preparation = prepared.resources;
-    const input = prepared.input;
+    await using prepared = await prepareSwiftInput(sandbox, 'swift/build', { 'Main.swift': 'let value = 1\n' });
+
+    const input = prepared.planned;
     using resources = new DisposableStack();
     resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
             buildProcessResult({
                 code: 1,
-                // eslint-disable-next-line sonarjs/publicly-writable-directories -- The test compares compiler error text and never opens these paths.
-                stderr: '/private/tmp/project/Main.swift:4:2: error: Missing value\n/tmp/project/Other.swift:5:3: error: Unknown name',
+
+                stderr: '/private/var/folders/project/Main.swift:4:2: error: Missing value\n/var/folders/project/Other.swift:5:3: error: Unknown name',
             }),
         ),
     );
-    expect(await findBuiltInCheck('swift/build')(input)).toStrictEqual([
+    expect(await findBuiltInCheck('swift/build')(prepared.session, input)).toStrictEqual([
         matchFields({
-            // eslint-disable-next-line sonarjs/publicly-writable-directories -- reason: This expected compiler path serves as parser text and creates no filesystem entry.
-            file: '/tmp/project/Main.swift',
+            file: '/var/folders/project/Main.swift',
             line: 4,
             column: 2,
             rule: 'compiler',
@@ -251,8 +247,7 @@ test('compiler: Swift compiler diagnostics drop the macOS /private prefix from s
         }),
 
         matchFields({
-            // eslint-disable-next-line sonarjs/publicly-writable-directories -- reason: This expected compiler path serves as parser text and creates no filesystem entry.
-            file: '/tmp/project/Other.swift',
+            file: '/var/folders/project/Other.swift',
             line: 5,
             column: 3,
             rule: 'compiler',

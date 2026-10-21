@@ -7,36 +7,39 @@ import { planRun } from '#cli/planning/checks.ts';
 import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { checkReport } from '#tests/setup/run-gspot.ts';
 import { useExecutable } from '#tests/setup/processes.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { chmod, symlink, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
-import { TWO_SCOPES_SETTINGS } from '#tests/data/settings/scopes.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 import { runCheckCommand, buildCommandEnvironment } from '#cli/runs/command/check.ts';
 
 test('a check command accepts a configuration input linked inside the repository', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: [],
-            command_check: [
-                {
-                    name: 'project/linked-config',
-                    paths: ['*.swift'],
-                    stage: 'commit',
-                    command: [process.execPath, '-e', 'process.exitCode = 0', '{existing:--config:.swiftlint.yml}'],
-                    output: { format: 'lines', file_type: 'path' },
-                },
-            ],
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: stringify({
+                command_check: [
+                    {
+                        name: 'project/linked-config',
+                        paths: ['*.swift'],
+                        stage: 'commit',
+                        command: [process.execPath, '-e', 'process.exitCode = 0', '{existing:--config:.swiftlint.yml}'],
+                        output: { format: 'lines' },
+                    },
+                ],
+            }),
         }),
         'source.swift': 'let value = 1\n',
         'settings/swiftlint.yml': 'disabled_rules: []\n',
     });
+
     await symlink('settings/swiftlint.yml', join(sandbox.path, '.swiftlint.yml'));
-    const checked = await checkReport(sandbox.path, ['check', '--only', 'project/linked-config', '--json']);
+    const checked = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'project/linked-config', '--json']),
+    );
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
@@ -45,7 +48,7 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
     await using sandbox = await testdir();
     const scope = 'apps/café [web]';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['swift'], { tables: `[[scope]]\npath = ${JSON.stringify(scope)}\n` }),
+        'gspot.toml': buildSandboxSettings(['swift'], { tables: `[[scope]]\npath = ${JSON.stringify(scope)}\n` }),
         'Sources/Main.swift': 'let value = 1\n',
         [`${scope}/Sources/Main.swift`]: 'let value = 2\n',
     });
@@ -68,7 +71,7 @@ test.skipIf(isWindows)('a session that runs again uses a replaced program and re
     await using sandbox = await testdir();
     const executable = join(sandbox.path, 'checker');
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([], {
+        'gspot.toml': buildSandboxSettings([], {
             tables: `[[command_check]]
 name = "project/checker"\noutput = { format = "none" }\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
         }),
@@ -96,31 +99,33 @@ name = "project/checker"\noutput = { format = "none" }\nstage = "commit"\npaths 
 });
 
 test('per-file failures name the selected file when expanded arguments follow it', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: [],
-            command_check: [
-                {
-                    name: 'project/file-result',
-                    command: [
-                        process.execPath,
-                        'validate.cjs',
-                        '{existing:--config:settings.txt}',
-                        '{file}',
-                        'config',
-                        '--quiet',
-                    ],
-                    paths: ['inputs/**'],
-                    stage: 'commit',
-                },
-            ],
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: stringify({
+                command_check: [
+                    {
+                        name: 'project/file-result',
+                        command: [
+                            process.execPath,
+                            'validate.cjs',
+                            '{existing:--config:settings.txt}',
+                            '{file}',
+                            'config',
+                            '--quiet',
+                        ],
+                        paths: ['inputs/**'],
+                        stage: 'commit',
+                    },
+                ],
+            }),
         }),
         'settings.txt': '',
         'inputs/café source.txt': 'invalid',
         'validate.cjs':
             'const fs = require("node:fs"); process.exitCode = fs.readFileSync(process.argv[4], "utf8") === "valid" ? 0 : 1;',
     });
+
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'all', only: ['project/file-result'] });
     const planned = plans[0]!;
@@ -131,21 +136,23 @@ test('per-file failures name the selected file when expanded arguments follow it
 
 // Windows has no signals: a process that kills itself exits with a code.
 test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a finding', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: [],
-            command_check: [
-                {
-                    name: 'project/termination',
-                    command: [process.execPath, '-e', 'process.kill(process.pid, "SIGTERM")', '{file}'],
-                    paths: ['source.txt'],
-                    stage: 'commit',
-                },
-            ],
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: stringify({
+                command_check: [
+                    {
+                        name: 'project/termination',
+                        command: [process.execPath, '-e', 'process.kill(process.pid, "SIGTERM")', '{file}'],
+                        paths: ['source.txt'],
+                        stage: 'commit',
+                    },
+                ],
+            }),
         }),
         'source.txt': 'valid source',
     });
+
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'all', only: ['project/termination'] });
     const planned = plans[0]!;
@@ -157,16 +164,18 @@ test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a
 test("a command run in a copy finds its chosen program's companion before an inactive PATH entry", async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: [],
-            command_check: [
-                {
-                    name: 'project/companion',
-                    stage: 'commit',
-                    paths: ['source.txt'],
-                    command: [join(sandbox.path, 'native/checker')],
-                },
-            ],
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: stringify({
+                command_check: [
+                    {
+                        name: 'project/companion',
+                        stage: 'commit',
+                        paths: ['source.txt'],
+                        command: [join(sandbox.path, 'native/checker')],
+                    },
+                ],
+            }),
         }),
         'source.txt': '',
         'copy/.keep': '',
@@ -193,7 +202,7 @@ test.skipIf(isWindows)('a command check reports files whose folder name has a co
     await using sandbox = await testdir();
     const paths = ['source\nfiles/greet.sh', 'source:files/greet.sh'];
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         ...Object.fromEntries(paths.map((path) => [path, 'if then\n'])),
     });
     const options = buildRunOptions({ only: ['project/bash-syntax'] });
@@ -207,13 +216,19 @@ test.skipIf(isWindows)('a command check reports files whose folder name has a co
 });
 
 test('a command check at the root checks a changed file of a child scope once', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `${TWO_SCOPES_SETTINGS}\n[[command_check]]
-name = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\noutput.format = "none"\npaths = ["**/*.sh"]\nstage = "push"\n`,
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            scopes: [
+                { path: 'api', configurations: [] },
+                { path: 'web', configurations: [] },
+            ],
+            tables: '\n[[command_check]]\nname = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\noutput.format = "none"\npaths = ["**/*.sh"]\nstage = "push"\n',
+        }),
         'api/source.sh': 'if then\n',
         'web/source.sh': 'echo sibling\n',
     });
+
     const options = buildRunOptions({
         stage: 'push',
         only: ['project/syntax'],
@@ -224,4 +239,20 @@ name = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\noutput.format = "n
     expect(failed.report.checks).toMatchObject([
         { check: 'project/syntax', scope: '', fileCount: 1, status: 'failed' },
     ]);
+});
+
+test('a command without an extra tool-file list refuses its missing declared tool file before running', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([]),
+        'source.js': 'export const ready = true;\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planRun(session, { stage: 'commit', only: ['format/prettier'] })[0]!;
+    const command = ['prettier', '--config', '{tool_file:prettier}', '{files}'];
+    const result = await runCheckCommand(session, { ...planned, check: { ...planned.check, command } });
+    expect(result).toMatchObject({
+        status: 'error',
+        note: 'The tool file .gspot/configurations/general/format/prettier.json is missing. Run gspot apply.',
+        findings: [],
+    });
 });

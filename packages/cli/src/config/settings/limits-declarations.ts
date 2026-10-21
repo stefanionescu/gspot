@@ -1,3 +1,5 @@
+import type { SettingMetadata } from '#cli/types/settings/metadata.ts';
+
 export const LIMITS_DECLARATIONS = {
     'limits.file_lines': {
         configurations: ['sql', 'structure'],
@@ -5,6 +7,7 @@ export const LIMITS_DECLARATIONS = {
         reason_needed: 'raising',
         languages: ['typescript', 'javascript', 'python', 'swift', 'sql', 'bash'],
         language_defaults: { sql: 400, bash: 140 },
+        default: 300,
     },
     'limits.function_lines': {
         configurations: ['structure'],
@@ -12,18 +15,21 @@ export const LIMITS_DECLARATIONS = {
         reason_needed: 'raising',
         languages: ['typescript', 'javascript', 'python', 'swift', 'bash'],
         language_defaults: { bash: 40 },
+        default: 60,
     },
     'limits.function_parameters': {
         configurations: ['structure'],
         description: 'The most parameters one function may take.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript', 'python', 'swift'],
+        default: 7,
     },
     'limits.function_statements': {
         configurations: ['structure'],
         description: 'The most statements one function may have.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript', 'python'],
+        default: 30,
     },
     'limits.block_nesting': {
         configurations: ['structure'],
@@ -31,12 +37,14 @@ export const LIMITS_DECLARATIONS = {
         reason_needed: 'raising',
         languages: ['typescript', 'javascript', 'bash'],
         language_defaults: { bash: 3 },
+        default: 3,
     },
     'limits.callback_nesting': {
         configurations: ['structure'],
         description: 'How deep callbacks may nest.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript'],
+        default: 3,
     },
     'limits.cognitive_complexity': {
         configurations: ['structure'],
@@ -44,12 +52,14 @@ export const LIMITS_DECLARATIONS = {
             'The highest sonarjs cognitive score one function may have; the score grows as the function gets harder to follow.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript'],
+        default: 8,
     },
     'limits.cyclomatic_complexity': {
         configurations: ['structure'],
         description: 'The most paths that may run through one function.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript', 'python', 'swift'],
+        default: 8,
     },
     'limits.function_branches': {
         configurations: ['structure'],
@@ -57,6 +67,7 @@ export const LIMITS_DECLARATIONS = {
         reason_needed: 'raising',
         languages: ['python', 'bash'],
         language_defaults: { python: 8, bash: 8 },
+        default: 8,
     },
     'limits.function_returns': {
         configurations: ['structure'],
@@ -64,6 +75,7 @@ export const LIMITS_DECLARATIONS = {
         reason_needed: 'raising',
         languages: ['python'],
         language_defaults: { python: 4 },
+        default: 4,
     },
     'limits.function_assignments': {
         configurations: ['structure'],
@@ -71,6 +83,7 @@ export const LIMITS_DECLARATIONS = {
         reason_needed: 'raising',
         language_defaults: { bash: 8 },
         languages: ['bash'],
+        default: 8,
     },
     'limits.closure_lines': {
         configurations: ['structure'],
@@ -78,6 +91,7 @@ export const LIMITS_DECLARATIONS = {
         reason_needed: 'raising',
         language_defaults: { swift: 60 },
         languages: ['swift'],
+        default: 60,
     },
     'limits.type_lines': {
         configurations: ['structure'],
@@ -85,23 +99,27 @@ export const LIMITS_DECLARATIONS = {
         reason_needed: 'raising',
         language_defaults: { swift: 300 },
         languages: ['swift'],
+        default: 300,
     },
     'limits.index_exports': {
         configurations: ['structure'],
         description: 'The most re-exports one index file may hold.',
         reason_needed: 'raising',
         languages: ['typescript', 'javascript'],
+        default: 20,
     },
     'limits.trivial_function_statements': {
         configurations: ['structure'],
         description:
-            'Report functions with this many statements or fewer; any whole number from 1 up works, a higher number reports more functions, and limits.`<language>` sets it for one language.',
+            'Report functions with this many statements or fewer, including the statements of nested functions and callbacks in every language; any whole number from 1 up works, a higher number reports more functions, and limits.`<language>` sets it for one language.',
         reason_needed: 'lowering',
         languages: ['typescript', 'javascript', 'python', 'swift', 'bash'],
+        default: 2,
     },
     'limits.shared_prefix_files': {
         configurations: ['structure'],
         description: 'The number of siblings sharing a name prefix that makes a finding.',
         reason_needed: 'raising',
+        default: 2,
     },
-} as const;
+} as const satisfies Record<string, SettingMetadata>;

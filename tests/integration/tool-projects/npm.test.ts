@@ -8,12 +8,12 @@ import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { NPM_REGISTRY_TOKEN } from '#tests/data/test-setup.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { DryRunJson } from '#cli/types/commands/settings.ts';
-import { SETTING_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { selectLockfileName } from '#cli/install/npm/tool-project.ts';
 import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { TOOL_PROJECT_BYTE_ATTRIBUTES } from '#tests/data/parsers/git.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
+import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
 import { PACKAGE_MANAGER_ROWS } from '#tests/data/install/npm-tool-project.ts';
 import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
 import { createPackageManagerSandbox } from '#tests/setup/package-manager-sandboxes.ts';
@@ -48,7 +48,8 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
         });
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(JSON.parse(installed.stdout)).toMatchObject({ installed: true });
+        const steps: unknown = expect.arrayContaining([[packageManager, '--version']]);
+        expect(JSON.parse(installed.stdout)).toStrictEqual({ steps });
         expect(await readFile(lockfilePath, 'utf8')).not.toBe(stale);
         const repaired = await spawnGspot(root, ['apply', '--dry-run', '--json']);
         expect((JSON.parse(repaired.stdout) as DryRunJson).stale).not.toContainEqual({
@@ -89,7 +90,8 @@ test.each(PACKAGE_MANAGER_ROWS.filter(([, path]) => path === 'package.json'))(
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(JSON.parse(installed.stdout)).toMatchObject({ installed: true });
+        const steps: unknown = expect.arrayContaining([[packageManager, '--version']]);
+        expect(JSON.parse(installed.stdout)).toStrictEqual({ steps });
         expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         expect(await readFile(lockfilePath, 'utf8')).not.toContain('<<<<<<<');
     },
@@ -105,7 +107,6 @@ async function assertCloneInstallation(project: PackageManagerSandbox, inputs: T
     commitAll(root);
     readGitOutput(root, ['clone', '--quiet', '--no-local', root, clone]);
     expect(await isOnDisk(join(clone, '.gspot/node_modules'))).toBe(false);
-    expect(await isOnDisk(join(clone, '.gspot/state/ownership.json'))).toBe(false);
     for (let attempt = 0; attempt < 2; attempt++) {
         const cloneInstall = await spawnGspot(clone, ['install']);
         expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);
@@ -221,7 +222,7 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     await createFileTree(isolated.path, { 'package.json': '{"private":true}\n' });
     const command = ['npm', 'view', 'private-check-tool', 'version', '--json', '--cache', join(isolated.path, 'cache')];
     const missing = await runTool(command, {
-        timeoutSeconds: SETTING_DEFAULTS.tool_timeout_seconds,
+        timeoutSeconds: SETTING_DECLARATIONS['tool_timeout_seconds'].default,
         cwd: isolated.path,
         env: await readRegistryEnvironment(repository.path),
     });
@@ -231,7 +232,7 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     await writeFile(join(repository.path, '.npmrc'), source, { mode: 0o600 });
     const { mode } = await stat(join(repository.path, '.npmrc'));
     const corrected = await runTool(command, {
-        timeoutSeconds: SETTING_DEFAULTS.tool_timeout_seconds,
+        timeoutSeconds: SETTING_DECLARATIONS['tool_timeout_seconds'].default,
         cwd: isolated.path,
         env: await readRegistryEnvironment(repository.path),
     });

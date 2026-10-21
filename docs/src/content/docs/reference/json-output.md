@@ -12,31 +12,30 @@ gspot check --json
 
 ## Report fields
 
-| Field             | Meaning                                                                                       |
-| ----------------- | --------------------------------------------------------------------------------------------- |
-| `version`         | The gspot version that made the report.                                                       |
-| `stage`           | The selected stage: `commit`, `push`, `message`, `manual`, or `all` for the default run.      |
-| `started`         | Start time as an ISO 8601 timestamp.                                                          |
-| `duration`        | Elapsed run time in milliseconds.                                                             |
-| `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference.  |
-| `checks`          | Results for checks that ran, including their findings.                                        |
-| `ignores`         | Ignores in effect, with their check, optional lint rule and paths, reason, and matched count. |
-| `skips`           | Checks that did not run, each with its `cause`. A skipped check did not pass.                 |
-| `unstagedChanges` | Number of changed files left out when the run reads the staging area.                         |
-| `partial`         | Whether the run selected only staged files, changed files, or named paths.                    |
-| `failed`          | Check IDs that failed, including checks whose fixer failed.                                   |
-| `exitCode`        | The process exit code. See [Exit codes](/reference/commands/#exit-codes).                     |
+| Field             | Meaning                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| `version`         | The gspot version that made the report.                                                      |
+| `stage`           | The selected stage: `commit`, `push`, `message`, `manual`, or `all` for the default run.     |
+| `started`         | Start time as an ISO 8601 timestamp.                                                         |
+| `duration`        | Elapsed run time in milliseconds.                                                            |
+| `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference. |
+| `checks`          | Results for checks that ran, including their findings.                                       |
+| `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and names, and reason.       |
+| `unstagedChanges` | Number of changed files left out when the run reads the staging area.                        |
+| `partial`         | Whether the run selected only staged files, changed files, or named paths.                   |
+| `failed`          | Check IDs that failed, including checks whose fixer failed.                                  |
+| `exitCode`        | The process exit code. See [Exit codes](/reference/commands/#exit-codes).                    |
 
 ## Check results
 
 Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and `findings`.
-It can also have `files`, `note`, `reproduce`, and `command`. The status takes one of `passed`, `failed`, `missing`, `error`, or
+It can also have `files`, `note`, `reproduce`, and `command`. A skipped result carries its `cause`. The status takes one of `passed`, `failed`, `missing`, `error`, or
 `skipped`. `missing` and `error` make the run incomplete and produce exit code `2`.
 
 Each finding has `check`, `file`, `message`, and `fixable`. Optional fields include `line`, `column`, `rule`, and
 `help`. Source lines and columns start at `1`. A finding without a source location can have an empty `file`.
 
-The `cause` of a skip takes one of `level`, `flag`, `system`, `replaced`, `setting`, `condition`, `ignore`, or
+The `cause` of a skip takes one of `level`, `system`, `replaced`, `setting`, `condition`, `ignore`, or
 `inputs`.
 
 ## Push report
@@ -71,7 +70,6 @@ Commands with `--json` report an error with `error` and `message`. `error` holds
 | `tool`         | Finding or running a tool.                                      |
 | `output`       | Reading a tool's output.                                        |
 | `pin`          | The repository's version pin.                                   |
-| `template`     | Reading or using a template.                                    |
 | `prompt`       | Asking for a plan to be accepted.                               |
 | `failure`      | An unexpected error; the message names it.                      |
 | `canceled`     | A signal stopped the command. The object also holds `exitCode`. |

@@ -1,0 +1,137 @@
+import { join, posix, dirname } from 'node:path';
+import { setImmediate } from 'node:timers/promises';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { DOT_GSPOT } from '#cli/config/system/locations.ts';
+import { splitSystemPath } from '#cli/system/files/names.ts';
+import { PERMISSION_BITS } from '#cli/config/system/modes.ts';
+import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
+import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { copyDependencies } from '#cli/runs/copy/dependencies.ts';
+import { createScratchFolder } from '#cli/system/files/folders.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { listWorkspaceDependencyFiles } from '#cli/repository/packages.ts';
+import { type Files, type ScratchFolder } from '#cli/types/system/files.ts';
+import { SYMLINK_MODE, ENTRY_FILE_MODES } from '#cli/config/repository/revisions.ts';
+import { SCRATCH_EXTRAS, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/runs/copy.ts';
+import type { ScratchFile, DependencyCopy, ScratchCopyPlan, ScratchCopyPaths } from '#cli/types/runs/copy.ts';
+import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
+
+// Source reads go through the confined reader, so they stay inside the repository.
+function writeScratchFile(files: Files, scratch: string, file: ScratchFile): void {
+    const target = join(scratch, ...splitSystemPath(typeof file === 'string' ? file : file.entry.path));
+    mkdirSync(dirname(target), { recursive: true });
+    if (typeof file === 'string') {
+        const source = files.readRealPath(file);
+        copyFileSync(source, target, constants.COPYFILE_FICLONE);
+        chmodSync(target, statSync(source).mode & PERMISSION_BITS);
+        return;
+    }
+    const mode = normalizeFileMode({ mode: ENTRY_FILE_MODES[file.entry.mode] });
+    if (file.entry.mode === SYMLINK_MODE) symlinkSync(file.bytes, target);
+    else {
+        writeFileSync(target, file.bytes, { flag: 'wx', mode });
+        chmodSync(target, mode);
+    }
+}
+
+/**
+ * Writes files and Git blobs into a scratch copy.
+ *
+ * @param input what to write, and where.
+ */
+export async function writeScratchFiles(input: ScratchCopyPlan): Promise<void> {
+    using files = openFiles(input.root);
+    let written = 0;
+    for await (const file of input.files) {
+        if (written % FILES_BETWEEN_PAUSES === 0) await setImmediate();
+        written += 1;
+        input.cancelSignal?.throwIfAborted();
+        const path = typeof file === 'string' ? file : file.entry.path;
+        if (!input.dependencies.some((dependency) => isInScope(path, dependency.path)))
+            writeScratchFile(files, input.target, file);
+    }
+}
+
+/**
+ * Copies the files and dependency trees that the check needs.
+ *
+ * @param session the repository and its tools.
+ * @param planned the check and its files.
+ * @param extra more paths to copy.
+ * @returns the new folder, deleted on dispose.
+ */
+export async function copyCheckIntoScratch(
+    session: Session,
+    planned: PlannedCheck,
+    extra: string[] = [],
+): Promise<ScratchFolder> {
+    return copyIntoScratch({
+        ...selectScratchCopyPaths(
+            session.root,
+            [
+                ...planned.files.map((file) => file.path),
+                ...listWorkspaceDependencyFiles(session.reads, planned.selection.scope.path, session.repository.files),
+                ...extra,
+            ],
+            session.repository.scopes.map((scope) => scope.path),
+        ),
+        cancelSignal: session.cancelSignal,
+    });
+}
+
+/**
+ * Copies source files and dependency trees into a new scratch copy.
+ *
+ * @param source the paths and dependency trees to copy.
+ * @returns the new folder, deleted on dispose.
+ */
+export async function copyIntoScratch(source: ScratchCopyPaths): Promise<ScratchFolder> {
+    const folder = createScratchFolder();
+    try {
+        const input = {
+            ...source,
+            target: folder.path,
+            files: new Set(source.paths),
+        };
+        await writeScratchFiles(input);
+        await copyDependencies(input);
+        return folder;
+    } catch (error) {
+        folder[Symbol.dispose]();
+        throw error;
+    }
+}
+
+/**
+ * Selects the paths and installed dependency trees for a scratch copy of the working tree.
+ *
+ * @param repositoryRoot the repository folder.
+ * @param paths the authored files to copy.
+ * @param scopes the folders that hold installed dependencies.
+ * @returns the paths and dependency trees to copy.
+ */
+export function selectScratchCopyPaths(repositoryRoot: string, paths: string[], scopes: string[]): ScratchCopyPaths {
+    const projects = paths.flatMap((path) =>
+        DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
+            ? [posix.dirname(path)]
+            : [],
+    );
+    const dependencies = [
+        ...new Set([DOT_GSPOT, ...scopes, ...projects].map((project) => posix.join(project, NODE_MODULES))),
+    ]
+        .filter((path) => statSync(join(repositoryRoot, path), { throwIfNoEntry: false }) !== undefined)
+        .map(
+            (path): DependencyCopy => ({
+                path,
+                operation: path === posix.join(DOT_GSPOT, NODE_MODULES) ? 'link' : 'clone',
+            }),
+        );
+    return {
+        root: repositoryRoot,
+        paths: [...new Set([...paths, ...SCRATCH_EXTRAS])].filter(
+            (path) => statSync(join(repositoryRoot, path), { throwIfNoEntry: false }) !== undefined,
+        ),
+        dependencies,
+    };
+}

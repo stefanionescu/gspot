@@ -1,3 +1,4 @@
+import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { splitParts } from '#cli/checks/naming/settings.ts';
@@ -18,13 +19,11 @@ import {
     CAMEL_WORD,
     LOWER_WORD,
     UPPER_WORD,
-    DIGITS_ONLY,
     PASCAL_WORD,
     NUMERIC_WORDS,
     LAST_EXTENSION,
     TEST_TERM_GROUP,
     RUFF_CATEGORIES,
-    VERB_CATEGORIES,
     CATEGORY_PARENTS,
     MIGRATION_DIGITS,
     BANNED_WORD_FORMS,
@@ -196,26 +195,6 @@ function checkBannedWords(context: NamingContext, parts: string[]): Finding[] {
     return findings;
 }
 
-function checkCallbackVerb(context: NamingContext, parts: string[]) {
-    if (!VERB_CATEGORIES.has(context.identifier.category)) return undefined;
-    const verb = context.settings.overrides
-        .filter(
-            (override) =>
-                override.matches(context.identifier.file) &&
-                (override.languages === undefined || override.languages.has(context.identifier.language)),
-        )
-        .map((override) => override.ignoredPrefix?.exec(context.identifier.name)?.[0])
-        .find((prefix) => prefix === parts[0]);
-    return verb === undefined
-        ? undefined
-        : buildFinding(
-              context,
-              context.place,
-              'callback-verb',
-              `${context.prefix}"${verb}" starts a name only for event handlers. Name what this function does.`,
-          );
-}
-
 /**
  * Finds the first part that appears twice.
  *
@@ -308,7 +287,6 @@ export function checkIdentifier(identifier: Identifier, inputs: NamingInputs): F
         checkWordCount(context, words, limits),
         checkRepeatedWords(context, words, overrides),
         ...checkBannedWords(context, parts),
-        checkCallbackVerb(context, parts),
     ];
     return findings.filter((finding) => finding !== undefined);
 }

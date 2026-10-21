@@ -6,13 +6,11 @@ description = "Checks gspot.toml, generated files, and suppression reasons."
 title = "gspot"
 
 [[tool]]
-brew = "node@24"
 install_hint = "Install Node.js 24.2.0 or newer. On macOS, run brew install node@24. On Windows, run winget install OpenJS.NodeJS.LTS."
 min_version = "24.2.0"
 name = "node"
 system = true
 version_command = ["--version"]
-winget = "OpenJS.NodeJS.LTS"
 
 [[check]]
 example = "A `.commitlintrc.json` while gspot runs commitlint reports a replaced file. Delete it, and write the rule you need in `gspot.toml`, such as `tools.commitlint.types`."
@@ -51,5 +49,5 @@ level = "recommended"
 name = "suppressions"
 runs = "once"
 stage = "commit"
-summary = "Reports suppressions with no reason, any that lift a size or complexity limit, and Semgrep or Vale directives."
+summary = "Reports suppressions with no reason, any that lift a size or complexity limit, Semgrep or Vale directives, and ignores past their until date."
 why = "A suppression with no reason hides a finding nobody reviewed."

@@ -3,16 +3,21 @@ import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { stripUndefined } from '#cli/system/values.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import type { ReadCache } from '#cli/types/system/files.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { CommandCheck } from '#cli/types/settings/values.ts';
 import { listConfigurationSettings } from '#cli/settings/known.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
-import { getToolName, getToolDeclaration } from '#cli/configurations/tools.ts';
-import type { CheckFacts, Explanation, ExplainedCheck } from '#cli/types/commands/explain.ts';
+import type { CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
 import { listRuleFiles, readManifests, listChecksById } from '#cli/configurations/manifests.ts';
-import type { Manifest, ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
+import { getToolName, extractRulePrefix, getToolDeclaration } from '#cli/configurations/tools.ts';
+
+import {
+    type Manifest,
+    type KnownCheck,
+    type ToolDeclaration,
+    type CheckDeclaration,
+} from '#cli/types/configurations.ts';
 
 function getRulePlugin(prefix: string, manifests: Map<string, Manifest>): ToolDeclaration | undefined {
     return manifests
@@ -22,35 +27,26 @@ function getRulePlugin(prefix: string, manifests: Map<string, Manifest>): ToolDe
 }
 
 // Find the page for a lint rule: the tool page, or the page of the plugin that the rule prefix names.
-function getRulePage(
-    check: CheckDeclaration,
-    tool: string,
-    rule: string,
-    manifests: Map<string, Manifest>,
-): string | undefined {
-    const slash = rule.lastIndexOf('/');
-    if (slash === -1) {
-        const pin = getToolDeclaration(manifests.values(), tool, manifests.get(check.name.split('/', 1)[0] ?? ''));
+function getRulePage(tool: string, rule: string, manifests: Map<string, Manifest>): string | undefined {
+    const prefix = extractRulePrefix(rule);
+    if (prefix === undefined) {
+        const pin = getToolDeclaration(manifests.values(), tool);
         return pin.rule_url?.replace(RULE_PLACEHOLDER, rule);
     }
-    const plugin = getRulePlugin(rule.slice(0, slash), manifests);
-    return plugin?.rule_url?.replace(RULE_PLACEHOLDER, rule.slice(slash + 1));
+    const plugin = getRulePlugin(prefix, manifests);
+    return plugin?.rule_url?.replace(RULE_PLACEHOLDER, rule.slice(prefix.length + 1));
 }
 
 // List the settings that change the check, and the rules and crash pattern of its configuration.
 function buildCheckFacts(
     check: CheckDeclaration,
-    configuration: ExplainedCheck['configuration'],
+    configuration: KnownCheck['configuration'],
     manifests: Map<string, Manifest>,
     installedRules: ReadonlySet<string>,
 ): CheckFacts {
     const tool = getToolName(check);
     const settings = (configuration === undefined ? [] : listConfigurationSettings(configuration.configuration.name))
-        .filter(
-            (setting) =>
-                check.settings?.includes(setting.name) === true ||
-                (tool !== undefined && setting.name.startsWith(`tools.${tool}.`)),
-        )
+        .filter((setting) => tool !== undefined && setting.name.startsWith(`tools.${tool}.`))
         .map((setting) => setting.name);
     const rules =
         configuration === undefined
@@ -58,9 +54,7 @@ function buildCheckFacts(
             : listRuleFiles(configuration)
                   .filter((file) => installedRules.has(file.path))
                   .map((file) => file.path);
-    const crashPattern =
-        check.crash_pattern ??
-        (tool === undefined ? undefined : getToolDeclaration(manifests.values(), tool, configuration).crash_pattern);
+    const crashPattern = tool === undefined ? undefined : getToolDeclaration(manifests.values(), tool).crash_pattern;
     return {
         source:
             configuration === undefined ? 'repository command' : `${configuration.configuration.name} configuration`,
@@ -80,7 +74,7 @@ function buildCheckFacts(
 function formatRepositoryUse(
     session: Session | undefined,
     declared: CommandCheck | undefined,
-    configuration: ExplainedCheck['configuration'],
+    configuration: KnownCheck['configuration'],
 ): string[] {
     const lines: string[] = [];
     if (declared !== undefined)
@@ -99,7 +93,7 @@ function formatRepositoryUse(
 
 function describeCheck(
     session: Session | undefined,
-    found: ExplainedCheck,
+    found: KnownCheck,
     declared: CommandCheck | undefined,
     facts: CheckFacts,
 ): string {
@@ -133,17 +127,12 @@ function describeCheck(
  *
  * @param session the repository, or undefined outside one.
  * @param checkName the check ID to explain.
- * @param reads the file cache for this run.
  * @returns the explanation, or undefined when no check has the ID.
  */
-export function explainCheck(
-    session: Session | undefined,
-    checkName: string,
-    reads: ReadCache,
-): Explanation | undefined {
-    const manifests = readManifests(reads);
+export function explainCheck(session: Session | undefined, checkName: string): Explanation | undefined {
+    const manifests = readManifests();
     const declared = session?.settingsFile.settings.commandChecks[checkName];
-    const found: ExplainedCheck | undefined =
+    const found: KnownCheck | undefined =
         listChecksById(manifests.values()).get(checkName) ??
         (declared === undefined ? undefined : { check: declared, configuration: undefined });
     if (found === undefined) return undefined;
@@ -161,7 +150,7 @@ export function explainCheck(
         data: {
             check: checkName,
             ...(configuration === undefined
-                ? { command: check.command, paths: check.files.paths }
+                ? { command: check.command, paths: check.files?.paths }
                 : { configuration: configuration.configuration.name }),
             stage: check.stage,
             level: check.level,
@@ -184,13 +173,12 @@ export function explainCheck(
  *
  * @param tool the command or plugin prefix.
  * @param rule the ID without its prefix, such as no-console.
- * @param reads the file cache for this run.
  * @returns the explanation, or undefined when no check runs the tool.
  */
-export function explainLintRule(tool: string, rule: string, reads: ReadCache): Explanation | undefined {
-    const manifests = readManifests(reads);
+export function explainLintRule(tool: string, rule: string): Explanation | undefined {
+    const manifests = readManifests();
     const qualified = `${tool}/${rule}`;
-    const plugin = getRulePlugin(qualified.slice(0, qualified.lastIndexOf('/')), manifests);
+    const plugin = getRulePlugin(extractRulePrefix(qualified) ?? tool, manifests);
     const ruleTool = plugin === undefined ? tool : ESLINT_TOOL;
     const identifier = plugin === undefined ? rule : qualified;
     const found = listChecksById(manifests.values())
@@ -201,7 +189,7 @@ export function explainLintRule(tool: string, rule: string, reads: ReadCache): E
         );
     if (!found) return undefined;
     const { check, configuration } = found;
-    const page = getRulePage(check, ruleTool, identifier, manifests);
+    const page = getRulePage(ruleTool, identifier, manifests);
     const key = quoteArgument(`tools.${ruleTool}.rules`);
     const entries = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
     const optionLines = listConfigurationSettings(configuration.configuration.name)

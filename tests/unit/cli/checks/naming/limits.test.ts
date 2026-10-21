@@ -1,10 +1,8 @@
 import { test, expect } from 'bun:test';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { checkIdentifier } from '#cli/checks/naming/names.ts';
 import { type Identifier } from '#cli/types/checks/naming.ts';
-import { buildScopeNamingSettings } from '#tests/setup/builders.ts';
-import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { getShippedCheck, buildScopeNamingSettings } from '#tests/setup/builders.ts';
 
 import {
     NAME_WORDS,
@@ -16,7 +14,7 @@ import {
 } from '#tests/data/checks/naming/settings.ts';
 
 test('category limits inherit root and scope language settings while explicit categories take precedence', () => {
-    const text = buildSettingsText(['naming'], {
+    const text = buildSandboxSettings(['naming'], {
         rules: true,
         tables: SWIFT_NAMING_LIMITS,
     });
@@ -34,11 +32,9 @@ test('category limits inherit root and scope language settings while explicit ca
 });
 
 test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the next character or word', (language) => {
-    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
-        'naming/identifiers',
-    )!.check;
+    const check = getShippedCheck('naming/identifiers');
 
-    const effective = buildScopeNamingSettings(buildSettingsText(['naming'], { rules: true }));
+    const effective = buildScopeNamingSettings(buildSandboxSettings(['naming'], { rules: true }));
     const category = language === 'swift' || language === 'sql' ? 'functions' : 'variables';
     const { maxChars: characters, maxWords: words } = effective.limitsFor(language, category);
     const context = { check, settings: effective, isTestFile: false };
@@ -70,12 +66,10 @@ test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the ne
 test.each([...LINTER_LIMIT_CASES])(
     '$language $category with a 41-letter name reports $expected, and too many words are still reported',
     ({ language, category, expected }) => {
-        const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
-            'naming/identifiers',
-        )!.check;
+        const check = getShippedCheck('naming/identifiers');
 
         const effective = buildScopeNamingSettings(
-            buildSettingsText(['naming'], {
+            buildSandboxSettings(['naming'], {
                 rules: true,
                 level: 'all',
                 tables: UPPER_SNAKE_OVERRIDE,
@@ -99,11 +93,9 @@ test.each([...LINTER_LIMIT_CASES])(
 );
 
 test("a framework's naming rules come after the shipped ones and before the repository's", () => {
-    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
-        'naming/identifiers',
-    )!.check;
+    const check = getShippedCheck('naming/identifiers');
 
-    const text = buildSettingsText(['typescript', 'express'], {
+    const text = buildSandboxSettings(['typescript', 'express'], {
         rules: true,
         tables: '[naming]\nbanned_words = ["handle", "use"]\n[[naming.override]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nignored_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n',
     });

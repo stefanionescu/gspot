@@ -39,7 +39,7 @@
 .hero .lead {
     margin-block: 20px 0;
     max-width: 30rem;
-    font-size: 18px;
+    font-size: 1.125rem;
     line-height: 1.5;
     text-wrap: pretty;
 }
@@ -47,10 +47,10 @@
 .hero-docs {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
+    min-height: var(--target-size);
     margin-block-start: 12px;
     color: var(--sl-color-text-accent);
-    font-size: 16px;
+    font-size: 1rem;
     text-underline-offset: 3px;
 }
 

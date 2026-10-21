@@ -1,28 +1,20 @@
 import { splitByCase } from 'scule';
+import { getTable } from '#cli/settings/scope-view.ts';
 import { stripUndefined } from '#cli/system/values.ts';
-import type { CheckInput } from '#cli/types/runs/check.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import type { ScopeView } from '#cli/types/settings/values.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
-import type { ParsedNamingLanguageFields } from '#cli/types/settings/tables.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
+import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/tables.ts';
+import { type Settings, type ScopeView, type ScopeSelection } from '#cli/types/settings/values.ts';
 import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY, CATEGORY_PARENTS } from '#cli/config/checks/naming.ts';
-
-import type {
-    BannedWord,
-    NamingDefaults,
-    NamingOverride,
-    NamingSettings,
-    CompiledOverride,
-    NamingDefaultsLanguage,
-} from '#cli/types/checks/naming.ts';
+import type { BannedWord, NamingOverride, NamingSettings, CompiledOverride } from '#cli/types/checks/naming.ts';
 
 function collectNames(names: string[] | undefined): Set<string> | undefined {
     return names === undefined || names.length === 0 ? undefined : new Set(names);
 }
 
-function compileOverride(rule: NamingOverride, source: string): CompiledOverride {
+function compileOverride(rule: NamingOverride): CompiledOverride {
     return {
         matches: buildPathMatcher(rule.paths ?? ['**']),
         languages: collectNames(rule.languages),
@@ -34,12 +26,11 @@ function compileOverride(rule: NamingOverride, source: string): CompiledOverride
         ignoredNames:
             rule.ignored_names_pattern === undefined ? undefined : new RegExp(rule.ignored_names_pattern, 'u'),
         cases: rule.cases,
-        origin: source,
     };
 }
 
-function getNamingLimits(view: Pick<ScopeView, 'options'>, language: string, category: string) {
-    const root = view.options('naming');
+function getNamingLimits(view: ScopeView, language: string, category: string) {
+    const root = getTable(view, 'naming');
     const languageKey = SETTING_LANGUAGES.find((name) => name === language);
     // Every category of every language, so a category that a language lacks reads as unset.
     const languageTable: ParsedNamingLanguageFields | undefined =
@@ -53,24 +44,15 @@ function getNamingLimits(view: Pick<ScopeView, 'options'>, language: string, cat
     };
 }
 
-function listDefaultCases(shipped: NamingDefaults, language: string, category: string, parent: string) {
-    const table: NamingDefaultsLanguage | undefined = shipped.languages[language];
-    for (const name of [category, parent]) {
-        const cases = table?.categories[name]?.cases;
-        if (cases !== undefined) return cases;
-    }
-    return [];
-}
-
-function buildLimitsFor(shipped: NamingDefaults, view: Pick<ScopeView, 'options'>): NamingSettings['limitsFor'] {
+function buildLimitsFor(view: ScopeView): NamingSettings['limitsFor'] {
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
 
     return (language, category) => {
         const parent = parents[category] ?? category;
         const limits = getNamingLimits(view, language, parent);
-        const defaults = listDefaultCases(shipped, language, category, parent);
         return {
-            caseNames: limits.cases.length > 0 ? limits.cases : defaults,
+            caseNames:
+                (view.settings[`naming.${language}.${category}.cases`] as NamingCase[] | undefined) ?? limits.cases,
             maxChars: limits.max_characters,
             maxWords: limits.max_words,
         };
@@ -96,25 +78,17 @@ function compileBannedWords(
 /**
  * Reads the naming settings of a scope: the shipped lists plus the repository additions, exemptions, and limits.
  *
- * @param input the scope and settings file.
+ * @param settings the authored repository settings.
+ * @param selection the scope, selected configurations, and merged settings.
  * @returns the word lists, exemptions, and limits.
  */
-export function readNamingSettings(
-    input: Pick<CheckInput, 'reads'> & {
-        selection: Pick<CheckInput['selection'], 'view' | 'selected'> & {
-            scope: Pick<CheckInput['selection']['scope'], 'path'>;
-        };
-        settingsFile: Pick<CheckInput['settingsFile'], 'settings'>;
-    },
-): NamingSettings {
+export function readNamingSettings(settings: Settings, selection: ScopeSelection): NamingSettings {
     const {
         view,
         selected: manifests,
         scope: { path: scope },
-    } = input.selection;
-    const settings = input.settingsFile.settings;
-    const reads = input.reads;
-    const shipped = readNamingDefaults(reads);
+    } = selection;
+    const shipped = readNamingDefaults();
     const tables = listApplicableTables(settings, scope).map(({ table }) => table.naming);
     const bannedWords = [...new Set(tables.flatMap((table) => table?.banned_words ?? []))];
     const terms = [
@@ -128,16 +102,12 @@ export function readNamingSettings(
         ...compileBannedWords(bannedWords, { setting: 'naming.banned_words' }),
     ];
     const overrides = [
-        compileOverride({ allowed_names: shipped.allowed_names }, 'shipped allowed names'),
-        ...shipped.override.map((override, index) => compileOverride(override, `shipped rule ${String(index + 1)}`)),
+        compileOverride({ allowed_names: shipped.allowed_names }),
+        ...shipped.override.map((override) => compileOverride(override)),
         ...manifests.flatMap((manifest) =>
-            (manifest.naming?.override ?? []).map((override) =>
-                compileOverride(stripUndefined(override), `the ${manifest.configuration.name} configuration`),
-            ),
+            (manifest.naming?.override ?? []).map((override) => compileOverride(stripUndefined(override))),
         ),
-        ...settings.naming.override.map((override, index) =>
-            compileOverride(override, `[[naming.override]] record ${String(index + 1)}`),
-        ),
+        ...settings.naming.override.map((override) => compileOverride(override)),
     ];
     return {
         bannedWords: terms,
@@ -146,7 +116,7 @@ export function readNamingSettings(
             Object.entries(shipped.reserved).map(([term, categories]) => [term.toLowerCase(), categories]),
         ),
         overrides,
-        limitsFor: buildLimitsFor(shipped, view),
+        limitsFor: buildLimitsFor(view),
         isDigitsAllowed: shipped.allow_digits,
         isRepeatAllowed: shipped.allow_repeated_words,
     };

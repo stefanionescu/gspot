@@ -1,22 +1,22 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { parseJsonFile } from '#cli/parsers/json.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { writeScopeTsconfig } from '#cli/checks/typescript/compiler.ts';
 import { MALFORMED_TSCONFIGS, STRICT_TSCONFIG_TEXT } from '#tests/data/checks/typescript/projects.ts';
 
 test.each(MALFORMED_TSCONFIGS)(
     'a malformed tsconfig.json fails with its path and reason: %s',
     async (content, detail) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'tsconfig.json': content,
-            'gspot.toml': buildSettingsText(['typescript']),
+            'gspot.toml': buildSandboxSettings(['typescript']),
             'source.ts': 'export const value = 1;\n',
         });
+
         const session = await openSession(sandbox.path);
         expect(() =>
             writeScopeTsconfig(session, session.scopes[0]!, join(sandbox.path, '.gspot/state/tsconfig.json')),
@@ -25,15 +25,15 @@ test.each(MALFORMED_TSCONFIGS)(
 );
 
 test('an authored project extends its own compiler options without forcing required options', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], {
             tables: '[[ignore]]\ncheck = "typescript/tsconfig"\nrule = "noImplicitReturns"\nreason = "Returns are checked separately."\n',
             level: 'all',
         }),
         'source.ts': 'export const value = 1;',
         'tsconfig.json': STRICT_TSCONFIG_TEXT,
     });
+
     const session = await openSession(sandbox.path);
     const scope = session.scopes[0]!;
     const path = writeScopeTsconfig(session, scope, join(sandbox.path, '.gspot/state/tsconfig.json'));
@@ -46,9 +46,10 @@ test('an authored project extends its own compiler options without forcing requi
 
 test('projects without tsconfig.json get required options and framework options only in their scope', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['typescript'], {
+        'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
-            tables: '[[ignore]]\ncheck = "typescript/tsconfig"\nrule = "noImplicitReturns"\nreason = "Returns are checked separately."\n[[scope]]\npath = "service"\n\nconfigurations = ["nestjs"]',
+            tables: '[[ignore]]\ncheck = "typescript/tsconfig"\nrule = "noImplicitReturns"\nreason = "Returns are checked separately."\n',
+            scopes: [{ path: 'service', configurations: ['nestjs'] }],
         }),
         'source.ts': 'export const port = 8080;\n',
         'service/source.ts': 'export const port = 3000;\n',

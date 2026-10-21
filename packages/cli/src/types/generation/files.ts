@@ -1,8 +1,8 @@
 import type { Session } from '#cli/types/planning.ts';
-import type { FileEdit } from '#cli/types/ownership.ts';
+import type { FileSettings } from '#cli/types/ownership.ts';
+import { type FileContents } from '#cli/types/system/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
-import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
 import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/ignore-files.ts';
 import type { RUNNERS, LFS_HOOKS, CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { Level, Manifest, ToolDeclaration, ToolFileDeclaration } from '#cli/types/configurations.ts';
@@ -11,29 +11,22 @@ type ManagedBlock = { path: string; block: string; style: BlockStyle };
 
 type SemgrepRule = Record<string, unknown> & { id: string; paths?: { include: string[] } };
 
-/** The repository and resolved scope for building tool files. */
-type GenerationInputs = {
-    session: Session;
-    selection: ScopeSelection;
-};
-
 export type GeneratedFile = {
     path: string;
     content: string;
     executable?: boolean;
-    read?: FileContents;
-    kind?: 'lock' | 'tool_file' | 'tool_project' | 'pointer' | 'hook' | 'workflow' | 'rules';
+    read?: FileContents | undefined;
+    kind?: 'lock' | 'workflow';
 };
 
 export type GenerationResult = {
-    notes: string[];
     files: GeneratedFile[];
     blocks: ManagedBlock[];
-    fileEdits: FileEdit[];
+    fileSettings: FileSettings[];
 };
 
 /** The declaring configuration and the inputs of its scope. */
-export type ToolFileInputs = GenerationInputs & { manifest: Manifest };
+export type ToolFileInputs = { session: Session; selection: ScopeSelection; manifest: Manifest };
 
 /** Generated tool files and the chosen target for each scope and declaration. */
 export type ToolFileGeneration = {
@@ -49,27 +42,7 @@ export type StartRunner = {
     pin: string;
 };
 
-export type PythonInputs = {
-    pythonVenv: string | undefined;
-    pythonScopePath: string;
-    pythonExcludes: (check: string) => string[];
-    ruffRules: string[];
-};
-
-export type ProseInputs = { words: string[] };
-
 export type SemgrepDocument = { rules: SemgrepRule[] };
-
-/** Typos dictionaries, whose values replace each declared word or identifier. */
-export type TyposDictionary = {
-    locale?: string;
-    'extend-glob'?: string[];
-    'extend-identifiers'?: Record<string, string>;
-    'extend-words'?: Record<string, string>;
-};
-
-/** Typos extension tables. */
-export type TyposSettings = { default?: TyposDictionary; type?: Record<string, TyposDictionary> };
 
 export type HookName = (typeof CHECK_HOOKS)[number];
 
@@ -83,14 +56,12 @@ export type NpmProjectInputs = {
     isYarnBerry: boolean;
 };
 
-export type SwiftVersionInput = { root: string; scope: string; reads: ReadCache };
-
 export type WholeToolFile = Extract<ToolFileDeclaration, { source: string }>;
 
 /** The repository, scope, declaration, and destination for one whole tool file. */
 export type ToolFileContext = ToolFileInputs & { targetPath: string; level: Level; toolFile: WholeToolFile };
 
-/** Build a tool file's text from its resolved settings and declaration, including the final newline. */
+/** Build the text of one tool file; buildToolFile adds the header and the final newline. */
 export type ToolFileBuilder = (context: ToolFileContext) => string;
 
 /** A tool and the generated destinations that can replace its package fields. */

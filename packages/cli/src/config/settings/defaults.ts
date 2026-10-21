@@ -19,42 +19,8 @@ export const OPENNEXT_TYPE_DEFAULTS = {
     'cloudflare.types_interface': 'CloudflareEnv',
 } as const;
 
-export const SETTING_DEFAULTS = {
-    file_lines: 300,
-    function_lines: 60,
-    function_parameters: 7,
-    function_statements: 30,
-    block_nesting: 3,
-    callback_nesting: 3,
-    cognitive_complexity: 8,
-    cyclomatic_complexity: 8,
-    function_branches: 8,
-    function_returns: 4,
-    function_assignments: 8,
-    closure_lines: 60,
-    type_lines: 300,
-    index_exports: 20,
-    trivial_function_statements: 2,
-    shared_prefix_files: 2,
-    max_file_kilobytes: 1024,
-    max_sentence_words: 30,
-    max_list_item_words: 45,
-    max_paragraph_sentences: 6,
-    min_lines: 8,
-    min_tokens: 40,
-    min_release_age_days: 7,
-    percentage_maximum: 100,
-    indent_width: 4,
-    print_width: 120,
-    max_characters: 35,
-    max_words: 4,
-    minProperties: 2,
-    tool_timeout_seconds: 600,
-} as const;
-
 /** Settings whose default comes from project files, which the settings writer cannot read. */
 export const DETECTED_SETTINGS = [
-    'openapi.document',
     'site.build_command',
     'swift.xcode_destination',
     'cloudflare.types_file',

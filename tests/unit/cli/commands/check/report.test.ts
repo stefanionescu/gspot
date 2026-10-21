@@ -1,66 +1,68 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/git.ts';
-import { testdir, createFileTree } from 'testdirs';
-import { stringify } from '@decimalturn/toml-patch';
 import { stripVTControlCharacters } from 'node:util';
+import { readFile, writeFile } from 'node:fs/promises';
 import { type RunReport } from '#cli/types/runs/check.ts';
 import { setOutputOptions } from '#cli/system/terminal.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { PROGRESS_CLEAR, FINDINGS_SHOWN } from '#cli/config/terminal.ts';
-import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
+import { clearProgress, printProgress, formatRunReport } from '#cli/commands/check/report.ts';
 
 import {
-    VERBOSITY_CASES,
+    VERBOSITY_FILES,
     NO_COLOR_SETTINGS,
     FAILED_CHECK_REPORT,
     VERBOSITY_ARGUMENTS,
-    CHECK_REPORT_STATUSES,
     CHECK_REPORT_COMPARISONS,
 } from '#tests/data/commands/check.ts';
 
-test.each([...VERBOSITY_CASES])(
-    'check --verbose prints every finding and command while --json keeps every finding',
-    async ({ flags, verbosity }) => {
-        await using sandbox = await testdir();
-        const checks = [
-            { name: 'example/findings', command: [process.execPath, 'findings.ts'], output: { format: 'lines' } },
-            { name: 'example/passing', command: [process.execPath, '-e', 'process.exitCode=0;'] },
-        ].map((check) => ({ ...check, paths: ['source.txt'], stage: 'commit' }));
-        await createFileTree(sandbox.path, {
-            'gspot.toml': stringify({ configurations: [], command_check: checks }),
-            'source.txt': 'before',
-            'findings.ts': 'process.stdout.write(await Bun.file("findings.txt").text()); process.exitCode=1;',
-            'findings.txt':
-                Array.from({ length: FINDINGS_SHOWN + 1 }, (_, index) => `finding ${String(index + 1)}.`).join('\n') +
-                '\n',
-        });
-        commitAll(sandbox.path);
-        await Bun.write(join(sandbox.path, 'source.txt'), 'after');
-        const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS, ...flags]);
-        expect(result.code, result.stdout + result.stderr).toBe(1);
-        expect(result.stderr).toBe('');
-        expect(result.stdout.includes('example/passing')).toBe(verbosity === 'verbose');
-        expect(result.stdout.includes('Checked the files changed since HEAD.')).toBe(true);
-        expect(result.stdout.includes(`finding ${String(FINDINGS_SHOWN + 1)}.`)).toBe(verbosity === 'verbose');
-        expect(result.stdout.includes('and 1 more')).toBe(verbosity !== 'verbose');
-        expect(result.stdout.includes('$ ')).toBe(verbosity === 'verbose');
-        const json = await checkReport(sandbox.path, [...VERBOSITY_ARGUMENTS, '--json', ...flags]);
-        expect(json.code, json.stdout + json.stderr).toBe(1);
-        const report = json.report;
-        expect(report.checks.find((check) => check.check === 'example/findings')?.findings).toHaveLength(
-            FINDINGS_SHOWN + 1,
-        );
-        expect(report.checks.find((check) => check.check === 'example/passing')?.status).toBe('passed');
-        expect(json.stderr).toBe('');
-        await Bun.write(join(sandbox.path, 'findings.ts'), 'process.exitCode=0;');
-        const repaired = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS, ...flags]);
-        expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
-        expect(repaired.stderr.split('\n').filter((line) => line.startsWith('root  example/'))).toStrictEqual([]);
-        expect(await Bun.file(join(sandbox.path, 'source.txt')).text()).toBe('after');
-    },
-);
+async function assertReportRepair(root: string, commandArguments: readonly string[]): Promise<void> {
+    const json = parseCheckReport(await runGspot(root, [...commandArguments, '--json']));
+    expect(json.code, json.stdout + json.stderr).toBe(1);
+    const report = json.report;
+    expect(report.checks.find((check) => check.check === 'example/findings')?.findings).toHaveLength(
+        FINDINGS_SHOWN + 1,
+    );
+    expect(report.checks.find((check) => check.check === 'example/passing')?.status).toBe('passed');
+    expect(json.stderr).toBe('');
+    await writeFile(join(root, 'findings.ts'), 'process.exitCode=0;');
+    const repaired = await runGspot(root, [...commandArguments]);
+    expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
+    expect(await readFile(join(root, 'source.txt'), 'utf8')).toBe('after');
+}
+
+test('check prints the first findings and the count of the rest, and --json keeps every finding', async () => {
+    await using sandbox = await testdir(VERBOSITY_FILES);
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'source.txt'), 'after');
+    const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS]);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(result.stderr).toBe('');
+    expect(result.stdout.includes('example/passing')).toBe(false);
+    expect(result.stdout.includes('Checked the files changed since HEAD.')).toBe(true);
+    expect(result.stdout.includes(`finding ${String(FINDINGS_SHOWN + 1)}.`)).toBe(false);
+    expect(result.stdout.includes('and 1 more')).toBe(true);
+    expect(result.stdout.includes('$ ')).toBe(false);
+    await assertReportRepair(sandbox.path, VERBOSITY_ARGUMENTS);
+});
+
+test('check --verbose prints every finding and the command, and --json keeps every finding', async () => {
+    await using sandbox = await testdir(VERBOSITY_FILES);
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'source.txt'), 'after');
+    const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(result.stderr).toBe('');
+    expect(result.stdout.includes('example/passing')).toBe(true);
+    expect(result.stdout.includes('Checked the files changed since HEAD.')).toBe(true);
+    expect(result.stdout.includes(`finding ${String(FINDINGS_SHOWN + 1)}.`)).toBe(true);
+    expect(result.stdout.includes('and 1 more')).toBe(false);
+    expect(result.stdout.includes('$ ')).toBe(true);
+    await assertReportRepair(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
+});
 
 test('skipped checks do not count as passed, and an empty canceled run is incomplete', () => {
     const skipped: RunReport = {
@@ -95,6 +97,7 @@ test('one line per check, the findings with a help line, the reproduce lines and
     expect(text).toContain('  a.sh:4:3  SC2086  Double quote to prevent globbing.');
     expect(text).toContain('  help: Quote it.');
     expect(text).toContain('  run again: gspot check --only bash/shellcheck');
+    expect(text.split('run again: gspot check --only bash/shellcheck')).toHaveLength(2);
     expect(text).toContain('api  format/prettier  missing  prettier is not installed. Run: mise install');
     expect(text).toContain('ignores    1 (printed with --verbose)');
     expect(text).toEndWith(
@@ -102,11 +105,11 @@ test('one line per check, the findings with a help line, the reproduce lines and
     );
 });
 
-test('--verbose prints ignores with their reasons', () => {
-    expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).not.toContain('bash/shfmt');
-    expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: true })).toContain(
-        'ignore     bash/shellcheck SC2312  why  (1 matched)',
-    );
+test('only --verbose prints each ignore with its reason', () => {
+    const text = stripVTControlCharacters(formatRunReport(FAILED_CHECK_REPORT, { verbose: true }));
+    expect(text.split('\n').filter((line) => line.startsWith('ignore     '))).toStrictEqual([
+        'ignore     bash/shellcheck SC2312  why',
+    ]);
 });
 
 test('findings that share a help print it once, after the last of them', () => {
@@ -153,19 +156,16 @@ test.each([...CHECK_REPORT_COMPARISONS])('the report names $content comparisons'
 test('the report prints planned skips once with their reason only in verbose output', () => {
     const skipped: RunReport = {
         ...FAILED_CHECK_REPORT,
-        checks: [{ ...FAILED_CHECK_REPORT.checks[0], status: 'skipped', note: 'disabled', findings: [] }],
-        skips: [{ check: 'bash/shellcheck', cause: 'condition' }],
+        checks: [
+            { ...FAILED_CHECK_REPORT.checks[0], status: 'skipped', cause: 'condition', note: 'disabled', findings: [] },
+        ],
     };
+    expect(skipped.checks[0]?.cause).toBe('condition');
+    expect(skipped).not.toHaveProperty('skips');
     expect(formatRunReport(skipped, { verbose: false })).not.toContain('bash/shellcheck');
     expect(formatRunReport(skipped, { verbose: true }).split('bash/shellcheck  skipped')).toHaveLength(2);
     expect(formatRunReport(skipped, { verbose: true })).toContain('skipped  disabled');
     expect(formatRunReport(skipped, { verbose: false })).toContain('Skipped: 1 check.');
-});
-
-test('a failed report prints each reproduce line once and no hook bypass', () => {
-    const text = formatRunReport(FAILED_CHECK_REPORT, { verbose: false });
-    expect(text.split('run again: gspot check --only bash/shellcheck')).toHaveLength(2);
-    expect(text).not.toContain('--no-verify');
 });
 
 test('terminal progress rewrites one status line and log output stays empty', () => {
@@ -195,12 +195,13 @@ test('terminal progress rewrites one status line and log output stays empty', ()
             lines.push(String(chunk));
             return true;
         };
-        for (const [index] of CHECK_REPORT_STATUSES.entries())
-            printProgress({ completed: index + 1, total: CHECK_REPORT_STATUSES.length, comparison: undefined });
-        printProgress(undefined);
+        for (let index = 0; index < 5; index++)
+            printProgress({ completed: index + 1, total: 5, comparison: undefined });
+        clearProgress();
     }
     expect(terminal).toStrictEqual([
-        ...CHECK_REPORT_STATUSES.map(
+        ...Array.from(
+            { length: 5 },
             (_, index) => `\r\u001B[2KChecking the working tree: ${String(index + 1)} of 5 checks done`,
         ),
         '\r\u001B[2K',
@@ -209,8 +210,8 @@ test('terminal progress rewrites one status line and log output stays empty', ()
 });
 
 test('NO_COLOR prints findings without color on terminal streams', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': NO_COLOR_SETTINGS });
+    await using sandbox = await testdir({ 'gspot.toml': NO_COLOR_SETTINGS });
+
     using resources = new DisposableStack();
     for (const stream of [process.stdout, process.stderr]) {
         const original = Object.getOwnPropertyDescriptor(stream, 'isTTY');
@@ -241,7 +242,6 @@ test.each([
         comparison: { content: 'index', reference: 'staged' },
         checks: [],
         ignores: [],
-        skips: [],
         failed: [],
         unstagedChanges: count,
         duration: 0,

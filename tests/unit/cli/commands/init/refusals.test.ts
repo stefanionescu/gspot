@@ -1,20 +1,21 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { commitAll } from '#tests/setup/git.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { matchSubstring } from '#tests/setup/matchers.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { GIT_PLAN_CASES } from '#tests/data/commands/init.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+    await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--configurations', 'bassh']);
@@ -24,29 +25,31 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
 });
 
 test('init refuses an unreadable package.json before writing', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'package.json': '{', 'source.ts': 'export {};\n' });
+    await using sandbox = await testdir({ 'package.json': '{', 'source.ts': 'export {};\n' });
+
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, buildInitArguments([]));
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout).toBe('');
-    expect(result.stderr).toBe('package.json is not valid JSON. Fix the file.\n');
+    expect(result.stderr).toBe(
+        'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.\n',
+    );
     const structured = await runGspot(sandbox.path, [...buildInitArguments([]), '--json']);
     expect(structured.code).toBe(2);
     expect(structured.stderr).toBe('');
     expect(JSON.parse(structured.stdout)).toStrictEqual({
         error: 'filesystem',
-        message: 'package.json is not valid JSON. Fix the file.',
+        message: 'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('init in a repository that already has gspot.toml exits 2 and changes nothing', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'configurations = ["bash"]\n',
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { rules: true }),
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
     });
+
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
@@ -59,8 +62,8 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
 });
 
 test('init --json without --yes names --yes before reading the repository', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'package.json': '{' });
+    await using sandbox = await testdir({ 'package.json': '{' });
+
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code).toBe(2);
@@ -70,8 +73,8 @@ test('init --json without --yes names --yes before reading the repository', asyn
 });
 
 test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that apply', async ({ hasGit }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'control.txt': 'preserve this source\n' });
+    await using sandbox = await testdir({ 'control.txt': 'preserve this source\n' });
+
     if (hasGit) commitAll(sandbox.path);
     const commandArguments = [...buildInitArguments([], { json: true }), '--no-configurations'];
     const before = await readTree(sandbox.path);
@@ -83,18 +86,18 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     expect(changes.has('.gitignore')).toBe(hasGit);
     expect(changes.has('.gspot/hooks')).toBe(hasGit);
     expect(changes.has('.gitattributes')).toBe(hasGit);
-    expect(parseSettings(report.settings, undefined, createReadCache(process.cwd())).hooks).toBeDefined();
+    expect(parseSettings(report.settings, undefined).hooks).toBeDefined();
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const initialized = await runGspot(sandbox.path, commandArguments);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, '.gitignore'))).toBe(hasGit);
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(hasGit);
-    expect(await Bun.file(join(sandbox.path, 'control.txt')).text()).toBe('preserve this source\n');
+    expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe('preserve this source\n');
 });
 
 test('init without a terminal names --yes once and writes only after --yes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'control.txt': 'preserve this source\n' });
+    await using sandbox = await testdir({ 'control.txt': 'preserve this source\n' });
+
     const commandArguments = buildInitArguments([]).filter((argument) => argument !== '--yes');
     const before = await readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, commandArguments);
@@ -104,5 +107,5 @@ test('init without a terminal names --yes once and writes only after --yes', asy
     const accepted = await runGspot(sandbox.path, [...commandArguments, '--yes']);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
-    expect(await Bun.file(join(sandbox.path, 'control.txt')).text()).toBe('preserve this source\n');
+    expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe('preserve this source\n');
 });

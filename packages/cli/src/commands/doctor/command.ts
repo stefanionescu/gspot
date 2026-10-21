@@ -6,15 +6,16 @@ import { getColors } from '#cli/system/terminal.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Session } from '#cli/types/planning.ts';
 import { readHookStatus } from '#cli/install/hooks.ts';
+import { getMiseBinPaths } from '#cli/tools/locate.ts';
 import { EXIT_FINDINGS } from '#cli/config/terminal.ts';
-import { listHookNames } from '#cli/generation/hooks.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { readVersionPin } from '#cli/repository/version.ts';
 import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
 import { listSubmodulePaths } from '#cli/repository/tracked.ts';
-import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { AVAILABLE_TOOL_STATES } from '#cli/config/tools/find.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/configurations/tools.ts';
@@ -83,24 +84,22 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
     // The session leaves out a tool with no build for this system, so its checks skip here.
     const inspections = new Map<string, ToolInspection>();
     const pins = listDistinctTools(session.neededToolManifests).filter(
-        (tool) => findMissingBuild(tool, platform, process.arch) === undefined,
+        (tool) => findMissingBuild(tool, { platform: platform, arch: process.arch }) === undefined,
     );
     for (const { scope, selected } of session.scopes) {
         const declared = new Set(selected.flatMap((manifest) => manifest.tools).map((tool) => tool.name));
         for (const tool of pins.filter((pin) => declared.has(pin.name))) {
-            const inspection = inspectTool({ ...session, cwd: join(session.root, scope.path) }, tool);
+            const inspection = inspectTool(
+                { ...session, cwd: join(session.root, scope.path), miseBinPaths: getMiseBinPaths(session) },
+                tool,
+            );
             inspections.set(`${tool.name}\0${scope.path}`, inspection);
         }
     }
     const tools = [...inspections.values()].toSorted((left, right) => left.name.localeCompare(right.name));
     const { settings } = session.settingsFile;
-    const hooks = readHookStatus({
-        settings: session.settingsFile.settings,
-        repository: session.repository,
-        runner: session.startRunner,
-        hooks: listHookNames(session.configuredChecks),
-    });
-    const isBroken = [!hooks.ready, tools.some((tool) => !isToolAvailable(tool))].includes(true);
+    const hooks = readHookStatus(session, session.repository);
+    const isBroken = !hooks.ready || tools.some((tool) => !isToolAvailable(tool));
     return {
         submodules: listSubmodulePaths(session.repository.index),
         tools,
@@ -109,7 +108,7 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
         ci: settings.ci?.enabled === true ? CI_FILE_LABELS[settings.ci.provider] : 'none',
         ruleFiles: selectRuleFiles(session).length,
         version: {
-            running: session.version,
+            running: packageManifest.version,
             ...(pinned === undefined ? {} : { pinned }),
         },
         exitCode: isBroken ? EXIT_FINDINGS : 0,

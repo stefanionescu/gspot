@@ -1,28 +1,28 @@
-import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import { getTable } from '#cli/settings/scope-view.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
+import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
-import { MIGRATION_DOWN } from '#cli/config/checks/postgres.ts';
-import { readMigrations } from '#cli/checks/postgres/migrations.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { selectFrozenMigrations } from '#cli/parsers/sql/migrations.ts';
-import { FROZEN_NONE, MIGRATION_SYNTAX_SKIP } from '#cli/config/parsers/sql.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { readBlobs, listHeadEntries } from '#cli/repository/revisions/tree-entries.ts';
+import { readMigrations, stripDownSection, readParsedMigrations } from '#cli/checks/postgres/migrations.ts';
 
 const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
-async function readCommittedMigrations(input: CheckInput, paths: string[]): Promise<Map<string, string>> {
-    return getCachedMapValue(input.reads, COMMITTED_MIGRATIONS_MEMO, JSON.stringify(paths), async () => {
-        if (!input.hasGit) return new Map<string, string>();
-        const committed = await listHeadEntries(input.root, input.cancelSignal);
+async function readCommittedMigrations(session: Session, paths: string[]): Promise<Map<string, string>> {
+    return getCachedMapValue(session.reads, COMMITTED_MIGRATIONS_MEMO, JSON.stringify(paths), async () => {
+        if (!session.repository.hasGit) return new Map<string, string>();
+        const committed = await listHeadEntries(session.root, session.cancelSignal);
         const selected = new Set(paths);
         const entries = committed.filter(
             (entry) => selected.has(entry.path) && entry.mode !== SYMLINK_MODE && entry.mode !== GITLINK_MODE,
         );
         const blobs = await readBlobs(
-            input.root,
+            session.root,
             entries.map((entry) => entry.hash),
-            input.cancelSignal,
+            session.cancelSignal,
         );
         return new Map(
             entries.map((entry, index) => {
@@ -36,11 +36,12 @@ async function readCommittedMigrations(input: CheckInput, paths: string[]): Prom
 /**
  * Reports a version that two files share, a file with no version, and a new file that sorts before a committed one.
  *
- * @param input the scope whose migrations to compare with the last commit.
+ * @param session the repository and its tools.
+ * @param planned the scope whose migrations to compare with the last commit.
  * @returns the findings.
  */
-export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Finding[]> {
-    const { migrations, findings: syntax } = await readMigrations(input);
+export async function checkPostgresMigrationOrder(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const { migrations, findings: syntax } = await readMigrations(session, planned);
     if (syntax.length > 0) return syntax;
     const findings: Finding[] = [];
     const seen = new Map<string, string>();
@@ -48,7 +49,7 @@ export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Fi
         if (migration.version === '')
             findings.push(
                 buildFinding(
-                    input,
+                    planned,
                     { file: migration.path, line: 1 },
                     'version',
                     'The file name starts with no version number.',
@@ -58,7 +59,7 @@ export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Fi
         if (earlier !== undefined && migration.version !== '')
             findings.push(
                 buildFinding(
-                    input,
+                    planned,
                     { file: migration.path, line: 1 },
                     'duplicate-version',
                     `${earlier} already has the version ${migration.version}.`,
@@ -67,7 +68,7 @@ export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Fi
         seen.set(migration.version, migration.name);
     }
     const texts = await readCommittedMigrations(
-        input,
+        session,
         migrations.map((migration) => migration.path),
     );
     const committed = migrations.filter((migration) => texts.has(migration.path));
@@ -84,7 +85,7 @@ export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Fi
         ...findings,
         ...late.map((migration) =>
             buildFinding(
-                input,
+                planned,
                 { file: migration.path, line: 1 },
                 'order',
                 `A new migration sorts before ${newest.name}, which is already committed.`,
@@ -96,16 +97,16 @@ export async function checkPostgresMigrationOrder(input: CheckInput): Promise<Fi
 /**
  * Reports each migration at or before postgres.frozen_through whose text differs from the committed text.
  *
- * @param input the scope whose migrations to compare with the last commit.
+ * @param session the repository and its tools.
+ * @param planned the scope whose migrations to compare with the last commit.
  * @returns the findings.
  */
-export async function checkPostgresEditedMigrations(input: CheckInput): Promise<Finding[]> {
-    const through = input.selection.view.options('postgres')['frozen_through'];
+export async function checkPostgresEditedMigrations(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const through = getTable(planned.selection.view, 'postgres')['frozen_through'];
     if (through === FROZEN_NONE) return [];
-    const { migrations, findings: syntax } = await readMigrations(input);
-    if (syntax.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
+    const migrations = await readParsedMigrations(session, planned);
     const texts = await readCommittedMigrations(
-        input,
+        session,
         migrations.map((migration) => migration.path),
     );
     const frozen = selectFrozenMigrations(
@@ -116,10 +117,10 @@ export async function checkPostgresEditedMigrations(input: CheckInput): Promise<
         .filter((migration) => frozen.has(migration.path))
         .flatMap((migration): Finding[] => {
             const committed = texts.get(migration.path);
-            if (committed === undefined || (committed.split(MIGRATION_DOWN, 1)[0] ?? '') === migration.text) return [];
+            if (committed === undefined || stripDownSection(committed) === migration.text) return [];
             return [
                 buildFinding(
-                    input,
+                    planned,
                     { file: migration.path, line: 1 },
                     'frozen',
                     'This migration is at or before postgres.frozen_through and differs from its committed text. Restore it and write a new migration.',

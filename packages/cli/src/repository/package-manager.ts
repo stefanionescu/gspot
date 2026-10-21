@@ -1,36 +1,41 @@
 // Read and select the repository package manager.
-import { z } from 'zod';
 import semver from 'semver';
 import { join, dirname } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { VERSION_FLAG } from '#cli/config/tools/run.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
+import { RUNNERS } from '#cli/config/generation/hooks.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
+import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
+import type { StartRunner } from '#cli/types/generation/files.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { detectPackageManager as detectNypmPackageManager } from 'nypm';
-import { NPM_PROGRAM, NYPM_DETECTION_OPTIONS } from '#cli/config/tools/npm.ts';
+import { type MemoKey, type ReadCache } from '#cli/types/system/files.ts';
+import type { PackageManagerField } from '#cli/types/repository/package-manager.ts';
+import { NPM_PROGRAM, NYPM_DETECTION_OPTIONS, MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/tools/npm.ts';
+import { PACKAGE_JSON, YARN_BERRY_MAJOR, PACKAGE_MANAGER_HASH_SUFFIX } from '#cli/config/parsers/dependencies.ts';
+import { packageManagerSchema, packageManagerDeclarationSchema } from '#cli/schemas/repository/package-manager.ts';
 
 import {
     type PackageJson,
     type PackageManager,
     type PackageManagerDeclaration,
-} from '#cli/types/parsers/dependency-files.ts';
-import {
-    PACKAGE_JSON,
-    PACKAGE_MANAGERS,
-    YARN_BERRY_MAJOR,
-    PACKAGE_MANAGER_HASH_SUFFIX,
-} from '#cli/config/parsers/dependency-files.ts';
+} from '#cli/types/parsers/dependencies.ts';
 
-type PackageManagerField = PackageManagerDeclaration & { declared: string; field: string };
+const packageManagerVersions: MemoKey<Map<string, PackageManager>> = { create: () => new Map() };
 
-const exactVersionSchema = z
-    .string()
-    .refine(
-        (value) => semver.valid(value) !== null,
-        'Package manager version must be exact.',
-    ) satisfies z.ZodType<string>;
+/**
+ * Refuse a tool-project operation when the session selects no package manager.
+ *
+ * @param declaration the package manager selected by the session.
+ * @returns the declared or detected package manager.
+ * @throws when the session has no package manager for a tool project.
+ */
+function assertPackageManager(declaration: PackageManagerDeclaration | undefined): PackageManagerDeclaration {
+    if (declaration === undefined) throw new GspotError('installation', MISSING_PACKAGE_MANAGER_MESSAGE);
+    return declaration;
+}
 
 /**
  * Split a packageManager field such as `npm@11.17.0+sha512.abc` into a name and a version.
@@ -61,16 +66,6 @@ async function detectPackageManager(
     return { name: NPM_PROGRAM, version: undefined };
 }
 
-/** The authored package manager declaration, before install validates its version. */
-const packageManagerDeclarationSchema = z.strictObject({
-    name: z.enum(PACKAGE_MANAGERS),
-    version: z.string().optional(),
-} satisfies SchemaShape<PackageManagerDeclaration>) satisfies z.ZodType<PackageManagerDeclaration>;
-
-const packageManagerSchema = packageManagerDeclarationSchema.extend({
-    version: exactVersionSchema,
-}) satisfies z.ZodType<PackageManager>;
-
 /**
  * Check whether the package manager runs Yarn Berry, which has its own settings and install arguments.
  *
@@ -86,7 +81,7 @@ function isYarnBerry(packageManager: PackageManager): boolean {
  * Read the package manager declaration, before its version gets validated.
  *
  * @param packageJson the validated package.json.
- * @returns packageManager first, then the first devEngines declaration, or no declaration.
+ * @returns the declaration with its raw text and field, or no declaration.
  */
 function readPackageManagerDeclaration(packageJson: PackageJson): PackageManagerField | undefined {
     if (packageJson.packageManager !== undefined)
@@ -122,7 +117,7 @@ async function selectPackageManager(
     const candidates = [
         PACKAGE_JSON,
         ...trackedPaths
-            .filter((path) => path.endsWith('/package.json') && !isInGspotFolder(path))
+            .filter((path) => path.endsWith(`/${PACKAGE_JSON}`) && !isInGspotFolder(path))
             .toSorted((left, right) => left.localeCompare(right))
             .slice(0, 1),
     ];
@@ -145,6 +140,7 @@ async function selectPackageManager(
  * @param repositoryRoot the working folder used when querying an undeclared version.
  * @param packageManager the declared or detected name and version.
  * @param timeoutSeconds the limit for the version query.
+ * @param reads the run cache that owns the resolved version.
  *
  * @returns the name and version requirement used by the tool project.
  */
@@ -152,15 +148,38 @@ function readPackageManagerVersion(
     repositoryRoot: string,
     packageManager: PackageManagerDeclaration,
     timeoutSeconds: number,
+    reads: ReadCache,
 ): PackageManager {
-    const { name, version } = packageManager;
-    if (version !== undefined) return { name, version };
-    const result = spawnProcessBlocking([name, VERSION_FLAG], {
-        cwd: repositoryRoot,
-        timeoutSeconds: timeoutSeconds,
+    const key = JSON.stringify([repositoryRoot, packageManager.name, packageManager.version]);
+    return getCachedMapValue(reads, packageManagerVersions, key, () => {
+        const { name, version } = packageManager;
+        if (version !== undefined) return { name, version };
+        const result = spawnProcessBlocking([name, VERSION_FLAG], {
+            cwd: repositoryRoot,
+            timeoutSeconds,
+        });
+        if (result.code !== 0)
+            throw new GspotError('tool', `Cannot determine the ${name} version for the tool project.`);
+        return packageManagerSchema.parse({ name, version: result.stdout.trim() });
     });
-    if (result.code !== 0) throw new GspotError('tool', `Cannot determine the ${name} version for the tool project.`);
-    return packageManagerSchema.parse({ name, version: result.stdout.trim() });
 }
 
-export { isYarnBerry, selectPackageManager, readPackageManagerVersion };
+/**
+ * Select the runner from the root gspot dependency.
+ *
+ * @param repositoryRoot the folder whose package.json decides the runner.
+ *
+ * @returns the runner of the package manager, or mise when gspot has no root npm dependency.
+ */
+async function selectRunner(repositoryRoot: string): Promise<StartRunner> {
+    const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
+    const hasDependency =
+        packageJson?.dependencies?.[packageManifest.name] !== undefined ||
+        packageJson?.devDependencies?.[packageManifest.name] !== undefined;
+    const packageManager = hasDependency ? await selectPackageManager(repositoryRoot, []) : undefined;
+    const name = packageManager === undefined ? 'mise' : packageManager.name;
+    const runner = RUNNERS[name];
+    return { name, ...runner, pin: runner.pin.replace('<package>', packageManifest.name) };
+}
+
+export { isYarnBerry, selectRunner, assertPackageManager, selectPackageManager, readPackageManagerVersion };

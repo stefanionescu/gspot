@@ -3,13 +3,12 @@ import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { parseSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { formatSettingsText } from '#cli/settings/write/text.ts';
-import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
+import { parseTomlText, isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
 import { isRecord, getValueAt, createTable, normalizeTables } from '#cli/system/values.ts';
-import type { Mutation, SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
+import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 
 function splitKey(key: string): SettingKey {
     const boundary = key.lastIndexOf('.');
@@ -21,16 +20,13 @@ function splitKey(key: string): SettingKey {
  *
  * @param repositoryRoot the folder against which the edited scope paths resolve.
  * @param input the settings read before the edit.
- * @param mutate the change applied once.
  * @returns the edited settings.
  */
-function updateSettings(repositoryRoot: string, input: SettingsEdit, mutate: Mutation): EditedSettings {
-    const { text, table, values } = input;
-    const reads = createReadCache(repositoryRoot);
-    mutate(table);
-    parseSettings(stringify(table), repositoryRoot, reads);
-    const next = isDeepStrictEqual(structuredClone(table), values) ? text : formatSettingsText(text, table);
-    const settings = parseSettings(next, repositoryRoot, reads);
+function updateSettings(repositoryRoot: string, input: SettingsEdit): EditedSettings {
+    const { text, table } = input;
+    parseSettings(stringify(table), repositoryRoot);
+    const next = isDeepStrictEqual(table, parseTomlText(text, SETTINGS_FILE)) ? text : formatSettingsText(text, table);
+    const settings = parseSettings(next, repositoryRoot);
     return { text: next, settings, changed: next !== text };
 }
 
@@ -90,13 +86,7 @@ function addToList(document: TomlTable, key: string, entries: unknown[]): void {
     const list = [...existing];
     for (const entry of entries) {
         const value = normalizeTables(entry);
-        const previous = list.find((item) =>
-            isRecord(value) && Array.isArray(value['paths'])
-                ? isRecord(item) && isDeepStrictEqual(item['paths'], value['paths'])
-                : isDeepStrictEqual(item, value),
-        );
-        if (isRecord(previous) && isRecord(value)) Object.assign(previous, value);
-        else if (previous === undefined) list.push(value);
+        if (!list.some((item) => isDeepStrictEqual(item, value))) list.push(value);
     }
     table[name] = replaceWrittenValue(written, list);
 }
@@ -168,8 +158,8 @@ function findScopeTable(written: TomlTable, scope: string | undefined): TomlTabl
  */
 function readSettingsEdit(repositoryRoot: string): SettingsEdit {
     const { text, original } = readSettingsFile(repositoryRoot);
-    const table = parseTomlText(text, SETTINGS_FILE, 'settings');
-    return { text, table, values: structuredClone(table), original };
+    const table = parseTomlText(text, SETTINGS_FILE);
+    return { text, table, original };
 }
 
 /**
@@ -179,7 +169,7 @@ function readSettingsEdit(repositoryRoot: string): SettingsEdit {
  * @returns the value that a settings edit changes.
  */
 function getWrittenValue(written: unknown): unknown {
-    if (isRecord(written) && Object.hasOwn(written, 'value')) return written['value'];
+    if (isReasonedValue(written)) return written.value;
     return written;
 }
 
@@ -191,7 +181,7 @@ function getWrittenValue(written: unknown): unknown {
  * @returns the replacement in the same written form.
  */
 function replaceWrittenValue(written: unknown, value: unknown): unknown {
-    if (isRecord(written) && Object.hasOwn(written, 'value')) return { ...written, value };
+    if (isReasonedValue(written)) return { ...written, value };
     return value;
 }
 

@@ -8,7 +8,7 @@ import {
 } from '#cli/config/system/locations.ts';
 
 // The paths the job caches between runs: the package caches and the installed tools.
-const CACHED_PATHS = [
+export const CACHED_PATHS = [
     '~/.npm/_cacache',
     '~/.bun/install/cache',
     '~/.cache/uv',
@@ -18,16 +18,13 @@ const CACHED_PATHS = [
     '~/.yarn/berry/cache',
 ] as const;
 
-const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
+export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
 
-const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
-
-/** The GitLab include named in initialization and doctor. */
-const GITLAB_INCLUDE_LABEL = `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)`;
+export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
 
 /** Shared pins for generation, installation, downloads, and maintenance checks. */
-const CI_PINS = {
-    mise: { name: 'jdx/mise', version: '2026.10.7' },
+export const CI_PINS = {
+    mise: { version: '2026.10.7' },
     actions: {
         checkout: {
             name: 'actions/checkout',
@@ -53,21 +50,23 @@ const CI_PINS = {
 } as const;
 
 /** Generated CI jobs use one provider-independent time limit. */
-const CI_TIMEOUT_MINUTES = 60;
+export const CI_TIMEOUT_MINUTES = 60;
 
-const CI_FILE_LABELS = { github: GITHUB_WORKFLOW, gitlab: GITLAB_INCLUDE_LABEL } as const;
+export const CI_FILE_LABELS = {
+    github: GITHUB_WORKFLOW,
+    gitlab: `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)`,
+} as const;
 
 /** Git sends these all-zero object names for new branches. */
-const ZERO_SHAS = [
+export const ZERO_SHAS = [
     '0000000000000000000000000000000000000000',
     '0000000000000000000000000000000000000000000000000000000000000000',
 ] as const;
 
-const SWIFT_CONFIGURATION = 'swift';
 // mise reads this token to download release builds from GitHub above the anonymous rate limit.
-const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: '${{ github.token }}' } as const;
-const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
-const CI_CACHE_FILES = [
+export const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: '${{ github.token }}' } as const;
+export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
+export const CI_CACHE_FILES = [
     SETTINGS_FILE,
     NPM_TOOL_PROJECT_FILE,
     `${DOT_GSPOT}/*lock*`,
@@ -75,46 +74,24 @@ const CI_CACHE_FILES = [
     MISE_TOOL_PROJECT_FILE,
     VERSION_PIN_FILE,
 ] as const;
-const CHECKOUT_OPTIONS = { 'fetch-depth': 0, 'persist-credentials': false } as const;
-const GITHUB_BASE_EXPRESSION =
+export const CHECKOUT_OPTIONS = { 'fetch-depth': 0, 'persist-credentials': false } as const;
+export const GITHUB_BASE_EXPRESSION =
     "${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}";
-const GITHUB_MANUAL_CONDITION =
+export const GITHUB_MANUAL_CONDITION =
     "github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)";
-const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
-const GITHUB_CONCURRENCY = {
+export const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
+export const GITHUB_CONCURRENCY = {
     group: "${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}",
     'cancel-in-progress': "${{ github.event_name == 'pull_request' }}",
 } as const;
-const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-\${CI_COMMIT_BEFORE_SHA:-}}"`;
-const GITLAB_RULES = [
+export const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-\${CI_COMMIT_BEFORE_SHA:-}}"`;
+export const GITLAB_RULES = [
     { if: '$CI_PIPELINE_SOURCE == "merge_request_event"', interruptible: true },
     { if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH', interruptible: false },
 ] as const;
 
-const GITLAB_MANUAL_CONDITION =
+export const GITLAB_MANUAL_CONDITION =
     '[ "${CI_PIPELINE_SOURCE:-}" = "push" ] && [ "${CI_COMMIT_BRANCH:-}" = "${CI_DEFAULT_BRANCH:-}" ]';
-
-export {
-    CI_PINS,
-    ZERO_SHAS,
-    CACHED_PATHS,
-    GITLAB_RULES,
-    GITHUB_EVENTS,
-    CI_FILE_LABELS,
-    CI_CACHE_FILES,
-    GITHUB_WORKFLOW,
-    GITLAB_WORKFLOW,
-    CI_BASE_VARIABLE,
-    CHECKOUT_OPTIONS,
-    GITLAB_BASE_LINE,
-    CI_TIMEOUT_MINUTES,
-    GITHUB_CONCURRENCY,
-    SWIFT_CONFIGURATION,
-    MISE_TOKEN_ENVIRONMENT,
-    GITHUB_BASE_EXPRESSION,
-    GITHUB_MANUAL_CONDITION,
-    GITLAB_MANUAL_CONDITION,
-};
 
 export const CI_NODE = 'node@24';
 export const CI_STEP_NAMES = {
@@ -127,8 +104,6 @@ export const CI_STEP_NAMES = {
     check: 'Check',
     manual: 'Manual checks',
 } as const;
-
-export const NEXTJS_CONFIGURATION = 'nextjs';
 
 export const FROZEN_INSTALLS: Readonly<Record<string, readonly string[]>> = {
     'package-lock.json': ['npm', 'ci'],

@@ -39,6 +39,8 @@ prettier.config.mjs
 # Generator outputs
 docs/cloudflare-env.d.ts
 docs/worker-configuration.d.ts
+packages/cli/configurations/**/*-names.json
+packages/cli/configurations/**/eslint-presets.json
 
 # Dependencies
 bower_components/

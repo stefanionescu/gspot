@@ -15,7 +15,6 @@ configurations = [ "typescript" ]
     root: `[[import_rule]]
 name = "app"
 paths = [ "app/**" ]
-can_also_import = [ "app" ]
 
 [[import_rule]]
 name = "storage"
@@ -32,7 +31,6 @@ configurations = [ "typescript" ]
 [[import_rule]]
 name = "app"
 paths = [ "apps/api/app/**" ]
-can_also_import = [ "app" ]
 
 [[import_rule]]
 name = "storage"
@@ -129,7 +127,6 @@ export const QA_MODULE_TABLES = `test_files = ["app/qa/**"]
 [[import_rule]]
 name = "app"
 paths = ["app/**"]
-can_also_import = ["app"]
 
 [[import_rule]]
 name = "storage"
@@ -138,7 +135,6 @@ paths = ["storage/**"]
 [[import_rule]]
 name = "api-app"
 paths = ["apps/api/app/**"]
-can_also_import = ["api-app"]
 
 [[import_rule]]
 name = "api-storage"
@@ -160,3 +156,23 @@ export const QA_IMPORT_CASES = [
     { path: 'apps/api/app/qa/check.js', importPath: '../../storage/value.js', count: 0 },
     { path: 'apps/api/app/example.spec.js', importPath: '../storage/value.js', count: 0 },
 ] as const;
+
+export const PACKAGE_IMPORT_FILES = {
+    'package.json': '{"private":true,"type":"module"}',
+    'tsconfig.json': JSON.stringify({
+        compilerOptions: {
+            strict: true,
+            paths: {
+                '#cli/*': ['./packages/cli/src/*'],
+                '#eslint-plugin/*': ['./packages/eslint-plugin/src/*'],
+            },
+        },
+        include: ['packages/**/*.ts'],
+    }),
+    'packages/cli/src/config/text.ts': 'export const LIMIT = 1;\n',
+    'packages/cli/src/system/paths.ts':
+        'import { UPSTREAM_RULE } from "#eslint-plugin/config/magic-numbers.ts"; export const limit = UPSTREAM_RULE;\n',
+    'packages/eslint-plugin/src/config/magic-numbers.ts': 'export const UPSTREAM_RULE = "max-lines";\n',
+    'packages/eslint-plugin/src/rules/imports.ts':
+        'import { LIMIT } from "#cli/config/text.ts"; export const limit = LIMIT;\n',
+} as const;

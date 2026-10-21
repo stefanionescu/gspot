@@ -2,22 +2,23 @@ import { posix } from 'node:path';
 import { test, expect } from 'bun:test';
 import { listAssets } from '#cli/system/assets.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { classifyToolVersion } from '#cli/tools/versions.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { readLintRules } from '#cli/configurations/lint-rules.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
-import { readLintRuleNames } from '#cli/configurations/lint-rule-names.ts';
+import pluginManifest from '#eslint-plugin-package' with { type: 'json' };
 import { EACH_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 test('each lint-rule list names the pinned package version', () => {
-    const manifests = [...readManifests(createReadCache(process.cwd())).values()];
+    const manifests = [...readManifests().values()];
     const pins = listToolProjectPins(manifests).npm;
+    expect(pins[pluginManifest.name]).toBe(pluginManifest.version);
     for (const path of listAssets('configurations/').filter((asset) => asset.endsWith('-names.json'))) {
-        const names = readLintRuleNames(path);
+        const names = readLintRules(path);
         expect(pins[names.package], path).toBe(names.version);
     }
     const presetFiles = new Set(
@@ -41,7 +42,7 @@ function listToolPins(tool: ToolDeclaration): (readonly [string, string])[] {
 test('configurations agree on every tool and installer pin', () => {
     const versions = new Map<string, string>();
     const mismatches: string[] = [];
-    const manifests = [...readManifests(createReadCache(process.cwd())).values()];
+    const manifests = [...readManifests().values()];
     const pins = manifests.flatMap(({ tools }) => tools).flatMap((tool) => listToolPins(tool));
     for (const [name, version] of pins) {
         const previous = versions.get(name);
@@ -58,7 +59,7 @@ function hasOutdatedPin(tool: ToolDeclaration): boolean {
 
 test('each tool has a pin or a floor at or above it', () => {
     const mismatches: string[] = [];
-    for (const manifest of readManifests(createReadCache(process.cwd())).values())
+    for (const manifest of readManifests().values())
         for (const tool of manifest.tools) {
             const unpinned =
                 tool.system !== true &&
@@ -106,8 +107,8 @@ function listSettingMismatches(
 }
 
 test('a check waits for each setting with an empty default', () => {
-    const manifests = [...readManifests(createReadCache(process.cwd())).values()];
-    const declarations = buildKnownSettings(manifests, 'all', createReadCache(process.cwd())).declarations;
+    const manifests = [...readManifests().values()];
+    const declarations = buildKnownSettings(manifests, 'all').declarations;
     const mismatches = manifests.flatMap((manifest) =>
         manifest.checks.flatMap((check) => listSettingMismatches(check, declarations)),
     );
@@ -115,8 +116,8 @@ test('a check waits for each setting with an empty default', () => {
 });
 
 test('every default names a declared setting', () => {
-    const manifests = [...readManifests(createReadCache(process.cwd())).values()];
-    const declarations = buildKnownSettings(manifests, 'all', createReadCache(process.cwd())).declarations;
+    const manifests = [...readManifests().values()];
+    const declarations = buildKnownSettings(manifests, 'all').declarations;
     expect(
         manifests.flatMap((manifest) =>
             Object.keys(manifest.defaults)
@@ -127,13 +128,14 @@ test('every default names a declared setting', () => {
 });
 
 test('tool files and checks name declared tools and checks', () => {
-    const manifests = [...readManifests(createReadCache(process.cwd())).values()];
+    const manifests = [...readManifests().values()];
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map(({ name }) => name)));
     const checks = new Set(manifests.flatMap((manifest) => manifest.checks.map(({ name }) => name)));
     const mismatches: string[] = [];
     for (const manifest of manifests) {
         const names = [
-            ...manifest.toolFiles.flatMap((file) => [...file.tool, ...file.required_tools]),
+            ...manifest.toolFiles.flatMap((file) => file.tool),
+            ...manifest.eslint.required_tools,
             ...manifest.tools.flatMap((tool) => tool.requires ?? []),
             ...manifest.checks.flatMap((check) => [
                 ...(check.tool === undefined ? [] : [check.tool]),
@@ -150,7 +152,7 @@ test('tool files and checks name declared tools and checks', () => {
 
 test('each conditional rule names a shipped rule file', () => {
     const mismatches: string[] = [];
-    for (const manifest of readManifests(createReadCache(process.cwd())).values()) {
+    for (const manifest of readManifests().values()) {
         const files = new Set(listAssets(`${manifest.folder}/rules/`).map((path) => posix.basename(path)));
         mismatches.push(
             ...Object.keys(manifest.rules)
@@ -162,7 +164,7 @@ test('each conditional rule names a shipped rule file', () => {
 });
 
 test('a check that needs a build, Docker, or the network does not run at the commit stage', () => {
-    const manifests = [...readManifests(createReadCache(process.cwd())).values()];
+    const manifests = [...readManifests().values()];
     expect(
         manifests.flatMap((manifest) =>
             manifest.checks

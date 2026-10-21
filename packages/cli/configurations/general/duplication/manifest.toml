@@ -7,7 +7,6 @@ title = "Duplication"
 languages = true
 
 [[tool]]
-mise = "npm:jscpd"
 name = "jscpd"
 npm = "jscpd"
 replace = [".jscpd.json"]

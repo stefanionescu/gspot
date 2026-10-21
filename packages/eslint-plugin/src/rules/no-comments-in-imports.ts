@@ -1,6 +1,5 @@
-import { createRule } from '../create-rule.ts';
 import type { RuleContext } from '../types/rules.ts';
-import type { StatementStart } from '../types/syntax.ts';
+import { createRule } from '../schemas/rules/options.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -41,12 +40,12 @@ function isOwnLine(source: TSESLint.SourceCode, comment: TSESTree.Comment): bool
  * Check for an import declaration or a CommonJS `require` statement.
  *
  * @param node the statement
- * @param context the running rule, with its source type
+ * @param sourceType the source type of the file
  * @returns whether the statement belongs to the import block
  */
-function isImportLike(node: TSESTree.Statement, context: RuleContext): boolean {
+function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languageOptions']['sourceType']): boolean {
     if (node.type === AST_NODE_TYPES.ImportDeclaration) return true;
-    if (context.languageOptions.sourceType !== 'commonjs') return false;
+    if (sourceType !== 'commonjs') return false;
     if (node.type === AST_NODE_TYPES.ExpressionStatement) return isRequireCall(node.expression);
     return (
         node.type === AST_NODE_TYPES.VariableDeclaration &&
@@ -71,12 +70,12 @@ function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
 }
 function groupStatementRuns(
     body: TSESTree.Statement[],
-    accepts: (statement: TSESTree.Statement) => boolean,
+    sourceType: RuleContext['languageOptions']['sourceType'],
 ): [TSESTree.Statement, ...TSESTree.Statement[]][] {
     const runs: [TSESTree.Statement, ...TSESTree.Statement[]][] = [];
     let open: [TSESTree.Statement, ...TSESTree.Statement[]] | undefined;
     for (const statement of body) {
-        if (!accepts(statement)) {
+        if (!isImportLike(statement, sourceType)) {
             open = undefined;
             continue;
         }
@@ -115,7 +114,7 @@ function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
 }
 
 // The parser starts an exported decorated class at `export`, but its leading comment sits above the first decorator.
-function getStatementStart(node: TSESTree.Node): StatementStart {
+function getStatementOffset(node: TSESTree.Node): number {
     const declared =
         node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration
             ? node.declaration
@@ -124,9 +123,7 @@ function getStatementStart(node: TSESTree.Node): StatementStart {
         declared?.type === AST_NODE_TYPES.ClassDeclaration && 'decorators' in declared
             ? declared.decorators[0]
             : undefined;
-    return decorator !== undefined && decorator.range[0] < node.range[0]
-        ? { offset: decorator.range[0], line: decorator.loc.start.line }
-        : { offset: node.range[0], line: node.loc.start.line };
+    return decorator !== undefined && decorator.range[0] < node.range[0] ? decorator.range[0] : node.range[0];
 }
 
 // A leading comment may sit one blank line and some tool directives above its declaration.
@@ -136,14 +133,12 @@ function isLeading(
     node: TSESTree.Node,
     comments: TSESTree.Comment[],
 ): boolean {
-    const start = getStatementStart(node);
-    if (comment.range[1] > start.offset || !isOwnLine(source, comment)) return false;
-    let between = source.getText().slice(comment.range[1], start.offset);
+    const start = getStatementOffset(node);
+    if (comment.range[1] > start || !isOwnLine(source, comment)) return false;
+    let between = source.getText().slice(comment.range[1], start);
     const directives = comments.filter(
         (directive) =>
-            directive.range[0] >= comment.range[1] &&
-            directive.range[1] <= start.offset &&
-            isToolComment(directive.value),
+            directive.range[0] >= comment.range[1] && directive.range[1] <= start && isToolComment(directive.value),
     );
     for (const directive of directives.toReversed()) {
         const from = directive.range[0] - comment.range[1];
@@ -190,11 +185,11 @@ export const noCommentsInImports = createRule<[], 'noCommentsInImports'>({
         const comments = mergeCommentLines(source);
         return {
             Program(node) {
-                for (const run of groupStatementRuns(node.body, (statement) => isImportLike(statement, context))) {
+                for (const run of groupStatementRuns(node.body, context.languageOptions.sourceType)) {
                     const [first] = run;
                     const last = run.at(-1) ?? first;
                     const other = node.body[node.body.indexOf(last) + 1];
-                    const end = other === undefined ? text.length : getStatementStart(other).offset;
+                    const end = other === undefined ? text.length : getStatementOffset(other);
                     const violating = comments.find(
                         (comment) =>
                             comment.range[0] > first.range[0] &&

@@ -1,82 +1,18 @@
+import { isRecord } from '#cli/system/values.ts';
 import { FIRST_READ } from '#cli/config/rules.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { isRecord, getValueAt } from '#cli/system/values.ts';
+import { type Manifest } from '#cli/types/configurations.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
+import type { Settings } from '#cli/types/settings/values.ts';
+import { SETTING_RULES } from '#cli/config/settings/schema.ts';
+import { listRuleFiles } from '#cli/configurations/manifests.ts';
+import type { SettingsError } from '#cli/types/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { SETTING_DECLARATIONS } from '#cli/config/settings/declarations.ts';
+import { ESLINT_LIMIT_RULES } from '#cli/config/generation/eslint.ts';
+import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
-import type { Settings, SettingsTable } from '#cli/types/settings/values.ts';
-import { listRuleFiles, listChecksById } from '#cli/configurations/manifests.ts';
-import { type Manifest, type ToolDeclaration } from '#cli/types/configurations.ts';
-import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
-import type { ToolTable, SettingsError, RuleExcludeError } from '#cli/types/settings/file.ts';
-
-function validateToolRules(
-    tool: string,
-    table: ToolTable,
-    path: KeyPath,
-    manifests: Map<string, Manifest>,
-): SettingsError[] {
-    const rules = table['rules'];
-    if (!isRecord(rules)) return [];
-    const declarations: Readonly<
-        Record<string, { description: string } & Partial<Record<'off_values', readonly (string | number | boolean)[]>>>
-    > = SETTING_DECLARATIONS;
-    const offValues = declarations[`tools.${tool}.rules`]?.off_values;
-    if (offValues === undefined) return [];
-    const disabled = Object.entries(rules).filter(([, option]) => {
-        const severity: unknown = Array.isArray(option) ? option[0] : option;
-        return (
-            (typeof severity === 'string' || typeof severity === 'number' || typeof severity === 'boolean') &&
-            offValues.includes(severity)
-        );
-    });
-    if (disabled.length === 0) return [];
-    // Tool settings use the check ID, which can differ from its executable.
-    const check = [...listChecksById(manifests.values()).values()].find(({ check }) =>
-        check.name.endsWith(`/${tool}`),
-    )?.check;
-    const name = check === undefined ? '<check>' : quoteArgument(check.name);
-    return disabled.map(([rule]) => {
-        return {
-            path: [...path, 'rules', rule],
-            message: `Disable a rule with an ignore. Run: gspot ignore ${name} --rule ${quoteArgument(rule)} --reason "..."`,
-        };
-    });
-}
-
-/**
- * Report rules turned off outside the ignore settings.
- *
- * @param settings the normalized gspot.toml.
- * @param manifests the shipped configuration declarations indexed by name.
- * @returns the refused changes, at both levels.
- */
-function validateDisabledRules(settings: Settings, manifests: Map<string, Manifest>): SettingsError[] {
-    const exclusions = validateRuleExcludes(settings.rules.exclude, manifests).map(({ index, message }) => ({
-        path: ['rules', 'exclude', index],
-        message,
-    }));
-    return [
-        ...exclusions,
-        ...listSettingsTables(settings).flatMap(({ table, path }) =>
-            (table.tools === undefined ? [] : Object.entries(table.tools)).flatMap(([tool, table]) => {
-                const location = [...path, 'tools', tool];
-                const overrides = Array.isArray(table['override']) ? table['override'] : [];
-                return [
-                    ...validateToolRules(tool, table, location, manifests),
-                    ...overrides.flatMap((override: unknown, index) =>
-                        isRecord(override)
-                            ? validateToolRules(tool, override, [...location, 'override', index], manifests)
-                            : [],
-                    ),
-                ];
-            }),
-        ),
-    ];
-}
 
 /**
  * Refuse scope paths that name a file or repeat, and keep written scopes whose folder does not exist yet.
@@ -101,55 +37,51 @@ function validateScopePaths(repositoryRoot: string, settings: Settings): Setting
                       },
                   ];
         } catch (error) {
-            return [{ path: location, message: String(error) }];
+            if (!(error instanceof Error)) throw error;
+            return [{ path: location, message: error.message }];
         }
     });
 }
 
 /**
- * Check that each of your own ESLint plugins names a module file in the repository.
+ * Check the rule file paths of the root and every scope against the repository files.
  *
  * @param repositoryRoot the folder the paths start from.
  * @param settings the parsed gspot.toml.
- * @returns an error for each plugin path that names no file.
+ * @returns an error at each key that names no file.
  */
-function validatePluginPaths(repositoryRoot: string, settings: Settings): SettingsError[] {
-    const plugins = settings.tools['eslint']?.['plugins'];
-    if (!Array.isArray(plugins)) return [];
+function validateRuleFilePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
     using files = openFiles(repositoryRoot);
-    return plugins.flatMap((plugin: { path: string }, index) =>
-        files.readStats(plugin.path)?.isFile() === true
-            ? []
-            : [
-                  {
-                      path: ['tools', 'eslint', 'plugins', index, 'path'],
-                      message: `\`${plugin.path}\` names no file. Point path at the plugin module, relative to the repository root.`,
-                  },
-              ],
-    );
-}
-
-/**
- * Check tool option constraints declared by tools, including inactive scopes.
- *
- * @param table the written root or scope values.
- * @param tools the declarations with option limits.
- * @returns each refused tool option at its written path.
- */
-function validateExtraOptions(table: SettingsTable, tools: ToolDeclaration[]): SettingsError[] {
-    const errors: SettingsError[] = [];
-    for (const tool of tools) {
-        const options = table.tools?.[tool.name]?.['extra'];
-        if (options === undefined) continue;
-        for (const restriction of tool.refused_options ?? []) {
-            const refused = restriction.paths.some((path) => {
-                const value = getValueAt(options, path.split('.'));
-                return value !== undefined;
-            });
-            if (refused) errors.push({ path: ['tools', tool.name, 'extra'], message: restriction.message });
-        }
-    }
-    return errors;
+    return listSettingsTables(settings).flatMap(({ table, path }) => {
+        const plugins = table.tools?.['eslint']?.['plugins'];
+        const ruleFiles = table.tools?.['semgrep']?.['rule_files'];
+        const paths = [
+            ...(Array.isArray(plugins)
+                ? plugins.map((plugin: { path: string }, index) => ({
+                      value: plugin.path,
+                      key: 'path',
+                      path: [...path, 'tools', 'eslint', 'plugins', index, 'path'],
+                  }))
+                : []),
+            ...(Array.isArray(ruleFiles)
+                ? ruleFiles.map((value: string, index) => ({
+                      value,
+                      key: 'rule_files',
+                      path: [...path, 'tools', 'semgrep', 'rule_files', index],
+                  }))
+                : []),
+        ];
+        return paths.flatMap(({ value, key, path }) =>
+            files.readStats(value)?.isFile() === true
+                ? []
+                : [
+                      {
+                          path,
+                          message: `\`${value}\` names no file. Point ${key} at a file, relative to the repository root.`,
+                      },
+                  ],
+        );
+    });
 }
 
 /**
@@ -159,26 +91,88 @@ function validateExtraOptions(table: SettingsTable, tools: ToolDeclaration[]): S
  * @param manifests the shipped configuration declarations indexed by name.
  * @returns each error with its position in the exclusion list.
  */
-function validateRuleExcludes(exclude: string[], manifests: Map<string, Manifest>): RuleExcludeError[] {
+function validateRuleExcludes(exclude: string[], manifests: Map<string, Manifest>): SettingsError[] {
     if (exclude.length === 0) return [];
     const paths = [...manifests.values()].flatMap((manifest) => listRuleFiles(manifest).map((file) => file.path));
     return exclude.flatMap((entry, index) => {
         if (FIRST_READ.some((file) => isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${file}`, trimTrailingSlashes(entry))))
             return [
                 {
-                    index,
+                    path: ['rules', 'exclude', index],
                     message: `[rules] exclude names ${formatCodeList([entry])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
                 },
             ];
         if (paths.some((path) => isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${path}`, trimTrailingSlashes(entry))))
             return [];
-        const near = selectSimilarNames(
+        const hint = formatSimilarNames(
             entry,
             paths.map((path) => `${GSPOT_CONFIGURATIONS_PATH}/${path}`),
         );
-        const hint = near.length > 0 ? ` Did you mean ${formatCodeList(near)}?` : '';
-        return [{ index, message: `[rules] exclude names ${formatCodeList([entry])}, which matches no rule.${hint}` }];
+        return [
+            {
+                path: ['rules', 'exclude', index],
+                message: `[rules] exclude names ${formatCodeList([entry])}, which matches no rule.${hint}`,
+            },
+        ];
     });
 }
 
-export { validateScopePaths, validatePluginPaths, validateExtraOptions, validateDisabledRules };
+/**
+ * Refuse rule options whose values come from another gspot setting.
+ *
+ * @param settings the root settings and every scope.
+ * @returns the settings errors with the key that owns each value.
+ */
+function validateSettingRules(settings: Settings): SettingsError[] {
+    const limitRules = Object.fromEntries(
+        Object.entries(ESLINT_LIMIT_RULES).map(([rule, declaration]) => [rule, `limits.${declaration.limit}`]),
+    );
+    const owned = new Map(
+        Object.entries({ ...SETTING_RULES, eslint: { ...limitRules, ...SETTING_RULES['eslint'] } }).map(
+            ([tool, rules]) => [tool, new Map(Object.entries(rules))],
+        ),
+    );
+    return listSettingsTables(settings).flatMap(({ table, path }) => {
+        const eslint = table.tools?.['eslint'];
+        const overrides = eslint !== undefined && 'override' in eslint ? eslint['override'] : undefined;
+        const tables = [
+            { tool: 'eslint', rules: eslint?.['rules'], path: [...path, 'tools', 'eslint', 'rules'] },
+            {
+                tool: 'markdownlint',
+                rules: table.tools?.['markdownlint']?.['rules'],
+                path: [...path, 'tools', 'markdownlint', 'rules'],
+            },
+            ...(Array.isArray(overrides)
+                ? overrides.flatMap((override: unknown, index) =>
+                      isRecord(override)
+                          ? [
+                                {
+                                    tool: 'eslint',
+                                    rules: override['rules'],
+                                    path: [...path, 'tools', 'eslint', 'override', index, 'rules'],
+                                },
+                            ]
+                          : [],
+                  )
+                : []),
+        ];
+        return tables.flatMap(({ tool, rules, path }) => {
+            if (!isRecord(rules)) return [];
+            return Object.keys(rules).flatMap((rule) => {
+                const setting = owned.get(tool)?.get(rule);
+                if (setting === undefined) return [];
+                return [
+                    {
+                        path: [...path, rule],
+                        message:
+                            setting === '[[import_rule]]'
+                                ? `gspot writes the options of ${rule} from the [[import_rule]] records. Change those records instead.`
+                                : `gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`,
+                    },
+                ];
+            });
+        });
+    });
+}
+
+export { validateScopePaths, validateSettingRules, validateRuleExcludes, validateRuleFilePaths };

@@ -51,7 +51,7 @@ main:has(.landing) {
 .intro .lead {
     margin-inline: 0;
     margin-block: 16px 0;
-    font-size: 17px;
+    font-size: 1.0625rem;
     line-height: 1.6;
     text-wrap: pretty;
 }
@@ -77,7 +77,7 @@ main:has(.landing) {
 .tools-label {
     margin: 0;
     color: var(--sl-color-gray-3);
-    font-size: 13px;
+    font-size: 0.8125rem;
 }
 
 .tools ul {
@@ -96,7 +96,7 @@ main:has(.landing) {
     gap: 8px;
     min-width: 0;
     color: var(--sl-color-gray-1);
-    font-size: 13px;
+    font-size: 0.8125rem;
     font-weight: 500;
     white-space: nowrap;
 }
@@ -145,7 +145,7 @@ main:has(.landing) {
 .card h3 {
     margin: 0;
     color: var(--sl-color-white);
-    font-size: 18px;
+    font-size: 1.125rem;
     font-weight: 600;
     line-height: 1.35;
     letter-spacing: -0.01em;
@@ -153,7 +153,7 @@ main:has(.landing) {
 
 .card p {
     margin: 0;
-    font-size: 15px;
+    font-size: 0.9375rem;
     line-height: 1.6;
 }
 
@@ -172,7 +172,7 @@ main:has(.landing) {
 .more {
     margin-block-start: 24px;
     color: var(--sl-color-gray-3);
-    font-size: 14px;
+    font-size: 0.875rem;
     text-align: center;
     text-wrap: balance;
 }
@@ -193,7 +193,7 @@ main:has(.landing) {
     gap: 12px;
     padding-block: 32px;
     color: var(--sl-color-gray-3);
-    font-size: 14px;
+    font-size: 0.875rem;
 }
 
 .home-footer nav {

@@ -13,6 +13,7 @@ createRuleTester().run<keyof (typeof plugin.rules)['no-magic-numbers']['meta']['
             { code: 'setTimeout(retry, 3000);', options: [{ ignore: [3000] }] },
         ],
         invalid: [
+            { code: 'let timeout = 3000;', options: [{ enforceConst: true }], errors: [{ messageId: 'useConst' }] },
             { code: 'setTimeout(retry, 3000);', errors: [{ messageId: 'noMagic', data: { raw: '3000' } }] },
             { code: 'function area(radius) { return radius * 3.14; }', errors: [{ messageId: 'noMagic' }] },
             { code: 'const HANDLERS = [() => wait(500)];', errors: [{ messageId: 'noMagic' }] },

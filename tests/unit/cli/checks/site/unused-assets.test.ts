@@ -4,9 +4,9 @@ import { openSession } from '#cli/session.ts';
 import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, readFile } from 'node:fs/promises';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { copyRevision } from '#cli/runs/scratch-copy/revision.ts';
-import { checkFindings, buildCheckInput, findBuiltInCheck } from '#tests/setup/check-input.ts';
+import { copyRevision } from '#cli/runs/copy/revision.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { checkFindings, planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
 
 test("an asset in a scope's assets folder counts as used when a file outside the scope links to it", async () => {
     await using resources = new AsyncDisposableStack();
@@ -33,9 +33,8 @@ test('unused-assets reads staged files, not an unstaged README or an untracked f
         'README.md': '![Unused](docs/assets/unused.svg)\n',
         'untracked.md': '![Unused](docs/assets/unused.svg)\n',
     });
-    const findings = await copyRevision(root, { kind: 'index' }, async (root) => {
-        return await checkFindings(root, 'site/unused-assets', { scope: 'docs' });
-    });
+    using copy = await copyRevision(root, { kind: 'index' });
+    const findings = await checkFindings(copy.root, 'site/unused-assets', { scope: 'docs' });
     expect(findings).toMatchObject([{ file: 'docs/assets/unused.svg', rule: 'dead-asset' }]);
     expect(await readFile(join(root, 'README.md'), 'utf8')).toBe('![Unused](docs/assets/unused.svg)\n');
 });
@@ -45,14 +44,15 @@ test.each([
     ['Logo.tsx', '<img src="assets/logo.svg" />'],
 ])('a site without Git keeps the asset that %s names and reports an unused asset', async (file, text) => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['site'], { level: 'all' }),
+        'gspot.toml': buildSandboxSettings(['site'], { level: 'all' }),
         [file]: text,
         'assets/logo.svg': '<svg/>',
         'assets/unused.svg': '<svg/>',
     });
-    const input = buildCheckInput(await openSession(sandbox.path), 'site/unused-assets');
-    expect(input.index).toStrictEqual([]);
-    expect(await findBuiltInCheck('site/unused-assets')(input)).toMatchObject([
+    const session = await openSession(sandbox.path);
+    const input = planSandboxCheck(session, 'site/unused-assets');
+    expect(session.repository.index).toStrictEqual([]);
+    expect(await findBuiltInCheck('site/unused-assets')(session, input)).toMatchObject([
         { file: 'assets/unused.svg', rule: 'dead-asset' },
     ]);
 });
@@ -64,9 +64,10 @@ test('an unstaged deletion removes the reference without failing the asset check
         'docs/assets/logo.svg': '<svg/>',
     });
     await unlink(join(root, 'README.md'));
-    const input = buildCheckInput(await openSession(root), 'site/unused-assets', { scope: 'docs' });
-    expect(input.index.map((entry) => entry.path)).toContain('README.md');
-    expect(await findBuiltInCheck('site/unused-assets')(input)).toMatchObject([
+    const session = await openSession(root);
+    const input = planSandboxCheck(session, 'site/unused-assets', { scope: 'docs' });
+    expect(session.repository.index.map((entry) => entry.path)).toContain('README.md');
+    expect(await findBuiltInCheck('site/unused-assets')(session, input)).toMatchObject([
         { file: 'docs/assets/logo.svg', rule: 'dead-asset' },
     ]);
 });
@@ -75,9 +76,9 @@ test('an unstaged deletion removes the reference without failing the asset check
 async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
     const sandbox = resources.use(
         await testdir({
-            'gspot.toml': buildSettingsText([], {
+            'gspot.toml': buildSandboxSettings([], {
                 level: 'all',
-                tables: '[[scope]]\npath = "docs"\nconfigurations = ["site"]\n',
+                scopes: [{ path: 'docs', configurations: ['site'] }],
             }),
             ...files,
         }),

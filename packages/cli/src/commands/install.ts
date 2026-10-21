@@ -19,18 +19,18 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
  * @param cancelSignal stops the install processes.
  * @returns the install result.
  */
-async function runInstallCommand(cwd: string, cancelSignal?: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
+async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
     const root = findRoot(cwd);
-    const session = await openSession(root);
+    const session = await openSession(root, { cancelSignal });
     const generated = generate(session);
     // The tools install from the tool projects on disk, so those must match the settings first.
     if (listStaleFiles(session, generated).some((file) => TOOL_PROJECT_INPUTS.has(file.path)))
         throw new GspotError('installation', 'Run gspot apply first');
     using writer = openWriter(root);
-    const { note, steps } = await installTools(session, writer, generated, cancelSignal);
+    const { note, steps } = await installTools(session, writer, generated);
     return {
         text: `${note === '' ? 'No change: every tool is installed.' : note}\n`,
-        json: { installed: true, steps },
+        json: { steps },
         exitCode: 0,
     };
 }

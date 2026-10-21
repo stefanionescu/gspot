@@ -1,36 +1,22 @@
 import { dirname, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import type { Session } from '#cli/types/planning.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
-import type { CheckInput } from '#cli/types/runs/check.ts';
-import type { ToolSearch } from '#cli/types/tools/find.ts';
-import type { ScopeView } from '#cli/types/settings/values.ts';
+import { getMiseBinPaths } from '#cli/tools/locate.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { listCompanionTools } from '#cli/planning/needed-tools.ts';
-import { findExecutionFailure } from '#cli/runs/command/output.ts';
 import { runTool, getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
+import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
-import type { ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
 import { findPathKey, readEnvironmentVariable } from '#cli/system/environment.ts';
+import type { ToolRunOptions, ExecutionFailure, ToolAvailability } from '#cli/types/tools/run.ts';
+import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/runs/command.ts';
 
-import type {
-    CheckTool,
-    PreparedCommand,
-    CheckToolOptions,
-    CheckToolProgram,
-    PlannedToolResult,
-} from '#cli/types/runs/command.ts';
-
-function checkTool(
-    input: CheckInput,
-    name: string,
-    options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>>,
-): CheckTool {
-    const tool = getToolDeclaration(input.manifests.values(), name);
-    const env = { ...tool.env, ...input.check.env, ...options.env };
-    const availability = findTool(input, options.cwd, tool, env);
+function checkTool(session: Session, planned: PlannedCheck, name: string, options: CheckToolOptions): CheckTool {
+    const tool = getToolDeclaration(session.manifests.values(), name);
+    const env = { ...planned.check.env, ...options.env };
+    const availability = findTool(session, options.cwd, tool);
     if ('status' in availability) {
         if (availability.status === 'error') throw new Error(availability.note);
         throw new GspotError('tool', availability.note);
@@ -39,22 +25,43 @@ function checkTool(
 }
 
 /**
- * Runs a check tool with the tool time limit and classifies its process failure.
+ * Classifies a process failure for command checks and built-in checks.
+ *
+ * @param result what the process returned.
+ * @param name the tool that the note mentions.
+ * @param timeoutSeconds the process time limit, in seconds.
+ * @returns the failure, or undefined for readable output.
+ */
+function findExecutionFailure(result: SpawnResult, name: string, timeoutSeconds: number): ExecutionFailure | undefined {
+    if (result.isCanceled === true) return { status: 'error', note: `${name} was canceled.` };
+    if (result.isTimedOut === true)
+        return {
+            status: 'error',
+            note: `${name} ran longer than tool_timeout_seconds (${String(timeoutSeconds)}s) and was stopped.`,
+        };
+    if (result.missing) return { status: 'missing', note: `${name} could not be started: ${result.stderr.trim()}` };
+    if (result.isErrored === true)
+        return {
+            status: 'error',
+            note: `${name} could not run: ${result.stderr.trim()}`,
+        };
+    return undefined;
+}
+
+/**
+ * Run a tool process and classify a failure.
  *
  * @param commandArguments the executable and expanded arguments.
- * @param options how to start the process.
- * @param view the scope settings.
- * @param name the tool that a failure note mentions.
+ * @param options the process options and tool name for a failure note.
  * @returns the process result and any failure.
  */
-export async function runPlannedTool(
+export async function runToolProcess(
     commandArguments: string[],
-    options: Omit<ToolRunOptions, 'timeoutSeconds'>,
-    view: ScopeView,
-    name: string,
-): Promise<PlannedToolResult> {
-    const result = await runTool(commandArguments, { ...options, timeoutSeconds: getToolTimeoutSeconds(view) });
-    return { result, failure: findExecutionFailure(result, name, view) };
+    options: ToolRunOptions & { name: string },
+): Promise<ToolProcessResult> {
+    const { name, ...processOptions } = options;
+    const result = await runTool(commandArguments, processOptions);
+    return { result, failure: findExecutionFailure(result, name, options.timeoutSeconds) };
 }
 
 /**
@@ -63,33 +70,34 @@ export async function runPlannedTool(
  * @param session the repository and tool paths.
  * @param cwd the working folder.
  * @param tool the declaration with its version pin.
- * @param env variables for the tool process.
  * @returns the executable path or its installation failure.
  */
-export function findTool(
-    session: ToolSearch,
-    cwd: string,
-    tool: ToolDeclaration,
-    env?: Record<string, string>,
-): ToolAvailability {
-    return buildToolAvailability(tool, inspectTool({ ...session, cwd }, env === undefined ? tool : { ...tool, env }));
+export function findTool(session: Session, cwd: string, tool: ToolDeclaration): ToolAvailability {
+    const miseBinPaths = getMiseBinPaths(session);
+    return buildToolAvailability(tool, inspectTool({ ...session, cwd, miseBinPaths }, tool));
 }
 
 /**
  * Add the folders of installed companion tools to the process `PATH`, also in a scratch copy.
  *
- * @param input the repository and manifests.
+ * @param session the repository and manifests.
  * @param names the companion tools to add.
  * @param env variables for the tool process.
  * @returns the environment with the companion folders on `PATH`.
  */
 export function buildCompanionEnvironment(
-    input: Session | CheckInput,
-    names: string[] | undefined,
+    session: Session,
+    names: string[],
     env: Record<string, string>,
 ): Record<string, string> {
-    const folders = (names ?? [])
-        .map((name) => inspectTool(input, getToolDeclaration(input.manifests.values(), name)).path)
+    const folders = names
+        .map(
+            (name) =>
+                inspectTool(
+                    { ...session, miseBinPaths: getMiseBinPaths(session) },
+                    getToolDeclaration(session.manifests.values(), name),
+                ).path,
+        )
         .filter((path) => path !== undefined)
         .map((path) => dirname(path));
     if (folders.length === 0) return env;
@@ -102,29 +110,33 @@ export function buildCompanionEnvironment(
 /**
  * Runs the tool of a check with the tool time limit and failure handling.
  *
- * @param input the check and scope.
+ * @param session the repository and its tools.
+ * @param planned the check and scope.
  * @param command the executable name and arguments.
  * @param options how to start the process.
  * @returns the process output.
  */
 export async function runCheckTool(
-    input: CheckInput,
+    session: Session,
+    planned: PlannedCheck,
     command: readonly string[] | CheckToolProgram,
     options: CheckToolOptions,
 ): Promise<SpawnResult> {
-    const { name, path, env } = checkTool(input, 'tool' in command ? command.tool : (command[0] as string), options);
+    const { name, path, env } = checkTool(
+        session,
+        planned,
+        'tool' in command ? command.tool : (command[0] as string),
+        options,
+    );
     const commandArguments =
         'tool' in command ? [process.execPath, buildAssetPath(command.entry), path] : [path, ...command.slice(1)];
-    const { result, failure } = await runPlannedTool(
-        commandArguments,
-        {
-            ...options,
-            env: buildCompanionEnvironment(input, listCompanionTools(input.selection, input.check), env),
-            cancelSignal: input.cancelSignal,
-        },
-        input.selection.view,
+    const { result, failure } = await runToolProcess(commandArguments, {
+        ...options,
+        env: buildCompanionEnvironment(session, listCompanionTools(planned.selection, planned.check), env),
+        cancelSignal: session.cancelSignal,
+        timeoutSeconds: getToolTimeoutSeconds(planned.selection.view),
         name,
-    );
+    });
     if (failure?.status === 'missing') throw new GspotError('tool', failure.note);
     if (failure !== undefined) throw new Error(failure.note);
     return result;

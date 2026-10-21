@@ -48,36 +48,38 @@ function findVariableEnd(text: string, at: number): number {
     return text[end] === quote ? end + 1 : -1;
 }
 
+type MatchedToken = Omit<SqlToken, 'start'>;
+
 // Match an E'' string, whose E must start a word.
-function matchEscapedString(text: string, at: number): Omit<SqlToken, 'start'> | undefined {
+function matchEscapedString(text: string, at: number): MatchedToken | undefined {
     if (text[at + 1] !== "'" || WORD_CHARACTER.test(text[at - 1] ?? '')) return undefined;
     return { end: findEscapedStringEnd(text, at + "E'".length), kind: 'other' };
 }
 
 // Match a dollar-quote tag, which cannot continue an identifier or a number.
-function matchDollarTag(text: string, at: number): Omit<SqlToken, 'start'> | undefined {
+function matchDollarTag(text: string, at: number): MatchedToken | undefined {
     if (DOLLAR_TAG_BLOCKER.test(text[at - 1] ?? '')) return undefined;
     const end = findIdentifierEnd(text, at + 1);
     return text[end] === '$' ? { end: end + 1, kind: 'dollar' } : undefined;
 }
 
 // Match a cast operator or a psql variable.
-function matchColonToken(text: string, at: number): Omit<SqlToken, 'start'> | undefined {
+function matchColonToken(text: string, at: number): MatchedToken | undefined {
     if (text[at + 1] === ':') return { end: at + '::'.length, kind: 'other' };
     const end = findVariableEnd(text, at);
     return end === -1 ? undefined : { end, kind: 'variable' };
 }
 
-function matchQuotedToken(text: string, at: number): Omit<SqlToken, 'start'> {
+function matchQuotedToken(text: string, at: number): MatchedToken {
     return { end: findDoubledQuoteEnd(text, at + 1, text[at] ?? ''), kind: 'other' };
 }
 
 // The reader for each character that can start a lexeme.
-const READERS: Record<string, (text: string, at: number) => Omit<SqlToken, 'start'> | undefined> = {
-    '-': (text: string, at: number): Omit<SqlToken, 'start'> | undefined => {
+const READERS: Record<string, (text: string, at: number) => MatchedToken | undefined> = {
+    '-': (text, at) => {
         return text[at + 1] === '-' ? { end: findLineEnd(text, at, '\n'), kind: 'line-comment' } : undefined;
     },
-    '/': (text: string, at: number): Omit<SqlToken, 'start'> | undefined => {
+    '/': (text, at) => {
         return text[at + 1] === '*' ? { end: at + '/*'.length, kind: 'block-comment' } : undefined;
     },
     E: matchEscapedString,
@@ -85,7 +87,7 @@ const READERS: Record<string, (text: string, at: number) => Omit<SqlToken, 'star
     "'": matchQuotedToken,
     '"': matchQuotedToken,
     $: matchDollarTag,
-    '\\': (text: string, at: number): Omit<SqlToken, 'start'> => {
+    '\\': (text, at) => {
         return { end: findLineEnd(text, at, '\r\n'), kind: 'command' };
     },
     ':': matchColonToken,
@@ -109,7 +111,7 @@ function findBlockCommentEnd(text: string, from: number): number {
 }
 
 // Find the index past the whole lexeme: a block comment closes with nesting, and a dollar quote at the return of its tag.
-function findLexemeEnd(text: string, at: number, lexeme: Omit<SqlToken, 'start'>): number {
+function findLexemeEnd(text: string, at: number, lexeme: MatchedToken): number {
     if (lexeme.kind === 'block-comment') return findBlockCommentEnd(text, lexeme.end);
     if (lexeme.kind !== 'dollar') return lexeme.end;
     const tag = text.slice(at, lexeme.end);
@@ -118,7 +120,7 @@ function findLexemeEnd(text: string, at: number, lexeme: Omit<SqlToken, 'start'>
 }
 
 // Build the parser text that stands in for a meta-command or a psql variable, with the same length so positions hold.
-function buildReplacement(kind: Omit<SqlToken, 'start'>['kind'], lexeme: string): string {
+function buildReplacement(kind: SqlToken['kind'], lexeme: string): string {
     if (kind === 'command') return ' '.repeat(lexeme.length);
     if (lexeme[1] === "'") return `''${' '.repeat(lexeme.length - "''".length)}`;
     if (lexeme[1] === '"') return ` ${lexeme.slice(1)}`;

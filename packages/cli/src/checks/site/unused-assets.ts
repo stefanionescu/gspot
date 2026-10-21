@@ -1,24 +1,26 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
+import { findCachedText } from '#cli/system/files/reads.ts';
 import { FILENAME_TAGS } from '#cli/config/repository/inventory.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { ASSET_FOLDER, TEXT_SUFFIXES } from '#cli/config/checks/site.ts';
 import { REGULAR_FILE_MODES } from '#cli/config/repository/revisions.ts';
-import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
 
 /**
  * Reports each asset that no text file in the scope or the index names.
  *
- * @param input the scope files and the tracked files.
+ * @param session the repository and its tools.
+ * @param planned the scope files and the tracked files.
  * @returns the findings.
  */
-export function checkSiteUnusedAssets(input: CheckInput): Finding[] {
-    const files = input.files;
+export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): Finding[] {
+    const files = planned.files;
     const local = new Set(files.map((file) => file.path));
     const paths = new Set([
         ...local,
-        ...input.index
+        ...session.repository.index
             .filter((entry) => entry.stage === 0 && REGULAR_FILE_MODES.has(entry.mode))
             .map((entry) => entry.path),
     ]);
@@ -26,7 +28,7 @@ export function checkSiteUnusedAssets(input: CheckInput): Finding[] {
         .values()
         .filter((path) => TEXT_SUFFIXES.has(posix.extname(path)))
         .flatMap((path) => {
-            const text = readCachedText(input.reads, path);
+            const text = findCachedText(session.reads, path);
             return text === undefined ? [] : [{ path, text }];
         })
         .toArray();
@@ -46,7 +48,7 @@ export function checkSiteUnusedAssets(input: CheckInput): Finding[] {
         })
         .map((file) =>
             buildFinding(
-                input,
+                planned,
                 { file: file.path, line: 1 },
                 'dead-asset',
                 'No page, stylesheet or script names this file.',

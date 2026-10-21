@@ -1,33 +1,35 @@
 // Find existing lint commands, hooks, and tool files.
-import { z } from 'zod';
-import { parse as parseYaml } from 'yaml';
-import { readText } from '#cli/system/files/reads.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
+import { parseYamlFile } from '#cli/parsers/yaml.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import type { FileSettings } from '#cli/types/ownership.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { HOOKS_PATH } from '#cli/config/system/locations.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
 import { ESLINT_TOOL } from '#cli/config/generation/eslint.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
 import { join, dirname, resolve, basename, relative } from 'node:path';
 import { MARKDOWN_EXTENSION } from '#cli/config/repository/inventory.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependency-files.ts';
+import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { listToolSettingsFiles } from '#cli/repository/tool-settings-files.ts';
-import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
+import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/existing-tools.ts';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
-import type { CiJob, TrackedFile, ExistingTools } from '#cli/types/repository/inventory.ts';
 
 import {
+    type CiJob,
+    type Repository,
+    type FoundToolFile,
+    type ExistingTools,
+} from '#cli/types/repository/inventory.ts';
+import {
     HUSKY_PATH,
-    HOOK_FOLDERS,
     LEFTHOOK_NAMES,
     PRE_COMMIT_FILE,
-    MISE_HOOKS_PATH,
     LEFTHOOK_PREFIXES,
     HOOKS_PATH_SETTING,
     LEFTHOOK_EXTENSIONS,
+    FOREIGN_HOOK_FOLDERS,
     SIMPLE_GIT_HOOKS_KEY,
 } from '#cli/config/repository/hooks.ts';
 import {
@@ -66,7 +68,7 @@ function isLintCommand(command: string): boolean {
 // List the files in a folder under a root, without dot files; none when the folder does not exist.
 function listFolder(root: string, folder: string): string[] {
     const path = join(root, folder);
-    if (!existsSync(path)) return [];
+    if (statSync(path, { throwIfNoEntry: false }) === undefined) return [];
     const realRoot = realpathSync(root);
     const target = realpathSync(path);
     if (!isInside(relative(realRoot, target))) return [];
@@ -90,28 +92,6 @@ function detectHookFolder(root: string, folder: string, hooksPath: string): Exis
         return undefined;
     return { kind: folder === HUSKY_PATH ? 'husky' : 'githooks', path: folder, files };
 }
-
-const ciStepSchema = z.object({ run: z.string().optional() } satisfies SchemaShape<{ run?: string | undefined }>);
-
-const ciJobSchema = z.object({
-    script: (
-        z.union([
-            z.string(),
-            z.array(z.unknown()).transform((commands) => commands.filter((command) => typeof command === 'string')),
-        ]) satisfies z.ZodType<string | string[]>
-    ).optional(),
-    steps: z
-        .array(z.unknown())
-        .transform((steps) =>
-            steps.flatMap((step) => {
-                const parsed = ciStepSchema.safeParse(step);
-                return parsed.success ? [parsed.data] : [];
-            }),
-        )
-        .optional(),
-    extends: z.unknown().optional(),
-} satisfies SchemaShape<CiJob>);
-const ciDocumentSchema = z.record(z.string(), z.unknown()) satisfies z.ZodType<Record<string, unknown>>;
 
 function listJobCommands(job: CiJob): string[] {
     if (job.script !== undefined) return Array.isArray(job.script) ? job.script : [job.script];
@@ -143,8 +123,8 @@ function listLintCommands(path: string, document: unknown): string[] {
 
 // Read the folder that core.hooksPath names. Husky points it at its stubs in .husky/_, or at .husky in Husky 8, and
 // keeps the hooks of the user in .husky, which the Husky entry lists.
-function readHooksPathEntry(root: string, hooksPath: string, isHuskyPath: boolean): ExistingTools['hooks'] {
-    if (hooksPath === '' || isHuskyPath) return [];
+function readHooksPathEntry(root: string, hooksPath: string): ExistingTools['hooks'] {
+    if (hooksPath === '') return [];
     const location = readHooksFolder(root);
     return [{ kind: 'hooksPath', path: hooksPath, files: listHookFiles(dirname(location), basename(location)) }];
 }
@@ -160,14 +140,12 @@ export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
     const packageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
     const written = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
     // core.hooksPath can name an absolute path or start with ./; compare it with the hook folders as a repository path.
-    const hooksPath =
-        written === ''
-            ? ''
-            : convertToPosixPath(relative(repositoryRoot, resolve(repositoryRoot, written))).replace(
-                  TRAILING_SLASH,
-                  '',
-              );
+    const hooksPath = convertToPosixPath(relative(repositoryRoot, resolve(repositoryRoot, written))).replace(
+        TRAILING_SLASH,
+        '',
+    );
     const isHuskyPath = hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
+    const foreignHooksPath = isHuskyPath ? '' : hooksPath;
     const hookNames = [
         ...LEFTHOOK_NAMES.flatMap((name) =>
             LEFTHOOK_EXTENSIONS.flatMap((extension) =>
@@ -181,10 +159,10 @@ export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
     );
     const lefthook = present.find((name) => name !== PRE_COMMIT_FILE);
     return [
-        ...readHooksPathEntry(repositoryRoot, hooksPath, isHuskyPath),
-        ...HOOK_FOLDERS.filter((folder) => folder !== HOOKS_PATH && folder !== MISE_HOOKS_PATH)
-            .map((folder) => detectHookFolder(repositoryRoot, folder, isHuskyPath ? '' : hooksPath))
-            .filter((hook) => hook !== undefined),
+        ...readHooksPathEntry(repositoryRoot, foreignHooksPath),
+        ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(repositoryRoot, folder, foreignHooksPath)).filter(
+            (hook) => hook !== undefined,
+        ),
         ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
         ...(present.includes(PRE_COMMIT_FILE)
             ? [{ kind: 'pre-commit' as const, path: PRE_COMMIT_FILE, files: [] }]
@@ -204,15 +182,9 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
     return paths
         .filter((path) => !FOREIGN_CI_FILES.has(path))
         .flatMap((path) => {
-            const source = readText(repositoryRoot, path);
+            const source = findText(repositoryRoot, path);
             if (source === undefined) return [];
-            let document: unknown;
-            try {
-                document = parseYaml(source);
-            } catch (error) {
-                const detail = error instanceof Error ? error.message : String(error);
-                throw new Error(`Cannot read CI configuration ${path}: ${detail}`, { cause: error });
-            }
+            const document = parseYamlFile(path, source);
             return listLintCommands(path, document);
         });
 }
@@ -220,20 +192,18 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
 /**
  * Find tool files to replace, hooks, CI, agent files, and lint folders.
  *
- * @param repositoryRoot the repository to read.
- * @param files the tracked inventory.
- * @param dependencyFiles the parsed package declarations.
- * @param reads the run cache.
+ * @param reads the run cache and repository boundary.
+ * @param repository the inventory and parsed package declarations.
  * @returns what to replace, keep, or report.
  */
 export function readExistingTools(
-    repositoryRoot: string,
-    files: TrackedFile[],
-    dependencyFiles: DependencyFile[],
     reads: ReadCache,
+    repository: Pick<Repository, 'files' | 'dependencyFiles'>,
 ): ExistingTools {
+    const repositoryRoot = reads.root;
+    const { files, dependencyFiles } = repository;
     const paths = new Set(files.map((file) => file.path));
-    const manifests = readManifests(reads);
+    const manifests = readManifests();
     const toolOnlyPackages = [...listToolOnlyPackages(dependencyFiles, manifests.values())].toSorted(
         (a, b) => Number(a === PACKAGE_JSON) - Number(b === PACKAGE_JSON),
     );
@@ -267,4 +237,27 @@ export function readExistingTools(
         lintFolders: LINT_FOLDERS.filter((name) => listFolder(repositoryRoot, name).length > 0),
         toolOnlyPackages,
     };
+}
+
+/**
+ * Check whether generated field edits cover an existing tool settings section.
+ *
+ * @param toolFile the existing file or section.
+ * @param fileEdits the generated field edits.
+ * @returns whether an edit covers that file and key.
+ */
+export function isEditedInPlace(toolFile: FoundToolFile, fileEdits: FileSettings[]): boolean {
+    return fileEdits.some(
+        (output) => output.path === toolFile.path && output.changes.some((field) => field.path[0] === toolFile.key),
+    );
+}
+
+/**
+ * Name the section of an existing tool settings file.
+ *
+ * @param toolFile the existing file or section.
+ * @returns the table, key, or owning tool name.
+ */
+export function getToolFileSection(toolFile: FoundToolFile): string {
+    return toolFile.table ?? toolFile.key ?? toolFile.tool;
 }

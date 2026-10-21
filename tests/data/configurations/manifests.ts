@@ -15,19 +15,17 @@ description = "A local configuration used by manifest loading."
 export const SEMGREP_TOOL_FILES = `
 [[tool_file]]
 target = "other.yml"
-pointer = { path = "other.yml" }
+pointer = { path = "other.yml", body = "{target}" }
 
 [[tool_file]]
 target = "semgrep/first.yml"
 tool = "semgrep"
 per_scope = true
-when = { configuration = "security" }
 
 [[tool_file]]
 target = "semgrep/second.yml"
 tool = "semgrep"
 per_scope = true
-when = { configuration = "security" }
 `;
 
 /** One tool, a tool file that names no consumer, and one that names a check. */
@@ -88,3 +86,25 @@ export const TOOL_PROJECT_PACKAGES = [
 ] as const;
 
 export const TOOL_DECLARATION = '[[tool]]\nname = "example"\nversion = "1.0.0"\n';
+
+export const EXAMPLE_MANIFEST_PATH = 'configurations/language/example/manifest.toml';
+
+/** The public reader runs once in a separate process for each package fixture. */
+export const MANIFEST_READER_SCRIPT = `
+import { spyOn } from 'bun:test';
+import * as assets from '#cli/system/assets.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
+const fixture = JSON.parse(process.argv[1]);
+const paths = Object.keys(fixture.files);
+const readAsset = assets.readAsset;
+using listing = spyOn(assets, 'listAssets').mockImplementation((prefix) =>
+    prefix === 'configurations/' ? paths : fixture.assets.filter((path) => path.startsWith(prefix)),
+);
+using reading = spyOn(assets, 'readAsset').mockImplementation((path) => fixture.files[path] ?? readAsset(path));
+try {
+    process.stdout.write(JSON.stringify([...readManifests()]));
+} catch (error) {
+    process.stderr.write(error.message);
+    process.exitCode = 1;
+}
+`;

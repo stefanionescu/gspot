@@ -1,9 +1,7 @@
 import type { Optional } from '#cli/types/shapes.ts';
 import type { JsonValue } from '#cli/types/parsers/json.ts';
-import type { SettingValue } from '#cli/types/settings/file.ts';
+import { type SettingValue, type StylelintOptions } from '#cli/types/settings/file.ts';
 import type { RULE_CONDITIONS, DOCSTRING_CONVENTIONS, IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
-
-type ParsedExtraOptions = { extra?: Record<string, unknown> | undefined };
 
 type WrittenTools = {
     hadolint?: { trusted_registries?: string[] | undefined } | undefined;
@@ -13,11 +11,7 @@ type WrittenTools = {
     sqlfluff?: { dialect?: string | undefined } | undefined;
     swiftlint?: { always_keep_imports?: string[] | undefined } | undefined;
     trivy?: { severity?: string[] | undefined } | undefined;
-    eslint?:
-        | (Optional<Omit<ParsedEslint, 'extra'>> & {
-              extra?: { value: Record<string, unknown>; reason: string } | undefined;
-          })
-        | undefined;
+    eslint?: Optional<ParsedEslint> | undefined;
     commitlint?:
         | {
               types?: string[] | undefined;
@@ -29,20 +23,14 @@ type WrittenTools = {
     markdownlint?: { rules?: Record<string, Record<string, JsonValue>> | undefined } | undefined;
     stylelint?: Optional<ParsedStylelint> | undefined;
     squawk?: { assume_in_transaction?: boolean | undefined } | undefined;
-    prettier?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
-    'editorconfig-checker'?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
-    typos?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
-    shellcheck?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
     knip?:
         | {
-              extra?: { value: Record<string, unknown>; reason: string } | undefined;
               entry?: string[] | undefined;
               ignore_dependencies?: SettingValue<string[]> | undefined;
           }
         | undefined;
     purgecss?: { safelist?: SettingValue<string[]> | undefined } | undefined;
     v8r?: { schema?: { paths: string[]; url: string }[] | undefined } | undefined;
-    taplo?: { extra?: { value: Record<string, unknown>; reason: string } | undefined } | undefined;
 };
 
 type ParsedHadolint = { trusted_registries: string[] };
@@ -60,7 +48,6 @@ type ParsedSwiftlint = { always_keep_imports: string[] };
 type ParsedTrivy = { severity: string[] };
 
 type ParsedEslint = {
-    extra?: Record<string, unknown> | undefined;
     import_extension: (typeof IMPORT_EXTENSION_STYLES)[number];
     restricted_imports: { name: string; message: string }[];
     rules: Record<
@@ -102,17 +89,14 @@ type ParsedStylelint = {
         | true
         | string
         | number
-        | { severity?: 'error' | undefined }
-        | [
-              true | string | number | { severity?: 'error' | undefined } | JsonValue[],
-              ({ severity?: 'error' | undefined } | undefined)?,
-          ]
+        | StylelintOptions
+        | [true | string | number | StylelintOptions | JsonValue[], (StylelintOptions | undefined)?]
     >;
 };
 
 type ParsedSquawk = { assume_in_transaction: boolean };
 
-type ParsedKnip = { extra?: Record<string, unknown> | undefined; entry: string[]; ignore_dependencies: string[] };
+type ParsedKnip = { entry: string[]; ignore_dependencies: string[] };
 
 type ParsedPurgecss = { safelist: string[] };
 
@@ -132,14 +116,9 @@ type ParsedTools = {
     markdownlint?: ParsedMarkdownlint | undefined;
     stylelint?: ParsedStylelint | undefined;
     squawk?: ParsedSquawk | undefined;
-    prettier?: ParsedExtraOptions | undefined;
-    'editorconfig-checker'?: ParsedExtraOptions | undefined;
-    typos?: ParsedExtraOptions | undefined;
-    shellcheck?: ParsedExtraOptions | undefined;
     knip?: ParsedKnip | undefined;
     purgecss?: ParsedPurgecss | undefined;
     v8r?: ParsedV8r | undefined;
-    taplo?: ParsedExtraOptions | undefined;
 };
 
 export type { ParsedTools, WrittenTools };

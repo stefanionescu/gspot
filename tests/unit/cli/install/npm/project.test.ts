@@ -7,16 +7,16 @@ import { fakeCommand } from '#tests/setup/fakes.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildInstallContext } from '#tests/setup/install.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependencies.ts';
 import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
-import { NPM_TOOL_PROJECT } from '#cli/config/parsers/dependency-files.ts';
-import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
 import { INSTALL_FAILURES, TOOL_REQUIREMENTS } from '#tests/data/install/npm-tool-project.ts';
+import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from '#cli/install/npm/project.ts';
 
 /**
  * Fake bun 1.4.2, and fail every other bun run.
@@ -36,7 +36,7 @@ function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' |
 
 /** Wrap package.json text as the generated tool project file. */
 function buildNpmToolFile(content: string): GeneratedFile {
-    return { path: '.gspot/package.json', content, kind: 'tool_project' };
+    return { path: '.gspot/package.json', content };
 }
 
 test.each([...TOOL_REQUIREMENTS])(
@@ -73,7 +73,7 @@ test.each([...INSTALL_FAILURES])(
             '.gspot/package.json': original,
             '.gspot/bun.lock': lockfile,
         });
-        await createFileTree(repository.path, { 'gspot.toml': buildSettingsText([]) });
+        await createFileTree(repository.path, { 'gspot.toml': buildSandboxSettings([]) });
         const session = await openSession(repository.path);
         using owner = openWriter(repository.path);
         using resources = new DisposableStack();
@@ -105,7 +105,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
     await using repository = await testdir();
     const manifest = JSON.stringify({ private: true, devDependencies: { prettier: '3.8.1' } });
     await createFileTree(repository.path, {
-        'gspot.toml': buildSettingsText([]),
+        'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
         '.gspot/package.json': manifest,
         '.gspot/bun.lock': JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.1' } } } }),
@@ -114,7 +114,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
     using owner = openWriter(repository.path);
     using _bun = fakeFailingBun({ isTimedOut: true });
     expect(await captureRejection(installNpmTools(buildInstallContext(session, owner)))).toBe(
-        `bun ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,
+        `The command bun install --frozen-lockfile --linker hoisted ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,
     );
 });
 
@@ -140,7 +140,7 @@ test.each([false, true])(
             '.gspot/bun.lock': lockfile,
             '.gspot/node_modules/authored.txt': 'keep installed files',
         });
-        await createFileTree(repository.path, { 'gspot.toml': buildSettingsText([]) });
+        await createFileTree(repository.path, { 'gspot.toml': buildSandboxSettings([]) });
         const session = await openSession(repository.path);
         using owner = openWriter(repository.path);
         using boundary = fakeCommand('bun', async (command, options) => {
@@ -184,7 +184,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         'source.txt': 'kept\n',
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
     });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildSettingsText([]) });
+    await createFileTree(sandbox.path, { 'gspot.toml': buildSandboxSettings([]) });
     const session = await openSession(sandbox.path);
     using _path = overrideEnvironment({
         PATH: join(sandbox.path, 'missing-bin'),
@@ -208,8 +208,32 @@ test.each([
     { source: 'registry=not-a-valid-url\n', message: 'Invalid registry URL in package manager configuration.' },
     { source: 'maxsockets=not-a-number\n', message: 'Invalid package manager configuration.' },
 ])('invalid .npmrc settings keep their error for $source', async ({ source, message }) => {
-    await using repository = await testdir();
-    await createFileTree(repository.path, { '.npmrc': source, 'package.json': '{"private":true}\n' });
+    await using repository = await testdir({ '.npmrc': source, 'package.json': '{"private":true}\n' });
+
     expect(await captureRejection(readRegistryEnvironment(repository.path))).toBe(message);
     expect(await readFile(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
+});
+
+test('a package manager version timeout names the install command and configured limit', async () => {
+    await using repository = await testdir({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
+    });
+    const session = await openSession(repository.path);
+    using owner = openWriter(repository.path);
+    const context = buildInstallContext(session, owner);
+    using _bun = fakeCommand('bun', () =>
+        Promise.resolve({
+            code: 1,
+            missing: false,
+            duration: 0,
+            stdout: '',
+            stderr: '',
+            isTimedOut: true,
+        }),
+    );
+    expect(await captureRejection(assertPackageManagerVersion(context))).toBe(
+        `The command bun --version ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,
+    );
+    expect(context.steps).toStrictEqual([['bun', '--version']]);
 });

@@ -1,7 +1,6 @@
 // Reports the system and its tool builds, and fakes the system for tests.
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -9,6 +8,8 @@ import { findMissingBuild, getToolDeclaration } from '#cli/configurations/tools.
 
 /** Whether the tests run on Windows. */
 export const isWindows = process.platform === 'win32';
+
+export const FOLDER_LINK_TYPE = isWindows ? 'junction' : 'dir';
 
 export const isLinux = process.platform === 'linux';
 
@@ -23,8 +24,8 @@ export const isMacos = process.platform === 'darwin';
  */
 export function hasToolBuild(name: string): boolean {
     const operatingSystem = getOperatingSystem();
-    const pin = getToolDeclaration(readManifests(createReadCache(process.cwd())).values(), name);
-    return findMissingBuild(pin, operatingSystem, process.arch) === undefined;
+    const pin = getToolDeclaration(readManifests().values(), name);
+    return findMissingBuild(pin, { platform: operatingSystem, arch: process.arch }) === undefined;
 }
 
 /**

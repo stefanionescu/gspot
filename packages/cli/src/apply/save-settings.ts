@@ -20,17 +20,20 @@ import type { SaveSettingsResult, SaveSettingsOptions } from '#cli/types/command
  * @returns the apply report and whether the written settings changed
  */
 async function saveSettings(repositoryRoot: string, options: SaveSettingsOptions): Promise<SaveSettingsResult> {
-    const { input, change, summary } = options;
+    const { input, summary } = options;
     using writer = openWriter(repositoryRoot);
-    const result = updateSettings(repositoryRoot, input, change);
-    const session = await openSession(repositoryRoot, { settings: result.settings, text: result.text });
+    const result = updateSettings(repositoryRoot, input);
+    const session = await openSession(repositoryRoot, {
+        settingsFile: { settings: result.settings, text: result.text },
+    });
     const generated = generate(session);
     writeSettings(writer, result.text, input.original);
     let report: ApplyReport;
     try {
         report = writeGeneratedFiles(session, generated, writer);
     } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
+        if (!(error instanceof GspotError)) throw error;
+        const message = error.message;
         throw new GspotError(
             'writing',
             [
@@ -38,6 +41,7 @@ async function saveSettings(repositoryRoot: string, options: SaveSettingsOptions
                 `gspot.toml keeps this change, and applying it stopped: ${message}`,
                 'Fix that, then run gspot apply.',
             ].join('\n'),
+            { cause: error },
         );
     }
     const shown = result.changed ? summary : 'No change: gspot.toml already has this value.';

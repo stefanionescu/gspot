@@ -1,7 +1,8 @@
-import { createHash } from 'node:crypto';
+import { DESCRIPTION } from './config/site.ts';
+import { AGENT_STEPS } from './config/setup.ts';
+import { hashContent } from '#cli/system/text.ts';
 import type { AgentSkillsIndex } from './types/agents.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
-import { AGENT_STEPS, LLMS_DESCRIPTION } from './config/setup.ts';
 
 import {
     LLMS_FILE,
@@ -38,7 +39,7 @@ export async function writeAgentFiles(dir: URL): Promise<void> {
     const folder = new URL(`${SKILLS_FOLDER}${SETUP_SKILL.name}/`, dir);
     await mkdir(folder, { recursive: true });
     const frontmatter = `---\nname: ${SETUP_SKILL.name}\ndescription: ${SETUP_SKILL.description}\n---`;
-    const skill = `${frontmatter}\n\n# gspot\n\n${LLMS_DESCRIPTION}\n\n${AGENT_STEPS}`;
+    const skill = `${frontmatter}\n\n# gspot\n\n${DESCRIPTION}\n\n${AGENT_STEPS}`;
     await writeFile(new URL(SKILL_FILE, folder), skill);
     const index: AgentSkillsIndex = {
         $schema: SKILLS_SCHEMA,
@@ -47,7 +48,7 @@ export async function writeAgentFiles(dir: URL): Promise<void> {
                 ...SETUP_SKILL,
                 type: 'skill-md',
                 url: `/${SKILLS_FOLDER}${SETUP_SKILL.name}/${SKILL_FILE}`,
-                digest: `sha256:${createHash('sha256').update(skill).digest('hex')}`,
+                digest: `sha256:${hashContent(skill)}`,
             },
         ],
     };

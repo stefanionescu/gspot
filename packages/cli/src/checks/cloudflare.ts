@@ -1,11 +1,13 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
 import { listSourcePaths } from '#cli/repository/coverage.ts';
-import { type Finding, type CheckInput } from '#cli/types/runs/check.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import type { HeaderBlock, HeaderBlocks } from '#cli/types/checks/cloudflare.ts';
 
 import {
+    HEADERS_FILE,
     DETACH_PREFIX,
     PATH_PREFIXES,
     REDIRECT_PARTS,
@@ -33,7 +35,7 @@ function parseHeadersFile(text: string): HeaderBlocks {
     const blocks: HeaderBlock[] = [];
     const findings = splitContentLines(text).flatMap((line): NumberedLine[] => {
         if (!/^\s/u.test(line.text)) {
-            blocks.push({ path: line.text.trim(), line: line.number, headers: [] });
+            blocks.push({ path: line.text.trim(), headers: [] });
             return PATH_PREFIXES.some((prefix) => line.text.startsWith(prefix))
                 ? []
                 : [
@@ -52,7 +54,6 @@ function parseHeadersFile(text: string): HeaderBlocks {
         block.headers.push({
             name: header.slice(0, colon).toLowerCase(),
             value: header.slice(colon + 1).trim(),
-            line: line.number,
         });
         return [];
     });
@@ -100,13 +101,14 @@ function validateRedirects(text: string): NumberedLine[] {
 /**
  * Reports syntax errors in each _redirects file.
  *
- * @param input the scope files to read.
+ * @param session the repository and its tools.
+ * @param planned the scope files to read.
  * @returns the findings.
  */
-export function checkCloudflareRedirects(input: CheckInput): Finding[] {
-    return listSourcePaths(input.files, [REDIRECTS_FILE]).flatMap((path) =>
-        validateRedirects(readCachedBytes(input.reads, path).toString('utf8')).map((entry) =>
-            buildFinding(input, { file: path, line: entry.number }, 'syntax', entry.text),
+export function checkCloudflareRedirects(session: Session, planned: PlannedCheck): Finding[] {
+    return listSourcePaths(planned.files, [REDIRECTS_FILE]).flatMap((path) =>
+        validateRedirects(readCachedText(session.reads, path)).map((entry) =>
+            buildFinding(planned, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
     );
 }
@@ -114,17 +116,18 @@ export function checkCloudflareRedirects(input: CheckInput): Finding[] {
 /**
  * Reports syntax errors in each _headers file, and each security header that the block for every path does not set.
  *
- * @param input the scope files to read.
+ * @param session the repository and its tools.
+ * @param planned the scope files to read.
  * @returns the findings.
  */
-export function checkCloudflareHeaders(input: CheckInput): Finding[] {
-    return listSourcePaths(input.files, ['_headers']).flatMap((path) => {
-        const { blocks, findings } = parseHeadersFile(readCachedBytes(input.reads, path).toString('utf8'));
+export function checkCloudflareHeaders(session: Session, planned: PlannedCheck): Finding[] {
+    return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
+        const { blocks, findings } = parseHeadersFile(readCachedText(session.reads, path));
         return [
-            ...findings.map((entry) => buildFinding(input, { file: path, line: entry.number }, 'syntax', entry.text)),
+            ...findings.map((entry) => buildFinding(planned, { file: path, line: entry.number }, 'syntax', entry.text)),
             ...listMissingHeaders(blocks).map((name) =>
                 buildFinding(
-                    input,
+                    planned,
                     { file: path, line: 1 },
                     'missing-header',
                     `The block for /* sets no valid ${name} header.`,

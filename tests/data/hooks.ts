@@ -40,11 +40,6 @@ export const HOOK_REPOSITORIES = [
     {
         name: 'a Lefthook configuration',
         startProgram: 'npm',
-        settings: `[[ignore]]
-check = "files/yamllint"
-paths = ["lefthook.yml"]
-reason = "This unit checks hook preservation and the instructions for the existing hook provider."
-`,
         files: {
             'package.json':
                 '{"private":true,"packageManager":"npm@11.10.1","devDependencies":{"@gspothq/cli":"0.1.0"}}',

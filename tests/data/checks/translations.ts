@@ -37,7 +37,7 @@ const TRANSLATION_CASES = [
     },
 ] as const;
 
-export { TRANSLATION_CASES, TRANSLATION_SANDBOX };
+export { NEXT_TRANSLATIONS, TRANSLATION_CASES, TRANSLATION_SANDBOX };
 
 export const MESSAGE_LAYOUTS: {
     layout: string;

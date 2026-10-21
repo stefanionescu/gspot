@@ -1,8 +1,10 @@
 import type { Node } from 'web-tree-sitter';
 import { isDocstring } from '#cli/parsers/python.ts';
+import { getLimit } from '#cli/settings/scope-view.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { parseCached } from '#cli/system/files/cache.ts';
 import { locateNode, buildFinding } from '#cli/runs/finding.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { CONVENTION_SOURCES } from '#cli/checks/structure/convention-sources.ts';
 import { checkExportedFunctions } from '#cli/checks/structure/exported-functions.ts';
 import type { IsSubstantial, CountedLanguage } from '#cli/types/checks/structure.ts';
@@ -127,18 +129,19 @@ function isSubstantial(node: Node, language: CountedLanguage, limit: number): bo
 }
 
 /**
- * Counts executable statements, without nested function bodies or type-only declarations.
+ * Count executable statements, including nested function and callback bodies, without type-only declarations.
  *
  * @param nodes the body to count.
  * @param language the grammar of the file.
- * @returns the count; each nested function counts as one.
+ * @returns the count, including one for each expression-bodied lambda.
  */
 function countExecutableStatements(nodes: Node[], language: CountedLanguage): number {
     let count = 0;
     for (const node of nodes) {
         if (node.type.includes('comment') || TYPE_ALIAS_NODES.has(node.type)) continue;
         if (COUNTED_FUNCTION_NODES.has(node.type)) {
-            if (!node.type.startsWith('lambda')) count += 1;
+            const body = node.type === 'lambda' ? node.namedChildren : extractFunctionBody(node, language);
+            count += Number(node.type === 'lambda') + countExecutableStatements(body, language);
             continue;
         }
         count += STATEMENT_COUNTS[language](node) + countExecutableStatements(node.namedChildren, language);
@@ -182,24 +185,25 @@ function formatAccessorName(node: Node, label: string): string {
  * @returns the label for the finding.
  */
 function formatSwiftFunctionName(node: Node): string {
-    const name =
-        node.childForFieldName('name')?.text ??
-        (SWIFT_FUNCTION_LABELS as Readonly<Record<string, string>>)[node.type] ??
-        'function';
+    const name = node.childForFieldName('name')?.text ?? SWIFT_FUNCTION_LABELS[node.type] ?? 'function';
     return SWIFT_ACCESSOR_NODES.has(node.type) ? formatAccessorName(node, name) : name;
 }
 
 /**
  * Reports trivial functions and files, and leaves anonymous functions alone.
  *
- * @param input the scope files and statement limits.
+ * @param session the repository and its tools.
+ * @param planned the scope files and statement limits.
  * @returns the findings.
  */
-async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
-    const parsed = await parseCached(input, CONVENTION_SOURCES);
+async function checkTrivialFunctions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const parsed = await parseCached(
+        { ...session, files: planned.files, selection: planned.selection },
+        CONVENTION_SOURCES,
+    );
     const files: Finding[] = [];
     const functions = parsed.flatMap((source) => {
-        const limit = input.selection.view.limit('trivial_function_statements', source.language);
+        const limit = getLimit(planned.selection.view, 'trivial_function_statements', source.language);
         const findings = (source.captures.get('function') ?? []).flatMap((node) => {
             const body = extractFunctionBody(node, source.language);
             const count = countExecutableStatements(body, source.language);
@@ -209,7 +213,7 @@ async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
                     ? formatSwiftFunctionName(node)
                     : (node.childForFieldName('name')?.text ?? 'function');
             const message = formatTrivialFunction(name, count, limit);
-            return [{ ...buildFinding(input, locateNode(source.path, node), 'trivial-function', message), name }];
+            return [{ ...buildFinding(planned, locateNode(source.path, node), 'trivial-function', message), name }];
         });
         if (isTrivialFile(source.tree.rootNode, source.language, limit)) {
             const line =
@@ -219,7 +223,7 @@ async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
                           .row ?? 0) + 1;
             files.push(
                 buildFinding(
-                    input,
+                    planned,
                     { file: source.path, line },
                     'trivial-file',
                     'This file contains only imports, aliases, forwarding, or trivial functions. Move them to the code that uses them.',
@@ -228,7 +232,7 @@ async function checkTrivialFunctions(input: CheckInput): Promise<Finding[]> {
         }
         return findings;
     });
-    return [...checkExportedFunctions(input), ...functions, ...files];
+    return [...checkExportedFunctions(session, planned), ...functions, ...files];
 }
 
 /**

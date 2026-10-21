@@ -8,7 +8,6 @@ when = { git = true }
 paths = ["**"]
 
 [[tool]]
-mise = "npm:@commitlint/cli"
 name = "commitlint"
 npm = "@commitlint/cli"
 replace = [".commitlintrc", ".commitlintrc.json", ".commitlintrc.yml", ".commitlintrc.yaml", ".commitlintrc.js", ".commitlintrc.cjs", ".commitlintrc.mjs", ".commitlintrc.ts", ".commitlintrc.cts", ".commitlintrc.mts", "commitlint.config.js", "commitlint.config.cjs", "commitlint.config.mjs", "commitlint.config.ts", "commitlint.config.cts", "commitlint.config.mts"]

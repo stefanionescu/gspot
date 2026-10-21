@@ -1,14 +1,11 @@
-/** Each file with its parse error message, and a direct alias it supports. */
 export const ALIAS_FILES = [
     {
         path: 'package.json',
-        message: 'package.json is not valid JSON.',
-        valid: '{"imports":{"#app/*":"./src/*"}}',
+        message: 'package.json is not valid JSON:',
     },
     {
         path: 'tsconfig.json',
         message: 'Cannot read TypeScript configuration {PATH}',
-        valid: '{"compilerOptions":{"paths":{"#app/*":["./src/*"]}}}',
     },
 ] as const;
 

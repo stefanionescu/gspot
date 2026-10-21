@@ -1,10 +1,11 @@
 import type { Node } from 'web-tree-sitter';
-import type { Finding, CheckInput, FindingPlace } from '#cli/types/runs/check.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { Finding, FindingPlace } from '#cli/types/runs/check.ts';
 
 /**
  * Builds a finding that names the check and, by default, has no automatic fix.
  *
- * @param input the check that reports it.
+ * @param planned the check that reports it.
  * @param at the file, and the line and column when known.
  * @param rule the ID of the broken requirement.
  * @param message the text that says what went wrong.
@@ -12,14 +13,14 @@ import type { Finding, CheckInput, FindingPlace } from '#cli/types/runs/check.ts
  * @returns a finding ready for the report.
  */
 export function buildFinding(
-    input: Pick<CheckInput, 'check'>,
+    planned: Pick<PlannedCheck, 'check'>,
     at: FindingPlace,
     rule: string,
     message: string,
     options: Partial<Pick<Finding, 'help' | 'fixable'>> = {},
 ): Finding {
     return {
-        check: input.check.name,
+        check: planned.check.name,
         ...at,
         rule,
         message,

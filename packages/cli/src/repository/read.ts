@@ -5,15 +5,15 @@ import { findScopes } from '#cli/repository/scopes.ts';
 import { detectSwiftTags } from '#cli/parsers/swift.ts';
 import { join, posix, dirname, resolve } from 'node:path';
 import { classifyFile } from '#cli/repository/classify.ts';
+import { stripBlock } from '#cli/system/managed-blocks.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
-import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
 import { SETTINGS_FILE } from '#cli/config/system/locations.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
-import { readCachedBytes, readCachedPrefix } from '#cli/system/files/reads.ts';
+import { readCachedText, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { readIndexEntries, listTrackedFiles } from '#cli/repository/tracked.ts';
 import type { Scope, Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { trimGitLine, isOutsideGit, runGitBlocking, isGitRepository } from '#cli/system/git.ts';
@@ -61,7 +61,7 @@ export async function readRepository(
     const root = reads.root;
     const hasGit = isGitRepository(root);
     const index = hasGit ? await readIndexEntries(root) : [];
-    const entries = await listTrackedFiles(root, index, { hasGit: hasGit });
+    const entries = await listTrackedFiles(root, index, { hasGit });
     using files = openFiles(root);
     const tracked: TrackedFile[] = [];
     const attributes = hasGit
@@ -74,7 +74,7 @@ export async function readRepository(
         const prefix = entry.symlink ? Buffer.alloc(0) : readCachedPrefix(reads, entry.path, FILE_PREFIX_BYTES);
         const file = classifyFile(root, entry, prefix, { declarations, attributes });
         if (!entry.symlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
-            const tags = await detectSwiftTags(file.path, readCachedBytes(reads, file.path).toString('utf8'));
+            const tags = await detectSwiftTags(file.path, readCachedText(reads, file.path));
             file.tags.push(...tags);
         }
         tracked.push(file);
@@ -119,9 +119,8 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
             paths
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
                 .flatMap((path) => {
-                    const text = readCachedBytes(reads, path).toString('utf8');
-                    const span = findBlockSpan(text, { path, style: 'hash' });
-                    const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
+                    const text = readCachedText(reads, path);
+                    const authored = stripBlock(text, { path, style: 'hash' });
                     return parseAttributePatterns(authored, posix.dirname(path))
                         .filter((rule) =>
                             Object.entries(mergeAttributes(rule.attributes, {})).some(
@@ -137,8 +136,8 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
 }
 
 /**
- * Find the nearest folder at or above start that holds gspot.toml, up to the Git top level.
- * Without settings, return the Git top level, or start outside Git.
+ * Find the Git top level, or the nearest settings folder outside Git.
+ * Without settings outside Git, return the starting folder.
  *
  * @param start where the search begins.
  * @returns the settings folder, Git top level, or starting folder outside Git.
@@ -147,12 +146,12 @@ export function findRoot(start: string): string {
     const folder = realpathSync(start);
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS);
     const gitRoot = top.code === 0 ? resolve(trimGitLine(top.stdout)) : undefined;
+    if (gitRoot !== undefined) return gitRoot;
     // Broken Git metadata stops the search; a folder outside any repository does not.
-    if (gitRoot === undefined && !isOutsideGit(runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
+    if (!isOutsideGit(runGitBlocking(folder, WORK_TREE_ARGUMENTS, { env: GIT_LOCALE })))
         throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);
     let current = folder;
     while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
-        if (current === gitRoot) return gitRoot;
         const parent = dirname(current);
         if (parent === current) return folder;
         current = parent;

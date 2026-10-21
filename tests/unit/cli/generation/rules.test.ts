@@ -1,34 +1,45 @@
 import { join } from 'node:path';
 import { format } from 'prettier';
+import { testdir } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import * as assets from '#cli/system/assets.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { generate } from '#cli/generation/generate.ts';
+import { RUNNERS } from '#cli/config/generation/hooks.ts';
 import { type Level } from '#cli/types/configurations.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
-import { JAVASCRIPT_IN_APP, RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/data/rules.ts';
+
+import {
+    JAVASCRIPT_IN_APP,
+    RUNTIME_RULE_CASES,
+    RULE_CONFIGURATIONS,
+    RULE_CORRECTNESS_CASES,
+    NAMING_RULE_LEVEL_CASES,
+} from '#tests/data/rules.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([...RULE_CONFIGURATIONS], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([...RULE_CONFIGURATIONS], {
             rules: true,
             level: level,
         }),
         ...files,
     });
+
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    return new Map(output.files.filter((file) => file.kind === 'rules').map((file) => [file.path, file.content]));
+    return new Map(
+        output.files
+            .filter((file) => file.path.includes('/rules/') && file.path.endsWith('.md'))
+            .map((file) => [file.path, file.content]),
+    );
 }
 
 test('level filtering respects fenced examples, nested sections, and the next heading of the same depth', async () => {
@@ -38,12 +49,12 @@ test('level filtering respects fenced examples, nested sections, and the next he
     const after = '## Safety\n\nKeep this requirement.\n';
     const text = before + omitted + after;
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['bash'], { rules: true }),
+        'gspot.toml': buildSandboxSettings(['bash'], { rules: true }),
         'rules/GUIDE.md': text,
     });
     const session = await openSession(sandbox.path);
     const manifest = {
-        ...readManifests(createReadCache(process.cwd())).get('bash')!,
+        ...readManifests().get('bash')!,
         folder: sandbox.path.replaceAll('\\', '/'),
         rules: {},
     };
@@ -82,7 +93,7 @@ test.each(['', 'app'].flatMap((scope) => RUNTIME_RULE_CASES.map((row) => ({ ...r
     async ({ scope, runtime, dependency, hasNode }) => {
         const prefix = scope === '' ? '' : scope + '/';
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText(scope === '' ? ['javascript'] : [], {
+            'gspot.toml': buildSandboxSettings(scope === '' ? ['javascript'] : [], {
                 rules: true,
                 level: 'all',
                 tables: scope === '' ? '' : '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n',
@@ -108,7 +119,7 @@ test.each(['', 'app'].flatMap((scope) => RUNTIME_RULE_CASES.map((row) => ({ ...r
 
 test('the AGENTS.md block names the folders of a scoped rule without parentheses', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText([], { rules: true, tables: JAVASCRIPT_IN_APP }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables: JAVASCRIPT_IN_APP }),
         'app/main.js': 'console.log("ready");\n',
     });
     const applied = await runGspot(sandbox.path, ['apply']);
@@ -119,7 +130,7 @@ test('the AGENTS.md block names the folders of a scoped rule without parentheses
 });
 
 test('an always-selected configuration installs its rule file once', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([], { rules: true, level: 'all' }) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([], { rules: true, level: 'all' }) });
     const session = await openSession(sandbox.path);
     const engineering = listSelectedManifests(session.scopes).find(
         (manifest) => manifest.configuration.name === 'engineering',
@@ -143,7 +154,7 @@ async function buildManagedBlock(root: string): Promise<string> {
     return buildAgentsBlock({
         hasOwnTitle: false,
         generatedPaths: generated.files.map(({ path }) => path).filter((path) => !path.startsWith('.gspot/')),
-        fileEdits: generated.fileEdits.map(({ path, changes }) => ({
+        fileSettings: generated.fileSettings.map(({ path, changes }) => ({
             path,
             keys: changes.map((change) => change.path.join('.')),
         })),
@@ -158,8 +169,8 @@ async function buildManagedBlock(root: string): Promise<string> {
 }
 
 test('with no configurations the block still lists the general rules and the check command', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildSettingsText([], { rules: true }) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([], { rules: true }) });
+
     const block = await buildManagedBlock(sandbox.path);
     expect(block).toContain('engineering/rules/WORKING.md');
     expect(block).toContain('gspot check --staged');
@@ -167,13 +178,13 @@ test('with no configurations the block still lists the general rules and the che
 });
 
 test('with a check selected the block names the command, and an excluded file leaves the index', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['spelling'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['spelling'], {
             rules: true,
             tables: '\n[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESSIBILITY.md"]\n',
         }),
     });
+
     const block = await buildManagedBlock(sandbox.path);
     expect(block).toContain('gspot check --staged');
     expect(block).not.toContain('ACCESSIBILITY.md');
@@ -227,7 +238,7 @@ describe('rules', () => {
 
 test('the AGENTS.md block moves its headings one level down in a file with its own title', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText([], { rules: true }),
+        'gspot.toml': buildSandboxSettings([], { rules: true }),
         'AGENTS.md': '# Shop\n\nHow agents work here.\n\n```bash\n# not a heading\n```\n',
     });
     const applied = await runGspot(sandbox.path, ['apply']);
@@ -239,4 +250,60 @@ test('the AGENTS.md block moves its headings one level down in a file with its o
     const again = await runGspot(sandbox.path, ['apply']);
     expect(again.code, again.stdout + again.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
+});
+
+test.each(Object.values(RUNNERS).flatMap(({ command }) => [true, false].map((hasChecks) => ({ command, hasChecks }))))(
+    'the AGENTS.md block explains the short gspot command as $command with checks=$hasChecks',
+    ({ command, hasChecks }) => {
+        const block = buildAgentsBlock({
+            files: [],
+            generatedPaths: [],
+            fileSettings: [],
+            hasOwnTitle: false,
+            hasChecks,
+            startCommand: command,
+        });
+        expect(block).toContain(`## Commands\n\nThe rules write \`gspot\` for \`${command}\`.\n\n`);
+    },
+);
+
+test.each([...NAMING_RULE_LEVEL_CASES])(
+    'recommended omits the complete Naming section of $configuration rules and all retains it',
+    async ({ configuration, path }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([configuration], { rules: true }),
+        });
+        const session = await openSession(sandbox.path);
+        const recommended = selectRuleFiles(session).find((file) => file.path === path);
+        expect(recommended).toBeDefined();
+        expect(recommended?.content).not.toContain('## Naming');
+        const all = selectRuleFiles({
+            ...session,
+            settingsFile: { ...session.settingsFile, settings: { ...session.settingsFile.settings, level: 'all' } },
+        }).find((file) => file.path === path);
+        expect(all?.content).toContain('## Naming');
+        expect(all?.content).toContain('### ');
+    },
+);
+
+test.each([...RULE_CORRECTNESS_CASES])(
+    'recommended retains the correctness and security instructions in $path',
+    async ({ configuration, path, instructions }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([configuration], { rules: true }),
+        });
+        const session = await openSession(sandbox.path);
+        const rule = selectRuleFiles(session).find((file) => file.path === path);
+        for (const instruction of instructions) expect(rule?.content.replaceAll(/\s+/gu, ' ')).toContain(instruction);
+    },
+);
+
+test('recommended Python typing rules retain the guidance without a reference to a removed example', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['python'], { rules: true }),
+    });
+    const session = await openSession(sandbox.path);
+    const rule = selectRuleFiles(session).find((file) => file.path === 'language/python/rules/TYPING.md');
+    expect(rule?.content).toContain('## Any, object, and shapes');
+    expect(rule?.content).not.toContain('as `Key` does above');
 });

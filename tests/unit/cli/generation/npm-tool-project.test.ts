@@ -1,39 +1,38 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { STYLESHEET_CASES } from '#tests/data/checks/css.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildNpmProject } from '#cli/generation/projects.ts';
-import { isYarnBerry } from '#cli/repository/package-manager.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { parseToolProject } from '#cli/install/npm/tool-project.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
+import { isYarnBerry, assertPackageManager } from '#cli/repository/package-manager.ts';
 import { YARN_CLIENTS, NEXT_INSTALLATIONS } from '#tests/data/install/npm-tool-project.ts';
 import { REACT_NATIVE_TSCONFIG, REACT_NATIVE_DEPENDENCIES } from '#tests/data/checks/react.ts';
 
 test.each([...STYLESHEET_CASES])(
     '$name installs postcss-html only when Stylelint reads Vue or Svelte styles',
     async (entry) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(entry.configurations),
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(entry.configurations),
             ...entry.files,
         });
+
         const session = await openSession(sandbox.path);
         const manifest = generate(session).files.find(({ path }) => path === '.gspot/package.json')!;
         expect(
-            Object.keys(parseToolProject(manifest.content, session.requirePackageManager().name).dependencies).includes(
-                'postcss-html',
-            ),
+            Object.keys(
+                parseToolProject(manifest.content, assertPackageManager(session.packageManager).name).dependencies,
+            ).includes('postcss-html'),
         ).toBe(entry.needsHtmlParser);
     },
 );
 
 test('a React Native project without Expo installs no Expo or DOM lint plugins', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript', 'react-native']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript', 'react-native']),
         'package.json': JSON.stringify({
             name: 'example',
             private: true,
@@ -41,9 +40,10 @@ test('a React Native project without Expo installs no Expo or DOM lint plugins',
         }),
         'tsconfig.json': JSON.stringify(REACT_NATIVE_TSCONFIG),
     });
+
     const session = await openSession(sandbox.path);
     const generated = generate(session).files.find(({ path }) => path === '.gspot/package.json')!;
-    const project = parseToolProject(generated.content, session.requirePackageManager().name);
+    const project = parseToolProject(generated.content, assertPackageManager(session.packageManager).name);
     expect(project.dependencies).toHaveProperty('eslint-plugin-react-native');
     expect(project.dependencies).not.toHaveProperty('eslint-plugin-expo');
     expect(project.dependencies).not.toHaveProperty('expo-doctor');
@@ -54,8 +54,9 @@ test.each([{ configurations: ['licenses'] }, { configurations: [] }])(
     'a root allowed package installs the license tool for a child scope without a root selection: $configurations',
     async ({ configurations }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSettingsText([...configurations], {
-                tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "1.0.0"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "docs"\nconfigurations = ["licenses"]\n',
+            'gspot.toml': buildSandboxSettings([...configurations], {
+                tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "1.0.0"\nreason = "Reviewed installed metadata."\n',
+                scopes: [{ path: 'docs', configurations: ['licenses'] }],
             }),
             'docs/package.json': '{"name":"docs","private":true}',
         });
@@ -85,11 +86,8 @@ test.each([...YARN_CLIENTS])(
 );
 
 test.each([...NEXT_INSTALLATIONS])('Next ESLint plugin requirements follow the installed major: $name', async (row) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['nextjs'], {
-            tables: `[[scope]]\npath = "app"\nconfigurations = ["nextjs"]\n`,
-        }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['nextjs'], { scopes: [{ path: 'app', configurations: ['nextjs'] }] }),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2","dependencies":{"next":"*"}}',
         'app/package.json': '{"private":true,"dependencies":{"next":"*"}}',
         ...(row.rootVersion === undefined
@@ -109,6 +107,7 @@ test.each([...NEXT_INSTALLATIONS])('Next ESLint plugin requirements follow the i
                   }),
               }),
     });
+
     const session = await openSession(sandbox.path);
     if (row.expected === 'conflict') {
         expect(() => generate(session)).toThrow('Tool pin @next/eslint-plugin-next conflicts');
@@ -116,7 +115,7 @@ test.each([...NEXT_INSTALLATIONS])('Next ESLint plugin requirements follow the i
     } else {
         const generated = generate(session).files.find(({ path }) => path === '.gspot/package.json');
         expect(
-            parseToolProject(generated!.content, session.requirePackageManager().name).dependencies[
+            parseToolProject(generated!.content, assertPackageManager(session.packageManager).name).dependencies[
                 '@next/eslint-plugin-next'
             ],
         ).toBe(row.expected ?? getToolDeclaration(session.manifests.values(), '@next/eslint-plugin-next').version);
@@ -124,10 +123,12 @@ test.each([...NEXT_INSTALLATIONS])('Next ESLint plugin requirements follow the i
 });
 
 test('only selected Next.js scopes set the shared plugin version', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
-            tables: '[[scope]]\npath = "web"\nconfigurations = ["nextjs"]\n[[scope]]\npath = "api"\nconfigurations = ["javascript"]\n',
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            scopes: [
+                { path: 'web', configurations: ['nextjs'] },
+                { path: 'api', configurations: ['javascript'] },
+            ],
         }),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
         'web/package.json': '{"dependencies":{"next":"*"}}',
@@ -135,10 +136,11 @@ test('only selected Next.js scopes set the shared plugin version', async () => {
         'web/node_modules/next/package.json': '{"name":"next","version":"16.3.6"}',
         'api/node_modules/next/package.json': '{"name":"next","version":"15.5.9"}',
     });
+
     const session = await openSession(sandbox.path);
     const output = generate(session).files.find(({ path }) => path === '.gspot/package.json');
     expect(
-        parseToolProject(output!.content, session.requirePackageManager().name).dependencies[
+        parseToolProject(output!.content, assertPackageManager(session.packageManager).name).dependencies[
             '@next/eslint-plugin-next'
         ],
     ).toBe('^16');

@@ -4,8 +4,9 @@ import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { statSync, readFileSync } from 'node:fs';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { ALL_FILES_GLOB } from '#cli/config/system/paths.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { ALL_FILES_GLOB, GRAMMARS_FOLDER, CLI_PACKAGE_JSON, PACKAGE_SEARCH_DEPTH } from '#cli/config/system/assets.ts';
+import { GRAMMARS_FOLDER, CLI_PACKAGE_JSON, PACKAGE_SEARCH_DEPTH } from '#cli/config/system/assets.ts';
 
 let cachedPackageFolder: string | undefined;
 

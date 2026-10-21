@@ -4,13 +4,12 @@ import { parse } from '@decimalturn/toml-patch';
 import { testdir, createFileTree } from 'testdirs';
 import { hasToolBuild } from '#tests/setup/system.ts';
 import { runCommand } from '#tests/setup/processes.ts';
+import { TEST_RUN_FOLDER } from '#tests/setup/install.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { readManifests } from '#cli/configurations/manifests.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { testRunFolder, buildSandboxPath } from '#tests/setup/install.ts';
 import { TUTORIALS, listQuickstartCommands } from '#tests/data/quickstart.ts';
 
 test.each(
@@ -22,7 +21,6 @@ test.each(
     const root = join(sandbox.path, row.folder);
     await mkdir(root);
     const environment = {
-        PATH: buildSandboxPath(),
         MISE_CONFIG_DIR: join(sandbox.path, 'config'),
         MISE_DATA_DIR: join(sandbox.path, 'data'),
         MISE_STATE_DIR: join(sandbox.path, 'state'),
@@ -48,17 +46,7 @@ test.each(
         ...listQuickstartCommands(row.firstCheckCode),
     ]) {
         const result = await runCommand([...command], { cwd: root, env: environment });
-        const launchFailure =
-            result.code === code
-                ? ''
-                : await runCommand(['mise', 'which', 'gspot'], { cwd: root, env: environment }).then(
-                      async (selected) => {
-                          const limit = 4096;
-                          const launcher = selected.code === 0 ? await readFile(selected.stdout.trim(), 'utf8') : '';
-                          return `\nLauncher selection (${String(selected.code)}):\n${selected.stdout}${selected.stderr}\n${launcher.slice(0, limit)}${launcher.length > limit ? '\n[launcher truncated]' : ''}`;
-                      },
-                  );
-        expect(result.code, `${command.join(' ')}\n${result.stdout}${result.stderr}${launchFailure}`).toBe(code);
+        expect(result.code, `${command.join(' ')}\n${result.stdout}${result.stderr}`).toBe(code);
     }
     const source = join(root, row.sourcePath);
     const original = await readFile(source);
@@ -83,16 +71,13 @@ test.each(
  * @param environment mise folder variables for that repository.
  */
 async function linkQuickstartTools(tutorialRoot: string, environment: Record<string, string>): Promise<void> {
-    for (const pin of listMisePins(
-        [...readManifests(createReadCache(process.cwd())).values()],
-        createReadCache(process.cwd()),
-    ).filter((pin) => hasToolBuild(pin.name))) {
+    for (const pin of listMisePins([...readManifests().values()]).filter((pin) => hasToolBuild(pin.name))) {
         const requirement = `${pin.name}@${pin.version}`;
 
         const installed = await runCommand(
             pin.name === 'uv' ? ['mise', 'which', 'uv'] : ['mise', 'where', requirement],
             {
-                cwd: testRunFolder(),
+                cwd: TEST_RUN_FOLDER,
             },
         );
         expect(installed.code, `Quickstart tool lookup failed: ${installed.stdout}${installed.stderr}`).toBe(0);

@@ -52,7 +52,6 @@
                 "old",
                 "new",
                 "legacy",
-                "plus",
                 "combined"
             ]
         },
@@ -99,7 +98,7 @@
             ]
         },
         "folders": {
-            "terms": ["common", "core", "helper", "helpers", "util", "utils", "support", "misc", "shared"]
+            "terms": ["shared"]
         }
     },
     "reserved": {
@@ -118,7 +117,6 @@
     },
     "languages": {
         "typescript": {
-            "acronyms": "word",
             "categories": {
                 "files": {
                     "cases": ["kebab"]
@@ -165,7 +163,6 @@
             }
         },
         "javascript": {
-            "acronyms": "word",
             "categories": {
                 "files": {
                     "cases": ["kebab"]
@@ -203,7 +200,6 @@
             }
         },
         "python": {
-            "acronyms": "lower",
             "categories": {
                 "files": {
                     "cases": ["snake"]
@@ -235,7 +231,6 @@
             }
         },
         "swift": {
-            "acronyms": "initialism",
             "categories": {
                 "files": {
                     "cases": ["pascal", "pascal-extension"]
@@ -252,7 +247,6 @@
             }
         },
         "bash": {
-            "acronyms": "lower",
             "categories": {
                 "files": {
                     "cases": ["kebab", "snake"]
@@ -272,7 +266,6 @@
             }
         },
         "sql": {
-            "acronyms": "lower",
             "categories": {
                 "files": {
                     "cases": ["timestamp-snake", "snake"]
@@ -368,12 +361,6 @@
             "allowed_names": ["node_modules", "__pycache__", "__tests__", "__mocks__"]
         },
         {
-            "paths": ["**"],
-            "languages": ["typescript", "javascript"],
-            "categories": ["parameters", "variables"],
-            "ignored_prefix": "^_+"
-        },
-        {
             "paths": ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"],
             "categories": ["files"],
             "reason": "git names its hooks.",
@@ -390,12 +377,14 @@
         {
             "paths": ["**/e2e/**"],
             "categories": ["folders", "files"],
-            "allow_digits": true
+            "allow_digits": true,
+            "reason": "The folder name e2e holds a digit."
         },
         {
             "paths": ["**/migrations/**"],
-            "categories": ["files"],
-            "allow_digits": true
+            "categories": ["folders", "files"],
+            "allow_digits": true,
+            "reason": "Migration tools name their folders and files with timestamps."
         }
     ],
     "path_containers": [

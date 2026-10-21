@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 
 import {
     STYLESHEETS,
@@ -25,28 +25,14 @@ const installedSandbox = registerSharedSandbox({
     files: { 'package.json': '{"private":true}\n', ...STYLESHEETS },
 });
 
-/**
- * Apply the settings in the shared sandbox, then run Stylelint, which must fail.
- *
- * @param sandboxRoot the folder of the shared sandbox.
- * @returns the report of the failed run.
- */
-async function runStylelintAfterApply(sandboxRoot: string): Promise<RunReport> {
-    const applied = await spawnGspot(sandboxRoot, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const failed = await spawnGspot(sandboxRoot, [...STYLELINT_COMMAND]);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    return JSON.parse(failed.stdout) as RunReport;
-}
-
 test.each([...LEVELS])(
     "Stylelint at level %s applies each scope's lint rule options and no other lint rules",
     async (level) => {
         const root = installedSandbox().root;
-        await using _change = await updateSandbox(installedSandbox(), {
+        await using _change = await applySandboxChanges(installedSandbox(), {
             check: '',
             files: {
-                'gspot.toml': buildSettingsText(['css'], {
+                'gspot.toml': buildSandboxSettings(['css'], {
                     level,
                     tables: level === 'all' ? ALL_LEVEL_STYLELINT_SETTINGS : STYLELINT_SETTINGS,
                 }),
@@ -54,7 +40,9 @@ test.each([...LEVELS])(
                 ...STYLESHEETS,
             },
         });
-        const failedReport = await runStylelintAfterApply(root);
+        const failed = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND]));
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        const failedReport = failed.report;
         expect(failedReport.checks).toMatchObject([
             { check: 'css/stylelint', scope: '', status: 'failed' },
             { check: 'css/stylelint', scope: 'app', status: 'failed' },
@@ -72,9 +60,9 @@ test.each([...LEVELS])(
             level === 'all' ? ['build/site.css', 'app/site.css'] : [],
         );
         await createFileTree(root, FIXED_STYLESHEETS);
-        const corrected = await spawnGspot(root, [...STYLELINT_COMMAND]);
+        const corrected = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND]));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const correctedReport = JSON.parse(corrected.stdout) as RunReport;
+        const correctedReport = corrected.report;
         expect(correctedReport.checks).toMatchObject([
             { check: 'css/stylelint', scope: '', status: 'passed', findings: [] },
             { check: 'css/stylelint', scope: 'app', status: 'passed', findings: [] },
@@ -84,16 +72,15 @@ test.each([...LEVELS])(
 
 test("Stylelint run by an editor finds the scope's tool file and checks your build folder", async () => {
     const root = installedSandbox().root;
-    await using _change = await updateSandbox(installedSandbox(), {
+    await using _change = await applySandboxChanges(installedSandbox(), {
         check: '',
         files: {
-            'gspot.toml': buildSettingsText(['css'], { level: 'all', tables: ALL_LEVEL_STYLELINT_SETTINGS }),
+            'gspot.toml': buildSandboxSettings(['css'], { level: 'all', tables: ALL_LEVEL_STYLELINT_SETTINGS }),
             'package.json': '{"private":true}\n',
             ...STYLESHEETS,
         },
     });
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+
     const tool = join(root, '.gspot/node_modules/.bin/stylelint');
     const failed = await runCommand([tool, 'build/site.css'], { cwd: root });
     expect(failed.code, failed.stdout + failed.stderr).toBe(2);
@@ -109,14 +96,16 @@ test("Stylelint run by an editor finds the scope's tool file and checks your bui
 
 test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind', async () => {
     const root = installedSandbox().root;
-    await using _change = await updateSandbox(installedSandbox(), {
+    await using _change = await applySandboxChanges(installedSandbox(), {
         check: '',
         files: {
-            'gspot.toml': buildSettingsText(['css', 'nextjs'], { level: 'all', tables: TAILWIND_SETTINGS }),
+            'gspot.toml': buildSandboxSettings(['css', 'nextjs'], { level: 'all', tables: TAILWIND_SETTINGS }),
             ...TAILWIND_FILES,
         },
     });
-    const report = await runStylelintAfterApply(root);
+    const failed = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND]));
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    const report = failed.report;
     expect(report.checks.find((check) => check.scope === 'app')).toMatchObject({
         status: 'passed',
         findings: [],
@@ -129,18 +118,20 @@ test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind
             matchFields({ file: 'other/site.css', rule: 'function-no-unknown', line: 4 }),
         ]),
     );
-    await Bun.write(join(root, 'app/site.css'), 'a { color: #ggg; }\n');
-    const invalidValue = await spawnGspot(root, ['check', 'app', '--only', 'css/stylelint', '--json']);
+    await writeFile(join(root, 'app/site.css'), 'a { color: #ggg; }\n');
+    const invalidValue = parseCheckReport(
+        await spawnGspot(root, ['check', 'app', '--only', 'css/stylelint', '--json']),
+    );
     expect(invalidValue.code, invalidValue.stdout + invalidValue.stderr).toBe(1);
-    expect((JSON.parse(invalidValue.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual(
+    expect(invalidValue.report.checks.flatMap((check) => check.findings)).toStrictEqual(
         matchItems([matchFields({ file: 'app/site.css', rule: 'declaration-property-value-no-unknown', line: 1 })]),
     );
-    await Bun.write(join(root, 'app/site.css'), TAILWIND_FILES['app/site.css']);
-    await Bun.write(join(root, 'build/site.css'), 'a { color: red; }\n');
-    await Bun.write(join(root, 'other/site.css'), 'a { color: red; }\n');
-    const corrected = await spawnGspot(root, [...STYLELINT_COMMAND]);
+    await writeFile(join(root, 'app/site.css'), TAILWIND_FILES['app/site.css']);
+    await writeFile(join(root, 'build/site.css'), 'a { color: red; }\n');
+    await writeFile(join(root, 'other/site.css'), 'a { color: red; }\n');
+    const corrected = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND]));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+    expect(corrected.report.checks).toMatchObject([
         { scope: '', status: 'passed', findings: [] },
         { scope: 'app', status: 'passed', findings: [] },
         { scope: 'other', status: 'passed', findings: [] },

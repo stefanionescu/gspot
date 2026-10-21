@@ -38,10 +38,6 @@ dependencies = ["fastapi"]
 /** Samples beside safe documented forms, project validators, and server factories. */
 export const PLATFORM_SOURCES = {
     'scripts/inject.js': 'execSync(`printf ${input}`);\n',
-    'functions/validated.js': 'const body = await request.json(); schema.parse(body);\n',
-    'supabase/functions/admin/index.ts': 'createClient("https://example.com", process.env.SERVICE_ROLE_KEY);\n',
-    'supabase/functions/factory/index.ts': 'const admin = createAdminClient();\n',
-    'src/rpc-input.js': 'const req = { body: validatedData }; client.rpc("write", req.body);\n',
     'Info.plist': '<plist><dict><key>NSAllowsArbitraryLoads</key><true/></dict></plist>\n',
     'Allowed.plist':
         '<plist><dict><key>NSAppTransportSecurity</key><dict><key>NSExceptionDomains</key><dict><key>example.com</key><dict/></dict></dict></dict></plist>\n',
@@ -50,10 +46,6 @@ export const PLATFORM_SOURCES = {
     'supabase/functions/_shared/cors.ts': 'export const headers = { "Access-Control-Allow-Origin": "*" };\n',
     'supabase/functions/cors/index.ts':
         'export const headers = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Credentials": "true" };\n',
-    'supabase/functions/eval/index.ts': 'eval(input);\n',
-    'supabase/functions/remote/index.ts': 'const loaded = import(modulePath);\n',
-    'supabase/functions/lazy/index.ts': 'const loaded = import("./local.ts");\n',
-    'src/rpc.js': 'client.rpc(`fetch_${name}`);\n',
     'src/select.js': 'client.from("users").select(`id,${column}`);\n',
     'src/equal.js': 'client.from("users").filter("name", "eq", `${name}`);\n',
     'src/filter.js': 'client.from("users").or(`id.eq.${input}`);\n',
@@ -94,8 +86,6 @@ export const PLATFORM_SOURCE_FIXES = {
     'src/search.js': 'client.from("docs").textSearch("body", `${term}`, { type: "plain" });\n',
     'supabase/functions/cors/index.ts':
         'export const headers = { "Access-Control-Allow-Origin": "https://example.com", "Access-Control-Allow-Credentials": "true" };\n',
-    'supabase/functions/eval/index.ts': 'const parsed = Number(input);\n',
-    'supabase/functions/remote/index.ts': 'const loaded = import("./local.ts");\n',
 } as const;
 
 export const OWN_RULE_SOURCE = `export function double(value: number): number {

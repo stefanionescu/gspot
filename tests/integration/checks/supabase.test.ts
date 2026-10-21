@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { hasToolBuild } from '#tests/setup/system.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { runSandboxStep } from '#tests/setup/install.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildSandboxChanges } from '#tests/setup/builders.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { SUPABASE_CASES, SUPABASE_SANDBOX } from '#tests/data/checks/supabase.ts';
+import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 
 test.skipIf(!hasToolBuild('semgrep'))(
@@ -15,13 +15,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
     async () => {
         const { root, environment } = installedSandbox();
         const files = {
-            'gspot.toml': buildSettingsText(['supabase', 'security'], {
-                level: 'all',
-                tables: `[[scope]]
-path = "child"
-
-`,
-            }),
+            'gspot.toml': buildSandboxSettings(['supabase', 'security'], { level: 'all', scopes: [{ path: 'child' }] }),
             ...Object.fromEntries(
                 ['supabase/functions/source.js', 'child/source.js'].map((path) => [
                     path,
@@ -29,17 +23,16 @@ path = "child"
                 ]),
             ),
         };
-        await using _sourceChange = await updateSandbox(
+        await using _sourceChange = await applySandboxChanges(
             installedSandbox(),
             buildSandboxChanges(SUPABASE_SANDBOX.files, files),
         );
-        const applied = await spawnGspot(root, ['apply'], environment);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await runSandboxStep(root, ['install'], environment, 'install');
+
+        await runSandboxStep({ root: root, environment: environment, run: spawnGspot }, ['install']);
         const command = ['check', '--only', 'security/semgrep', '--json'];
-        const failed = await spawnGspot(root, command, environment);
+        const failed = parseCheckReport(await spawnGspot(root, command, environment));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = JSON.parse(failed.stdout) as RunReport;
+        const report = failed.report;
         expect(
             report.checks
                 .flatMap((check) => check.findings)
@@ -55,12 +48,12 @@ path = "child"
                 .toSorted((a, b) => a.file.localeCompare(b.file)),
         );
         for (const path of ['supabase/functions/source.js', 'child/source.js']) {
-            expect(await Bun.file(join(root, path)).text()).toBe('console.log(Deno.env.get("API_SECRET"));\n');
-            await Bun.write(join(root, path), 'console.log("Unable to load the record");\n');
+            expect(await readFile(join(root, path), 'utf8')).toBe('console.log(Deno.env.get("API_SECRET"));\n');
+            await writeFile(join(root, path), 'console.log("Unable to load the record");\n');
         }
-        const corrected = await spawnGspot(root, command, environment);
+        const corrected = parseCheckReport(await spawnGspot(root, command, environment));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
+        expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
     },
 );
 

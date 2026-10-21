@@ -143,9 +143,10 @@ documents keeping them. Acquire a lock atomically with `mkdir` on a folder that 
 
 Stop commands remove only what the script created. Validate a cleanup path from
 input or persistent state against its permitted root. Reject empty values, `/`,
-the repository root, `$HOME`, symlinks, and anything outside the folder the script created. Keep a `mktemp -d` result
-exactly. Never widen the path to its neighbors. `|| true` never follows a destructive
-step or a required installation, publishing, build, or runtime command.
+the repository root, `$HOME`, symlinks, and anything outside the folder the script created.
+
+Keep a `mktemp -d` result exactly. Never widen the path to its neighbors. Do not hide a failure with `|| true`. Handle it, or let it stop the
+script.
 
 ```bash
 downloaded_file="$(mktemp "${config_file}.XXXXXX")" || exit 1

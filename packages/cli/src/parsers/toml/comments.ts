@@ -27,8 +27,7 @@ function buildTablePath(
         if (!Array.isArray(getValueAt(positions.value, path))) continue;
         const name = JSON.stringify(node.key.item.value.slice(0, index + 1));
         let position = positions.active.get(name) ?? 0;
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- reason: Convert the library enum to text before comparing syntax names, as the TOML parser interface requires.
-        if (String(node.type) === 'TableArray' && index === node.key.item.value.length - 1) {
+        if (isTomlKind(node, 'TableArray') && index === node.key.item.value.length - 1) {
             position = positions.counts.get(name) ?? 0;
             positions.counts.set(name, position + 1);
             positions.active.set(name, position);

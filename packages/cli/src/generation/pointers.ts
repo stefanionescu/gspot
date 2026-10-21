@@ -3,11 +3,10 @@ import { parseJsonFile } from '#cli/parsers/json.ts';
 import { posix, dirname, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Session } from '#cli/types/planning.ts';
-import type { FileEdit } from '#cli/types/ownership.ts';
 import { formatHeader } from '#cli/generation/header.ts';
+import type { FileSettings } from '#cli/types/ownership.ts';
 import { listCoveredFiles } from '#cli/repository/coverage.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { type ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { listScopeChecks, listRequiredTools } from '#cli/planning/needed-tools.ts';
 import { isInScope, joinScope, listNestedScopes, buildScopeTarget } from '#cli/repository/scopes.ts';
@@ -66,13 +65,12 @@ function buildBodyPointer(
     pointerPath: string,
     targetPath: string,
 ): GeneratedFile {
-    const body = fillTarget(pointer.body ?? '', pointerPath, targetPath);
+    const body = fillTarget(pointer.body, pointerPath, targetPath);
     const ended = body.endsWith('\n') ? body : `${body}\n`;
     const notes = [`The tool file is ${targetPath}.`, ...(pointer.note === undefined ? [] : [pointer.note])];
     return {
         path: pointerPath,
         content: `${formatHeader(pointerPath, notes)}${ended}`,
-        kind: 'pointer',
     };
 }
 
@@ -84,19 +82,11 @@ function buildBodyPointer(
  *
  * @returns the root or folder paths.
  */
-function listPointerPaths(
-    context: Pick<ToolFileInputs, 'session' | 'selection' | 'manifest'>,
-    toolFile: ToolFileDeclaration,
-): string[] {
+function listPointerPaths(context: ToolFileInputs, toolFile: ToolFileDeclaration): string[] {
     const { selection, manifest } = context;
     const { scopes, repository } = context.session;
     const { pointer } = toolFile;
     if (pointer === undefined) return [];
-    if (
-        pointer.when !== undefined &&
-        !isConfigurationSelected(toolFile.per_scope ? [selection] : scopes, pointer.when.configuration)
-    )
-        return [];
     const scope = selection.scope.path;
     if (pointer.folders === undefined) return [toolFile.per_scope ? joinScope(scope, pointer.path) : pointer.path];
     const children = listNestedScopes(
@@ -139,19 +129,11 @@ function listPointerFieldTargets({
                         file.tool.includes(tool.name) && (!file.per_scope || consumed || !paths.has(target)),
                 )
                 .map(({ file, target }) => {
-                    let scope = '';
-                    let children: string[] = [];
-                    if (file.per_scope) {
-                        scope = selection.scope.path;
-                        children = listNestedScopes(scopePaths, scope);
-                    }
-                    let pointerTarget = target;
-                    if (file.pointer !== undefined) {
-                        const pointerPath = posix.join(scope, file.pointer.path);
-                        pointerTarget = paths.has(pointerPath) ? pointerPath : file.pointer.path;
-                    }
+                    const scope = file.per_scope ? selection.scope.path : '';
+                    const children = file.per_scope ? listNestedScopes(scopePaths, scope) : [];
+                    const pointerPath = file.pointer === undefined ? target : joinScope(scope, file.pointer.path);
+                    const pointerTarget = paths.has(pointerPath) ? pointerPath : (file.pointer?.path ?? target);
                     return {
-                        file: replacement.file,
                         key: replacement.key,
                         scope,
                         children,
@@ -173,7 +155,7 @@ function buildPointerFieldEdits(
     session: Session,
     generated: GeneratedFile[],
     targets: PointerFieldInputs['targets'],
-): FileEdit[] {
+): FileSettings[] {
     const { root, repository, scopes } = session;
     const paths = new Set(generated.map(({ path }) => path));
     const scopePaths = scopes.map(({ scope }) => scope.path);
@@ -186,22 +168,20 @@ function buildPointerFieldEdits(
     const declarations = tools.flatMap((selected) =>
         listPointerFieldTargets({ ...selected, paths, targets, scopePaths }),
     );
-    const pointerFields = new Map(
-        declarations.map((row) => [JSON.stringify([row.file, row.key, row.scope, row.target]), row]),
-    );
+    const pointerFields = new Map(declarations.map((row) => [JSON.stringify([row.key, row.scope, row.target]), row]));
+    if (pointerFields.size === 0) return [];
     const packages = new Set([
         'package.json',
         ...repository.files
             .filter((file) => file.kind === 'source' && posix.basename(file.path) === 'package.json')
             .map(({ path }) => path),
     ]);
-    if (pointerFields.size === 0) return [];
     using files = openFiles(root);
     return [...packages].flatMap((path) => {
         const source = files.read(path);
         if (source === undefined) return [];
         const document = parseJsonFile(path, source.bytes.toString('utf8'));
-        return [...pointerFields.values()]
+        const changes = [...pointerFields.values()]
             .filter(
                 (row) =>
                     Object.hasOwn(document, row.key) &&
@@ -211,14 +191,10 @@ function buildPointerFieldEdits(
                         isDeepStrictEqual(document[row.key], { extends: deriveRelativeTarget(path, row.target) })),
             )
             .map((row) => ({
-                path,
-                changes: [
-                    {
-                        path: [row.key],
-                        value: paths.has(row.target) ? { extends: deriveRelativeTarget(path, row.target) } : undefined,
-                    },
-                ],
+                path: [row.key],
+                value: paths.has(row.target) ? { extends: deriveRelativeTarget(path, row.target) } : undefined,
             }));
+        return changes.length === 0 ? [] : [{ path, changes }];
     });
 }
 

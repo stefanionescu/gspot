@@ -1,3 +1,4 @@
+import type { Group } from '#cli/types/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 
 export const SOURCE_FILE_GROUPS = ['language', 'framework'] as const;
@@ -9,7 +10,6 @@ export const RULES_FOLDER = 'rules';
 
 export const NAMING_DEFAULTS_FILE = 'configurations/general/naming/defaults.json';
 
-/** Display labels for each configuration group, in init order. */
 export const GROUPS = [
     'language',
     'framework',
@@ -21,6 +21,7 @@ export const GROUPS = [
     'general',
 ] as const;
 
+/** Display labels for each configuration group, in init order. */
 export const GROUP_LABELS = {
     language: 'Languages',
     framework: 'Frameworks',
@@ -30,15 +31,7 @@ export const GROUP_LABELS = {
     infrastructure: 'Infrastructure',
     library: 'Libraries',
     general: 'General',
-} as const;
-
-export const MISE_BACKENDS = [
-    { installer: 'mise', prefix: '' },
-    { installer: 'npm', prefix: 'npm:' },
-    { installer: 'pypi', prefix: 'pipx:' },
-    { installer: 'github', prefix: 'github:' },
-    { installer: 'cargo', prefix: 'cargo:' },
-] as const;
+} as const satisfies Record<Group, string>;
 
 /** The placeholder that a manifest file list uses for the resolved test files of the scope. */
 export const TEST_FILES_PLACEHOLDER = '{setting:test_files}';
@@ -101,4 +94,28 @@ export const EXTENSION_PATTERN = /^\.[a-z0-9]+$/u;
 
 export const SHIPPED_TOOL_FILES_FOLDER = 'tool-files';
 
-export const JAVASCRIPT_CONFIGURATION_FOLDER = 'configurations/language/javascript';
+export const SVELTE_CONFIGURATION = 'svelte';
+
+export const VUE_CONFIGURATION = 'vue';
+
+export const LICENSES_CONFIGURATION = 'licenses';
+
+export const OPENAPI_CONFIGURATION = 'openapi';
+
+export const FORMAT_CONFIGURATION = 'format';
+
+export const SWIFT_CONFIGURATION = 'swift';
+
+export const SITE_CONFIGURATION = 'site';
+
+export const TRPC_CONFIGURATION = 'trpc';
+
+export const REACT_NATIVE_CONFIGURATION = 'react-native';
+
+export const NESTJS_CONFIGURATION = 'nestjs';
+
+export const NEXTJS_CONFIGURATION = 'nextjs';
+
+export const TYPESCRIPT_CONFIGURATION = 'typescript';
+
+export const JAVASCRIPT_CONFIGURATION = 'javascript';

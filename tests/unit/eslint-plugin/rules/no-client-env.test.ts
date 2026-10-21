@@ -1,14 +1,13 @@
 import plugin from '#eslint-plugin/plugin.ts';
 import { createRuleTester } from '#tests/setup/rule-tester.ts';
+import { ENVIRONMENT_GLOBALS } from '#tests/data/eslint-plugin.ts';
 import type { ClientEnvOptions } from '#eslint-plugin/types/rules.ts';
-import { CLIENT_ENV_SAMPLE, ENVIRONMENT_GLOBALS } from '#tests/data/eslint-plugin.ts';
 
-createRuleTester('/repo').run<
+createRuleTester().run<
     keyof (typeof plugin.rules)['no-client-env']['meta']['messages'],
     [Partial<ClientEnvOptions[0]>]
 >('no-client-env', plugin.rules['no-client-env'], {
     valid: [
-        CLIENT_ENV_SAMPLE.corrected,
         "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",
         "'use client';\nconst mode = process.env.NODE_ENV;",
         "'use client';\nconst { NODE_ENV } = process.env;",
@@ -23,8 +22,10 @@ createRuleTester('/repo').run<
         },
     ],
     invalid: [
-        { code: CLIENT_ENV_SAMPLE.broken, errors: [{ messageId: 'private', line: 2, column: 25 }] },
-        { code: "'use client';\nconst key = process.env.SECRET;", errors: [{ messageId: 'private' }] },
+        {
+            code: "'use client';\nconst key = process.env.SECRET;",
+            errors: [{ messageId: 'private', line: 2, column: 13 }],
+        },
         {
             code: "'use client';\nconst key = process.env.SECRET;",
             languageOptions: { globals: ENVIRONMENT_GLOBALS },

@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
 import { APP_JEST, VITEST_FILES } from '#tests/data/generation/eslint/fragments.ts';
@@ -10,12 +10,12 @@ import { DUPLICATE_RULE_CASES, DUPLICATE_RULE_FILES } from '#tests/data/generati
 test.each([...DUPLICATE_RULE_CASES])(
     'each pair of duplicate rules reports a defect once, from the kept rule (%j)',
     async ({ file, rules, kept }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             ...DUPLICATE_RULE_FILES,
-            'gspot.toml': buildSettingsText(['typescript'], { level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
             ...Object.fromEntries(DUPLICATE_RULE_CASES.map(({ file, source }) => [file, source])),
         });
+
         const eslint = await createEslint(sandbox.path);
 
         const reports = await collectLintFindings(eslint, sandbox.path, [file], rules);
@@ -46,7 +46,7 @@ test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum
                 ? ''
                 : `[limits.${language}]\nfunction_parameters = { value = ${String(maximum)}, reason = "This sandbox tests the authored parameter ceiling." }\n`;
         await createFileTree(folder.path, {
-            'gspot.toml': buildSettingsText([language], { tables: limits, level: 'all' }),
+            'gspot.toml': buildSandboxSettings([language], { tables: limits, level: 'all' }),
             'package.json': '{"private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
             [`example.${extension}`]: source,
@@ -63,7 +63,7 @@ test('limit-languages > a JavaScript file takes the JavaScript limits, and a Typ
     await using folder = await testdir();
     const body = '(value) { if (value > 1) return 1; if (value > 0) return 2; return 3; }';
     await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['javascript', 'typescript'], {
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript'], {
             tables: '[limits.javascript]\ncyclomatic_complexity = 2\n',
             level: 'all',
         }),
@@ -80,13 +80,13 @@ test('limit-languages > a JavaScript file takes the JavaScript limits, and a Typ
 
 describe('jest', () => {
     test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'gspot.toml': APP_JEST,
             'package.json': '{"private":true,"type":"module"}\n',
             'root.test.js': '',
             'app/sample.test.js': '',
         });
+
         const eslint = await createEslint(sandbox.path);
         const focused =
             "import { test, expect } from '@jest/globals';\ntest.only('counts', () => { expect(1).toBe(1); });\n";
@@ -105,11 +105,11 @@ describe('testing-library', () => {
         ['vue', '@testing-library/vue'],
         ['svelte', '@testing-library/svelte'],
     ])('Testing Library with %s reports debugging only in dependency-owned test files', async (framework, library) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['javascript', framework, 'testing-library'], {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['javascript', framework, 'testing-library'], {
                 level: 'all',
-                tables: '[[scope]]\npath = "child"\n\n[[scope]]\npath = "neighbor"\nremoved_configurations = [ "testing-library" ]\n',
+                scopes: [{ path: 'child' }, { path: 'neighbor' }],
+                tables: 'removed_configurations = { value = [ "testing-library" ], reason = "This scope does not use Testing Library." }\n',
             }),
             'package.json': JSON.stringify({ private: true, dependencies: { [library]: '1.0.0' } }),
             'child/package.json': '{"private":true,"dependencies":{}}\n',
@@ -118,6 +118,7 @@ describe('testing-library', () => {
             'child/source.test.js': '',
             'neighbor/source.test.js': '',
         });
+
         const eslint = await createEslint(sandbox.path);
         const source = `import { screen } from '${library}';\nscreen.debug();\n`;
         const paths = ['source.test.js', 'source.js', 'child/source.test.js', 'neighbor/source.test.js'];
@@ -137,11 +138,11 @@ describe('vitest', () => {
     test.each([...LEVELS])(
         'Vitest reports a focused test without a fix, and strict equality only at level all (%s)',
         async (level) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
+            await using sandbox = await testdir({
                 ...VITEST_FILES,
-                'gspot.toml': buildSettingsText(['vitest'], { level }),
+                'gspot.toml': buildSandboxSettings(['vitest'], { level }),
             });
+
             const eslint = await createEslint(sandbox.path);
             const config = (await eslint.calculateConfigForFile('tests/unit/example.test.js')) as EslintConfiguration;
             expect(config.rules['vitest/no-focused-tests']).toStrictEqual([2, { fixable: false }]);
@@ -165,13 +166,13 @@ test.only('checks the value', () => { expect({value: 1}).toEqual({value: 1}); })
 });
 
 test('a template message to a logger method, including log, is reported, and console.log is not', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}\n',
         'source.js':
             'export function report(logger, count) {\n    logger.log(`Saved ${count}`);\n    logger.info(`Read ${count}`);\n    console.log(`Printed ${count}`);\n}\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     const [result] = await eslint.lintFiles(['source.js']);
     expect(

@@ -1,7 +1,8 @@
 import type { Node } from 'web-tree-sitter';
+import type { Finding } from '#cli/types/runs/check.ts';
+import { visitParsedSources } from '#cli/parsers/grammars.ts';
 import { locateNode, buildFinding } from '#cli/runs/finding.ts';
-import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { COMMENT_LINE, XCTEST_PREFIX, SKIP_REASON_ARGUMENT, SWIFT_STRING_LITERAL } from '#cli/config/checks/swift.ts';
 
 function hasReason(value: Node | undefined): boolean {
@@ -47,17 +48,18 @@ function listUnexplainedSkips(root: Node, lines: string[]): Node[] {
 /**
  * Reports each skipped test without a reason, and each unavailable declaration without an explanation.
  *
- * @param input the scope Swift test files.
+ * @param session the repository and its tools.
+ * @param planned the scope Swift test files.
  * @returns the findings.
  */
-export async function checkSwiftSkipReasons(input: CheckInput): Promise<Finding[]> {
-    const files = input.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
+export async function checkSwiftSkipReasons(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: Finding[] = [];
-    await visitParsedSources({ ...input, files }, (source) => {
+    await visitParsedSources({ reads: session.reads, resources: session.resources, files }, (source) => {
         for (const node of listUnexplainedSkips(source.rootNode, source.text.split('\n')))
             findings.push(
                 buildFinding(
-                    input,
+                    planned,
                     locateNode(source.path, node),
                     'disabled',
                     'Explain why this test is disabled in its reason argument or availability annotation.',

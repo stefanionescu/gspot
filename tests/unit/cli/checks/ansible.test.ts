@@ -2,16 +2,15 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
-import { checkAnsibleLint } from '#cli/checks/ansible.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { COMMAND_PLAYBOOK } from '#tests/data/checks/ansible.ts';
-import { buildCheckInput, openPinnedSession } from '#tests/setup/check-input.ts';
+import { findBuiltInCheck, planSandboxCheck, openPinnedSession } from '#tests/setup/check-input.ts';
 
 test('each Ansible project lints its own files and not those of a nested project', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['ansible']),
+        'gspot.toml': buildSandboxSettings(['ansible']),
         'infra/ansible.cfg': '[defaults]\n',
         'infra/site.yml': COMMAND_PLAYBOOK,
         'infra/edge/ansible.cfg': '[defaults]\n',
@@ -23,7 +22,7 @@ test('each Ansible project lints its own files and not those of a nested project
     await createFileTree(sandbox.path, {
         [buildVenvExecutablePath('.gspot/.venv', 'ansible-lint')]: 'fixture',
     });
-    const input = buildCheckInput(session, 'ansible/ansible-lint');
+    const input = planSandboxCheck(session, 'ansible/ansible-lint');
     const run = resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation((command) =>
             Promise.resolve(
@@ -37,7 +36,7 @@ test('each Ansible project lints its own files and not those of a nested project
             ),
         ),
     );
-    const findings = await checkAnsibleLint(input);
+    const findings = await findBuiltInCheck('ansible/ansible-lint')(session, input);
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'infra/site.yml', rule: 'command-instead-of-module' },
         { file: 'infra/edge/site.yml', rule: 'command-instead-of-module' },

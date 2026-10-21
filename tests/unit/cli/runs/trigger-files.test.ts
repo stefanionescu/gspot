@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/runs/run.ts';
 import { openSession } from '#cli/session.ts';
@@ -7,7 +8,6 @@ import { fakeTool } from '#tests/setup/fakes.ts';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { planRun } from '#cli/planning/checks.ts';
 import { mkdir, readFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { type Session } from '#cli/types/planning.ts';
 import { DOCS_SETTINGS } from '#tests/data/checks/docs.ts';
 import { buildRunOptions } from '#tests/setup/builders.ts';
@@ -34,7 +34,7 @@ async function fakeProjectChecks(session: Session): Promise<void> {
         runs: 'scope',
         cwd: 'root' as const,
         command: [join(session.root, '.gspot/mock-tsc')],
-        output: { format: 'lines' as const, file_type: 'path' },
+        output: { format: 'lines' as const },
         files: manifest.files,
         fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
@@ -46,12 +46,12 @@ async function fakeProjectChecks(session: Session): Promise<void> {
 test.each([...PROJECT_TRIGGERS])(
     'a last-file %s triggers only the affected project with %s selection, and its fixer supports a dry run',
     async (operation, selection) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'gspot.toml': TWO_SCOPES_SETTINGS,
             'api/source.ts': 'export {};\n',
             'web/kept.ts': 'export {};\n',
         });
+
         commitAll(sandbox.path);
         if (operation === 'delete') readGitOutput(sandbox.path, ['rm', 'api/source.ts']);
         else readGitOutput(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
@@ -96,8 +96,8 @@ test.each([...PROJECT_TRIGGERS])(
     },
 );
 test('a deleted file from another language does not trigger a TypeScript project', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': TWO_SCOPES_SETTINGS, 'api/kept.ts': 'export {};\n' });
+    await using sandbox = await testdir({ 'gspot.toml': TWO_SCOPES_SETTINGS, 'api/kept.ts': 'export {};\n' });
+
     const session = await openSession(sandbox.path);
     await fakeProjectChecks(session);
     const planned = planRun(session, {
@@ -109,8 +109,7 @@ test('a deleted file from another language does not trigger a TypeScript project
     expect(planned.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
 });
 test('a deleted child-scope input triggers only the child project', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'gspot.toml':
             TWO_SCOPES_SETTINGS +
             `
@@ -122,6 +121,7 @@ configurations = []
         'api/nested/README.md': '# Nested\n',
         'web/kept.ts': 'export {};\n',
     });
+
     const session = await openSession(sandbox.path);
     await fakeProjectChecks(session);
     const planned = planRun(session, {
@@ -139,13 +139,13 @@ configurations = []
 test.each(['gspot.toml', '.gspot/configurations/general/docs/lychee.toml'])(
     'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
     async (path) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'gspot.toml': DOCS_SETTINGS,
             'README.md': '# Root\n',
             'api/guide.md': '# API\n',
             'api/ignored/guide.md': '# Built pages\n',
         });
+
         const session = await openSession(sandbox.path);
         const planned = planRun(session, { stage: 'commit', staged: [path], only: ['docs/lychee'] });
         expect(

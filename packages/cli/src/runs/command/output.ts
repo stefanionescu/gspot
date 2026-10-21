@@ -2,17 +2,14 @@ import { statSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
 import { join, relative, isAbsolute } from 'node:path';
 import { TAIL_LINES } from '#cli/config/runs/command.ts';
-import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { OUT_OF_MEMORY } from '#cli/config/runs/output.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { OutputPaths } from '#cli/types/runs/output.ts';
-import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { ExecutionFailure } from '#cli/types/tools/run.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import { parseOutput, outputFormats } from '#cli/runs/output/formats.ts';
-import { convertToPosixPath, normalizeOutputPath } from '#cli/system/paths.ts';
 import type { ToolDeclaration, CheckDeclaration } from '#cli/types/configurations.ts';
 
 import type {
@@ -41,36 +38,15 @@ function buildUnexplainedFailure(
     const { name, help } = check;
     return {
         check: name,
-        file: file === undefined ? '' : normalizeOutputPath(file),
+        file: file === undefined ? '' : convertToPosixPath(file),
         message: text,
         help,
         fixable: false,
     };
 }
 
-function markFailure(
-    check: CheckDeclaration,
-    {
-        tool,
-        result,
-        parsed,
-        state,
-    }: { tool: ToolDeclaration; result: SpawnResult; parsed: Finding[]; state: CommandRunState },
-): void {
-    if (result.code === 0) return;
-    state.isFailed = true;
-    if (parsed.length === 0) state.findings.push(buildUnexplainedFailure(check, tool, result, undefined));
-}
-
-function setFindingFiles(
-    parsed: Finding[],
-    invocation: CommandInvocation,
-    check: CheckDeclaration,
-    paths: OutputPaths,
-): void {
+function setFindingFiles(parsed: Finding[], invocation: CommandInvocation, paths: OutputPaths): void {
     if (invocation.file === undefined) return;
-    // Regex file groups can name a rule or another identifier instead of a path.
-    if (check.output.format === 'regex' && check.output.file_type !== 'path') return;
     const file = convertToPosixPath(relative(paths.root, join(paths.cwd, invocation.file)));
     for (const finding of parsed) if (finding.file === '') finding.file = file;
 }
@@ -80,22 +56,6 @@ function isOnDisk(file: string, roots: string[]): boolean {
     return roots.some(
         (root) => statSync(isAbsolute(file) ? file : join(root, file), { throwIfNoEntry: false }) !== undefined,
     );
-}
-
-// A secret scanner that fails shows its exit code only, never its output.
-function buildWithheldError(check: CheckDeclaration, result: SpawnResult): GspotError {
-    return new GspotError('output', `${check.name} failed with exit ${String(result.code)}; raw output was withheld.`);
-}
-
-function parseRedactedFindings(check: CheckDeclaration, result: SpawnResult, paths: OutputPaths): Finding[] {
-    if (result.code !== 0 && check.exit_codes?.includes(result.code) !== true) throw buildWithheldError(check, result);
-    const findings = parseOutput(check, result.stdout, result.stderr, paths);
-    if (result.code !== 0 && findings.length === 0)
-        throw new GspotError(
-            'output',
-            `${check.name} reported findings without valid structured data; raw output was withheld.`,
-        );
-    return findings;
 }
 
 function failBrokenTool(planned: OutputCheck, result: SpawnResult): never {
@@ -114,14 +74,15 @@ function failBrokenTool(planned: OutputCheck, result: SpawnResult): never {
  * @returns true for a crash.
  */
 function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Finding[], paths: OutputPaths): boolean {
-    if (result.code === 0 || (check.command?.includes(FILE_PLACEHOLDER) ?? false)) return false;
+    if (check.runs === 'history' || result.code === 0 || (check.command?.includes(FILE_PLACEHOLDER) ?? false))
+        return false;
     const output = check.output;
     if (!outputFormats[output.format].namesFiles(output)) return false;
     return parsed.every((finding) => !isOnDisk(finding.file, [paths.cwd, paths.root]));
 }
 
 /**
- * Parses findings, fails on a crash, and withholds secret-scanner output.
+ * Parses findings and fails on a crash.
  *
  * @param planned the check that ran.
  * @param result what the command printed.
@@ -130,14 +91,8 @@ function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Find
  */
 function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
     const { check } = planned;
-    const redacts = outputFormats[check.output.format].redactsOutput;
-    if (hasToolError(check, planned.tool, result)) {
-        if (redacts) throw buildWithheldError(check, result);
-        failBrokenTool(planned, result);
-    }
-    const parsed = redacts
-        ? parseRedactedFindings(check, result, paths)
-        : parseOutput(check, result.stdout, result.stderr, paths);
+    if (hasToolError(check, planned.tool, result)) failBrokenTool(planned, result);
+    const parsed = parseOutput(check, result.stdout, result.stderr, paths);
     if (isToolBroken(check, result, parsed, paths)) failBrokenTool(planned, result);
     return parsed;
 }
@@ -160,7 +115,7 @@ export function buildCheckResult(
     const { base, state, commandArguments, started } = completion;
     const output = check.output;
     const descriptor = outputFormats[output.format];
-    const isEveryFindingKept = state.isFailed || descriptor.redactsOutput || descriptor.namesFiles(output);
+    const isEveryFindingKept = state.isFailed || (check.runs !== 'history' && descriptor.namesFiles(output));
     // Successful tools can print fileless progress; failed runs must retain that output.
     const findings = isEveryFindingKept
         ? state.findings
@@ -206,59 +161,30 @@ export function recordInvocation(
         invocation.file === undefined
             ? undefined
             : convertToPosixPath(relative(state.root, join(state.cwd, invocation.file)));
-    const parsed =
-        findings.length === 0 && result.code !== 0 && invocation.file !== undefined
-            ? [buildUnexplainedFailure(check, tool, result, file)]
-            : findings.map((finding) => ({ ...finding }));
-    setFindingFiles(parsed, invocation, check, state);
-    state.findings.push(...parsed);
-    markFailure(check, { tool, result, parsed, state });
-}
-
-/**
- * Classifies a process failure for command checks and built-in checks.
- *
- * @param result what the process returned.
- * @param name the tool that the note mentions.
- * @param view the scope settings.
- * @returns the failure, or undefined for readable output.
- */
-export function findExecutionFailure(
-    result: SpawnResult,
-    name: string,
-    view: Pick<ScopeView, 'settings'>,
-): ExecutionFailure | undefined {
-    if (result.isCanceled === true) return { status: 'error', note: `${name} was canceled.` };
-    if (result.isTimedOut === true)
-        return {
-            status: 'error',
-            note: `${name} ran longer than tool_timeout_seconds (${String(getToolTimeoutSeconds(view))}s) and was stopped.`,
-        };
-    if (result.missing) return { status: 'missing', note: `${name} could not be started: ${result.stderr.trim()}` };
-    if (result.isErrored === true)
-        return {
-            status: 'error',
-            note: `${name} could not run: ${result.stderr.trim()}`,
-        };
-    return undefined;
+    setFindingFiles(findings, invocation, state);
+    if (result.code !== 0) {
+        state.isFailed = true;
+        if (findings.length === 0) findings.push(buildUnexplainedFailure(check, tool, result, file));
+    }
+    state.findings.push(...findings);
 }
 
 /**
  * Checks whether a run exited with an undeclared code or printed a crash pattern.
  *
- * @param check the declared exit codes and crash pattern.
+ * @param check the declared exit codes.
  * @param tool the declaration with the shared crash pattern.
  * @param result what the process returned.
  * @returns whether the tool broke.
  */
 export function hasToolError(check: CheckDeclaration, tool: ToolDeclaration | undefined, result: SpawnResult): boolean {
     if (result.code !== 0 && check.exit_codes !== undefined && !check.exit_codes.includes(result.code)) return true;
-    const pattern = check.crash_pattern ?? tool?.crash_pattern;
+    const pattern = tool?.crash_pattern;
     return pattern !== undefined && new RegExp(pattern, 'mu').test(`${result.stdout}\n${result.stderr}`);
 }
 
 /**
- * Formats the last lines of tool output that needs no redaction.
+ * Formats the last lines of tool output.
  *
  * @param result what the tool printed.
  * @param placeholder the text when both streams stay empty.

@@ -1,10 +1,6 @@
 import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
 
-export const EXPRESS_SCOPE_SETTINGS = `[[ignore]]
-check = "security/semgrep"
-paths = ["app/**/ignored.js"]
-reason = "Generated samples are checked by their producer."
-[[scope]]
+export const EXPRESS_SCOPE_SETTINGS = `[[scope]]
 path = "app"
 
 configurations = ["express"]
@@ -23,9 +19,6 @@ export const EXPRESS_SCOPE_FILES = {
     'app/source.js': 'res.send(req.body.message);\n',
     'app/child/source.js': 'res.send(req.body.message);\n',
     'sibling/source.js': 'res.send(req.body.message);\n',
-    'app/ignored.js': 'eval(input);\n',
-    'app/child/ignored.js': 'eval(input);\n',
-    'sibling/ignored.js': 'eval(input);\n',
 } as const;
 
 /** Samples and sources with findings, run together under the shipped Express rules. */

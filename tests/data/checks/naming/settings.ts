@@ -177,8 +177,6 @@ test_files = ["apps/web/verification/**"]
 path = "apps/api"
 `;
 
-export const ORDINARY_WORDS = ['data', 'message', 'values', 'id'] as const;
-
 export const NUMBERED_PREFIX_OVERRIDE =
     '[[naming.override]]\npaths = [".mise/tasks/*.sh", "scripts/steps/*.sh"]\n' +
     String.raw`categories = ["files"]
@@ -235,7 +233,6 @@ export const NAMING_TEST_SETTINGS = {
             ignoredPrefix: undefined,
             ignoredNames: undefined,
             cases: undefined,
-            origin: 'required API names',
         },
         {
             matches: ['api/route.ts'],
@@ -247,7 +244,6 @@ export const NAMING_TEST_SETTINGS = {
             ignoredPrefix: undefined,
             ignoredNames: undefined,
             cases: undefined,
-            origin: 'An external protocol fixes this name.',
         },
         {
             matches: ['**'],
@@ -259,7 +255,6 @@ export const NAMING_TEST_SETTINGS = {
             ignoredPrefix: undefined,
             ignoredNames: undefined,
             cases: undefined,
-            origin: 'shipped rule 1',
         },
         {
             matches: ['**/acceptance/**'],
@@ -271,7 +266,6 @@ export const NAMING_TEST_SETTINGS = {
             ignoredPrefix: undefined,
             ignoredNames: undefined,
             cases: undefined,
-            origin: 'shipped rule 2',
         },
         {
             matches: ['**/*.sh'],
@@ -283,7 +277,6 @@ export const NAMING_TEST_SETTINGS = {
             ignoredPrefix: /^_+/u,
             ignoredNames: undefined,
             cases: undefined,
-            origin: 'shipped rule 3',
         },
     ],
     isDigitsAllowed: false,
@@ -296,5 +289,3 @@ export const NAMING_TEST_LIMITS = {
     bash: ['snake'],
     other: ['camel'],
 } as const;
-
-export const ALLOWED_NAMES_CHECK_COMMAND = ['check', '--only', 'naming/allowed-names', '--json'] as const;

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { hasToolBuild } from '#tests/setup/system.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { spawnGspot, listFindingRows } from '#tests/setup/run-gspot.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 import {
     SEMGREP_CHECK,
@@ -21,26 +21,25 @@ test.skipIf(!hasToolBuild('semgrep'))(
     async () => {
         const sandbox = { path: installedSandbox!().root };
         const sourceFiles = {
-            'gspot.toml': buildSettingsText(['fastapi', 'security']),
+            'gspot.toml': buildSandboxSettings(['fastapi', 'security']),
             'pyproject.toml': SEMGREP_PROJECT_FILES['pyproject.toml'],
             'service.py': FASTAPI_SOURCE,
             'neighbor.py':
                 'from fastapi import HTTPException\nraise HTTPException(status_code=404, detail="User not found")\n',
         };
-        await using _sourceChange = await updateSandbox(installedSandbox!(), {
+        await using _sourceChange = await applySandboxChanges(installedSandbox!(), {
             check: '',
             files: sourceFiles,
             removed: Object.keys(CHECKS_FASTAPI_INSTALLED_SANDBOX.files).filter(
                 (path) => path !== '.gitignore' && !Object.hasOwn(sourceFiles, path),
             ),
         });
-        expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
-        const failed = await spawnGspot(sandbox.path, SEMGREP_CHECK);
+        const failed = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(listFindingRows(JSON.parse(failed.stdout) as RunReport)).toStrictEqual([
+        expect(listFindingRows(failed.report)).toStrictEqual([
             { file: 'service.py', line: 7, rule: 'gspot.fastapi.exception-text-in-response' },
         ]);
-        await Bun.write(
+        await writeFile(
             join(sandbox.path, 'service.py'),
             FASTAPI_SOURCE.replace('detail=str(error)', 'detail="Unable to load user"'),
         );

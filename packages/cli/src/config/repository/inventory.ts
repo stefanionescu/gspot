@@ -191,7 +191,17 @@ export const SHEBANG_TAGS: Readonly<Record<string, readonly string[]>> = {
 } as const satisfies Readonly<Record<string, readonly string[]>>;
 
 /** The file classification of a file that no earlier rule claims. */
-export const SOURCE_KIND = { kind: 'source', origin: 'default' } as const;
+export const KIND_ORIGINS = {
+    default: 'default',
+    gspot: 'gspot',
+    buildWrapper: 'build wrapper',
+    banner: 'banner',
+    content: 'content',
+    license: 'license',
+    directory: 'directory',
+} as const;
+
+export const SOURCE_KIND = { kind: 'source', origin: KIND_ORIGINS.default } as const;
 
 export const SHEBANG_TAG = 'shebang:';
 
@@ -212,6 +222,7 @@ export const SET_VALUES: ReadonlySet<string> = new Set(['set', 'true']);
 export const LFS_FILTER = 'lfs';
 export const MARKDOWN_EXTENSION = '.md';
 export const ATTRIBUTE_SET = 'set';
+export const UNSET_VALUE = 'unset';
 export const CHECK_ATTRIBUTES_ARGUMENTS = [
     'check-attr',
     '--stdin',
@@ -228,9 +239,12 @@ export const SWIFT_TEST_TAG = 'swift-test';
 
 export const DEFAULT_DIALECT = 'bash';
 export const TEXT_TAG = 'text';
-export const VERSION_CHARACTERS = '0123456789.';
+export const TRAILING_VERSION = /(?<![\d.])[\d.]+$/u;
 export const DOCKERFILE_EXTENSION = '.dockerfile';
 export const DOTENV_PREFIX = '.env';
 export const BINARY_TAG = 'binary';
 
 export const TYPESCRIPT_TAG = 'typescript';
+
+/** The inventory tag for scripts whose shebang selects Node.js. */
+export const NODE_SHEBANG_TAG = `${SHEBANG_TAG}node`;

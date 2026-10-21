@@ -1,10 +1,10 @@
 // Identifies Swift imports, tests, and package targets.
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { parseSource } from '#cli/parsers/grammars.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/dependencies.ts';
 import { SWIFT_ENV_READ } from '#cli/config/parsers/environment.ts';
 import { SWIFT_TEST_TAG } from '#cli/config/repository/inventory.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 
 import {
@@ -32,10 +32,7 @@ export async function detectSwiftTags(path: string, text: string): Promise<strin
     try {
         const imports = tree.rootNode
             .descendantsOfType(SWIFT_IMPORT_NODE)
-            .map(
-                (node) =>
-                    node.namedChildren.find((child) => child.type === SWIFT_IDENTIFIER_NODE)?.text.split('.', 1)[0],
-            )
+            .map((node) => getImportedModule(node))
             .filter((name) => name !== undefined);
         const attributes = tree.rootNode.descendantsOfType(SWIFT_ATTRIBUTE_NODE);
         const isTest =
@@ -68,4 +65,14 @@ export function readSwiftEnvironment(syntaxRoot: Node): EnvironmentRead[] {
         .descendantsOfType('navigation_expression')
         .filter((node) => node.text.replaceAll(/\s+/gu, '') === SWIFT_ENV_READ)
         .map((node) => ({ key: undefined, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }));
+}
+
+/**
+ * Get the top-level module named by a Swift import declaration.
+ *
+ * @param node the import declaration.
+ * @returns the imported module, when the declaration names one.
+ */
+export function getImportedModule(node: Node): string | undefined {
+    return node.namedChildren.find((child) => child.type === SWIFT_IDENTIFIER_NODE)?.text.split('.', 1)[0];
 }

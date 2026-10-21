@@ -8,11 +8,11 @@ export type ErrorCode =
     | 'files'
     | 'writing'
     | 'installation'
+    | 'check'
     | 'tool'
     | 'output'
     | 'skip'
     | 'pin'
-    | 'template'
     | 'prompt';
 
 /** A parsed value, or the error from its source. */

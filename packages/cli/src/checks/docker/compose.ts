@@ -1,16 +1,16 @@
-import { z } from 'zod';
-import { parse } from 'yaml';
 import { posix } from 'node:path';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { parseYamlFile } from '#cli/parsers/yaml.ts';
+import { readCachedText } from '#cli/system/files/reads.ts';
+import { type CheckResult } from '#cli/types/runs/check.ts';
+import { listCheckFiles } from '#cli/repository/coverage.ts';
 import { runCommandGroups } from '#cli/runs/command/check.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/inventory.ts';
+import { composeSchema } from '#cli/schemas/checks/docker/compose.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
-import { type CheckInput, type CheckResult } from '#cli/types/runs/check.ts';
-import type { ComposeFiles, ComposeService, ComposeDocuments } from '#cli/types/checks/docker.ts';
+import { type ComposeFiles, type ComposeDocuments, type ComposeDeclaration } from '#cli/types/checks/docker.ts';
 
 import {
     DOCKERIGNORE,
@@ -44,84 +44,49 @@ function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     return [...groups.values()];
 }
 
+function listBuildContexts(declarations: ComposeDeclaration[], folder: string): [string, string[]][] {
+    return Map.groupBy(declarations, ({ name }) => name)
+        .values()
+        .flatMap((service) => {
+            const builds = service.flatMap(({ service: { build } }) => (build === undefined ? [] : [build]));
+            if (builds.length === 0) return [];
+            const declaredContexts = builds.flatMap(({ context }) =>
+                context === undefined ? [] : [posix.join(folder, context)],
+            );
+            const contexts = declaredContexts.length === 0 ? [folder] : declaredContexts;
+            const declaredNames = builds.flatMap(({ dockerfile }) => (dockerfile === undefined ? [] : [dockerfile]));
+            const names = declaredNames.length === 0 ? [DOCKERFILE_NAME] : declaredNames;
+            const ignores = contexts.map((context) => posix.join(context, DOCKERIGNORE));
+            return contexts.flatMap((context) =>
+                names.map((name): [string, string[]] => [posix.join(context, name), ignores]),
+            );
+        })
+        .toArray();
+}
+
 /**
  * Reads Compose services and resolves their local build contexts.
  *
- * @param input the scope files to read.
+ * @param session the repository and its tools.
+ * @param planned the scope files to read.
  * @returns the services and their build contexts.
  */
-function readComposeDocuments(input: CheckInput): ComposeDocuments {
-    const patterns = input.manifests
-        .values()
-        .flatMap(({ checks }) => checks)
-        .filter(({ name }) => name === COMPOSE_CHECK)
-        .flatMap(({ files }) => files?.paths ?? [])
-        .toArray();
-    const isCompose = buildPathMatcher(patterns);
+function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeDocuments {
     const documents: ComposeDocuments = { declarations: [], contexts: new Map() };
-    for (const group of groupComposeFiles(input.files.filter(({ path }) => isCompose(path)))) {
+    for (const group of groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK))) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
-            try {
-                const document = composeSchema.parse(
-                    parse(readCachedBytes(input.reads, path).toString('utf8'), { merge: true }),
-                );
-                const entries = document.services === undefined ? [] : Object.entries(document.services);
-                return entries.map(([name, service]) => ({ name, path, service }));
-            } catch (error) {
-                throw new Error(`Cannot read Compose service images in ${path}.`, { cause: error });
-            }
+            const document = parseYamlFile(path, readCachedText(session.reads, path), composeSchema);
+            const entries = document.services === undefined ? [] : Object.entries(document.services);
+            return entries.map(([name, service]) => ({ name, path, service }));
         });
         documents.declarations.push(...declarations);
         const folder = posix.dirname(group.last.path);
-        const candidates = Map.groupBy(declarations, ({ name }) => name)
-            .values()
-            .flatMap((service) => {
-                const builds = service.flatMap(({ service: { build } }) => (build === undefined ? [] : [build]));
-                if (builds.length === 0) return [];
-                const declaredContexts = builds.flatMap(({ context }) =>
-                    context === undefined ? [] : [posix.join(folder, context)],
-                );
-                const contexts = declaredContexts.length === 0 ? [folder] : declaredContexts;
-                const declaredNames = builds.flatMap(({ dockerfile }) =>
-                    dockerfile === undefined ? [] : [dockerfile],
-                );
-                const names = declaredNames.length === 0 ? [DOCKERFILE_NAME] : declaredNames;
-                const ignores = contexts.map((context) => posix.join(context, DOCKERIGNORE));
-                return contexts.flatMap((context) =>
-                    names.map((name) => [posix.join(context, name), ignores] as const),
-                );
-            });
+        const candidates = listBuildContexts(declarations, folder);
         for (const [dockerfile, paths] of candidates)
             documents.contexts.set(dockerfile, [...(documents.contexts.get(dockerfile) ?? []), ...paths]);
     }
     return documents;
 }
-
-const composeSchema = z.object({
-    services: z
-        .record(
-            z.string(),
-            z.object({
-                image: z.string().min(1).optional(),
-                build: (
-                    z.union([
-                        z.string().transform((context) => ({ context, dockerfile: undefined })) satisfies z.ZodType<
-                            NonNullable<ComposeService['build']>,
-                            string
-                        >,
-                        z.object({
-                            context: z.string().optional(),
-                            dockerfile: z.string().optional(),
-                        } satisfies SchemaShape<{ context?: string | undefined; dockerfile?: string | undefined }>),
-                    ]) satisfies z.ZodType<
-                        NonNullable<ComposeService['build']>,
-                        string | NonNullable<ComposeService['build']>
-                    >
-                ).optional(),
-            } satisfies SchemaShape<ComposeService>),
-        )
-        .optional(),
-} satisfies SchemaShape<{ services?: Record<string, ComposeService> | undefined }>);
 
 /**
  * Validates each Compose project with its overrides.

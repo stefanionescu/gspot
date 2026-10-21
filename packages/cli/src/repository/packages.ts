@@ -1,24 +1,23 @@
 // Read npm workspaces, installed packages, and their source files.
-
 import { createRequire } from 'node:module';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { realpathSync, readFileSync } from 'node:fs';
-import { isInScope } from '#cli/repository/scopes.ts';
-import { readText } from '#cli/system/files/reads.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { join, posix, dirname, relative } from 'node:path';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
+import { isInScope, joinScope } from '#cli/repository/scopes.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
-import { packageJsonSchema } from '#cli/parsers/dependency-files.ts';
-import { join, posix, dirname, basename, relative } from 'node:path';
+import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { readPackageJson } from '#cli/repository/dependency-files.ts';
 import { type TrackedFile } from '#cli/types/repository/inventory.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependency-files.ts';
-import { GspotError, isMissingFileError } from '#cli/system/errors.ts';
 import { type Files, type ReadCache } from '#cli/types/system/files.ts';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers/dependencies/package-json.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/tools';
-import { type PackageJson, type InstalledDependency } from '#cli/types/parsers/dependency-files.ts';
+import { type PackageJson, type InstalledDependency } from '#cli/types/parsers/dependencies.ts';
+import { isInside, convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 
 function listWorkspacePackages(root: string): Package[] {
     let file = PACKAGE_JSON;
@@ -49,23 +48,23 @@ const WORKSPACE_FILES_MEMO = { create: () => new Map<string, string[]>() };
 /**
  * Select the declared workspace sources from the inventory of this run.
  *
- * @param source the base folder for resolving inventoried package and compiler files.
+ * @param reads the run cache and base for resolving package and compiler files.
  * @param scope the owning project.
  * @param files the source inventory.
- * @param reads the run cache.
  * @returns workspace dependency paths.
  */
-function listWorkspaceDependencyFiles(source: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
+function listWorkspaceDependencyFiles(reads: ReadCache, scope: string, files: TrackedFile[]): string[] {
+    const source = reads.root;
     const cache = getCachedValue(reads, WORKSPACE_FILES_MEMO);
-    const manifestPath = files
-        .map((file) => file.path)
-        .filter((path) => basename(path) === PACKAGE_JSON && isInScope(scope, posix.relative('.', posix.dirname(path))))
-        .toSorted((left, right) => right.length - left.length)[0];
+    const tracked = new Set(files.map((file) => file.path));
+    const manifestPath = listEnclosingFolders(scope)
+        .map((folder) => joinScope(folder, PACKAGE_JSON))
+        .find((path) => tracked.has(path));
     if (manifestPath === undefined) return [];
     const key = JSON.stringify([source, manifestPath]);
     const held = cache.get(key);
     if (held !== undefined) return held;
-    const projectRoot = posix.relative('.', posix.dirname(manifestPath));
+    const projectRoot = extractParentFolder(manifestPath);
     const ordered = [...new Set([projectRoot, ...listWorkspaceFolders(source)])].toSorted(
         (left, right) => right.length - left.length,
     );
@@ -160,7 +159,7 @@ export function readHostPackage(path: string): PackageJson | undefined {
     try {
         text = readFileSync(path, 'utf8');
     } catch (error) {
-        if (isMissingFileError(error)) return undefined;
+        if (hasErrorCode(error, 'ENOENT')) return undefined;
         throw error;
     }
     return parseJsonFile(path, text, packageJsonSchema);
@@ -179,11 +178,11 @@ export function readToolProjectPackage(files: Files, repositoryRoot: string, pat
     try {
         target = files.readRealPath(convertToPosixPath(relative(repositoryRoot, path)));
     } catch (error) {
-        if (isMissingFileError(error)) return undefined;
+        if (hasErrorCode(error, 'ENOENT')) return undefined;
         throw error;
     }
     const local = convertToPosixPath(relative(repositoryRoot, target));
-    const text = readText(repositoryRoot, local);
+    const text = findText(repositoryRoot, local);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 

@@ -16,15 +16,15 @@ test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ pat
 test('root and child aliases read their own files, and tsconfig paths win', async () => {
     await using sandbox = await testdir(ALIAS_PROJECT);
     expect(readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({
-        '#app/': 'src/',
-        '#root/': 'root/',
-        '@root/': 'typed/',
-        '#shared/': 'compiler/',
+        '#app/*': 'src/*',
+        '#root/*': 'root/*',
+        '@root/*': 'typed/*',
+        '#shared/*': 'compiler/*',
     });
     expect(readScopeAliases(sandbox.path, 'web', createReadCache(sandbox.path))).toStrictEqual({
-        '#app/': 'web/src/',
-        '@web/': 'web/typed/',
-        '#shared/': 'web/compiler/',
+        '#app/*': 'web/src/*',
+        '@web/*': 'web/typed/*',
+        '#shared/*': 'web/compiler/*',
     });
 });
 
@@ -41,20 +41,20 @@ test('alias reads follow extends into a linked node_modules package', async () =
 });
 
 test('inherited aliases are read relative to the file that declares them', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'tsconfig.json': '{"extends":"./configs/tsconfig.json"}',
         'configs/tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["../src/*"]}}}',
     });
+
     expect(readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({
-        '@app/': 'src/',
+        '@app/*': 'src/*',
     });
     await writeFile(
         join(sandbox.path, 'configs/tsconfig.json'),
         '{"compilerOptions":{"baseUrl":"../app","paths":{"@app/*":["src/*"]}}}',
     );
     expect(readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toStrictEqual({
-        '@app/': 'app/src/',
+        '@app/*': 'app/src/*',
     });
 });
 

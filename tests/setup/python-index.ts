@@ -7,11 +7,11 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { encodeZipArchive } from '#tests/setup/files.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
 import type { IndexedPythonSandbox } from '#tests/types/packages.ts';
-import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
+import { runSandboxStep, installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
 
 import {
     ZIP_LAYOUT,
@@ -37,7 +37,7 @@ async function createPythonSandbox(
     const { indexFile, indexUrl } = options;
     await createFileTree(root, {
         '.gitignore': '.venv/\n',
-        'gspot.toml': buildSettingsText(['python'], {
+        'gspot.toml': buildSandboxSettings(['python'], {
             ignore: { checks: PYTHON_SANDBOX_IGNORES, reason: 'This test exercises the pinned Ruff installation.' },
             level: 'recommended',
         }),
@@ -65,8 +65,7 @@ async function createPythonSandbox(
         const rootProject = await readFile(join(root, 'pyproject.toml'));
         const rootConfiguration = await readFile(join(root, indexFile));
         commitAll(root);
-        const applied = await spawnGspot(root, ['apply']);
-        if (applied.code !== 0) throw new Error(`Python sandbox apply failed: ${applied.stdout}${applied.stderr}`);
+        await runSandboxStep({ root, environment: {}, run: spawnGspot }, ['apply']);
         return {
             root,
             rootProject,
@@ -82,14 +81,12 @@ async function createPythonSandbox(
 }
 
 /**
- * Serve a wheel with the installed Ruff executable and a relocatable console entry point.
+ * Serve a wheel with the installed Ruff executable.
  *
  * @param work the temporary folder receiving the wheel.
  * @returns an authenticated registry serving the wheel.
  */
-async function createPythonIndex(
-    work: string,
-): Promise<AsyncDisposable & { version: string; url: string; readonly requests: number }> {
+async function createPythonIndex(work: string): Promise<AsyncDisposable & { url: string }> {
     await using source = await createPythonSandbox(work, { indexFile: 'uv.toml' });
     await installToolProjects(source.root);
     const binary = buildVenvExecutablePath(join(work, '.gspot/.venv'), 'ruff');
@@ -113,12 +110,10 @@ async function createPythonIndex(
     const { user, password } = PYTHON_INDEX_CREDENTIALS;
     const credentials = `${user}:${password}`;
     const authentication = `Basic ${Buffer.from(credentials).toString('base64')}`;
-    let requests = 0;
     const server = Bun.serve({
         hostname: REGISTRY_HOST,
         port: 0,
         fetch(request) {
-            requests += 1;
             if (request.headers.get('authorization') !== authentication)
                 return new Response('Authentication required', { status: 401 });
             if (new URL(request.url).pathname.endsWith('.whl')) return new Response(archive);
@@ -128,10 +123,6 @@ async function createPythonIndex(
         },
     });
     return {
-        version,
-        get requests() {
-            return requests;
-        },
         url: `http://${user}:${password}@${REGISTRY_HOST}:${String(server.port)}/simple`,
         async [Symbol.asyncDispose]() {
             await server.stop(true);
@@ -143,18 +134,7 @@ async function createPythonIndex(
 async function buildWheelEntries(binary: string, version: string): Promise<Array<[string, Buffer]>> {
     const metadata = `ruff-${version}.dist-info`;
     const entries: Array<[string, Buffer]> = [
-        [`ruff-${version}.data/scripts/${basename(binary)}`, Buffer.from(await Bun.file(binary).bytes())],
-        [
-            'gspot_marker.py',
-            Buffer.from(`def main():
- import sys
- print(sys.prefix)
-`),
-        ],
-        [
-            `${metadata}/entry_points.txt`,
-            Buffer.from('[console_scripts]\ngspot-relocation-marker = gspot_marker:main\n'),
-        ],
+        [`ruff-${version}.data/scripts/${basename(binary)}`, Buffer.from(await readFile(binary))],
         [
             `${metadata}/METADATA`,
             Buffer.from(`Metadata-Version: 2.1
@@ -195,7 +175,6 @@ async function createIndexedPythonSandbox(
     return {
         rootProject: project.rootProject,
         rootConfiguration: project.rootConfiguration,
-        registry,
         inputs,
         [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
     };

@@ -1,21 +1,21 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/repository/matchers.ts';
+import { getTable } from '#cli/settings/scope-view.ts';
+import { buildScopeGlob } from '#cli/generation/eslint/files.ts';
 import type { ScopeSelection } from '#cli/types/settings/values.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/eslint.ts';
 import { findParentSelection } from '#cli/generation/eslint/lint-rules.ts';
 import type { EslintPlugins, EslintSettingsBlock } from '#cli/types/generation/eslint.ts';
 
 function listPluginRecords(scopes: ScopeSelection[]) {
     return scopes
-        .filter(({ view }) => view.configurations.includes('javascript'))
+        .filter(({ view }) => view.configurations.includes(JAVASCRIPT_CONFIGURATION))
         .flatMap((selection) => {
             const parent = findParentSelection(scopes, selection.scope.path);
             const inherited = parent?.view.values[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
-            return selection.view
-                .options(ESLINT_SETTINGS_TABLE)
+            return getTable(selection.view, ESLINT_SETTINGS_TABLE)
                 .plugins.filter((plugin) => !inherited.some((record) => isDeepStrictEqual(record, plugin)))
                 .map((plugin) => ({ ...plugin, scope: selection.scope.path }));
         });
@@ -66,7 +66,7 @@ export function listLocalPlugins(scopes: ScopeSelection[], targetPath: string, s
  */
 export function buildLocalPluginBlocks(scopes: ScopeSelection[], codeFiles: string[]): EslintSettingsBlock[] {
     return listPluginRecords(scopes).map(({ name, rules, scope }) => ({
-        files: scope === '' ? codeFiles : codeFiles.map((pattern) => [pattern, joinScope(escapeGlob(scope), '**/*')]),
+        files: scope === '' ? codeFiles : codeFiles.map((pattern) => [pattern, buildScopeGlob(scope, '**/*')]),
         rules: Object.fromEntries(
             Object.entries(rules).map(([rule, options]) => [`${name}/${rule}`, ['error', ...options]]),
         ),

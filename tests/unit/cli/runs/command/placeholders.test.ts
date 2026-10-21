@@ -2,15 +2,14 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { planRun } from '#cli/planning/checks.ts';
-import { checkInput } from '#cli/runs/built-in.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { symlink, writeFile } from 'node:fs/promises';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { type CommandPart } from '#cli/types/runs/command.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { listSwiftlintToolFiles } from '#cli/checks/swift/build.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { WORKSPACE_SCOPE_CASES } from '#tests/data/runs/command-checks.ts';
 import { prepareCommand, buildCommandEnvironment } from '#cli/runs/command/check.ts';
 import { expandCommand, listScratchFiles, buildFileInvocations } from '#cli/runs/command/placeholders.ts';
@@ -25,7 +24,6 @@ test('a whole setting preserves empty and multiword command arguments', async ()
         '--',
     ];
     const settings = {
-        configurations: ['openapi'],
         openapi: { document: 'openapi.json', generate_command: commandArguments },
         command_check: [
             {
@@ -38,10 +36,10 @@ test('a whole setting preserves empty and multiword command arguments', async ()
         rules: { enabled: false },
     };
     await createFileTree(sandbox.path, {
-        'gspot.toml': stringify(settings),
+        'gspot.toml': buildSandboxSettings(['openapi'], { tables: stringify(settings) }),
         'openapi.json': '{}\n',
     });
-    const result = await checkReport(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']);
+    const result = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']));
     expect(result.code, result.stderr).toBe(0);
     expect(result.report.checks).toMatchObject([
         {
@@ -52,30 +50,33 @@ test('a whole setting preserves empty and multiword command arguments', async ()
     ]);
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        stringify({
-            ...settings,
-            command_check: [
-                {
-                    ...settings.command_check[0],
-                    command: [...runner, 'prefix{setting:openapi.generate_command}'],
-                },
-            ],
+        buildSandboxSettings(['openapi'], {
+            tables: stringify({
+                ...settings,
+                command_check: [
+                    {
+                        ...settings.command_check[0],
+                        command: [...runner, 'prefix{setting:openapi.generate_command}'],
+                    },
+                ],
+            }),
         }),
     );
     await verifyInlineCommand(sandbox.path);
     await verifyEmptyCommand(
         sandbox.path,
-        stringify({
-            ...settings,
-            openapi: { ...settings.openapi, generate_command: [] },
+        buildSandboxSettings(['openapi'], {
+            tables: stringify({
+                ...settings,
+                openapi: { ...settings.openapi, generate_command: [] },
+            }),
         }),
     );
 });
 
 test('tool file inputs of a nested scope stop at the scope folder and follow a link inside the repository', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['swift'], { tables: '[[scope]]\npath = "app"\n' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
         '.swiftlint.yml': 'disabled_rules: []\n',
         'app/.swiftlint.yml': 'disabled_rules: []\n',
         'app/Sources/.swiftlint.yml': 'disabled_rules: []\n',
@@ -83,16 +84,17 @@ test('tool file inputs of a nested scope stop at the scope folder and follow a l
         'app/Sources/Feature/Two.swift': 'let two = 2\n',
         'app/Other/.swiftlint.yml': 'disabled_rules: []\n',
     });
+
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] });
     const planned = plans.find((plan) => plan.selection.scope.path === 'app')!;
-    expect(listSwiftlintToolFiles(checkInput(session, planned))).toStrictEqual([
+    expect(listSwiftlintToolFiles(session, planned)).toStrictEqual([
         '.gspot/configurations/language/swift/swiftlint.yml',
         'app/.swiftlint.yml',
         'app/Sources/.swiftlint.yml',
     ]);
     await symlink('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
-    expect(listSwiftlintToolFiles(checkInput(session, planned))).toStrictEqual([
+    expect(listSwiftlintToolFiles(session, planned)).toStrictEqual([
         '.gspot/configurations/language/swift/swiftlint.yml',
         'app/.swiftlint.yml',
         'app/Sources/.swiftlint.yml',
@@ -103,14 +105,14 @@ test('tool file inputs of a nested scope stop at the scope folder and follow a l
 test.each([...WORKSPACE_SCOPE_CASES])(
     'workspace expansion retains arguments only for a package scope: $scope',
     async ({ scope, expected }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['swift']),
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['swift']),
             'Example.swift': 'let example = 1\n',
             'package.json': '{}',
             'package/package.json': '{}',
             'source/Example.swift': 'let source = 2\n',
         });
+
         const session = await openSession(sandbox.path);
         const plans = planRun(session, { stage: 'commit', only: ['swift/swiftlint'] });
         expect(
@@ -136,11 +138,11 @@ test.each([0, 1, 2])('replaces a file marker at position %s without dropping nei
 });
 
 test('a Markdown command run in a scratch copy keeps the tool files its manifest writes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['markdown']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['markdown']),
         'README.md': '# Example\n',
     });
+
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'commit', only: ['markdown/markdownlint'] })[0]!;
     const paths = listScratchFiles(session, planned, planned.check.command!);
@@ -159,17 +161,18 @@ command = ${JSON.stringify([process.execPath, 'echo.cjs', '{existing:--config:se
 paths = ["inputs/**"]
 stage = "commit"
 `;
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'gspot.toml': settings,
         'settings.txt': '',
         'inputs/café source.txt': '',
         'echo.cjs': 'process.stdout.write(JSON.stringify([process.env.TOOL_RELEASE, ...process.argv.slice(2)]));',
     });
+
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'all', only: ['sandbox/arguments'] });
     const planned = plans[0]!;
-    planned.tool = { name: 'echo', installers: {}, kind: 'program', env: { TOOL_RELEASE: 'v3.4.0' } };
+    planned.tool = { name: 'echo', installers: {}, kind: 'program' };
+    planned.check.env = { TOOL_RELEASE: 'v3.4.0' };
     const prepared = prepareCommand(planned, {
         session,
         command: planned.check.command!,
@@ -195,9 +198,8 @@ test.each([
     { style: 'space', width: 6, expected: '6' },
     { style: 'tab', width: 6, expected: '0' },
 ])('format $style indentation supplies shfmt -i $expected', async ({ style, width, expected }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['format', 'bash'], {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['format', 'bash'], {
             level: 'all',
             tables: `[format]
 indent_style = "${style}"
@@ -206,6 +208,7 @@ indent_width = ${String(width)}
         }),
         'sample.sh': 'echo example\n',
     });
+
     const session = await openSession(sandbox.path);
     const [planned] = planRun(session, { stage: 'all', only: ['bash/shfmt'] });
     const command = prepareCommand(planned!, {
@@ -230,7 +233,7 @@ async function verifyEmptyCommand(root: string, settings: string): Promise<void>
 
 /** Check that a list setting cannot expand inside one command argument. */
 async function verifyInlineCommand(root: string): Promise<void> {
-    const inline = await checkReport(root, ['check', '--only', 'sandbox/arguments', '--json']);
+    const inline = parseCheckReport(await runGspot(root, ['check', '--only', 'sandbox/arguments', '--json']));
     expect(inline.code).toBe(2);
     expect(inline.report.checks).toMatchObject([
         {

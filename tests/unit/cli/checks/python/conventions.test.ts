@@ -1,12 +1,14 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { rm } from 'node:fs/promises';
+import { runChecks } from '#cli/runs/run.ts';
+import { openSession } from '#cli/session.ts';
 import { test, expect, describe } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
-import { checkReport } from '#tests/setup/run-gspot.ts';
 import { createSandbox } from '#tests/setup/sandbox.ts';
+import { buildRunOptions } from '#tests/setup/builders.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 import { CLEAN_PYTHON_MODULE, PYTHON_MODULE_CASES, PYTHON_MODULE_SANDBOX } from '#tests/data/checks/python/modules.ts';
 
@@ -14,9 +16,7 @@ describe('modules', () => {
     test.each([...PYTHON_MODULE_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
         const plan = {
             ...PYTHON_MODULE_SANDBOX,
-            corrected: (row: { files: Readonly<Record<string, string>> }) => ({
-                files: Object.fromEntries(Object.keys(row.files).map((path) => [path, CLEAN_PYTHON_MODULE])),
-            }),
+            cleanSource: CLEAN_PYTHON_MODULE,
         };
         await using sandbox = await createSandbox(plan);
         const result = await runCheckSample(sandbox, entry, plan);
@@ -27,11 +27,13 @@ describe('pip-installs', () => {
     test.each([...LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].includes(packageManager))])(
         'pip-installs reports a requirements file only in a locked scope ($file) and passes once it is removed',
         async ({ file }) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'gspot.toml': buildSettingsText(['python'], {
-                    tables: '[[scope]]\npath = "locked"\nconfigurations = ["python"]\n[[scope]]\npath = "other"\nconfigurations = ["python"]\n',
+            await using sandbox = await testdir({
+                'gspot.toml': buildSandboxSettings(['python'], {
                     level: 'all',
+                    scopes: [
+                        { path: 'locked', configurations: ['python'] },
+                        { path: 'other', configurations: ['python'] },
+                    ],
                 }),
                 'requirements.txt': 'root-dependency\n',
                 [`locked/${file}`]: 'version = 1\n',
@@ -40,9 +42,12 @@ describe('pip-installs', () => {
                 'other/requirements.txt': 'unlocked-dependency\n',
                 'other/main.py': 'value = 2\n',
             });
-            const command = ['check', '--only', 'python/pip-installs', '--json'];
-            const checked = await checkReport(sandbox.path, command);
-            expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+
+            const checked = await runChecks(
+                await openSession(sandbox.path),
+                buildRunOptions({ only: ['python/pip-installs'] }),
+            );
+
             const report = checked.report;
             expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
                 { file: 'locked/requirements.txt', rule: 'requirements-file' },
@@ -51,8 +56,11 @@ describe('pip-installs', () => {
                 report.checks.filter((check) => check.status === 'failed').map((check) => check.scope),
             ).toStrictEqual(['locked']);
             await rm(join(sandbox.path, 'locked/requirements.txt'));
-            const corrected = await checkReport(sandbox.path, command);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+            const corrected = await runChecks(
+                await openSession(sandbox.path),
+                buildRunOptions({ only: ['python/pip-installs'] }),
+            );
+
             expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
         },
     );
@@ -60,7 +68,10 @@ describe('pip-installs', () => {
 
 test('function-size reports a Python function over limits.python.function_lines, counting code lines only', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText(['python'], { level: 'all', tables: '[limits.python]\nfunction_lines = 3\n' }),
+        'gspot.toml': buildSandboxSettings(['python'], {
+            level: 'all',
+            tables: '[limits.python]\nfunction_lines = 3\n',
+        }),
         'main.py':
             'def short():\n    # A comment.\n\n    return 1\n\n\ndef long(value):\n    first = value\n    second = first\n    return second\n',
     });

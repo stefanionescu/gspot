@@ -1,6 +1,8 @@
 // Starts test commands and limits them to the current test timeout.
 import executables from 'which';
+import { stat } from 'node:fs/promises';
 import { spyOn, type Mock } from 'bun:test';
+import { hasErrorCode } from '#cli/system/errors.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { CapturedChild, ProcessBackend, CapturedProcess } from '#tests/types/processes.ts';
@@ -125,8 +127,16 @@ async function waitForExit(pid: number): Promise<void> {
  */
 async function waitForFile(path: string): Promise<boolean> {
     const deadline = performance.now() + computeTimeLeft();
-    while (Bun.file(path).size === 0 && performance.now() < deadline) await Bun.sleep(READY_POLL_MILLISECONDS);
-    return Bun.file(path).size > 0;
+    while (performance.now() < deadline) {
+        try {
+            const file = await stat(path);
+            if (file.size > 0) return true;
+        } catch (error) {
+            if (!hasErrorCode(error, 'ENOENT')) throw error;
+        }
+        await Bun.sleep(READY_POLL_MILLISECONDS);
+    }
+    return false;
 }
 
 /** Drains a child's output and guarantees termination when a test leaves its scope. */

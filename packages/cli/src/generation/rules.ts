@@ -16,7 +16,6 @@ import { type Repository } from '#cli/types/repository/inventory.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { type Level, type Manifest } from '#cli/types/configurations.ts';
 import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/system/locations.ts';
-import { type DependencyFile } from '#cli/types/parsers/dependency-files.ts';
 import type { RuleFile, ShippedRule, RuleSection, AgentsBlockInput } from '#cli/types/rules.ts';
 
 import {
@@ -28,13 +27,9 @@ import {
 } from '#cli/config/rules.ts';
 
 // List the rules of the configurations; a file with a condition installs only when the repository meets it.
-function listConfigurationRules(
-    manifests: Manifest[],
-    repository: Repository,
-    dependencyFiles: DependencyFile[],
-): ShippedRule[] {
+function listConfigurationRules(manifests: Manifest[], repository: Repository): ShippedRule[] {
     const conditions = manifests.flatMap((manifest) => Object.values(manifest.rules));
-    const matched = detectConditions(conditions, repository.files, dependencyFiles);
+    const matched = detectConditions(conditions, repository.files, repository.dependencyFiles);
     return manifests.flatMap((manifest) =>
         listRuleFiles(manifest).filter((file) => {
             const condition = manifest.rules[posix.basename(file.source)];
@@ -145,15 +140,13 @@ function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'rep
         },
         repository,
     } = session;
+    if (!rules.enabled) return [];
     const manifests = listSelectedManifests(session.scopes);
     const scopeRules = session.scopes.map((selection) => ({
         path: selection.scope.path,
         rules: listScopeRules(selection),
     }));
-    if (!rules.enabled) return [];
-    const sources = new Map(
-        listConfigurationRules(manifests, repository, repository.dependencyFiles).map((file) => [file.path, file]),
-    );
+    const sources = new Map(listConfigurationRules(manifests, repository).map((file) => [file.path, file]));
     return sources
         .values()
         .filter(
@@ -178,7 +171,7 @@ function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'rep
  * @param inputs what the block lists.
  * @param inputs.files the rules with their content.
  * @param inputs.generatedPaths the files gspot writes outside .gspot, with managed keys.
- * @param inputs.fileEdits the keys that gspot manages inside authored tool files.
+ * @param inputs.fileSettings the keys that gspot manages inside authored tool files.
  * @param inputs.hasChecks whether any configuration runs a check.
  * @param inputs.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
  * @param inputs.startCommand the command that starts gspot.
@@ -188,13 +181,13 @@ function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'rep
 function buildAgentsBlock({
     files,
     generatedPaths,
-    fileEdits,
+    fileSettings,
     hasChecks,
     startCommand,
     hasOwnTitle,
 }: AgentsBlockInput): string {
     const index = files.length > 0 ? formatRulesIndex(files) : [];
-    const outside = [...new Set(generatedPaths)]
+    const outside = generatedPaths
         .toSorted((first, second) => first.localeCompare(second))
         .map((path) => `- \`${path}\``);
     const lines = [
@@ -202,6 +195,8 @@ function buildAgentsBlock({
         '',
         ...index,
         '## Commands',
+        '',
+        `The rules write \`gspot\` for \`${startCommand}\`.`,
         '',
         ...(hasChecks ? [`Before you commit, run \`${startCommand} check --staged\`.`, ''] : []),
         `To change \`gspot.toml\`, run ${formatSettingsCommands(startCommand)}.`,
@@ -213,7 +208,7 @@ function buildAgentsBlock({
         '',
         '- every file under `.gspot/`',
         ...outside,
-        ...fileEdits.flatMap(({ path, keys }) => [
+        ...fileSettings.flatMap(({ path, keys }) => [
             '',
             `gspot also sets ${keys.length === 1 ? 'one key' : 'these keys'} in \`${path}\`: ${keys.map((key) => '`' + key + '`').join(' and ')}.`,
             'You can edit the other keys of that file.',

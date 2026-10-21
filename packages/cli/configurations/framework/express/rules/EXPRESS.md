@@ -6,8 +6,6 @@ Follow the HTTP rules too.
 
 ## Routes and middleware
 
-<!-- level: all -->
-
 Express requires no layout, schema library, or response envelope. Use the contracts the project
 already has instead of adding competing ones.
 

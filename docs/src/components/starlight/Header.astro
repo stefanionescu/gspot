@@ -5,22 +5,26 @@ import { DOCS_PATH } from '../../config/site.ts';
 import Search from '@astrojs/starlight/components/Search.astro';
 import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 
-// The landing page has no sidebar menu, so its Docs link and GitHub icon stay in the header at every width.
-// Docs pages hold search, and the Docs link sits beside the name.
 const isHome = Astro.url.pathname === '/';
 ---
 
+<!--
+The landing page has no sidebar menu, so its Docs link and GitHub icon stay in the header at every width.
+Docs pages hold search, and the Docs link sits beside the name.
+-->
 <div class:list={['site-header', { home: isHome }]}>
     <SiteTitle />
-    {
-        !isHome && (
-            <div class="search print:hidden">
-                <Search />
-            </div>
-        )
-    }
+    {!isHome && (
+        <div class="search print:hidden">
+            <Search />
+        </div>
+    )}
     <div class="controls print:hidden">
-        {isHome && <a class="docs" href={DOCS_PATH}>Docs</a>}
+        {isHome && (
+            <a class="docs" href={DOCS_PATH}>
+                Docs
+            </a>
+        )}
         <div class="social">
             <SocialIcons />
         </div>
@@ -60,7 +64,7 @@ const isHome = Astro.url.pathname === '/';
 .docs {
     display: inline-flex;
     align-items: center;
-    min-height: 44px;
+    min-height: var(--target-size);
     padding-inline: 8px;
     color: var(--sl-color-gray-2);
     font-size: 0.9375rem;
@@ -75,8 +79,8 @@ const isHome = Astro.url.pathname === '/';
 .social :global(a) {
     display: inline-grid;
     place-items: center;
-    width: 44px;
-    height: 44px;
+    width: var(--target-size);
+    height: var(--target-size);
     margin: 0;
     padding: 0;
     border-radius: 8px;
@@ -95,8 +99,8 @@ const isHome = Astro.url.pathname === '/';
 
 @media (width < 50rem) {
     .search :global(button[data-open-modal]) {
-        width: 44px;
-        height: 44px;
+        width: var(--target-size);
+        height: var(--target-size);
         padding: 0;
         justify-content: center;
         border-radius: 8px;

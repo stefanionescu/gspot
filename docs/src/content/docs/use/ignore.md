@@ -38,6 +38,6 @@ To remove the ignore:
 gspot unignore javascript/eslint --rule no-console --paths "scripts/**"
 ```
 
-`gspot check --verbose` prints each ignore in effect, its reason, and the number of findings it matched.
+`gspot check --verbose` prints each ignore in effect and its reason.
 
 To change a limit, see [limits](/reference/gspot-toml/#limits). Use an ignore only when you can state why the check does not fit that code.

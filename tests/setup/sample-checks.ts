@@ -1,13 +1,13 @@
 // Runs one check on a bad sample, then on its fix, and puts the files back.
 import { afterAll, beforeAll } from 'bun:test';
 import { markExecutable } from '#tests/setup/git.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
+import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import type { Sandbox, SandboxPlan } from '#tests/types/sandbox.ts';
+import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import { createSandbox, changeSandbox } from '#tests/setup/sandbox.ts';
-import type { Finding, RunReport, CheckResult } from '#cli/types/runs/check.ts';
-import { BASH_SANDBOX, CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 
 import type {
     GspotCall,
@@ -42,18 +42,19 @@ export async function checkChanges(
 /**
  * Run the check on the sample and then on its fix, and return both reports.
  *
- * @param repository the installed sandbox and how to run gspot in it.
+ * @param sandbox the installed sandbox and how to run gspot in it.
  * @param entry the sample and expected finding.
  * @param plan what the sandbox holds, with the default fix.
  * @returns both process results and reports.
  */
-export async function runCheckSample(
-    repository: Pick<Sandbox, 'root' | 'environment' | 'run'>,
-    entry: CheckSample,
-    plan: SandboxPlan,
-): Promise<SampleResult> {
-    const failed = await checkChanges(repository.root, entry, repository.environment, repository.run);
-    const given: SampleFix = entry.corrected ?? plan.corrected?.(entry) ?? { files: {} };
+export async function runCheckSample(sandbox: Sandbox, entry: CheckSample, plan: SandboxPlan): Promise<SampleResult> {
+    const failed = parseCheckReport(await checkChanges(sandbox.root, entry, sandbox.environment, sandbox.run));
+    const { cleanSource } = plan;
+    const given: SampleFix =
+        entry.corrected ??
+        (cleanSource === undefined
+            ? { files: {} }
+            : { files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, cleanSource])) });
     const corrected = {
         check: entry.check,
         files: given.files,
@@ -61,9 +62,9 @@ export async function runCheckSample(
         executable: entry.executable,
         removed: given.removed,
     };
-    const passed = await checkChanges(repository.root, corrected, repository.environment, repository.run);
-    const failedReport = JSON.parse(failed.stdout) as RunReport;
-    const passedReport = JSON.parse(passed.stdout) as RunReport;
+    const passed = parseCheckReport(await checkChanges(sandbox.root, corrected, sandbox.environment, sandbox.run));
+    const failedReport = failed.report;
+    const passedReport = passed.report;
     return { failed: { ...failed, report: failedReport }, passed: { ...passed, report: passedReport } };
 }
 
@@ -99,7 +100,7 @@ export function expectedSummary(entry: CheckSample): SampleSummary {
 
 /** Create the Bash sandbox once for a test file and remove it after the tests of that file. */
 export function registerBashSandbox(): () => Sandbox {
-    let sandbox: Sandbox;
+    let sandbox: Sandbox & AsyncDisposable;
     beforeAll(async () => {
         sandbox = await createSandbox(BASH_SANDBOX);
         for (const path of Object.keys(BASH_SANDBOX.files).filter((path) => path.endsWith('.sh'))) {
@@ -110,14 +111,4 @@ export function registerBashSandbox(): () => Sandbox {
         await sandbox[Symbol.asyncDispose]();
     });
     return () => sandbox;
-}
-
-/** Run a Bash sample and its fix in the same sandbox; the fix replaces each file with the clean script. */
-export async function runBashSample(sandbox: Sandbox, entry: CheckSample): Promise<SampleResult> {
-    return await runCheckSample(sandbox, entry, {
-        ...BASH_SANDBOX,
-        corrected: (sample) => ({
-            files: Object.fromEntries(Object.keys(sample.files).map((path) => [path, CLEAN_BASH_SCRIPT])),
-        }),
-    });
 }

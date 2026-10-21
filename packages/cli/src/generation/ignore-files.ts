@@ -1,5 +1,4 @@
 // Build the shared ignore sections for .prettierignore and the tool exclusions.
-import { join, basename } from 'node:path/posix';
 import { joinScope } from '#cli/repository/scopes.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { LEADING_SLASH } from '#cli/config/system/paths.ts';
@@ -9,10 +8,11 @@ import { listPointerPaths } from '#cli/generation/pointers.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { type ScopeView } from '#cli/types/settings/values.ts';
+import { join, dirname, basename, relative } from 'node:path/posix';
 import { listGitignorePatterns } from '#cli/repository/gitignore.ts';
-import { IGNORE_FILE_PURPOSES } from '#cli/config/generation/formatting.ts';
-import { isFileIgnore, listActiveIgnores } from '#cli/settings/scope-view.ts';
-import { listToolFileDeclarations } from '#cli/generation/tool-files/declarations.ts';
+import { listIgnores, isFileIgnore } from '#cli/settings/scope-view.ts';
+import { PRETTIERIGNORE_PURPOSE } from '#cli/config/generation/formatting.ts';
+import { listToolFileDeclarations } from '#cli/generation/settings/declarations.ts';
 import { type IgnoreSection, type ToolFileContext } from '#cli/types/generation/files.ts';
 
 import {
@@ -28,7 +28,7 @@ import {
 function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
     return listGitignorePatterns(session.reads, tracked).filter((pattern) => {
         if (isInGspotFolder(pattern.replace(LEADING_SLASH, ''))) return false;
-        const matches = buildPathMatcher(buildGlobSections([{ key: 'git', title: '', patterns: [pattern] }]));
+        const matches = buildPathMatcher([convertToGlob(pattern)]);
         return !tracked.some((path) => matches(path));
     });
 }
@@ -60,7 +60,7 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
     );
     const trackedPaths = (repository.index.length === 0 ? repository.files : repository.index).map(({ path }) => path);
     const folders = [
-        ...new Set(scopes.flatMap(({ selected }) => selected.flatMap((manifest) => manifest.ignored_folders))),
+        ...new Set(scopes.flatMap(({ selected }) => selected.flatMap((manifest) => manifest.ignored_paths))),
     ];
     const toolFiles = collectToolExclusions(session);
     return [
@@ -69,9 +69,7 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
             title: IGNORE_SECTION_TITLES.build,
             patterns: [
                 ...BUILD_OUTPUT_PATTERNS.filter((pattern) => {
-                    const matches = buildPathMatcher(
-                        buildGlobSections([{ key: 'build', title: IGNORE_SECTION_TITLES.build, patterns: [pattern] }]),
-                    );
+                    const matches = buildPathMatcher([convertToGlob(pattern)]);
                     return repository.files.some((file) => matches(file.path));
                 }),
                 ...folders.filter((folder) => BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
@@ -91,7 +89,7 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
         {
             key: 'dependencies',
             title: IGNORE_SECTION_TITLES.dependencies,
-            patterns: folders.filter((folder) => !BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
+            patterns: folders.filter((folder) => !BUILD_OUTPUT_FOLDERS.has(folder)),
         },
         {
             key: 'lockfiles',
@@ -101,7 +99,7 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
             ).map(({ file }) => file),
         },
         { key: 'environment', title: IGNORE_SECTION_TITLES.environment, patterns: [...LOCAL_ENVIRONMENT_PATTERNS] },
-        ...listActiveIgnores(session.settingsFile.settings)
+        ...session.settingsFile.settings.ignore
             .filter((entry) => entry.check === undefined)
             .map((entry): IgnoreSection => ({ key: 'settings', title: entry.reason, patterns: entry.paths ?? [] })),
     ];
@@ -115,45 +113,78 @@ function buildIgnoreSections(session: Session): IgnoreSection[] {
  * @returns the check-wide path exclusions with their reasons.
  */
 function buildSettingsSections(view: ScopeView, check: string): IgnoreSection[] {
-    return view
-        .ignoresFor(check)
+    return listIgnores(view, check)
         .filter((entry) => isFileIgnore(entry))
         .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths }));
 }
 
 /**
- * Write ignore sections for a tool that reads them from the root.
+ * Keep each pattern in its first section.
  *
- * @param options what to write.
- * @param options.sections the ordered exclusion groups and their reasons.
- * @param options.purpose the explanation at the start of the ignore file.
- * @returns the ignore file text.
+ * @param sections the ordered sections.
+ * @returns sections with repeated patterns removed.
  */
-function formatIgnoreFile(options: { sections: IgnoreSection[]; purpose: string }): string {
-    const { sections, purpose } = options;
+function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {
     const seen = new Set<string>();
-    const lines = sections.flatMap(({ title, patterns }) => {
-        const ordered = patterns.some((pattern) => pattern.startsWith('!'))
-            ? patterns
-            : patterns.toSorted((left, right) => left.localeCompare(right));
-        const paths = ordered.filter((pattern) => {
+    return sections.map((section) => ({
+        ...section,
+        patterns: section.patterns.filter((pattern) => {
             if (seen.has(pattern)) return false;
             seen.add(pattern);
             return true;
-        });
-        return paths.length === 0
-            ? []
-            : [
-                  '',
-                  ...title
-                      .replaceAll('\r\n', '\n')
-                      .replaceAll('\r', '\n')
-                      .split('\n')
-                      .map((line) => `# ${line}`),
-                  ...paths,
-              ];
+        }),
+    }));
+}
+
+/**
+ * Turn each reason line into a comment.
+ *
+ * @param reason the written reason.
+ * @param indent the spacing before each comment.
+ * @returns the comment lines.
+ */
+function formatReasonLines(reason: string, indent: string): string[] {
+    return reason
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n')
+        .split('\n')
+        .map((line) => `${indent}# ${line}`);
+}
+
+/**
+ * Write ignore sections for a tool that reads them from the root.
+ *
+ * @param sections the ordered exclusion groups and their reasons.
+ * @returns the ignore file text.
+ */
+function formatIgnoreFile(sections: IgnoreSection[]): string {
+    const ordered = sections.map((section) => ({
+        ...section,
+        patterns: section.patterns.some((pattern) => pattern.startsWith('!'))
+            ? section.patterns
+            : section.patterns.toSorted((left, right) => left.localeCompare(right)),
+    }));
+    const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns: paths }) => {
+        return paths.length === 0 ? [] : ['', ...formatReasonLines(title, ''), ...paths];
     });
-    return [`# ${purpose}`, ...lines, ''].join('\n');
+    return [`# ${PRETTIERIGNORE_PURPOSE}`, ...lines, ''].join('\n');
+}
+
+/**
+ * Convert an ignore pattern to the glob a tool uses.
+ *
+ * @param pattern the ignore pattern.
+ * @returns its equivalent glob.
+ */
+function convertToGlob(pattern: string): string {
+    const negative = pattern.startsWith('!') ? '!' : '';
+    let path = negative === '' ? pattern : pattern.slice(1);
+    const anchored = path.startsWith('/');
+    if (anchored) path = path.slice(1);
+    const folder = path.endsWith('/');
+    const bare = folder ? path.slice(0, -1) : path;
+    const prefix = anchored || bare.includes('/') ? '' : '**/';
+    return `${negative}${prefix}${bare}${folder ? '/**' : ''}`;
 }
 
 /**
@@ -164,20 +195,7 @@ function formatIgnoreFile(options: { sections: IgnoreSection[]; purpose: string 
  */
 function buildGlobSections(sections: IgnoreSection[]): string[] {
     const patterns = sections.flatMap((section) => section.patterns);
-    return [
-        ...new Set(
-            patterns.map((pattern) => {
-                const negative = pattern.startsWith('!') ? '!' : '';
-                let path = negative === '' ? pattern : pattern.slice(1);
-                const anchored = path.startsWith('/');
-                if (anchored) path = path.slice(1);
-                const folder = path.endsWith('/');
-                const bare = folder ? path.slice(0, -1) : path;
-                const prefix = anchored || bare.includes('/') ? '' : '**/';
-                return `${negative}${prefix}${bare}${folder ? '/**' : ''}`;
-            }),
-        ),
-    ];
+    return [...new Set(patterns.map((pattern) => convertToGlob(pattern)))];
 }
 
 /**
@@ -187,13 +205,10 @@ function buildGlobSections(sections: IgnoreSection[]): string[] {
  * @returns the ignore file text.
  */
 function buildPrettierignore(context: ToolFileContext): string {
-    return formatIgnoreFile({
-        sections: [
-            ...buildIgnoreSections(context.session),
-            ...buildSettingsSections(context.selection.view, 'format/prettier'),
-        ],
-        purpose: IGNORE_FILE_PURPOSES.prettier,
-    });
+    return formatIgnoreFile([
+        ...buildIgnoreSections(context.session),
+        ...buildSettingsSections(context.selection.view, 'format/prettier'),
+    ]);
 }
 
 /**
@@ -208,4 +223,35 @@ function listIgnoredGlobs(session: Session, view: ScopeView, check: string): str
     return buildGlobSections([...buildIgnoreSections(session), ...buildSettingsSections(view, check)]);
 }
 
-export { listIgnoredGlobs, buildGlobSections, buildIgnoreSections, buildPrettierignore, buildSettingsSections };
+/**
+ * List the shared and check-specific globs that a Python tool leaves out.
+ *
+ * @param context the tool file and its scope.
+ * @param check the check whose path ignores apply.
+ * @returns the globs relative to the tool file.
+ */
+function listPythonIgnoredGlobs(context: ToolFileContext, check: string): string[] {
+    const base = relative(dirname(context.targetPath), '.');
+    const exclusions = buildGlobSections(buildIgnoreSections(context.session)).filter(
+        (pattern) =>
+            pattern.endsWith('/**') ||
+            context.manifest.files.extensions.some((extension) => pattern.endsWith(extension)),
+    );
+    return [
+        ...exclusions,
+        ...listIgnores(context.selection.view, check)
+            .filter((entry) => isFileIgnore(entry))
+            .flatMap((entry) => entry.paths),
+    ].map((path) => `${base}/${path}`);
+}
+
+export {
+    listIgnoredGlobs,
+    keepFirstPatterns,
+    formatReasonLines,
+    buildGlobSections,
+    buildIgnoreSections,
+    buildPrettierignore,
+    buildSettingsSections,
+    listPythonIgnoredGlobs,
+};

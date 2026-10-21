@@ -1,12 +1,11 @@
-import type { Manifest } from '#cli/types/configurations.ts';
 import type { ScopeView } from '#cli/types/settings/values.ts';
-import type { GROUP_LABELS } from '#cli/config/configurations.ts';
 import type { FileKind } from '#cli/types/repository/inventory.ts';
+import { type Group, type Manifest } from '#cli/types/configurations.ts';
 
 export type ConfigurationEvidence = {
     configuration: string;
     evidence: string;
-    group: keyof typeof GROUP_LABELS;
+    group: Group;
     count?: number;
 };
 

@@ -1,4 +1,3 @@
-import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
 /** The working folder and environment of a command in a packed sandbox. */
@@ -37,10 +36,8 @@ export type PackageManagerSandbox = {
     root: string;
     artifacts: string;
     registry: NpmRegistry;
-    tools: ToolDeclaration[];
     rootPackage: string;
     yarnConfiguration: string | undefined;
-    version: string;
     [Symbol.asyncDispose](): Promise<void>;
 };
 
@@ -56,6 +53,5 @@ export type ToolProjectFiles = {
 export type IndexedPythonSandbox = AsyncDisposable & {
     rootProject: Buffer<ArrayBuffer>;
     rootConfiguration: Buffer<ArrayBuffer>;
-    registry: { url: string; readonly requests: number };
     inputs: ToolProjectFiles;
 };

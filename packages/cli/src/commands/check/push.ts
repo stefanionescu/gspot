@@ -1,11 +1,10 @@
 // Check each revision that a push sends in its own scratch copy, and write one report for the push.
 
-import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
+import { copyRevision } from '#cli/runs/copy/revision.ts';
 import type { RunReport } from '#cli/types/runs/check.ts';
 import { type CommandResult } from '#cli/types/terminal.ts';
 import { selectPush } from '#cli/repository/revisions/push.ts';
-import { copyRevision } from '#cli/runs/scratch-copy/revision.ts';
 import { type PushReport, type CheckOptions } from '#cli/types/commands/check.ts';
 import { type PushRevision, type PushSelection } from '#cli/types/repository/revisions.ts';
 
@@ -17,21 +16,16 @@ async function checkRevision(
     revision: PushRevision,
 ): Promise<CommandResult<RunReport> | undefined> {
     try {
-        return await copyRevision(
-            root,
-            { kind: 'commit', hash: revision.hash },
-            (scratch) =>
-                checkTree(scratch, options, signal, {
-                    base: revision.base,
-                    commits: revision.commits,
-                    historyComplete: revision.historyComplete,
-                    content: 'commit',
-                    installedRoot: root,
-                    reference: revision.hash,
-                    ...(revision.paths === undefined ? {} : { changed: revision.paths }),
-                }),
-            signal,
-        );
+        using copy = await copyRevision(root, { kind: 'commit', hash: revision.hash }, signal);
+        return await checkTree(copy.root, options, signal, {
+            base: revision.base,
+            commits: revision.commits,
+            historyComplete: revision.historyComplete,
+            content: 'commit',
+            installedRoot: root,
+            reference: revision.hash,
+            ...(revision.paths === undefined ? {} : { changed: revision.paths }),
+        });
     } catch (error) {
         if (!signal.aborted) throw error;
         return undefined;
@@ -41,10 +35,7 @@ async function checkRevision(
 // Build the push report: the checked revisions, the updates that no check covers, and the refs that a cancellation left.
 function buildPushReport(selected: PushSelection, revisions: PushReport['revisions'], signal: AbortSignal): PushReport {
     const pendingRefs = selected.revisions.slice(revisions.length).flatMap((revision) => revision.refs);
-    const exitCode = Math.max(
-        signal.aborted ? EXIT_ERROR : 0,
-        ...revisions.map((revision) => revision.report.exitCode),
-    );
+    const exitCode = Math.max(0, ...revisions.map((revision) => revision.report.exitCode));
     return {
         revisions,
         skipped: selected.skipped,

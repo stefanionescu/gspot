@@ -1,24 +1,26 @@
 import { readReferenceData } from '#cli/reference.ts';
 import type { GuideCheck, ReferencePage } from '../types/reference.ts';
+import { WHOLE_SETTING_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
-import { formatList, escapeCell, formatTable, formatSection, buildReferencePage } from './markdown.ts';
+import { getToolName, getToolDeclaration } from '#cli/configurations/tools.ts';
+import { CHECK_RUN_LABELS, SUPPRESSIONS_CHECK, CHECK_NEEDS_LABELS } from '../config/reference.ts';
 
 import {
-    CHECK_RUN_LABELS,
-    REFERENCE_FOLDERS,
-    SUPPRESSIONS_CHECK,
-    CHECK_NEEDS_LABELS,
-    SETTING_PLACEHOLDER,
-} from '../config/reference.ts';
+    formatCode,
+    formatList,
+    escapeCell,
+    formatTable,
+    formatSection,
+    buildReferencePage,
+    formatReferencePath,
+    formatReferenceLink,
+} from './markdown.ts';
 
 type Manifest = ReturnType<typeof readReferenceData>['configurations'][number];
 type CheckDeclaration = Manifest['checks'][number];
 type Suppression = NonNullable<Exclude<Manifest['tools'][number], string>['suppression']>;
 
-// The program a check starts: its tool, or the first word of its command.
-function findCheckProgram(check: CheckDeclaration): string | undefined {
-    return check.tool ?? check.command?.[0];
-}
+const configurations = readReferenceData().configurations;
 
 /**
  * Name the tools a check runs; a built-in check runs none.
@@ -27,11 +29,12 @@ function findCheckProgram(check: CheckDeclaration): string | undefined {
  * @returns the display name, or nothing for a built-in check
  */
 function formatToolNames(check: CheckDeclaration): string | undefined {
-    const program = findCheckProgram(check);
+    const program = getToolName(check);
     if (program === undefined) return undefined;
     // A command taken from a setting names the setting, not the placeholder.
-    const setting = SETTING_PLACEHOLDER.exec(program)?.groups?.['setting'];
-    return setting === undefined ? program : `the command in \`${setting}\``;
+    const setting = WHOLE_SETTING_PLACEHOLDER.exec(program)?.groups?.['name'];
+    const tool = setting === undefined ? program : `the command in ${formatCode(setting)}`;
+    return check.other_tools === undefined ? tool : `${tool}, with ${formatList(check.other_tools)}`;
 }
 
 // Every suppression form, for the check that reads them.
@@ -40,17 +43,26 @@ function formatSuppressionForms(suppressions: Map<string, Suppression>): string 
         ['Tool', 'Form'],
         [...suppressions].map(([name, form]) => [
             name,
-            form.forbidden === true ? 'Refused; use `gspot ignore`' : `\`${escapeCell(form.example ?? '')}\``,
+            form.forbidden === true ? 'Refused; use `gspot ignore`' : formatCode(escapeCell(form.example ?? '')),
         ]),
     );
+}
+
+function listToolSystems(check: CheckDeclaration): string[] | undefined {
+    const program = getToolName(check);
+    const builds = program === undefined ? undefined : getToolDeclaration(configurations, program).builds;
+    if (check.operating_systems === undefined && builds === undefined) return undefined;
+    return OPERATING_SYSTEMS.filter(
+        ({ name }) =>
+            (check.operating_systems?.includes(name) ?? true) &&
+            (builds?.some((build) => build === name || build.startsWith(`${name}-`)) ?? true),
+    ).map(({ label }) => label);
 }
 
 // The tool the check runs, and the build, service, or system it needs, each as one sentence when it applies.
 function listCheckRequirements(check: CheckDeclaration): string[] {
     const tools = formatToolNames(check);
-    const systems = check.operating_systems?.map(
-        (name) => OPERATING_SYSTEMS.find((system) => system.name === name)?.label ?? name,
-    );
+    const systems = listToolSystems(check);
     const needs = check.needs?.map((need) => CHECK_NEEDS_LABELS[need]);
     return [
         tools === undefined ? 'gspot runs this check itself.' : `It runs ${tools}.`,
@@ -64,13 +76,13 @@ function formatCheckFacts(check: CheckDeclaration, manifest: Manifest): string {
     const configuration = manifest.configuration.name;
     const timing =
         check.stage === 'manual'
-            ? `only when \`gspot check --only ${check.name}\` names it`
-            : `at the \`${check.stage}\` [stage](/start/concepts/#stage)`;
+            ? `only when ${formatCode('gspot check --only ' + check.name)} names it`
+            : `at the ${formatCode(check.stage)} [stage](/start/concepts/#stage)`;
     return [
-        `Part of the [\`${configuration}\`](/reference/${REFERENCE_FOLDERS.configurations}/${configuration}/) configuration, at the \`${check.level}\` [level](/start/concepts/#levels). It runs ${timing}, ${CHECK_RUN_LABELS[check.runs]}.`,
+        `Part of the ${formatReferenceLink('configurations', configuration)} configuration, at the ${formatCode(check.level)} [level](/start/concepts/#levels). It runs ${timing}, ${CHECK_RUN_LABELS[check.runs]}.`,
         ...listCheckRequirements(check),
         check.fix === undefined ? '' : '`gspot check --fix` fixes what it can.',
-        check.when?.setting === undefined ? '' : `It skips until you set \`${check.when.setting}\`.`,
+        check.when?.setting === undefined ? '' : `It skips until you set ${formatCode(check.when.setting)}.`,
     ]
         .filter(Boolean)
         .join(' ');
@@ -89,7 +101,7 @@ function formatTurnOff(check: CheckDeclaration, suppressions: Map<string, Suppre
         `gspot ignore ${check.name} --paths "<glob>" --reason "<why>"`,
         ...(check.command === undefined ? [] : [`gspot ignore ${check.name} --rule <rule> --reason "<why>"`]),
     ];
-    const program = findCheckProgram(check);
+    const program = getToolName(check);
     const comment = formatSuppressionComment(program === undefined ? undefined : suppressions.get(program));
     return `Turn it off for some files${check.command === undefined ? '' : ', or one of its lint rules'}, with a reason:\n\n\`\`\`shell\n${commands.join('\n')}\n\`\`\`${comment}`;
 }
@@ -140,15 +152,8 @@ export function buildCheckIndex(
             '`gspot explain <check>` shows its state in your repository.\n' +
             Object.entries(groups)
                 .map(([group, title]) => {
-                    const rows = checks
-                        .filter(({ configuration }) => configuration.configuration.group === group)
-                        .map(({ check }) => [
-                            `[\`${check.name}\`](/reference/${REFERENCE_FOLDERS.checks}/${check.name}/)`,
-                            `\`${check.stage}\``,
-                            `\`${check.level}\``,
-                            escapeCell(check.summary),
-                        ]);
-                    return formatSection(title, formatTable(['Check', 'Stage', 'Level', 'What it does'], rows));
+                    const entries = checks.filter(({ configuration }) => configuration.configuration.group === group);
+                    return formatSection(title, formatCheckTable(entries.map(({ check }) => check)));
                 })
                 .join(''),
     );
@@ -183,8 +188,26 @@ export function listGuideChecks(configurations: string[]): GuideCheck[] {
         .checks.filter(({ configuration }) => configurations.includes(configuration.configuration.name))
         .map(({ check }) => ({
             name: check.name,
-            link: `/reference/${REFERENCE_FOLDERS.checks}/${check.name}/`,
+            link: formatReferencePath('checks', check.name),
             stage: check.stage,
             summary: check.summary,
         }));
+}
+
+/**
+ * Format the check rows shared by indexes and configuration pages.
+ *
+ * @param checks the declared checks in display order.
+ * @returns the Markdown table, or nothing for no checks.
+ */
+export function formatCheckTable(checks: CheckDeclaration[]): string {
+    return formatTable(
+        ['Check', 'Stage', 'Level', 'What it does'],
+        checks.map((check) => [
+            formatReferenceLink('checks', check.name),
+            formatCode(check.stage),
+            formatCode(check.level),
+            escapeCell(check.summary),
+        ]),
+    );
 }

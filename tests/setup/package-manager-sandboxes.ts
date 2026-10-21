@@ -2,17 +2,16 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { runGit } from '#tests/setup/git.ts';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { runSandboxStep } from '#tests/setup/install.ts';
 import { createNpmRegistry } from '#tests/setup/registry.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { listDistinctTools } from '#cli/configurations/tools.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import type { PackageManager } from '#cli/types/parsers/dependencies.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
-import type { PackageManager } from '#cli/types/parsers/dependency-files.ts';
 import type { NpmRegistry, PackageManagerSandbox } from '#tests/types/packages.ts';
 
 import {
@@ -30,7 +29,7 @@ async function writePackageManagerSandbox(options: {
     registry: NpmRegistry;
     packageManager: PackageManager['name'];
     projectPath: string;
-}): Promise<Pick<PackageManagerSandbox, 'rootPackage' | 'yarnConfiguration' | 'version'>> {
+}): Promise<Pick<PackageManagerSandbox, 'rootPackage' | 'yarnConfiguration'>> {
     const { root, artifacts, registry, packageManager, projectPath } = options;
     const version = await runCommand([packageManager, '--version'], { cwd: artifacts });
     if (version.code !== 0) throw new Error(`Package manager version failed: ${version.stdout}${version.stderr}`);
@@ -42,7 +41,7 @@ async function writePackageManagerSandbox(options: {
         [projectPath]: rootPackage,
         ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': PNPM_WORKSPACE } : {}),
         '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${NPM_REGISTRY_TOKEN}\n`,
-        'gspot.toml': buildSettingsText(['format'], {
+        'gspot.toml': buildSandboxSettings(['format'], {
             ignore: {
                 checks: NPM_SANDBOX_IGNORES,
                 reason: 'The sandbox tests package-manager installation and preserves authored dependencies.',
@@ -58,7 +57,7 @@ async function writePackageManagerSandbox(options: {
     if (yarnConfiguration !== undefined) await writeFile(join(root, '.yarnrc.yml'), yarnConfiguration, { mode: 0o600 });
     const initialized = runGit(root, ['init', '--quiet']);
     if (initialized.code !== 0) throw new Error(`Package project Git setup failed: ${initialized.stderr}`);
-    return { rootPackage, yarnConfiguration, version: version.stdout.trim() };
+    return { rootPackage, yarnConfiguration };
 }
 
 /** Creates an authenticated registry and an authored project for a package manager. */
@@ -87,19 +86,16 @@ export async function createPackageManagerSandbox(
             }),
         );
         const authored = await writePackageManagerSandbox({ root, artifacts, registry, packageManager, projectPath });
-        const result = await spawnGspot(root, ['apply', '--json']);
-        if (result.code !== 0) throw new Error(`Package sandbox apply failed: ${result.stdout}${result.stderr}`);
+        const result = await runSandboxStep({ root, environment: {}, run: spawnGspot }, ['apply', '--json']);
         const preserved = (JSON.parse(result.stdout) as ApplyReport).notes.filter((note) =>
             note.startsWith('preserved'),
         );
         if (preserved.length > 0)
             throw new Error(`Package sandbox preserved conflicting inputs: ${preserved.join('\n')}`);
-        const session = await openSession(root);
         return {
             root,
             artifacts,
             registry,
-            tools: listDistinctTools(session.neededToolManifests),
             ...authored,
             async [Symbol.asyncDispose]() {
                 await resources.disposeAsync();

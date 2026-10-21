@@ -1,4 +1,5 @@
 // Checks system paths and portable generated file names.
+import { GspotError } from '#cli/system/errors.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/system/locations.ts';
 import { DEVICE_NAME, UNSAFE_PATH_END, RESERVED_SEGMENTS, UNSAFE_CHARACTERS } from '#cli/config/system/files.ts';
 
@@ -18,7 +19,8 @@ function isUnsafeSegment(part: string): boolean {
 function splitPortablePath(path: string): string[] {
     const parts = path.split('/');
     if (parts.some((part) => isUnsafeSegment(part)))
-        throw new Error(
+        throw new GspotError(
+            'filesystem',
             `${JSON.stringify(path)} is not a safe repository-relative path. Choose a path inside the repository.`,
         );
     return parts;
@@ -34,7 +36,8 @@ export function splitSystemPath(path: string): string[] {
     if (process.platform === 'win32') return splitPortablePath(path);
     const parts = path.split('/');
     if (parts.some((part) => RESERVED_SEGMENTS.has(part) || part.includes('\0')))
-        throw new Error(
+        throw new GspotError(
+            'filesystem',
             `${JSON.stringify(path)} is not a safe repository-relative path. Choose a path inside the repository.`,
         );
     return parts;
@@ -48,5 +51,5 @@ export function splitSystemPath(path: string): string[] {
 export function assertWritablePath(path: string): void {
     splitPortablePath(path);
     if (STATE_FOLDER_PATTERN.test(path.normalize('NFC')))
-        throw new Error(`${path} is inside .gspot/state. Choose a path outside it.`);
+        throw new GspotError('filesystem', `${path} is inside .gspot/state. Choose a path outside it.`);
 }

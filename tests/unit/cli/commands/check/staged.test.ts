@@ -8,11 +8,11 @@ import { readGitOutput } from '#tests/setup/git.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { isWindows, isCaseFolding } from '#tests/setup/system.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/data/checks/bash/tool-checks.ts';
 import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
 
@@ -34,20 +34,24 @@ test('a staged check reads index bytes and file modes, converts no line endings,
         '.gitattributes': 'payload.dat text eol=crlf\n',
         'payload.dat': Buffer.from([255, 10, 0]),
         'task.sh': '#!/bin/sh\nexit 0\n',
-        'gspot.toml': `configurations = []
-[[command_check]]
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: `[[command_check]]
 name = "project/index-bytes"
 command = ${JSON.stringify(command)}
 paths = ["payload.dat", "task.sh"]
 stage = "commit"
 `,
+        }),
     });
     await chmod(join(folder.path, 'task.sh'), 0o755);
     readGitOutput(folder.path, ['init', '-q']);
     readGitOutput(folder.path, ['add', '-A']);
     await writeFile(join(folder.path, 'payload.dat'), Buffer.from([0, 1, 2]));
     await chmod(join(folder.path, 'task.sh'), 0o644);
-    const result = await checkReport(folder.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
+    const result = parseCheckReport(
+        await runGspot(folder.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']),
+    );
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.report.checks[0]?.status).toBe('passed');
     expect(await readFile(join(folder.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
@@ -82,13 +86,15 @@ test('a staged check copies the locked dependencies and leaves the working tree 
         'node_modules/dependency/index.js': 'export const verdict = true;\n',
         'node_modules/dependency/stamp.txt': 'authored dependency data',
         'source.txt': 'authored input',
-        'gspot.toml': `configurations = []
-[[command_check]]
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: `[[command_check]]
 name = "project/dependencies"
 command = ${JSON.stringify(command)}
 paths = ["source.txt"]
 stage = "commit"
 `,
+        }),
     });
     readGitOutput(folder.path, ['init', '-q']);
     readGitOutput(folder.path, ['add', '-A']);
@@ -108,12 +114,9 @@ name = "example"
 version = "0.0.0"
 `;
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['python'], {
+        'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
-            tables: `[[scope]]
-path = "child"
-configurations = ["python"]
-`,
+            scopes: [{ path: 'child', configurations: ['python'] }],
         }),
         'pyproject.toml': project,
         'main.py': 'value = 1\n',
@@ -128,7 +131,7 @@ configurations = ["python"]
     readGitOutput(sandbox.path, ['add', '-A']);
     const original = await readFile(join(sandbox.path, '.gspot/configurations/language/python/basedpyright.json'));
     const commandArguments = ['check', '--staged', '--only', 'gspot/generated-files', '--json'];
-    const checked = await checkReport(sandbox.path, commandArguments);
+    const checked = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(
         checked.report.checks
@@ -165,10 +168,8 @@ async function createCaseClashingSandbox() {
             stage: 'commit',
         };
         await createFileTree(sandbox.path, {
-            'gspot.toml': stringify({
-                configurations: [],
-                rules: { enabled: false },
-                command_check: [{ name: 'sandbox/report', ...check }],
+            'gspot.toml': buildSandboxSettings([], {
+                tables: stringify({ rules: { enabled: false }, command_check: [{ name: 'sandbox/report', ...check }] }),
             }),
             'docs/guide.md': '# Guide\n',
         });
@@ -192,7 +193,9 @@ async function createCaseClashingSandbox() {
 
 test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep both spellings and bytes', async () => {
     await using sandbox = await createCaseClashingSandbox();
-    const result = await checkReport(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']);
+    const result = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']),
+    );
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = result.report;
     expect(report.checks.map((entry) => [entry.check, entry.status, entry.fileCount])).toStrictEqual([
@@ -209,7 +212,9 @@ test.skipIf(!isCaseFolding())(
     'staged paths that differ only by letter case are refused on a case-folding disk',
     async () => {
         await using sandbox = await createCaseClashingSandbox();
-        const result = await checkReport(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']);
+        const result = parseCheckReport(
+            await runGspot(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']),
+        );
         expect(result.code, result.stdout + result.stderr).toBe(2);
         const failure = JSON.parse(result.stdout) as CommandFailureJson;
         expect(failure).toStrictEqual({ error: 'files', message: expect.stringContaining('docs/NOTES.md') as string });
@@ -218,7 +223,7 @@ test.skipIf(!isCaseFolding())(
 
 test('staged checks use index bytes and settings on an unborn branch while preserving unstaged edits', async () => {
     await using folder = await testdir();
-    const settings = buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK });
+    const settings = buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK });
     await createFileTree(folder.path, { 'gspot.toml': settings, 'script with spaces.sh': 'if then\n' });
     readGitOutput(folder.path, ['init', '-q']);
     readGitOutput(folder.path, ['add', '-A']);
@@ -226,7 +231,7 @@ test('staged checks use index bytes and settings on an unborn branch while prese
     await writeFile(join(folder.path, 'script with spaces.sh'), 'echo repaired only in the working tree\n');
     await writeFile(join(folder.path, 'gspot.toml'), 'invalid working settings');
     const commandArguments = ['check', '--staged', '--only', 'project/bash-syntax', '--json'];
-    const failed = await checkReport(folder.path, commandArguments);
+    const failed = parseCheckReport(await runGspot(folder.path, commandArguments));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const failedReport = failed.report;
     expect(failedReport.comparison?.content).toBe('index');
@@ -242,7 +247,7 @@ test('staged checks use index bytes and settings on an unborn branch while prese
     await writeFile(join(folder.path, 'gspot.toml'), settings);
     readGitOutput(folder.path, ['add', 'gspot.toml', 'script with spaces.sh']);
     await writeFile(join(folder.path, 'script with spaces.sh'), 'if then\n');
-    const passed = await checkReport(folder.path, commandArguments);
+    const passed = parseCheckReport(await runGspot(folder.path, commandArguments));
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     const passedReport = passed.report;
     expect(passedReport.checks[0]?.status).toBe('passed');
@@ -251,16 +256,16 @@ test('staged checks use index bytes and settings on an unborn branch while prese
 });
 
 test('staged checks read an indexed file when its working file is missing', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['bash'], { tables: BASH_SYNTAX_CHECK }),
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'script with spaces.sh': 'echo indexed\n',
     });
+
     readGitOutput(folder.path, ['init', '-q']);
     readGitOutput(folder.path, ['add', '-A']);
     const commandArguments = ['check', '--staged', '--only', 'project/bash-syntax', '--json'];
     await unlink(join(folder.path, 'script with spaces.sh'));
-    const ran = await checkReport(folder.path, commandArguments);
+    const ran = parseCheckReport(await runGspot(folder.path, commandArguments));
     expect(ran.code, ran.stdout + ran.stderr).toBe(0);
     expect(ran.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 1 });
     expect(await isOnDisk(join(folder.path, 'script with spaces.sh'))).toBe(false);

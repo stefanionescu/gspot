@@ -1,10 +1,12 @@
+import type { ColumnDef } from '@pgsql/types';
 import { computePosition } from '#cli/system/text.ts';
 import { listSqlTokens } from '#cli/parsers/sql/lexer.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { createIdentifier } from '#cli/checks/naming/collect.ts';
+import { parseSqlFile, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
 import type { SqlFile, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 import { type SqlNamed, type Identifier, type IdentifierRead } from '#cli/types/checks/naming.ts';
-import { parseSqlFile, listNameParts, readStatement, listNodeFields } from '#cli/parsers/sql/postgres.ts';
+import { SQL_CREATE_KIND, SQL_CREATE_PREFIX, SQL_CREATE_MODIFIER } from '#cli/config/checks/naming.ts';
 
 import {
     SQL_NAME_TOKEN,
@@ -12,18 +14,23 @@ import {
     SQL_PARAMETER_DEPTH,
     SQL_PARAMETER_PREFIX,
     SQL_TABLE_PARAMETERS,
-    SQL_DECLARATION_PREFIX,
 } from '#cli/config/parsers/sql.ts';
+
+function buildColumnName(column: ColumnDef): SqlNamed {
+    return {
+        category: 'columns',
+        name: column.colname ?? '',
+        ...(column.location === undefined ? {} : { location: column.location }),
+    };
+}
 
 function listAddedColumns({ fields }: SqlStatementView<'AlterTableStmt'>): SqlNamed[] {
     return listNodeFields(fields.cmds, 'AlterTableCmd')
         .filter((command) => command.subtype === 'AT_AddColumn')
         .flatMap((command) =>
-            listNodeFields(command.def === undefined ? [] : [command.def], 'ColumnDef').map((column) => ({
-                category: 'columns',
-                name: column.colname ?? '',
-                ...(column.location === undefined ? {} : { location: column.location }),
-            })),
+            listNodeFields(command.def === undefined ? [] : [command.def], 'ColumnDef').map((column) =>
+                buildColumnName(column),
+            ),
         );
 }
 
@@ -35,11 +42,7 @@ const NAME_READERS: SqlStatementReaders<SqlNamed[]> = {
             name: fields.relation?.relname ?? '',
             ...(fields.relation?.location === undefined ? {} : { location: fields.relation.location }),
         },
-        ...listNodeFields(fields.tableElts, 'ColumnDef').map<SqlNamed>((column) => ({
-            category: 'columns',
-            name: column.colname ?? '',
-            ...(column.location === undefined ? {} : { location: column.location }),
-        })),
+        ...listNodeFields(fields.tableElts, 'ColumnDef').map((column) => buildColumnName(column)),
     ],
     ViewStmt: ({ fields }) => [
         {
@@ -83,7 +86,9 @@ function parseParameterSpans(source: string, start: number): { spans: number[]; 
 }
 
 function findFunctionName(statement: SqlStatementView<'CreateFunctionStmt'>, source: string) {
-    let start = statement.start + (SQL_DECLARATION_PREFIX.exec(source.slice(statement.start))?.[0].length ?? 0);
+    let start = statement.start;
+    for (const pattern of [SQL_CREATE_PREFIX, SQL_CREATE_MODIFIER, SQL_CREATE_KIND])
+        start += pattern.exec(source.slice(start))?.[0].length ?? 0;
     start += source.slice(start).length - source.slice(start).trimStart().length;
     const qualified = SQL_QUALIFIED_NAME.exec(source.slice(start))?.[0] ?? '';
     const lastPart = [...qualified.matchAll(SQL_NAME_TOKEN)].at(-1);
@@ -95,7 +100,10 @@ function listFunctionNames(statement: SqlStatementView<'CreateFunctionStmt'>, so
     const names: SqlNamed[] = [
         {
             category: 'functions',
-            name: listNameParts(statement.fields.funcname).at(-1) ?? '',
+            name:
+                listNodeFields(statement.fields.funcname, 'String')
+                    .map((part) => part.sval ?? '')
+                    .at(-1) ?? '',
             offset,
         },
     ];
@@ -155,7 +163,9 @@ function extractStatementIdentifiers({
         statement.kind === 'CreateFunctionStmt'
             ? listFunctionNames(statement, lexicalSource)
             : (readStatement(statement, NAME_READERS) ?? []);
-    let offset = statement.start + (SQL_DECLARATION_PREFIX.exec(lexicalSource.slice(statement.start))?.[0].length ?? 0);
+    let offset = statement.start;
+    for (const pattern of [SQL_CREATE_PREFIX, SQL_CREATE_MODIFIER, SQL_CREATE_KIND])
+        offset += pattern.exec(lexicalSource.slice(offset))?.[0].length ?? 0;
     return named
         .filter((entry) => entry.name !== '')
 
@@ -199,11 +209,11 @@ export async function extractSqlIdentifiers(file: string, source: string, reads:
     return {
         identifiers: parsed.statements.flatMap((statement) =>
             extractStatementIdentifiers({
-                file: file,
-                source: source,
-                statement: statement,
-                parsed: parsed,
-                lexicalSource: lexicalSource,
+                file,
+                source,
+                statement,
+                parsed,
+                lexicalSource,
             }),
         ),
         error: undefined,

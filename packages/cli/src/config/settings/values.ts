@@ -1,3 +1,5 @@
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
+
 export const ISO_DATE_LENGTH = 10;
 
 // A category key has two parts after the language: naming.<language>.<category>.<setting>.
@@ -10,7 +12,6 @@ export const OVERRIDING_GROUPS = new Set<string>(['framework', 'platform', 'libr
 
 export const REASON_WORDS_MIN = 2;
 
-export const ALL_LANGUAGES = '*';
 export const COMMAND_CHECK_DEFAULTS = {
     level: 'recommended',
     runs: 'files',
@@ -23,15 +24,6 @@ export const COMMAND_CHECK_DEFAULTS = {
         eslint_plugins: false,
         kinds: ['source', 'generated'],
     },
-} as const;
-
-export const TOOL_TIMEOUT_SETTING = 'tool_timeout_seconds';
-
-/** Scope tables leave out these root records but keep their normalized list fields. */
-export const SCOPE_EMPTY_RECORDS = [
-    ['naming', 'override'],
-    ['coverage', 'swift_target'],
-    ['docs', 'banned_headings'],
-    ['licenses', 'allowed_package'],
-    ['site', 'size_limit'],
-] as const;
+} satisfies Pick<CheckDeclaration, 'level' | 'runs'> & {
+    files: Omit<NonNullable<CheckDeclaration['files']>, 'paths'>;
+};

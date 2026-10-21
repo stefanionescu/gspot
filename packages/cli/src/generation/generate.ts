@@ -2,29 +2,29 @@ import { AGENTS_FILE } from '#cli/config/rules.ts';
 import { buildPathKey } from '#cli/system/paths.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { readCachedText } from '#cli/system/files/reads.ts';
+import { stripBlock } from '#cli/system/managed-blocks.ts';
+import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import { buildBunScannerEdits } from '#cli/generation/bun.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
-import { findBlockSpan } from '#cli/system/managed-blocks.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { listDistinctTools } from '#cli/configurations/tools.ts';
-import { isYarnBerry } from '#cli/repository/package-manager.ts';
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
-import { SWIFT_CONFIGURATION } from '#cli/config/generation/ci.ts';
-import { readRootHoldDays } from '#cli/generation/release-holds.ts';
+import { SWIFT_CONFIGURATION } from '#cli/config/configurations.ts';
+import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
-import { buildBunScannerEdits } from '#cli/generation/bun-scanner.ts';
+import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { listProjectInstallLines } from '#cli/generation/project-install.ts';
-import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
-import { NPMRC_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/tools/npm.ts';
+import { getTable, findRootSelection } from '#cli/settings/scope-view.ts';
 import { usesGitLfs, listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { listSelectedManifests, isConfigurationSelected } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/projects.ts';
+import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 import { DOT_GSPOT, STATE_PATH, VERSION_PIN_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
+import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
 
 import {
     LF_ATTRIBUTES,
@@ -39,15 +39,22 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
     const {
         settingsFile: { settings },
         scopes,
-        version,
     } = session;
     if (settings.ci?.enabled !== true) return;
     const manual = session.configuredChecks.filter((planned) => planned.check.stage === 'manual');
     const required = new Set(manual.flatMap((element) => listRequiredTools(element)));
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
-            version,
-            packageManager: session.getPackageManager(),
+            version: packageManifest.version,
+            packageManager:
+                session.packageManager === undefined
+                    ? undefined
+                    : readPackageManagerVersion(
+                          session.installedRoot,
+                          assertPackageManager(session.packageManager),
+                          session.timeoutSeconds,
+                          session.reads,
+                      ),
             setupCommand: settings.ci.setup_command,
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
             operatingSystems: settings.ci.operating_systems,
@@ -69,7 +76,7 @@ function formatAttributePattern(path: string): string {
 }
 
 // Each whole file gspot writes outside its folder keeps LF too, so a CRLF checkout does not read as an edit.
-function buildAttributesBlock(files: GenerationResult['files'], authored: string): string {
+function buildAttributesBlock(outsidePaths: string[], authored: string): string {
     const inheritsLineEndings = parseAttributePatterns(authored, '.').some(
         ({ pattern, attributes }) =>
             pattern === '**/*' && AUTO_LF_ATTRIBUTES.every((attribute) => attributes.includes(attribute)),
@@ -79,72 +86,62 @@ function buildAttributesBlock(files: GenerationResult['files'], authored: string
               .filter((line) => !line.endsWith(` ${LF_ATTRIBUTES}`))
               .join('\n')
         : GIT_ATTRIBUTES_BLOCK;
-    const outside = files.map(({ path }) => path).filter((path) => !isInGspotFolder(path));
     const suffix = inheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
-    const lines = outside
+    const lines = outsidePaths
         .toSorted((left, right) => left.localeCompare(right))
         .map((path) => `${formatAttributePattern(path)} linguist-generated${suffix}`);
     return [block, ...lines].join('\n');
 }
 
-function addManagedBlocks(
-    session: Session,
-    manifests: Manifest[],
-    rules: RuleFile[],
-    generated: GenerationResult,
-): void {
+/**
+ * Build the managed .gitignore block for tool projects and generated files.
+ *
+ * @returns the paths that Git must leave untracked.
+ */
+function buildGitignoreBlock(): string {
+    const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), STATE_PATH].map((path) => `${path}/`);
+    return [...toolProjectPaths, `${DOT_GSPOT}/${YARN_INSTALL_SETTINGS_FILE}`].join('\n');
+}
+
+function addManagedBlocks(session: Session, rules: RuleFile[], generated: GenerationResult): void {
     const {
         repository,
         settingsFile: { settings },
         reads,
     } = session;
-    const text = readCachedText(reads, GITATTRIBUTES_FILE) ?? '';
-    const span = findBlockSpan(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
-    const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
+    const outsidePaths = generated.files.map(({ path }) => path).filter((path) => !isInGspotFolder(path));
+    const text = findCachedText(reads, GITATTRIBUTES_FILE) ?? '';
+    const authored = stripBlock(text, { path: GITATTRIBUTES_FILE, style: 'hash' });
     if (repository.hasGit) {
         generated.blocks.push(
             { path: GITIGNORE_FILE, block: buildGitignoreBlock(), style: 'hash' },
             {
                 path: GITATTRIBUTES_FILE,
-                block: buildAttributesBlock(generated.files, authored),
+                block: buildAttributesBlock(outsidePaths, authored),
                 style: 'hash',
             },
         );
     }
     if (!settings.rules.enabled) return;
-    const agents = readCachedText(reads, AGENTS_FILE) ?? '';
-    const agentsSpan = findBlockSpan(agents, { path: AGENTS_FILE, style: 'markdown' });
-    const agentsText =
-        agentsSpan === undefined ? agents : agents.slice(0, agentsSpan.start) + agents.slice(agentsSpan.end);
+    const agents = findCachedText(reads, AGENTS_FILE) ?? '';
+    const agentsText = stripBlock(agents, { path: AGENTS_FILE, style: 'markdown' });
     const block = buildAgentsBlock({
         hasOwnTitle: hasTopHeading(agentsText),
-        generatedPaths: generated.files.map(({ path }) => path).filter((path) => !isInGspotFolder(path)),
-        fileEdits: generated.fileEdits.map(({ path, changes }) => ({
+        generatedPaths: outsidePaths,
+        fileSettings: generated.fileSettings.map(({ path, changes }) => ({
             path,
             keys: changes.map((change) => change.path.join('.')),
         })),
         startCommand: session.startRunner.command,
         files: rules,
-        hasChecks: manifests.some((manifest) => manifest.checks.length > 0),
+        hasChecks: listSelectedManifests(session.scopes).some((manifest) => manifest.checks.length > 0),
     });
     generated.blocks.push({ path: AGENTS_FILE, block, style: 'markdown' });
 }
 
-function mergeFileEdits(generated: GenerationResult): void {
-    const assembled = new Map<string, GenerationResult['fileEdits'][number]>();
-    for (const file of generated.fileEdits) {
-        const previous = assembled.get(file.path);
-        if (previous === undefined) assembled.set(file.path, { ...file, changes: [...file.changes] });
-        else {
-            previous.changes.push(...file.changes);
-        }
-    }
-    generated.fileEdits = [...assembled.values()];
-}
-
 function assertDistinctPaths(generated: GenerationResult): void {
     const paths = new Map<string, string>();
-    const files = [...generated.files, ...generated.blocks, ...generated.fileEdits];
+    const files = [...generated.files, ...generated.blocks, ...generated.fileSettings];
     for (const file of files) {
         assertWritablePath(file.path);
         const key = buildPathKey(file.path);
@@ -155,21 +152,11 @@ function assertDistinctPaths(generated: GenerationResult): void {
 }
 
 /**
- * Build the managed .gitignore block for tool projects and generated files.
- *
- * @returns the paths that Git must leave untracked.
- */
-function buildGitignoreBlock(): string {
-    const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), STATE_PATH].map((path) => `${path}/`);
-    return [...toolProjectPaths, `${DOT_GSPOT}/${NPMRC_FILE}`, `${DOT_GSPOT}/${YARN_INSTALL_SETTINGS_FILE}`].join('\n');
-}
-
-/**
  * Generate every file in memory, and write nothing.
  *
  * @param session the repository to generate for.
  *
- * @returns everything that apply writes, with notes.
+ * @returns everything that apply writes.
  */
 function generate(session: Session): GenerationResult {
     const {
@@ -177,23 +164,23 @@ function generate(session: Session): GenerationResult {
         repository,
         scopes,
     } = session;
+    const { installedRoot, timeoutSeconds, reads } = session;
     const { root } = repository;
-    const packageManager = session.getPackageManagerName();
+    const packageManager = session.packageManager?.name;
     const manifests = session.neededToolManifests;
     const generated: GenerationResult = {
-        notes: [],
-        files: [{ path: VERSION_PIN_FILE, content: session.version + '\n' }],
+        files: [{ path: VERSION_PIN_FILE, content: packageManifest.version + '\n' }],
         blocks: [],
-        fileEdits: [],
+        fileSettings: [],
     };
-    const toolFiles = session.toolFiles();
+    const toolFiles = getToolFiles(session);
     generated.files.push(...toolFiles.files);
-    generated.fileEdits.push(
-        ...buildBunScannerEdits(root, scopes),
+    generated.fileSettings.push(
+        ...buildBunScannerEdits(session),
         ...buildPointerFieldEdits(session, generated.files, toolFiles.targets),
     );
     generated.files.push(
-        ...buildHookFiles(root, settings, session.startRunner, {
+        ...buildHookFiles(settings, session.startRunner, {
             names: listHookNames(session.configuredChecks),
             usesLfs: usesGitLfs(session.repository.attributes),
         }),
@@ -204,24 +191,25 @@ function generate(session: Session): GenerationResult {
                   root,
                   scopes,
                   manifests,
-                  isYarnBerry: packageManager === 'yarn' && isYarnBerry(session.requirePackageManager()),
+                  isYarnBerry:
+                      packageManager === 'yarn' &&
+                      isYarnBerry(
+                          readPackageManagerVersion(
+                              installedRoot,
+                              assertPackageManager(session.packageManager),
+                              timeoutSeconds,
+                              reads,
+                          ),
+                      ),
               })),
-        ...buildPythonProject(manifests, readRootHoldDays(scopes)),
-        buildMiseProject(manifests, session.reads),
+        ...buildPythonProject(manifests, getTable(findRootSelection(scopes).view, 'dependencies').min_release_age_days),
+        buildMiseProject(manifests),
     );
     buildWorkflow(session, generated);
-    const selected = listSelectedManifests(scopes);
     const rules = selectRuleFiles(session);
-    generated.files.push(
-        ...rules.map((file) => ({
-            path: file.target,
-            content: file.content,
-            kind: 'rules' as const,
-        })),
-    );
-    addManagedBlocks(session, selected, rules, generated);
-    generated.files.sort((a, b) => a.path.localeCompare(b.path));
-    mergeFileEdits(generated);
+    generated.files.push(...rules.map(({ target: path, content }) => ({ path, content })));
+    addManagedBlocks(session, rules, generated);
+    generated.files = generated.files.toSorted((left, right) => left.path.localeCompare(right.path));
     assertDistinctPaths(generated);
     return generated;
 }

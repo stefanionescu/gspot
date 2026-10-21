@@ -1,52 +1,40 @@
 // Reads and edits JSON and JSON with comments.
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import type { Parsed } from '#cli/types/errors.ts';
+import { JSONC_OPTIONS } from '#cli/config/parsers/json.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import { JSONC_OPTIONS, JSONC_EXTENSION } from '#cli/config/parsers/json.ts';
 import { isRecord, getValueAt, normalizeTables } from '#cli/system/values.ts';
 import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser';
 
 // Parse the complete JSON document before editing or returning any of its fields.
-export function parseJsonFile(path: string, source: string): Record<string, unknown>;
-export function parseJsonFile<Value>(path: string, source: string, schema: z.ZodType<Value>): Value;
+export function parseJsonFile(path: string, text: string): Record<string, unknown>;
+export function parseJsonFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
 /**
  * Read a JSON object, and validate it against the schema, if any.
  *
  * @param path the repository-relative file.
- * @param source the file text.
+ * @param text the complete JSON source, including comments.
  * @param schema the shape to check.
  * @returns the parsed object.
  */
-export function parseJsonFile(path: string, source: string, schema?: z.ZodType): unknown {
+export function parseJsonFile(path: string, text: string, schema?: z.ZodType): unknown {
     let value: unknown;
     try {
-        value = path.endsWith(JSONC_EXTENSION) ? parseJsonc(source) : JSON.parse(source);
+        const errors: ParseError[] = [];
+        value = parse(text, errors, JSONC_OPTIONS);
+        const error = errors[0];
+        if (error !== undefined)
+            throw new SyntaxError(
+                `Invalid JSON at offset ${String(error.offset)}: ${printParseErrorCode(error.error)}`,
+            );
     } catch (error) {
-        throw new GspotError('filesystem', `${path} is not valid JSON. Fix the file.`, { cause: error });
+        if (!(error instanceof Error)) throw error;
+        const detail = error.message.split('\n', 1).join('').replace(/\.$/u, '');
+        throw new GspotError('filesystem', `${path} is not valid JSON: ${detail}. Fix the file.`, { cause: error });
     }
     if (!isRecord(value)) throw new GspotError('filesystem', `${path} must contain a JSON object. Fix the file.`);
     return schema === undefined ? value : parseFileFields(path, value, schema);
-}
-
-/**
- * Parse and validate a source JSON document before a check reads its fields.
- *
- * @param text the JSON source.
- * @param schema the fields and constraints to validate.
- * @returns the validated value, or a parse error.
- */
-export function parseJsonResult<T>(text: string, schema: z.ZodType<T>): Parsed<T> {
-    let value: unknown;
-    try {
-        value = JSON.parse(text);
-    } catch (error) {
-        if (!(error instanceof Error)) throw error;
-        return { error: error.message };
-    }
-    const parsed = schema.safeParse(value);
-    return parsed.success ? { value: parsed.data } : { error: parsed.error.message };
 }
 
 /**
@@ -60,7 +48,6 @@ export function openJsonFile(path: string, source: string): EditableFile {
     let text = source;
     let document = parseJsonFile(path, text);
     return {
-        format: 'json',
         getValue: (keys) => normalizeTables(getValueAt(document, keys)),
         set(keys, value) {
             if (isDeepStrictEqual(normalizeTables(getValueAt(document, keys)), normalizeTables(value))) return;
@@ -72,20 +59,21 @@ export function openJsonFile(path: string, source: string): EditableFile {
     };
 }
 
+export function parseReport(tool: string, text: string): unknown;
+export function parseReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value;
 /**
- * Parse JSON with comments and trailing commas, and refuse partial results.
+ * Parse and validate a report, and keep its untrusted contents out of errors.
  *
- * @param text the source to parse.
- * @returns the parsed value.
- * @throws when the text does not parse.
+ * @param tool the program that printed the report.
+ * @param text the JSON report.
+ * @param schema the shape to validate when supplied.
+ * @returns the parsed report, after validation against any supplied schema.
  */
-export function parseJsonc(text: string): unknown {
-    const errors: ParseError[] = [];
-    const value: unknown = parse(text, errors, JSONC_OPTIONS);
-    const error = errors[0];
-    if (error !== undefined)
-        throw new SyntaxError(
-            `Invalid JSON configuration at offset ${String(error.offset)}: ${printParseErrorCode(error.error)}.`,
-        );
-    return value;
+export function parseReport(tool: string, text: string, schema?: z.ZodType): unknown {
+    try {
+        const parsed: unknown = JSON.parse(text);
+        return schema === undefined ? parsed : schema.parse(parsed);
+    } catch {
+        throw new GspotError('output', `${tool} returned invalid structured findings.`);
+    }
 }

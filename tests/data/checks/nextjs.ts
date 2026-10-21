@@ -169,10 +169,7 @@ const TSC_FAILURE_OUTPUT = 'src/app/page.ts(1,1): error TS2322: Type mismatch\n'
 const NEXT_VERSION_OUTPUT = 'Next.js v16.3.5';
 
 const TYPESCRIPT_VERSION_OUTPUT = 'Version 5.9.3';
-
-const MAXIMUM_BYTE = 255;
-const SECOND_CACHE_BYTE = 2;
-const NEXT_CACHE_BYTES = [0, MAXIMUM_BYTE, 1, SECOND_CACHE_BYTE] as const;
+const NEXT_CACHE_BYTES = [0, 255, 1, 2] as const;
 
 export {
     NEXT_PACKAGE,

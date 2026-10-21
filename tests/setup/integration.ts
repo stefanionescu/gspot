@@ -2,10 +2,13 @@
 import { testdir } from 'testdirs';
 import { afterAll } from 'bun:test';
 import { readFile } from 'node:fs/promises';
+import { isOnDisk } from '#tests/setup/files.ts';
 import { join, dirname, delimiter } from 'node:path';
+import { TEST_RUN_FOLDER } from '#tests/setup/install.ts';
 import { createNpmRegistry } from '#tests/setup/registry.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
-import { testRunFolder, buildSandboxPath } from '#tests/setup/install.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { testModules, installedModules } from '#tests/setup/modules.ts';
 
 import {
     TERMINATED_EXIT,
@@ -46,8 +49,8 @@ afterAll(async () => {
 });
 
 try {
-    const folder = testRunFolder();
-    if (!(await Bun.file(join(folder, PACKED_PACKAGES_FILE)).exists()))
+    const folder = TEST_RUN_FOLDER;
+    if (!(await isOnDisk(join(folder, PACKED_PACKAGES_FILE))))
         throw new Error('Run mise run test integration or mise run test e2e first.');
     const registry = resources.use(await createNpmRegistry(work.path, { declarations: [] }));
     resources.use(
@@ -60,7 +63,15 @@ try {
     const pinnedToolsPath = paths.trim().split(/\r?\n/u);
     const commandFolder = dirname(join(folder, GSPOT_LAUNCHER_PATH));
     resources.use(
-        overrideEnvironment({ PATH: [commandFolder, ...pinnedToolsPath, buildSandboxPath()].join(delimiter) }),
+        overrideEnvironment({
+            PATH: [
+                commandFolder,
+                ...pinnedToolsPath,
+                join(testModules, '.bin'),
+                join(installedModules, '.bin'),
+                readEnvironmentVariable('PATH') ?? '',
+            ].join(delimiter),
+        }),
     );
 } catch (error) {
     await resources.disposeAsync();

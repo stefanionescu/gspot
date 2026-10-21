@@ -1,15 +1,16 @@
 import { join } from 'node:path';
+import { runChecks } from '#cli/runs/run.ts';
+import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { fakeNpmTool } from '#tests/setup/fakes.ts';
 import * as processes from '#cli/system/processes.ts';
-import { checkReport } from '#tests/setup/run-gspot.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { prepareLicenseSandbox } from '#tests/setup/licenses.ts';
+import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { matchFields, matchSubstring, captureRejection } from '#tests/setup/matchers.ts';
 
 import {
@@ -97,7 +98,7 @@ test.each(['', 'apps/example'].flatMap((scope) => LICENSE_DEPENDENCY_FILES.map((
                 ? LICENSE_SETTINGS
                 : `${LICENSE_SETTINGS}[[scope]]\npath = "${scope}"\nconfigurations = ["licenses"]\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['licenses'], { tables }),
+            'gspot.toml': buildSandboxSettings(['licenses'], { tables }),
             [path]: source,
         });
 
@@ -237,12 +238,15 @@ test('scan: only the packages that the lockfile holds are checked, and a locked 
 });
 
 test('scan: the check skips with a note while licenses.allowed is empty', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['licenses']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['licenses']),
         'pyproject.toml': '[project]\nname = "app"\nversion = "1.0.0"\n',
     });
-    const { report } = await checkReport(sandbox.path, ['check', '--only', 'licenses/allowed', '--json']);
+
+    const { report } = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['licenses/allowed'] }),
+    );
     expect(report.checks).toMatchObject([
         { check: 'licenses/allowed', status: 'skipped', note: 'Set licenses.allowed to check licenses.' },
     ]);

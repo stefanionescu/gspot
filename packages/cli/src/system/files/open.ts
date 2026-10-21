@@ -1,9 +1,9 @@
 // Read and write contained files through verified folder paths.
-import { posix } from 'node:path';
-import { isMissingFileError } from '#cli/system/errors.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { Files, FilesState } from '#cli/types/system/files.ts';
 import { releaseLocks, lockForWriting } from '#cli/system/files/lock.ts';
+import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
@@ -29,19 +29,19 @@ export function openFiles(baseFolder: string): Files {
         },
         deleteTree(path) {
             const stat = files.readStats(path);
-            if (stat === undefined) return;
-            if (!stat.isDirectory()) throw new Error(`${path} is not a directory. Choose a directory.`);
-            rmSync(verifyPath(bounds, path), { recursive: true, force: true });
+            if (stat?.isDirectory() === false)
+                throw new GspotError('filesystem', `${path} is not a directory. Choose a directory.`);
+            if (stat !== undefined) rmSync(verifyPath(bounds, path), { recursive: true, force: true });
         },
         readRealPath: (path) => readContainedPath(bounds.root, path),
         list(path) {
             try {
-                const target = path === undefined ? bounds.root : verifyPath(bounds, path);
+                const target = path === '' ? bounds.root : verifyPath(bounds, path);
                 if (!lstatSync(target).isDirectory())
-                    throw new Error(`${path ?? '.'} is not a directory. Choose a directory.`);
+                    throw new GspotError('filesystem', `${path || '.'} is not a directory. Choose a directory.`);
                 return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
             } catch (error) {
-                if (isMissingFileError(error)) return [];
+                if (hasErrorCode(error, 'ENOENT')) return [];
                 throw error;
             }
         },
@@ -51,7 +51,7 @@ export function openFiles(baseFolder: string): Files {
                 if (stat.isSymbolicLink()) throw new Error(`${path} is a link. gspot does not write through links.`);
                 return stat;
             } catch (error) {
-                if (isMissingFileError(error)) return undefined;
+                if (hasErrorCode(error, 'ENOENT')) return undefined;
                 throw error;
             }
         },
@@ -60,7 +60,7 @@ export function openFiles(baseFolder: string): Files {
         write: replaceEntry.bind(undefined, bounds),
         deleteFile(path, expected) {
             if (!isSameContents(readEntryKeepingLinks(bounds, path), expected))
-                throw new Error(`${path} changed before removal. Run the command again.`);
+                throw new GspotError('filesystem', `${path} changed before removal. Run the command again.`);
             unlinkSync(verifyPath(bounds, path));
         },
         createFolder(path, mode) {
@@ -68,9 +68,10 @@ export function openFiles(baseFolder: string): Files {
             try {
                 mkdirSync(target, { mode });
             } catch (error) {
-                if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+                if (!hasErrorCode(error, 'EEXIST')) throw error;
             }
-            if (!lstatSync(target).isDirectory()) throw new Error(`${path} is not a directory. Choose a directory.`);
+            if (!lstatSync(target).isDirectory())
+                throw new GspotError('filesystem', `${path} is not a directory. Choose a directory.`);
             chmodSync(target, mode);
         },
         createLock: lockForWriting.bind(undefined, bounds),
@@ -88,7 +89,7 @@ export function openFiles(baseFolder: string): Files {
  * @param path the removed file.
  */
 export function removeEmptyFolders(files: Files, path: string): void {
-    for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
+    for (const folder of listEnclosingFolders(extractParentFolder(path)).slice(0, -1)) {
         if (files.list(folder).length > 0) return;
         files.deleteFolder(folder);
     }
@@ -104,7 +105,7 @@ export function removeEmptyFolders(files: Files, path: string): void {
 export function walkFiles(files: Files, start: string, visit: (path: string) => boolean): void {
     const pending = [start];
     for (let folder = pending.pop(); folder !== undefined; folder = pending.pop()) {
-        const names = files.list(folder === '' ? undefined : folder);
+        const names = files.list(folder);
         const paths = folder === '' ? names : names.map((name) => `${folder}/${name}`);
         pending.push(...paths.filter((path) => visit(path)));
     }

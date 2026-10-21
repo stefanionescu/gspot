@@ -1,13 +1,12 @@
-import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
 import { convertWarningsToErrors } from '#cli/generation/eslint/block-writer.ts';
-import { TESTING_LIBRARY_DEFAULT_PRESET } from '#cli/config/generation/eslint-fragments.ts';
+import { getPreset, buildPresetRuleExpression } from '#cli/generation/eslint/presets.ts';
+import { type EslintFragment, type EslintFragmentContext } from '#cli/types/generation/eslint.ts';
 
 import {
-    type EslintPresets,
-    type EslintContext,
-    type EslintFragment,
-    type FragmentPresets,
-} from '#cli/types/generation/eslint.ts';
+    FRAGMENT_IMPORTS,
+    TESTING_LIBRARY_SCOPE,
+    TESTING_LIBRARY_DEFAULT_PRESET,
+} from '#cli/config/generation/eslint-fragments.ts';
 
 /**
  * Apply the Testing Library presets of the frameworks in use.
@@ -16,41 +15,31 @@ import {
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildTestingLibraryFragment(
-    context: Pick<EslintContext, 'eslintPresets' | 'blockWriter' | 'eslintFiles' | 'scopeDependencies'>,
+    context: Pick<EslintFragmentContext, 'presets' | 'eslintFiles' | 'scopeDependencies'>,
 ): EslintFragment {
-    const { eslintPresets, blockWriter, eslintFiles, scopeDependencies } = context;
-
-    const imports: string[] = ["import testingLibrary from 'eslint-plugin-testing-library';"];
-
-    const output: string[] = ['\n'];
-    const presets = eslintPresets.get('testing-library') as FragmentPresets;
-    const dependencies = scopeDependencies.filter((name) => name.startsWith('@testing-library/'));
+    const { presets, eslintFiles, scopeDependencies } = context;
+    const blocks: EslintFragment['blocks'] = [];
+    const dependencies = scopeDependencies.filter((name) => name.startsWith(TESTING_LIBRARY_SCOPE));
     if (dependencies.length > 0) {
         const presetNames = dependencies
-            .map((name) => name.slice('@testing-library/'.length))
-            .filter((name) => presets[name] !== undefined);
+            .map((name) => name.slice(TESTING_LIBRARY_SCOPE.length))
+            .filter((name) => presets?.[name] !== undefined);
         for (const name of new Set(presetNames.length === 0 ? [TESTING_LIBRARY_DEFAULT_PRESET] : presetNames)) {
-            const preset = presets[name] as EslintPresets[string];
-            const block = preset.blocks[0] as EslintPresets[string]['blocks'][number];
-            output.push(
-                '\n',
-                blockWriter.block(
-                    {
-                        files: eslintFiles.tests,
-                        ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
-                    },
-                    "plugins: { 'testing-library': testingLibrary }",
-                    {
-                        expression: `${serializePresetAccess('testingLibrary', preset.source)}.rules`,
-                        rules: block.rules,
-                    },
-                ),
-                ',\n',
-            );
+            const preset = getPreset(presets, name);
+            const block = preset.blocks[0];
+            blocks.push({
+                data: {
+                    files: eslintFiles.tests,
+                    ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
+                },
+                properties: "plugins: { 'testing-library': testingLibrary }",
+                preset: buildPresetRuleExpression([['testingLibrary', preset]]),
+            });
         }
     }
-    output.push('\n');
-    return { imports: imports, blocks: output.join('') };
+    return {
+        imports: FRAGMENT_IMPORTS['testing-library'],
+        blocks,
+    };
 }
-
 export { buildTestingLibraryFragment };

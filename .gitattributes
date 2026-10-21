@@ -1,5 +1,8 @@
 * text=auto eol=lf
 
+packages/cli/configurations/**/eslint-presets.json linguist-generated
+packages/cli/configurations/**/*-names.json linguist-generated
+
 # >>> gspot managed >>>
 .gspot/** linguist-generated
 /.editorconfig linguist-generated

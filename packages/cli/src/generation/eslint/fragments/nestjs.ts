@@ -1,7 +1,13 @@
-import { escapeGlob } from '#cli/repository/matchers.ts';
+import { getPreset } from '#cli/generation/eslint/presets.ts';
+import { buildScopeGlob } from '#cli/generation/eslint/files.ts';
 import { serializePresetAccess } from '#cli/generation/eslint/print.ts';
-import { type EslintContext, type EslintFragment, type FragmentPresets } from '#cli/types/generation/eslint.ts';
-import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/config/generation/eslint-fragments.ts';
+import { type EslintFragment, type EslintFragmentContext } from '#cli/types/generation/eslint.ts';
+
+import {
+    NESTJS_RULES,
+    FRAGMENT_IMPORTS,
+    NESTJS_INJECTABLE_FILTER_PATHS,
+} from '#cli/config/generation/eslint-fragments.ts';
 
 /**
  * Apply the NestJS lint rules and the TypeScript parsing mode of the scope.
@@ -10,60 +16,49 @@ import { NESTJS_ALL_LEVEL_RULES, NESTJS_INJECTABLE_FILTER_PATHS } from '#cli/con
  * @returns the imports and ESLint blocks for this configuration.
  */
 function buildNestjsFragment(
-    context: Pick<EslintContext, 'blockWriter' | 'eslintFiles' | 'eslintPresets' | 'scope' | 'scopeDependencies'>,
+    context: Pick<EslintFragmentContext, 'eslintFiles' | 'presets' | 'scope' | 'scopeDependencies'>,
 ): EslintFragment {
-    const { blockWriter, eslintFiles, eslintPresets, scope, scopeDependencies } = context;
-
-    const imports: string[] = ["import nestjsTyped from '@darraghor/eslint-plugin-nestjs-typed';"];
-
-    const output: string[] = ['\n'];
-    const presets = eslintPresets.get('nestjs') as FragmentPresets;
-    output.push(
-        '\n',
-        blockWriter.block({
-            files: eslintFiles.typescript,
-            rules: NESTJS_ALL_LEVEL_RULES,
-        }),
-        ',\n',
-    );
-    const selected = [
-        presets.recommended,
-        ...(scopeDependencies.includes('@nestjs/swagger') ? [] : [presets.noSwagger]),
+    const { eslintFiles, presets, scope, scopeDependencies } = context;
+    const recommended = getPreset(presets, 'recommended');
+    const noSwagger = getPreset(presets, 'noSwagger');
+    const blocks: EslintFragment['blocks'] = [
+        {
+            data: {
+                files: eslintFiles.typescript,
+                rules: NESTJS_RULES,
+            },
+        },
     ];
+    const selected = [recommended, ...(scopeDependencies.includes('@nestjs/swagger') ? [] : [noSwagger])];
     const rules = Object.fromEntries(
         selected.flatMap((preset) =>
             preset.blocks.flatMap((block) => (block.rules === undefined ? [] : Object.entries(block.rules))),
         ),
     );
-    const sources = selected
-        .map((preset) => `...${serializePresetAccess('nestjsTyped', preset.source)}.map((block) => block.rules)`)
-        .join(', ');
-    const prefix = scope === '' ? '' : `${escapeGlob(scope)}/`;
-    output.push(
-        '\n',
-        blockWriter.block(
-            {
-                files: eslintFiles.typescriptSource,
-                rules: {
-                    ...rules,
-                    '@darraghor/nestjs-typed/injectable-should-be-provided': [
-                        'error',
-                        {
-                            src: [`${prefix}**/*.ts`],
-                            filterFromPaths: NESTJS_INJECTABLE_FILTER_PATHS,
-                        },
-                    ],
-                },
+    const sources = selected.map((preset) => `...${serializePresetAccess('nestjsTyped', preset.source)}`).join(', ');
+    blocks.push({
+        data: {
+            files: eslintFiles.typescriptSource,
+            rules: {
+                ...rules,
+                '@darraghor/nestjs-typed/injectable-should-be-provided': [
+                    'error',
+                    {
+                        src: [buildScopeGlob(scope, '**/*.ts')],
+                        filterFromPaths: NESTJS_INJECTABLE_FILTER_PATHS,
+                    },
+                ],
             },
-            "plugins: { '@darraghor/nestjs-typed': nestjsTyped.plugin }",
-            {
-                expression: `Object.assign({}, ${sources})`,
-                rules,
-            },
-        ),
-        ',\n',
-    );
-    return { imports: imports, blocks: output.join('') };
+        },
+        properties: "plugins: { '@darraghor/nestjs-typed': nestjsTyped.plugin }",
+        preset: {
+            expression: `mergePresetRules([${sources}])`,
+            rules,
+        },
+    });
+    return {
+        imports: FRAGMENT_IMPORTS['nestjs'],
+        blocks,
+    };
 }
-
 export { buildNestjsFragment };

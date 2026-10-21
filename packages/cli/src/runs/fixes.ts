@@ -1,19 +1,19 @@
 import { createTwoFilesPatch } from 'diff';
+import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { getToolTimeoutSeconds } from '#cli/tools/run.ts';
 import { hasToolError } from '#cli/runs/command/output.ts';
-import { isMissingFileError } from '#cli/system/errors.ts';
-import { getToolDeclaration } from '#cli/configurations/tools.ts';
+import type { GrammarName } from '#cli/types/parsers/grammars.ts';
 import type { PreparedCommand } from '#cli/types/runs/command.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { findTool, runPlannedTool } from '#cli/runs/command/tool.ts';
-import type { GrammarName } from '#cli/types/parsers/tree-sitter.ts';
+import { findTool, runToolProcess } from '#cli/runs/command/tool.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/runs/run.ts';
-import { parseSource, findGrammarByExtension } from '#cli/parsers/tree-sitter.ts';
-import { copyIntoScratch, selectScratchCopyPaths } from '#cli/runs/scratch-copy/scratch.ts';
-import { prepareCommand, prepareInScratch, buildCommandEnvironment } from '#cli/runs/command/check.ts';
+import { parseSource, findGrammarByExtension } from '#cli/parsers/grammars.ts';
+import { copyIntoScratch, selectScratchCopyPaths } from '#cli/runs/copy/files.ts';
+import { prepareCommand, copyCheckFiles, prepareCommandIn, prepareToolEnvironment } from '#cli/runs/command/check.ts';
 
 import {
     type FixReport,
@@ -37,21 +37,22 @@ function listFixPaths(planned: PlannedCheck): string[] {
     return [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
 }
 
-async function runFix(session: Session, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
+async function runFixCommands(
+    planned: PlannedCheck,
+    prepared: PreparedCommand,
+    cancelSignal: AbortSignal | undefined,
+): Promise<FixResult> {
     const check = planned.check.name;
     const paths = listFixPaths(planned);
     const before = readContents(prepared.root, paths);
     let note: string | undefined;
     for (const command of prepared.commands) {
-        const { result, failure } = await runPlannedTool(
-            command.commandArguments,
-            {
-                ...prepared,
-                cancelSignal: session.cancelSignal,
-            },
-            planned.selection.view,
-            planned.check.name,
-        );
+        const { result, failure } = await runToolProcess(command.commandArguments, {
+            ...prepared,
+            cancelSignal,
+            timeoutSeconds: getToolTimeoutSeconds(planned.selection.view),
+            name: planned.check.name,
+        });
         note = failure?.note ?? fixFailure(planned, result);
         if (note !== undefined) break;
     }
@@ -71,18 +72,12 @@ async function runFixInScratch(
         options,
     }: { session: Session; root: string; command: string[]; toolPath: string; options: CheckRunOptions },
 ): Promise<FixResult> {
-    const preparedScratch = await prepareInScratch(planned, {
-        session: { ...session, root },
-        command,
-        toolPath,
-        options,
-    });
-    using scratch = preparedScratch.copy;
-    const prepared = preparedScratch.prepared;
+    using scratch = await copyCheckFiles(planned, { session: { ...session, root }, command, options });
+    const prepared = prepareCommandIn(scratch.path, planned, { session, command, toolPath, options });
     using files = openFiles(root);
     const paths = listFixPaths(planned);
     const originals = new Map(paths.map((path) => [path, files.read(path)]));
-    const result = await runFix(session, planned, prepared);
+    const result = await runFixCommands(planned, prepared, session.cancelSignal);
     using corrected = openFiles(scratch.path);
     for (const path of result.changed) {
         const original = originals.get(path);
@@ -102,50 +97,6 @@ function mergeResults(first: FixResult | undefined, next: FixResult): FixResult 
     return { check: next.check, status: changed.length === 0 ? next.status : 'changed', changed };
 }
 
-async function runCommandFix(
-    session: Session,
-    planned: PlannedCheck,
-    workingFolder: string,
-    options: CheckRunOptions,
-): Promise<FixResult> {
-    const check = planned.check.name;
-    // runFixers selects only checks with a validated, nonempty fixer command.
-    const command = planned.check.fix as string[];
-    const name = command[0] as string;
-    const tool =
-        planned.tool?.name === name
-            ? planned.tool
-            : getToolDeclaration(session.manifests.values(), name, planned.manifest);
-    const selected = { ...planned, tool };
-    const environment = buildCommandEnvironment(session, selected, options);
-    const { env, cwd } = environment;
-    const availability = findTool(session, cwd, tool, env);
-    if ('status' in availability)
-        return {
-            check,
-            status: 'failed',
-            changed: [],
-            note: availability.note,
-        };
-    if (planned.check.run_in_copy === true)
-        return runFixInScratch(selected, {
-            session,
-            root: workingFolder,
-            command,
-            toolPath: availability.path,
-            options,
-        });
-    const scratchSession = { ...session, root: workingFolder };
-    const prepared = prepareCommand(selected, {
-        session: scratchSession,
-        command,
-        environment:
-            workingFolder === session.root ? environment : buildCommandEnvironment(scratchSession, selected, options),
-        toolPath: availability.path,
-    });
-    return runFix(session, planned, prepared);
-}
-
 // A canceled or skipped fix returns before it finds the tool or writes files.
 async function runFixer(
     session: Session,
@@ -158,11 +109,21 @@ async function runFixer(
         return { check, status: 'failed', changed: [], note: 'The fix was canceled.' };
     if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
-    const implementation = selectImplementation(planned.check);
-    return runCommandFix(session, planned, root, {
-        arguments: implementation?.arguments,
-        toolFiles: implementation?.toolFiles,
-    });
+    const options: CheckRunOptions = { ...selectImplementation(planned.check) };
+    // runFixers selects only checks with a validated, nonempty fixer command.
+    const command = planned.check.fix as string[];
+    const name = command[0] as string;
+    const { tool, environment } = prepareToolEnvironment(session, planned, name, options);
+    const selected = { ...planned, tool };
+    const availability = findTool(session, environment.cwd, tool);
+    if ('status' in availability) return { check, status: 'failed', changed: [], note: availability.note };
+    if (planned.check.run_in_copy === true)
+        return runFixInScratch(selected, { session, root, command, toolPath: availability.path, options });
+    const prepared =
+        root === session.root
+            ? prepareCommand(selected, { session, command, environment, toolPath: availability.path })
+            : prepareCommandIn(root, selected, { session, command, toolPath: availability.path, options });
+    return runFixCommands(planned, prepared, session.cancelSignal);
 }
 
 /**
@@ -178,7 +139,7 @@ function readContents(sourceRoot: string, paths: string[]): Map<string, Buffer |
         try {
             contents.set(path, readBytes(sourceRoot, path));
         } catch (error) {
-            if (!isMissingFileError(error)) throw error;
+            if (!hasErrorCode(error, 'ENOENT')) throw error;
             contents.set(path, undefined);
         }
     }

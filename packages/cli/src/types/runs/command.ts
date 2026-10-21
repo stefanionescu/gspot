@@ -1,4 +1,3 @@
-import type { ScratchFolder } from '#cli/types/system/files.ts';
 import type { ExecutionFailure } from '#cli/types/tools/run.ts';
 import type { ToolDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
@@ -7,10 +6,7 @@ import type { SpawnResult, SpawnOptions } from '#cli/types/system/processes.ts';
 import type { Finding, CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
 
 /** The process result and its interpreted execution failure. */
-export type PlannedToolResult = { result: SpawnResult; failure: ExecutionFailure | undefined };
-
-/** A scratch copy of the source, and the command prepared for its files. */
-export type PreparedScratch = { copy: ScratchFolder; session: Session; prepared: PreparedCommand };
+export type ToolProcessResult = { result: SpawnResult; failure: ExecutionFailure | undefined };
 
 /** The public API of a tool, run by a shipped, supervised program. */
 export type CheckToolProgram = { tool: string; entry: string };
@@ -75,16 +71,6 @@ export type InvocationOutput = { invocation: CommandInvocation; result: SpawnRes
 export type ParsedFindings = { findings: Finding[]; note?: undefined } | { findings?: undefined; note: string };
 
 /** The check data for parsing output and telling a process crash from findings. */
-export type OutputCheck = Pick<PlannedCheck, 'check' | 'tool' | 'manifest'>;
-
-/** Repository data and check metadata consumed by placeholder expansion. */
-export type CommandInputs = Pick<
-    Session,
-    'root' | 'reads' | 'manifests' | 'settingsFile' | 'generatedPaths' | 'toolFiles'
->;
-
-export type SubstitutionCheck = Pick<PlannedCheck, 'check' | 'selection' | 'files'> & {
-    messageFile?: PlannedCheck['messageFile'];
-};
+export type OutputCheck = Pick<PlannedCheck, 'check' | 'tool'>;
 
 export type CommandGroup = { files: TrackedFile[]; command: string[] };

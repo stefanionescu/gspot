@@ -36,8 +36,6 @@ export const FORWARDING_NODES = new Set([
     'MemberExpression',
     'TSDeclareFunction',
 ]);
-// Positions whose parent always takes a function value.
-export const VALUE_PARENTS = new Set<string>(['ReturnStatement', 'JSXExpressionContainer', 'ArrowFunctionExpression']);
 
 /** Two reads in one module count as reuse. */
 export const MIN_SHARED_READS = 2;
@@ -67,3 +65,9 @@ export const COMPARISON_OPERATORS = new Set<string>([
 
 export const MODULE_CALL_SELECTOR =
     'Program > ExpressionStatement > CallExpression, Program > ExpressionStatement > AwaitExpression > CallExpression';
+
+export const IMPORT_SPECIFIER_NODES = new Set<string>([
+    'ImportSpecifier',
+    'ImportDefaultSpecifier',
+    'ImportNamespaceSpecifier',
+]);

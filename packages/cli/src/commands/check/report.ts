@@ -23,7 +23,14 @@ function formatFixerFailure(note: string): string {
     );
 }
 
-function printFailedFixers(fixes: FixReport, verbose: boolean): void {
+/**
+ * Print failed fixer warnings, with the full diagnostics when requested.
+ *
+ * @param fixes the fixer results.
+ * @param options the diagnostic verbosity.
+ * @param options.verbose whether to include the full fixer output.
+ */
+function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
     for (const result of fixes.results) {
         if (result.status !== 'failed') continue;
         const note = stripVTControlCharacters(result.note);
@@ -41,7 +48,7 @@ function printFailedFixers(fixes: FixReport, verbose: boolean): void {
     }
 }
 
-function formatProgressSubject(comparison: CheckProgress['comparison']): string {
+function formatCheckedContent(comparison: CheckProgress['comparison']): string {
     if (comparison?.content === 'index') return 'the staged files';
     if (comparison?.content === 'commit') return `commit ${comparison.reference.slice(0, COMMIT_PREFIX_LENGTH)}`;
     return 'the working tree';
@@ -80,7 +87,7 @@ function formatCheckTail(check: CheckResult): string {
     return `${formatCount(check.fileCount, 'file')}  ${formatSeconds(check.duration)}`;
 }
 
-function formatCheckFindings(findings: readonly Finding[], verbose: boolean): string[] {
+function formatCheckFindings(findings: readonly Finding[], { verbose }: { verbose: boolean }): string[] {
     const shown = verbose ? findings : findings.slice(0, FINDINGS_SHOWN);
     const lines = shown.flatMap((finding, index) => formatFinding(finding, shown[index + 1]));
     const hidden = findings.length - shown.length;
@@ -97,7 +104,7 @@ function formatCheck(check: CheckResult, { verbose }: { verbose: boolean }): str
     const tail = formatCheckTail(check);
     const lines = [`${scope}${check.check}  ${status}  ${tail}`.trimEnd()];
     if (verbose && check.command) lines.push(`  ${getColors().dim('$ ' + check.command.join(' '))}`);
-    if (check.status === 'failed') lines.push(...formatCheckFindings(check.findings, verbose));
+    if (check.status === 'failed') lines.push(...formatCheckFindings(check.findings, { verbose }));
     if ((check.status === 'failed' || check.status === 'error') && check.reproduce !== undefined)
         lines.push(`  ${getColors().dim('run again:')} ${check.reproduce}`);
     return lines;
@@ -110,7 +117,7 @@ function formatIgnores(report: RunReport, { verbose }: { verbose: boolean }): st
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
         const names = ignore.names === undefined ? '' : ` names ${ignore.names.join(' ')}`;
-        return `ignore     ${ignore.check ?? 'every check'}${rule}${paths}${names}  ${getColors().dim(ignore.reason)}  (${String(ignore.matched)} matched)`;
+        return `ignore     ${ignore.check ?? 'every check'}${rule}${paths}${names}  ${getColors().dim(ignore.reason)}`;
     });
 }
 
@@ -136,8 +143,7 @@ function formatSummary(report: RunReport): string {
 function formatComparison(comparison: RunReport['comparison']): string {
     if (comparison === undefined) return '';
     if (comparison.content === 'working-tree') return `Checked the files changed since ${comparison.reference}.\n`;
-    if (comparison.content === 'index') return 'Checked the staged files.\n';
-    return `Checked commit ${comparison.reference.slice(0, COMMIT_PREFIX_LENGTH)}.\n`;
+    return `Checked ${formatCheckedContent(comparison)}.\n`;
 }
 
 /**
@@ -164,20 +170,21 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean }
 }
 
 /**
- * Print one terminal status line, or clear it before the report prints.
+ * Print the last finished check and its place in the run.
  *
  * @param progress the last finished check and its place in the run.
  */
-export function printProgress(progress: CheckProgress | undefined): void {
+export function printProgress(progress: CheckProgress): void {
     if (!process.stderr.isTTY) return;
-    if (progress === undefined) {
-        process.stderr.write(PROGRESS_CLEAR);
-        return;
-    }
-    const subject = formatProgressSubject(progress.comparison);
+    const subject = formatCheckedContent(progress.comparison);
     process.stderr.write(
         `${PROGRESS_CLEAR}Checking ${subject}: ${String(progress.completed)} of ${String(progress.total)} checks done`,
     );
+}
+
+/** Clear the terminal progress line before the final report prints. */
+export function clearProgress(): void {
+    if (process.stderr.isTTY) process.stderr.write(PROGRESS_CLEAR);
 }
 
 /**
@@ -186,12 +193,10 @@ export function printProgress(progress: CheckProgress | undefined): void {
  * @param fixes the fixer results and the verification state.
  * @param options how to show the fixes.
  * @param options.isDryRun whether the run shows fixes and writes nothing.
- * @param options.verbose whether to show passing checks and full tool output.
  * @returns the lines that describe the fixes.
  */
-export function formatFixes(fixes: FixReport, options: { isDryRun: boolean; verbose: boolean }): string[] {
-    const { isDryRun, verbose } = options;
-    printFailedFixers(fixes, verbose);
+export function formatFixes(fixes: FixReport, options: { isDryRun: boolean }): string[] {
+    const { isDryRun } = options;
     const count = fixes.changed.length;
     if (isDryRun)
         return [
@@ -208,3 +213,5 @@ export function formatFixes(fixes: FixReport, options: { isDryRun: boolean; verb
         ),
     ];
 }
+
+export { printFailedFixers };

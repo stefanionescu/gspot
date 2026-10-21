@@ -1,31 +1,36 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { readGitOutput } from '#tests/setup/git.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
-import { buildReportingCheck } from '#tests/setup/settings.ts';
-import { runGspot, checkReport } from '#tests/setup/run-gspot.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/settings.ts';
 
 // The files a check reports and the status it ends with, for a staged run and for a push of the same change.
 async function collectVerdicts(format: 'sha1' | 'sha256'): Promise<unknown> {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            configurations: [],
-            rules: { enabled: false },
-            command_check: [{ ...buildReportingCheck({ name: 'sandbox/report', paths: ['src/**'], stage: 'commit' }) }],
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: stringify({
+                rules: { enabled: false },
+                command_check: [
+                    { ...buildReportingCheck({ name: 'sandbox/report', paths: ['src/**'], stage: 'commit' }) },
+                ],
+            }),
         }),
         'src/kept.ts': 'export {};\n',
     });
+
     readGitOutput(sandbox.path, ['init', '-q', `--object-format=${format}`]);
     readGitOutput(sandbox.path, ['add', '-A']);
     readGitOutput(sandbox.path, ['commit', '-qm', 'base']);
     const base = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     await writeFile(join(sandbox.path, 'src/changed.ts'), 'export const changed = 1;\n');
     readGitOutput(sandbox.path, ['add', 'src/changed.ts']);
-    const staged = await checkReport(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']);
+    const staged = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']),
+    );
     const stagedReport = staged.report;
     readGitOutput(sandbox.path, ['commit', '-qm', 'change']);
     const head = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);

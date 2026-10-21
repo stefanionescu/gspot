@@ -11,18 +11,13 @@ kinds = ["source", "generated"]
 prefixes = ["package", "pnpm"]
 
 [[tool]]
-brew = "osv-scanner"
-github = { name = "google/osv-scanner", version = "v2.6.0" }
 min_version = "2.0.0"
 mise = "osv-scanner"
 name = "osv-scanner"
 replace = ["osv-scanner.toml"]
-scoop = "osv-scanner"
 version = "2.6.0"
-winget = "Google.OSVScanner"
 
 [[tool]]
-mise = "npm:syncpack"
 name = "syncpack"
 npm = "syncpack"
 replace = [".syncpackrc", ".syncpackrc.json", ".syncpackrc.yaml", ".syncpackrc.yml", ".syncpackrc.ts", ".syncpackrc.mjs", ".syncpackrc.js", ".syncpackrc.cjs", "syncpack.config.js", "syncpack.config.cjs", "syncpack.config.mjs", "syncpack.config.ts"]
@@ -38,7 +33,7 @@ tool = "syncpack"
 
 [[check]]
 example = "A locked package version named in an OSV advisory reports a finding. Upgrade to a fixed version, and update the lockfile."
-files = { filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "go.mod", "Cargo.lock", "Gemfile.lock", "gems.locked", "requirements.txt", "Pipfile.lock", "poetry.lock", "pdm.lock", "pylock.toml", "uv.lock", "pom.xml", "gradle.lockfile", "buildscript-gradle.lockfile", "conan.lock", "pubspec.lock", "mix.lock", "cabal.project.freeze", "stack.yaml.lock", "composer.lock", "renv.lock", "packages.config", "packages.lock.json", "*.deps.json"], paths = ["**/gradle/verification-metadata.xml", "gradle/verification-metadata.xml"], kinds = ["source", "generated"] }
+files = { filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "go.mod", "Cargo.lock", "Gemfile.lock", "gems.locked", "requirements.txt", "Pipfile.lock", "poetry.lock", "pdm.lock", "pylock.toml", "uv.lock", "pom.xml", "gradle.lockfile", "buildscript-gradle.lockfile", "conan.lock", "pubspec.lock", "mix.lock", "cabal.project.freeze", "stack.yaml.lock", "composer.lock", "renv.lock", "packages.config", "packages.lock.json", "*.deps.json"], paths = ["**/gradle/verification-metadata.xml"], kinds = ["source", "generated"] }
 level = "recommended"
 name = "osv-scanner"
 needs = ["network"]

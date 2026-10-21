@@ -1,8 +1,4 @@
-import { YARN_SETTINGS } from '#cli/config/system/locations.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
-
-/** Paths that documents may name before you turn on the setting that generates them. */
-export const OPTIONAL_GENERATED_PATHS = [GITHUB_WORKFLOW, GITLAB_WORKFLOW, YARN_SETTINGS] as const;
+import { RUNNER_NAMES } from '#cli/config/repository/existing-tools.ts';
 
 export const MARKDOWN_EXTENSIONS = ['.md', '.mdx'] as const;
 
@@ -27,3 +23,10 @@ export const LICENSE_PATH = 'LICENSE';
 
 export const TITLE_ATTRIBUTE = 'title=';
 export const EMPHASIS_MARKERS = ['**', '*'] as const;
+
+export const RELATIVE_PATH_PREFIXES = ['./', '../'] as const;
+
+export const RUN_COMMAND = new RegExp(
+    String.raw`\b(?:${RUNNER_NAMES.join('|')}) run (?:--[\w-]+\s+)*[\w][\w:.-]*`,
+    'gu',
+);

@@ -18,7 +18,6 @@ reason = "The test runner finds a test by this prefix."
 install_hint = "Run: python -m pip install pytest"
 min_version = "7.0.0"
 name = "pytest"
-pypi = "pytest"
 suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "if TYPE_CHECKING:  # pragma: no cover # imports for type checkers only" }
 system = true
 version_pattern = "(\\d+\\.\\d+\\.\\d+)"
@@ -27,7 +26,6 @@ version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 install_hint = "Install pytest-cov in the Python environment used by pytest."
 kind = "library"
 name = "pytest-cov"
-pypi = "pytest-cov"
 system = true
 version_command = ["pytest", "--version", "--version"]
 version_pattern = "pytest-cov-(\\d+(?:\\.\\d+)+)"
@@ -38,6 +36,7 @@ recommended = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "P
 
 [[check]]
 command = ["pytest", "-q", "--strict-markers", "--strict-config", "--cov", "--cov-fail-under={setting:coverage.lines}", "--no-header", "-p", "no:cacheprovider"]
+coverage_arguments = ["--cov", "--cov-fail-under"]
 cwd = "scope"
 example = "pytest-cov reports `FAIL Required test coverage of 90% not reached. Total coverage: 85%`. Add a Python test for the uncovered behavior."
 exit_codes = [1]

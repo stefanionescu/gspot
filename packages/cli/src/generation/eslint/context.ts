@@ -1,23 +1,19 @@
 import { basename } from 'node:path/posix';
 import { listAssets } from '#cli/system/assets.ts';
-import type { MemoKey } from '#cli/types/system/files.ts';
-import { getSettingValue } from '#cli/settings/inherit.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 import { readPresets } from '#cli/generation/eslint/presets.ts';
-import { listIgnoredGlobs } from '#cli/generation/ignore-files.ts';
-import { readScopeAliases } from '#cli/generation/eslint/aliases.ts';
+import { buildLevelRules } from '#cli/generation/eslint/base.ts';
+import { listScriptPaths } from '#cli/generation/eslint/runtimes.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import type { ToolFileContext } from '#cli/types/generation/files.ts';
-import { createBlockWriter } from '#cli/generation/eslint/block-writer.ts';
-import { buildBoundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
-import { getCachedValue, getCachedMapValue } from '#cli/system/files/cache.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
+import { NODE_SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
+import { BASE_SELECTORS } from '#cli/config/generation/eslint-rules.ts';
+import type { EslintPresets, EslintContext } from '#cli/types/generation/eslint.ts';
+import { CODE_LANGUAGES, ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint.ts';
 import { listFragmentConfigurations } from '#cli/generation/eslint/fragments/build.ts';
 import { buildFilePatterns, buildSourcePattern } from '#cli/generation/eslint/files.ts';
-import { listScriptPaths, buildRuntimeBlocks } from '#cli/generation/eslint/runtimes.ts';
-import type { EslintParts, EslintFacts, EslintPresets, EslintContext } from '#cli/types/generation/eslint.ts';
 
 import {
     buildRuleOptions,
@@ -26,115 +22,21 @@ import {
     buildTrivialRuleBlocks,
     buildEnvironmentRuleBlocks,
 } from '#cli/generation/eslint/lint-rules.ts';
-import {
-    buildImportIgnores,
-    buildNodeScriptBlocks,
-    buildImportStyleBlocks,
-    buildScopeImportBlocks,
-    buildImportBoundariesRule,
-} from '#cli/generation/eslint/imports.ts';
-import {
-    CODE_LANGUAGES,
-    NODE_SHEBANG_TAG,
-    BARREL_FILES_RULE,
-    EXPORTS_LAST_RULE,
-    IMPORT_LAYOUT_RULES,
-    ESLINT_PRESETS_FILE,
-    ESLINT_SETTINGS_TABLE,
-    IMPORT_BOUNDARIES_RULE,
-} from '#cli/config/generation/eslint.ts';
 
-// ESLint options and the separate reason you give for them.
-function buildExtraBlock(context: Pick<EslintContext, 'repositorySettings' | 'selection'>): EslintParts['extra'] {
-    const { repositorySettings: settings, selection } = context;
-    const entries = selection.view.extra('eslint');
-    if (entries === undefined || Object.keys(entries).length === 0) return undefined;
-    return {
-        reason: getSettingValue(selection.known, settings, 'tools.eslint.extra', selection.scope.path)?.reason,
-        entries,
-    };
-}
-// Keep source classification and shared ignore selectors consistent across all ESLint blocks.
-function buildEslintFacts({ session, selection }: ToolFileContext): EslintFacts {
-    const recognized = buildPathMatcher([buildSourcePattern(...CODE_LANGUAGES)]);
-    const nodeFiles = session.repository.files
-        .filter((file) => !recognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
-        .map((file) => file.path);
-    return {
-        root: session.root,
-        reads: session.reads,
-        scopes: session.scopes,
-        repositorySettings: session.settingsFile.settings,
-        selection,
-        nodeFiles,
-        generatedPatterns: listIgnoredGlobs(session, selection.view, 'javascript/eslint'),
-    };
-}
-
-// Cache each pinned preset export once per run, including authored asset-backed presets.
+// Read each shipped configuration preset once per process.
 function readEslintPresets(session: ToolFileContext['session']): Map<string, EslintPresets> {
-    const assets = getCachedValue(session.reads, presetAssets);
     return new Map(
         [...session.manifests.values()]
-            .filter((manifest) => assets.has(`${manifest.folder}/${ESLINT_PRESETS_FILE}`))
-            .map((manifest) => [
-                manifest.configuration.name,
-                getCachedMapValue(session.reads, presetInputs, manifest, () => readPresets(manifest)),
-            ]),
+            .filter((manifest) => presetAssets.has(`${manifest.folder}/${ESLINT_PRESETS_FILE}`))
+            .map((manifest): [string, EslintPresets] => {
+                let presets = presetInputs.get(manifest);
+                if (presets === undefined) {
+                    presets = readPresets(manifest);
+                    presetInputs.set(manifest, presets);
+                }
+                return [manifest.configuration.name, presets];
+            }),
     );
-}
-
-// Derive project imports, runtime boundaries, and your own ESLint options from the shared facts.
-function buildProjectOptions(session: ToolFileContext['session'], context: EslintFacts): EslintParts {
-    const { root, reads, scopes, selection, nodeFiles, repositorySettings } = context;
-    const { view } = selection;
-    const repository = session.repository;
-    const tool = view.options(ESLINT_SETTINGS_TABLE);
-    const aliases = readScopeAliases(root, '', reads);
-    return {
-        projects: repository.files.filter((file) => basename(file.path) === TSCONFIG_FILE).map((file) => file.path),
-        nodeFiles,
-        restrictedImports: tool.restricted_imports,
-        allLevelRules: {
-            [IMPORT_BOUNDARIES_RULE]: buildImportBoundariesRule(context.scopes, aliases),
-            [EXPORTS_LAST_RULE]: 'error',
-            ...IMPORT_LAYOUT_RULES,
-            ...(repositorySettings.structure.reexports === 'none'
-                ? {}
-                : {
-                      [BARREL_FILES_RULE]: [
-                          'error',
-                          {
-                              amountOfExportsToConsiderModuleAsBarrel: selection.view.limit(
-                                  'index_exports',
-                                  'typescript',
-                              ),
-                          },
-                      ],
-                  }),
-        },
-        javascriptAllLevelRules:
-            repositorySettings.structure.reexports === 'none'
-                ? {}
-                : {
-                      [BARREL_FILES_RULE]: [
-                          'error',
-                          {
-                              amountOfExportsToConsiderModuleAsBarrel: selection.view.limit(
-                                  'index_exports',
-                                  'javascript',
-                              ),
-                          },
-                      ],
-                  },
-        importStyleBlocks: buildImportStyleBlocks(scopes, nodeFiles),
-        runtimes: buildRuntimeBlocks(scopes),
-        boundaryBlocks: buildBoundaryBlocks(context),
-        scopeBlocks: [...buildScopeImportBlocks(context), ...buildNodeScriptBlocks(context)],
-        ignoredPaths: context.generatedPatterns,
-        importIgnores: buildImportIgnores(context.generatedPatterns),
-        extra: buildExtraBlock(context),
-    };
 }
 
 /**
@@ -145,26 +47,38 @@ function buildProjectOptions(session: ToolFileContext['session'], context: Eslin
  */
 function buildEslintContext(input: ToolFileContext): EslintContext {
     const { session, selection, toolFile } = input;
-    const context = buildEslintFacts(input);
-    const { repositorySettings, scopes, nodeFiles } = context;
     const { view } = selection;
+    const { scopes } = session;
+    const repositorySettings = session.settingsFile.settings;
+    const { level } = repositorySettings;
+    const recognized = buildPathMatcher([buildSourcePattern(...CODE_LANGUAGES)]);
+    const nodeFiles = session.repository.files
+        .filter((file) => !recognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
+        .map((file) => file.path);
+    const configurations = listFragmentConfigurations(scopes, selection, toolFile);
+    const context = { session, nodeFiles };
     const options = buildRuleOptions(repositorySettings, scopes);
     const allRules = new Set(
         [...session.manifests.values()].flatMap((manifest) => [...manifest.eslint.all_level_rules]),
     );
     const eslintFiles = buildFilePatterns({
-        components: listFragmentConfigurations(scopes, selection, toolFile),
+        components: configurations,
         nodeFiles,
         scopes: scopes.map((selection) => ({
             scope: selection.scope.path,
             tests: selection.view.test_files,
-            scripts: listScriptPaths({ selection }),
+            scripts: listScriptPaths(selection),
         })),
     });
     return {
         ...context,
+        selection,
+        level,
+        projects: session.repository.files
+            .filter((file) => basename(file.path) === TSCONFIG_FILE)
+            .map((file) => file.path),
         ruleOptions: options,
-        eslint: buildProjectOptions(session, context),
+        levelRules: buildLevelRules(view, level === 'all' ? BASE_SELECTORS : []),
         settingsBlocks: [
             ...buildEnvironmentRuleBlocks(context),
             ...buildTrivialRuleBlocks(context),
@@ -172,27 +86,21 @@ function buildEslintContext(input: ToolFileContext): EslintContext {
             ...buildIgnoreBlocks(repositorySettings),
         ],
         eslintAllRules: allRules,
-        blockWriter: createBlockWriter({
-            source: 'JavaScript and repository settings',
+        blockInput: {
+            applied: new Set(),
             allRules,
-            isAll: repositorySettings.level === 'all',
+            level,
             codeFiles: eslintFiles.code,
             ruleOptions: options,
-        }),
+        },
         eslintFiles,
         eslintPresets: readEslintPresets(session),
-        configurations: view.configurations,
-        settings: view.settings,
-        testFiles: view.test_files,
-        scope: selection.scope.path,
-        scopeDependencies: listProjectDependencyNames(session.repository.dependencyFiles, selection.scope.path),
-        isAll: repositorySettings.level === 'all',
-        sourceFiles: session.repository.files.flatMap((file) => (file.kind === 'source' ? [file.path] : [])),
+        configurations,
     };
 }
 
-const presetInputs: MemoKey<Map<Manifest, EslintPresets>> = { create: () => new Map() };
+const presetInputs = new Map<Manifest, EslintPresets>();
 
-const presetAssets: MemoKey<Set<string>> = { create: () => new Set(listAssets(CONFIGURATIONS_FOLDER)) };
+const presetAssets = new Set(listAssets(CONFIGURATIONS_FOLDER));
 
 export { buildEslintContext };

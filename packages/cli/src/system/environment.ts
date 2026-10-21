@@ -1,6 +1,7 @@
 // Read system information and build command environments.
 import envPaths from 'env-paths';
 import { isAbsolute } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { CACHE_FOLDER_NAME } from '#cli/config/system/environment.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
 
@@ -60,7 +61,8 @@ export function findPathKey(env: Readonly<Record<string, unknown>>): string | un
 export function readCacheFolder(): string {
     const { cache } = envPaths(CACHE_FOLDER_NAME, { suffix: '' });
     if (!isAbsolute(cache))
-        throw new Error(
+        throw new GspotError(
+            'filesystem',
             'The cache folder must be an absolute path. Set XDG_CACHE_HOME or LOCALAPPDATA to an absolute path.',
         );
     return cache;

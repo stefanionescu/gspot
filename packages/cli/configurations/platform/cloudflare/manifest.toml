@@ -4,7 +4,6 @@ generated = ["worker-configuration.d.ts", "cloudflare-env.d.ts"]
 [configuration]
 description = "Cloudflare Pages and Workers: valid headers and redirects files, current binding types, and security rules for worker code."
 requires = ["javascript"]
-suggests = []
 title = "Cloudflare"
 
 [detect]
@@ -29,7 +28,6 @@ level = "all"
 per_scope = true
 target = "semgrep.yml"
 tool = "semgrep"
-when = { configuration = "security" }
 
 [[check]]
 example = "An indented `X-Frame-Options: DENY` at the top of `_headers` reports a header with no path. Put a path such as `/*` on an unindented line above it."

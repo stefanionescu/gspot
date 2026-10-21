@@ -1,5 +1,3 @@
-import { STRICT_COMPILER_OPTIONS } from '#tests/data/checks/typescript/projects.ts';
-
 const VITEST_SOURCE = `// Arithmetic the test tests call.
 
 /**
@@ -39,18 +37,11 @@ test('adds only positive values', () => {
 });
 `;
 
-const VITEST_SANDBOX = {
-    configurations: ['typescript', 'vitest'],
-    tsconfig: {
-        compilerOptions: STRICT_COMPILER_OPTIONS,
-        include: ['src'],
-    },
-    files: {
-        '.gitignore': 'node_modules\ncoverage\n',
-        'vitest.config.mjs': "export default { test: { include: ['src/*.test.ts'] } };\n",
-        'src/public.ts': VITEST_SOURCE,
-        'src/math.test.ts': VITEST_MATH_TEST,
-    },
+const VITEST_PROJECT_FILES = {
+    '.gitignore': 'node_modules\ncoverage\n',
+    'vitest.config.mjs': "export default { test: { include: ['src/*.test.ts'] } };\n",
+    'src/public.ts': VITEST_SOURCE,
+    'src/math.test.ts': VITEST_MATH_TEST,
 } as const;
 
-export { VITEST_SOURCE, VITEST_PACKAGE, VITEST_SANDBOX, UNTESTED_SOURCE };
+export { VITEST_SOURCE, VITEST_PACKAGE, UNTESTED_SOURCE, VITEST_PROJECT_FILES };

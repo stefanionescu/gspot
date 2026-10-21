@@ -1,12 +1,11 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { GspotError } from '#cli/system/errors.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildProcessResult } from '#tests/setup/builders.ts';
+import { readManifests } from '#cli/configurations/manifests.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
-import { readManifests, listChecksById } from '#cli/configurations/manifests.ts';
+import { getShippedCheck, buildProcessResult } from '#tests/setup/builders.ts';
 
 import {
     REPORT_ERRORS,
@@ -17,20 +16,16 @@ import {
 } from '#tests/data/runs/output.ts';
 
 test.each([...INVALID_KNIP_REPORTS])('an invalid Knip report is refused: %s', async (stdout) => {
-    const check = readManifests(createReadCache(process.cwd()))
-        .get('javascript')!
-        .checks.find(({ name }) => name === 'javascript/knip')!;
+    const check = getShippedCheck('javascript/knip');
 
     await using sandbox = await testdir();
     expect(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })).toThrow(GspotError);
 });
 
 test('a markdownlint record becomes a finding', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'sample.md': '<span>Content</span>\n' });
-    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
-        'markdown/markdownlint',
-    )!.check;
+    await using sandbox = await testdir({ 'sample.md': '<span>Content</span>\n' });
+
+    const check = getShippedCheck('markdown/markdownlint');
     const valid = MARKDOWN_REPORT;
     expect(parseOutput(check, JSON.stringify([valid]), '', { root: sandbox.path, cwd: sandbox.path })).toMatchObject([
         { file: 'sample.md', rule: 'MD033', fixable: false },
@@ -39,24 +34,22 @@ test('a markdownlint record becomes a finding', async () => {
 
 test.each([...REPORT_ERRORS])('$configuration rejects $name: $message', async ({ configuration, output, message }) => {
     const stdout = typeof output === 'string' ? output : JSON.stringify(output);
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'sample.md': '<span>Content</span>\n',
         'sample.txt': `${TYPO.the}\n`,
     });
-    const check = listChecksById(readManifests(createReadCache(process.cwd())).values()).get(
-        configuration === 'markdown' ? 'markdown/markdownlint' : 'spelling/typos',
-    )!.check;
+
+    const check = getShippedCheck(configuration === 'markdown' ? 'markdown/markdownlint' : 'spelling/typos');
     expect(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })).toThrow(message);
 });
 
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\neval input\n' });
-    const manifest = readManifests(createReadCache(process.cwd())).get('security')!;
+    const manifest = readManifests().get('security')!;
     const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
     const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [SEMGREP_PARSE_ERROR] });
     expect(
-        parseCommandFindings({ check, manifest }, buildProcessResult({ code: 3, stdout }), {
+        parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), {
             cwd: sandbox.path,
             root: sandbox.path,
         }).findings,
@@ -86,7 +79,7 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
 
 test('Semgrep scanner, rule, unpositioned and malformed reports are errors', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\n' });
-    const manifest = readManifests(createReadCache(process.cwd())).get('security')!;
+    const manifest = readManifests().get('security')!;
     const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
     const outputs = [
         '',
@@ -99,13 +92,13 @@ test('Semgrep scanner, rule, unpositioned and malformed reports are errors', asy
     ];
     for (const stdout of outputs)
         expect(
-            parseCommandFindings({ check, manifest }, buildProcessResult({ code: 3, stdout }), {
+            parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), {
                 cwd: sandbox.path,
                 root: sandbox.path,
             }).note,
         ).toBeDefined();
     expect(
-        parseCommandFindings({ check, manifest }, buildProcessResult({ stdout: '{"results":[],"errors":[]}' }), {
+        parseCommandFindings({ check }, buildProcessResult({ stdout: '{"results":[],"errors":[]}' }), {
             cwd: sandbox.path,
             root: sandbox.path,
         }).findings,

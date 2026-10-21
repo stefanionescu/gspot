@@ -182,12 +182,10 @@ export const orderCount = 1;
 
 export const ARCHITECTURE_SETTINGS = `
 [[import_rule]]
-can_also_import = ["orders"]
 name = "orders"
 paths = ["src/orders/**"]
 
 [[import_rule]]
-can_also_import = ["entry", "orders"]
 name = "entry"
 paths = ["src/main.ts"]
 `;

@@ -3,15 +3,16 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { readGitSetting } from '#cli/system/git.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { installRuntimes } from '#tests/setup/install.ts';
 import { buildInitArguments } from '#tests/setup/builders.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { overrideEnvironment } from '#tests/setup/environment.ts';
-import { spawnGspot, checkReport } from '#tests/setup/run-gspot.ts';
 import { INDEX_COMMAND, SAMPLE_COMMAND } from '#tests/data/hooks.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { installRuntimes, buildSandboxPath } from '#tests/setup/install.ts';
-import { buildSettingsText, buildReportingCheck } from '#tests/setup/settings.ts';
+import { runGspot, spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/settings.ts';
 
 // A fresh clone installs the locked tools, then rejects and accepts a real staged commit.
 async function assertCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
@@ -20,7 +21,7 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
     const cloned = runGit(source, ['clone', '--quiet', '--no-local', source, clone]);
     expect(cloned.code, cloned.stdout + cloned.stderr).toBe(0);
     await installRuntimes(clone);
-    const uninstalled = await checkReport(clone, ['check', '--only', 'bash/shellcheck', '--json']);
+    const uninstalled = parseCheckReport(await runGspot(clone, ['check', '--only', 'bash/shellcheck', '--json']));
     expect(uninstalled.code, uninstalled.stdout + uninstalled.stderr).toBe(0);
     expect(uninstalled.report).toMatchObject({
         stage: 'all',
@@ -36,36 +37,35 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
     }
     const ready = await spawnGspot(clone, ['check', '--only', 'bash/shellcheck']);
     expect(ready.code, ready.stdout + ready.stderr).toBe(0);
-    await Bun.write(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho $1\n');
+    await writeFile(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho $1\n');
     expect(runGit(clone, ['add', 'scripts/b.sh']).code).toBe(0);
     const rejected = runGit(clone, ['commit', '-qm', 'Unquoted shell input'], environment);
     expect(rejected.code).not.toBe(0);
     expect(rejected.stdout + rejected.stderr).toContain('SC2086');
-    await Bun.write(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "${1:-ready}"\n');
+    await writeFile(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "${1:-ready}"\n');
     expect(runGit(clone, ['add', 'scripts/b.sh']).code).toBe(0);
     const accepted = runGit(clone, ['commit', '-qm', 'Quote shell input'], environment);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 }
 
 test('installed and freshly cloned repositories enforce staged findings through real commits', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+    await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+
     await installRuntimes(sandbox.path);
     commitAll(sandbox.path);
     const initialized = await spawnGspot(sandbox.path, buildInitArguments(['bash']));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
+    await writeFile(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
     expect(runGit(sandbox.path, ['add', '-A']).code).toBe(0);
     const environment = {
-        PATH: buildSandboxPath(),
         NO_COLOR: '1',
     };
     const commit = runGit(sandbox.path, ['commit', '-qm', 'bad'], environment);
     expect(commit.code).not.toBe(0);
     expect(`${commit.stdout}${commit.stderr}`).toContain('SC2086');
-    await Bun.write(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "$1"\n');
+    await writeFile(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "$1"\n');
     expect(runGit(sandbox.path, ['add', '-A']).code).toBe(0);
     const corrected = runGit(sandbox.path, ['commit', '-qm', 'Correct shell input'], environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -73,12 +73,12 @@ test('installed and freshly cloned repositories enforce staged findings through 
 });
 
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
-    await using sandbox = await testdir();
-    // hooks.enabled turns on the default Git hooks.
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([], { tables: '[hooks]\nenabled = true\n' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = true\n' }),
     });
-    const environment = { PATH: buildSandboxPath() };
+    // hooks.enabled turns on the default Git hooks.
+
+    const environment = {};
     readGitOutput(sandbox.path, ['init', '-q']);
     const missing = await spawnGspot(sandbox.path, ['doctor', '--json'], environment);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
@@ -94,19 +94,20 @@ test('doctor reports hooks this clone has not installed and accepts them after i
     expect(report.tools.filter(({ state }) => state !== 'ok' && state !== 'system')).toStrictEqual([]);
 });
 
-test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks', async (prefix) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        [`${prefix}gspot.toml`]: buildSettingsText([], { tables: '[hooks]\nenabled = true\n' }),
+test.each(['', 'app/'])('install from %s points core.hooksPath at .gspot/hooks', async (prefix) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = true\n' }),
+        'app/gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = false\n' }),
     });
+
     readGitOutput(sandbox.path, ['init', '-q']);
     const root = join(sandbox.path, prefix);
     const applied = await spawnGspot(root, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const installed = await spawnGspot(root, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(installed.stdout).toContain(`set core.hooksPath to ${prefix}.gspot/hooks`);
-    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(`${prefix}.gspot/hooks`);
+    expect(installed.stdout).toContain('set core.hooksPath to .gspot/hooks');
+    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe('.gspot/hooks');
 });
 
 test('a commit in a linked worktree runs staged checks and blocks a finding', async () => {
@@ -115,7 +116,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     const linked = join(sandbox.path, 'linked');
 
     await createFileTree(main, {
-        'gspot.toml': buildSettingsText([], {
+        'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
                 hooks: { enabled: true },
                 command_check: [
@@ -131,7 +132,6 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     await installRuntimes(main);
     commitAll(main);
     const environment = {
-        PATH: buildSandboxPath(),
         NO_COLOR: '1',
     };
     using _environment = overrideEnvironment(environment);
@@ -144,23 +144,23 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     readGitOutput(main, ['worktree', 'add', '-q', '-b', 'topic', linked]);
     await installRuntimes(linked);
     expect(await spawnGspot(linked, ['install'])).toMatchObject({ code: 0 });
-    await Bun.write(join(linked, 'src/added.txt'), 'DEFECT\n');
+    await writeFile(join(linked, 'src/added.txt'), 'DEFECT\n');
     readGitOutput(linked, ['add', 'src/added.txt']);
     const blocked = runGit(linked, ['commit', '-qm', 'Defect'], environment);
     expect(blocked.code, blocked.stdout + blocked.stderr).not.toBe(0);
     expect(blocked.stdout + blocked.stderr).toContain('src/added.txt');
-    await Bun.write(join(linked, 'src/added.txt'), 'clean\n');
+    await writeFile(join(linked, 'src/added.txt'), 'clean\n');
     readGitOutput(linked, ['add', 'src/added.txt']);
     const accepted = runGit(linked, ['commit', '-qm', 'Clean'], environment);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 });
 
-test('a hook uses the gspot.toml below the Git root and checks the index', async () => {
+test('a hook ignores a nested gspot.toml and checks the index at the Git root', async () => {
     await using sandbox = await testdir();
     const project = join(sandbox.path, 'nested config');
     await createFileTree(sandbox.path, {
-        'nested config/gspot.toml': `configurations = []
-[rules]
+        'gspot.toml': buildSandboxSettings([], {
+            tables: `[rules]
 enabled = false
 [hooks]
 enabled = true
@@ -170,7 +170,9 @@ stage = "commit"
 paths = ["source.txt"]
 command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
 `,
-        'nested config/source.txt': 'invalid\n',
+        }),
+        'nested config/gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = false\n' }),
+        'source.txt': 'invalid\n',
     });
     await installRuntimes(sandbox.path);
     expect(runGit(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -178,18 +180,17 @@ command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const installed = await spawnGspot(project, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe('.gspot/hooks');
     const formatted = await spawnGspot(project, ['check', '--only', 'files/taplo-format', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     expect(runGit(sandbox.path, ['add', '-A']).code).toBe(0);
-    await Bun.write(join(project, 'source.txt'), 'corrected working tree\n');
-    const environment = {
-        PATH: buildSandboxPath(),
-    };
+    await writeFile(join(sandbox.path, 'source.txt'), 'corrected working tree\n');
+    const environment = {};
     const rejected = runGit(sandbox.path, ['hook', 'run', 'pre-commit'], environment);
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
     expect(rejected.stdout + rejected.stderr).toContain('Indexed defect');
-    expect(await Bun.file(join(project, 'source.txt')).text()).toBe('corrected working tree\n');
-    expect(runGit(sandbox.path, ['add', 'nested config/source.txt']).code).toBe(0);
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected working tree\n');
+    expect(runGit(sandbox.path, ['add', 'source.txt']).code).toBe(0);
     const corrected = runGit(sandbox.path, ['hook', 'run', 'pre-commit'], environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

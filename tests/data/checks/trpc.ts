@@ -29,15 +29,12 @@ server_files = ["private/**", "app/api/trpc/**"]
 [[import_rule]]
 name = "server"
 paths = ["private/**", "app/api/trpc/**"]
-can_also_import = ["server"]
 [[import_rule]]
 name = "client"
 paths = ["client/**"]
-can_also_import = ["server", "client"]
 [[import_rule]]
 name = "storage"
 paths = ["storage/**"]
-can_also_import = ["storage"]
 `;
 
 export const TRPC_FAILURES = {

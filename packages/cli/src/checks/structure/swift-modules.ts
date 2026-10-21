@@ -1,13 +1,14 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { parsePbxproj } from '#cli/parsers/xcode.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { PBXPROJ } from '#cli/config/parsers/xcode.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { CheckInput } from '#cli/types/runs/check.ts';
+import { parseSource } from '#cli/parsers/grammars.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/swift.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/dependencies.ts';
 import type { SwiftModule } from '#cli/types/checks/import-rules.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/dependency-files.ts';
 import { SWIFTPM_TARGET_FOLDERS, SWIFT_MODULE_NAME_CHARACTERS } from '#cli/config/checks/import-rules.ts';
 
 function readStringArgument(call: Node, label: string): string | undefined {
@@ -25,10 +26,10 @@ function findDefaultFolder(folders: readonly string[], packageFolder: string, sw
     return present ?? folders[0] ?? '';
 }
 
-async function listPackageModules(input: CheckInput, path: string, swiftFiles: string[]): Promise<SwiftModule[]> {
-    const tree = await parseSource('swift', readCachedText(input.reads, path) ?? '');
+async function listPackageModules(session: Session, path: string, swiftFiles: string[]): Promise<SwiftModule[]> {
+    const tree = await parseSource('swift', readCachedText(session.reads, path));
     try {
-        const packageFolder = posix.dirname(path) === '.' ? '' : posix.dirname(path);
+        const packageFolder = extractParentFolder(path);
         return tree.rootNode.descendantsOfType('call_expression').flatMap((call) => {
             const callee = call.namedChildren[0];
             const kind = callee?.type === 'prefix_expression' ? callee.childForFieldName('target')?.text : undefined;
@@ -48,9 +49,8 @@ async function listPackageModules(input: CheckInput, path: string, swiftFiles: s
     }
 }
 
-function listXcodeModules(input: CheckInput, path: string, swiftFiles: string[]): SwiftModule[] {
-    const bundle = path.slice(0, path.indexOf(PBXPROJ));
-    const project = parsePbxproj(readCachedText(input.reads, path) ?? '', bundle.slice(0, bundle.lastIndexOf('/') + 1));
+function listXcodeModules(session: Session, path: string, swiftFiles: string[]): SwiftModule[] {
+    const project = parsePbxproj(readCachedText(session.reads, path), path);
     return project.targets.map((target) => ({
         name: target.name.replaceAll(SWIFT_MODULE_NAME_CHARACTERS, '_'),
         files: swiftFiles.filter(
@@ -64,16 +64,18 @@ function listXcodeModules(input: CheckInput, path: string, swiftFiles: string[])
 /**
  * List the Swift modules that the repository builds, each with its Swift files.
  *
- * @param input the repository files and the read cache.
+ * @param session the repository and its tools.
  * @returns the modules of every Package.swift target and every Xcode native target.
  */
-export async function listSwiftModules(input: CheckInput): Promise<SwiftModule[]> {
-    const paths = input.repositoryFiles.map((file) => file.path);
+export async function listSwiftModules(session: Session): Promise<SwiftModule[]> {
+    const paths = session.repository.files.map((file) => file.path);
     const swiftFiles = paths.filter((path) => path.endsWith(SWIFT_EXTENSION) && posix.basename(path) !== PACKAGE_SWIFT);
     const packages = paths.filter((path) => posix.basename(path) === PACKAGE_SWIFT);
-    const modules = await Promise.all(packages.map((path) => listPackageModules(input, path, swiftFiles)));
+    const modules = await Promise.all(packages.map((path) => listPackageModules(session, path, swiftFiles)));
     return [
         ...modules.flat(),
-        ...paths.filter((path) => path.endsWith(PBXPROJ)).flatMap((path) => listXcodeModules(input, path, swiftFiles)),
+        ...paths
+            .filter((path) => path.endsWith(PBXPROJ))
+            .flatMap((path) => listXcodeModules(session, path, swiftFiles)),
     ];
 }

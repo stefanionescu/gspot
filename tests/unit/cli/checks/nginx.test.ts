@@ -1,15 +1,15 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
-import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { checkFindings } from '#tests/setup/check-input.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { buildProcessResult } from '#tests/setup/builders.ts';
 import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { getToolDeclaration } from '#cli/configurations/tools.ts';
 import { NGINX_CONFIGURATION, NGINX_DIRECTIVE_CASES } from '#tests/data/checks/nginx.ts';
 
@@ -34,7 +34,7 @@ test.each([
         certificates: [],
     })),
 ])('nginx config-test mounts $name', async ({ source, hosts, certificates }) => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText(['nginx']), 'nginx.conf': source });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['nginx']), 'nginx.conf': source });
     const session = await openSession(sandbox.path);
     using _pins = fakePinnedExecutables([
         getToolDeclaration(session.manifests.values(), 'openssl'),
@@ -60,11 +60,11 @@ test.each([
 test.each(['stdout', 'stderr'])(
     'a failed certificate step reports its %s text, removes the scratch files, and does not start Docker',
     async (stream) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['nginx']),
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['nginx']),
             'nginx.conf': NGINX_CONFIGURATION,
         });
+
         const session = await openSession(sandbox.path);
 
         using resources = new DisposableStack();

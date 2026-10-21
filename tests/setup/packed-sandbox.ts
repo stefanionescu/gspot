@@ -2,9 +2,11 @@
 import { testdir } from 'testdirs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/processes.ts';
+import type { Sandbox } from '#tests/types/sandbox.ts';
+import { runSandboxStep } from '#tests/setup/install.ts';
 import type { PackedSandbox } from '#tests/types/packages.ts';
+import type { ProcessOutput } from '#tests/types/processes.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { sep, join, resolve, relative, delimiter, isAbsolute } from 'node:path';
 import { NPM_INSTALL_FLAGS, OFFLINE_ENVIRONMENT } from '#tests/data/test-setup.ts';
 import { buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -58,18 +60,21 @@ export async function createPackedSandbox(): Promise<PackedSandbox> {
 export async function setUpPackedSandbox(
     installation: PackedSandbox,
     options: { cwd: string; configurations: readonly string[]; level?: 'recommended' | 'all' },
-): Promise<SpawnResult> {
-    const commandOptions = { ...installation.onlineOptions, cwd: options.cwd };
-    const initialized = await runCommand(
-        [...installation.command, 'init', '--yes', '--configurations', ...options.configurations, '--json'],
-        commandOptions,
-    );
-    if (initialized.code !== 0) throw new Error(`Packed CLI init failed: ${initialized.stdout}${initialized.stderr}`);
-    if (options.level !== undefined) {
-        const level = await runCommand([...installation.command, 'set', 'level', options.level], commandOptions);
-        if (level.code !== 0) throw new Error(`Packed CLI level failed: ${level.stdout}${level.stderr}`);
-    }
-    const installed = await runCommand([...installation.command, 'install', '--json'], commandOptions);
-    if (installed.code !== 0) throw new Error(`Packed CLI tools failed: ${installed.stdout}${installed.stderr}`);
+): Promise<ProcessOutput> {
+    const sandbox: Sandbox = {
+        root: options.cwd,
+        environment: {},
+        run: async (cwd, commandArguments) =>
+            await runCommand([...installation.command, ...commandArguments], { ...installation.onlineOptions, cwd }),
+    };
+    const initialized = await runSandboxStep(sandbox, [
+        'init',
+        '--yes',
+        '--configurations',
+        ...options.configurations,
+        '--json',
+    ]);
+    if (options.level !== undefined) await runSandboxStep(sandbox, ['set', 'level', options.level]);
+    await runSandboxStep(sandbox, ['install', '--json']);
     return initialized;
 }

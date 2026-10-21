@@ -1,8 +1,9 @@
 ---
 import assert from 'node:assert/strict';
-import InlineText from './InlineText.astro';
+import ExampleRun from './ExampleRun.astro';
+import InlineText from '../InlineText.astro';
 import example from '../../config/example.json';
-import { CODE_TOKENS, COMMIT_RECORD, SUMMARY_SENTENCE_BREAK } from '../../config/home.ts';
+import { CODE_TOKENS } from '../../config/home.ts';
 
 type ExampleToken = { text: string; kind: string };
 type ExampleLine = { number: number; tokens: ExampleToken[] };
@@ -38,156 +39,78 @@ const beforeLines = example.agent.files
     .map((line) => ({
         ...line,
         problem: example.problems.findIndex(({ lines }) => lines.includes(line.number)) + 1,
+        inserted: false,
     }));
 const afterLines = example.fix.files
     .flatMap(({ content }) => buildExampleLines(content))
     .map((line) => ({
         ...line,
-        inserted: line.tokens.some(({ text }) => text === 'await'),
+        inserted: example.fix.inserted_lines.includes(line.number),
+        problem: 0,
     }));
-const failedChecks = [...new Set(example.findings.map(({ check }) => check))].map((check) => ({
-    name: check,
-    findings: example.findings
-        .filter((finding) => finding.check === check)
-        .map((finding) => ({
-            ...finding,
-            problem: example.problems.findIndex(({ rules }) => rules.includes(finding.rule)) + 1,
-            location: [finding.file, finding.line, 'column' in finding ? finding.column : undefined]
-                .filter((part) => part !== undefined)
-                .join(':'),
-        })),
-}));
+const summaries = [
+    { status: 'failed', summary: example.rejected_summary },
+    { status: 'passed', summary: example.passed },
+];
 ---
 
 <div class="example-grid">
-    <figure class="panel before">
-        <figcaption class="panel-head">
-            <span>Before: what the agent wrote</span>
-            <span class="file">{example.agent.files.map(({ path }) => path)}</span>
-        </figcaption>
-        <div class="panel-body">
-            <code class="code">
-                {beforeLines.map(({ number, problem, tokens }) => (
-                    <span class:list={['line', { 'is-marked': problem > 0 }]}>
-                        {problem > 0 ? (
-                            <span class="badge">
-                                <span class="visually-hidden">Problem </span>
-                                {problem}
-                            </span>
-                        ) : (
-                            <span></span>
+    {summaries.map(({ status, summary }) => (
+        <>
+            <figure class:list={['panel', { before: status === 'failed', after: status !== 'failed' }]}>
+                <figcaption class="panel-head">
+                    <span>{status === 'failed' ? 'Before: what the agent wrote' : 'After: the fix'}</span>
+                    <span class="file">
+                        {(status === 'failed' ? example.agent : example.fix).files.map(({ path }) => path)}
+                    </span>
+                </figcaption>
+                <div class="panel-body">
+                    <code class="code">
+                        {(status === 'failed' ? beforeLines : afterLines).map(
+                            ({ number, problem, inserted, tokens }) => (
+                                <span class:list={['line', { 'is-marked': problem > 0, 'is-inserted': inserted }]}>
+                                    <span class:list={{ badge: problem > 0 }}>
+                                        {problem > 0 && (
+                                            <>
+                                                <span class="sr-only">Problem </span>
+                                                {problem}
+                                            </>
+                                        )}
+                                    </span>
+                                    <span class="number" aria-hidden="true">
+                                        {number}
+                                    </span>
+                                    <span>
+                                        {tokens.map(({ text, kind }) => (
+                                            <span class:list={[kind]}>{text}</span>
+                                        ))}
+                                    </span>
+                                </span>
+                            ),
                         )}
-                        <span class="number" aria-hidden="true">
-                            {number}
-                        </span>
-                        <span>
-                            {tokens.map(({ text, kind }) => (
-                                <span class:list={[kind]}>{text}</span>
-                            ))}
-                        </span>
-                    </span>
-                ))}
-            </code>
-        </div>
-        <ol class="problems">
-            {example.problems.map(({ title, text }, index) => (
-                <li>
-                    <span class="badge" aria-hidden="true">
-                        {index + 1}
-                    </span>
-                    <span>
-                        <strong>{title}</strong> <InlineText text={text} />
-                    </span>
-                </li>
-            ))}
-        </ol>
-    </figure>
-    <figure class="panel blocked">
-        <figcaption class="panel-head">
-            <span class="run">
-                <span class="prompt">$ </span>git commit
-            </span>
-            <span class="status failed">Blocked</span>
-        </figcaption>
-        <div class="panel-body terminal">
-            <p class="muted">Checked the staged files.</p>
-            {failedChecks.map(({ name, findings }) => (
-                <>
-                    <p class="check-row">
-                        <span>{name}</span>
-                        <span class="failed">failed</span>
-                    </p>
-                    <ol class="findings">
-                        {findings.map(({ problem, location, rule, message }) => (
+                    </code>
+                </div>
+                {status === 'failed' ? (
+                    <ol class="problems">
+                        {example.problems.map(({ title, text }, index) => (
                             <li>
-                                <span class="badge">
-                                    <span class="visually-hidden">Problem </span>
-                                    {problem}
+                                <span class="badge" aria-hidden="true">
+                                    {index + 1}
                                 </span>
-                                <span class="where">
-                                    <span class="loc">{location}</span>
-                                    <span>{rule}</span>
+                                <span>
+                                    <strong>{title}</strong> <InlineText text={text} />
                                 </span>
-                                <span class="message">{message}</span>
                             </li>
                         ))}
                     </ol>
-                </>
-            ))}
-            <p class="summary">
-                {example.rejected_summary.split(SUMMARY_SENTENCE_BREAK).map((sentence, index) => (
-                    <>
-                        {index > 0 && ' '}
-                        {index === 0 ? <strong class="failed">{sentence}</strong> : sentence}
-                    </>
-                ))}
-            </p>
-        </div>
-    </figure>
-    <figure class="panel after">
-        <figcaption class="panel-head">
-            <span>After: the fix</span>
-            <span class="file">{example.fix.files.map(({ path }) => path)}</span>
-        </figcaption>
-        <div class="panel-body">
-            <code class="code">
-                {afterLines.map(({ number, inserted, tokens }) => (
-                    <span class:list={['line', { 'is-inserted': inserted }]}>
-                        <span></span>
-                        <span class="number" aria-hidden="true">
-                            {number}
-                        </span>
-                        <span>
-                            {tokens.map(({ text, kind }) => (
-                                <span class:list={[kind]}>{text}</span>
-                            ))}
-                        </span>
-                    </span>
-                ))}
-            </code>
-        </div>
-        <p class="panel-note">
-            <code class="inline-code">pay</code> now waits for the charge, and a failed payment reaches the caller.
-        </p>
-    </figure>
-    <figure class="panel passed">
-        <figcaption class="panel-head">
-            <span class="run">
-                <span class="prompt">$ </span>git commit
-            </span>
-            <span class="status passed">Committed</span>
-        </figcaption>
-        <div class="panel-body terminal">
-            <p class="muted">Checked the staged files.</p>
-            <p class="summary">
-                {example.passed.split(SUMMARY_SENTENCE_BREAK).map((sentence, index) => (
-                    <>
-                        {index > 0 && ' '}
-                        {index === 0 ? <strong class="passed">{sentence}</strong> : sentence}
-                    </>
-                ))}
-            </p>
-            <p class="muted">{COMMIT_RECORD}</p>
-        </div>
-    </figure>
+                ) : (
+                    <p class="panel-note">
+                        <code class="inline-code">pay</code> now waits for the charge, and a failed payment reaches the
+                        caller.
+                    </p>
+                )}
+            </figure>
+            <ExampleRun {status} {summary} />
+        </>
+    ))}
 </div>

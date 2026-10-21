@@ -7,8 +7,6 @@ export type SampleFix = {
     /** TOML tables appended to the installed settings. */
     settings?: string;
     removed?: readonly string[] | undefined;
-    /** Executable paths for the fixed sample. */
-    executable?: readonly string[] | undefined;
 };
 
 /** A test case that checks a finding at its source location, and what corrects it for the clean rerun. */

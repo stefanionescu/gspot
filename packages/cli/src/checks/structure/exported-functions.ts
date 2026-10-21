@@ -2,25 +2,25 @@ import ts from 'typescript';
 import { join, relative } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { findScope } from '#cli/repository/scopes.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { isInGspotFolder } from '#cli/repository/classify.ts';
 import { listTypescriptNodes } from '#cli/parsers/typescript.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { readTsconfig, buildCompilerHost } from '#cli/parsers/tsconfig.ts';
 import { EXPORTED_FUNCTION_EXTENSIONS } from '#cli/config/checks/structure.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
 
 // The compiler project of a scope: its tsconfig.json, or its jsconfig.json when it has none.
-function readScopeProject(input: CheckInput, scope: string) {
+function readScopeProject(session: Session, scope: string) {
     return (
-        readTsconfig(input.root, join(input.root, scope, TSCONFIG_FILE), input.reads) ??
-        readTsconfig(input.root, join(input.root, scope, JSCONFIG_FILE), input.reads)
+        readTsconfig(session.root, join(session.root, scope, TSCONFIG_FILE), session.reads) ??
+        readTsconfig(session.root, join(session.root, scope, JSCONFIG_FILE), session.reads)
     );
 }
 
-function buildExportProgram(input: CheckInput, paths: string[]): ts.Program {
-    const scope = input.selection.scope.path;
-    const config = readScopeProject(input, scope);
+function buildExportProgram(session: Session, planned: PlannedCheck, paths: string[]): ts.Program {
+    const scope = planned.selection.scope.path;
+    const config = readScopeProject(session, scope);
     const options = {
         module: ts.ModuleKind.Preserve,
         moduleResolution: ts.ModuleResolutionKind.Bundler,
@@ -31,12 +31,12 @@ function buildExportProgram(input: CheckInput, paths: string[]): ts.Program {
         noEmit: true,
         jsx: ts.JsxEmit.Preserve,
     };
-    const owned = new Set(paths.map((path) => convertToPosixPath(join(input.root, path))));
-    const host = buildCompilerHost(input.root, scope, input.reads, options);
+    const owned = new Set(paths.map((path) => convertToPosixPath(join(session.root, path))));
+    const host = buildCompilerHost(session.root, scope, session.reads, options);
     host.resolveModuleNameLiterals = (literals, file) => {
-        const path = convertToPosixPath(relative(input.root, file));
-        const scope = findScope(path, input.scopes).path;
-        const config = readScopeProject(input, scope);
+        const path = convertToPosixPath(relative(session.root, file));
+        const scope = findScope(path, session.repository.scopes).path;
+        const config = readScopeProject(session, scope);
         return literals.map(({ text: name }) => {
             const importedModule = ts.resolveModuleName(
                 name,
@@ -53,7 +53,7 @@ function buildExportProgram(input: CheckInput, paths: string[]): ts.Program {
             };
         });
     };
-    return ts.createProgram({ rootNames: paths.map((path) => join(input.root, path)), options, host });
+    return ts.createProgram({ rootNames: paths.map((path) => join(session.root, path)), options, host });
 }
 
 function recordImporter(importers: Map<ts.Symbol, Set<string>>, symbol: ts.Symbol, path: string): void {
@@ -156,20 +156,21 @@ function isUsedLocally(checker: ts.TypeChecker, nodes: ts.Node[], symbol: ts.Sym
 }
 
 function isLocalForwarder(
-    input: CheckInput,
+    session: Session,
     module: { checker: ts.TypeChecker; source: ts.SourceFile; path: string },
     symbol: ts.Symbol,
     callable: ts.FunctionDeclaration | ts.FunctionExpression | ts.ArrowFunction,
 ): boolean {
     return (
-        convertToPosixPath(relative(input.root, callable.getSourceFile().fileName)) === module.path &&
+        convertToPosixPath(relative(session.root, callable.getSourceFile().fileName)) === module.path &&
         findForwardedExpression(callable.body as ts.ConciseBody) !== undefined &&
         !isUsedLocally(module.checker, listTypescriptNodes(module.source), symbol)
     );
 }
 
 function checkModuleExports(
-    input: CheckInput,
+    session: Session,
+    planned: PlannedCheck,
     program: ts.Program,
     importers: Map<ts.Symbol, Set<string>>,
     source: ts.SourceFile,
@@ -177,16 +178,17 @@ function checkModuleExports(
     const checker = program.getTypeChecker();
     const module = checker.getSymbolAtLocation(source);
     if (module === undefined) return [];
-    const path = convertToPosixPath(relative(input.root, source.fileName));
+    const path = convertToPosixPath(relative(session.root, source.fileName));
     return [...(module.exports?.values() ?? [])].flatMap((exported): Finding[] => {
         const symbol = exported.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(exported) : exported;
         if (importers.get(symbol)?.size !== 1) return [];
         const callable = findExportedFunction(symbol);
-        if (callable === undefined || !isLocalForwarder(input, { checker, source, path }, symbol, callable)) return [];
+        if (callable === undefined || !isLocalForwarder(session, { checker, source, path }, symbol, callable))
+            return [];
         const name = symbol.getName() === 'export=' ? 'The default export' : symbol.getName();
         return [
             buildFinding(
-                input,
+                planned,
                 { file: path, line: source.getLineAndCharacterOfPosition(callable.getStart(source)).line + 1 },
                 'trivial-function',
                 `${name} forwards one expression to one importing file. Move it into its caller, or record the API it serves with gspot ignore.`,
@@ -198,20 +200,20 @@ function checkModuleExports(
 /**
  * Reports exported functions that forward one expression and have one importing file.
  *
- * @param input the files to check.
+ * @param session the repository and its tools.
+ * @param planned the files to check.
  * @returns the findings.
  */
-export function checkExportedFunctions(input: CheckInput): Finding[] {
-    const sources = input.repositoryFiles.filter(
+export function checkExportedFunctions(session: Session, planned: PlannedCheck): Finding[] {
+    const sources = session.repository.files.filter(
         (file) =>
-            file.kind === 'source' &&
-            !isInGspotFolder(file.path) &&
-            EXPORTED_FUNCTION_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
+            file.kind === 'source' && EXPORTED_FUNCTION_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
-    const selected = new Set(input.files.map(({ path }) => path));
+    const selected = new Set(planned.files.map(({ path }) => path));
     if (!sources.some(({ path }) => selected.has(path))) return [];
     const program = buildExportProgram(
-        input,
+        session,
+        planned,
         sources.map(({ path }) => path),
     );
     const importers = findImporters(program);
@@ -219,10 +221,11 @@ export function checkExportedFunctions(input: CheckInput): Finding[] {
         .filter(({ path }) => selected.has(path))
         .flatMap(({ path }) =>
             checkModuleExports(
-                input,
+                session,
+                planned,
                 program,
                 importers,
-                program.getSourceFile(join(input.root, path)) as ts.SourceFile,
+                program.getSourceFile(join(session.root, path)) as ts.SourceFile,
             ),
         );
 }

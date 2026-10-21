@@ -1,13 +1,14 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildMobileFiles } from '#tests/setup/builders.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, readEslintRules, collectLintFindings } from '#tests/setup/tool-files.ts';
 
 describe('expo', () => {
     test('Expo rules apply in the Expo scope and not in its React Native sibling', async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, buildMobileFiles());
+        await using sandbox = await testdir(buildMobileFiles());
+
         const eslint = await createEslint(sandbox.path);
         const bare = (await eslint.calculateConfigForFile('bare/source.js')) as EslintConfiguration;
         const expo = (await eslint.calculateConfigForFile('expo-app/source.js')) as EslintConfiguration;
@@ -28,8 +29,10 @@ describe('react-native', () => {
         await using sandbox = await testdir();
         const files = ['native/App.tsx', 'web/App.tsx'];
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                'configurations = ["react-dom", "typescript"]\n[[scope]]\npath = "native"\nconfigurations = ["react-native"]\n',
+            'gspot.toml': buildSandboxSettings(['react-dom', 'typescript'], {
+                rules: true,
+                scopes: [{ path: 'native', configurations: ['react-native'] }],
+            }),
             ...Object.fromEntries(files.map((file) => [file, 'export const value = 1;\n'])),
         });
         const eslint = await createEslint(sandbox.path);

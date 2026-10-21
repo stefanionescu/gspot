@@ -1,13 +1,8 @@
-allowed_words = ["Bash", "ShellCheck", "tree-sitter"]
+allowed_words = ["Bash", "ShellCheck"]
 
 [configuration]
 description = "Shell scripts, hooks, and task files: lint, formatting, syntax, and the structure rules for shell."
-suggests = []
 title = "Shell scripts"
-
-[detect]
-extensions = [".sh", ".bash", ".zsh", ".bats"]
-shebangs = ["shell"]
 
 [files]
 extensions = [".sh", ".bash", ".zsh", ".bats"]
@@ -28,29 +23,17 @@ paths = ["**"]
 reason = "A leading underscore marks a private shell declaration."
 
 [[tool]]
-apt = "shellcheck"
-brew = "shellcheck"
-github = { name = "koalaman/shellcheck", version = "v0.11.0" }
 mise = "shellcheck"
 name = "shellcheck"
-refused_options = [
-    { paths = ["enable", "disable"], message = "ShellCheck rule selection comes from level recommended or all and gspot ignore. Remove enable and disable from tools.shellcheck.extra.value." },
-]
 replace = [".shellcheckrc"]
 rule_url = "https://www.shellcheck.net/wiki/{rule}"
-scoop = "shellcheck"
 suppression = { marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reason>\\S.*)", example = "# shellcheck disable=SC2086 # reason: the word splitting is wanted here" }
 version = "0.11.0"
-winget = "koalaman.shellcheck"
 
 [[tool]]
-brew = "shfmt"
-github = { name = "mvdan/sh", version = "v3.12.0" }
 mise = "shfmt"
 name = "shfmt"
-scoop = "shfmt"
 version = "3.12.0"
-winget = "mvdan.shfmt"
 
 [[tool]]
 name = "zsh"
@@ -65,7 +48,6 @@ tool = "shellcheck"
 per_scope = true
 target = "semgrep.yml"
 tool = "semgrep"
-when = { configuration = "security" }
 
 [[check]]
 command = ["zsh", "-n", "{file}"]

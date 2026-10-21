@@ -22,10 +22,6 @@ export const SQL_QUALIFIED_NAME = new RegExp(
     'u',
 );
 
-export const SQL_DECLARATION_PREFIX =
-    // eslint-disable-next-line sonarjs/regex-complexity -- reason: This PostgreSQL keyword list keeps declaration positions exact without accepting unrelated creation forms.
-    /^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:(?:UNIQUE|CONSTRAINT|MATERIALIZED|TEMPORARY|TEMP|UNLOGGED)\s+)?\w+(?:\s+IF\s+NOT\s+EXISTS)?/iu;
-
 /** Function parameters begin after an optional PostgreSQL parameter mode. */
 export const SQL_PARAMETER_PREFIX = /^\s*(?:(?:INOUT|IN|OUT|VARIADIC)\s+)?/iu;
 

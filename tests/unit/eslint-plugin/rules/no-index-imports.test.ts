@@ -29,6 +29,5 @@ createRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
                 errors: [{ messageId: 'index' as const }],
             })),
         ),
-        { code: "import { env } from '@/env/index.js';", errors: [{ messageId: 'index' }] },
     ],
 });

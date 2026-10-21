@@ -94,24 +94,43 @@ export const PUBLISHED_SCHEMA_CASES = [
         input: { dependencies: { allowed_registries: { value: [false], reason: 'Reviewed the package registry.' } } },
         valid: false,
     },
+] as const;
+
+export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
+
+export const SETTING_RULE_OPTIONS = [
     {
-        name: 'a reviewed formatter option',
-        input: {
-            tools: {
-                prettier: { extra: { value: { printWidth: 96 }, reason: 'The formatter owns this project option.' } },
-            },
-        },
-        valid: true,
+        tables: '[tools.eslint.rules]\ncomplexity = [40]\n',
+        path: 'tools.eslint.rules.complexity',
+        rule: 'complexity',
+        setting: 'limits.cyclomatic_complexity',
     },
     {
-        name: 'a forbidden YAML extra table',
-        input: {
-            tools: { yamllint: { extra: { value: { enabled: false }, reason: 'Reviewed the native YAML option.' } } },
-        },
-        valid: false,
+        tables: '[[tools.eslint.override]]\npaths = ["src/**"]\nrules = { max-lines = [{ max = 900 }] }\n',
+        path: 'tools.eslint.override.0.rules.max-lines',
+        rule: 'max-lines',
+        setting: 'limits.file_lines',
+    },
+    {
+        tables: '[tools.markdownlint.rules]\nMD007 = { indent = 8 }\n',
+        path: 'tools.markdownlint.rules.MD007',
+        rule: 'MD007',
+        setting: 'format.indent_width',
+    },
+    {
+        tables: '[[scope]]\npath = "app"\n[scope.tools.eslint.rules]\n"sonarjs/no-identical-functions" = [50]\n',
+        path: 'scope.0.tools.eslint.rules.sonarjs/no-identical-functions',
+        rule: 'sonarjs/no-identical-functions',
+        setting: 'duplication.min_lines',
     },
 ] as const;
 
-export const BASH_TEMPLATE_SETTINGS = 'configurations = ["bash"]\n';
-
-export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
+export const REMOVED_EXTRA_TOOLS = [
+    'eslint',
+    'knip',
+    'prettier',
+    'editorconfig-checker',
+    'shellcheck',
+    'taplo',
+    'typos',
+] as const;

@@ -1,38 +1,38 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { TYPESCRIPT_FILES } from '#tests/data/generation/eslint/fragments.ts';
 import { TYPE_EXPORT_FILES, TYPED_RULE_PROJECTS } from '#tests/data/generation/eslint/levels.ts';
 import { createEslint, listFindingRules, collectLintFindings } from '#tests/setup/tool-files.ts';
 
 test.each([...TYPED_RULE_PROJECTS])('$name gets typed lint rules', async ({ configurations, tables, files, file }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([...configurations], { level: 'all', tables }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([...configurations], { level: 'all', tables }),
         ...files,
     });
+
     const eslint = await createEslint(sandbox.path);
     const rules = ['@typescript-eslint/no-unnecessary-type-assertion'];
     expect(await collectLintFindings(eslint, sandbox.path, [file], rules)).toStrictEqual([
         { file, rule: '@typescript-eslint/no-unnecessary-type-assertion', line: 4 },
     ]);
-    const source = await Bun.file(join(sandbox.path, file)).text();
-    await Bun.write(join(sandbox.path, file), source.replace(' as number', ''));
+    const source = await readFile(join(sandbox.path, file), 'utf8');
+    await writeFile(join(sandbox.path, file), source.replace(' as number', ''));
     expect(await collectLintFindings(eslint, sandbox.path, [file], rules)).toStrictEqual([]);
 });
 
 test.each([...LEVELS])('%s type import and export rules apply at their declared level', async (level) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         ...TYPE_EXPORT_FILES,
-        'gspot.toml': buildSettingsText(['typescript'], {
+        'gspot.toml': buildSandboxSettings(['typescript'], {
             level,
             tables: '[structure]\nreexports = { value = "index-only", reason = "The package exports its public index files." }\n',
         }),
     });
+
     const eslint = await createEslint(sandbox.path);
     const rules = ['@typescript-eslint/consistent-type-imports', '@typescript-eslint/consistent-type-exports'];
     const findings = await collectLintFindings(eslint, sandbox.path, ['index.ts'], rules);
@@ -42,10 +42,9 @@ test.each([...LEVELS])('%s type import and export rules apply at their declared 
 });
 
 test('reexports = index-only keeps re-exports in index files and reports forwarding elsewhere', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         ...TYPESCRIPT_FILES,
-        'gspot.toml': buildSettingsText(['typescript'], {
+        'gspot.toml': buildSandboxSettings(['typescript'], {
             tables: '[structure]\nreexports = { value = "index-only", reason = "The package exports its public index files." }\n',
             level: 'all',
         }),
@@ -54,6 +53,7 @@ test('reexports = index-only keeps re-exports in index files and reports forward
         'src/index.ts': 'export * from "./first.js";\nexport { shared as second } from "./second.js";\n',
         'src/forward.ts': 'export { shared } from "./first.js";\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     const reported = await collectLintFindings(
         eslint,
@@ -81,13 +81,13 @@ test('reexports = index-only keeps re-exports in index files and reports forward
 });
 
 test('a default import with an inline type merges with a type-only import into code that parses', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript']),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript']),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
         'client.ts': '',
     });
+
     const eslint = await createEslint(sandbox.path, { fix: ({ ruleId }) => ruleId === 'import-x/no-duplicates' });
     const source =
         "import type { Level } from 'hls.js';\nimport Hls, { Events, type Config } from 'hls.js';\nexport { Hls, Events, type Config, type Level };\n";
@@ -99,14 +99,14 @@ test('a default import with an inline type merges with a type-only import into c
 });
 
 test('gspot/no-magic-numbers accepts the numbers of a module-level const and reports the others', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['typescript'], { level: 'all' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["source.ts"]}\n',
         'source.ts':
             'export const SIZES = [16, 32, 64];\nexport const TIMEOUT_MS = 60 * 1000;\nexport function wait(): number {\n    return TIMEOUT_MS + 250;\n}\n',
     });
+
     const eslint = await createEslint(sandbox.path);
     expect(
         await collectLintFindings(

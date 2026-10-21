@@ -35,6 +35,8 @@
         "docs/.stylelintrc.json",
         "packages/cli/.markdownlint.jsonc",
         "packages/eslint-plugin/.markdownlint.jsonc",
+        "packages/cli/configurations/**/eslint-presets.json",
+        "packages/cli/configurations/**/*-names.json",
         "docs/worker-configuration.d.ts",
         "docs/cloudflare-env.d.ts",
         "**/bower_components/**",

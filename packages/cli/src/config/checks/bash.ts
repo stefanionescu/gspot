@@ -86,9 +86,10 @@ export const VAGUE_WORDS: ReadonlySet<string> = new Set([
 export const BASH_DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '# Returns:'] as const;
 
 export const COUNT_LIMITS = [
-    { limit: 'function_branches', property: 'branches', noun: 'branches' },
-    { limit: 'block_nesting', property: 'nesting', noun: 'levels of nesting' },
-    { limit: 'function_assignments', property: 'assignments', noun: 'assignments' },
+    { limit: 'function_lines', rule: 'function-lines', noun: 'code lines' },
+    { limit: 'function_branches', rule: 'function_branches', noun: 'branches' },
+    { limit: 'block_nesting', rule: 'block_nesting', noun: 'levels of nesting' },
+    { limit: 'function_assignments', rule: 'function_assignments', noun: 'assignments' },
 ] as const;
 
 /** A comment that directs ShellCheck, which must sit on the line it covers. */

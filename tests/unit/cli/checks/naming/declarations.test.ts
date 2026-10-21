@@ -1,6 +1,5 @@
 import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { type Identifier } from '#cli/types/checks/naming.ts';
 import { extractSqlIdentifiers } from '#cli/checks/naming/sql.ts';
 import { readNamingDefaults } from '#cli/configurations/manifests.ts';
 import { SQL_DECLARATIONS, QUALIFIED_FUNCTION_DECLARATION } from '#tests/data/checks/sql.ts';
@@ -12,11 +11,6 @@ import {
     DECLARATION_ORDER_CASES,
 } from '#tests/data/checks/naming/sources.ts';
 
-// Several language cases compare the same category of extracted declarations.
-function listCategoryNames(found: Identifier[], category: string): string[] {
-    return found.filter((entry) => entry.category === category).map((entry) => entry.name);
-}
-
 test.each([...DECLARATION_SAMPLES])(
     'identifiers: $language declarations are collected by category',
     async ({ language, path, source, expected, absent }) => {
@@ -27,7 +21,10 @@ test.each([...DECLARATION_SAMPLES])(
         const byCategory: Readonly<Record<string, readonly string[]>> = expected;
         expect(
             Object.fromEntries(
-                Object.keys(byCategory).map((category) => [category, listCategoryNames(found, category)]),
+                Object.keys(byCategory).map((category) => [
+                    category,
+                    found.filter((entry) => entry.category === category).map((entry) => entry.name),
+                ]),
             ),
         ).toStrictEqual(
             Object.fromEntries(Object.entries(byCategory).map(([category, names]) => [category, [...names]])),
@@ -114,7 +111,7 @@ test.each([...NAME_POSITION_CASES])(
 );
 
 test('identifiers: shared route containers retain punctuation without changing plain paths', () => {
-    const containers = readNamingDefaults(createReadCache(process.cwd())).path_containers;
+    const containers = readNamingDefaults().path_containers;
     expect(buildFileIdentifier('app/[...slug].ts', 'typescript', containers)).toMatchObject({
         name: 'slug',
         category: 'path_parameters',
@@ -140,7 +137,7 @@ test('identifiers: the stem drops one extension, or the whole declaration suffix
 });
 
 test('identifiers: Next.js segments are unwrapped and dot folders skipped', () => {
-    const containers = readNamingDefaults(createReadCache(process.cwd())).path_containers;
+    const containers = readNamingDefaults().path_containers;
     const names = buildFolderIdentifiers(
         'app/(marketing)/[slug]/@modal/_lib/.hidden/page.tsx',
         'typescript',

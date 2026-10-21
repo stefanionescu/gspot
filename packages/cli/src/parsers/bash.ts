@@ -1,9 +1,9 @@
 // Parses Bash scripts and counts their functions and control flow.
 import type { Node } from 'web-tree-sitter';
 import { convertToSpaces } from '#cli/system/text.ts';
+import { parseSource } from '#cli/parsers/grammars.ts';
 import type { NumberedLine } from '#cli/types/text.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { ParseCache } from '#cli/types/parsers/tree-sitter.ts';
+import type { ParseCache } from '#cli/types/parsers/grammars.ts';
 import type { EnvironmentRead } from '#cli/types/parsers/environment.ts';
 import type { ScriptSyntax, TemporaryPath, CleanupContext, TemporaryTargets } from '#cli/types/parsers/bash.ts';
 
@@ -332,7 +332,7 @@ export function listCodeLines(lines: string[]): NumberedLine[] {
  * @returns the environment reads and their source positions.
  */
 export function readBashEnvironment(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
-    return syntaxRoot.descendantsOfType(['simple_expansion', 'expansion']).flatMap((expansion) =>
+    return syntaxRoot.descendantsOfType([...EXPANSION_NODES]).flatMap((expansion) =>
         expansion.namedChildren
             .filter((node) => node.type === 'variable_name' && readerVariables.has(node.text))
             .map((node) => ({

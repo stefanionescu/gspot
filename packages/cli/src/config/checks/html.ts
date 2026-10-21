@@ -16,3 +16,5 @@ export const ACTIVE_DOCUMENT_TYPES = new Set(['text/html', 'application/xhtml+xm
 export const EVENT_ATTRIBUTE = /^on[a-z]+$/u;
 
 export const SCRIPT_SCHEMES = new Set(['javascript:', 'vbscript:']);
+
+export const RELATIVE_URL_BASE = 'https://example.invalid';

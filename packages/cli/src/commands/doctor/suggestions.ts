@@ -4,22 +4,28 @@ import { type Session } from '#cli/types/planning.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { type Manifest } from '#cli/types/configurations.ts';
-import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { readCachedPrefix } from '#cli/system/files/reads.ts';
 import { hasGeneratedHeader } from '#cli/repository/classify.ts';
-import { detectConfigurations } from '#cli/repository/detect.ts';
+import { BANNER_BYTES } from '#cli/config/repository/inventory.ts';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { type GenerationResult } from '#cli/types/generation/files.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/selection.ts';
-import { readLintJobs, readExistingTools } from '#cli/repository/existing-tools.ts';
+import { hasDetectionRules, detectConfigurations } from '#cli/repository/detect.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
 import { type ExistingTools, type FoundToolFile } from '#cli/types/repository/inventory.ts';
+
+import {
+    readLintJobs,
+    isEditedInPlace,
+    readExistingTools,
+    getToolFileSection,
+} from '#cli/repository/existing-tools.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
     const { root, repository, manifests, settingsFile } = session;
     const { dependencyFiles } = repository;
     const settings = settingsFile.settings;
-    return detectConfigurations(root, repository.files, manifests, dependencyFiles).flatMap((entry) => {
+    return detectConfigurations(repository, manifests).flatMap((entry) => {
         if (settings.removed_configurations.includes(entry.configuration)) return [];
         const removedScopes = Object.entries(settings.scopes)
             .filter(([, table]) => table.removed_configurations.includes(entry.configuration))
@@ -28,17 +34,14 @@ function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
         const files = repository.files.filter((file) => !removedScopes.some((path) => isInScope(file.path, path)));
         const paths = new Set(files.map((file) => file.path));
         return detectConfigurations(
-            root,
-            files,
+            { root, files, dependencyFiles: dependencyFiles.filter((file) => paths.has(file.path)) },
             new Map([...manifests].filter(([name]) => name === entry.configuration)),
-            dependencyFiles.filter((file) => paths.has(file.path)),
         );
     });
 }
 
 function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'detected' | 'suggested' | 'undetected'> {
-    const { root, repository, manifests, settingsFile } = session;
-    const { dependencyFiles } = repository;
+    const { repository, manifests, settingsFile } = session;
     const selections = listSelectedManifests(session.scopes);
     const selected = new Set(selections.map((manifest) => manifest.configuration.name));
     const settings = settingsFile.settings;
@@ -50,8 +53,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
     const undetected = choices
         .filter(({ configurations }) => configurations.length > 0)
         .flatMap(({ path, configurations }) => {
-            const evidence =
-                path === '' ? detected : detectConfigurations(root, repository.files, manifests, dependencyFiles, path);
+            const evidence = path === '' ? detected : detectConfigurations(repository, manifests, path);
             const found = new Set(evidence.map((entry) => entry.configuration));
             const scopeArgument = path === '' ? '' : ` --scope ${quoteArgument(path)}`;
             return configurations.flatMap((id) => {
@@ -60,7 +62,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
                     manifest === undefined ||
                     manifest.configuration.group === 'general' ||
                     found.has(id) ||
-                    !Object.values(manifest.detect).some((patterns) => Object.keys(patterns).length > 0)
+                    !hasDetectionRules(manifest)
                 )
                     return [];
                 return [
@@ -119,7 +121,7 @@ function buildFileRow(
             path: toolFile.path,
             note: `beside the generated ${toolFile.tool} tool file`,
             command: toolFile.shared
-                ? `move any ${toolFile.table ?? toolFile.key ?? toolFile.tool} setting you still need into gspot.toml, then delete the section`
+                ? `move any ${getToolFileSection(toolFile)} setting you still need into gspot.toml, then delete the section`
                 : 'move any setting you still need into gspot.toml, then delete the file',
         };
     if (manifest.configuration.group === 'general') return buildInactiveFileRow(session, toolFile, manifest);
@@ -140,25 +142,17 @@ function listUnownedToolFiles(
     const generated = new Set(outputs.files.map((file) => file.path));
     return existingTools.toolFiles
         .filter((toolFile) => tracked.has(toolFile.path) && !generated.has(toolFile.path))
+        .filter((toolFile) => !isEditedInPlace(toolFile, outputs.fileSettings))
         .filter(
             (toolFile) =>
-                !outputs.fileEdits.some(
-                    (output) =>
-                        output.path === toolFile.path && output.changes.some((field) => field.path[0] === toolFile.key),
-                ),
+                !hasGeneratedHeader(readCachedPrefix(session.reads, toolFile.path, BANNER_BYTES).toString('utf8')),
         )
-        .filter(
-            (toolFile) =>
-                !hasGeneratedHeader(readCachedPrefix(session.reads, toolFile.path, HEADER_BYTES).toString('utf8')),
-        )
-        .flatMap((toolFile) =>
-            session.manifests
+        .flatMap((toolFile) => {
+            const manifest = session.manifests
                 .values()
-                .filter((manifest) => manifest.tools.some((tool) => tool.name === toolFile.tool))
-                .take(1)
-                .map((manifest) => buildFileRow(session, toolFile, tools, manifest))
-                .toArray(),
-        );
+                .find((manifest) => manifest.tools.some((tool) => tool.name === toolFile.tool));
+            return manifest === undefined ? [] : [buildFileRow(session, toolFile, tools, manifest)];
+        });
 }
 
 /**
@@ -168,20 +162,17 @@ function listUnownedToolFiles(
  * @returns the suggested changes.
  */
 export function listSuggestions(session: Session): Suggestions {
-    const { dependencyFiles } = session.repository;
     const manifests = session.neededToolManifests;
-    const existingTools = readExistingTools(session.root, session.repository.files, dependencyFiles, session.reads);
+    const existingTools = readExistingTools(session.reads, session.repository);
     const generated = generate(session);
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         ...listConfigurationSuggestions(session),
         unowned: listUnownedToolFiles(session, existingTools, tools, generated),
-        lintJobs: [
-            ...readLintJobs(
-                session.root,
-                existingTools.ci.filter((path) => !workflows.has(path)),
-            ).map((path) => ({ path, note: 'an existing lint job', command: 'none; informational' })),
-        ],
+        lintJobs: readLintJobs(
+            session.root,
+            existingTools.ci.filter((path) => !workflows.has(path)),
+        ).map((path) => ({ path, note: 'an existing lint job', command: 'none; informational' })),
     };
 }

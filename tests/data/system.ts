@@ -132,8 +132,6 @@ export const GLOB_FILES = {
     'src/Case.TS': '',
     'src/nested/.inner/b.ts': '',
     '.hidden/nested/c.ts': '',
-    'packages/.hidden/package.json': '',
-    'packages/visible/package.json': '',
     'node_modules/.hidden/foreign.ts': '',
 } as const;
 

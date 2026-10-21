@@ -68,8 +68,8 @@ custom operator only for standard domain notation.
 
 <!-- level: all -->
 
-When the code needs a force unwrap, suppress `force_unwrapping` on that line with
-`// swiftlint:disable:next force_unwrapping`. The reason states the invariant, as the suppression rules require.
+When the code needs a force unwrap, put `// swiftlint:disable:next force_unwrapping - reason: <the invariant>.`
+on the line above it, as SUPPRESSIONS.md requires.
 
 ### API and ownership conventions
 
@@ -147,9 +147,9 @@ that continuing requires.
 
 ## Naming
 
-### Case, scope, and files
-
 <!-- level: all -->
+
+### Case, scope, and files
 
 Preserve external names and domain notation that the team uses. Express privacy through access
 modifiers, not an underscore.
@@ -160,8 +160,6 @@ declaring type: `UIColor.primary`, not `UIColor.primaryColor`. Use `shared` and 
 only when they describe the role.
 
 ### Roles
-
-<!-- level: all -->
 
 A suffix says what a type owns and means one thing across the whole codebase. If `Repository`
 owns domain-facing data access in one feature, it never means HTTP mechanics in another.
@@ -191,8 +189,6 @@ clients, database records, or DTOs.
 
 ### Method names
 
-<!-- level: all -->
-
 When the project uses view models, name a direct UI event for what happened,
 such as `submitButtonTapped()`, `cameraPermissionDenied()`, or `selectedItemChanged(to:)`. Name domain work
 with a verb such as `enqueueFileUpload(_:)`, `refreshOrderHistory(for:)`, or
@@ -200,8 +196,6 @@ with a verb such as `enqueueFileUpload(_:)`, `refreshOrderHistory(for:)`, or
 literal UIKit target-action and notification handlers marked `@objc`.
 
 ### Protocols and identifiers
-
-<!-- level: all -->
 
 A protocol carries no `I` prefix and no `Protocol` suffix. Name a domain role with a noun such as `TemplateRepository`. Name a capability for its behavior, often with `-ing`,
 such as `ProgressReporting`, `ThemeColorProviding`, or `LoginCoordinating`. Avoid an automatic `-able`

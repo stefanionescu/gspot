@@ -1,9 +1,8 @@
 allowed_words = ["Python", "Ruff"]
-ignored_folders = [".venv", "venv"]
+ignored_paths = ["**/.venv/**", "**/venv/**"]
 
 [configuration]
 description = "Python sources: lint, layout, strict types, import contracts, docstrings that match their signatures, and no unused code or dependencies."
-suggests = []
 title = "Python"
 
 [detect]
@@ -13,7 +12,7 @@ shebangs = ["python", "python3"]
 
 [files]
 extensions = [".py", ".pyi"]
-filenames = ["pyproject.toml", "setup.cfg", ".importlinter"]
+filenames = ["pyproject.toml", "setup.cfg"]
 
 [[naming.override]]
 allowed_names = ["__init__", "__main__"]
@@ -49,14 +48,12 @@ name = "uv"
 version = "0.12.22"
 
 [[tool]]
-brew = "ruff"
 min_version = "0.9.0"
-mise = "ruff"
 name = "ruff"
 pypi = "ruff"
 replace = ["ruff.toml", ".ruff.toml"]
 rule_url = "https://docs.astral.sh/ruff/rules/{rule}/"
-suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)[^#]*# ?(?<reason>\\S.*)", example = "import plugins  # noqa: F401 # the module registers its plugins on import" }
+suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)(?::(?<rules>[^#]*))?", reason = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)[^#]*# ?(?<reason>\\S.*)", example = "import plugins  # noqa: F401 # the module registers its plugins on import", separator = "#", all_rules = "^$", limit_rules = "(?:^|[\\s,])(?:C901|PLR0911|PLR0912|PLR0913|PLR0915)(?=$|[\\s,])" }
 version = "0.16.8"
 
 [[tool.replace_key]]
@@ -80,27 +77,17 @@ file = "pyproject.toml"
 table = "tool.pyright"
 
 [[tool]]
-mise = "pipx:import-linter"
-name = "lint-imports"
-pypi = "import-linter"
-version = "2.15"
-version_pattern = "v?(\\d+\\.\\d+(?:\\.\\d+)?)"
-
-[[tool]]
-mise = "pipx:pydoclint"
 name = "pydoclint"
 pypi = "pydoclint"
 version = "0.9.1"
 
 [[tool]]
 min_version = "0.20.0"
-mise = "pipx:deptry"
 name = "deptry"
 pypi = "deptry"
 version = "0.25.1"
 
 [[tool]]
-mise = "pipx:vulture"
 name = "vulture"
 pypi = "vulture"
 version = "2.16"
@@ -371,7 +358,7 @@ fix = ["ruff", "format", "--no-cache", "--quiet", "{files}"]
 help = "Run `gspot check --fix`."
 level = "recommended"
 name = "ruff-format"
-output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", message = "This file is not formatted the way Ruff formats it." }
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", fixable = "unformatted: ", message = "This file is not formatted the way Ruff formats it." }
 stage = "commit"
 summary = "Checks the layout of every Python file against the Ruff formatter."
 why = "One layout everywhere keeps a diff about the change."
@@ -390,26 +377,6 @@ runs = "scope"
 stage = "push"
 summary = "Type checks the project. At level `all`, it also requires annotations."
 why = "Each type error found here becomes a crash that never reaches a user."
-
-[[check]]
-cwd = "scope"
-env = { PYTHONDONTWRITEBYTECODE = "1" }
-example = "A module that imports from a forbidden layer reports a broken contract. Move the shared code to an allowed layer, and update the import."
-files = { extensions = [
-    ".py",
-], filenames = [
-    "pyproject.toml",
-    "setup.cfg",
-    ".importlinter",
-] }
-help = "Move the import to the side the contract allows, or change the contract."
-level = "recommended"
-name = "import-linter"
-runs = "scope"
-stage = "commit"
-summary = "Runs project import contracts from setup.cfg, .importlinter, or pyproject.toml."
-tool = ["uv", "lint-imports"]
-why = "A layer that imports the layer above it turns an architecture into a diagram nobody follows."
 
 [[check]]
 cwd = "scope"
@@ -458,7 +425,6 @@ help = "Split the function by responsibility, or raise `limits.python.function_l
 level = "all"
 name = "function-size"
 runs = "scope"
-settings = ["limits.function_lines"]
 stage = "commit"
 summary = "Checks the code line count of each Python function against `limits.function_lines`."
 why = "A long function does more than one job, and a reader has to hold all of it at once."

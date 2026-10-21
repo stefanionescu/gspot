@@ -1,9 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, compareFindings, collectLintFindings } from '#tests/setup/tool-files.ts';
 
@@ -24,7 +25,7 @@ test.each([...LEVELS])(
             '/**\n * Measure the input.\n * @param {string} value The input text.\n * @returns {number} The input length.\n */\n';
         const typescript = 'export function measure(value: string): number { return value.length; }\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['typescript'], { level: level }),
+            'gspot.toml': buildSandboxSettings(['typescript'], { level: level }),
             'package.json': '{"private":true,"type":"module"}\n',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
             'client.ts': description + typescript,
@@ -46,7 +47,7 @@ test.each([...LEVELS])(
 test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig', async () => {
     const level = 'all';
     await using sandbox = await testdir();
-    const settings = buildSettingsText(['typescript'], { level });
+    const settings = buildSandboxSettings(['typescript'], { level });
     await createFileTree(sandbox.path, { ...JSDOC_FILES, 'gspot.toml': settings });
     const eslint = await createEslint(sandbox.path);
     const expectedConfiguration = {
@@ -87,7 +88,7 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['malformed.js', 'missing.js', 'undefined.js']);
     for (const { file } of JSDOC_FINDINGS.filter((entry) => entry.file.endsWith('.js')))
-        await Bun.write(join(sandbox.path, file), FIXED_JSDOC);
+        await writeFile(join(sandbox.path, file), FIXED_JSDOC);
     const corrected = await lintFiles();
     expect(corrected).toStrictEqual({
         configurations: expectedConfiguration,
@@ -98,12 +99,12 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
 });
 
 test('jsdoc/match-name reports the root0 placeholder and keeps a parameter named root', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}\n',
         'source.js': ROOT_PARAMETERS,
     });
+
     const eslint = await createEslint(sandbox.path);
     expect(await collectLintFindings(eslint, sandbox.path, ['source.js'], ['jsdoc/match-name'])).toStrictEqual([
         { file: 'source.js', rule: 'jsdoc/match-name', line: 11 },
@@ -111,12 +112,12 @@ test('jsdoc/match-name reports the root0 placeholder and keeps a parameter named
 });
 
 test('a missing doc block is reported, and the fixer adds no empty block', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         'package.json': '{"private":true,"type":"module"}\n',
         'client.js': '',
     });
+
     const eslint = await createEslint(sandbox.path, { fix: true });
     const source = 'export function measure(value) {\n    return value.length;\n}\n';
     const [result] = await eslint.lintText(source, { filePath: 'client.js' });

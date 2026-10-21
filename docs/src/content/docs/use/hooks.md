@@ -41,17 +41,6 @@ npm exec --no -- gspot check --hook commit-msg -- "$1"
 
 Use the exact lines that gspot prints for your package manager or mise. A hook without its line runs no gspot checks.
 
-The lines start gspot this way:
-
-```text
-npm: npm exec --no -- gspot
-pnpm: pnpm exec gspot
-Yarn: yarn exec gspot
-Bun: bun run --no-install gspot
-```
-
-When the root `package.json` does not list `@gspothq/cli`, they run `mise exec -- gspot`.
-
 ## Test a hook
 
 ```shell

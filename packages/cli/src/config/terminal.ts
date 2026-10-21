@@ -49,3 +49,5 @@ export {
     UNKNOWN_COMMAND_NAME,
     COMMANDER_ERROR_PREFIX,
 };
+
+export const DRY_RUN_NOTE = 'Dry run: nothing was written.';

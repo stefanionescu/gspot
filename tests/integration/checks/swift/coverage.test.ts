@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPlan } from '#cli/checks/swift/cache.ts';
 import { runCommand } from '#tests/setup/processes.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { rm, unlink, readFile } from 'node:fs/promises';
-import { type RunReport } from '#cli/types/runs/check.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildCheckInput } from '#tests/setup/check-input.ts';
+import { planSandboxCheck } from '#tests/setup/check-input.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { TEST_TARGET_PBXPROJ } from '#tests/data/checks/xcode.ts';
+import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { matchItems, matchFields, matchSubstring } from '#tests/setup/matchers.ts';
 
 import {
@@ -26,9 +26,8 @@ import {
 test.skipIf(!isMacos)(
     'swift/coverage reports a target under its coverage limit and passes after testing the uncovered function',
     async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['swift', 'xcode'], {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
                 tables: `[[coverage.swift_target]]
 name = "Inspection.xctest"
 lines = 100
@@ -46,10 +45,11 @@ xcode_destination = "platform=macOS"
             'Value.swift': XCTEST_COVERAGE_SOURCE,
             'ValueTests.swift': XCTEST_COVERAGE_TESTS,
         });
+
         try {
             const command = ['check', '--only', 'swift/coverage', '--json'];
-            const failedCommand = await spawnGspot(sandbox.path, command);
-            const failed = JSON.parse(failedCommand.stdout) as RunReport;
+            const failedCommand = parseCheckReport(await spawnGspot(sandbox.path, command));
+            const failed = failedCommand.report;
             expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
             expect(failed.checks).toMatchObject([
                 {
@@ -58,15 +58,15 @@ xcode_destination = "platform=macOS"
                     findings: [{ rule: 'coverage', line: 1, message: matchSubstring('under the limit of 100') }],
                 },
             ]);
-            await Bun.write(
+            await writeFile(
                 join(sandbox.path, 'ValueTests.swift'),
                 XCTEST_COVERAGE_TESTS.replace(
                     'XCTAssertEqual(first(), 1)',
                     'XCTAssertEqual(first(), 1)\n        XCTAssertEqual(second(), 2)',
                 ),
             );
-            const correctedCommand = await spawnGspot(sandbox.path, command);
-            const corrected = JSON.parse(correctedCommand.stdout) as RunReport;
+            const correctedCommand = parseCheckReport(await spawnGspot(sandbox.path, command));
+            const corrected = correctedCommand.report;
             expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
             expect(corrected.checks).toMatchObject([{ check: 'swift/coverage', status: 'passed', findings: [] }]);
             expect(await readFile(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(XCTEST_COVERAGE_SOURCE);
@@ -74,12 +74,11 @@ xcode_destination = "platform=macOS"
                 TEST_TARGET_PBXPROJ,
             );
         } finally {
-            await rm(
-                buildPlan(buildCheckInput(await openSession(sandbox.path), 'swift/coverage'), {
-                    purpose: 'coverage',
-                }).folder,
-                { recursive: true, force: true },
-            );
+            const session = await openSession(sandbox.path);
+            await rm(buildPlan(session, planSandboxCheck(session, 'swift/coverage'), { purpose: 'coverage' }).folder, {
+                recursive: true,
+                force: true,
+            });
         }
     },
 );
@@ -90,7 +89,7 @@ async function prepareSwiftScope(scope: string) {
     const root = sandbox.path;
     const prefix = scope === '' ? '' : `${scope}/`;
     await createFileTree(root, {
-        'gspot.toml': buildSettingsText(scope === '' ? ['swift'] : [], {
+        'gspot.toml': buildSandboxSettings(scope === '' ? ['swift'] : [], {
             level: 'all',
             tables:
                 scope === ''
@@ -105,7 +104,7 @@ configurations = ["swift"]
         [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
     });
     expect(await spawnGspot(root, ['apply'])).toMatchObject({ code: 0 });
-    expect(await Bun.file(join(root, `${prefix}AppTests/.swiftlint.yml`)).exists()).toBe(true);
+    expect(await isOnDisk(join(root, `${prefix}AppTests/.swiftlint.yml`))).toBe(true);
     const lifetime = resources.move();
     return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
 }
@@ -115,10 +114,10 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     async ({ scope }) => {
         await using sandbox = await prepareSwiftScope(scope);
         const { root, prefix } = sandbox;
-        await Bun.write(join(root, `${prefix}Sources/Value.swift`), PARSER_SOURCE);
-        const broken = await spawnGspot(root, SWIFTLINT_COMMAND);
+        await writeFile(join(root, `${prefix}Sources/Value.swift`), PARSER_SOURCE);
+        const broken = parseCheckReport(await spawnGspot(root, SWIFTLINT_COMMAND));
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        const findings = (JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings);
+        const findings = broken.report.checks.flatMap((check) => check.findings);
         expect(findings).toStrictEqual(
             matchItems([
                 matchFields({ file: `${prefix}Sources/Value.swift`, rule: 'force_unwrapping' }),
@@ -127,7 +126,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
             ]),
         );
         expect(findings.every((finding) => finding.file === `${prefix}Sources/Value.swift`)).toBe(true);
-        await Bun.write(join(root, `${prefix}Sources/Value.swift`), FIXED_PARSER_SOURCE);
+        await writeFile(join(root, `${prefix}Sources/Value.swift`), FIXED_PARSER_SOURCE);
         const corrected = await spawnGspot(root, SWIFTLINT_COMMAND);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
@@ -137,13 +136,13 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     async ({ scope }) => {
         await using sandbox = await prepareSwiftScope(scope);
         const { root, prefix } = sandbox;
-        await Bun.write(
+        await writeFile(
             join(root, `${prefix}Sources/Value.swift`),
             FIXED_PARSER_SOURCE.replace('value: String', 'value:String'),
         );
         const fixed = await spawnGspot(root, [...SWIFTLINT_COMMAND, '--fix']);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-        expect(await Bun.file(join(root, `${prefix}Sources/Value.swift`)).text()).toBe(FIXED_PARSER_SOURCE);
+        expect(await readFile(join(root, `${prefix}Sources/Value.swift`), 'utf8')).toBe(FIXED_PARSER_SOURCE);
     },
 );
 test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
@@ -161,9 +160,8 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
 test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
     'a Swift test scope %s gets one complete SwiftLint tool file',
     async (scope) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText([], {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([], {
                 tables: `[[scope]]
 path = "${scope}"
 configurations = ["swift"]
@@ -172,8 +170,9 @@ configurations = ["swift"]
             }),
             [`${scope}/Value.swift`]: PARSER_SOURCE,
         });
+
         expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
-        expect(await Bun.file(join(sandbox.path, `${scope}/.swiftlint.yml`)).exists()).toBe(true);
+        expect(await isOnDisk(join(sandbox.path, `${scope}/.swiftlint.yml`))).toBe(true);
         const toolResult = await runCommand(
             ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
             { cwd: join(sandbox.path, scope) },

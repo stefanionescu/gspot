@@ -2,14 +2,13 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
-import type { RunReport } from '#cli/types/runs/check.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
 import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { createCompilerCache } from '#tests/setup/check-input.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { SWIFT_PACKAGE_CASES, SWIFT_PACKAGE_SANDBOX } from '#tests/data/checks/swift/package.ts';
 import { runCheckSample, expectedSummary, summarizeSample } from '#tests/setup/sample-checks.ts';
 import { XCODE_TOOL_SCHEME, XCODE_TOOL_PROJECT, XCODE_BUILD_SETTINGS } from '#tests/data/checks/xcode.ts';
@@ -20,7 +19,7 @@ test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports
     await using sandbox = await testdir();
     await using _cache = await createCompilerCache();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['swift']),
+        'gspot.toml': buildSandboxSettings(['swift']),
         'Package.swift': SWIFT_LANGUAGE_PACKAGE,
         'Sources/Example/Value.swift': SWIFT_VALUE_SOURCE,
     });
@@ -35,17 +34,15 @@ test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports
     expect(again.code, again.stdout + again.stderr).toBe(0);
     expect(await stat(compiledFile)).toMatchObject({ mtimeMs: modified });
     await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), SWIFT_VALUE_ERROR);
-    const failedBuild = await runGspot(sandbox.path, command);
+    const failedBuild = parseCheckReport(await runGspot(sandbox.path, command));
     expect(failedBuild.code, failedBuild.stdout + failedBuild.stderr).toBe(1);
-    expect((JSON.parse(failedBuild.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(failedBuild.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
     ]);
     await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
-    const repairedBuild = await runGspot(sandbox.path, command);
+    const repairedBuild = parseCheckReport(await runGspot(sandbox.path, command));
     expect(repairedBuild.code, repairedBuild.stdout + repairedBuild.stderr).toBe(0);
-    expect((JSON.parse(repairedBuild.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual(
-        [],
-    );
+    expect(repairedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
 
 // This check needs the Xcode toolchain supplied by macOS.
@@ -57,7 +54,7 @@ test.skipIf(!isMacos)(
         const project = XCODE_TOOL_PROJECT;
         const source = 'let value: Int = 1\nprint(value)\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['swift', 'xcode'], {
+            'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
                 tables: XCODE_BUILD_SETTINGS,
             }),
             'Example.xcodeproj/project.pbxproj': project,
@@ -73,11 +70,9 @@ test.skipIf(!isMacos)(
         const times = await Promise.all(
             compiledFiles.map((file) => stat(join(readCacheFolder(), file)).then(({ mtimeMs }) => mtimeMs)),
         );
-        const commentedBuild = await runGspot(sandbox.path, command);
+        const commentedBuild = parseCheckReport(await runGspot(sandbox.path, command));
         expect(commentedBuild.code, commentedBuild.stdout + commentedBuild.stderr).toBe(0);
-        expect(
-            (JSON.parse(commentedBuild.stdout) as RunReport).checks.flatMap(({ findings }) => findings),
-        ).toStrictEqual([]);
+        expect(commentedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
         expect(
             await Promise.all(
                 compiledFiles.map((file) => stat(join(readCacheFolder(), file)).then(({ mtimeMs }) => mtimeMs)),
@@ -88,17 +83,15 @@ test.skipIf(!isMacos)(
         expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('authored content\n');
         expect(await isOnDisk(join(sandbox.path, 'build'))).toBe(false);
         await writeFile(join(sandbox.path, 'main.swift'), 'let value: Int = "wrong"\nprint(value)\n');
-        const changedBuild = await runGspot(sandbox.path, command);
+        const changedBuild = parseCheckReport(await runGspot(sandbox.path, command));
         expect(changedBuild.code, changedBuild.stdout + changedBuild.stderr).toBe(1);
-        expect((JSON.parse(changedBuild.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject(
-            [{ file: 'main.swift', line: 1, column: 18, rule: 'compiler' }],
-        );
+        expect(changedBuild.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
+            { file: 'main.swift', line: 1, column: 18, rule: 'compiler' },
+        ]);
         await writeFile(join(sandbox.path, 'main.swift'), source);
-        const restoredBuild = await runGspot(sandbox.path, command);
+        const restoredBuild = parseCheckReport(await runGspot(sandbox.path, command));
         expect(restoredBuild.code, restoredBuild.stdout + restoredBuild.stderr).toBe(0);
-        expect(
-            (JSON.parse(restoredBuild.stdout) as RunReport).checks.flatMap(({ findings }) => findings),
-        ).toStrictEqual([]);
+        expect(restoredBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     },
 );
 

@@ -7,15 +7,14 @@ import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { planKeyChanges } from '#cli/ownership/managed-keys.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import type { BlockStyle } from '#cli/types/system/managed-blocks.ts';
 import { isInGspotFolder, hasGeneratedHeader } from '#cli/repository/classify.ts';
+import type { Writer, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { readBlock, replaceBlock, findBlockSpan } from '#cli/system/managed-blocks.ts';
-import type { Writer, FileEdit, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
 import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/system/locations.ts';
 
 // Markdown comments keep block markers out of the displayed document.
@@ -48,7 +47,7 @@ function removeBlock(path: string, current: FileContents): FileContents | undefi
  * @param disk the repository reader.
  * @returns whether gspot owns the whole file.
  */
-export function isOwned(path: string, disk: Files): boolean {
+function isOwned(path: string, disk: Files): boolean {
     if (!isInside(path)) return false;
     if (isInGspotFolder(path)) return true;
     const file = disk.readKeepingLinks(path);
@@ -68,10 +67,7 @@ export function isOwned(path: string, disk: Files): boolean {
  * @param expected the generated destinations that remain.
  * @returns the obsolete generated paths.
  */
-export function listStrayPaths(
-    session: Pick<Session, 'root' | 'repository' | 'settingsFile'>,
-    expected: ReadonlySet<string>,
-): string[] {
+export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, expected: ReadonlySet<string>): string[] {
     using disk = openFiles(session.root);
     const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
     const installations = [STATE_PATH, ...Object.values(INSTALLED_TOOL_FOLDERS)];
@@ -114,7 +110,7 @@ export function planReplacement(writer: Writer, request: ReplacementRequest): Wr
         current !== undefined &&
         !isSameContents(current, next) &&
         !isOwned(path, writer.files) &&
-        request.canReplace !== true
+        expected === undefined
     )
         return { path, before: current, status: 'preserved' };
     return {
@@ -143,20 +139,6 @@ export function planBlock(writer: Writer, path: string, body: string, style: Blo
         mode: current?.mode ?? OWNER_WRITABLE_FILE,
     };
     return { path, before: current, after: next, status: isSameContents(current, next) ? 'unchanged' : 'changed' };
-}
-
-/**
- * Merge the managed keys into a shared file.
- *
- * @param writer the locked repository handle.
- * @param path the destination.
- * @param changes the keys and requested values.
- * @returns the key write plan.
- */
-export function planManagedKeys(writer: Writer, path: string, changes: FileEdit['changes']): WritePlan {
-    const current = writer.files.read(path);
-    const plan = planKeyChanges({ path, changes, current });
-    return { path, before: current, after: plan.next, status: plan.status };
 }
 
 /**

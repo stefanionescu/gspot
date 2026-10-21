@@ -1,12 +1,17 @@
 import plugin from '#eslint-plugin/plugin.ts';
+import { isRecord } from '#cli/system/values.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import type { PluginRule, ReferencePage } from '../types/reference.ts';
-import { formatList, escapeCell, formatTable, buildReferencePage } from './markdown.ts';
 import { FIRST_SENTENCE, REFERENCE_FOLDERS, SCHEMA_TYPE_LABELS } from '../config/reference.ts';
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
+import {
+    formatCode,
+    formatList,
+    escapeCell,
+    formatTable,
+    buildReferencePage,
+    formatReferencePath,
+} from './markdown.ts';
 
 function formatRuleOptions(schemas: unknown, defaults: unknown): string {
     const labels: Readonly<Record<string, string>> = SCHEMA_TYPE_LABELS;
@@ -17,9 +22,9 @@ function formatRuleOptions(schemas: unknown, defaults: unknown): string {
             const value = isRecord(defaults) ? defaults[option] : undefined;
             const type = isRecord(shape) && typeof shape['type'] === 'string' ? shape['type'] : 'Value';
             return [
-                `\`${option}\``,
+                formatCode(option),
                 labels[type] ?? type,
-                value === undefined ? 'Unset' : `\`${escapeCell(JSON.stringify(value))}\``,
+                value === undefined ? 'Unset' : formatCode(escapeCell(JSON.stringify(value))),
                 isRecord(shape) && typeof shape['description'] === 'string'
                     ? escapeCell(shape['description'])
                     : 'See the example.',
@@ -39,7 +44,7 @@ function listRuleConfigs(name: string): string[] {
 // The sentence that names the configs that turn a rule on.
 function formatRuleConfigs(configs: string[]): string {
     if (configs.length === 0) return 'No config turns it on; turn it on in your ESLint config.';
-    const names = formatList(configs.map((config) => '`' + config + '`'));
+    const names = formatList(configs.map((config) => formatCode(config)));
     return configs.length === 1 ? `The ${names} config turns it on.` : `The ${names} configs turn it on.`;
 }
 
@@ -53,7 +58,7 @@ export function listPluginRules(): PluginRule[] {
         .toSorted(([left], [right]) => left.localeCompare(right))
         .map(([name, rule]) => ({
             name: `${PLUGIN_PREFIX}/${name}`,
-            link: `/reference/${REFERENCE_FOLDERS.eslintPlugin}/${name}/`,
+            link: formatReferencePath('eslintPlugin', name),
             configs: listRuleConfigs(name),
             // The table shows the first sentence; the rule page holds the rest.
             summary: (FIRST_SENTENCE.exec(rule.meta.docs.description)?.[0] ?? rule.meta.docs.description).trim(),

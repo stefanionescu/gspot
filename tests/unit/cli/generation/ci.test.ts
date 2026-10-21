@@ -1,18 +1,19 @@
 import { parse } from 'yaml';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/session.ts';
+import { isOnDisk } from '#tests/setup/files.ts';
 import { chmod, readFile } from 'node:fs/promises';
-import { testdir, createFileTree } from 'testdirs';
 import { quoteArgument } from '#cli/system/text.ts';
 import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { runCommand } from '#tests/setup/processes.ts';
 import { type Pipeline } from '#cli/types/generation/ci.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { listProjectInstallLines } from '#cli/generation/project-install.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
-import { buildGithubWorkflow, buildGitlabWorkflow } from '#cli/generation/ci.ts';
+import { assertPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
+import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 
 import {
     SETUP_CASES,
@@ -109,12 +110,12 @@ test.each(SETUP_CASES)(
         await using resources = new AsyncDisposableStack();
         const selectedPipeline = await buildPipeline(resources);
 
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             'bin/mise': MISE_PROGRAM,
             'bin/gspot': GSPOT_PROGRAM,
             'bin/project setup': SETUP_PROGRAM,
         });
+
         for (const name of ['mise', 'gspot', 'project setup']) await chmod(join(sandbox.path, 'bin', name), 0o755);
         const commands = join(sandbox.path, 'commands.log');
         const argumentsPath = join(sandbox.path, 'arguments.log');
@@ -144,7 +145,7 @@ test.each(SETUP_CASES)(
         expect(result.stderr).toBe('setup err\n');
         expect(await readFile(commands, 'utf8')).toBe(setupExit === 0 ? 'setup\ninstall\ncheck\n' : 'setup\n');
         expect(await readFile(argumentsPath, 'utf8')).toBe(`${SETUP_ARGUMENTS.join('\n')}\n`);
-        expect(await Bun.file(join(sandbox.path, 'unexpected')).exists()).toBe(false);
+        expect(await isOnDisk(join(sandbox.path, 'unexpected'))).toBe(false);
     },
 );
 
@@ -152,7 +153,7 @@ test.each(SETUP_CASES)(
 async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline> {
     const sandbox = resources.use(
         await testdir({
-            'gspot.toml': buildSettingsText(['docs'], {
+            'gspot.toml': buildSandboxSettings(['docs'], {
                 tables: '[[command_check]]\nname = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
             }),
             'README.md': '# Example\n',
@@ -160,7 +161,15 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
         }),
     );
     const session = await openSession(sandbox.path);
-    const packageManager = session.getPackageManager();
+    const packageManager =
+        session.packageManager === undefined
+            ? undefined
+            : readPackageManagerVersion(
+                  session.installedRoot,
+                  assertPackageManager(session.packageManager),
+                  session.timeoutSeconds,
+                  session.reads,
+              );
     const pipeline: Pipeline = {
         ...LINUX_PIPELINE,
         operatingSystems: [...LINUX_PIPELINE.operatingSystems],
@@ -175,10 +184,10 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
 }
 
 test('without a setup command, CI installs the locked dependencies of each project and writes Next.js route types', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['javascript', 'python'], {
-            tables: '[ci]\nenabled = true\nprovider = "github"\n[[scope]]\npath = "web"\nconfigurations = ["nextjs"]\n',
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'python'], {
+            tables: '[ci]\nenabled = true\nprovider = "github"\n',
+            scopes: [{ path: 'web', configurations: ['nextjs'] }],
         }),
         'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
         'package-lock.json': '{"lockfileVersion":3}',
@@ -190,6 +199,7 @@ test('without a setup command, CI installs the locked dependencies of each proje
         'main.py': 'value = 1\n',
         'web/app/page.tsx': 'export default function Page() { return null; }\n',
     });
+
     const session = await openSession(sandbox.path);
     const uv = session.manifests.get('python')!.tools.find(({ name }) => name === 'uv')?.version;
     expect(listProjectInstallLines(session)).toStrictEqual([

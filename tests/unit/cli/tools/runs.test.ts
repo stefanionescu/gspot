@@ -1,18 +1,18 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runTool } from '#cli/tools/run.ts';
 import { openSession } from '#cli/session.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
-import { buildCheckInput } from '#tests/setup/check-input.ts';
+import { planSandboxCheck } from '#tests/setup/check-input.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 test("a tool's output reaches its check with LF line endings when the tool prints CRLF", async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildSettingsText(['bash']) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
+
     const session = await openSession(sandbox.path);
-    const input = buildCheckInput(session, 'bash/shfmt');
+    const input = planSandboxCheck(session, 'bash/shfmt');
     const printed = String.raw`process.stdout.write('one\r\ntwo\r\n'); process.stderr.write('three\r\n');`;
-    const result = await runCheckTool(input, [process.execPath, '-e', printed], { cwd: sandbox.path });
+    const result = await runCheckTool(session, input, [process.execPath, '-e', printed], { cwd: sandbox.path });
     expect(result.stdout).toBe('one\ntwo\n');
     expect(result.stderr).toBe('three\n');
 });

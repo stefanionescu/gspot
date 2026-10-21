@@ -8,10 +8,10 @@ import { runCommand } from '#tests/setup/processes.ts';
 import { spawnGspot } from '#tests/setup/run-gspot.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
+import { PYTHON_VERSION } from '#cli/config/parsers/dependencies.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
 import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
-import { PYTHON_VERSION } from '#cli/config/parsers/dependency-files.ts';
 import { installToolProjects, readToolProjectFiles } from '#tests/setup/install.ts';
 import { createPythonSandbox, createIndexedPythonSandbox } from '#tests/setup/python-index.ts';
 import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/data/install/python-tool-project.ts';
@@ -33,7 +33,7 @@ test.each([...PYTHON_PROJECTS])(
         expect(command.code, command.stdout + command.stderr).toBe(0);
         const steps = (JSON.parse(command.stdout) as { steps: string[][] }).steps;
         const session = await openSession(repository.path);
-        const miseTools = listMisePins(session.neededToolManifests, session.reads).map(({ name }) => name);
+        const miseTools = listMisePins(session.neededToolManifests).map(({ name }) => name);
         expect(
             steps.map((step) => (step[0] === 'mise' ? step : ['uv', ...step.slice(1, step.indexOf('--project'))])),
         ).toStrictEqual([
@@ -72,7 +72,6 @@ test.each([...PYTHON_PROJECTS])(
         commitAll(repository.path);
         readGitOutput(repository.path, ['clone', '--quiet', '--no-local', repository.path, clone]);
         expect(await isOnDisk(join(clone, '.gspot/.venv'))).toBe(false);
-        expect(await isOnDisk(join(clone, '.gspot/state/ownership.json'))).toBe(false);
         for (let attempt = 0; attempt < 2; attempt++) {
             {
                 const installed = await spawnGspot(clone, ['install']);

@@ -13,6 +13,8 @@ import {
     SHA256,
     ENTRY_PATH,
     BINARY_BLOB,
+    BLOB_FAILURE,
+    ENTRY_FAILURE,
     INVALID_BLOBS,
     INVALID_ENTRIES,
     ATTRIBUTE_LINES,
@@ -40,7 +42,9 @@ test('tree entries keep full object IDs, modes and unquoted paths', () => {
     expect(parseTreeEntries(Buffer.alloc(0))).toStrictEqual([]);
 });
 
-test.each([...INVALID_ENTRIES])(`a Git entry listing is refused: $name`, ({ name, output, message }) => {
+test.each([...INVALID_ENTRIES])(`a Git entry listing is refused: $name`, (entry) => {
+    const { name, output } = entry;
+    const message = 'message' in entry ? entry.message : ENTRY_FAILURE;
     const bytes =
         typeof output === 'string'
             ? Buffer.from(output)
@@ -100,7 +104,7 @@ test('a batch keeps binary content and an empty blob in response order', async (
     ).toStrictEqual(new Map());
 });
 
-test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output, message }) => {
+test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output }) => {
     expect(
         await captureRejection(
             Array.fromAsync(
@@ -113,7 +117,7 @@ test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output, mess
                 ),
             ),
         ),
-    ).toMatch(new RegExp(message));
+    ).toBe(BLOB_FAILURE);
 });
 
 test.each([0, 1])('index entries keep stage %i and the full object ID', (stage) => {

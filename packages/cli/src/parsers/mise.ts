@@ -1,24 +1,17 @@
 // Reads mise task names and their aliases.
-import { z } from 'zod';
-import { parse } from '@decimalturn/toml-patch';
 import { isRecord } from '#cli/system/values.ts';
-import type { SchemaShape } from '#cli/types/shapes.ts';
-
-const miseTasksSchema = z.object({ tasks: z.record(z.string(), z.unknown()).default({}) } satisfies SchemaShape<{
-    tasks: Record<string, unknown>;
-}>);
-const miseTaskAliasSchema = z.object({
-    alias: (z.union([z.string(), z.array(z.string())]) satisfies z.ZodType<string | string[]>).optional(),
-} satisfies SchemaShape<{ alias?: string | string[] | undefined }>);
+import { parseTomlFile } from '#cli/parsers/toml/document.ts';
+import { miseTasksSchema, miseTaskAliasSchema } from '#cli/schemas/parsers/mise.ts';
 
 /**
  * Read task names and aliases from a mise document.
  *
  * @param text the mise TOML contents.
+ * @param path the source mise file.
  * @returns task names and the aliases explicitly declared for them.
  */
-export function parseMiseTasks(text: string): string[] {
-    const { tasks } = miseTasksSchema.parse(parse(text));
+export function parseMiseTasks(text: string, path: string): string[] {
+    const { tasks } = parseTomlFile(path, text, miseTasksSchema);
     return Object.entries(tasks).flatMap(([name, task]) => {
         const alias = isRecord(task) ? miseTaskAliasSchema.parse(task).alias : undefined;
         return [name, ...[alias ?? []].flat()];

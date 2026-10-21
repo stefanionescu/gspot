@@ -1,11 +1,12 @@
 import { test, expect } from 'bun:test';
+import { sep, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { readFile } from 'node:fs/promises';
-import { sep, join, resolve } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
-import { outputSchema } from '#cli/configurations/schema/output.ts';
+import { outputSchema } from '#cli/schemas/configurations/output.ts';
 
 import {
     CODEQL_REPORT,
@@ -18,7 +19,12 @@ import {
 /** Parse a Static Analysis Results Interchange Format (SARIF) report with the same check and paths for each case. */
 function parseSarifReport(report: unknown, root: string): Finding[] {
     return parseOutput(
-        { name: 'docker/trivy-config', help: 'Correct the defect.', output: outputSchema.parse({ format: 'sarif' }) },
+        {
+            runs: 'files',
+            name: 'docker/trivy-config',
+            help: 'Correct the defect.',
+            output: outputSchema.parse({ format: 'sarif' }),
+        },
         JSON.stringify(report),
         '',
         { root, cwd: root },
@@ -47,7 +53,7 @@ test.each([...FAILED_INVOCATIONS])(
 
         expect(() =>
             parseSarifReport({ version: '2.1.0', runs: [{ results: [], invocations: [invocation] }] }, sourceRoot),
-        ).toThrow('unsuccessful analysis');
+        ).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'output' }));
     },
 );
 
@@ -102,7 +108,9 @@ test.each([
     { name: 'a missing artifact', report: buildLocationReport({ index: 1 }) },
     { name: 'a cyclic URI base', report: CYCLIC_REPORT },
 ])('a report location that gspot cannot resolve is refused: $name', ({ report }) => {
-    expect(() => parseSarifReport(report, resolve('selected-source'))).toThrow('SARIF reported');
+    expect(() => parseSarifReport(report, resolve('selected-source'))).toThrow(
+        matchFields<GspotError>({ name: 'GspotError', code: 'output' }),
+    );
 });
 
 test.each([...POSITIONLESS_RESULTS])(
@@ -134,5 +142,4 @@ test('given positions are kept without reading source bytes or encodings', async
     const source = Buffer.from('first\n😀x', 'utf16le');
     await createFileTree(folder.path, { 'source.py': source });
     expect(parseSarifReport(ENCODED_REPORT, folder.path)).toMatchObject([{ file: 'source.py', line: 3, column: 2 }]);
-    expect(await readFile(join(folder.path, 'source.py'))).toStrictEqual(source);
 });

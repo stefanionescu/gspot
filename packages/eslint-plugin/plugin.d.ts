@@ -1,4 +1,3 @@
-/* eslint-disable gspot/no-trivial-files -- reason: npm exposes this declaration file as the public type entry for the bundled plugin. */
 import type { TSESLint } from '@typescript-eslint/utils';
 
 declare const plugin: TSESLint.FlatConfig.Plugin & {

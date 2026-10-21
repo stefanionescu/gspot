@@ -1,17 +1,21 @@
 // Build readable GitHub workflows and GitLab includes from the checks.
 import { quoteArgument } from '#cli/system/text.ts';
+import { UV_TOOL } from '#cli/config/tools/python.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { formatHeader } from '#cli/generation/header.ts';
-import { TOOL_BUILDS } from '#cli/config/configurations.ts';
-import { DOT_GSPOT } from '#cli/config/system/locations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { listRequiredTools } from '#cli/planning/needed-tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/operating-systems.ts';
-import { findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
+import { DOT_GSPOT, PROJECT_UV_LOCKFILE } from '#cli/config/system/locations.ts';
+import { TOOL_BUILDS, NEXTJS_CONFIGURATION } from '#cli/config/configurations.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
+import { findMisePin, findMissingBuild, getToolDeclaration } from '#cli/configurations/tools.ts';
+import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/package-manager.ts';
 
 import {
     CI_PINS,
@@ -22,11 +26,14 @@ import {
     CI_STEP_NAMES,
     GITHUB_EVENTS,
     CI_CACHE_FILES,
+    FROZEN_INSTALLS,
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
     CI_BASE_VARIABLE,
     CHECKOUT_OPTIONS,
     GITLAB_BASE_LINE,
+    NEXT_TYPEGEN_LINE,
+    YARN_BERRY_INSTALL,
     GITHUB_CONCURRENCY,
     CI_TIMEOUT_MINUTES,
     MISE_TOKEN_ENVIRONMENT,
@@ -72,7 +79,9 @@ function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSys
     const required = new Set(checks.flatMap((check) => listRequiredTools(check)));
     const tools = pipeline.manualTools.flatMap((tool) => {
         const pin = findMisePin(tool);
-        return pin !== undefined && required.has(tool.name) && findMissingBuild(tool, platform, arch) === undefined
+        return pin !== undefined &&
+            required.has(tool.name) &&
+            findMissingBuild(tool, { platform: platform, arch: arch }) === undefined
             ? [pin.name]
             : [];
     });
@@ -141,6 +150,15 @@ function spaceWorkflowGroups(workflow: Document): void {
     }
 }
 
+function listManualLines(command: string, manual: { checks: string[]; tools: string[] }): string[] {
+    return [
+        ...(manual.tools.length === 0
+            ? []
+            : [`(cd ${DOT_GSPOT} && mise install ${manual.tools.map((tool) => quoteArgument(tool)).join(' ')})`]),
+        `${command} check --only ${quoteArgument(manual.checks.join(CHECK_LIST_SEPARATOR))}`,
+    ];
+}
+
 /**
  * Generate the check job and the manual jobs for each machine with one mise setup.
  *
@@ -149,14 +167,15 @@ function spaceWorkflowGroups(workflow: Document): void {
  * @returns the GitHub workflow file.
  */
 function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
-    const command = `${buildGspotCommand(pipeline)} check`;
+    const command = buildGspotCommand(pipeline);
+    const checkScript = buildCheckScript(`${command} check`);
     const check: GithubCheck = {
         step: {
             name: CI_STEP_NAMES.check,
             env: {
                 [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION,
             },
-            run: `${buildCheckScript(command)}\n`,
+            run: `${checkScript}\n`,
         },
     };
     const platforms = [...new Set([...pipeline.operatingSystems, ...(pipeline.hasSwift ? (['macos'] as const) : [])])];
@@ -181,15 +200,7 @@ function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
                                 step: {
                                     name: CI_STEP_NAMES.manual,
                                     ...(manual.tools.length === 0 ? {} : { env: { ...MISE_TOKEN_ENVIRONMENT } }),
-                                    run:
-                                        [
-                                            ...(manual.tools.length === 0
-                                                ? []
-                                                : [
-                                                      `(cd ${DOT_GSPOT} && mise install ${manual.tools.map((element) => quoteArgument(element)).join(' ')})`,
-                                                  ]),
-                                            `${buildGspotCommand(pipeline)} check --only ${quoteArgument(manual.checks.join(CHECK_LIST_SEPARATOR))}`,
-                                        ].join('\n') + '\n',
+                                    run: listManualLines(command, manual).join('\n') + '\n',
                                 },
                             }),
                         ]);
@@ -225,12 +236,7 @@ function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             if (manual.checks.length === 0) return [];
             return [
                 `    ${system.nodeName}/${arch})`,
-                ...(manual.tools.length === 0
-                    ? []
-                    : [
-                          `        (cd ${DOT_GSPOT} && mise install ${manual.tools.map((element) => quoteArgument(element)).join(' ')})`,
-                      ]),
-                `        ${command} check --only ${quoteArgument(manual.checks.join(CHECK_LIST_SEPARATOR))}`,
+                ...listManualLines(command, manual).map((line) => `        ${line}`),
                 '        ;;',
             ];
         }),
@@ -259,4 +265,46 @@ function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
 }
 
-export { buildGithubWorkflow, buildGitlabWorkflow };
+// uv runs at the version that the gspot tools pin, through mise, which every CI job of gspot has.
+function buildFrozenInstall(session: Session, lockfile: string): readonly string[] | undefined {
+    if (lockfile === PROJECT_UV_LOCKFILE) {
+        const { version } = getToolDeclaration(session.manifests.values(), UV_TOOL);
+        if (version === undefined) throw new Error('The uv tool declaration has no pinned version.');
+        return ['mise', 'exec', `${UV_TOOL}@${version}`, '--', ...(FROZEN_INSTALLS[lockfile] ?? [])];
+    }
+    const declared =
+        session.packageManager === undefined
+            ? undefined
+            : readPackageManagerVersion(
+                  session.installedRoot,
+                  assertPackageManager(session.packageManager),
+                  session.timeoutSeconds,
+                  session.reads,
+              );
+    if (lockfile === 'yarn.lock' && declared !== undefined && isYarnBerry(declared)) return [...YARN_BERRY_INSTALL];
+    return FROZEN_INSTALLS[lockfile];
+}
+
+/**
+ * List the shell lines that install the locked dependencies of each project, then write the route types of each
+ * Next.js project, which typed lint rules read.
+ *
+ * @param session the repository, its scopes, and its tools.
+ * @returns the lines, each run from the repository root.
+ */
+function listProjectInstallLines(session: Session): string[] {
+    const tracked = new Set(session.repository.files.map((file) => file.path));
+    return session.scopes.flatMap(({ scope, selected }) => {
+        const installs = Object.keys(FROZEN_INSTALLS)
+            .filter((lockfile) => tracked.has(joinScope(scope.path, lockfile)))
+            .flatMap((lockfile) => {
+                const command = buildFrozenInstall(session, lockfile);
+                return command === undefined ? [] : [command.map((argument) => quoteArgument(argument)).join(' ')];
+            });
+        const isNext = selected.some((manifest) => manifest.configuration.name === NEXTJS_CONFIGURATION);
+        const lines = [...installs, ...(isNext && installs.length > 0 ? [NEXT_TYPEGEN_LINE] : [])];
+        return scope.path === '' ? lines : lines.map((line) => `(cd ${quoteArgument(scope.path)} && ${line})`);
+    });
+}
+
+export { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines };

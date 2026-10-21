@@ -1,18 +1,14 @@
 import { join } from 'node:path';
 import picomatch from 'picomatch';
 import { test, expect } from 'bun:test';
-import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { stringify } from '@decimalturn/toml-patch';
+import { runGspot } from '#tests/setup/run-gspot.ts';
 import { unlink, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildManifest } from '#tests/setup/builders.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { buildFilePatterns } from '#cli/generation/eslint/files.ts';
 import { SELECTOR_FILES } from '#tests/data/generation/eslint/framework.ts';
-import { groupFragmentSelectors } from '#cli/generation/eslint/selectors.ts';
 import { createEslint, collectLintFindings } from '#tests/setup/tool-files.ts';
-import { SELECTOR_GROUP_CASES } from '#tests/data/generation/eslint/selectors.ts';
 
 import {
     SCOPE_IMPORT_FILES,
@@ -24,7 +20,7 @@ test.each([false, true])(
     'blocks > an ignore of an ESLint rule applies after your rule options (%j)',
     async (ignored) => {
         await using folder = await testdir();
-        const settings = buildSettingsText(['javascript'], {
+        const settings = buildSandboxSettings(['javascript'], {
             level: 'all',
             tables: '[tools.eslint.rules]\n"no-console" = [{allow = ["warn"]}]\n',
         });
@@ -99,11 +95,18 @@ test.each([false, true])(
 test.each([...LEVELS])(
     'blocks > React Native and react-hook-form syntax selectors report only at level all (%s)',
     async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+        await using sandbox = await testdir({
             ...SELECTOR_FILES,
-            'gspot.toml': `level = "${level}"\nconfigurations = ["javascript"]\n[[scope]]\npath = "native"\nconfigurations = ["react-native"]\n[[scope]]\npath = "forms"\nconfigurations = ["react", "react-hook-form"]\n`,
+            'gspot.toml': buildSandboxSettings(['javascript'], {
+                level: level,
+                rules: true,
+                scopes: [
+                    { path: 'native', configurations: ['react-native'] },
+                    { path: 'forms', configurations: ['react', 'react-hook-form'] },
+                ],
+            }),
         });
+
         const eslint = await createEslint(sandbox.path);
         expect(
             await collectLintFindings(
@@ -123,24 +126,6 @@ test.each([...LEVELS])(
     },
 );
 
-test.each(SELECTOR_GROUP_CASES)('blocks > generated selector blocks: $name', async ({ selectors, expected }) => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText(['javascript'], { level: 'all' }) });
-    const session = await openSession(sandbox.path);
-    const declaration = buildManifest('synthetic', { tables: stringify({ eslint: { selectors } }) });
-    const groups = groupFragmentSelectors(
-        [{ ...session.scopes[0]!, selected: [{ ...declaration, tools: [] }] }],
-        true,
-        'none',
-    );
-    const selected = new Set<string>(selectors.map((entry) => entry.selector));
-    expect(
-        groups.map(({ scope: _scope, ignoredScopes: _ignoredScopes, ...group }) => ({
-            ...group,
-            selectors: group.selectors.filter((entry) => selected.has(entry.selector)),
-        })),
-    ).toStrictEqual(expected);
-});
-
 test('files > Node file patterns match a filename with a backslash and not its neighbor', () => {
     const file = String.raw`scripts/run\name`;
     const patterns = buildFilePatterns({ components: [], scopes: [], nodeFiles: [file] }).code;
@@ -149,10 +134,9 @@ test('files > Node file patterns match a filename with a backslash and not its n
     expect(matches('scripts/runname')).toBe(false);
 });
 
-test('blocks > an override of no-restricted-imports keeps the bans of tools.eslint.restricted_imports', async () => {
-    await using folder = await testdir();
-    await createFileTree(folder.path, {
-        'gspot.toml': buildSettingsText(['javascript'], {
+test('an override of no-restricted-imports is refused with its owning setting', async () => {
+    await using folder = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
             tables: `[[tools.eslint.restricted_imports]]
 name = "lodash"
 message = "Use the built-in methods."
@@ -168,14 +152,12 @@ rules = { "no-restricted-imports" = [{ paths = [{ name = "moment", message = "Us
         'other.js':
             "import lodash from 'lodash';\nimport moment from 'moment';\nexport const both = [lodash, moment];\n",
     });
-    const eslint = await createEslint(folder.path);
-    expect(
-        await collectLintFindings(eslint, folder.path, ['app/source.js', 'other.js'], ['no-restricted-imports']),
-    ).toStrictEqual([
-        { file: 'app/source.js', rule: 'no-restricted-imports', line: 1 },
-        { file: 'app/source.js', rule: 'no-restricted-imports', line: 2 },
-        { file: 'other.js', rule: 'no-restricted-imports', line: 1 },
-    ]);
+
+    const refused = await runGspot(folder.path, ['apply']);
+    expect(refused.code).toBe(2);
+    expect(refused.stdout + refused.stderr).toContain(
+        'gspot.toml: tools.eslint.override.0.rules.no-restricted-imports: gspot writes the options of no-restricted-imports from tools.eslint.restricted_imports. Change that setting instead: gspot set tools.eslint.restricted_imports <value>, with --reason when you raise it.',
+    );
 });
 
 test.each([...LEVELS])(
@@ -183,7 +165,7 @@ test.each([...LEVELS])(
     async (level) => {
         await using folder = await testdir({
             ...SCOPE_IMPORT_FILES,
-            'gspot.toml': buildSettingsText(['javascript'], { level, tables: SCOPE_IMPORT_TABLES }),
+            'gspot.toml': buildSandboxSettings(['javascript'], { level, tables: SCOPE_IMPORT_TABLES }),
         });
         const eslint = await createEslint(folder.path);
         expect(
@@ -208,13 +190,9 @@ test.each([...LEVELS])(
 test('a JavaScript child applies its import restrictions under a Python root', async () => {
     await using folder = await testdir({
         'app/source.js': SCOPE_IMPORT_FILES['app/source.js'],
-        'gspot.toml': buildSettingsText(['python'], {
-            tables: `[[scope]]
-path = "app"
-configurations = ["javascript"]
-[scope.tools.eslint]
-restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
-`,
+        'gspot.toml': buildSandboxSettings(['python'], {
+            scopes: [{ path: 'app', configurations: ['javascript'] }],
+            tables: '[scope.tools.eslint]\nrestricted_imports = [{ name = "node:fs", message = "Use the storage service." }]\n',
         }),
     });
     const eslint = await createEslint(folder.path);

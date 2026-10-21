@@ -24,10 +24,8 @@ for cleanup that can run safely on the relevant exit path.
 
 <!-- level: all -->
 
-End an executable script with a meaningful status. A final message, a false condition, or an
-optional cleanup check must not set the exit status by accident. Use
-an explicit `exit 0` only when the final command's status differs from the program result and
-prior checks establish success.
+Open an executable script with its shebang and `set -euo pipefail`.
+When it defines functions, define `main` and call it last, as `main "$@"`.
 
 ## Options
 
@@ -63,6 +61,11 @@ boundary. Use `${1:-}` where callers can omit an argument.
 Write messages with `printf`, not `echo`. Return or exit with the intended status: printing
 an error does not make a command fail.
 
+End an executable script with a meaningful status. A final message, a false condition, or an
+optional cleanup check must not set the exit status by accident. Use
+an explicit `exit 0` only when the final command's status differs from the program result and
+prior checks establish success.
+
 ```bash
 # log_status: Prints a timestamped diagnostic line to stderr.
 # Arguments:
@@ -91,17 +94,15 @@ A public, sourced, complex, or risky function carries the full header with `Glob
 
 ## Naming
 
-### Bash case rules
-
 <!-- level: all -->
+
+### Bash case rules
 
 - Executable scripts use `.sh` when invoked through a task runner or build
   rules.
 - Omit the extension on an executable script only when users invoke it
   as a command on `PATH`.
 - Give sourced libraries the `.sh` extension and no executable permission.
-- Numbered pipeline steps use `NN-description.sh`, such as `01-install.sh`; the naming check strips
-  the numeric prefix before it matches the stem.
 - Functions and mutable variables use `lower_snake_case`.
 - Use `::` in package-like function prefixes only when a script family already
   follows that convention.
@@ -117,8 +118,6 @@ Name a deployment function `deploy_api` and its local target
 
 ### Bash variables
 
-<!-- level: all -->
-
 - Name each loop variable after its item.
 - Name a temporary path after what it holds, such as `download_file` or `work_dir`; `tmp` and
   `temp` say nothing.
@@ -131,8 +130,6 @@ the captured output. A loop variable such as `i` does not describe a file.
 
 ### Bash functions
 
-<!-- level: all -->
-
 - Give a function with side effects a verb-phrase name.
 - Name a function that writes to `stdout` for the data it prints.
 - Do not name scripts or functions after shell builtins or common commands.
@@ -142,8 +139,6 @@ Name a port validator `validate_port`. Avoid `test`, which shadows a shell built
 generic names such as `run` or `process`.
 
 ### Files
-
-<!-- level: all -->
 
 - Put a related script family in its own subfolder, and give its files role names such as
   `main.sh`, `state.sh`, `query.sh`, or `report.sh`.

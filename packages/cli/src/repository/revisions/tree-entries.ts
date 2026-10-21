@@ -1,9 +1,9 @@
 // Reads committed Git entries and blob contents.
 import { GspotError } from '#cli/system/errors.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
-import { runGit, runGitForBytes } from '#cli/system/git.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
+import { runGit, runGitStream, runGitForBytes } from '#cli/system/git.ts';
 import { parseGitBlobs, parseTreeEntries, stripIndexStages } from '#cli/parsers/git.ts';
 
 import {
@@ -52,7 +52,7 @@ export async function visitGitBlobs(
 ): Promise<void> {
     const blobs = [...new Set(requested)];
     if (blobs.length === 0) return;
-    const result = await runGit(
+    const result = await runGitStream(
         repositoryRoot,
         BLOBS_ARGUMENTS,
         {

@@ -1,24 +1,24 @@
 import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
+import { stripUndefined } from '#cli/system/values.ts';
+import { listSettings } from '#cli/settings/inherit.ts';
 import { formatScopeLabel } from '#cli/system/terminal.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { planRun, isActive } from '#cli/planning/checks.ts';
-import { isRecord, stripUndefined } from '#cli/system/values.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { type Session, type PlannedCheck } from '#cli/types/planning.ts';
 import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
 import { type Settings, type ScopeSelection } from '#cli/types/settings/values.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { listSettings, getWrittenSetting, listSettingsTables } from '#cli/settings/inherit.ts';
 import { type ListKind, type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
-function formatScopeTag(scope: string | undefined): string {
-    return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
+function formatScopeTag(scope: string): string {
+    return scope === '' ? '' : `  [scope ${scope}]`;
 }
 
 function buildSettingsResult(session: Session): CommandResult {
-    const { settings: rows, extras } = buildSettingRows(session.settingsFile.settings, session.scopes);
+    const { settings: rows } = buildSettingRows(session.settingsFile.settings, session.scopes);
     const displayed = rows.filter(
         (row) => row.scope === '' || (row.origin === 'scope' && row.originScope === row.scope),
     );
@@ -29,14 +29,7 @@ function buildSettingsResult(session: Session): CommandResult {
         return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reason_needed ?? '').padEnd('reason needed when'.length)}  ${row.source}${formatScopeTag(row.scope)}`;
     });
     lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} reason needed when  source`);
-    if (extras.length > 0) {
-        lines.push('', 'extra tool options (gspot passes them on unchecked)');
-        for (const extra of extras)
-            lines.push(
-                `  tools.${extra.tool}.extra  ${extra.keys.join(', ')}  ${extra.reason ?? ''}${formatScopeTag(extra.scope)}`,
-            );
-    }
-    return { text: `${lines.join('\n')}\n`, json: { settings: rows, extras } satisfies SettingsListJson, exitCode: 0 };
+    return { text: `${lines.join('\n')}\n`, json: { settings: rows } satisfies SettingsListJson, exitCode: 0 };
 }
 
 function buildConfigurationsResult(session: Session): CommandResult {
@@ -83,27 +76,13 @@ function buildConfigurationsResult(session: Session): CommandResult {
 }
 
 /**
- * List every setting for each scope, and each extra tool options table that you wrote.
+ * List every setting for each scope.
  *
  * @param settings the parsed gspot.toml.
  * @param scopes the settings that apply in each scope.
- * @returns the rows and the extra tables.
+ * @returns values and their inheritance sources for every selected scope.
  */
 function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): SettingsListJson {
-    const extras = listSettingsTables(settings).flatMap(({ table, scope = '' }) =>
-        (table.tools === undefined ? [] : Object.entries(table.tools)).flatMap(([tool, { extra }]) =>
-            isRecord(extra)
-                ? [
-                      stripUndefined({
-                          tool,
-                          keys: Object.keys(extra),
-                          reason: getWrittenSetting(table, `tools.${tool}.extra`)?.reason,
-                          scope,
-                      }),
-                  ]
-                : [],
-        ),
-    );
     const rows = scopes.flatMap((selection) => {
         const scope = selection.scope.path;
         return listSettings(selection.known, settings, scope)
@@ -118,13 +97,12 @@ function buildSettingRows(settings: Settings, scopes: ScopeSelection[]): Setting
                 scope,
             }));
     });
-    return { settings: rows, extras };
+    return { settings: rows };
 }
 
 function formatCheckStatus(check: PlannedCheck | undefined): string {
     if (check === undefined) return 'off (level)';
-    if (check.skip !== undefined)
-        return check.skip.cause === 'inputs' ? 'no matching files' : `off (${check.skip.cause})`;
+    if (check.skip !== undefined) return `off (${check.skip.cause})`;
     return isActive(check) ? 'on' : 'no matching files';
 }
 

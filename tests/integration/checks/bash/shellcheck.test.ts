@@ -1,34 +1,29 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { planRun } from '#cli/planning/checks.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { type RunReport } from '#cli/types/runs/check.ts';
-import { buildSandboxPath } from '#tests/setup/install.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { runCommandBlocking } from '#tests/setup/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
 import { DIALECT_FIXES, DIALECT_SOURCES } from '#tests/data/checks/bash/tool-checks.ts';
 
 test('ShellCheck reports dialect findings by shebang and an unchecked cd, and changes no file', async () => {
     await using sandbox = await testdir();
-    const environment = { PATH: buildSandboxPath() };
+    const environment = {};
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['bash'], {
-            level: 'all',
-            tables: '[[scope]]\npath = "app"\n\n',
-        }),
+        'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', scopes: [{ path: 'app' }] }),
         ...DIALECT_SOURCES,
     });
     const applied = await spawnGspot(sandbox.path, ['apply'], environment);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'bash/shellcheck,bash/safety', '--json'];
-    const checked = await spawnGspot(sandbox.path, command, environment);
+    const checked = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = JSON.parse(checked.stdout) as RunReport;
+    const report = checked.report;
     expect(
         report.checks
             .filter(({ check }) => check === 'bash/safety')
@@ -50,9 +45,9 @@ test('ShellCheck reports dialect findings by shebang and an unchecked cd, and ch
     for (const [path, source] of Object.entries(DIALECT_SOURCES))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
     await createFileTree(sandbox.path, DIALECT_FIXES);
-    const corrected = await spawnGspot(sandbox.path, command, environment);
+    const corrected = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const clean = JSON.parse(corrected.stdout) as RunReport;
+    const clean = corrected.report;
     expect(
         clean.checks
             .filter(({ check }) => check === 'bash/shellcheck')
@@ -67,7 +62,7 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     await using sandbox = await testdir();
     const source = '#!/usr/bin/env bash\necho $unquoted\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText(['bash']),
+        'gspot.toml': buildSandboxSettings(['bash']),
         'sample.sh': source,
     });
     const session = await openSession(sandbox.path);
@@ -84,7 +79,7 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     expect(parseCommandFindings(planned, failed, paths).findings).toContainEqual(
         matchFields({ file: 'sample.sh', line: 2, rule: 'SC2086' }),
     );
-    await Bun.write(join(sandbox.path, 'sample.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "${1:-}"\n');
+    await writeFile(join(sandbox.path, 'sample.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "${1:-}"\n');
     const corrected = runCommandBlocking(command, { cwd: sandbox.path });
     expect(corrected.code).toBe(0);
     expect(parseCommandFindings(planned, corrected, paths).findings).toStrictEqual([]);

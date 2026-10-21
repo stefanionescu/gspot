@@ -1,38 +1,23 @@
 import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { GspotError } from '#cli/system/errors.ts';
 import { getValueAt } from '#cli/system/values.ts';
-import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
-import { matchItems } from '#tests/setup/matchers.ts';
+import { runGspot } from '#tests/setup/run-gspot.ts';
 import { isOnDisk, readTree } from '#tests/setup/files.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { runGspot, runRegisteredCommand } from '#tests/setup/run-gspot.ts';
 import { commitAll, readGitOutput, prepareAppliedBashRepository } from '#tests/setup/git.ts';
-
-import {
-    SET_SETTINGS,
-    TAPLO_REASON,
-    TAPLO_OPTIONS,
-    RESTRICTED_IMPORTS,
-    EXTRA_OPTION_SCOPES,
-} from '#tests/data/commands/set.ts';
+import { SET_SETTINGS, SCOPE_BANNED_WORDS, RESTRICTED_IMPORTS, BANNED_WORD_SCOPES } from '#tests/data/commands/set.ts';
 
 test.each([
     [
-        'a scope-only key without --scope',
-        ['set', 'tools.shellcheck.extra', '{ external_sources = true }'],
-        '--scope api',
-    ],
-    [
         'a rule turned off',
         ['set', 'tools.markdownlint.rules', '{ MD013 = false }'],
-        'gspot ignore markdown/markdownlint --rule <rule> --reason',
+        'gspot.toml: tools.markdownlint.rules.MD013: This table holds options only, without a severity; the level decides which rules run. To turn MD013 off, run gspot ignore markdown/markdownlint --rule MD013 --reason "<why>".',
     ],
     ['a key without a value', ['set', 'limits.file_lines'], "Missing required argument 'values'"],
     [
@@ -46,12 +31,12 @@ test.each([
         'The value `everything` is not valid for level. Use recommended or all.',
     ],
 ])('set refuses %s', async (_, commandArguments, expected) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'gspot.toml': SET_SETTINGS,
         'api/entry.sh': 'echo api\n',
         'web/index.md': '# Web\n',
     });
+
     const before = await readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, commandArguments);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -68,16 +53,16 @@ test.each([
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test.each(['tools.taplo.unknown', 'tools.eslint.extra', 'tools.v8r.extra'])(
+test.each(['tools.eslint.extra', 'tools.v8r.extra'])(
     'set refuses the unknown or unavailable key %s and writes nothing',
     async (key) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['files']),
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['files']),
             'settings.toml': 'enabled = true\n',
         });
+
         const before = await readTree(sandbox.path);
-        const refused = await runGspot(sandbox.path, ['set', key, '{ enabled = true }', '--reason', TAPLO_REASON]);
+        const refused = await runGspot(sandbox.path, ['set', key, '{ enabled = true }']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(refused.stderr).toContain(key);
         expect(await readTree(sandbox.path)).toStrictEqual(before);
@@ -86,7 +71,7 @@ test.each(['tools.taplo.unknown', 'tools.eslint.extra', 'tools.v8r.extra'])(
 
 test('set and unset change a setting of a configuration that the files select', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSettingsText([]),
+        'gspot.toml': buildSandboxSettings([]),
         'package.json': '{ "name": "example", "private": true }\n',
     });
     const set = await runGspot(sandbox.path, ['set', 'licenses.allowed', 'MIT']);
@@ -98,7 +83,7 @@ test('set and unset change a setting of a configuration that the files select', 
 });
 
 test('set names -- when a value reads as an option, and takes the values after --', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([]) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
     const refused = await runGspot(sandbox.path, ['set', 'ci.setup_command', 'bun', 'install', '--frozen-lockfile']);
     expect(refused.code).toBe(2);
     expect(refused.stderr).toContain(
@@ -115,7 +100,7 @@ test.each([
     ['unset level', ['unset', 'level']],
     ['set level recommended', ['set', 'level', 'recommended']],
 ])('%s reports no change when gspot.toml already has the value', async (_name, commandArguments) => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText(['bash']) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
     const result = await runGspot(sandbox.path, commandArguments);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toContain('No change: gspot.toml already has this value.');
@@ -133,14 +118,14 @@ test.each([
         'check = "bash/shellcheck"',
     ],
 ])('%s keeps its change in gspot.toml and exits 2 when apply then stops', async (_, commandArguments, written) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'gspot.toml': `configurations = ["bash", "structure"]
 [rules]
 enabled = false
 `,
         'entry.sh': 'echo example\n',
     });
+
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const generated = join(sandbox.path, '.editorconfig');
@@ -153,65 +138,49 @@ enabled = false
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(written);
 });
 
-test.each([...EXTRA_OPTION_SCOPES])(
-    'set writes extra Taplo options in the $name scope without installing tools, and unset removes them',
-    async ({ scope, source }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['files'], { tables: '[[scope]]\npath = "app"\n' }),
-            'app/settings.toml': 'enabled = true\n',
+test.each([...BANNED_WORD_SCOPES])(
+    'set writes naming.banned_words in the $name scope without installing tools, and unset removes them',
+    async ({ scope }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['naming', 'typescript'], { scopes: [{ path: 'app' }] }),
+            'app/source.ts': 'export const active = true;\n',
         });
-        const key = 'tools.taplo.extra';
+        const key = 'naming.banned_words';
         const scopeArguments = scope === '' ? [] : ['--scope', scope];
-        const commandArguments = ['set', key, '{ compact_inline_tables = true }', ...scopeArguments];
-        const before = await readTree(sandbox.path);
-        const refused = await runGspot(sandbox.path, commandArguments);
-        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(refused.stderr).toContain('reason');
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-        const written = await runGspot(sandbox.path, [...commandArguments, '--reason', TAPLO_REASON]);
+        const written = await runGspot(sandbox.path, ['set', key, ...SCOPE_BANNED_WORDS, ...scopeArguments]);
         expect(written.code, written.stdout + written.stderr).toBe(0);
-        const explained = await runGspot(sandbox.path, ['explain', key, '--json']);
-        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        expect(JSON.parse(explained.stdout)).toMatchObject({
-            key,
-            scopes: matchItems([{ scope, current: TAPLO_OPTIONS, reason: TAPLO_REASON, source }]),
-        });
-        if (scope === '') {
-            const generated = parse(
-                await readFile(join(sandbox.path, '.gspot/configurations/general/files/taplo.toml'), 'utf8'),
-            ) as TomlTable;
-            expect(generated['formatting']).toMatchObject(TAPLO_OPTIONS);
-        }
+        const settings = readSettings(sandbox.path).settings;
+        const table = scope === '' ? settings.written : settings.scopes[scope]?.written;
+        expect(getValueAt(table, ['naming', 'banned_words'])).toStrictEqual([...SCOPE_BANNED_WORDS]);
         expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
         const reset = await runGspot(sandbox.path, ['unset', key, ...scopeArguments]);
         expect(reset.code, reset.stdout + reset.stderr).toBe(0);
-        const next = readSettings(sandbox.path, createReadCache(process.cwd())).settings;
-        const table = scope === '' ? next.written : next.scopes[scope]?.written;
-        expect(getValueAt(table, ['tools', 'taplo', 'extra'])).toBeUndefined();
-        expect(await readFile(join(sandbox.path, 'app/settings.toml'), 'utf8')).toBe('enabled = true\n');
+        const next = readSettings(sandbox.path).settings;
+        const nextTable = scope === '' ? next.written : next.scopes[scope]?.written;
+        expect(getValueAt(nextTable, ['naming', 'banned_words'])).toBeUndefined();
+        expect(await readFile(join(sandbox.path, 'app/source.ts'), 'utf8')).toBe('export const active = true;\n');
     },
 );
 
 test('gspot set writes a list of tables typed the TOML way as tables, and the settings refuses quoted ones', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'README.md': '# test\n',
-        'gspot.toml': buildSettingsText(['docs', 'javascript']),
+        'gspot.toml': buildSandboxSettings(['docs', 'javascript']),
     });
+
     commitAll(sandbox.path);
     const written = await runGspot(sandbox.path, ['set', 'tools.eslint.restricted_imports', RESTRICTED_IMPORTS]);
     expect(written.code, written.stdout + written.stderr).toBe(0);
-    const settings = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
+    const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(settings).toContain('name = "unreviewed-module"');
     expect(settings).not.toContain('"[{name');
     const unreadable = await runGspot(sandbox.path, ['set', 'tools.eslint.restricted_imports', '[{name = ']);
     expect(unreadable.code).toBe(2);
     expect(unreadable.stdout + unreadable.stderr).toContain('is not a TOML inline value');
     // A person can still type the quotes by hand; gspot refuses those settings when it loads them.
-    await Bun.write(
+    await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        buildSettingsText(['docs', 'javascript'], {
+        buildSandboxSettings(['docs', 'javascript'], {
             tables: `[tools.eslint]\nrestricted_imports = ['{name = "a", message = "Use its public entrypoint."}']\n`,
         }),
     );
@@ -223,16 +192,15 @@ test('gspot set writes a list of tables typed the TOML way as tables, and the se
     });
 });
 
-test('a fresh clone can change the level without an ownership log', async () => {
+test('set level all works in a fresh clone', async () => {
     await using sandbox = await testdir();
     const source = join(sandbox.path, 'source');
     const checkout = join(sandbox.path, 'checkout');
     await prepareAppliedBashRepository(source);
     readGitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
-    expect(await isOnDisk(join(checkout, '.gspot/state/ownership.json'))).toBe(false);
     const changed = await runGspot(checkout, ['set', 'level', 'all']);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    expect(readSettings(checkout, createReadCache(process.cwd())).settings.level).toBe('all');
+    expect(readSettings(checkout).settings.level).toBe('all');
 });
 
 test.each([
@@ -246,27 +214,26 @@ test.each([
         message: 'level is not a list or a table, so it takes no items. Run gspot unset level.',
     },
 ])('gspot $commandArguments refuses the change and preserves gspot.toml', async ({ commandArguments, message }) => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([]) });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
     const path = join(sandbox.path, 'gspot.toml');
-    const before = await Bun.file(path).text();
+    const before = await readFile(path, 'utf8');
     const result = await runGspot(sandbox.path, commandArguments);
     expect(result.code).toBe(2);
     expect(result.stderr).toContain(message);
-    expect(await Bun.file(path).text()).toBe(before);
+    expect(await readFile(path, 'utf8')).toBe(before);
 });
 
-test('set keeps the TOML parser failure as the argument error cause', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSettingsText([]) });
+test('set reports a structured-value parser failure as an argument error', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
     const before = await readTree(sandbox.path);
-    const failure = await runRegisteredCommand(sandbox.path, ['set', 'ci.setup_command', '[']).then(
-        () => undefined,
-        (error: unknown) => error,
-    );
-    expect(failure).toBeInstanceOf(GspotError);
-    if (!(failure instanceof GspotError)) throw new Error('Expected a command argument error.');
-    expect(failure.code).toBe('arguments');
-    expect(failure.cause).toBeInstanceOf(GspotError);
-    expect(failure.cause).toMatchObject({ code: 'settings' });
+    const failure = await runGspot(sandbox.path, ['set', 'ci.setup_command', '[', '--json']);
+    expect(failure.code).toBe(2);
+    expect(failure.stderr).toBe('');
+    expect(JSON.parse(failure.stdout)).toStrictEqual({
+        error: 'arguments',
+        message:
+            'The value [ is not a TOML inline value. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.',
+    });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

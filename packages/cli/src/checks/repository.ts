@@ -1,30 +1,34 @@
 import { posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { findScope } from '#cli/repository/scopes.ts';
+import { getTable } from '#cli/settings/scope-view.ts';
+import type { Finding } from '#cli/types/runs/check.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { LFS_FILTER } from '#cli/config/repository/inventory.ts';
-import type { Finding, CheckInput } from '#cli/types/runs/check.ts';
+import { findScope, joinScope } from '#cli/repository/scopes.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 /**
  * Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
  *
- * @param input the tracked files and size limit.
+ * @param session the repository and its tools.
+ * @param planned the tracked files and size limit.
  * @returns the findings.
  */
-export function checkLargeFiles(input: CheckInput): Finding[] {
-    const limitKilobytes = input.selection.view.options('repository').max_file_kilobytes;
-    return input.repositoryFiles
+export function checkLargeFiles(session: Session, planned: PlannedCheck): Finding[] {
+    const limitKilobytes = getTable(planned.selection.view, 'repository').max_file_kilobytes;
+    return session.repository.files
         .filter(
             (file) =>
                 file.kind !== 'generated' &&
                 file.kind !== 'vendored' &&
                 file.size > limitKilobytes * BYTES_PER_KILOBYTE &&
-                input.attributes.get(file.path)?.['filter'] !== LFS_FILTER,
+                session.repository.attributes.get(file.path)?.['filter'] !== LFS_FILTER,
         )
         .map((file) =>
             buildFinding(
-                input,
+                planned,
                 { file: file.path, line: 1 },
                 'size',
                 `${String(Math.round(file.size / BYTES_PER_KILOBYTE))} kB is over the ${String(limitKilobytes)} kB limit; mark it as generated or vendored in .gitattributes, move it to LFS, or ignore this finding with a reason.`,
@@ -35,31 +39,23 @@ export function checkLargeFiles(input: CheckInput): Finding[] {
 /**
  * Reports indexed files that the scope configurations mark as untracked.
  *
- * @param input the Git index and each scope.
+ * @param session the repository and its tools.
+ * @param planned the Git index and each scope.
  * @returns the findings.
  */
-export function checkLocalFiles(input: CheckInput): Finding[] {
-    const scopes = input.selections.map(({ scope }) => scope);
-    const matchers = input.selections.map(({ scope, selected, view }) => {
-        const matches = buildPathMatcher(
-            selected.flatMap((manifest) => manifest.ignored_folders.map((name) => `**/${name}/**`)),
-        );
-        const examples = new Set(view.options('secrets').env_examples);
-        const hasSecrets = selected.some((manifest) => manifest.configuration.name === 'secrets');
+export function checkLocalFiles(session: Session, planned: PlannedCheck): Finding[] {
+    const scopes = session.scopes.map(({ scope }) => scope);
+    const matchers = session.scopes.map(({ scope, selected, view }) => {
+        const matches = buildPathMatcher(selected.flatMap((manifest) => manifest.ignored_paths));
+        const examples = new Set(getTable(view, 'secrets').env_examples);
         return {
             scope,
-            matches: (path: string) => {
-                const name = posix.basename(path);
-                const environmentFile =
-                    name === '.env' ||
-                    name.startsWith('.env.') ||
-                    name === '.dev.vars' ||
-                    name.startsWith('.dev.vars.');
-                return matches(path) || (hasSecrets && environmentFile && !examples.has(name));
-            },
+            matches: (path: string) =>
+                matches(path) &&
+                (!examples.has(posix.basename(path)) || matches(joinScope(extractParentFolder(path), ''))),
         };
     });
-    return [...new Set(input.index.map(({ path }) => path))]
+    return [...new Set(session.repository.index.map(({ path }) => path))]
         .filter((path) =>
             matchers.some(
                 ({ scope, matches }) =>
@@ -68,7 +64,7 @@ export function checkLocalFiles(input: CheckInput): Finding[] {
         )
         .map((path) =>
             buildFinding(
-                input,
+                planned,
                 { file: path, line: 1 },
                 'tracked-file',
                 `${path} is tracked; its selected configuration declares it untracked. Remove it from the Git index and add it to .gitignore.`,

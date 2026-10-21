@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { rm, readFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/run-gspot.ts';
@@ -9,16 +8,16 @@ import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { rm, readFile, writeFile } from 'node:fs/promises';
 import { runGit, readGitOutput } from '#tests/setup/git.ts';
-import { buildSettingsText } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
 
 test.each(['absent', 'authored', 'managed'])(
     '%s attributes keep LF in generated files, also in a scope folder with a space',
     async (source) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSettingsText(['security', 'format'], {
-                tables: '[[scope]]\npath = "web app"\n\nconfigurations = ["security", "javascript", "css"]\n',
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['security', 'format'], {
+                scopes: [{ path: 'web app', configurations: ['security', 'javascript', 'css'] }],
             }),
             'web app/page.js': 'export const page = 1;\n',
             'web app/style.css': 'a { color: red; }\n',
@@ -31,11 +30,12 @@ test.each(['absent', 'authored', 'managed'])(
                               : '# >>> gspot managed >>>\n* text=auto eol=lf\n# <<< gspot managed <<<\n',
                   }),
         });
+
         readGitOutput(sandbox.path, ['init', '-q']);
         const generated = generate(await openSession(sandbox.path));
         const attributes = generated.blocks.find(({ path }) => path === '.gitattributes')!;
         expect(attributes.block.includes(' text eol=lf')).toBe(source !== 'authored');
-        await Bun.write(
+        await writeFile(
             join(sandbox.path, '.gitattributes'),
             `${source === 'authored' ? '* text=auto eol=lf\n' : ''}${attributes.block}\n`,
         );
@@ -49,11 +49,11 @@ test.each(['absent', 'authored', 'managed'])(
     },
 );
 test('generated attributes keep LF through an autocrlf checkout', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSettingsText([], { rules: true }),
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], { rules: true }),
         '.gitattributes': '*.txt text\n',
     });
+
     readGitOutput(sandbox.path, ['init', '-q']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -72,7 +72,7 @@ test.each([true, false])(
         await using repository = await testdir();
         const original = '# Authored entries\nprivate.tmp\n';
         await createFileTree(repository.path, {
-            'gspot.toml': buildSettingsText([]),
+            'gspot.toml': buildSandboxSettings([]),
             ...(authored ? { '.gitignore': original } : {}),
         });
         {

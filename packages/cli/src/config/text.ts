@@ -1,4 +1,4 @@
-export const SUGGESTION_LIMIT = 3;
+export const SIMILAR_NAME_LIMIT = 3;
 
 export const TYPO_MIN = 2;
 
@@ -17,3 +17,5 @@ export const LEADING_NEWLINE = /^\r?\n/u;
 export const NOT_LINE_BREAK = /[^\r\n]/gu;
 
 export const SURROUNDING_QUOTES = /^["']|["']$/gu;
+
+export const DIGITS_ONLY = /^\d+$/u;

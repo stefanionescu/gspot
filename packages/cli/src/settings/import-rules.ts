@@ -2,7 +2,7 @@ import type { ImportRule } from '#cli/types/settings/imports.ts';
 
 /**
  * List the import rules whose files the files of one rule may import: the rule itself, and either its can_import list
- * or every rule above it with its can_also_import list.
+ * or every rule above it.
  *
  * @param rules every [[import_rule]] record, in order.
  * @param index the position of the importing rule.
@@ -10,8 +10,7 @@ import type { ImportRule } from '#cli/types/settings/imports.ts';
  */
 export function listAllowedRules(rules: ImportRule[], index: number): string[] {
     const rule = rules[index] as ImportRule;
-    const others = rule.can_import ?? [...rules.slice(0, index).map(({ name }) => name), ...rule.can_also_import];
-    return [rule.name, ...others.filter((name) => name !== rule.name)];
+    return [rule.name, ...(rule.can_import ?? rules.slice(0, index).map(({ name }) => name))];
 }
 
 /**
@@ -26,5 +25,5 @@ export function formatRefusedImport(allowed: string[], imported: string, owner: 
     const [name, ...others] = allowed;
     const quoted = others.map((rule) => JSON.stringify(rule)).join(', ');
     const reach = others.length === 0 ? 'only its own files' : `its own files and ${quoted}`;
-    return `Import rule "${String(name)}" may import ${reach}, not ${imported} from ${owner}. Move the code, or add that rule to can_also_import or can_import.`;
+    return `Import rule "${String(name)}" may import ${reach}, not ${imported} from ${owner}. Move the code, move that rule above this one, or list the rules it may import in can_import.`;
 }

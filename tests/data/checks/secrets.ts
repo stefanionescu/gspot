@@ -1,3 +1,5 @@
+import { buildSandboxSettings } from '#tests/setup/settings.ts';
+
 const READER_FILES = {
     'config/example.env': 'export KNOWN=example\n# ignored\n',
     'source.ts': `Bun.env.KNOWN; Bun.env.MISSING; process.env["MISSING"];
@@ -148,22 +150,6 @@ const FIXED_SECRET_FILES = {
     'identity.py': 'import os\naws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]\n',
 } as const;
 
-/** Harmless tokens that only the custom detector of the local provider finds. */
-const VERIFIER_TOKENS = {
-    first: 'gspot-acceptance-token-first',
-    second: 'gspot-acceptance-token-second',
-} as const;
-
-const TRUFFLEHOG_DETECTORS = {
-    detectors: [
-        {
-            name: 'GspotAcceptance',
-            keywords: ['gspot-acceptance-token-'],
-            regex: { token: '(gspot-acceptance-token-[a-z]+)' },
-        },
-    ],
-} as const;
-
 const ENV_ACCESSOR_FILES = {
     'app.astro': `---
 const endpoint = import.meta.env.VITE_API;
@@ -194,20 +180,26 @@ LEGACY_API=example
 export {
     API_TOKEN,
     AWS_KEY_ID,
-    READER_FILES,
     SECRET_FILES,
-    READER_TABLES,
     READER_EXAMPLE,
     READER_FINDINGS,
-    VERIFIER_TOKENS,
     NESTED_ENV_FILES,
     ENV_ACCESSOR_FILES,
     ENV_EXAMPLES_CASES,
     FIXED_SECRET_FILES,
     SCOPE_READER_FIXES,
-    SCOPE_READER_TABLES,
     ENV_ACCESSOR_EXAMPLE,
     ENV_EXAMPLES_SANDBOX,
-    TRUFFLEHOG_DETECTORS,
-    ENVIRONMENT_READER_FILES,
+};
+
+export const ENVIRONMENT_CHECK_OPTIONS = { only: ['secrets/env-examples'] };
+
+export const READER_PROJECT = {
+    ...READER_FILES,
+    'gspot.toml': buildSandboxSettings([], { tables: READER_TABLES }),
+};
+
+export const SCOPE_READER_PROJECT = {
+    ...ENVIRONMENT_READER_FILES,
+    'gspot.toml': buildSandboxSettings([], { tables: SCOPE_READER_TABLES }),
 };

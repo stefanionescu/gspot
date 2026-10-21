@@ -2,27 +2,37 @@
 import which from 'which';
 import { statSync } from 'node:fs';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
+import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { type Session } from '#cli/types/planning.ts';
 import type { Files } from '#cli/types/system/files.ts';
-import { isMissingFileError } from '#cli/system/errors.ts';
+import { listMisePins } from '#cli/configurations/tools.ts';
 import { isInGspotFolder } from '#cli/repository/classify.ts';
 import type { LocateOptions } from '#cli/types/tools/find.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
+import { listSelectedManifests } from '#cli/configurations/select.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
+import { UV_TOOL, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/tools/python.ts';
 import { DOT_GSPOT, GSPOT_PYTHON_ENVIRONMENT_PATH } from '#cli/config/system/locations.ts';
 import { buildVenvBinPath, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
-import { MISE_WHICH, MISE_PROGRAM, NPM_BIN_FOLDER, MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/find.ts';
+
+import {
+    MISE_WHICH,
+    MISE_PROGRAM,
+    NPM_BIN_FOLDER,
+    MISE_LAUNCHER_FOLDER,
+    MISE_BIN_PATHS_ARGUMENTS,
+} from '#cli/config/tools/find.ts';
 
 // Search folders for tool-project and system executables. A scratch copy has no tool projects or virtual
 // environments of its own: they run from the working tree that the copy stands for.
 function listSearchFolders(root: string, options: LocateOptions): string[] {
-    const { searchFolders, toolProjectKind, installedRoot = root } = options;
-    if (toolProjectKind === 'npm') return [join(installedRoot, DOT_GSPOT, NPM_BIN_FOLDER)];
-    if (toolProjectKind === 'python') return [buildVenvBinPath(join(installedRoot, GSPOT_PYTHON_ENVIRONMENT_PATH))];
+    const { searchFolders, toolProjectKind } = options;
+    if (toolProjectKind === 'npm') return [join(root, DOT_GSPOT, NPM_BIN_FOLDER)];
+    if (toolProjectKind === 'python') return [buildVenvBinPath(join(root, GSPOT_PYTHON_ENVIRONMENT_PATH))];
     return [...new Set(searchFolders)].flatMap((folder) => [
-        join(basename(folder) === DOT_GSPOT ? join(installedRoot, relative(root, folder)) : folder, NPM_BIN_FOLDER),
-        buildVenvBinPath(join(installedRoot, relative(root, folder), PYTHON_ENVIRONMENT_FOLDER)),
+        join(folder, NPM_BIN_FOLDER),
+        buildVenvBinPath(join(folder, PYTHON_ENVIRONMENT_FOLDER)),
     ]);
 }
 
@@ -34,7 +44,7 @@ function isCandidatePresent(files: Files, root: string, path: string): boolean {
         files.readRealPath(local);
         return true;
     } catch (error) {
-        if (!isMissingFileError(error)) throw error;
+        if (!hasErrorCode(error, 'ENOENT')) throw error;
         return false;
     }
 }
@@ -51,11 +61,11 @@ function listMiseCandidates(workingFolder: string, name: string, timeoutSeconds:
     const paths = which.sync(name, { nothrow: true, all: true }) ?? [];
     const mise = which.sync(MISE_PROGRAM, { nothrow: true });
     return paths.flatMap((path) => {
-        if (basename(dirname(path)) !== 'shims' || mise === null) return [path];
+        if (basename(dirname(path)) !== MISE_LAUNCHER_FOLDER || mise === null) return [path];
         const result = spawnProcessBlocking([mise, MISE_WHICH, name], {
             cwd: workingFolder,
             env: TOOL_ENV,
-            timeoutSeconds: timeoutSeconds,
+            timeoutSeconds,
         });
         const selected = result.stdout.trim();
         return result.code === 0 && selected !== '' ? [selected] : [];
@@ -86,16 +96,10 @@ function locateRepositoryCandidates(repositoryRoot: string, name: string, option
  * @param repositoryRoot the folder with the managed mise settings.
  * @param toolNames the mise tools to find.
  * @param timeoutSeconds the limit for the mise query.
- * @param steps collects each command that install runs.
  *
  * @returns the executable folders that mise installed.
  */
-function readMiseBinPaths(
-    repositoryRoot: string,
-    toolNames: string[],
-    timeoutSeconds: number,
-    steps: (readonly string[])[],
-): string[] {
+function readMiseBinPaths(repositoryRoot: string, toolNames: string[], timeoutSeconds: number): string[] {
     if (
         toolNames.length === 0 ||
         which.sync(MISE_PROGRAM, { nothrow: true }) === null ||
@@ -103,10 +107,9 @@ function readMiseBinPaths(
     )
         return [];
     const command = [...MISE_BIN_PATHS_ARGUMENTS, ...toolNames];
-    steps.push(command);
     const result = spawnProcessBlocking(command, {
         cwd: join(repositoryRoot, DOT_GSPOT),
-        timeoutSeconds: timeoutSeconds,
+        timeoutSeconds,
         env: TOOL_ENV,
     });
     return result.code === 0 ? result.stdout.trim().split(/\r?\n/u).filter(Boolean) : [];
@@ -133,9 +136,41 @@ function locateCandidates(
         .filter((path) => statSync(path, { throwIfNoEntry: false }) !== undefined);
     const paths =
         options.search === 'mise'
-            ? listMiseCandidates(options.installedRoot ?? repositoryRoot, name, options.timeoutSeconds)
+            ? listMiseCandidates(repositoryRoot, name, options.timeoutSeconds)
             : (which.sync(name, { nothrow: true, all: true }) ?? []);
     return [...programs, ...found, ...paths];
+}
+
+/**
+ * Read and cache the installed mise folders when a tool search needs them.
+ *
+ * @param session the run whose tools select the mise query.
+ * @returns the folders that mise installed.
+ */
+export function getMiseBinPaths(session: Session): string[] {
+    session.miseBinPaths ??= readMiseBinPaths(
+        session.installedRoot,
+        [...new Set(listMisePins(listSelectedManifests(session.scopes)).map((pin) => pin.name))],
+        session.timeoutSeconds,
+    );
+    return session.miseBinPaths;
+}
+
+/**
+ * Locate uv when a Python installation needs it, and reuse it for the run.
+ *
+ * @param session the working tree and its tool search cache.
+ * @returns the uv program to run.
+ */
+export function getUvPath(session: Session): string {
+    session.uvPath ??=
+        locateCandidates(session.installedRoot, UV_TOOL, {
+            search: 'path',
+            searchFolders: [],
+            miseBinPaths: getMiseBinPaths(session),
+            timeoutSeconds: session.timeoutSeconds,
+        })[0] ?? UV_TOOL;
+    return session.uvPath;
 }
 
 export { readMiseBinPaths, locateCandidates, locateRepositoryCandidates };

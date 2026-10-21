@@ -7,6 +7,17 @@ createRuleTester().run<
     [Partial<TrivialFilesOptions[0]>]
 >('no-trivial-files', plugin.rules['no-trivial-files'], {
     valid: [
+        'export class Money { double() { return this.amount * 2; } }',
+        'export class Money { double = () => this.amount * 2; }',
+        'class Money { double() { return this.amount * 2; } } export { Money };',
+        {
+            code: 'import type { A } from "a"; declare const plugin: A & { rules: Record<string, unknown> }; export default plugin;',
+            filename: '/repo/src/plugin.d.ts',
+        },
+        'import { z } from "zod"; import { NAMES } from "./config"; export const schema = z.enum(NAMES);',
+        'import { z as schema } from "zod"; export const name = schema.string();',
+        'import * as schema from "zod"; import { NAMES } from "./config"; export const names = schema.enum(NAMES).optional();',
+        'import { string as text } from "zod"; export const name = text();',
         String.raw`export function normalizePath(value) { return value.replaceAll("\\", "/").replace(/^\.\//u, ""); }`,
         '#!/usr/bin/env bun\nimport "./owner";',
         {
@@ -58,6 +69,10 @@ createRuleTester().run<
         'export const schema = define<{ enabled: boolean; paths: string[] }>();',
     ],
     invalid: [
+        'import { z } from "zod"; export const alias = z;',
+        'import { z } from "zod"; import { NAMES } from "./config"; export const result = z.parse(NAMES);',
+        'import { z } from "./owner"; import { NAMES } from "./config"; export const schema = z.enum(NAMES);',
+        'import { z } from "zod"; export function forward(value) { return z.parse(value); }',
         'export function schema() { return owner.schema; }',
         'export function schema(properties) { return configure(properties); }',
         'export function heading() { return `constant`; }',
@@ -80,6 +95,7 @@ createRuleTester().run<
         'configure().start();',
         'new Owner(...args);',
         'declare function run(): void;',
+        'import type { Plugin } from "./owner"; declare const plugin: Plugin; export default plugin;',
         'export * from "./owner";',
     ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }] })),
 });

@@ -58,6 +58,9 @@ existing. Check replay with the project migration tool. See
 - Bucket restrictions enforce file size and MIME type, not only application validation.
 - RLS policies on `storage.objects` and `storage.buckets` control access. The service controls metadata in the `storage` schema: migrations add only policies, indexes for RLS or validation, triggers,
   and bucket configuration. Object rows change only through the Storage API.
+- Validate user-controlled key segments and limit their length before use.
+- Do not embed secrets, provider tokens, raw user text, or private identifiers in
+  object keys.
 
 ### Storage names
 
@@ -65,9 +68,6 @@ existing. Check replay with the project migration tool. See
 
 - Storage buckets use `lower_snake_case`.
 - Use stable, explicit storage object keys.
-- Validate user-controlled key segments and limit their length before use.
-- Do not embed secrets, provider tokens, raw user text, or private identifiers in
-  object keys.
 - Do not use display text as storage identity.
 
 | Avoid                                       | Prefer                                 | Meaning                              |
@@ -84,7 +84,7 @@ existing. Check replay with the project migration tool. See
 - Name a function folder in kebab-case for its callable operation, not its technology:
   `submit-order`, never `SubmitOrder` or `provider_handler`. The folder, the `config.toml` table, and
   the deployed name match.
-- Edge Functions run on Deno, and the Deno rules hold.
+- Edge Functions run on Deno; read DENO.md too.
 - Keep `verify_jwt = true` for user-authenticated functions. Set it to `false` only when the function
   exposes nothing but public, harmless behavior, verifies a provider webhook signature, checks a service secret, or takes
   a Vault secret from cron.

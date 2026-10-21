@@ -4,19 +4,16 @@ import type { Settings } from '#cli/types/settings/values.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import { REASON_WORDS_MIN } from '#cli/config/settings/values.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import type { ReasonNeeded } from '#cli/types/settings/metadata.ts';
 import type { SettingDeclaration } from '#cli/types/settings/tables.ts';
 
 function buildErrorsAt(path: KeyPath, text: string | undefined): SettingsError[] {
     return text === undefined ? [] : [{ path, message: text }];
 }
 
-function isLimitLoosening(direction: 'raising' | 'lowering', value: unknown, shipped: unknown): boolean {
-    if (
-        (typeof value !== 'number' && typeof value !== 'boolean') ||
-        (typeof shipped !== 'number' && typeof shipped !== 'boolean')
-    )
-        return false;
-    return direction === 'raising' ? Number(value) > Number(shipped) : Number(value) < Number(shipped);
+function isLimitLoosening(direction: Exclude<ReasonNeeded, 'adding'>, value: unknown, shipped: unknown): boolean {
+    if (typeof value !== 'number' || typeof shipped !== 'number') return false;
+    return direction === 'raising' ? value > shipped : value < shipped;
 }
 
 /**
@@ -33,17 +30,14 @@ function validateReason(where: string, reason: string | undefined): string | und
     return `${where} needs a reason that says something: ${refused} is refused. Write one sentence saying why.`;
 }
 
-// The tool reads extra options; only the reasoned value around them carries a gspot reason.
-function validateExtraReason(entry: Record<string, unknown>, path: KeyPath): SettingsError[] {
-    const reason = entry['reason'];
-    return buildErrorsAt(
-        [...path, 'reason'],
-        validateReason(path.map(String).join('.'), typeof reason === 'string' ? reason : undefined),
-    );
+function validateRemovedConfigurations(value: unknown, path: KeyPath): SettingsError[] {
+    if (!Array.isArray(value) || value.length === 0) return [];
+    const missingReason = validateReason(path.map(String).join('.'), undefined);
+    return buildErrorsAt([...path, 'reason'], missingReason);
 }
 
 /**
- * Find missing or invalid reasons on ignores, declarations, naming exceptions, and extra tool options.
+ * Find missing or invalid reasons on ignores, declarations, and naming exceptions.
  *
  * @param settings the normalized gspot.toml.
  * @returns the errors in plain English.
@@ -54,7 +48,6 @@ function validateSettingReasons(settings: Settings): SettingsError[] {
         if (table === 'tools' && field === 'rules') return [];
         if (Array.isArray(value)) return value.flatMap((entry, index) => visit(entry, [...path, index]));
         if (!isRecord(value)) return [];
-        if (path.at(-1) === 'extra') return validateExtraReason(value, path);
         const reason = value['reason'];
         const own: SettingsError[] = [];
         if (reason !== undefined)
@@ -67,16 +60,19 @@ function validateSettingReasons(settings: Settings): SettingsError[] {
         return [
             ...own,
             ...Object.entries(value)
-                .filter(
-                    ([key]) =>
-                        key !== 'reason' &&
-                        !(path.length === 0 && key === 'ignore') &&
-                        !(key === 'value' && path.at(-1) === 'extra'),
-                )
+                .filter(([key]) => key !== 'reason' && !(path.length === 0 && key === 'ignore'))
                 .flatMap(([key, entry]) => visit(entry, [...path, key])),
         ];
     }
     return [
+        ...validateRemovedConfigurations(settings.written['removed_configurations'], ['removed_configurations']),
+        ...Object.values(settings.scopes).flatMap((scope, index) =>
+            validateRemovedConfigurations(scope.written['removed_configurations'], [
+                'scope',
+                index,
+                'removed_configurations',
+            ]),
+        ),
         ...settings.ignore.flatMap((entry, index) =>
             buildErrorsAt(['ignore', index, 'reason'], validateReason(`ignore.${String(index)}`, entry.reason)),
         ),
