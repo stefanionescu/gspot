@@ -185,3 +185,45 @@ test.each([
         { file: expected, line: 1, column: 2 },
     ]);
 });
+
+test('a regex finding without a rule group keeps a trailing bracketed word in its message', () => {
+    const check = { ...BASE_CHECK, output: outputSchema.parse({ format: 'regex' }) };
+    const paths = { root: '/repository', cwd: '/repository' };
+    expect(
+        parseOutput(
+            check,
+            'a.txt:1: Call the function by its full name (fetch)\nb.txt:2: Name the type [User]\n',
+            '',
+            paths,
+        ),
+    ).toStrictEqual([
+        {
+            check: 'sandbox/diagnostic',
+            file: 'a.txt',
+            line: 1,
+            message: 'Call the function by its full name (fetch)',
+            help: '',
+            fixable: false,
+        },
+        {
+            check: 'sandbox/diagnostic',
+            file: 'b.txt',
+            line: 2,
+            message: 'Name the type [User]',
+            help: '',
+            fixable: false,
+        },
+    ]);
+    const pytest = listChecksById(readManifests(createReadCache(process.cwd())).values()).get('pytest/coverage')!.check;
+    expect(
+        parseOutput(pytest, 'FAILED tests/test_total.py::test_sum - assert total(items) == expected(items)', '', paths),
+    ).toStrictEqual([
+        {
+            check: 'pytest/coverage',
+            file: '',
+            message: 'FAILED tests/test_total.py::test_sum - assert total(items) == expected(items)',
+            help: pytest.help,
+            fixable: false,
+        },
+    ]);
+});

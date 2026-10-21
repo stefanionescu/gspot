@@ -1,7 +1,7 @@
 // Reads tool messages with declared text patterns.
 import type { Finding } from '#cli/types/runs/check.ts';
+import { LEADING_DOT_SLASH } from '#cli/config/runs/output.ts';
 import { type ReportInput, type RegexParser } from '#cli/types/runs/output.ts';
-import { LEADING_DOT_SLASH, TRAILING_PAREN_RULE, TRAILING_BRACKET_RULE } from '#cli/config/runs/output.ts';
 
 function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {
     const line = groups['line'];
@@ -13,16 +13,6 @@ function setMatchedFields(finding: Finding, groups: Record<string, string | unde
     return finding;
 }
 
-function splitTrailingRule(finding: Finding): void {
-    if (finding.rule !== undefined) return;
-    const text = finding.message.trimEnd();
-    const trailing = TRAILING_BRACKET_RULE.exec(text) ?? TRAILING_PAREN_RULE.exec(text);
-    const rule = trailing?.groups?.['rule'];
-    if (trailing === null || rule === undefined) return;
-    finding.rule = rule;
-    finding.message = text.slice(0, trailing.index).trim();
-}
-
 function readMatchedFinding(
     check: string,
     parser: RegexParser,
@@ -30,7 +20,7 @@ function readMatchedFinding(
     groups: Record<string, string | undefined>,
 ): Finding {
     const { output, fixable, help } = parser;
-    const finding = setMatchedFields(
+    return setMatchedFields(
         {
             check,
             file: (groups['file'] ?? '').replace(LEADING_DOT_SLASH, ''),
@@ -41,8 +31,6 @@ function readMatchedFinding(
         },
         groups,
     );
-    splitTrailingRule(finding);
-    return finding;
 }
 
 /**

@@ -4,11 +4,7 @@ export const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;
 
 export const DEFAULT_GROUPED_PATTERN = String.raw`^\s+(?<line>\d+): (?<message>.*)$`;
 
-export const TRAILING_BRACKET_RULE = /\[(?<rule>[\w:/@.-]+)\]$/u;
-
 export const LEADING_DOT_SLASH = /^\.\//u;
-
-export const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
 
 export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN, file_type: 'path' } as const;
 
