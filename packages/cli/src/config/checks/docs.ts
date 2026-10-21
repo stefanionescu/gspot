@@ -4,6 +4,8 @@ import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 /** Paths that documents may name before you turn on the setting that generates them. */
 export const OPTIONAL_GENERATED_PATHS = [GITHUB_WORKFLOW, GITLAB_WORKFLOW, YARN_SETTINGS] as const;
 
+export const MARKDOWN_EXTENSIONS = ['.md', '.mdx'] as const;
+
 export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
 
 export const TRAILING_PUNCTUATION = '.,;:';

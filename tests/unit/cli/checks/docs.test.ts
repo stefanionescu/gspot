@@ -15,6 +15,7 @@ import { checkFindings, buildCheckInput, findBuiltInCheck } from '#tests/setup/c
 import {
     README,
     LICENSE,
+    MDX_GUIDE,
     DOC_TASK_FILES,
     DOC_TASK_SCOPES,
     DOC_TASK_FINDINGS,
@@ -31,6 +32,21 @@ async function collectDocsFindings(
     await using sandbox = await testdir({ 'gspot.toml': buildSettingsText(['docs'], { level: 'all' }), ...files });
     return await checkFindings(sandbox.path, 'docs/missing-paths', options);
 }
+
+test('missing-paths: a path in an .mdx page that names no tracked file is reported', async () => {
+    const found = await collectDocsFindings(
+        { 'docs/guide.mdx': MDX_GUIDE, 'docs/example.ts': '' },
+        { paths: ['docs/guide.mdx'] },
+    );
+    expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        {
+            file: 'docs/guide.mdx',
+            line: 5,
+            rule: 'missing-path',
+            message: './missing.ts names no tracked file or folder.',
+        },
+    ]);
+});
 
 test('missing-paths: wildcard examples are skipped; bold, italic and code paths are checked', async () => {
     const found = await collectDocsFindings(

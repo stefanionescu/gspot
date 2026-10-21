@@ -200,3 +200,12 @@ build_command = ["node", "build.mjs"]
     'guides/shop.mdx': '# Shop\n\n<a href={link}>Open the shop</a>\n',
     'web/index.md': '# Shop\n\nRead [the install page](/start/install/).\n',
 } as const;
+
+export const MDX_GUIDE = `import Example from './example.ts';
+
+# Guide
+
+Read \`./missing.ts\`.
+
+<Example />
+`;

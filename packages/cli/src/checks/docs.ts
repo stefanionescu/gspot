@@ -35,6 +35,7 @@ import {
     EMPHASIS_MARKERS,
     PATH_TOKEN_SKIPS,
     TOKEN_SEPARATORS,
+    MARKDOWN_EXTENSIONS,
     TRAILING_PUNCTUATION,
     OPTIONAL_GENERATED_PATHS,
 } from '#cli/config/checks/docs.ts';
@@ -221,7 +222,9 @@ function extractPathTokens(line: string): string[] {
  * @returns the findings.
  */
 export function checkDocsMissingPaths(input: CheckInput): Finding[] {
-    const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
+    const files = input.files.filter(
+        (file) => file.kind === 'source' && MARKDOWN_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
+    );
     const known = listKnownPaths(input);
     const isIgnored = buildGitignoreTest(
         input.reads,
