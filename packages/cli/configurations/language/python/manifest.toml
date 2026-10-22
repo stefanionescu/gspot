@@ -315,13 +315,13 @@ all = [
     "TRY",
 ]
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 pointer = { path = "ruff.toml", body = 'extend = "{target}"' }
 target = "ruff.toml"
 tool = "ruff"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 pointer = { path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}" }
 target = "basedpyright.json"

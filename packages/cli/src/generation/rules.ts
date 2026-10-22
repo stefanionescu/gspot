@@ -185,7 +185,7 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
  * @param block what the block lists.
  * @param block.files the rules with their content.
  * @param block.generatedPaths the files gspot writes outside .gspot.
- * @param block.managedKeys the keys that gspot manages inside authored tool files.
+ * @param block.managedKeys the keys that gspot manages inside authored config files.
  * @param block.hasChecks whether any configuration runs a check.
  * @param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
  * @param block.startCommand the command that starts gspot.

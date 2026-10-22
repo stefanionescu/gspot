@@ -9,10 +9,10 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { buildLevelRules } from '#cli/generation/eslint/base.ts';
 import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
-import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/eslint/files.ts';
 import { BASE_SELECTORS } from '#cli/config/generation/eslint/rules.ts';
-import type { ToolFile, Configuration } from '#cli/types/configurations.ts';
+import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
+import type { ConfigFile, Configuration } from '#cli/types/configurations.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/eslint/presets.ts';
 import { ESLINT_CHECK } from '#cli/config/generation/eslint/settings-blocks.ts';
 import { NODE_SHEBANG_TAG, MISE_SCRIPT_PATH } from '#cli/config/repository/inventory.ts';
@@ -31,22 +31,22 @@ const PRESETS_BY_CONFIGURATION = new Map<Configuration, EslintPresets>();
 const PRESET_ASSET_PATHS = new Set(listAssets(CONFIGURATIONS_FOLDER));
 
 /**
- * Select the configurations that may add blocks to this tool file. A tool file per scope takes those of the scope; a
- * tool file written once takes those of every scope.
+ * Select the configurations that may add blocks to this config file. A config file per scope takes those of the scope; a
+ * config file written once takes those of every scope.
  *
  * @param scopes every project and its settings.
- * @param scope the scope that gets the tool file.
- * @param toolFile the tool file declaration and its scope requirements.
+ * @param scope the scope that gets the config file.
+ * @param configFile the config file declaration and its scope requirements.
  * @returns each of those configurations, once.
  */
-function listToolFileConfigurations(scopes: Scope[], scope: Scope, toolFile: ToolFile): Configuration[] {
-    if (toolFile.per_scope) return scope.configurations;
+function listConfigFileConfigurations(scopes: Scope[], scope: Scope, configFile: ConfigFile): Configuration[] {
+    if (configFile.per_scope) return scope.configurations;
     const every = [scope, ...scopes].flatMap((entry) => entry.configurations);
     return new Map(every.map((configuration) => [configuration.name, configuration])).values().toArray();
 }
 
 // Read each shipped configuration preset once per process.
-function readEslintPresets(session: PlannedToolFile['session']): Map<string, EslintPresets> {
+function readEslintPresets(session: PlannedConfigFile['session']): Map<string, EslintPresets> {
     return new Map(
         [...session.configurations.values()]
             .filter((configuration) => PRESET_ASSET_PATHS.has(`${configuration.folder}/${ESLINT_PRESETS_FILE}`))
@@ -84,13 +84,13 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeF
 }
 
 /**
- * Collect what the ESLint tool file of one scope needs: its file patterns, presets, rule options, and settings blocks.
+ * Collect what the ESLint config file of one scope needs: its file patterns, presets, rule options, and settings blocks.
  *
- * @param planned the tool file to build.
+ * @param planned the config file to build.
  * @returns the scopes, presets, rule options, and settings blocks of the ESLint file.
  */
-export function buildPlannedEslintFile(planned: PlannedToolFile): PlannedEslintFile {
-    const { session, scope, toolFile } = planned;
+export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslintFile {
+    const { session, scope, configFile } = planned;
     const { settings } = scope;
     const { scopes } = session;
     const repositorySettings = session.settingsFile.settings;
@@ -99,7 +99,7 @@ export function buildPlannedEslintFile(planned: PlannedToolFile): PlannedEslintF
     const nodeFiles = session.repository.files
         .filter((file) => !recognized(file.path) && file.kind === 'source' && file.tags.includes(NODE_SHEBANG_TAG))
         .map((file) => file.path);
-    const configurations = listToolFileConfigurations(scopes, scope, toolFile);
+    const configurations = listConfigFileConfigurations(scopes, scope, configFile);
     const options = buildRuleOptions(repositorySettings, scopes);
     const allLevelRules = new Set(
         [...session.configurations.values()].flatMap((configuration) => [...configuration.eslint.all_level_rules]),

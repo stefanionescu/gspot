@@ -37,7 +37,7 @@ test('init names pinned dependencies without proposing to delete the package man
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('the init plan keeps existing CI jobs apart from tool settings that the generated tool files replace', async () => {
+test('the init plan keeps existing CI jobs apart from tool settings that the generated config files replace', async () => {
     await using sandbox = await testdir(SHARED_SETUP_FILES);
 
     commitAll(sandbox.path);
@@ -47,16 +47,16 @@ test('the init plan keeps existing CI jobs apart from tool settings that the gen
     expect(preview.stderr).toBe('');
     const retained = preview.stdout.split('left in place\n', 2)[1]?.split('\n\n', 1)[0];
     expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section; the generated tool file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
+        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
     expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section; the generated tool file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
+        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
     expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section; the generated tool file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
+        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
     expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section; the generated tool file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
+        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -104,7 +104,7 @@ test('the init plan lists each submodule once and reads none of it', async () =>
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });
 
-test('init plans no scope for an old lint folder, and --level all replaces the tool files of that level', async () => {
+test('init plans no scope for an old lint folder, and --level all replaces the config files of that level', async () => {
     await using sandbox = await testdir(QUALITY_PACKAGE_FILES);
     runGitStep(sandbox.path, ['init', '-q']);
     const result = await runGspot(sandbox.path, [

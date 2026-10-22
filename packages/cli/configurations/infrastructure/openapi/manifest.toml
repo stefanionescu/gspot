@@ -14,12 +14,12 @@ version = "6.15.0"
 [[tool]]
 name = "ajv"
 
-[[tool_file]]
+[[config_file]]
 target = "spectral.yml"
 tool = "spectral"
 
 [[check]]
-command = ["spectral", "lint", "--ruleset", "{tool_file:spectral}", "--format", "text", "{setting:openapi.document}"]
+command = ["spectral", "lint", "--ruleset", "{config_file:spectral}", "--format", "text", "{setting:openapi.document}"]
 cwd = "root"
 example = "An operation that references an undefined schema reports a finding. Define the schema or fix the reference in the source, then generate the document again."
 files = { extensions = [".yaml", ".yml", ".json"] }

@@ -23,13 +23,13 @@ npm = "squawk-cli"
 replace = [".squawk.toml", "squawk.toml"]
 version = "2.64.0"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "squawk.toml"
 tool = "squawk"
 
 [[check]]
-command = ["squawk", "--config", "{tool_file:squawk}", "--reporter", "json", "{files}"]
+command = ["squawk", "--config", "{config_file:squawk}", "--reporter", "json", "{files}"]
 example = "A migration that adds a constraint with a full table scan reports a finding. Create the constraint first, and validate it in a separate migration."
 files = { paths = ["{setting:postgres.migrations_folder}/**/*.sql"] }
 help = "Follow the advice squawk prints for the rule. Turn one rule off with `gspot ignore postgres/squawk --rule <rule> --reason \"<why>\"`."

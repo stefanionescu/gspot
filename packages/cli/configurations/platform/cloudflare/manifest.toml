@@ -23,7 +23,7 @@ npm = "wrangler"
 system = true
 version_command = ["--version"]
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 per_scope = true
 target = "semgrep.yml"

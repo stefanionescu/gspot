@@ -126,14 +126,14 @@ test('every default names a declared setting', () => {
     ).toStrictEqual([]);
 });
 
-test('tool files and checks name declared tools and checks', () => {
+test('config files and checks name declared tools and checks', () => {
     const configurations = [...readConfigurations().values()];
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)));
     const checks = new Set(configurations.flatMap((configuration) => configuration.checks.map(({ id: name }) => name)));
     const mismatches: string[] = [];
     for (const configuration of configurations) {
         const names = [
-            ...configuration.toolFiles.flatMap((file) => file.tool),
+            ...configuration.configFiles.flatMap((file) => file.tool),
             ...configuration.eslint.required_tools,
             ...configuration.tools.flatMap((tool) => tool.requires ?? []),
             ...configuration.checks.flatMap((check) => [
@@ -143,7 +143,7 @@ test('tool files and checks name declared tools and checks', () => {
         ];
         mismatches.push(
             ...names.filter((name) => !tools.has(name)).map((name) => `${configuration.name}: ${name}`),
-            ...configuration.toolFiles.flatMap((file) => file.check.filter((name) => !checks.has(name))),
+            ...configuration.configFiles.flatMap((file) => file.check.filter((name) => !checks.has(name))),
         );
     }
     expect(mismatches).toStrictEqual([]);

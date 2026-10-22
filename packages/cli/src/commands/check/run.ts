@@ -195,6 +195,6 @@ export async function runCheckCode(
     return (code?.run ?? runCheckCommand)(session, planned, {
         ...options,
         listFileArguments: code?.listFileArguments,
-        listToolFiles: code?.listToolFiles,
+        listConfigFiles: code?.listConfigFiles,
     });
 }

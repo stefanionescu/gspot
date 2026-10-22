@@ -3,9 +3,9 @@ import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { findToolFilePath } from '#tests/setup/cli/config-files.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
+import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import type { LintFinding, EslintConfiguration } from '#tests/types/tool-output.ts';
 
@@ -31,11 +31,11 @@ export async function listLintFindings(
 }
 
 /**
- * Link the test packages, run apply, and load the generated ESLint tool file.
+ * Link the test packages, run apply, and load the generated ESLint config file.
  *
  * @param sandboxRoot folder with a gspot.toml.
  * @param options more ESLint options.
- * @returns ESLint set up with the generated tool file.
+ * @returns ESLint set up with the generated config file.
  */
 export async function createEslint(sandboxRoot: string, options?: ESLint.Options): Promise<ESLint> {
     await linkInstalledModules(join(sandboxRoot, 'node_modules'));
@@ -43,14 +43,14 @@ export async function createEslint(sandboxRoot: string, options?: ESLint.Options
     const session = await openSession(sandboxRoot);
     const scope = session.scopes.find((entry) =>
         entry.configurations.some((configuration) =>
-            configuration.toolFiles.some((file) => extractToolFileName(file.file) === 'eslint'),
+            configuration.configFiles.some((file) => extractConfigFileName(file.file) === 'eslint'),
         ),
     )?.folder.path;
-    if (scope === undefined) throw new Error('The sandbox selects no ESLint tool file.');
+    if (scope === undefined) throw new Error('The sandbox selects no ESLint config file.');
     return new ESLint({
         ...options,
         cwd: sandboxRoot,
-        overrideConfigFile: join(sandboxRoot, findToolFilePath(session, 'eslint', scope)),
+        overrideConfigFile: join(sandboxRoot, findConfigFilePath(session, 'eslint', scope)),
         overrideConfig: { languageOptions: { parserOptions: { noWarnOnMultipleProjects: true } } },
     });
 }

@@ -1,9 +1,9 @@
 ---
 title: Lint rule options
-description: Set lint rule options in gspot.toml instead of the tool files.
+description: Set lint rule options in gspot.toml instead of the config files.
 ---
 
-Set lint rule options in `gspot.toml`; gspot writes them into the tool file. To turn a lint rule off, use an
+Set lint rule options in `gspot.toml`; gspot writes them into the config file. To turn a lint rule off, use an
 [ignore](/use/ignore/) with a reason.
 
 gspot refuses options for an ESLint or Stylelint rule that the selected level does not run. The refusal names the

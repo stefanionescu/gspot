@@ -30,23 +30,23 @@ install_help = "Install Docker Desktop or Docker Engine."
 name = "docker"
 system = true
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "hadolint.yml"
 tool = "hadolint"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "trivy.yml"
 tool = "trivy"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "trivyignore"
 tool = "trivy"
 
 [[check]]
-command = ["hadolint", "--no-color", "--config", "{tool_file:hadolint}", "{files}"]
+command = ["hadolint", "--no-color", "--config", "{config_file:hadolint}", "{files}"]
 example = "`FROM node:latest` reports DL3007, because that tag moves. Pin an explicit version tag or a digest."
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
 help = "Change the instruction the way the rule says. Turn one rule off with `gspot ignore docker/hadolint --rule <rule> --reason \"<why>\"`."
@@ -83,7 +83,7 @@ summary = "Checks that an ignore file sits beside every Dockerfile and keeps the
 why = "Without it, the daemon receives the whole folder, and a `COPY` of it puts the history and secrets into the image."
 
 [[check]]
-command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{tool_file:trivy}", "--ignorefile", "{tool_file:trivyignore}", "--exit-code", "10", "--format", "sarif", "{root}"]
+command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{config_file:trivy}", "--ignorefile", "{config_file:trivyignore}", "--exit-code", "10", "--format", "sarif", "{root}"]
 example = "A Dockerfile whose final stage runs as root reports a finding. Create an unprivileged user, and switch to it with `USER` before the application starts."
 exit_codes = [10]
 help = "Change the file the way the message says. Accept one advisory with `gspot ignore docker/trivy-config --rule <rule> --reason \"<why>\"`."

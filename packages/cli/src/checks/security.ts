@@ -6,23 +6,23 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { SEMGREP_TOOL } from '#cli/config/checks/security.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 
 /**
  * List the Semgrep rule files that the configurations and settings of a scope name.
  *
- * @param session the level and tool files.
+ * @param session the level and config files.
  * @param planned the check for one scope.
  * @returns the repository-relative paths.
  */
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
     const { configurations, folder, settings } = planned.scope;
     const declared = configurations.flatMap((configuration) =>
-        configuration.toolFiles
+        configuration.configFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
             .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
-            .map((file) => getToolFileTarget(folder.path, file, getToolFiles(session).targets)),
+            .map((file) => getConfigFileTarget(folder.path, file, getConfigFiles(session).targets)),
     );
     return [...new Set([...declared, ...getTable(settings, 'tools.semgrep').rule_files])];
 }

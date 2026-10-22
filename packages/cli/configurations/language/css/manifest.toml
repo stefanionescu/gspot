@@ -37,18 +37,18 @@ name = "postcss-html"
 npm = "postcss-html"
 version = "2.0.0"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 pointer = { path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n" }
 target = "stylelint.json"
 tool = "stylelint"
 
 [[check]]
-command = ["stylelint", "--config", "{tool_file:stylelint}", "--config-basedir", "{root}/.gspot", "--formatter", "unix", "--allow-empty-input", "{files}"]
+command = ["stylelint", "--config", "{config_file:stylelint}", "--config-basedir", "{root}/.gspot", "--formatter", "unix", "--allow-empty-input", "{files}"]
 example = "The declaration `color: #ggg` holds an invalid hex value and reports a finding. Replace it with a valid one such as `#abc`."
 exit_codes = [2]
 files = { extensions = [".css", ".vue", ".svelte"] }
-fix = ["stylelint", "--config", "{tool_file:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
+fix = ["stylelint", "--config", "{config_file:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
 help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore css/stylelint --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "stylelint"

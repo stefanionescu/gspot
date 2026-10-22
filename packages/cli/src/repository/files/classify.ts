@@ -8,7 +8,7 @@ import { MARKERS } from '#cli/config/parsers/managed-blocks.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependencies.ts';
 import { DOT_GSPOT, VALE_PACKAGES_PATH } from '#cli/config/gspot-paths.ts';
-import type { ToolFile, Configuration } from '#cli/types/configurations.ts';
+import type { ConfigFile, Configuration } from '#cli/types/configurations.ts';
 import { HEADER_LINES_CHECKED, GENERATED_HEADER_LINE } from '#cli/config/generation/header.ts';
 
 import type {
@@ -165,13 +165,13 @@ function tagTextFile(tags: Set<string>, firstLine: string): FileTags {
 }
 
 /**
- * Resolve the pointer paths that tool files generate outside the tool project.
+ * Resolve the pointer paths that config files generate outside the tool project.
  *
  * @param path the scope folder.
- * @param files the tool files.
+ * @param files the config files.
  * @returns the pointer paths and declared folder patterns.
  */
-function listPointers(path: string, files: ToolFile[]): string[] {
+function listPointers(path: string, files: ConfigFile[]): string[] {
     return files.flatMap((file) => {
         const pointer = file.pointer;
         if (pointer === undefined) return [];
@@ -284,8 +284,8 @@ export function listConfigurationGeneratedPaths(selected: Map<string, Configurat
     return selected
         .entries()
         .flatMap(([path, configurations]) =>
-            configurations.flatMap(({ generated, name, toolFiles }) => {
-                const paths = [...generated.map((file) => posix.join(path, file)), ...listPointers(path, toolFiles)];
+            configurations.flatMap(({ generated, name, configFiles }) => {
+                const paths = [...generated.map((file) => posix.join(path, file)), ...listPointers(path, configFiles)];
                 return paths.length === 0
                     ? []
                     : [

@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
-import { VALE_PACKAGES_PATH, VALE_TOOL_FILE_PATH } from '#cli/config/gspot-paths.ts';
+import { VALE_PACKAGES_PATH, VALE_CONFIG_FILE_PATH } from '#cli/config/gspot-paths.ts';
 
 // Refuses a copy whose Vale configuration differs from the one the installed packages came from.
 function assertValeMatches(installed: Files, destination: Files, config: string): void {
@@ -49,7 +49,7 @@ function listStyleFiles(files: Files, folder: string): string[] {
  */
 export function copyValePackages(repositoryRoot: string, copyRoot: string, paths: string[]): void {
     const configurations = paths.filter(
-        (path) => path === VALE_TOOL_FILE_PATH || path.endsWith(`/${VALE_TOOL_FILE_PATH}`),
+        (path) => path === VALE_CONFIG_FILE_PATH || path.endsWith(`/${VALE_CONFIG_FILE_PATH}`),
     );
     using installed = openFiles(repositoryRoot);
     using destination = openFiles(resolve(copyRoot));

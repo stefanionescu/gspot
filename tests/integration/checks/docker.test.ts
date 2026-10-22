@@ -117,7 +117,7 @@ test.each([...LEVELS])(
 
 // These Docker checks need the Linux Docker engine.
 test.skipIf(!isLinux)(
-    'docker/trivy-image reports a private key in an image, errors on a broken tool file, and passes a clean image',
+    'docker/trivy-image reports a private key in an image, errors on a broken config file, and passes a clean image',
     async () => {
         await using sandbox = await testdir();
         const prefix = `gspot-tools-image-${randomUUID()}`;

@@ -20,7 +20,7 @@ name = "zizmor"
 pypi = "zizmor"
 version = "1.30.1"
 
-[[tool_file]]
+[[config_file]]
 target = "zizmor.yml"
 tool = "zizmor"
 
@@ -39,7 +39,7 @@ tool = ["actionlint", "shellcheck"]
 why = "A workflow error surfaces on the first push after the change, in CI, where it costs a round trip."
 
 [[check]]
-command = ["zizmor", "--offline", "--no-progress", "--format", "github", "--config", "{tool_file:zizmor}", "{files}"]
+command = ["zizmor", "--offline", "--no-progress", "--format", "github", "--config", "{config_file:zizmor}", "{files}"]
 example = "A workflow that puts pull request text straight into a shell command reports `template-injection`. Pass the text through a step environment variable, and quote its expansion."
 exit_codes = [11, 12, 13, 14]
 help = "Apply the fix zizmor names, or turn one audit off with `gspot ignore github-actions/zizmor --rule <rule> --reason \"<why>\"`."

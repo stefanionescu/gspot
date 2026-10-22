@@ -68,7 +68,7 @@ test('a failed init keeps the version pin it already wrote', async () => {
     expect(await readFile(join(sandbox.path, '.gspot/version'), 'utf8')).toBe(`${cliPackage.version}\n`);
 });
 
-test('init keeps the old tool file when the generated one cannot be written', async () => {
+test('init keeps the old config file when the generated one cannot be written', async () => {
     await using sandbox = await testdir();
     const authored = '[default.extend-words]\nAuthored = "Authored"\n';
     await createFileTree(sandbox.path, { 'typos.toml': authored });
@@ -128,7 +128,7 @@ test('init keeps a shared file that was edited after the plan', async () => {
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
     expect(plan.retained).toContainEqual({
         path: 'setup.cfg',
-        note: expect.stringContaining('Delete the section; the generated tool file replaces it.') as string,
+        note: expect.stringContaining('Delete the section; the generated config file replaces it.') as string,
     });
     const edited = `[sqlfluff]
 exclude_rules = LT01, RF01

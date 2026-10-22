@@ -18,12 +18,12 @@ file = "package.json"
 key = "commitlint"
 pointer = true
 
-[[tool_file]]
+[[config_file]]
 target = "commitlint.json"
 tool = "commitlint"
 
 [[check]]
-command = ["commitlint", "--config", "{tool_file:commitlint}", "--edit", "{message_file}"]
+command = ["commitlint", "--config", "{config_file:commitlint}", "--edit", "{message_file}"]
 example = "The message `changed stuff` has no type or scope. Write `fix(cli): report missing configuration` instead."
 help = "Write `<type>: <subject>` or `<type>(<scope>): <subject>` in a first line of 72 characters or fewer. Change the accepted types with `gspot set tools.commitlint.types`."
 level = "all"

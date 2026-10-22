@@ -63,8 +63,8 @@ function listGeneratorPaths(planned: PlannedCheck): string[] {
 function listKnownPaths(session: Session, planned: PlannedCheck): Set<string> {
     const known = includeParentFolders(session.repository.files.map((file) => file.path));
     for (const path of includeParentFolders([...listGeneratedPaths(session.repository.files)])) known.add(path);
-    for (const toolFile of planned.scope.configurations.flatMap((configuration) => configuration.toolFiles))
-        known.add(toolFile.target);
+    for (const configFile of planned.scope.configurations.flatMap((configuration) => configuration.configFiles))
+        known.add(configFile.target);
     for (const path of listGeneratorPaths(planned)) known.add(path);
     // A check ID such as postgres/migration-order looks like a path, so count it as known.
     for (const check of session.configurations.values().flatMap((configuration) => configuration.checks))

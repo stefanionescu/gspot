@@ -3,7 +3,7 @@ export const TEST_FILES_PLACEHOLDER = '{setting:test_files}';
 
 export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
 
-export const TOOL_FILE_PLACEHOLDER = /\{tool_file:(?<name>[a-z0-9-]+)\}/gu;
+export const CONFIG_FILE_PLACEHOLDER = /\{config_file:(?<name>[a-z0-9-]+)\}/gu;
 
 export const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
 

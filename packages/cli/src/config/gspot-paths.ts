@@ -2,7 +2,7 @@ import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/repository/
 
 export const DOT_GSPOT = '.gspot';
 
-/** One folder for each group and configuration, which holds its tool files and rules. */
+/** One folder for each group and configuration, which holds its config files and rules. */
 export const GSPOT_CONFIGURATIONS_PATH = `${DOT_GSPOT}/configurations`;
 
 export const SETTINGS_FILE = 'gspot.toml';
@@ -13,7 +13,7 @@ export const PROJECT_UV_LOCKFILE = 'uv.lock';
 
 export const UV_LOCKFILE = `${DOT_GSPOT}/${PROJECT_UV_LOCKFILE}`;
 
-export const VALE_TOOL_FILE_PATH = `${GSPOT_CONFIGURATIONS_PATH}/general/prose/vale.ini`;
+export const VALE_CONFIG_FILE_PATH = `${GSPOT_CONFIGURATIONS_PATH}/general/prose/vale.ini`;
 
 /** The styles folder that Vale reads for the gspot style. */
 export const VALE_STYLES_PATH = `${GSPOT_CONFIGURATIONS_PATH}/general/prose/styles`;

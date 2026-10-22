@@ -1,4 +1,4 @@
-// Find existing lint commands, hooks, and tool files.
+// Find existing lint commands, hooks, and config files.
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import type { ManagedKeys } from '#cli/types/ownership.ts';
@@ -186,7 +186,7 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
 }
 
 /**
- * Find tool files to replace, hooks, CI, agent files, and lint folders.
+ * Find config files to replace, hooks, CI, agent files, and lint folders.
  *
  * @param reads the run cache.
  * @param repository the inventory and parsed package declarations.
@@ -235,12 +235,12 @@ export function readExistingTools(
 /**
  * Check whether generated field edits cover an existing tool settings section.
  *
- * @param toolFile the existing file or section.
+ * @param configFile the existing file or section.
  * @param fileEdits the generated field edits.
  * @returns whether an edit covers that file and key.
  */
-export function isEditedInPlace(toolFile: ReplacedFile, fileEdits: ManagedKeys[]): boolean {
+export function isEditedInPlace(configFile: ReplacedFile, fileEdits: ManagedKeys[]): boolean {
     return fileEdits.some(
-        (output) => output.path === toolFile.path && output.keys.some((field) => field.key[0] === toolFile.key),
+        (output) => output.path === configFile.path && output.keys.some((field) => field.key[0] === configFile.key),
     );
 }

@@ -51,7 +51,7 @@ function inspectLibraryCommand(inspected: InspectedTool, command: string[]): Too
         : inspectExecutablePath({ ...inspected, tool: { ...tool, version_command: commandArguments } }, path);
 }
 
-// Read library versions from the tool project installation that generated tool files use.
+// Read library versions from the tool project installation that generated config files use.
 function inspectLibrary(inspected: InspectedTool): ToolInspection {
     const { root, cwd, tool } = inspected;
     if (tool.system === true && tool.version_command !== undefined)

@@ -28,16 +28,16 @@ table = "sqlfluff"
 file = "tox.ini"
 table = "sqlfluff"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "sqlfluff.cfg"
 tool = "sqlfluff"
 
 [[check]]
-command = ["sqlfluff", "lint", "--config", "{tool_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
+command = ["sqlfluff", "lint", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
 example = "The query `select id from user_accounts;` reports CP01 for lowercase keywords. Write it as `SELECT id FROM user_accounts;`."
 exit_codes = [1]
-fix = ["sqlfluff", "fix", "--config", "{tool_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
+fix = ["sqlfluff", "fix", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
 help = "Run `gspot check --fix`. Turn one rule off with `gspot ignore sql/sqlfluff --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "sqlfluff"

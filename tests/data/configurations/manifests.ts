@@ -5,9 +5,9 @@ export const MINIMUM_VERSION_CASES = [
 ] as const;
 
 export const SEMGREP_ASSETS = [
-    'configurations/language/example/tool-files/semgrep/first.yml',
-    'configurations/language/example/tool-files/semgrep/second.yml',
-    'configurations/language/example/tool-files/semgrep/not-a-pack.txt',
+    'configurations/language/example/config-files/semgrep/first.yml',
+    'configurations/language/example/config-files/semgrep/second.yml',
+    'configurations/language/example/config-files/semgrep/not-a-pack.txt',
 ] as const;
 
 export const CONFIGURATION_TABLE = `
@@ -16,33 +16,33 @@ title = "Local"
 description = "A local configuration used by manifest loading."
 `;
 
-export const SEMGREP_TOOL_FILES = `
-[[tool_file]]
+export const SEMGREP_CONFIG_FILE_TABLES = `
+[[config_file]]
 target = "other.yml"
 pointer = { path = "other.yml", body = "{target}" }
 
-[[tool_file]]
+[[config_file]]
 target = "semgrep/first.yml"
 tool = "semgrep"
 per_scope = true
 
-[[tool_file]]
+[[config_file]]
 target = "semgrep/second.yml"
 tool = "semgrep"
 per_scope = true
 `;
 
-/** One tool, a tool file that names no tool or check, and one that names a check. */
-export const SINGLE_TOOL_FILES = `
+/** One tool, a config file that names no tool or check, and one that names a check. */
+export const SINGLE_CONFIG_FILES = `
 [[tool]]
 name = "semgrep"
 version = "1.0.0"
 
-[[tool_file]]
+[[config_file]]
 target = "semgrep/first.yml"
 level = "all"
 
-[[tool_file]]
+[[config_file]]
 target = "semgrep/second.yml"
 check = "example/scan"
 `;
@@ -89,11 +89,11 @@ try {
 `;
 
 /** The source and target of each discovered config file. */
-export const SEMGREP_CONFIG_FILES: string[][] = [
-    ['tool-files/other.yml', '.gspot/configurations/language/example/other.yml'],
-    ['tool-files/semgrep/first.yml', '.gspot/configurations/language/example/semgrep/first.yml'],
-    ['tool-files/semgrep/second.yml', '.gspot/configurations/language/example/semgrep/second.yml'],
-    ['tool-files/semgrep/not-a-pack.txt', '.gspot/configurations/language/example/semgrep/not-a-pack.txt'],
+export const SEMGREP_CONFIG_FILE_PATHS: string[][] = [
+    ['config-files/other.yml', '.gspot/configurations/language/example/other.yml'],
+    ['config-files/semgrep/first.yml', '.gspot/configurations/language/example/semgrep/first.yml'],
+    ['config-files/semgrep/second.yml', '.gspot/configurations/language/example/semgrep/second.yml'],
+    ['config-files/semgrep/not-a-pack.txt', '.gspot/configurations/language/example/semgrep/not-a-pack.txt'],
 ];
 
 /** Replacement items that a manifest refuses. */

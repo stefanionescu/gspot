@@ -182,7 +182,7 @@ stage = "push"
     expect(planChecks(session, { stage: 'push', only: ['sandbox/once'], historyComplete: false })).toHaveLength(1);
 });
 test.each([...CONFIGURED_CHECK_CASES])(
-    'planning $check keeps its declared tool-file selection $selected: $name',
+    'planning $check keeps its declared config-file selection $selected: $name',
     async ({ files, check, selected }) => {
         await using sandbox = await testdir(files);
         const session = await openSession(sandbox.path);

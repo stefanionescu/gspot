@@ -108,7 +108,7 @@ test.each([0, 1, 2])(
     },
 );
 
-test('a Markdown command run in a copy keeps the tool files its manifest writes', async () => {
+test('a Markdown command run in a copy keeps the config files its manifest writes', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['markdown']),
         'README.md': '# Example\n',
@@ -121,8 +121,8 @@ test('a Markdown command run in a copy keeps the tool files its manifest writes'
         '.gspot/configurations/language/markdown/markdownlint-cli2.mjs',
         '.gspot/configurations/language/markdown/markdownlint.jsonc',
     ]);
-    expect(() => listCopyFiles(session, planned, ['markdownlint-cli2', '{tool_file:absent}'])).toThrow(
-        'Check markdown/markdownlint names {tool_file:absent} and no configuration writes it.',
+    expect(() => listCopyFiles(session, planned, ['markdownlint-cli2', '{config_file:absent}'])).toThrow(
+        'Check markdown/markdownlint names {config_file:absent} and no configuration writes it.',
     );
 });
 
@@ -191,7 +191,7 @@ indent_width = ${String(width)}
         expect(command.commandArguments[command.commandArguments.indexOf('-i') + 1]).toBe(expected);
     },
 );
-test('a command check accepts an {existing} tool file that links to a file inside the repository', async () => {
+test('a command check accepts an {existing} config file that links to a file inside the repository', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,

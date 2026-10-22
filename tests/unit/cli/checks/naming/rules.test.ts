@@ -140,11 +140,13 @@ test('a reserved word is allowed only in its named categories', () => {
     const naming = readNaming('');
     expect(validateIdentifier(buildIdentifier({ name: 'config', category: 'variables' }), naming)).toStrictEqual([]);
     expect(validateIdentifier(buildIdentifier({ name: 'config', category: 'folders' }), naming)).toStrictEqual([]);
-    expect(listRuleMessages(buildIdentifier({ name: 'configOf' }), naming)).toStrictEqual([
+    expect(validateIdentifier(buildIdentifier({ name: 'ConfigFile', category: 'types' }), naming)).toStrictEqual([]);
+    expect(validateIdentifier(buildIdentifier({ name: 'readConfigFile' }), naming)).toStrictEqual([]);
+    expect(listRuleMessages(buildIdentifier({ name: 'ConfigReader', category: 'classes' }), naming)).toStrictEqual([
         {
             rule: 'reserved-term',
             message:
-                'typescript functions "configOf": "config" is reserved for folders, packages, files, modules, variables, constants, parameters, properties, attributes, enum_cases; this is a typescript functions.',
+                'typescript classes "ConfigReader": "config" is reserved for folders, packages, files, modules, types, functions, variables, constants, parameters, properties, attributes, enum_cases; this is a typescript classes.',
         },
     ]);
 });

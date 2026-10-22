@@ -8,7 +8,7 @@ import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
 import { VALE_INI, PROSE_SANDBOX } from '#tests/data/checks/prose.ts';
-import { TOKEN_IGNORES } from '#cli/config/generation/settings/builders/vale.ts';
+import { TOKEN_IGNORES } from '#cli/config/generation/config-files/builders/vale.ts';
 import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {

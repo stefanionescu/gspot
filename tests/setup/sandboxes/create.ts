@@ -12,11 +12,11 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { JSON_INDENT } from '#cli/config/generation/generate.ts';
-import { VALE_TOOL_FILE_PATH } from '#cli/config/gspot-paths.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
+import { VALE_CONFIG_FILE_PATH } from '#cli/config/gspot-paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
-import { VALE_PACKAGES } from '#cli/config/generation/settings/builders/vale.ts';
+import { VALE_PACKAGES } from '#cli/config/generation/config-files/builders/vale.ts';
 import { type Sandbox, type SandboxPlan, type InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 import { runGspot, spawnGspot, runGspotStep, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
@@ -141,10 +141,10 @@ export function shareProseSandbox(): () => Sandbox {
             ', ',
         );
         using writer = openWriter(root);
-        const file = writer.files.read(VALE_TOOL_FILE_PATH) as FileContents;
+        const file = writer.files.read(VALE_CONFIG_FILE_PATH) as FileContents;
         writePlans(writer, [
             planReplacement(writer, {
-                path: VALE_TOOL_FILE_PATH,
+                path: VALE_CONFIG_FILE_PATH,
                 next: {
                     bytes: Buffer.from(
                         file.bytes.toString('utf8').replace(/^Packages = .*$/mu, `Packages = ${packages}`),

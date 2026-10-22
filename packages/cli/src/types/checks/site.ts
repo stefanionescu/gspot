@@ -7,11 +7,11 @@ export type SiteBuild = {
     outputTail: string;
 };
 
-/** The PurgeCSS class: purge takes the tool file options with the stylesheets and pages to compare. */
+/** The PurgeCSS class: purge takes the config file options with the stylesheets and pages to compare. */
 export type PurgecssConstructor = new () => {
     purge(options: Record<string, unknown>): Promise<{ file?: string; rejected?: string[] }[]>;
 };
 
 export type PurgecssReport = { file: string; rejected: string[] }[];
 
-export type PurgecssRequest = { toolFile: string; css: string[]; content: string[] };
+export type PurgecssRequest = { configFile: string; css: string[]; content: string[] };

@@ -58,29 +58,29 @@ install_help = "Install Xcode from the App Store."
 name = "xcodebuild"
 system = true
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 pointer = { path = ".swiftlint.yml", body = "parent_config: {target_json}\n" }
 target = "swiftlint.yml"
 tool = "swiftlint"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 pointer = { path = ".swiftlint.yml", folders = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
 target = "swiftlint.yml"
 tool = "swiftlint"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "swiftformat"
 tool = "swiftformat"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "periphery.yml"
 tool = "periphery"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "semgrep.yml"
 tool = "semgrep"
@@ -101,11 +101,11 @@ tool = "swiftlint"
 why = "Forced casts and tries can crash, and a strong delegate can keep its owner alive."
 
 [[check]]
-command = ["swiftformat", "--lint", "--config", "{tool_file:swiftformat}", "{files}"]
+command = ["swiftformat", "--lint", "--config", "{config_file:swiftformat}", "{files}"]
 example = "`func   greeting` reports `consecutiveSpaces`. Run `gspot check --fix` to get `func greeting`."
 exit_codes = [1]
 files = { extensions = [".swift"] }
-fix = ["swiftformat", "--quiet", "--config", "{tool_file:swiftformat}", "{files}"]
+fix = ["swiftformat", "--quiet", "--config", "{config_file:swiftformat}", "{files}"]
 help = "Run `gspot check --fix`."
 level = "recommended"
 name = "swiftformat"

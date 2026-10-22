@@ -18,13 +18,13 @@ import type {
     CHECK_WORKING_FOLDERS,
 } from '#cli/config/configurations.ts';
 
-type ToolFilePointer = {
+type ConfigFilePointer = {
     path: string;
     folders?: string[] | undefined;
     body: string;
-    /** A line for the header of the pointer, after the tool file path. */
+    /** A line for the header of the pointer, after the config file path. */
     note?: string | undefined;
-    /** A scope that shares the tool file of the root uses the root pointer, because the tool reads the nearest one. */
+    /** A scope that shares the config file of the root uses the root pointer, because the tool reads the nearest one. */
     inherit?: boolean | undefined;
 };
 
@@ -81,14 +81,14 @@ export type ParsedManifest = {
         kinds: FileKind[];
     };
     tools: (string | Tool)[];
-    toolFiles: ToolFile[];
+    configFiles: ConfigFile[];
     checks: Check[];
     naming?: { override: (NamingOverride & { reason: string })[] } | undefined;
     rules: Record<string, ParsedManifest['detect']>;
     ruff: { recommended: string[]; all: string[] };
 };
 
-export type ToolFile = {
+export type ConfigFile = {
     source?: string | undefined;
     level?: Level | undefined;
     /** Where gspot writes the file, from the repository root, or from the scope for a root file. */
@@ -99,12 +99,12 @@ export type ToolFile = {
     root: boolean;
     tool: string[];
     check: string[];
-    pointer?: ToolFilePointer | undefined;
+    pointer?: ConfigFilePointer | undefined;
     per_scope: boolean;
-    /** Rule ID prefixes of a Semgrep tool file that stay only when the scope depends on one of the packages. */
+    /** Rule ID prefixes of a Semgrep config file that stay only when the scope depends on one of the packages. */
     rule_dependencies?: Record<string, string[]> | undefined;
     /**
-     * The setting that names the folder that each rule of a Semgrep tool file covers, in every scope with this
+     * The setting that names the folder that each rule of a Semgrep config file covers, in every scope with this
      * configuration.
      */
     paths_setting?: string | undefined;
@@ -112,7 +112,7 @@ export type ToolFile = {
     | { source: string }
     | {
           source?: undefined;
-          pointer: ToolFilePointer & { folders: string[] };
+          pointer: ConfigFilePointer & { folders: string[] };
       }
 );
 

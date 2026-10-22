@@ -4,7 +4,7 @@ import type { PurgecssRequest } from '#cli/types/checks/site.ts';
 
 /** The request that the parent process sends on stdin. */
 export const purgecssRequestSchema = z.strictObject({
-    toolFile: z.string().min(1),
+    configFile: z.string().min(1),
     css: z.array(z.string().min(1)),
     content: z.array(z.string().min(1)),
 } satisfies SchemaShape<PurgecssRequest>);

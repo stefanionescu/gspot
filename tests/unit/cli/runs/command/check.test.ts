@@ -234,18 +234,18 @@ test('a command check at the root checks a changed file of a child scope once', 
         { check: 'project/syntax', scope: '', fileCount: 1, status: 'failed' },
     ]);
 });
-test('a command without an extra tool-file list refuses its missing declared tool file before running', async () => {
+test('a command without an extra config-file list refuses its missing declared config file before running', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([]),
         'source.js': 'export const ready = true;\n',
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['format/prettier'] })[0]!;
-    const command = ['prettier', '--config', '{tool_file:prettier}', '{files}'];
+    const command = ['prettier', '--config', '{config_file:prettier}', '{files}'];
     const result = await runCheckCommand(session, { ...planned, check: { ...planned.check, command } });
     expect(result).toMatchObject({
         status: 'error',
-        note: 'The tool file .gspot/configurations/general/format/prettier.json is missing. Run gspot apply.',
+        note: 'The config file .gspot/configurations/general/format/prettier.json is missing. Run gspot apply.',
         findings: [],
     });
 });

@@ -39,12 +39,12 @@ version = "3.12.0"
 name = "zsh"
 system = true
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "shellcheckrc"
 tool = "shellcheck"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "semgrep.yml"
 tool = "semgrep"
@@ -62,7 +62,7 @@ summary = "Checks the syntax of Zsh scripts with `zsh -n`."
 why = "Zsh syntax differs from Bash, so a Bash parser rejects valid Zsh programs."
 
 [[check]]
-command = ["shellcheck", "--rcfile", "{tool_file:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
+command = ["shellcheck", "--rcfile", "{config_file:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the expansion permits word splitting and globbing. Use `printf \"%s\\n\" \"$name\"` to pass the value as one argument."
 exit_codes = [1]
 files = { tags = ["bash", "sh", "bats"] }

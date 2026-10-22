@@ -8,17 +8,17 @@ import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
-import { getToolFile } from '#cli/runs/command/placeholders.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
+import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import { listCoveredFiles } from '#cli/repository/covered-files.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { parseJsonFile, parseToolReport } from '#cli/parsers/json.ts';
-import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { cloneReportSchema } from '#cli/schemas/checks/duplication.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
-import { JSCPD, JSCPD_ARGUMENTS, JSCPD_TOOL_FILE, JSCPD_REPORT_FILE } from '#cli/config/checks/duplication.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
+import { JSCPD, JSCPD_ARGUMENTS, JSCPD_CONFIG_FILE, JSCPD_REPORT_FILE } from '#cli/config/checks/duplication.ts';
 
 /**
  * Runs jscpd over the scope and reports the clones.
@@ -44,18 +44,18 @@ export async function checkDuplicationJscpd(session: Session, planned: PlannedCh
         ),
     ];
     using files = openFiles(session.root);
-    const generatedPath = getToolFileTarget(
+    const generatedPath = getConfigFileTarget(
         planned.scope.folder.path,
-        getToolFile(session, planned, JSCPD),
-        getToolFiles(session).targets,
+        getConfigFile(session, planned, JSCPD),
+        getConfigFiles(session).targets,
     );
     const generated = files.read(generatedPath);
     if (generated === undefined) throw new GspotError('check', `Missing ${generatedPath}. Run gspot apply.`);
     const shipped = parseJsonFile(generatedPath, generated.bytes.toString('utf8'));
-    // A long file list overflows a command line, so the paths go into a tool file of their own.
-    const toolFile = join(work, JSCPD_TOOL_FILE);
-    writeFileSync(toolFile, JSON.stringify({ ...shipped, path: owned.map((path) => join(session.root, path)) }));
-    const commandArguments = [JSCPD, '--config', toolFile, ...JSCPD_ARGUMENTS, '--output', work];
+    // A long file list overflows a command line, so the paths go into a config file of their own.
+    const configFile = join(work, JSCPD_CONFIG_FILE);
+    writeFileSync(configFile, JSON.stringify({ ...shipped, path: owned.map((path) => join(session.root, path)) }));
+    const commandArguments = [JSCPD, '--config', configFile, ...JSCPD_ARGUMENTS, '--output', work];
     const result = await runCheckTool(session, planned, commandArguments, { cwd: session.root });
     if (result.code !== 0) throw new Error(`The jscpd command failed: ${formatOutputTail(result)}`);
     let bytes: Buffer;

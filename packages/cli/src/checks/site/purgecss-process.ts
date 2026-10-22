@@ -1,4 +1,4 @@
-// The PurgeCSS command imports its tool file by a bare path, which Node refuses on Windows. Import it by URL instead.
+// The PurgeCSS command imports its config file by a bare path, which Node refuses on Windows. Import it by URL instead.
 
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
@@ -12,7 +12,7 @@ const api = (await import(pathToFileURL(createRequire(executable).resolve(PURGEC
     PurgeCSS: PurgecssConstructor;
 };
 const request = purgecssRequestSchema.parse(JSON.parse(await text(process.stdin)));
-const options = (await import(pathToFileURL(request.toolFile).href)) as Record<string, unknown>;
+const options = (await import(pathToFileURL(request.configFile).href)) as Record<string, unknown>;
 const results = await new api.PurgeCSS().purge({
     ...options,
     css: request.css,

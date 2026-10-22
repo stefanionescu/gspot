@@ -5,11 +5,11 @@ import type { SkipCause, PlannedCheck } from '#cli/types/planning.ts';
 type CheckStatus = (typeof CHECK_STATUSES)[number];
 
 /**
- * The code of one check: a built-in check or its own run, or the arguments and tool files of a check that runs its
+ * The code of one check: a built-in check or its own run, or the arguments and config files of a check that runs its
  * declared command.
  */
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) &
-    Pick<CheckRunOptions, 'listFileArguments' | 'listToolFiles'>;
+    Pick<CheckRunOptions, 'listFileArguments' | 'listConfigFiles'>;
 
 type CheckRun = (
     session: Session,
@@ -17,12 +17,12 @@ type CheckRun = (
     options?: CheckRunOptions,
 ) => CheckResult | Promise<CheckResult>;
 
-/** The command, copy folder, file arguments, and tool files that a check run takes. */
+/** The command, copy folder, file arguments, and config files that a check run takes. */
 export type CheckRunOptions = {
     command?: string[];
     copyRoot?: string;
     listFileArguments?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;
-    listToolFiles?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;
+    listConfigFiles?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;
 };
 
 export type BuiltInCheckResult = { findings: Finding[]; files: string[] };

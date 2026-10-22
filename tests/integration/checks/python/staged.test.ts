@@ -13,7 +13,7 @@ test('Ruff from the installed environment reports a staged Python finding while 
         indexFile: 'pyproject.toml',
     });
     expect(await spawnGspot(prepared.root, ['install'])).toMatchObject({ code: 0 });
-    // createPythonSandbox ran apply after its commit, so this commit adds the generated Ruff tool file.
+    // createPythonSandbox ran apply after its commit, so this commit adds the generated Ruff config file.
     commitAll(sandbox.path);
     // The index holds a second sample beside the committed one; the working tree has the correction.
     await writeFile(join(sandbox.path, 'source.py'), 'import os\nimport sys\n');

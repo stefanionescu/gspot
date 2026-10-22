@@ -4,7 +4,7 @@ description: Each thing you can change in gspot, and the one command or setting 
 ---
 
 `gspot.toml` holds every change you make to gspot, and each change has one command or setting. A change that makes a
-check weaker needs a reason beside it. gspot writes the tool files from `gspot.toml`, so you never edit a tool file.
+check weaker needs a reason beside it. gspot writes the config files from `gspot.toml`, so you never edit a config file.
 
 ## Choose what runs
 
@@ -59,7 +59,7 @@ gspot decides these, so every repository at one level and one gspot version runs
   reason the rules you do not want.
 - **The options of rules that a setting writes.** Size and complexity rules take their values from `limits`, and
   indentation rules from `[format]`. Change the setting.
-- **Tool options that have no setting.** gspot writes each tool file from `gspot.toml` only.
+- **Tool options that have no setting.** gspot writes each config file from `gspot.toml` only.
 - **When a check runs, and whether it fails.** Every finding fails its check. Your own command checks choose their
   stage.
 - **Tool versions.** Each gspot release pins them.

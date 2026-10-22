@@ -8,7 +8,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { readCachedBytes } from '#cli/system/files/reads.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
-import { VALE_TOOL_FILE_PATH } from '#cli/config/gspot-paths.ts';
+import { VALE_CONFIG_FILE_PATH } from '#cli/config/gspot-paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -157,7 +157,7 @@ test('the Vale check fails before running Vale when the Vale packages are not in
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(await testdir(VALE_SANDBOX_FILES));
     const session = await openPinnedSession(sandbox.path, ['vale'], resources);
-    await rm(join(sandbox.path, VALE_TOOL_FILE_PATH));
+    await rm(join(sandbox.path, VALE_CONFIG_FILE_PATH));
     using run = spyOn(processes, 'spawnProcess');
     expect(await captureRejection(runSandboxCheck(session.root, 'prose/vale'))).toBe(
         'The Vale packages are not installed. Run gspot install.',

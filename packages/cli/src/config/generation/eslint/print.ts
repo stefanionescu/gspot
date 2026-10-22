@@ -8,7 +8,7 @@ export const COMPONENT_MATCHERS = {
 /** The indent of each generated ESLint block. */
 export const ESLINT_INDENT = ' '.repeat(JSON_INDENT);
 
-/** The ESLint runtime helper, which the ESLint tool file imports from its own folder. */
+/** The ESLint runtime helper, which the ESLint config file imports from its own folder. */
 const ESLINT_RUNTIME_FILE = 'eslint-runtime.mjs';
 
 export const ESLINT_BASE_IMPORTS = [

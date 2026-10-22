@@ -86,46 +86,46 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
     };
 }
 
-function buildInactiveFileRow(session: Session, toolFile: ReplacedFile, configuration: Configuration): SuggestionRow {
+function buildInactiveFileRow(session: Session, configFile: ReplacedFile, configuration: Configuration): SuggestionRow {
     if (configuration.when?.git === true && !session.repository.hasGit)
-        return { path: toolFile.path, note: `${toolFile.tool} requires a Git repository`, command: 'git init' };
+        return { path: configFile.path, note: `${configFile.tool} requires a Git repository`, command: 'git init' };
     const checks = configuration.checks.filter(
         (check) =>
-            (typeof check.tool === 'object' ? Object.values(check.tool) : [check.tool]).includes(toolFile.tool) ||
-            check.command?.[0] === toolFile.tool,
+            (typeof check.tool === 'object' ? Object.values(check.tool) : [check.tool]).includes(configFile.tool) ||
+            check.command?.[0] === configFile.tool,
     );
-    const note = `no applicable ${toolFile.tool} check at level ${session.settingsFile.settings.level}`;
+    const note = `no applicable ${configFile.tool} check at level ${session.settingsFile.settings.level}`;
     if (
         session.settingsFile.settings.level === 'recommended' &&
         checks.length > 0 &&
         checks.every((check) => check.level === 'all')
     )
-        return { path: toolFile.path, note, command: 'gspot set level all' };
-    return { path: toolFile.path, note: `${note}; add the source files that this check reads` };
+        return { path: configFile.path, note, command: 'gspot set level all' };
+    return { path: configFile.path, note: `${note}; add the source files that this check reads` };
 }
 
 function buildFileRow(
     session: Session,
-    toolFile: ReplacedFile,
+    configFile: ReplacedFile,
     tools: Set<string>,
     configuration: Configuration,
 ): SuggestionRow {
-    if (tools.has(toolFile.tool))
+    if (tools.has(configFile.tool))
         return {
-            path: toolFile.path,
-            note: toolFile.shared
-                ? `beside the generated ${toolFile.tool} tool file; move any ${toolFile.table ?? toolFile.key ?? toolFile.tool} setting you still need into gspot.toml, then delete the section`
-                : `beside the generated ${toolFile.tool} tool file; move any setting you still need into gspot.toml, then delete the file`,
+            path: configFile.path,
+            note: configFile.shared
+                ? `beside the generated ${configFile.tool} config file; move any ${configFile.table ?? configFile.key ?? configFile.tool} setting you still need into gspot.toml, then delete the section`
+                : `beside the generated ${configFile.tool} config file; move any setting you still need into gspot.toml, then delete the file`,
         };
-    if (configuration.group === 'general') return buildInactiveFileRow(session, toolFile, configuration);
+    if (configuration.group === 'general') return buildInactiveFileRow(session, configFile, configuration);
     return {
-        path: toolFile.path,
-        note: `the ${configuration.name} configuration configures ${toolFile.tool}`,
+        path: configFile.path,
+        note: `the ${configuration.name} configuration configures ${configFile.tool}`,
         command: `gspot add ${configuration.name}`,
     };
 }
 
-function listUnownedToolFiles(
+function listUnownedConfigFiles(
     session: Session,
     existingTools: ExistingTools,
     tools: Set<string>,
@@ -134,17 +134,17 @@ function listUnownedToolFiles(
     const tracked = new Set(session.repository.files.map((file) => file.path));
     const generatedPaths = new Set(generated.files.map((file) => file.path));
     return existingTools.replacedFiles
-        .filter((toolFile) => tracked.has(toolFile.path) && !generatedPaths.has(toolFile.path))
-        .filter((toolFile) => !isEditedInPlace(toolFile, generated.managedKeys))
+        .filter((configFile) => tracked.has(configFile.path) && !generatedPaths.has(configFile.path))
+        .filter((configFile) => !isEditedInPlace(configFile, generated.managedKeys))
         .filter(
-            (toolFile) =>
-                !hasGeneratedHeader(readCachedPrefix(session.reads, toolFile.path, BANNER_BYTES).toString('utf8')),
+            (configFile) =>
+                !hasGeneratedHeader(readCachedPrefix(session.reads, configFile.path, BANNER_BYTES).toString('utf8')),
         )
-        .flatMap((toolFile) => {
+        .flatMap((configFile) => {
             const configuration = session.configurations
                 .values()
-                .find((configuration) => configuration.tools.some((tool) => tool.name === toolFile.tool));
-            return configuration === undefined ? [] : [buildFileRow(session, toolFile, tools, configuration)];
+                .find((configuration) => configuration.tools.some((tool) => tool.name === configFile.tool));
+            return configuration === undefined ? [] : [buildFileRow(session, configFile, tools, configuration)];
         });
 }
 
@@ -162,7 +162,7 @@ export function listSuggestions(session: Session): Suggestions {
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         ...listConfigurationSuggestions(session),
-        unowned: listUnownedToolFiles(session, existingTools, tools, generated),
+        unowned: listUnownedConfigFiles(session, existingTools, tools, generated),
         lintJobs: readLintJobs(
             session.root,
             existingTools.ci.filter((path) => !workflows.has(path)),

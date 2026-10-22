@@ -9,7 +9,7 @@ import { create } from 'zustand';
 export const store = create(() => ({ readFile, join }));
 `;
 
-/** ESLint rules and overrides at the root and in two nested scopes. The generated tool file and a template read them. */
+/** ESLint rules and overrides at the root and in two nested scopes. The generated config file and a template read them. */
 export const ESLINT_OVERRIDES_SETTINGS = `configurations = [ "javascript" ]
 
 [rules]

@@ -12,7 +12,7 @@ npm = "jscpd"
 replace = [".jscpd.json"]
 version = "5.2.0"
 
-[[tool_file]]
+[[config_file]]
 target = "jscpd.json"
 tool = "jscpd"
 

@@ -49,7 +49,7 @@ files = ["**/{page,layout,template,default,loading,error,not-found,global-error,
 reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
 rules = ["gspot/no-trivial-files"]
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "semgrep.yml"
 tool = "semgrep"

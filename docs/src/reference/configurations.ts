@@ -75,8 +75,8 @@ function listInstalledSections(configuration: Configuration): [string, string][]
         (tool.version === undefined ? 'Any' : `\`${tool.version}\``) +
             (isInstalledByGspot(tool) ? '' : ', install it yourself'),
     ]);
-    // Two tool files can share one target, so each target appears once.
-    const targets = [...new Set(configuration.toolFiles.map((toolFile) => `\`${toolFile.target}\``))];
+    // Two config files can share one target, so each target appears once.
+    const targets = [...new Set(configuration.configFiles.map((configFile) => `\`${configFile.target}\``))];
     const ignored = configuration.ignored_paths.map((path) => `\`${path}\``);
     return [
         ['Tools and versions', formatTable(['Tool', 'Version'], tools)],

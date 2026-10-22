@@ -12,16 +12,16 @@ name = "typos"
 replace = ["typos.toml", ".typos.toml", "_typos.toml"]
 version = "1.43.5"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "typos.toml"
 tool = "typos"
 
 [[check]]
-command = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
+command = ["typos", "--isolated", "--config", "{config_file:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
 example = "A misspelled word reports a finding. Correct it, and for a file name, rename the file and update each reference to it."
 exit_codes = [2]
-fix = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--no-check-filenames", "--locale", "en", "--write-changes", "--color", "never", "{files}"]
+fix = ["typos", "--isolated", "--config", "{config_file:typos}", "--force-exclude", "--no-check-filenames", "--locale", "en", "--write-changes", "--color", "never", "{files}"]
 help = "Fix the spelling, or write the real name and its reason in the `spelling.allowed_words` setting."
 level = "recommended"
 name = "typos"

@@ -9,13 +9,13 @@ import type { RuleFile } from '#cli/types/generation/rules.ts';
 import { listNeededTools } from '#cli/planning/needed-tools.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
 import { SWIFT_CONFIGURATION } from '#cli/config/configurations.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm.ts';
 import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
 import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getTable, findRootScope } from '#cli/settings/scope-settings.ts';
-import { buildPointerFieldEdits } from '#cli/generation/settings/pointers.ts';
+import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts';
 import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/inventory.ts';
 import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
@@ -173,11 +173,11 @@ export function generate(session: Session): GenerationResult {
         blocks: [],
         managedKeys: [],
     };
-    const toolFiles = getToolFiles(session);
-    generated.files.push(...toolFiles.files);
+    const configFiles = getConfigFiles(session);
+    generated.files.push(...configFiles.files);
     generated.managedKeys.push(
         ...buildBunScannerEdits(session),
-        ...buildPointerFieldEdits(session, generated.files, toolFiles.targets),
+        ...buildPointerFieldEdits(session, generated.files, configFiles.targets),
     );
     generated.files.push(
         ...buildHookFiles(settings, session.startRunner, {

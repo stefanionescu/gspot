@@ -10,7 +10,7 @@ import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependencies.ts';
 import { declaredNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
 
 import type {
-    ToolFile,
+    ConfigFile,
     ParsedCheck,
     ParsedManifest,
     ConditionFields,
@@ -22,7 +22,7 @@ import {
     CHECK_NEEDS,
     NAME_PATTERN,
     CHECK_WORKING_FOLDERS,
-    SHIPPED_TOOL_FILES_FOLDER,
+    SHIPPED_CONFIG_FILES_FOLDER,
 } from '#cli/config/configurations.ts';
 import {
     levelSchema,
@@ -64,19 +64,19 @@ const pointerSchema = z.strictObject({
     body: z.string(),
     note: z.string().min(1).optional(),
     inherit: z.boolean().optional(),
-} satisfies SchemaShape<NonNullable<ToolFile['pointer']>>);
+} satisfies SchemaShape<NonNullable<ConfigFile['pointer']>>);
 
-// The tool and check fields of a tool file take one name or a nonempty list of names.
+// The tool and check fields of a config file take one name or a nonempty list of names.
 const consumerNamesSchema = z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .transform((names) => (typeof names === 'string' ? [names] : names))
     .default([]) satisfies z.ZodType<string[], string | string[] | undefined>;
 
-const toolFileSchema = z
+const configFileSchema = z
     .strictObject({
         level: levelSchema.optional(),
         target: z.string(),
-        // A root file sits in the scope folder; every other tool file sits in the folder of its configuration.
+        // A root file sits in the scope folder; every other config file sits in the folder of its configuration.
         root: z.boolean().default(false),
         // Generate the file when a check in its scope runs any named tool.
         tool: consumerNamesSchema,
@@ -86,16 +86,20 @@ const toolFileSchema = z
         rule_dependencies: z.record(z.string().min(1), z.array(z.string().min(1)).min(1)).optional(),
         paths_setting: z.string().min(1).optional(),
     })
-    // Copied files use the same relative path beneath tool-files and the generated configuration folder.
-    .transform((toolFile) => {
-        if (toolFile.pointer?.folders !== undefined)
+    // Copied files use the same relative path beneath config-files and the generated configuration folder.
+    .transform((configFile) => {
+        if (configFile.pointer?.folders !== undefined)
             return {
-                ...toolFile,
-                file: toolFile.target,
-                pointer: { ...toolFile.pointer, folders: toolFile.pointer.folders },
+                ...configFile,
+                file: configFile.target,
+                pointer: { ...configFile.pointer, folders: configFile.pointer.folders },
             };
-        return { ...toolFile, file: toolFile.target, source: posix.join(SHIPPED_TOOL_FILES_FOLDER, toolFile.target) };
-    }) satisfies z.ZodType<ToolFile>;
+        return {
+            ...configFile,
+            file: configFile.target,
+            source: posix.join(SHIPPED_CONFIG_FILES_FOLDER, configFile.target),
+        };
+    }) satisfies z.ZodType<ConfigFile>;
 
 const checkFields = z.strictObject({
     ...commandCheckFields,
@@ -222,9 +226,9 @@ export const manifestSchema = z
         detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
         tool: z.array(manifestToolSchema).default([]),
-        // Each file in the tool-files folder becomes a tool file. A [[tool_file]] record adds the tools and checks that
+        // Each file in the config-files folder becomes a config file. A [[config_file]] record adds the tools and checks that
         // read it, and its generation settings.
-        tool_file: z.array(toolFileSchema).default([]),
+        config_file: z.array(configFileSchema).default([]),
         check: z.array(checkSchema).default([]),
         // The naming rules of the framework or platform, merged after the shipped settings and before the repository's
         // own.
@@ -263,21 +267,21 @@ export const manifestSchema = z
             >)
             .prefault({}),
     })
-    // A manifest writes one [[tool]], [[tool_file]], or [[check]] record for each item; the code reads them as lists.
-    .transform(({ tool, tool_file: toolFiles, check, detect, ...rest }) => ({
+    // A manifest writes one [[tool]], [[config_file]], or [[check]] record for each item; the code reads them as lists.
+    .transform(({ tool, config_file: configFiles, check, detect, ...rest }) => ({
         ...rest,
         // An absent detection table inherits only the matcher fields of the validated [files] table.
         detect: detect ?? detectionSchema.strip().parse(rest.files),
         tools: tool,
-        toolFiles: toolFiles.map((toolFile) => ({
-            ...toolFile,
-            target: toolFile.root
-                ? toolFile.file
+        configFiles: configFiles.map((configFile) => ({
+            ...configFile,
+            target: configFile.root
+                ? configFile.file
                 : posix.join(
                       GSPOT_CONFIGURATIONS_PATH,
                       rest.configuration.group,
                       rest.configuration.name,
-                      toolFile.file,
+                      configFile.file,
                   ),
         })),
         checks: check.map(({ name, ...entry }) => ({ ...entry, id: `${rest.configuration.name}/${name}` })),

@@ -1,4 +1,4 @@
-/** pyproject.toml tables that init leaves in place while a generated tool file takes over. */
+/** pyproject.toml tables that init leaves in place while a generated config file takes over. */
 
 import { COMMITLINT_PACKAGE } from '#tests/data/checks/commits.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/data/checks/css.ts';
@@ -28,7 +28,7 @@ export const REPLACED_PYPROJECT_TABLES = [
     },
 ] as const;
 
-/** Existing tool files that checks for level all must leave alone at level recommended. */
+/** Existing config files that checks for level all must leave alone at level recommended. */
 export const INACTIVE_CONFIGURATIONS = {
     '.commitlintrc.json': '{"rules":{}}\n',
     '.commitlintrc.mts': 'export default { rules: {} };\n',
@@ -37,7 +37,7 @@ export const INACTIVE_CONFIGURATIONS = {
     'package.json': COMMITLINT_PACKAGE,
 } as const;
 
-/** A script that runs Stylelint without a path to a tool file, so Stylelint finds one itself. */
+/** A script that runs Stylelint without a path to a config file, so Stylelint finds one itself. */
 export const STYLELINT_LOOKUP_SCRIPT = `
 import stylelint from './.gspot/node_modules/stylelint/lib/index.mjs';
 const result = await stylelint.lint({ files: [process.argv[1]], cwd: process.cwd() });
@@ -48,7 +48,7 @@ const findings = result.results.flatMap(({ warnings, parseErrors, invalidOptionW
 ]);
 process.stdout.write(JSON.stringify(findings));
 `;
-export const REPLACED_TOOL_FILES = {
+export const REPLACED_CONFIG_FILES = {
     'typos.toml': `[default.extend-words]
 # The device identifier API name.
 udid = "udid"
@@ -59,7 +59,7 @@ udid = "udid"
     '.prettierrc': '{ "semi": false }\n',
 } as const;
 export const INIT_FILES = {
-    ...REPLACED_TOOL_FILES,
+    ...REPLACED_CONFIG_FILES,
     'scripts/a.sh': CLEAN_BASH_SCRIPT,
     'src/a.js': 'export const a = 1;\n',
     'README.md': '# test\n',

@@ -14,9 +14,9 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import { FORMAT_CONFIGURATION } from '#cli/config/configurations.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { buildSelectedConfigurations } from '#cli/commands/init/selection.ts';
-import { PYTHON_FILES } from '#cli/config/generation/settings/builders/ruff.ts';
 import type { SettingsDraft, PrettierOptions } from '#cli/types/commands/init.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
+import { PYTHON_FILES } from '#cli/config/generation/config-files/builders/ruff.ts';
 import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/commands.ts';
 
 import {

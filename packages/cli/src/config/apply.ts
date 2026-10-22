@@ -4,4 +4,4 @@ export const INSTALL_NEEDED_NOTE =
 export const HOOKS_CHANGED_NOTE = 'Git hooks changed. Run gspot install.';
 
 export const MANAGED_KEYS_NOTE =
-    'Keys that gspot no longer manages stay in your files. Review shared tool files after removing a configuration.';
+    'Keys that gspot no longer manages stay in your files. Review shared config files after removing a configuration.';

@@ -14,25 +14,25 @@ import {
     RULES_FOLDER,
     MANIFEST_FILE,
     CONFIGURATIONS_FOLDER,
-    SHIPPED_TOOL_FILES_FOLDER,
+    SHIPPED_CONFIG_FILES_FOLDER,
 } from '#cli/config/configurations.ts';
 
 // Every run shares the immutable declarations shipped with the package.
 let CONFIGURATIONS: Map<string, Configuration> | undefined;
 
-// A configuration with exactly one tool gives that tool to each tool file that names none.
+// A configuration with exactly one tool gives that tool to each config file that names none.
 function findOnlyToolName(tools: unknown): string | undefined {
     if (!Array.isArray(tools) || tools.length !== 1) return undefined;
     const tool: unknown = tools.at(0);
     return isTable(tool) && typeof tool['name'] === 'string' ? tool['name'] : undefined;
 }
 
-// Add a tool file for each file in the tool-files folder that no [[tool_file]] record names.
-function readToolFiles(configurationFolder: string, toolFiles: unknown, tools: unknown): unknown {
-    if (toolFiles !== undefined && !Array.isArray(toolFiles)) return toolFiles;
-    const entries: unknown[] = toolFiles === undefined ? [] : toolFiles;
+// Add a config file for each file in the config-files folder that no [[config_file]] record names.
+function readConfigFiles(configurationFolder: string, configFiles: unknown, tools: unknown): unknown {
+    if (configFiles !== undefined && !Array.isArray(configFiles)) return configFiles;
+    const entries: unknown[] = configFiles === undefined ? [] : configFiles;
     const declaredTargets = new Set(entries.flatMap((entry) => (isTable(entry) ? [entry['target']] : [])));
-    const folder = `${configurationFolder}/${SHIPPED_TOOL_FILES_FOLDER}/`;
+    const folder = `${configurationFolder}/${SHIPPED_CONFIG_FILES_FOLDER}/`;
     const copied = listAssets(folder)
         .map((path) => ({ target: posix.relative(folder, path) }))
         .filter(({ target }) => !declaredTargets.has(target));
@@ -75,15 +75,15 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
  *
  * @param text the `manifest.toml` content.
  * @param configurationFolder the asset path that gives the name and group.
- * @returns the configuration, with qualified check IDs and the tool files found in its folder.
+ * @returns the configuration, with qualified check IDs and the config files found in its folder.
  */
 function parseManifest(text: string, configurationFolder: string): ParsedManifest {
     const parsed = parseToml(text) as Record<string, unknown>;
-    const toolFiles = parsed['tool_file'];
-    const discoveredToolFiles = readToolFiles(configurationFolder, toolFiles, parsed['tool']);
+    const configFiles = parsed['config_file'];
+    const discoveredConfigFiles = readConfigFiles(configurationFolder, configFiles, parsed['tool']);
     const result = manifestSchema.safeParse({
         ...parsed,
-        tool_file: discoveredToolFiles,
+        config_file: discoveredConfigFiles,
         folder: configurationFolder,
         configuration: {
             ...(isTable(parsed['configuration']) ? parsed['configuration'] : {}),

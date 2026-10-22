@@ -13,13 +13,13 @@ import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildPathMatcher } from '#cli/repository/matchers.ts';
-import { getToolFile } from '#cli/runs/command/placeholders.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
+import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { purgecssReportSchema } from '#cli/schemas/checks/site/pages.ts';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { listBuiltFiles, getSuccessfulBuild, buildRepositoryPath } from '#cli/checks/site/build.ts';
 
 import {
@@ -105,7 +105,7 @@ export async function checkSiteLychee(session: Session, planned: PlannedCheck): 
 }
 
 /**
- * Runs html-validate on every built page with the tool file for built output.
+ * Runs html-validate on every built page with the config file for built output.
  *
  * @param session the repository and its tools.
  * @param planned the scope whose site to check.
@@ -117,19 +117,19 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
         .filter((path) => path.endsWith(HTML_EXTENSION))
         .map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
-    const toolFile = join(
+    const configFile = join(
         session.root,
-        getToolFileTarget(
+        getConfigFileTarget(
             planned.scope.folder.path,
-            getToolFile(session, planned, HTML_VALIDATE),
-            getToolFiles(session).targets,
+            getConfigFile(session, planned, HTML_VALIDATE),
+            getConfigFiles(session).targets,
         ),
     );
     using reports = createTemporaryFolder();
     const command = [
         HTML_VALIDATE,
         HTML_VALIDATE_CONFIG_FLAG,
-        toolFile,
+        configFile,
         HTML_VALIDATE_FORMATTER_FLAG,
         `json=${join(reports.path, HTML_REPORT_FILE)}`,
     ];
@@ -164,19 +164,19 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
     const build = await getSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
-    const toolFile = join(
+    const configFile = join(
         session.root,
-        getToolFileTarget(
+        getConfigFileTarget(
             planned.scope.folder.path,
-            getToolFile(session, planned, PURGECSS),
-            getToolFiles(session).targets,
+            getConfigFile(session, planned, PURGECSS),
+            getConfigFiles(session).targets,
         ),
     );
     const result = await runCheckTool(
         session,
         planned,
         { tool: PURGECSS, entry: PURGECSS_PROCESS },
-        { cwd: build.folder, stdin: JSON.stringify({ toolFile, css: sheets, content: PURGECSS_CONTENT }) },
+        { cwd: build.folder, stdin: JSON.stringify({ configFile, css: sheets, content: PURGECSS_CONTENT }) },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
     const report = parseToolReport('PurgeCSS', result.stdout, purgecssReportSchema);

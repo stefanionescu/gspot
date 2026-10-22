@@ -21,12 +21,12 @@ name = "docker"
 name = "openssl"
 system = true
 
-[[tool_file]]
+[[config_file]]
 target = "gixy.cfg"
 tool = "gixy"
 
 [[check]]
-command = ["gixy", "--config", "{tool_file:gixy}", "--format", "json", "{file}"]
+command = ["gixy", "--config", "{config_file:gixy}", "--format", "json", "{file}"]
 example = "A location for `/proxy/(.*)` with `proxy_pass http://$1` sends requests to any host and reports `ssrf`. Point `proxy_pass` at a fixed upstream instead."
 help = "Change the block the way the rule page says. Turn one rule off with `gspot ignore nginx/gixy --rule <rule> --reason \"<why>\"`."
 level = "recommended"

@@ -5,7 +5,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { type Configuration } from '#cli/types/configurations.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations.ts';
 import { findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
-import { JSON_INDENT, TOOL_FILE_TOML_FORMAT } from '#cli/config/generation/generate.ts';
+import { JSON_INDENT, CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/generate.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { type GeneratedFile, type PlannedNpmProject } from '#cli/types/generation/files.ts';
 
@@ -42,7 +42,7 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
     );
     return {
         path: MISE_TOOL_PROJECT_FILE,
-        content: stringify({ tools }, { ...TOOL_FILE_TOML_FORMAT, inlineTableStart: 1 }),
+        content: stringify({ tools }, { ...CONFIG_FILE_TOML_FORMAT, inlineTableStart: 1 }),
     };
 }
 
@@ -109,11 +109,11 @@ export function buildPythonProject(configurations: Configuration[], days: number
         {
             path: PYTHON_TOOL_PROJECT_FILE,
             content:
-                stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOOL_FILE_TOML_FORMAT) +
+                stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, CONFIG_FILE_TOML_FORMAT) +
                 // toml-patch writes an empty [tool] table before [tool.uv], so this code writes the table header
                 // itself.
                 `\n${UV_PROJECT_TABLE}\n` +
-                stringify({ package: false, 'exclude-newer': `${String(days)} days` }, TOOL_FILE_TOML_FORMAT),
+                stringify({ package: false, 'exclude-newer': `${String(days)} days` }, CONFIG_FILE_TOML_FORMAT),
         },
     ];
 }

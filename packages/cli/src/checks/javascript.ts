@@ -13,15 +13,15 @@ import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { JSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
-import { getToolFile } from '#cli/runs/command/placeholders.ts';
+import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import type { WholeToolFile } from '#cli/types/generation/files.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { buildPerScopeTarget } from '#cli/generation/settings/generate.ts';
-import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
+import type { WholeConfigFile } from '#cli/types/generation/files.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
-import { buildJsconfigFile } from '#cli/generation/settings/builders/jsconfig.ts';
+import { buildPerScopeTarget } from '#cli/generation/config-files/generate.ts';
+import { buildJsconfigFile } from '#cli/generation/config-files/builders/jsconfig.ts';
 import { TSC_PLAIN_OUTPUT, JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/typescript.ts';
 import { listCompilerFiles, restoreCommandPaths, appendTsbuildinfoFlag } from '#cli/checks/typescript/compiler.ts';
 
@@ -69,10 +69,10 @@ function buildScopeCompilerProject(
  * @returns the path of the matching jsconfig.
  */
 function findJavascriptProject(session: Session, planned: PlannedCheck): string {
-    const toolFile = getToolFile(session, planned, extractToolFileName(JSCONFIG_FILE)) as WholeToolFile;
+    const configFile = getConfigFile(session, planned, extractConfigFileName(JSCONFIG_FILE)) as WholeConfigFile;
     const paths = new Set([
-        toolFile.target,
-        ...session.scopes.map(({ folder }) => buildPerScopeTarget(toolFile, folder.path)),
+        configFile.target,
+        ...session.scopes.map(({ folder }) => buildPerScopeTarget(configFile, folder.path)),
     ]);
     using files = openFiles(session.root);
     for (const path of paths) {
@@ -82,13 +82,13 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
             session,
             scope: planned.scope,
             configuration: planned.configuration as Configuration,
-            toolFile,
+            configFile,
             targetPath: path,
             level: session.settingsFile.settings.level,
         });
         if (written.bytes.toString('utf8') === expected) return path;
     }
-    throw new Error(`Missing JavaScript tool file: ${toolFile.target}`);
+    throw new Error(`Missing JavaScript config file: ${configFile.target}`);
 }
 
 /**
@@ -104,7 +104,7 @@ export async function checkJavascriptTsc(session: Session, planned: PlannedCheck
         return { ...buildBaseResult(planned, session), fileCount: 0 };
     const target = findJavascriptProject(session, planned);
     const generated = readTsconfig(session.root, join(session.root, target), session.reads);
-    if (generated === undefined) throw new Error(`Missing JavaScript tool file: ${target}`);
+    if (generated === undefined) throw new Error(`Missing JavaScript config file: ${target}`);
     const project = {
         ...generated,
         ...buildScopeCompilerProject(session, scope, generated),

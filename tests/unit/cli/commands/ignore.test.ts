@@ -253,7 +253,7 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
     );
 });
 
-test('ignore without a check keeps the paths out of every check and every tool file', async () => {
+test('ignore without a check keeps the paths out of every check and every config file', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo entry\n',

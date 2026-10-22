@@ -83,7 +83,7 @@ export const TOOL_BUILDS = OPERATING_SYSTEMS.flatMap(
 
 export const EXTENSION_PATTERN = /^\.[a-z0-9]+$/u;
 
-export const SHIPPED_TOOL_FILES_FOLDER = 'tool-files';
+export const SHIPPED_CONFIG_FILES_FOLDER = 'config-files';
 
 export const SVELTE_CONFIGURATION = 'svelte';
 

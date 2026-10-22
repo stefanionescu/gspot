@@ -39,24 +39,24 @@ version = "8.20.0"
 name = "xmllint"
 system = true
 
-[[tool_file]]
+[[config_file]]
 target = "taplo.toml"
 tool = "taplo"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "yamllint.yml"
 tool = "yamllint"
 
-[[tool_file]]
+[[config_file]]
 target = "v8r.yml"
 tool = "v8r"
 
 [[check]]
-command = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
+command = ["taplo", "fmt", "--config", "{config_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
 example = "The TOML line `enabled=true` differs from the taplo output. Run `gspot check --fix` to get `enabled = true`."
 files = { extensions = [".toml"] }
-fix = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
+fix = ["taplo", "fmt", "--config", "{config_file:taplo}", "--colors", "never", "{files}"]
 help = "Run `gspot check --fix`."
 level = "recommended"
 name = "taplo-format"
@@ -66,7 +66,7 @@ summary = "Checks that every TOML file parses and matches the taplo output under
 why = "One formatter keeps a diff about the values, not the spacing."
 
 [[check]]
-command = ["yamllint", "-c", "{tool_file:yamllint}", "-f", "parsable", "-s", "{files}"]
+command = ["yamllint", "-c", "{config_file:yamllint}", "-f", "parsable", "-s", "{files}"]
 example = "Two `enabled` keys in one YAML mapping report a duplicate key. Keep one, and delete the other."
 files = { extensions = [".yaml", ".yml"] }
 help = "Fix the line yamllint names, or change rule options with `gspot set tools.yamllint.rules`."
@@ -79,7 +79,7 @@ why = "A YAML file that parses to the wrong shape fails silently: a duplicated k
 
 [[check]]
 command = ["v8r", "--output-format", "text", "{files}"]
-env = { V8R_CONFIG_FILE = "{tool_file:v8r}" }
+env = { V8R_CONFIG_FILE = "{config_file:v8r}" }
 example = "A JSON file with a string where its schema requires a boolean reports a mismatch. Replace the string with `true` or `false`."
 files = { extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"] }
 help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schema."

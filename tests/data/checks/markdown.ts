@@ -2,7 +2,7 @@ import { GUIDE, README, LICENSE } from '#tests/data/checks/docs.ts';
 
 export const MARKDOWNLINT_EXECUTABLE = '.gspot/node_modules/.bin/markdownlint-cli2';
 
-/** Markdown files in the root and a scope, to test which tool file applies, with no extra tools to install. */
+/** Markdown files in the root and a scope, to test which config file applies, with no extra tools to install. */
 export const MARKDOWN_FILES = {
     'root.md': `# Root
 

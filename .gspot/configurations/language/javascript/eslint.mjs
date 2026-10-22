@@ -1191,9 +1191,9 @@ export default [
                         ]
                     },
                     {
-                        "category": "import-rule:tool-files",
+                        "category": "import-rule:config-files",
                         "pattern": [
-                            "packages/cli/configurations/**/tool-files/**"
+                            "packages/cli/configurations/**/config-files/**"
                         ]
                     },
                     {
@@ -2423,7 +2423,7 @@ export default [
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:tool-files"
+                                    "categories": "import-rule:config-files"
                                 }
                             },
                             "disallow": {
@@ -2433,12 +2433,12 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tool-files\" may import only its own files, not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"config-files\" may import only its own files, not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
                                 "file": {
-                                    "categories": "import-rule:tool-files"
+                                    "categories": "import-rule:config-files"
                                 }
                             },
                             "allow": {
@@ -2446,7 +2446,7 @@ export default [
                                     "file": {
                                         "categories": {
                                             "anyOf": [
-                                                "import-rule:tool-files"
+                                                "import-rule:config-files"
                                             ]
                                         }
                                     }
@@ -2634,7 +2634,7 @@ export default [
                                             "import-rule:tests-types",
                                             "import-rule:tests-setup",
                                             "import-rule:tests",
-                                            "import-rule:tool-files"
+                                            "import-rule:config-files"
                                         ]
                                     }
                                 }
@@ -2681,7 +2681,7 @@ export default [
                                                 "import-rule:tests-types",
                                                 "import-rule:tests-setup",
                                                 "import-rule:tests",
-                                                "import-rule:tool-files"
+                                                "import-rule:config-files"
                                             ]
                                         }
                                     }

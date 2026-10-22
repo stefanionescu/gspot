@@ -107,6 +107,8 @@
             "packages",
             "files",
             "modules",
+            "types",
+            "functions",
             "variables",
             "constants",
             "parameters",

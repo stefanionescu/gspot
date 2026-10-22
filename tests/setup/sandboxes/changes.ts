@@ -62,7 +62,7 @@ async function removeParents(parents: string[]): Promise<void> {
         try {
             await rmdir(path);
         } catch (error) {
-            // Keep a folder that still holds generated or tool files; their owners remove them after the restore.
+            // Keep a folder that still holds generated or config files; their owners remove them after the restore.
             const code = (error as NodeJS.ErrnoException).code;
             if (code !== 'ENOENT' && code !== 'ENOTEMPTY') throw error;
         }

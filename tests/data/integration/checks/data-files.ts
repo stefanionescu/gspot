@@ -35,7 +35,7 @@ export const FILES_CASES = [
     },
 ] as const;
 
-/** The truthy setting of each scope must reach the yamllint tool file of that scope. */
+/** The truthy setting of each scope must reach the yamllint config file of that scope. */
 export const YAML_SCOPE_TABLES = `[format]
 indent_width = 4
 [[format.override]]

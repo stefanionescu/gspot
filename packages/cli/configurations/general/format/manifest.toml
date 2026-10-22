@@ -30,17 +30,17 @@ name = "editorconfig-checker"
 replace = [".editorconfig"]
 version = "3.4.0"
 
-[[tool_file]]
+[[config_file]]
 root = true
 target = ".editorconfig"
 tool = ["editorconfig-checker", "prettier"]
 
-[[tool_file]]
+[[config_file]]
 pointer = { path = "prettier.config.mjs", body = "export { default } from {target_module} with { type: 'json' };\n" }
 target = "prettier.json"
 tool = "prettier"
 
-[[tool_file]]
+[[config_file]]
 root = true
 target = ".prettierignore"
 tool = "prettier"

@@ -8,14 +8,14 @@ export const COMMAND_HELP = {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
         group: 'Set up a repository:',
         description:
-            'Find the configurations this repository needs and print a plan. When you accept the plan, gspot writes `gspot.toml`, the tool files, the rules for coding agents, the Git hooks, and the CI workflow.\n\ninit deletes the tool files that gspot replaces. Git keeps their old content. init installs no tools and runs no checks. Run `gspot install` next.',
+            'Find the configurations this repository needs and print a plan. When you accept the plan, gspot writes `gspot.toml`, the config files, the rules for coding agents, the Git hooks, and the CI workflow.\n\ninit deletes the config files that gspot replaces. Git keeps their old content. init installs no tools and runs no checks. Run `gspot install` next.',
         arguments: {},
         options: {
             '--yes': 'Accept the plan without a question (needed without a terminal)',
             '--dry-run': 'Print the plan and write nothing',
             '--configurations <names...>': 'Use these configurations at the root instead of the detected ones',
             '--no-configurations': 'Select no configurations at the root',
-            '--level <level>': 'Start at this level, so the plan replaces the tool files that this level runs',
+            '--level <level>': 'Start at this level, so the plan replaces the config files that this level runs',
             '--json': 'Print the result as JSON. Needs `--yes` or `--dry-run`',
         },
         exitCodes: [
@@ -44,7 +44,7 @@ export const COMMAND_HELP = {
         summary: 'Write the generated files again from gspot.toml',
         group: 'Set up a repository:',
         description:
-            'Write the tool files, the rules, the Git hooks, and the CI workflow again from `gspot.toml`. apply replaces the generated files that gspot owns, and sets the version pin in `.gspot/version` to the gspot version that runs.\n\napply does not change `gspot.toml` and installs no tools. Run `gspot install` when apply says the tools changed.',
+            'Write the config files, the rules, the Git hooks, and the CI workflow again from `gspot.toml`. apply replaces the generated files that gspot owns, and sets the version pin in `.gspot/version` to the gspot version that runs.\n\napply does not change `gspot.toml` and installs no tools. Run `gspot install` when apply says the tools changed.',
         arguments: {},
         options: {
             '--dry-run': 'Print the generated files that would change, with their differences, and write nothing',
@@ -165,7 +165,7 @@ export const COMMAND_HELP = {
         summary: 'Turn off a check, or one lint rule, with a reason',
         group: 'Change gspot.toml:',
         description:
-            'Turn off a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every tool file.\n\ngspot writes the ignore and your reason to `gspot.toml`, then writes the generated files again. Each report counts the ignores. `gspot check --verbose` prints them with their reasons.',
+            'Turn off a check, or one of its lint rules, everywhere or for some paths. Without a check, the paths stay out of every check and every config file.\n\ngspot writes the ignore and your reason to `gspot.toml`, then writes the generated files again. Each report counts the ignores. `gspot check --verbose` prints them with their reasons.',
         arguments: {
             check: 'The check, such as `python/ruff`. Leave it out to keep --paths out of every check',
         },

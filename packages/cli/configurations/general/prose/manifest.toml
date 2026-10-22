@@ -16,193 +16,193 @@ replace = [".vale.ini", "_vale.ini", "vale.ini"]
 suppression = { marker = "^<!--\\s*vale\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
 version = "3.21.0"
 
-[[tool_file]]
+[[config_file]]
 target = "vale.ini"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/acronyms.yml"
 
-[[tool_file]]
+[[config_file]]
 target = "styles/gspot/alt-text.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/banned-headings.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/heading-case.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/item-length.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/paragraph-length.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/possessives.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/sentence-length.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/title-case.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/config/vocabularies/words/accept.txt"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/numbered-units.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/future.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/modals.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/product-centric-writing.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/contractions.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/hedging.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/since.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/leading-conjunctions.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/date-ordinals.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/suspended-hyphens.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/locations.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/obvious-fields.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/symbols.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/merge-conflict-markers.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/tree-blocks.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/percentage-numbers.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/militaristic-language.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/currency.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/marketing.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/straight-quotes.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/placeholders.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/history.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/em-dashes.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/en-dashes.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/ordinal-adverbs.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/interface-verbs.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/punctuated-headings.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/file-paths.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/self-reference.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/jargon.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/session-identifiers.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/url-prepositions.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/version-range.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/ampm.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/time-ranges.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/conscious-language.yml"
 
-[[tool_file]]
+[[config_file]]
 level = "all"
 target = "styles/gspot/idioms.yml"
 

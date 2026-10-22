@@ -17,8 +17,8 @@ import { isCoverageOff, hasCoverageArguments } from '#cli/planning/checks.ts';
 import type { Tool, Check, Configuration } from '#cli/types/configurations.ts';
 import { getTool, findToolProjectPackage } from '#cli/configurations/declared-tools.ts';
 import { ESLINT_MANIFEST_TOOL, LICENSES_CONFIGURATION } from '#cli/config/configurations.ts';
-import { STYLELINT_COMPONENTS } from '#cli/config/generation/settings/builders/stylelint.ts';
 import { PIP_LICENSES_COMMAND, LICENSE_CHECKER_COMMAND } from '#cli/config/checks/licenses.ts';
+import { STYLELINT_COMPONENTS } from '#cli/config/generation/config-files/builders/stylelint.ts';
 
 function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     return (
@@ -59,7 +59,7 @@ export function listOtherTools(scope: Scope, check: Check, command?: string[]): 
         ),
         ...otherTools,
     ]);
-    // ESLint loads the packages of every configuration that adds a block to its tool file.
+    // ESLint loads the packages of every configuration that adds a block to its config file.
     const plugins = tools.has(ESLINT_MANIFEST_TOOL)
         ? scope.configurations.flatMap((configuration) => configuration.eslint.required_tools)
         : [];
@@ -106,7 +106,7 @@ export function listScopeChecks(session: Session, scope: Scope): PlannedCheck[] 
 }
 
 /**
- * Select the tools that checks, fixers, and their tool files use. The tools cover every supported system, so committed
+ * Select the tools that checks, fixers, and their config files use. The tools cover every supported system, so committed
  * output does not depend on this machine.
  *
  * @param session the repository and its settings.

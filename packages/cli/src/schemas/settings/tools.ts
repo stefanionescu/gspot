@@ -11,8 +11,8 @@ import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { buildRuleTableSchema } from '#cli/schemas/settings/rule-options.ts';
 import { eslintRules, eslintPluginsSchema } from '#cli/schemas/settings/eslint.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
-import { YAMLLINT_RULES } from '#cli/config/generation/settings/builders/yamllint.ts';
-import { COMMITLINT_RULES } from '#cli/config/generation/settings/builders/commitlint.ts';
+import { YAMLLINT_RULES } from '#cli/config/generation/config-files/builders/yamllint.ts';
+import { COMMITLINT_RULES } from '#cli/config/generation/config-files/builders/commitlint.ts';
 import { relativePath, nonemptyPaths, nonemptyStrings, allowReasonedValue } from '#cli/schemas/settings/parts.ts';
 
 import {

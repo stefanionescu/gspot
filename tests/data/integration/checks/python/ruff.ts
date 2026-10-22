@@ -1,7 +1,7 @@
 /** One correctness finding and one convention finding, to tell the levels apart. */
 export const RUFF_RULE_SOURCE = 'answer = missing_name\nprint(answer)\n';
 
-/** An editor that runs Ruff must find the tool file of each scope. */
+/** An editor that runs Ruff must find the config file of each scope. */
 export const RUFF_FORMAT_CASES = [
     {
         file: 'sample.py',

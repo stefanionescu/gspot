@@ -29,7 +29,7 @@ each kind of check needs.
 
 ## Set up
 
-`gspot init` deletes the tool files that gspot replaces, such as `.eslintrc.json`. Commit your work first, so Git
+`gspot init` deletes the config files that gspot replaces, such as `.eslintrc.json`. Commit your work first, so Git
 keeps a copy of each file that init deletes.
 
 Run these commands in the root folder of a repository that has a `package.json`:
@@ -42,8 +42,8 @@ npm exec --no -- gspot check
 ```
 
 1. `npm install --save-dev --save-exact @gspothq/cli` adds gspot as a development dependency, pinned to one version.
-2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the tool files, the rules for coding
-   agents, the Git hooks, and the CI workflow, and deletes the tool files it replaces.
+2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the config files, the rules for coding
+   agents, the Git hooks, and the CI workflow, and deletes the config files it replaces.
 3. `gspot install` installs the pinned tools and turns on the Git hooks. With mise, it also installs the programs that
    do not come from npm or PyPI. Without mise, it names each program that you must install yourself.
 4. `gspot check` runs the checks on every file. From then on, the Git hooks check each commit and push.

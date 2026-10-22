@@ -22,7 +22,7 @@ import {
     SIMPLE_GIT_HOOKS_PACKAGES,
 } from '#tests/data/repository/existing-tools.ts';
 
-test('tool discovery finds nested tool files and skips root .gspot and vendored folders', async () => {
+test('tool discovery finds nested config files and skips root .gspot and vendored folders', async () => {
     await using sandbox = await testdir(PRETTIER_SETTINGS_FILES);
 
     const repository = await readTestRepository(sandbox.path);

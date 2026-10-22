@@ -18,7 +18,7 @@ values and defaults.
 
 ## Choose configurations
 
-A configuration groups the checks, tool files, and rules for a language, framework, or concern. Select one, or drop a
+A configuration groups the checks, config files, and rules for a language, framework, or concern. Select one, or drop a
 language or framework, by name:
 
 ```shell

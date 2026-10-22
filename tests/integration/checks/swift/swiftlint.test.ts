@@ -44,7 +44,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     },
 );
 
-/** Create a sandbox with the SwiftLint sources and the generated test tool file for one scope. */
+/** Create a sandbox with the SwiftLint sources and the generated test config file for one scope. */
 async function prepareSwiftScope(scope: string) {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(await testdir());
@@ -85,7 +85,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     },
 );
 test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
-    'SwiftLint $name refuses a missing root tool file and names its path',
+    'SwiftLint $name refuses a missing root config file and names its path',
     async ({ scope }) => {
         await using sandbox = await prepareSwiftScope(scope);
         const { root, prefix } = sandbox;
@@ -97,7 +97,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     },
 );
 test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
-    'a Swift test scope %s gets one complete SwiftLint tool file',
+    'a Swift test scope %s gets one complete SwiftLint config file',
     async (scope) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([], {

@@ -125,7 +125,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
 );
 
 test.each([...PACKAGE_MANAGER_CASES])(
-    '%s from %s keeps your package files and the lockfile, and a reinstall restores an edited tool file',
+    '%s from %s keeps your package files and the lockfile, and a reinstall restores an edited config file',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
         const { root, rootPackage, yarnConfiguration } = sandbox;

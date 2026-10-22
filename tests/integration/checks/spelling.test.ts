@@ -37,7 +37,7 @@ test('typos uses the spelling locale of each scope at level all', async () => {
 });
 
 test.each([...SPELLING_IGNORE_CASES])(
-    'spelling ignore paths $patterns exclude the same files in the root and scope tool files',
+    'spelling ignore paths $patterns exclude the same files in the root and scope config files',
     async ({ patterns, expected }) => {
         const paths = ['src/bad.txt', 'src/keep.txt', 'trc/bad.txt', 'child/src/bad.txt', 'child/bad.txt', 'bad.txt'];
         const sourceFiles = {

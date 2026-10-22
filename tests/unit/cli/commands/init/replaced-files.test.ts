@@ -22,7 +22,7 @@ import {
     SQL_PACKAGE_FILES,
     SHARED_SETUP_CONFIG,
     LINKED_SETUP_CONFIG,
-    REPLACED_TOOL_FILES,
+    REPLACED_CONFIG_FILES,
     STYLELINT_LOOKUP_SCRIPT,
     INACTIVE_CONFIGURATIONS,
     REPLACED_PYPROJECT_TABLES,
@@ -55,7 +55,7 @@ test.each([
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
     },
 );
-test('the init plan deletes the replaced tool files and lists the lint folder', async () => {
+test('the init plan deletes the replaced config files and lists the lint folder', async () => {
     await using sandbox = await testdir(INIT_FILES);
 
     commitAll(sandbox.path);
@@ -66,7 +66,7 @@ test('the init plan deletes the replaced tool files and lists the lint folder', 
     ]);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    for (const path of Object.keys(REPLACED_TOOL_FILES).filter((path) => path !== '.markdownlint.jsonc'))
+    for (const path of Object.keys(REPLACED_CONFIG_FILES).filter((path) => path !== '.markdownlint.jsonc'))
         expect(plan.delete).toContainEqual({
             path,
             note: expect.stringContaining('replaced by the generated') as string,
@@ -86,7 +86,7 @@ test('the init plan deletes the replaced tool files and lists the lint folder', 
         '--json',
     ]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    for (const path of Object.keys(REPLACED_TOOL_FILES).filter((path) => path !== '.markdownlint.jsonc'))
+    for (const path of Object.keys(REPLACED_CONFIG_FILES).filter((path) => path !== '.markdownlint.jsonc'))
         expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
     expect(await readFile(join(sandbox.path, '.markdownlint.jsonc'), 'utf8')).toContain(
         '{ "extends": "./.gspot/configurations/language/markdown/markdownlint.jsonc" }',
@@ -112,7 +112,7 @@ test.each(['setup.cfg', 'tox.ini'])('init leaves a shared %s in place and names 
 async function assertRetainedFile(root: string, path: string, original: string, initialized: InitJson): Promise<void> {
     expect(initialized.plan.retained).toContainEqual({
         path,
-        note: expect.stringContaining('Delete the section; the generated tool file replaces it.') as string,
+        note: expect.stringContaining('Delete the section; the generated config file replaces it.') as string,
     });
     expect(await readFile(join(root, path), 'utf8')).toBe(original);
     const attributes = await stat(join(root, path));
@@ -158,7 +158,7 @@ test.each([true, false])(
         const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
         expect(plan.retained).toContainEqual({
             path: 'setup.cfg',
-            note: expect.stringContaining('Delete the section; the generated tool file replaces it.') as string,
+            note: expect.stringContaining('Delete the section; the generated config file replaces it.') as string,
         });
         expect(plan.delete.some((entry) => entry.path === 'setup.cfg')).toBe(false);
         expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
@@ -200,7 +200,7 @@ keep = true
         expect(await isOnDisk(join(sandbox.path, generated.folder, generated.file))).toBe(true);
     },
 );
-test('at level recommended, init keeps the tool files of checks that are off', async () => {
+test('at level recommended, init keeps the config files of checks that are off', async () => {
     await using sandbox = await testdir(INACTIVE_CONFIGURATIONS);
 
     commitAll(sandbox.path);
@@ -250,7 +250,7 @@ test.each([...STYLELINT_REPLACEMENT_CASES])(
         const plan = (JSON.parse(preview.stdout) as InitJson).plan;
         expect(plan.delete).toContainEqual({
             path: authoredConfiguration,
-            note: 'replaced by the generated stylelint tool file',
+            note: 'replaced by the generated stylelint config file',
         });
         expect(plan.change.filter(({ path }) => path === packagePath)).toStrictEqual(
             changed.map((path) => ({ path, note: 'managed stylelint fields; other content stays' })),

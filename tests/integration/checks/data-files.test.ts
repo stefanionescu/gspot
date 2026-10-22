@@ -64,7 +64,7 @@ url = "${server.url.toString()}schema.json"
 `,
         }),
     );
-    // An authored .v8rrc.yml must not replace the generated tool file.
+    // An authored .v8rrc.yml must not replace the generated config file.
     await writeFile(join(root, '.v8rrc.yml'), 'invalid: [\n');
     const path = join(root, 'settings/café.json');
     await writeFile(path, JSON.stringify({ count: 'invalid' }));

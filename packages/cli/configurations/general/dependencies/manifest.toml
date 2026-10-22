@@ -23,11 +23,11 @@ npm = "syncpack"
 replace = [".syncpackrc", ".syncpackrc.json", ".syncpackrc.yaml", ".syncpackrc.yml", ".syncpackrc.ts", ".syncpackrc.mjs", ".syncpackrc.js", ".syncpackrc.cjs", "syncpack.config.js", "syncpack.config.cjs", "syncpack.config.mjs", "syncpack.config.ts"]
 version = "15.3.3"
 
-[[tool_file]]
+[[config_file]]
 target = "osv-scanner.toml"
 tool = "osv-scanner"
 
-[[tool_file]]
+[[config_file]]
 target = "syncpack.json"
 tool = "syncpack"
 
@@ -40,14 +40,14 @@ needs = ["network"]
 runs = "once"
 stage = "push"
 # The tool project lockfiles under .gspot stay out: a repository cannot upgrade a package that a gspot tool pins.
-command = ["osv-scanner", "scan", "source", "--config", "{tool_file:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "--recursive", "--experimental-exclude", ".gspot", "{root}"]
+command = ["osv-scanner", "scan", "source", "--config", "{config_file:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "--recursive", "--experimental-exclude", ".gspot", "{root}"]
 help = "Upgrade the package the finding names. When no fix exists, accept the advisory until a recheck date with `gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason \"<why>\" --until <YYYY-MM-DD>`."
 output = { format = "json", items = "results", children = "packages.vulnerabilities", fields = { file = "source.path", rule = "id", message = "package.name package.version summary" } }
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
 why = "An advisory identifies a vulnerability in a dependency version."
 
 [[check]]
-command = ["syncpack", "lint", "--config", "{tool_file:syncpack}"]
+command = ["syncpack", "lint", "--config", "{config_file:syncpack}"]
 example = "Two package.json files that pin different versions of one dependency report a mismatch. Set both to the same version, and update the lockfile."
 files = { filenames = ["package.json"] }
 help = "Set every package.json to the same version of the dependency, then update the lockfile."

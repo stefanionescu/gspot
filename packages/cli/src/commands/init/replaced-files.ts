@@ -10,18 +10,18 @@ function addReplacedFile(entry: ReplacedFile, replaced: ReplacedFiles): void {
     if (shared)
         replaced.retained.push({
             path,
-            note: `${entry.table ?? entry.key ?? entry.tool} settings stay here, and the generated ${tool} tool file takes over. Delete the section; the generated tool file replaces it.`,
+            note: `${entry.table ?? entry.key ?? entry.tool} settings stay here, and the generated ${tool} config file takes over. Delete the section; the generated config file replaces it.`,
         });
-    else replaced.deleted.push({ path, note: `replaced by the generated ${tool} tool file` });
+    else replaced.deleted.push({ path, note: `replaced by the generated ${tool} config file` });
 }
 
 /**
- * Read the tool files of the chosen tools, and sort them into the files init deletes and the files it keeps.
+ * Read the config files of the chosen tools, and sort them into the files init deletes and the files it keeps.
  *
  * @param root the folder where init reads the originals before it replaces them.
- * @param existingTools the tool files that init found.
+ * @param existingTools the config files that init found.
  * @param tools what the checks at this level run.
- * @param fileEdits the shared tool file edits for these configurations.
+ * @param fileEdits the shared config file edits for these configurations.
  * @returns the reads, the deletions, and the shared files that stay.
  */
 export function readReplacedFiles(

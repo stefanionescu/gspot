@@ -19,13 +19,13 @@ name = "purgecss"
 npm = "purgecss"
 version = "7.0.2"
 
-[[tool_file]]
+[[config_file]]
 check = "site/html-validate"
 per_scope = true
 target = "html-validate.json"
 tool = "html-validate"
 
-[[tool_file]]
+[[config_file]]
 check = "site/purgecss"
 per_scope = true
 target = "purgecss.mjs"

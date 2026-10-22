@@ -71,7 +71,7 @@ test.each([...LEVELS])(
     },
 );
 
-test("Stylelint run by an editor finds the scope's tool file and checks your build folder", async () => {
+test("Stylelint run by an editor finds the scope's config file and checks your build folder", async () => {
     const root = installedSandbox().root;
     await using _change = await applySandboxChanges(installedSandbox(), {
         check: '',

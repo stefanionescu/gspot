@@ -28,12 +28,12 @@ function findMiseInstaller(tool: Tool): InstallerPin | undefined {
 }
 
 /**
- * Get the name that a tool-file placeholder uses for a tool file.
+ * Get the name that a config-file placeholder uses for a config file.
  *
  * @param file the path that the manifest names.
  * @returns the path without its extensions.
  */
-export function extractToolFileName(file: string): string {
+export function extractConfigFileName(file: string): string {
     const dot = file.indexOf('.');
     return dot === -1 ? file : file.slice(0, dot);
 }

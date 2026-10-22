@@ -6,8 +6,8 @@ import { LEVELS } from '#cli/config/configurations.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { HOST_MODULE } from '#tests/data/generation/settings/builders/knip.ts';
 import { SORT_CASES, SORT_RULES } from '#tests/data/generation/eslint/imports.ts';
+import { HOST_MODULE } from '#tests/data/generation/config-files/builders/knip.ts';
 
 test('a bundler scope uses extensionless imports while the Node.js parent keeps .js suffixes', async () => {
     await using sandbox = await testdir({

@@ -31,7 +31,7 @@ test(`Vale's em-dashes rule checks the reason text of ESLint comments and skips 
         'gspot.toml': buildSandboxSettings(['prose', 'typescript']),
         '.gspot/configurations/general/prose/vale.ini': VALE_INI,
         '.gspot/configurations/general/prose/styles/Example/Dashes.yml': readFileSync(
-            buildAssetPath('configurations/general/prose/tool-files/styles/gspot/em-dashes.yml'),
+            buildAssetPath('configurations/general/prose/config-files/styles/gspot/em-dashes.yml'),
             'utf8',
         ),
         'source.ts': [...SUPPRESSION_COMMENTS].join('\n'),
@@ -53,7 +53,7 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
         'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
         '.gspot/configurations/general/prose/vale.ini': VALE_INI,
         '.gspot/configurations/general/prose/styles/Example/Versions.yml': readFileSync(
-            buildAssetPath('configurations/general/prose/tool-files/styles/gspot/version-range.yml'),
+            buildAssetPath('configurations/general/prose/config-files/styles/gspot/version-range.yml'),
             'utf8',
         ),
         'versions.md': VERSION_RANGE_SOURCE,

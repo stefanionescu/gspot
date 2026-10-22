@@ -87,7 +87,7 @@ test('init leaves javascript out of a root package.json with only tool dependenc
     expect(session.scopes.find(({ folder }) => folder.path === 'app')!.settings.configurations).toContain('javascript');
 });
 
-test('the JavaScript tools and the ESLint tool file appear only after gspot add javascript for a new Node script, at both levels', async () => {
+test('the JavaScript tools and the ESLint config file appear only after gspot add javascript for a new Node script, at both levels', async () => {
     await using sandbox = await testdir({ 'package.json': TOOL_ONLY_PACKAGE, ...PYTHON_SOURCE });
 
     const initialized = await runGspot(sandbox.path, buildInitArguments([], { json: true }));

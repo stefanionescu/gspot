@@ -6,22 +6,22 @@ import { openSession } from '#cli/session.ts';
 import type { Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
-import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
+import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 
-/** Find the generated tool file for a tool and scope. */
-export function findToolFilePath(session: Session, tool: string, scopePath = ''): string {
+/** Find the generated config file for a tool and scope. */
+export function findConfigFilePath(session: Session, tool: string, scopePath = ''): string {
     const declaration = session.scopes
         .find((scope) => scope.folder.path === scopePath)
-        ?.configurations.flatMap((configuration) => configuration.toolFiles)
-        .find((file) => extractToolFileName(file.file) === tool);
+        ?.configurations.flatMap((configuration) => configuration.configFiles)
+        .find((file) => extractConfigFileName(file.file) === tool);
     if (declaration === undefined)
         throw new Error(`The sandbox generates no ${tool} file for ${scopePath || 'the root'}.`);
-    return getToolFileTarget(scopePath, declaration, getToolFiles(session).targets);
+    return getConfigFileTarget(scopePath, declaration, getConfigFiles(session).targets);
 }
 
-/** Read each generated tool file matched by a repository-relative glob. */
+/** Read each generated config file matched by a repository-relative glob. */
 export async function readGeneratedFiles(root: string, pattern: string): Promise<{ path: string; content: string }[]> {
     return Promise.all(
         [...new Bun.Glob(pattern).scanSync({ cwd: root, dot: true })].map(async (path) => ({

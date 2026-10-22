@@ -137,7 +137,7 @@ Commit first, so you can go back.
 2. Run `gspot set rules.enabled false`, `gspot set ci.enabled false`, and `gspot set hooks.enabled false`, then
    `gspot install`. gspot deletes the rules, its `AGENTS.md` managed block, the CI workflow, and the hook scripts, and
    `gspot install` removes `core.hooksPath`. If Husky, Lefthook, or your own hooks run gspot, delete those lines.
-3. Restore your earlier tool files from Git, such as `git show <commit>:.eslintrc.json`, or set up the tools you want.
+3. Restore your earlier config files from Git, such as `git show <commit>:.eslintrc.json`, or set up the tools you want.
 4. Delete the files and keys from step 1, the managed blocks in `.gitignore` and `.gitattributes`, `gspot.toml`, and
    `.gspot/`.
 5. Remove the package: `npm uninstall @gspothq/cli`, the remove command of your package manager, or

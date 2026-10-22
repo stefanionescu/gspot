@@ -148,8 +148,8 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.neededToolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
-    const detectedTools = [...new Set(existingTools.replacedFiles.map((toolFile) => toolFile.tool))].toSorted((a, b) =>
-        a.localeCompare(b),
+    const detectedTools = [...new Set(existingTools.replacedFiles.map((configFile) => configFile.tool))].toSorted(
+        (a, b) => a.localeCompare(b),
     );
     const detection: DetectionSummary = {
         files: repository.files,
@@ -214,7 +214,7 @@ function deleteReplacedFiles(
 }
 
 /**
- * Write the settings and generated files, and delete the replaced tool files.
+ * Write the settings and generated files, and delete the replaced config files.
  *
  * @param root the folder where init writes the accepted changes.
  * @param prepared the plan and file reads from planInit.

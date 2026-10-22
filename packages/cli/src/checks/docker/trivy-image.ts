@@ -6,13 +6,13 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
-import { getToolFile } from '#cli/runs/command/placeholders.ts';
 import type { ImageFinding } from '#cli/types/checks/docker.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
+import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import { readComposeDocuments } from '#cli/checks/docker/compose.ts';
-import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { imageReportSchema } from '#cli/schemas/checks/docker/trivy-image.ts';
-import { TRIVY_TOOL_FILE, TRIVY_IMAGE_COMMAND, TRIVY_FINDINGS_EXIT_CODE } from '#cli/config/checks/docker.ts';
+import { TRIVY_CONFIG_FILE, TRIVY_IMAGE_COMMAND, TRIVY_FINDINGS_EXIT_CODE } from '#cli/config/checks/docker.ts';
 
 // The tool's exit status and parsed findings must agree before a scan can count as clean.
 async function scanImage(session: Session, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
@@ -23,10 +23,10 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
             ...TRIVY_IMAGE_COMMAND,
             join(
                 session.root,
-                getToolFileTarget(
+                getConfigFileTarget(
                     planned.scope.folder.path,
-                    getToolFile(session, planned, TRIVY_TOOL_FILE),
-                    getToolFiles(session).targets,
+                    getConfigFile(session, planned, TRIVY_CONFIG_FILE),
+                    getConfigFiles(session).targets,
                 ),
             ),
             image,

@@ -10,7 +10,7 @@ import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listCoveredFiles } from '#cli/repository/covered-files.ts';
 import { DOT_GSPOT, SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
+import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 import type { Check, KnownCheck, Configuration } from '#cli/types/configurations.ts';
 import type { ToolIgnore, PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 
@@ -185,7 +185,7 @@ export function listChildScopes(scopes: Scope[], scope: Scope): string[] {
 }
 
 /**
- * Check whether a general per-file check runs once at the root. A check that reads a scope tool file does not.
+ * Check whether a general per-file check runs once at the root. A check that reads a scope config file does not.
  *
  * @param configuration the configuration that declares the check.
  * @param check the check to inspect.
@@ -195,11 +195,11 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
     if (configuration === undefined) return true;
     if (configuration.group !== 'general' || configuration.files.languages || check.runs === 'scope') return false;
     const command = [...(check.command ?? []), ...(check.env === undefined ? [] : Object.values(check.env))];
-    return !configuration.toolFiles.some(
+    return !configuration.configFiles.some(
         (config) =>
             config.per_scope &&
             (config.check.includes(check.id) ||
-                command.some((part) => part.includes(`{tool_file:${extractToolFileName(config.file)}}`))),
+                command.some((part) => part.includes(`{config_file:${extractConfigFileName(config.file)}}`))),
     );
 }
 

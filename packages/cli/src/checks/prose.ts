@@ -9,10 +9,10 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { valeReportSchema } from '#cli/schemas/checks/prose.ts';
 import { join, dirname, relative, isAbsolute } from 'node:path';
-import { VALE_TOOL_FILE_PATH } from '#cli/config/gspot-paths.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/inventory.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
+import { VALE_CONFIG_FILE_PATH } from '#cli/config/gspot-paths.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { ValeAlert, ProseRoute, ProseRouteGroup } from '#cli/types/checks/prose.ts';
@@ -58,7 +58,7 @@ async function runValeOnPaths(
     routes: ProseRoute[],
     folder: string,
 ): Promise<ValeAlert[]> {
-    const base = [VALE_TOOL, '--config', join(session.root, VALE_TOOL_FILE_PATH), ...VALE_ARGUMENTS];
+    const base = [VALE_TOOL, '--config', join(session.root, VALE_CONFIG_FILE_PATH), ...VALE_ARGUMENTS];
     const alerts: ValeAlert[] = [];
     for (const batch of splitFileArguments(
         routes.map((route) => join(session.root, route.path)),
@@ -92,7 +92,7 @@ async function runValeOnStdin(
         [
             VALE_TOOL,
             '--config',
-            join(session.root, VALE_TOOL_FILE_PATH),
+            join(session.root, VALE_CONFIG_FILE_PATH),
             ...VALE_ARGUMENTS,
             `--ext=${route.extension}`,
             `--path=${join(session.root, route.path)}${route.extension}`,
@@ -152,7 +152,7 @@ function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
 export async function checkProseVale(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     if (!hasValePackages(session.installedRoot, session.settingsFile.settings.level))
         throw new GspotError('tool', 'The Vale packages are not installed. Run gspot install.');
-    const folder = dirname(join(session.root, VALE_TOOL_FILE_PATH));
+    const folder = dirname(join(session.root, VALE_CONFIG_FILE_PATH));
     const groups = groupRoutes(planned.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];
     for (const group of groups) {

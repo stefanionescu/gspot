@@ -12,13 +12,13 @@ name = "lychee"
 replace = ["lychee.toml", ".lycheeignore"]
 version = "0.24.2"
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "lychee.toml"
 tool = "lychee"
 
 [[check]]
-command = ["lychee", "--config", "{tool_file:lychee}", "--root-dir", "{root}/.gspot/root-links", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
+command = ["lychee", "--config", "{config_file:lychee}", "--root-dir", "{root}/.gspot/root-links", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
 example = "The link `[Setup](missing.md)` reports a broken link when no `missing.md` exists. Point it at the setup guide, or add that file."
 help = "Point the link at the file or heading that exists, or delete it."
 level = "recommended"
@@ -29,7 +29,7 @@ summary = "Checks that local documentation links reach existing files and valid 
 why = "A dead link inside the repository breaks silently, and readers hit it first."
 
 [[check]]
-command = ["lychee", "--config", "{tool_file:lychee}", "--root-dir", "{root}", "--scheme", "http", "--scheme", "https", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
+command = ["lychee", "--config", "{config_file:lychee}", "--root-dir", "{root}", "--scheme", "http", "--scheme", "https", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
 example = "A link that returns HTTP 404 reports a broken destination. Replace the URL with a current one, or remove the link."
 help = "Update or remove the link, or exclude the URL pattern with a reason under docs.allowed_urls."
 level = "recommended"

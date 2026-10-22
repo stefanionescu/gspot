@@ -1,6 +1,6 @@
 import { BASE_INSTALLED_FILES } from '#tests/data/setup/sandboxes.ts';
 
-/** The paths that each spelling exclusion leaves checked. Both generated tool files must report them. */
+/** The paths that each spelling exclusion leaves checked. Both generated config files must report them. */
 export const SPELLING_IGNORE_CASES = [
     {
         patterns: ['nested/src/**'],

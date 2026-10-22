@@ -7,9 +7,9 @@ import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { listSwiftlintToolFiles } from '#cli/checks/swift/build.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildPlan, prepareBuild } from '#cli/checks/swift/cache.ts';
+import { listSwiftlintConfigFiles } from '#cli/checks/swift/build.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
@@ -229,7 +229,7 @@ test('compiler: Swift compiler diagnostics drop the macOS /private prefix from s
         matchFields(PRIVATE_OTHER_FINDING),
     ]);
 });
-test('the SwiftLint tool files of a nested scope stop at the scope folder and include a link inside the repository', async () => {
+test('the SwiftLint config files of a nested scope stop at the scope folder and include a link inside the repository', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: 'app' }] }),
         '.swiftlint.yml': 'disabled_rules: []\n',
@@ -243,11 +243,11 @@ test('the SwiftLint tool files of a nested scope stop at the scope folder and in
     const session = await openSession(sandbox.path);
     const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
     const planned = plans.find((plan) => plan.scope.folder.path === 'app')!;
-    expect(listSwiftlintToolFiles(session, planned)).toStrictEqual([
+    expect(listSwiftlintConfigFiles(session, planned)).toStrictEqual([
         '.gspot/configurations/language/swift/swiftlint.yml',
         'app/.swiftlint.yml',
         'app/Sources/.swiftlint.yml',
     ]);
     await symlink('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
-    expect(listSwiftlintToolFiles(session, planned)).toStrictEqual([...NESTED_SWIFTLINT_FILES]);
+    expect(listSwiftlintConfigFiles(session, planned)).toStrictEqual([...NESTED_SWIFTLINT_FILES]);
 });

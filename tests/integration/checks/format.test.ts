@@ -114,7 +114,7 @@ test('editorconfig-checker leaves indentation to the formatter and checks line e
     }
 });
 
-test('check --staged formats with the staged Prettier tool file after a later apply changes it, and leaves the working files and the index unchanged', async () => {
+test('check --staged formats with the staged Prettier config file after a later apply changes it, and leaves the working files and the index unchanged', async () => {
     const root = installedSandbox().root;
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: '',

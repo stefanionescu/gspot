@@ -4,12 +4,12 @@ import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToSystemPath } from '#cli/system/paths.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import type { ToolFile } from '#cli/types/configurations.ts';
+import type { ConfigFile } from '#cli/types/configurations.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
+import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 import type { CommandLine, CommandPart, Substitutions } from '#cli/types/runs/command.ts';
 
 import {
@@ -23,8 +23,8 @@ import {
     POINTER_PLACEHOLDER,
     SETTING_PLACEHOLDER,
     EXISTING_PLACEHOLDER,
-    TOOL_FILE_PLACEHOLDER,
     WORKSPACE_PLACEHOLDER,
+    CONFIG_FILE_PLACEHOLDER,
     MESSAGE_FILE_PLACEHOLDER,
     WHOLE_SETTING_PLACEHOLDER,
 } from '#cli/config/placeholders.ts';
@@ -67,14 +67,14 @@ function expandExistingPlaceholder(repositoryRoot: string, part: string): string
         : [groups['flag'] ?? '', convertToSystemPath(path)];
 }
 
-function listToolFiles(session: Session, planned: PlannedCheck): ToolFile[] {
-    // The tool files of the configurations of the check come first, because the lookup takes the first match.
+function listConfigFiles(session: Session, planned: PlannedCheck): ConfigFile[] {
+    // The config files of the configurations of the check come first, because the lookup takes the first match.
     const own = planned.scope.configurations
         .filter((configuration) => configuration.checks.some((check) => check.id === planned.check.id))
-        .flatMap((configuration) => configuration.toolFiles);
+        .flatMap((configuration) => configuration.configFiles);
     const every = session.configurations
         .values()
-        .flatMap((configuration) => configuration.toolFiles)
+        .flatMap((configuration) => configuration.configFiles)
         .toArray();
     return [...own, ...every];
 }
@@ -106,41 +106,44 @@ function expandPlainPart(
 }
 
 /**
- * Find the tool file that {tool_file:<name>} names, with the configurations of the check first.
+ * Find the config file that {config_file:<name>} names, with the configurations of the check first.
  *
  * @param session the repository and its configurations.
  * @param planned the check that names it.
- * @param name the tool file path without its extensions.
- * @returns the [[tool_file]] table of that tool file.
+ * @param name the config file path without its extensions.
+ * @returns the [[config_file]] table of that config file.
  */
-export function getToolFile(session: Session, planned: PlannedCheck, name: string): ToolFile {
-    const target = listToolFiles(session, planned).find((toolFile) => extractToolFileName(toolFile.file) === name);
-    if (!target) throw new Error(`Check ${planned.check.id} names {tool_file:${name}} and no configuration writes it.`);
+export function getConfigFile(session: Session, planned: PlannedCheck, name: string): ConfigFile {
+    const target = listConfigFiles(session, planned).find(
+        (configFile) => extractConfigFileName(configFile.file) === name,
+    );
+    if (!target)
+        throw new Error(`Check ${planned.check.id} names {config_file:${name}} and no configuration writes it.`);
     return target;
 }
 
 /**
- * Lists the tool files that a check command or its environment names.
+ * Lists the config files that a check command or its environment names.
  *
  * @param session the repository and its configurations.
  * @param planned the check that runs.
  * @param command the arguments to scan.
- * @returns the tool file paths, relative to the root.
+ * @returns the config file paths, relative to the root.
  */
-export function listCommandToolFiles(session: Session, planned: PlannedCheck, command: readonly string[]): string[] {
+export function listCommandConfigFiles(session: Session, planned: PlannedCheck, command: readonly string[]): string[] {
     const parts = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
     const scope = planned.scope.folder.path;
     return [
         ...new Set(
             parts.flatMap((part) => {
-                const configured = [...part.matchAll(TOOL_FILE_PLACEHOLDER)]
+                const configured = [...part.matchAll(CONFIG_FILE_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
                     .map((name) =>
-                        getToolFileTarget(
+                        getConfigFileTarget(
                             planned.scope.folder.path,
-                            getToolFile(session, planned, name),
-                            getToolFiles(session).targets,
+                            getConfigFile(session, planned, name),
+                            getConfigFiles(session).targets,
                         ),
                     );
                 const pointed = [...part.matchAll(POINTER_PLACEHOLDER)]
@@ -155,22 +158,22 @@ export function listCommandToolFiles(session: Session, planned: PlannedCheck, co
 }
 
 /**
- * Lists the source and tool files that a copy needs for a command.
+ * Lists the source and config files that a copy needs for a command.
  *
  * @param session the repository and its configurations.
  * @param planned the check and its files.
- * @param command the arguments, with tool file placeholders.
+ * @param command the arguments, with config file placeholders.
  * @returns repository-relative paths for the copy.
  */
 export function listCopyFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
     const scope = planned.scope.folder.path;
-    const owned = (planned.configuration?.toolFiles ?? []).map((toolFile) =>
-        getToolFileTarget(scope, toolFile, getToolFiles(session).targets),
+    const owned = (planned.configuration?.configFiles ?? []).map((configFile) =>
+        getConfigFileTarget(scope, configFile, getConfigFiles(session).targets),
     );
     return [
         ...new Set([
             ...planned.files.map(({ path }) => path),
-            ...listCommandToolFiles(session, planned, command),
+            ...listCommandConfigFiles(session, planned, command),
             ...owned,
         ]),
     ];
@@ -202,14 +205,14 @@ export function replacePlaceholders(
                 ? String(found)
                 : '';
         })
-        .replaceAll(TOOL_FILE_PLACEHOLDER, (_match, name: string) =>
+        .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) =>
             convertToSystemPath(
                 join(
                     session.root,
-                    getToolFileTarget(
+                    getConfigFileTarget(
                         planned.scope.folder.path,
-                        getToolFile(session, planned, name),
-                        getToolFiles(session).targets,
+                        getConfigFile(session, planned, name),
+                        getConfigFiles(session).targets,
                     ),
                 ),
             ),

@@ -121,7 +121,7 @@ function listFunctionEntries(planned: PlannedCheck): string[] {
     return [...entries.values()];
 }
 
-// Both Deno commands end with their target; the tool file flags belong before that target.
+// Both Deno commands end with their target; the config file flags belong before that target.
 async function runDenoCommand(
     session: Session,
     planned: PlannedCheck,

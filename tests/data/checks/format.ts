@@ -29,7 +29,7 @@ export const PRETTIER_OPTIONS_BY_FILE = [
     { file: 'apps/web/admin/page.js', tabWidth: 8, singleQuote: false, semi: true, endOfLine: 'crlf' },
 ] as const;
 
-/** A staged format check uses the root tool file until a later apply writes the scope tool file. */
+/** A staged format check uses the root config file until a later apply writes the scope config file. */
 export const STAGED_FORMAT_FILES = {
     'gspot.toml': buildSandboxSettings(['format'], {
         tables: '[format]\nindent_width = 2\n[rules]\nenabled = false\n',

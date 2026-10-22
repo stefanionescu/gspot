@@ -19,5 +19,5 @@ export const ENVIRONMENT_RULES = {
     'no-restricted-properties': ['error', { object: 'Bun', property: 'env' }, { object: 'Deno', property: 'env' }],
 } as const;
 
-// The check that runs ESLint, whose ignores with a rule become blocks of the generated tool file.
+// The check that runs ESLint, whose ignores with a rule become blocks of the generated config file.
 export const ESLINT_CHECK = 'javascript/eslint';

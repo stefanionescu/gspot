@@ -34,7 +34,7 @@ npm = "supabase"
 system = true
 version_command = ["--version"]
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 paths_setting = "supabase.functions_folder"
 target = "semgrep.yml"

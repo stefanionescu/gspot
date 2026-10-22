@@ -7,21 +7,21 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { SESSION_FILES, MISE_LOOKUP_SCRIPT, MISE_SESSION_FILES } from '#tests/data/session.ts';
 
 test('a copied session generates settings from its replacement inventory and read cache', async () => {
     await using sandbox = await testdir(SESSION_FILES);
     const opened = await openSession(sandbox.path);
-    const original = getToolFiles(opened);
+    const original = getConfigFiles(opened);
     await writeFile(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
     const fresh = await openSession(sandbox.path);
     const copied = { ...opened, reads: fresh.reads, repository: fresh.repository, scopes: fresh.scopes };
-    const generated = getToolFiles(copied);
+    const generated = getConfigFiles(copied);
     expect(generated.files).not.toStrictEqual(original.files);
-    expect(generated.files).toStrictEqual(getToolFiles(fresh).files);
+    expect(generated.files).toStrictEqual(getConfigFiles(fresh).files);
 });
 
 test('a naming-only run leaves mise tool discovery unused', async () => {

@@ -102,7 +102,7 @@ A document with a title.
     }
 });
 
-test('markdownlint honors a lint rule ignore in the root and scope tool files', async () => {
+test('markdownlint honors a lint rule ignore in the root and scope config files', async () => {
     const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
         check: 'markdown/markdownlint',

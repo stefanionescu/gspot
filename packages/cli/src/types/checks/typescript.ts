@@ -10,11 +10,11 @@ export type TypeScriptReferenceCopy = {
     projects: Map<string, TypeScriptConfiguration>;
 };
 
-/** The project files and required options for a TypeScript tool file. */
+/** The project files and required options for a TypeScript config file. */
 export type PlannedTsconfig = {
     root: string;
     /**
-     * The working tree with the installed packages, whose type roots the tool file lists when the check runs on a copy.
+     * The working tree with the installed packages, whose type roots the config file lists when the check runs on a copy.
      */
     typeRootsFolder: string;
     reads: ReadCache;

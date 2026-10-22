@@ -1,4 +1,4 @@
-import { VALE_PACKAGES } from '#cli/config/generation/settings/builders/vale.ts';
+import { VALE_PACKAGES } from '#cli/config/generation/config-files/builders/vale.ts';
 
 /** Every folder that the Vale packages need. */
 export const VALE_PACKAGE_FOLDERS = [...VALE_PACKAGES, 'config/dictionaries'] as const;

@@ -10,15 +10,15 @@ import {
     TOOL_TABLE,
     SEMGREP_ASSETS,
     REPLACE_KEY_TABLE,
-    SINGLE_TOOL_FILES,
-    SEMGREP_TOOL_FILES,
     REPLACEMENT_TABLES,
+    SINGLE_CONFIG_FILES,
     CONFIGURATION_TABLE,
     TOOL_TABLE_REFUSALS,
-    SEMGREP_CONFIG_FILES,
     EXAMPLE_MANIFEST_PATH,
     MINIMUM_VERSION_CASES,
     MANIFEST_READER_SCRIPT,
+    SEMGREP_CONFIG_FILE_PATHS,
+    SEMGREP_CONFIG_FILE_TABLES,
 } from '#tests/data/configurations/manifests.ts';
 
 /** Read fixture package data in its own process, retaining the production module cache. */
@@ -147,38 +147,38 @@ test('a manifest [[tool]] table keeps a rule page with {rule}, a rule prefix, an
     });
 });
 
-test('a tool file that names no tool and no check goes to the only tool of its configuration', async () => {
+test('a config file that names no tool and no check goes to the only tool of its configuration', async () => {
     const configurations = await readTestManifests(
-        { [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + SINGLE_TOOL_FILES },
+        { [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + SINGLE_CONFIG_FILES },
         SEMGREP_ASSETS,
     );
     const configuration = configurations.get('example')!;
 
-    expect(configuration.toolFiles.map(({ target, tool, check }) => [target, tool, check])).toStrictEqual([
+    expect(configuration.configFiles.map(({ target, tool, check }) => [target, tool, check])).toStrictEqual([
         ['.gspot/configurations/language/example/semgrep/first.yml', ['semgrep'], []],
         ['.gspot/configurations/language/example/semgrep/second.yml', [], ['example/scan']],
         ['.gspot/configurations/language/example/semgrep/not-a-pack.txt', ['semgrep'], []],
     ]);
 });
 
-test('the files under tool-files/ become tool files, each [[tool_file]] sets its tool and condition, and a tool_file that is not a table is refused', async () => {
+test('the files under config-files/ become config files, each [[config_file]] sets its tool and condition, and a config_file that is not a table is refused', async () => {
     const configurations = await readTestManifests(
-        { [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + SEMGREP_TOOL_FILES },
+        { [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + SEMGREP_CONFIG_FILE_TABLES },
         SEMGREP_ASSETS,
     );
     const configuration = configurations.get('example')!;
-    expect(configuration.toolFiles.map(({ source, target }) => [source, target])).toStrictEqual([
-        ...SEMGREP_CONFIG_FILES,
+    expect(configuration.configFiles.map(({ source, target }) => [source, target])).toStrictEqual([
+        ...SEMGREP_CONFIG_FILE_PATHS,
     ]);
-    expect(configuration.toolFiles.slice(1, 3)).toMatchObject([
+    expect(configuration.configFiles.slice(1, 3)).toMatchObject([
         { tool: ['semgrep'], per_scope: true },
         { tool: ['semgrep'], per_scope: true },
     ]);
-    expect(() => buildConfiguration('example', { tables: 'tool_file = "invalid"\n' })).toThrow(
+    expect(() => buildConfiguration('example', { tables: 'config_file = "invalid"\n' })).toThrow(
         matchFields<ZodError>({
             issues: [
                 matchFields<ZodError['issues'][number]>({
-                    path: ['tool_file'],
+                    path: ['config_file'],
                     message: 'Invalid input: expected array, received string',
                 }),
             ],

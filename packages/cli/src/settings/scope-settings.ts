@@ -97,7 +97,7 @@ function listLimitVariants(knownSettings: KnownSettings, settings: Settings, sco
  * @param settings the written root values and scoped overrides.
  * @param configurations the configurations that the scope selects.
  * @param scope the folder, '' for the root.
- * @returns the scope settings that planning, checks, and the tool file builders read.
+ * @returns the scope settings that planning, checks, and the config file builders read.
  */
 export function buildScopeSettings(
     knownSettings: KnownSettings,

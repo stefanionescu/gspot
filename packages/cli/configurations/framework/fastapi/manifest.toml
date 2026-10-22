@@ -10,7 +10,7 @@ dependencies = ["fastapi"]
 [ruff]
 recommended = ["FAST001", "FAST002", "FAST003"]
 
-[[tool_file]]
+[[config_file]]
 per_scope = true
 target = "semgrep.yml"
 tool = "semgrep"

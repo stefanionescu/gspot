@@ -14,7 +14,7 @@ import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/ow
 
 import {
     HOOKS_PATH,
-    VALE_TOOL_FILE_PATH,
+    VALE_CONFIG_FILE_PATH,
     NPM_TOOL_PROJECT_FILE,
     INSTALLED_TOOL_FOLDERS,
     PYTHON_TOOL_PROJECT_FILE,
@@ -51,7 +51,7 @@ function removeUnusedToolFolders(writer: Writer, paths: ReadonlySet<string>): vo
     for (const [path, keep] of [
         [INSTALLED_TOOL_FOLDERS.npm, paths.has(NPM_TOOL_PROJECT_FILE)],
         [INSTALLED_TOOL_FOLDERS.python, paths.has(PYTHON_TOOL_PROJECT_FILE)],
-        [INSTALLED_TOOL_FOLDERS.vale, paths.has(VALE_TOOL_FILE_PATH)],
+        [INSTALLED_TOOL_FOLDERS.vale, paths.has(VALE_CONFIG_FILE_PATH)],
     ] as const) {
         if (!keep) writer.files.deleteTree(path);
     }

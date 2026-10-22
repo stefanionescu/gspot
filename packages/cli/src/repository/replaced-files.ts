@@ -14,7 +14,7 @@ import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ReplacedFile } from '#cli/types/repository/existing-tools.ts';
 import { INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/existing-tools.ts';
 
-// List the root and every folder that a project file marks. A plain tool file name such as knip.ts counts only in these
+// List the root and every folder that a project file marks. A plain config file name such as knip.ts counts only in these
 // folders, because a source file deeper in the code can share it. A dotfile such as .prettierrc.json counts in any
 // folder.
 function listProjectFolders(inventory: Set<string>, configurations: Configuration[]): Set<string> {

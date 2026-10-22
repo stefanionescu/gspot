@@ -34,8 +34,8 @@ import {
     expandCommand,
     listCopyFiles,
     replacePlaceholders,
-    listCommandToolFiles,
     buildFileCommandLines,
+    listCommandConfigFiles,
 } from '#cli/runs/command/placeholders.ts';
 
 async function runCommands(
@@ -74,7 +74,7 @@ async function runCommands(
     return buildCheckResult(check, { base, state, commandArguments, started });
 }
 
-function findMissingToolFile(
+function findMissingConfigFile(
     planned: PlannedCheck,
     {
         session,
@@ -83,9 +83,9 @@ function findMissingToolFile(
         options,
     }: { session: Session; command: string[]; base: CheckResult; options: CheckRunOptions },
 ): CheckResult | undefined {
-    const paths = options.listToolFiles?.(session, planned) ?? [];
+    const paths = options.listConfigFiles?.(session, planned) ?? [];
     using files = openFiles(session.root);
-    const missing = [...paths, ...listCommandToolFiles(session, planned, command)].find((path) =>
+    const missing = [...paths, ...listCommandConfigFiles(session, planned, command)].find((path) =>
         path.startsWith(`${DOT_GSPOT}/`)
             ? files.read(path) === undefined
             : findCachedText(session.reads, path) === undefined,
@@ -94,7 +94,7 @@ function findMissingToolFile(
     return {
         ...base,
         status: 'error',
-        note: `The tool file ${missing} is missing. Run gspot apply.`,
+        note: `The config file ${missing} is missing. Run gspot apply.`,
     };
 }
 
@@ -136,7 +136,7 @@ function findMissingOtherTool(
 }
 
 /**
- * Copy a check's source, dependencies and tool files into a temporary folder.
+ * Copy a check's source, dependencies and config files into a temporary folder.
  *
  * @param planned the check to run.
  * @param copy the repository, command, and implementation overrides.
@@ -151,7 +151,7 @@ export async function copyCheckFiles(
 ): Promise<TemporaryFolder> {
     return createCopy({
         root: session.root,
-        paths: [...listCopyFiles(session, planned, command), ...(options.listToolFiles?.(session, planned) ?? [])],
+        paths: [...listCopyFiles(session, planned, command), ...(options.listConfigFiles?.(session, planned) ?? [])],
         dependencies: [],
         cancelSignal: session.cancelSignal,
     });
@@ -312,7 +312,7 @@ export async function runCheckCommand(
         ...listCopyPythonArguments(tool, setup.env),
     ];
     const { cwd } = setup;
-    const missing = findMissingToolFile(planned, { session, command, base, options });
+    const missing = findMissingConfigFile(planned, { session, command, base, options });
     if (missing !== undefined) return missing;
     const availability = findTool(session, cwd, tool);
     if ('status' in availability) return { ...base, ...availability };

@@ -72,7 +72,7 @@ import { checkPostgresGrants, checkRowLevelSecurity, checkDefinerSearchPath } fr
 import {
     checkSwiftBuild,
     checkSwiftPeriphery,
-    listSwiftlintToolFiles,
+    listSwiftlintConfigFiles,
     checkSwiftSwiftlintAnalyze,
 } from '#cli/checks/swift/build.ts';
 import {
@@ -173,7 +173,7 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'swift/coverage': { check: checkSwiftCoverage },
     'swift/periphery': { check: checkSwiftPeriphery },
     'swift/skip-reasons': { check: checkSwiftSkipReasons },
-    'swift/swiftlint': { listToolFiles: listSwiftlintToolFiles },
+    'swift/swiftlint': { listConfigFiles: listSwiftlintConfigFiles },
     'swift/swiftlint-analyze': { check: checkSwiftSwiftlintAnalyze },
     'translations/messages': { check: checkTranslationsMessages },
     'typescript/tsc': { run: checkTsc },

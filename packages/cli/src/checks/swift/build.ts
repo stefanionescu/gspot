@@ -9,10 +9,10 @@ import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
-import { getToolFile } from '#cli/runs/command/placeholders.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
-import { getToolFiles } from '#cli/generation/settings/generate.ts';
-import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
+import { getConfigFile } from '#cli/runs/command/placeholders.ts';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/checks/swift.ts';
 import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/swift/cache.ts';
@@ -27,8 +27,8 @@ import {
     PERIPHERY_COMMAND,
     MACOS_PRIVATE_PATH,
     BUILD_SOURCE_FOLDER,
-    PERIPHERY_TOOL_FILE,
-    SWIFTLINT_TOOL_FILE,
+    PERIPHERY_CONFIG_FILE,
+    SWIFTLINT_CONFIG_NAME,
     SWIFTLINT_CONFIG_FILE,
     SWIFTLINT_CONFIG_FLAG,
     MACOS_PRIVATE_REPLACEMENT,
@@ -147,18 +147,18 @@ export async function checkSwiftSwiftlintAnalyze(session: Session, planned: Plan
     const plan = buildPlan(session, planned, { purpose: 'analyze' });
     const build = await runSwiftBuild(session, planned, plan, 'analyze');
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const toolFile = join(
+    const configFile = join(
         session.root,
-        getToolFileTarget(
+        getConfigFileTarget(
             planned.scope.folder.path,
-            getToolFile(session, planned, SWIFTLINT_TOOL_FILE),
-            getToolFiles(session).targets,
+            getConfigFile(session, planned, SWIFTLINT_CONFIG_NAME),
+            getConfigFiles(session).targets,
         ),
     );
     const commandArguments = [
         ...SWIFTLINT_ANALYZE_COMMAND,
         SWIFTLINT_CONFIG_FLAG,
-        toolFile,
+        configFile,
         COMPILER_LOG_FLAG,
         plan.log,
     ];
@@ -180,15 +180,15 @@ export async function checkSwiftSwiftlintAnalyze(session: Session, planned: Plan
  */
 export async function checkSwiftPeriphery(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const folder = getScopeBuildFolder(session.installedRoot, planned.scope.folder.path, 'periphery');
-    const toolFile = join(
+    const configFile = join(
         session.root,
-        getToolFileTarget(
+        getConfigFileTarget(
             planned.scope.folder.path,
-            getToolFile(session, planned, PERIPHERY_TOOL_FILE),
-            getToolFiles(session).targets,
+            getConfigFile(session, planned, PERIPHERY_CONFIG_FILE),
+            getConfigFiles(session).targets,
         ),
     );
-    const commandArguments = [...PERIPHERY_COMMAND, toolFile];
+    const commandArguments = [...PERIPHERY_COMMAND, configFile];
     const prepared = prepareBuild(session.root, planned.files, folder);
     using files = prepared.files;
     const source = files.readRealPath(BUILD_SOURCE_FOLDER);
@@ -201,20 +201,22 @@ export async function checkSwiftPeriphery(session: Session, planned: PlannedChec
 }
 
 /**
- * Lists the SwiftLint files a copy keeps: the scope pointer, the tool file, and SwiftLint files in parent folders.
+ * Lists the SwiftLint files a copy keeps: the scope pointer, the config file, and SwiftLint files in parent folders.
  *
  * @param session the repository and its tools.
- * @param planned the scope files and tool files.
+ * @param planned the scope files and config files.
  * @returns the repository-relative paths, sorted.
  */
-export function listSwiftlintToolFiles(session: Session, planned: PlannedCheck): string[] {
+export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck): string[] {
     const paths = [
         joinScope(planned.scope.folder.path, SWIFTLINT_CONFIG_FILE),
         ...session.configurations
             .values()
-            .flatMap((configuration) => configuration.toolFiles)
-            .filter((toolFile) => toolFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
-            .map((toolFile) => getToolFileTarget(planned.scope.folder.path, toolFile, getToolFiles(session).targets)),
+            .flatMap((configuration) => configuration.configFiles)
+            .filter((configFile) => configFile.pointer?.path === SWIFTLINT_CONFIG_FILE)
+            .map((configFile) =>
+                getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session).targets),
+            ),
     ];
     for (const file of planned.files) {
         const folders = listEnclosingFolders(posix.dirname(file.path));
