@@ -1,26 +1,29 @@
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
-import { fakeTool } from '#tests/setup/fakes.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
-import { matchItems } from '#tests/setup/matchers.ts';
 import { CI_PINS } from '#cli/config/generation/ci.ts';
-import { runCommand } from '#tests/setup/processes.ts';
-import { installSandbox } from '#tests/setup/install.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { parseCheckReport } from '#tests/setup/run-gspot.ts';
-import type { PackedSandbox } from '#tests/types/packages.ts';
+import type { UserProject } from '#tests/types/packages.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
+import { parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { createPackedSandbox } from '#tests/setup/packed-sandbox.ts';
-import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/data/packed-install.ts';
+import { createUserProject } from '#tests/setup/sandboxes/user-project.ts';
+import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/data/e2e/cli.ts';
 
 // Checks what init replaced and kept, before the test reads the check report.
 async function assertReplacedFiles(root: string, output: string): Promise<void> {
-    expect((JSON.parse(output) as InitJson).plan.delete.map(({ path }) => path)).toStrictEqual([
-        'prettier.config.mjs',
-        '.editorconfig',
-    ]);
+    const { plan } = JSON.parse(output) as InitJson;
+    expect(plan.delete).toStrictEqual([]);
+    expect(plan.write.filter(({ path }) => ['prettier.config.mjs', '.editorconfig'].includes(path))).toStrictEqual(
+        ['.editorconfig', 'prettier.config.mjs'].map((path) => ({
+            path,
+            note: `replaces your file; read the old one with git show HEAD:${path}`,
+        })),
+    );
     const formatter = await readFile(join(root, 'prettier.config.mjs'), 'utf8');
     expect({
         settings: await isOnDisk(join(root, 'gspot.toml')),
@@ -36,19 +39,19 @@ async function assertReplacedFiles(root: string, output: string): Promise<void> 
 }
 
 test('init replaces formatter files, keeps your notes and CLAUDE.md, and check reports findings', async () => {
-    await using consumer = await createPackedSandbox();
-    const { root } = consumer;
+    await using sandbox = await createUserProject();
+    const { root } = sandbox;
     await createFileTree(root, STARTING_FILES);
-    const initialized = await installSandbox(consumer.online, {
+    const initialized = await initSandbox(sandbox.online, {
         configurations: ['bash', 'python', 'swift'],
     });
     await assertReplacedFiles(root, initialized.stdout);
     expect(initialized.stdout).not.toContain('formatter stdout');
     const checked = parseCheckReport(
-        await consumer.offline.run(
+        await sandbox.offline.run(
             root,
             ['check', '--only', 'bash/shellcheck,dependencies/lockfiles,format/prettier', '--json'],
-            consumer.offline.environment,
+            sandbox.offline.environment,
         ),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
@@ -56,7 +59,7 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     expect(exitCode).toBe(1);
     expect(checks).toHaveLength(3);
     expect(checks.filter(({ status }) => status === 'error' || status === 'missing')).toStrictEqual([]);
-    // The throwaway registry serves HTTP archives, which the consumer lockfile must report.
+    // The throwaway registry serves HTTP archives, which the sandbox lockfile must report.
     const lockfileHosts = checks.find(({ check }) => check === 'dependencies/lockfiles')!.findings;
     expect(lockfileHosts.length).toBeGreaterThan(0);
     for (const finding of lockfileHosts) {
@@ -64,10 +67,10 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
         expect(finding.message).toContain(new URL('/', buildSpawnEnvironment()['GSPOT_TEST_NPM_REGISTRY']).href);
     }
     expect(
-        checks.flatMap(({ check, status, findings }) =>
-            findings.map(({ file, line }) => ({ check, status, file, line })),
-        ),
-    ).toEqual(matchItems([{ check: 'format/prettier', status: 'failed', file: 'source.js', line: undefined }]));
+        checks
+            .filter(({ check }) => check === 'format/prettier')
+            .map(({ status, findings }) => ({ status, files: findings.map(({ file }) => file) })),
+    ).toStrictEqual([{ status: 'failed', files: ['package.json', 'source.js'] }]);
     expect(checks.find(({ check }) => check === 'bash/shellcheck')).toMatchObject({
         status: 'failed',
         fileCount: 1,
@@ -75,11 +78,7 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     });
     await writeFile(join(root, 'broken.sh'), 'echo example\n');
     const corrected = parseCheckReport(
-        await consumer.offline.run(
-            root,
-            ['check', '--only', 'bash/shellcheck', '--json'],
-            consumer.offline.environment,
-        ),
+        await sandbox.offline.run(root, ['check', '--only', 'bash/shellcheck', '--json'], sandbox.offline.environment),
     );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const clean = corrected.report;
@@ -90,11 +89,11 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
 });
 
 /** Install the format configuration in a package project, with a fake mise first on the path. */
-async function prepareFormatterSandbox(installation: PackedSandbox) {
+async function prepareFormatterSandbox(installation: UserProject) {
     const toolConsumer = join(installation.workspace, 'tool-consumer');
     const systemTools = join(installation.workspace, 'system-tools');
     await mkdir(toolConsumer);
-    await fakeTool(systemTools, 'mise', `console.log(${JSON.stringify(CI_PINS.mise.version)});\n`);
+    await writeScriptCommand(systemTools, 'mise', `console.log(${JSON.stringify(CI_PINS.mise.version)});\n`);
     const bun = await runCommand(['bun', '--version'], {
         cwd: toolConsumer,
         env: installation.online.environment,
@@ -115,7 +114,7 @@ async function prepareFormatterSandbox(installation: PackedSandbox) {
             PATH: `${systemTools}${delimiter}${installation.online.environment['PATH'] ?? ''}`,
         },
     };
-    await installSandbox(toolOptions, {
+    await initSandbox(toolOptions, {
         configurations: ['format'],
         level: 'all',
     });
@@ -123,7 +122,7 @@ async function prepareFormatterSandbox(installation: PackedSandbox) {
 }
 
 test('the installed formatter reports and fixes source and keeps your package.json fields', async () => {
-    await using consumer = await createPackedSandbox();
+    await using consumer = await createUserProject();
 
     const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterSandbox(consumer);
     const formatter = ['check', 'source.js', '--only', 'format/prettier', '--json'];

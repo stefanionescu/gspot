@@ -8,6 +8,7 @@ export type ProcessOutput = Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>;
 
 /** Standard input for a CLI child process. */
 export type StdinOptions = { stdin?: string | Uint8Array };
+
 /** The streams and stop controls of a test child process. */
 export type CapturedProcess = Pick<
     Bun.Subprocess<Bun.Spawn.Writable, 'pipe', 'pipe'>,

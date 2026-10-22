@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { VUE_CASES, VUE_SANDBOX } from '#tests/data/checks/vue.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { VUE_CASES, VUE_SANDBOX } from '#tests/data/integration/checks/vue.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
-const installedSandbox = registerSharedSandbox({
+const installedSandbox = shareInstalledSandbox({
     ...VUE_SANDBOX,
     dependencies: { vue: testsPackage.devDependencies.vue },
 });

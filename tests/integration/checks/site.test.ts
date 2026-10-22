@@ -2,28 +2,25 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runCheckSample } from '#tests/setup/sample-checks.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { SITE_SANDBOX } from '#tests/data/checks/site/project.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { runCheckSample } from '#tests/setup/cli/samples.ts';
+import { COPY_PAGE_BUILD } from '#tests/data/checks/site/build.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { SITE_SANDBOX, ALT_TEXT_PAGE, SITE_SETTINGS } from '#tests/data/checks/site/pages.ts';
 
 import {
     SITE_CASES,
-    COPY_PAGE_BUILD,
-    TWO_SITE_SCOPES,
-    BUILT_HTML_SITES,
-    SITE_OUTPUT_BUILD,
-} from '#tests/data/checks/site/build.ts';
-import {
     OUTPUT_CASES,
-    ALT_TEXT_PAGE,
-    SITE_SETTINGS,
     SITE_PAGE_HEAD,
+    TWO_SITE_TABLES,
+    BUILT_HTML_SITES,
     MISSING_ALT_PAGE,
-} from '#tests/data/checks/site/built-pages.ts';
+    SITE_OUTPUT_BUILD,
+} from '#tests/data/integration/checks/site.ts';
 
-const installedSandbox = registerSharedSandbox(SITE_SANDBOX);
+const installedSandbox = shareInstalledSandbox(SITE_SANDBOX);
 
 test.each([...SITE_CASES])('$check reports its finding and passes after the fix', async (entry) => {
     const { failed, passed } = await runCheckSample(installedSandbox(), entry, SITE_SANDBOX);
@@ -60,47 +57,50 @@ test.each([...OUTPUT_CASES])(
     },
 );
 
-test.each([...BUILT_HTML_SITES])('a built HTML ignore stays inside its own site with $name', async (repository) => {
-    const { root, environment } = installedSandbox();
-    const settings = buildSandboxSettings(repository.configurations, { level: 'all', tables: TWO_SITE_SCOPES });
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-        check: 'site/html-validate',
-        files: {
-            'gspot.toml': settings,
-            ...repository.files,
-            'app/build.mjs': COPY_PAGE_BUILD,
-            'app/page.html': MISSING_ALT_PAGE,
-            'other/build.mjs': COPY_PAGE_BUILD,
-            'other/page.html': MISSING_ALT_PAGE,
-        },
-    });
+test.each([...BUILT_HTML_SITES])(
+    'an html-validate ignore on app/** leaves the same finding in the other site, with $name',
+    async (repository) => {
+        const { root, environment } = installedSandbox();
+        const settings = buildSandboxSettings(repository.configurations, { level: 'all', tables: TWO_SITE_TABLES });
+        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+            check: 'site/html-validate',
+            files: {
+                'gspot.toml': settings,
+                ...repository.files,
+                'app/build.mjs': COPY_PAGE_BUILD,
+                'app/page.html': MISSING_ALT_PAGE,
+                'other/build.mjs': COPY_PAGE_BUILD,
+                'other/page.html': MISSING_ALT_PAGE,
+            },
+        });
 
-    const appliedSettings = await readFile(join(root, 'gspot.toml'), 'utf8');
-    const checked = parseCheckReport(
-        await spawnGspot(root, ['check', '--json', '--only', 'site/html-validate'], environment),
-    );
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect(checked.report.checks).toMatchObject([
-        { scope: 'app', status: 'passed', findings: [] },
-        {
-            scope: 'other',
-            status: 'failed',
-            findings: [matchFields({ file: 'other/dist/index.html', line: 7, rule: 'wcag/h37' })],
-        },
-    ]);
-    await writeFile(join(root, 'other/page.html'), ALT_TEXT_PAGE);
-    const corrected = parseCheckReport(
-        await spawnGspot(root, ['check', '--json', '--only', 'site/html-validate'], environment),
-    );
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([
-        { scope: 'app', status: 'passed', findings: [] },
-        { scope: 'other', status: 'passed', findings: [] },
-    ]);
-    expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(appliedSettings);
-    for (const scope of ['app', 'other'])
-        expect(await readFile(join(root, `${scope}/build.mjs`), 'utf8')).toBe(COPY_PAGE_BUILD);
-});
+        const appliedSettings = await readFile(join(root, 'gspot.toml'), 'utf8');
+        const checked = parseCheckReport(
+            await spawnGspot(root, ['check', '--json', '--only', 'site/html-validate'], environment),
+        );
+        expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+        expect(checked.report.checks).toMatchObject([
+            { scope: 'app', status: 'passed', findings: [] },
+            {
+                scope: 'other',
+                status: 'failed',
+                findings: [matchFields({ file: 'other/dist/index.html', line: 7, rule: 'wcag/h37' })],
+            },
+        ]);
+        await writeFile(join(root, 'other/page.html'), ALT_TEXT_PAGE);
+        const corrected = parseCheckReport(
+            await spawnGspot(root, ['check', '--json', '--only', 'site/html-validate'], environment),
+        );
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(corrected.report.checks).toMatchObject([
+            { scope: 'app', status: 'passed', findings: [] },
+            { scope: 'other', status: 'passed', findings: [] },
+        ]);
+        expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(appliedSettings);
+        for (const scope of ['app', 'other'])
+            expect(await readFile(join(root, `${scope}/build.mjs`), 'utf8')).toBe(COPY_PAGE_BUILD);
+    },
+);
 
 test('HTML Validate reports all 400 missing alt attributes in a built page', async () => {
     const { root, environment } = installedSandbox();

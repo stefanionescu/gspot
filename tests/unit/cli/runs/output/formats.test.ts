@@ -1,81 +1,86 @@
+import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { realpathSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { join, win32 } from 'node:path';
 import { openSession } from '#cli/session.ts';
-import { isLinux } from '#tests/setup/system.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { type Check } from '#cli/types/configurations.ts';
+import { isLinux } from '#tests/setup/system/platform.ts';
 import type { CommandRun } from '#cli/types/runs/command.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { outputSchema } from '#cli/schemas/configurations/output.ts';
+import { BASE_CHECK, FAILED_RUN } from '#tests/data/runs/command.ts';
+import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { BASE_CHECK, FAILED_RUN } from '#tests/data/runs/command-checks.ts';
-import { getShippedCheck, buildProcessResult } from '#tests/setup/builders.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { addCommandLine, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import {
-    EMPTY_ERRORS,
-    JSON_FORMATS,
     CHECK_OUTPUTS,
-    LINE_FINDINGS,
-    OTHER_TOOL_OUTPUT,
+    FOREIGN_OUTPUT,
+    LINE_ENDING_CASES,
+    ESLINT_PATH_CASES,
+    WINDOWS_ROOT_CASES,
     EDITORCONFIG_REPORT,
-} from '#tests/data/runs/output.ts';
+    OUTPUT_PARSE_RESULTS,
+    FIXABLE_FORMAT_CASES,
+    BRACKETED_WORD_FINDINGS,
+} from '#tests/data/runs/output/formats.ts';
+
+/** Run the parser and return its findings, or the message it refuses the output with. */
+function readParseResult(parse: () => Finding[]): { findings: readonly Finding[] } | { error: string } {
+    try {
+        return { findings: parse() };
+    } catch (error) {
+        return { error: (error as Error).message };
+    }
+}
 
 test.each(
-    CHECK_OUTPUTS.flatMap((output) => ['empty', 'foreign'].map((input) => ({ format: output.format, output, input }))),
-)('the $format format gives one result for $input output', async ({ output, input }) => {
-    await using sandbox = await testdir();
-    const check = {
-        id: 'sandbox/output',
-        runs: 'files' as const,
-        help: 'Correct the sandbox file.',
-        output: outputSchema.parse(output),
-    };
-    const fails = (input === 'empty' ? EMPTY_ERRORS : JSON_FORMATS).has(output.format);
-    if (fails) {
-        expect(() =>
-            parseOutput(check, input === 'empty' ? '' : OTHER_TOOL_OUTPUT, '', {
-                root: sandbox.path,
-                cwd: sandbox.path,
-            }),
-        ).toThrow(GspotError);
-    } else {
+    CHECK_OUTPUTS.flatMap((output) =>
+        (['empty', 'foreign'] as const).map((input) => ({ format: output.format, output, input })),
+    ),
+)(
+    'the $format format reads $input output into its exact findings or its refusal',
+    async ({ format, output, input }) => {
+        await using sandbox = await testdir();
+        const check = {
+            id: 'sandbox/output',
+            runs: 'files' as const,
+            help: 'Correct the sandbox file.',
+            output: outputSchema.parse(output),
+        };
+        const stdout = input === 'empty' ? '' : FOREIGN_OUTPUT;
         expect(
-            parseOutput(check, input === 'empty' ? '' : OTHER_TOOL_OUTPUT, '', {
-                root: sandbox.path,
+            readParseResult(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })),
+        ).toStrictEqual(OUTPUT_PARSE_RESULTS[format][input]);
+    },
+);
+
+test.each([...LINE_ENDING_CASES])(
+    'ShellCheck output keeps path, position and rule with %s line endings',
+    async (_, ending) => {
+        await using sandbox = await testdir({ 'scripts/café build.sh': 'echo $1\n' });
+
+        const check = getShippedCheck('bash/shellcheck');
+        const path = join('scripts', 'café build.sh');
+
+        const output = `${path}:1:6: note: Double quote to prevent globbing and word splitting. [SC2086]${ending}`;
+        const findings = parseOutput(check, '', output, { root: sandbox.path, cwd: sandbox.path });
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toMatchObject({ file: 'scripts/café build.sh', line: 1, column: 6, rule: 'SC2086' });
+        expect(
+            parseCommandFindings({ check }, buildProcessResult({ ...FAILED_RUN, stderr: output }), {
                 cwd: sandbox.path,
-            }),
-        ).toStrictEqual(input === 'foreign' && output.format === 'lines' ? [...LINE_FINDINGS] : []);
-    }
-});
-
-test.each([
-    ['LF', '\n'],
-    ['CRLF', '\r\n'],
-])('ShellCheck output keeps path, position and rule with %s line endings', async (_, ending) => {
-    await using sandbox = await testdir({ 'scripts/café build.sh': 'echo $1\n' });
-
-    const check = getShippedCheck('bash/shellcheck');
-    const path = join('scripts', 'café build.sh');
-
-    const output = `${path}:1:6: note: Double quote to prevent globbing and word splitting. [SC2086]${ending}`;
-    const findings = parseOutput(check, '', output, { root: sandbox.path, cwd: sandbox.path });
-    expect(findings).toHaveLength(1);
-    expect(findings[0]).toMatchObject({ file: 'scripts/café build.sh', line: 1, column: 6, rule: 'SC2086' });
-    expect(
-        parseCommandFindings({ check }, buildProcessResult({ ...FAILED_RUN, stderr: output }), {
-            cwd: sandbox.path,
-            root: sandbox.path,
-        }).findings,
-    ).toStrictEqual(findings);
-});
+                root: sandbox.path,
+            }).findings,
+        ).toStrictEqual(findings);
+    },
+);
 
 test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (source) => {
     await using sandbox = await testdir({ 'settings/café.toml': 'a=1\n' });
@@ -91,16 +96,7 @@ test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (s
     expect(findings[0]).toMatchObject({ file: 'settings/café.toml', fixable: true });
 });
 
-test.each([
-    {
-        root: 'C:/work',
-        stdout: 'error: invalid TOML\n  ┌─ C:/work/settings.toml:2:3\n  │\n',
-        stderr: '',
-        line: 2,
-        column: 3,
-    },
-    { root: '/repository', stdout: '', stderr: '  ┌─ settings.toml:2:1\n', line: 2, column: 1 },
-])(
+test.each([...WINDOWS_ROOT_CASES])(
     'a Taplo syntax error in $root names its file and position and is not fixable',
     ({ root, stdout, stderr, line, column }) => {
         const check = getShippedCheck('data-files/taplo-format');
@@ -156,22 +152,21 @@ test.skipIf(isLinux)('an absolute path that names the root in another case is st
     ]);
 });
 
-test.each([
-    ['/repo', '/repo/a.js', 'a.js'],
-    ['/repo', '/repository/a.js', '/repository/a.js'],
-    // Bun escapes Unicode inside String.raw; create the Windows path from slashes.
-    [
-        win32.normalize('C:/repo'),
-        win32.normalize('C:/repo/café file.js'),
-        process.platform === 'win32' ? 'café file.js' : win32.normalize('C:/repo/café file.js'),
-    ],
-])('ESLint paths are relative to the root only inside it: %s, %s', (root, path, expected) => {
-    const check = getShippedCheck('javascript/eslint');
-    const stdout = JSON.stringify([
-        { filePath: path, messages: [{ ruleId: null, severity: 2, message: 'Invalid syntax.', line: 1, column: 2 }] },
-    ]);
-    expect(parseOutput(check, stdout, '', { root, cwd: root })).toMatchObject([{ file: expected, line: 1, column: 2 }]);
-});
+test.each([...ESLINT_PATH_CASES])(
+    'ESLint paths are relative to the root only inside it: %s, %s',
+    (root, path, expected) => {
+        const check = getShippedCheck('javascript/eslint');
+        const stdout = JSON.stringify([
+            {
+                filePath: path,
+                messages: [{ ruleId: null, severity: 2, message: 'Invalid syntax.', line: 1, column: 2 }],
+            },
+        ]);
+        expect(parseOutput(check, stdout, '', { root, cwd: root })).toMatchObject([
+            { file: expected, line: 1, column: 2 },
+        ]);
+    },
+);
 
 test('a regex finding without a rule group keeps a trailing bracketed word in its message', () => {
     const check = { ...BASE_CHECK, output: outputSchema.parse({ format: 'regex' }) };
@@ -183,24 +178,7 @@ test('a regex finding without a rule group keeps a trailing bracketed word in it
             '',
             paths,
         ),
-    ).toStrictEqual([
-        {
-            check: 'sandbox/diagnostic',
-            file: 'a.txt',
-            line: 1,
-            message: 'Call the function by its full name (fetch)',
-            help: '',
-            fixable: false,
-        },
-        {
-            check: 'sandbox/diagnostic',
-            file: 'b.txt',
-            line: 2,
-            message: 'Name the type [User]',
-            help: '',
-            fixable: false,
-        },
-    ]);
+    ).toStrictEqual([...BRACKETED_WORD_FINDINGS]);
     const pytest = getShippedCheck('pytest/coverage');
     expect(
         parseOutput(pytest, 'FAILED tests/test_total.py::test_sum - assert total(items) == expected(items)', '', paths),
@@ -238,10 +216,7 @@ test('an unsuccessful SARIF invocation becomes a refused-output note for its com
     });
 });
 
-test.each([
-    ['format/prettier', '[warn] source.ts', 'source.ts'],
-    ['python/ruff-format', 'source.py:1:1: unformatted: different spacing', 'source.py'],
-])('the %s formatter declares which output supports fixing', (name, stdout, file) => {
+test.each([...FIXABLE_FORMAT_CASES])('the %s formatter declares which output supports fixing', (name, stdout, file) => {
     const check = getShippedCheck(name);
     expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toMatchObject([{ file, fixable: true }]);
 });

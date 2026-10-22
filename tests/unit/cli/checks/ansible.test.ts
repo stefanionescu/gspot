@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
-import { buildProcessResult } from '#tests/setup/builders.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { COMMAND_PLAYBOOK } from '#tests/data/checks/ansible.ts';
-import { findBuiltInCheck, planSandboxCheck, openPinnedSession } from '#tests/setup/check-input.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { findBuiltInCheck, planSandboxCheck, openPinnedSession } from '#tests/setup/cli/checks.ts';
 
 test('each Ansible project lints its own files and not those of a nested project', async () => {
     await using sandbox = await testdir({

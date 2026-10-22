@@ -1,25 +1,29 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import { EXPLAIN_SETTINGS, CHECK_TOOL_MINIMUMS, CONFIGURATION_DETECTION_LINES } from '#tests/data/commands/explain.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/sandbox.ts';
+
+import {
+    PATH_IGNORES,
+    EXPLAIN_SETTINGS,
+    SYNTAX_CHECK_TABLES,
+    CHECK_TOOL_MINIMUMS,
+    UNKNOWN_SUBJECT_CASES,
+    SYNTAX_CHECK_EXPLANATION,
+    CONFIGURATION_DETECTION_LINES,
+} from '#tests/data/commands/explain/subjects.ts';
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await testdir();
-    const tables = `[[command_check]]
-id = "project/syntax"
-command = ["bash", "-n", "{files}"]
-paths = ["**/*.sh"]
-stage = "manual"
-`;
+    const tables = SYNTAX_CHECK_TABLES;
     const settings = buildSandboxSettings([], { rules: true, scopes: [{ path: 'api', configurations: [] }], tables });
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
@@ -45,13 +49,7 @@ stage = "manual"
     expect(JSON.parse(corrected.stdout)).not.toHaveProperty('unchecked');
     const command = await runGspot(sandbox.path, ['explain', 'project/syntax', '--json']);
     expect(command.code, command.stdout + command.stderr).toBe(0);
-    expect(JSON.parse(command.stdout)).toMatchObject({
-        kind: 'check',
-        check: 'project/syntax',
-        stage: 'manual',
-        command: ['bash', '-n', '{files}'],
-        paths: ['**/*.sh'],
-    });
+    expect(JSON.parse(command.stdout)).toMatchObject(SYNTAX_CHECK_EXPLANATION);
     const remaining = (JSON.parse(ignored.stdout) as PathExplanation).checks;
     expect(remaining.map((entry) => entry.check)).not.toContain('project/syntax');
     expect(remaining.map((entry) => entry.check)).toContain('format/editorconfig-checker');
@@ -97,29 +95,23 @@ test('a file path reports its scope, checks, and ignores', async () => {
         fileKind: 'source',
         configurations: matchItems(['bash']),
         checks: matchItems([{ check: 'bash/shellcheck', stage: 'commit', configuration: 'bash' }]),
-        ignores: [
-            {
-                check: 'bash/shellcheck',
-                rule: 'SC2086',
-                reason: 'The script deliberately splits a list of arguments.',
-            },
-        ],
+        ignores: [...PATH_IGNORES],
     });
 });
-test.each([
-    ['./missing.sh', 'missing.sh'],
-    ['unknown-configuration', 'gspot cannot explain unknown-configuration.'],
-])('explain of %s fails with an arguments error that names the subject', async (subject, message) => {
-    await using sandbox = await testdir({ 'gspot.toml': EXPLAIN_SETTINGS, 'api/build.sh': CLEAN_BASH_SCRIPT });
+test.each([...UNKNOWN_SUBJECT_CASES])(
+    'explain of %s fails with an arguments error that names the subject',
+    async (subject, message) => {
+        await using sandbox = await testdir({ 'gspot.toml': EXPLAIN_SETTINGS, 'api/build.sh': CLEAN_BASH_SCRIPT });
 
-    commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'arguments',
-        message: expect.stringContaining(message) as string,
-    });
-});
+        commitAll(sandbox.path);
+        const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
+        expect(result.code, result.stdout + result.stderr).toBe(2);
+        expect(JSON.parse(result.stdout)).toMatchObject({
+            error: 'arguments',
+            message: expect.stringContaining(message) as string,
+        });
+    },
+);
 test.each([
     ['bash', 'configuration'],
     ['bash/shellcheck', 'check'],

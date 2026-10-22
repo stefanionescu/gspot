@@ -3,14 +3,14 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { fakeTool } from '#tests/setup/fakes.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
-import { overrideEnvironment } from '#tests/setup/environment.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { SESSION_FILES, MISE_SESSION_FILES, MISE_LOOKUP_SCRIPT } from '#tests/data/session.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { SESSION_FILES, MISE_LOOKUP_SCRIPT, MISE_SESSION_FILES } from '#tests/data/session.ts';
 
 test('a copied session generates settings from its replacement inventory and read cache', async () => {
     await using sandbox = await testdir(SESSION_FILES);
@@ -27,7 +27,7 @@ test('a copied session generates settings from its replacement inventory and rea
 test('a naming-only run leaves mise tool discovery unused', async () => {
     await using sandbox = await testdir(MISE_SESSION_FILES);
     await using programs = await testdir();
-    const bin = await fakeTool(programs.path, 'mise', MISE_LOOKUP_SCRIPT);
+    const bin = await writeScriptCommand(programs.path, 'mise', MISE_LOOKUP_SCRIPT);
     using _environment = overrideEnvironment({ PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}` });
     const session = await openSession(sandbox.path);
     using _resources = session.resources;

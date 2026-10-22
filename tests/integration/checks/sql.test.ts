@@ -2,11 +2,19 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
-import { SQL_CASES, SQL_SANDBOX, SQL_DUCKDB_SOURCE, SQL_FUNCTION_SOURCE } from '#tests/data/checks/sql.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+
+import {
+    SQL_CASES,
+    SQL_SANDBOX,
+    SQL_DUCKDB_SOURCE,
+    SQL_FUNCTION_SOURCE,
+    SQLFLUFF_DIALECT_SETTINGS,
+} from '#tests/data/integration/checks/sql.ts';
 
 /** Find SQL parse errors in the check report. */
 function hasSqlParseError(output: ProcessOutput): boolean {
@@ -20,17 +28,7 @@ test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL defau
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: 'sql/sqlfluff',
         files: {
-            'gspot.toml': buildSandboxSettings(['sql'], {
-                tables: `[tools.sqlfluff]
-dialect = "postgres"
-[[scope]]
-path = "warehouse"
-[scope.tools.sqlfluff]
-dialect = "duckdb"
-[[scope]]
-path = "warehouse/child"
-`,
-            }),
+            'gspot.toml': buildSandboxSettings(['sql'], SQLFLUFF_DIALECT_SETTINGS),
             'query.sql': 'PRAGMA table_info (users);\n',
             'warehouse/query.sql': 'SELECT 1;\n',
             'warehouse/child/query.sql': SQL_DUCKDB_SOURCE,
@@ -98,7 +96,7 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-const installedSandbox = registerSharedSandbox({
+const installedSandbox = shareInstalledSandbox({
     ...SQL_SANDBOX,
     async prepare(root, environment) {
         const ignored = await spawnGspot(

@@ -8,7 +8,10 @@ export const UNMATCHED_PATH_CASES = [
             import_rule: [{ name: 'core', paths: ['src/**', 'gone/**'] }],
             structure: { environment_readers: ['scripts/kept.sh', 'scripts/gone.sh'] },
         },
-        unmatched: ['gone/**', 'scripts/gone.sh'],
+        messages: [
+            'gone/** under [[import_rule]] matches no tracked file or folder.',
+            'scripts/gone.sh under structure.environment_readers matches no tracked file or folder.',
+        ],
     },
     {
         name: 'inherited paths are audited once from the repository root',
@@ -24,7 +27,11 @@ export const UNMATCHED_PATH_CASES = [
                 },
             ],
         },
-        unmatched: ['root-gone.sh', 'app/gone.sh', 'app/deep/gone.sh'],
+        messages: [
+            'root-gone.sh under structure.environment_readers matches no tracked file or folder.',
+            'app/gone.sh under scope.0.structure.environment_readers matches no tracked file or folder.',
+            'app/deep/gone.sh under scope.1.structure.environment_readers matches no tracked file or folder.',
+        ],
     },
     {
         name: 'scope paths audit absent folders',
@@ -33,7 +40,10 @@ export const UNMATCHED_PATH_CASES = [
             configurations: ['bash'],
             scope: [{ path: 'app' }, { path: 'app/deep' }, { path: 'absent' }, { path: 'absent/nested' }],
         },
-        unmatched: ['absent', 'absent/nested'],
+        messages: [
+            'absent under scope.2.path matches no tracked file or folder.',
+            'absent/nested under scope.3.path matches no tracked file or folder.',
+        ],
     },
     {
         name: 'future destinations and URL patterns are not source selectors',
@@ -49,7 +59,7 @@ export const UNMATCHED_PATH_CASES = [
                 },
             },
         },
-        unmatched: [],
+        messages: [],
     },
     {
         name: 'a document that names a path does not make it tracked',
@@ -67,6 +77,18 @@ export const UNMATCHED_PATH_CASES = [
                 },
             ],
         },
-        unmatched: ['.reports/output.json', '.reports/unused.json', '.reports/command.json'],
+        messages: [
+            '.reports/output.json under [[ignore]] matches no tracked file or folder.',
+            '.reports/unused.json under [[ignore]] matches no tracked file or folder.',
+            '.reports/command.json under [[command_check]] matches no tracked file or folder.',
+        ],
     },
 ] as const;
+
+/** The fields of each unmatched-paths finding. */
+export const UNMATCHED_PATH_FINDING = {
+    check: 'gspot/unmatched-paths',
+    file: 'gspot.toml',
+    line: 1,
+    rule: 'unmatched-path',
+} as const;

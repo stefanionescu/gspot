@@ -2,10 +2,10 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
-import { checkFindings } from '#tests/setup/check-input.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { GROUPED_PBXPROJ } from '#tests/data/checks/xcode.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { UNCOVERED_FILE_MESSAGE } from '#cli/config/checks/structure.ts';
 
 import {
@@ -16,12 +16,12 @@ import {
     PYTHON_IMPORT_RULES,
 } from '#tests/data/checks/structure/import-rules.ts';
 
-test('Python imports follow the import rules: rules above, can_import, relative imports, and host modules', async () => {
+test('structure/import-rules reports a Python file outside every rule and each refused import, a relative one too', async () => {
     await using sandbox = await testdir({
         ...PYTHON_IMPORT_FILES,
         'gspot.toml': buildSandboxSettings(['python'], { tables: PYTHON_IMPORT_RULES }),
     });
-    const findings = await checkFindings(sandbox.path, 'structure/import-rules');
+    const findings = await runSandboxCheck(sandbox.path, 'structure/import-rules');
     expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
         {
             file: 'src/app/__init__.py',
@@ -55,7 +55,7 @@ test('Swift imports follow the import rules through the SwiftPM targets, and a f
         ...SWIFT_IMPORT_FILES,
         'gspot.toml': buildSandboxSettings(['swift'], { tables: SWIFT_IMPORT_RULES }),
     });
-    const findings = await checkFindings(sandbox.path, 'structure/import-rules');
+    const findings = await runSandboxCheck(sandbox.path, 'structure/import-rules');
     expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
         { file: 'Sources/Loose/Helper.swift', line: 1, rule: 'uncovered-file', message: UNCOVERED_FILE_MESSAGE },
         {
@@ -80,7 +80,7 @@ test('an Xcode native target is a Swift module named after the target', async ()
             tables: '[[import_rule]]\nname = "tools"\npaths = ["Tools/**"]\n\n[[import_rule]]\nname = "app"\npaths = ["First Group/**", "Root.swift"]\n',
         }),
     });
-    const findings = await checkFindings(sandbox.path, 'structure/import-rules');
+    const findings = await runSandboxCheck(sandbox.path, 'structure/import-rules');
     expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'Tools/Script.swift', line: 1, rule: 'refused-import' },
     ]);

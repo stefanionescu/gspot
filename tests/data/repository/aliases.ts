@@ -16,3 +16,11 @@ export const ALIAS_PROJECT = {
     'web/package.json': '{"imports":{"#app/*":"./src/*","#shared/*":"./package/*"}}',
     'web/tsconfig.json': '{"compilerOptions":{"paths":{"@web/*":["./typed/*"],"#shared/*":["./compiler/*"]}}}',
 } as const;
+
+/** The root and child aliases. */
+export const SCOPE_ALIASES = {
+    '#app/*': 'src/*',
+    '#root/*': 'root/*',
+    '@root/*': 'typed/*',
+    '#shared/*': 'compiler/*',
+} as const;

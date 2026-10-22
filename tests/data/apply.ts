@@ -54,3 +54,19 @@ export const STYLELINT_PACKAGE_FIELDS = {
 /** An authored name edit that keeps the generated commitlint field. */
 export const EDITED_COMMITLINT_PACKAGE =
     '{"name":"edited-project","private":true,"commitlint":{"extends":"../.gspot/configurations/general/commits/commitlint.json"},"kept":[0,false,""]}\n';
+
+/** A file that changes between the init plan and the write: an edited package.json field. */
+export const EDITED_STYLELINT_PACKAGE = `{
+  "name": "edited-project",
+  "private": true,
+  "type": "module",
+  "stylelint": {"rules":{"property-no-unknown":null}}
+}
+`;
+
+/** The tool folders that apply deletes when no configuration needs them. */
+export const TOOL_FOLDERS = [
+    { kind: 'npm', folder: '.gspot/node_modules' },
+    { kind: 'python', folder: '.gspot/.venv' },
+    { kind: 'vale', folder: '.gspot/vale' },
+] as const;

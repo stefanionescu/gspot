@@ -1,4 +1,4 @@
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 export const NESTED_ESLINT_FILES = {
     'gspot.toml': buildSandboxSettings(['javascript'], {

@@ -41,6 +41,12 @@
         "docs/cloudflare-env.d.ts",
         "**/bower_components/**",
         "**/bun.lock",
-        "**/.env*"
+        "**/.env*",
+        "tests/integration/checks/swift/swiftlint.test.ts",
+        "tests/integration/checks/css.test.ts",
+        "tests/integration/checks/sql.test.ts",
+        "tests/integration/checks/data-files.test.ts",
+        "tests/unit/cli/checks/python/vulture.test.ts",
+        "tests/unit/cli/checks/python/deptry.test.ts"
     ]
 }

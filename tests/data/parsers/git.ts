@@ -39,18 +39,6 @@ export const INVALID_BLOBS = [
     { name: 'missing body terminator', output: `${SHA1} blob 2\nab` },
 ] as const;
 
-export const PUSH_CHECK_ARGUMENTS = [
-    'check',
-    '--hook',
-    'pre-push',
-    '--only',
-    'project/bash-syntax',
-    '--json',
-    '--',
-] as const;
-
-export const TOOL_PROJECT_BYTE_ATTRIBUTES = '\n.gspot/* -text\n';
-
 export const ATTRIBUTE_LINES = [
     { line: String.raw`"na\303\257ve.txt" binary`, expected: [{ pattern: '**/naïve.txt', attributes: ['binary'] }] },
     { line: '[attr]gen linguist-generated', expected: [] },

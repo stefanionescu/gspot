@@ -1,23 +1,27 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { readFile, writeFile } from 'node:fs/promises';
 import { type RunReport } from '#cli/types/runs/run.ts';
 import { setOutputOptions } from '#cli/system/terminal.ts';
-import { overrideEnvironment } from '#tests/setup/environment.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
 import { FINDINGS_SHOWN, PROGRESS_CLEAR } from '#cli/config/commands/check.ts';
 
 import {
     VERBOSITY_FILES,
     NO_COLOR_SETTINGS,
-    FAILED_CHECK_REPORT,
+    FAILED_REPORT_TEXT,
     VERBOSITY_ARGUMENTS,
+    FAILED_CHECK_REPORT,
+    SKIPPED_REPORT_CHECKS,
+    COMPARISON_NOTICE_CASES,
     CHECK_REPORT_COMPARISONS,
-} from '#tests/data/commands/check.ts';
+} from '#tests/data/commands/check/report.ts';
 
 async function assertReportRepair(root: string, commandArguments: readonly string[]): Promise<void> {
     const json = parseCheckReport(await runGspot(root, [...commandArguments, '--json']));
@@ -64,22 +68,12 @@ test('check --verbose prints every finding and the command, and --json keeps eve
     await assertReportRepair(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
 });
 
-test('skipped checks do not count as passed, and an empty canceled run is incomplete', () => {
+test('the summary counts skipped checks apart from passed ones, and an empty run still prints its exit code', () => {
     const skipped: RunReport = {
         ...FAILED_CHECK_REPORT,
         failed: [],
         exitCode: 0,
-        checks: [
-            {
-                check: 'example/skipped',
-                scope: '',
-                status: 'skipped',
-                fileCount: 0,
-                duration: 0,
-                findings: [],
-                note: 'disabled',
-            },
-        ],
+        checks: [...SKIPPED_REPORT_CHECKS],
     };
     expect(formatRunReport(skipped, { verbose: false })).toEndWith(
         'Passed: 0 checks. Skipped: 1 check.\nTime: 0.0s. Exit code 0.\n',
@@ -91,18 +85,8 @@ test('skipped checks do not count as passed, and an empty canceled run is incomp
     const text = formatRunReport(corrected, { verbose: false });
     expect(text).toEndWith('Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\n');
 });
-test('one line per check, the findings with a help line, the reproduce lines and the summary', () => {
-    const text = formatRunReport(FAILED_CHECK_REPORT, { verbose: false });
-    expect(text).toContain('bash/shellcheck  failed  1 finding');
-    expect(text).toContain('  a.sh:4:3  SC2086  Double quote to prevent globbing.');
-    expect(text).toContain('  help: Quote it.');
-    expect(text).toContain('  run again: gspot check --only bash/shellcheck');
-    expect(text.split('run again: gspot check --only bash/shellcheck')).toHaveLength(2);
-    expect(text).toContain('api  format/prettier  missing  prettier is not installed. Run: mise install');
-    expect(text).toContain('ignores    1 (printed with --verbose)');
-    expect(text).toEndWith(
-        'Failed: 1 check with 1 finding. Could not run: 1 check (a tool is missing; run gspot install). Passed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 1.\n',
-    );
+test('a failed report prints each check with its findings, help, and reproduce line, the ignore count, and the summary', () => {
+    expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).toBe(FAILED_REPORT_TEXT);
 });
 
 test('only --verbose prints each ignore with its reason', () => {
@@ -162,10 +146,12 @@ test('the report prints planned skips once with their reason only in verbose out
     };
     expect(skipped.checks[0]?.cause).toBe('condition');
     expect(skipped).not.toHaveProperty('skips');
-    expect(formatRunReport(skipped, { verbose: false })).not.toContain('bash/shellcheck');
-    expect(formatRunReport(skipped, { verbose: true }).split('bash/shellcheck  skipped')).toHaveLength(2);
-    expect(formatRunReport(skipped, { verbose: true })).toContain('skipped  disabled');
-    expect(formatRunReport(skipped, { verbose: false })).toContain('Skipped: 1 check.');
+    expect(formatRunReport(skipped, { verbose: false })).toBe(
+        'ignores    1 (printed with --verbose)\nPassed: 0 checks. Skipped: 1 check.\nTime: 0.0s. Exit code 1.\n',
+    );
+    expect(formatRunReport(skipped, { verbose: true })).toBe(
+        'bash/shellcheck  skipped  disabled\n\nignore     bash/shellcheck SC2312  why\nPassed: 0 checks. Skipped: 1 check.\nTime: 0.0s. Exit code 1.\n',
+    );
 });
 
 test('terminal progress rewrites one status line and log output stays empty', () => {
@@ -233,10 +219,7 @@ test('NO_COLOR prints findings without color on terminal streams', async () => {
     expect(stderr).toBe(stripVTControlCharacters(stderr));
 });
 
-test.each([
-    { count: 1, notice: '1 file has unstaged changes that were not checked.' },
-    { count: 2, notice: '2 files have unstaged changes that were not checked.' },
-])('a staged report names its comparison once: $notice', ({ count, notice }) => {
+test.each([...COMPARISON_NOTICE_CASES])('a staged report names its comparison once: $notice', ({ count, notice }) => {
     const report: RunReport = {
         ...FAILED_CHECK_REPORT,
         comparison: { content: 'index', reference: 'staged' },
@@ -250,4 +233,22 @@ test.each([
     expect(formatRunReport(report, { verbose: false })).toBe(
         `Checked the staged files.\n${notice}\nPassed: 0 checks. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\n`,
     );
+});
+
+test('a staged report with unstaged changes names their count once', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'README.md': '# Readme\n\nText.\n',
+    });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'README.md'), '# Readme\n\nNew text.\n');
+    runGitStep(sandbox.path, ['add', 'README.md']);
+    await writeFile(join(sandbox.path, 'README.md'), '# Readme\n\nNewer text.\n');
+    const result = await runGspot(sandbox.path, ['check', '--staged', '--only', 'markdown/fences']);
+    expect(result.stdout.split('\n').filter((line) => !line.startsWith('Time:'))).toStrictEqual([
+        'Checked the staged files.',
+        '1 file has unstaged changes that were not checked.',
+        'Passed: 1 check. Skipped: 0 checks.',
+        '',
+    ]);
 });

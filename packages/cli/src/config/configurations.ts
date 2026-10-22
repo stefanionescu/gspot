@@ -1,7 +1,7 @@
 import type { Group, Check } from '#cli/types/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 
-export const ESLINT_TOOL = 'eslint';
+export const ESLINT_MANIFEST_TOOL = 'eslint';
 
 export const ESLINT_RUNTIME_NAMES_FILE = 'configurations/language/javascript/eslint-runtime-names.json';
 

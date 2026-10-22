@@ -1,6 +1,13 @@
 import { test, expect } from 'bun:test';
 import { listCodeLines, parseBashScript } from '#cli/parsers/bash.ts';
-import { BASH_COMMENT_CASES, MKTEMP_CLEANUP_CASES, FORWARDING_CALL_CASES } from '#tests/data/parsers/bash.ts';
+
+import {
+    TRAP_CALLS,
+    BASH_FUNCTIONS,
+    BASH_COMMENT_CASES,
+    MKTEMP_CLEANUP_CASES,
+    FORWARDING_CALL_CASES,
+} from '#tests/data/parsers/bash.ts';
 
 test.each(BASH_COMMENT_CASES)(
     'Bash comments keep quoted and parameter hashes as code: %s',
@@ -16,7 +23,7 @@ test('comment masking keeps line numbers and drops blank lines', async () => {
 });
 
 test.each([...MKTEMP_CLEANUP_CASES])(
-    'only a trap that removes exactly the mktemp path counts as cleanup: $source',
+    'only a trap that removes exactly the mktemp path counts as cleanup: $name',
     async ({ source, expected }) => {
         const parsed = await parseBashScript(source);
         expect(parsed.temporaryPaths).toStrictEqual(expected);
@@ -28,16 +35,7 @@ test('Bash functions report their lines, bodies and the highest positional param
         '#!/usr/bin/env bash\n_one() {\n    echo 1\n}\n\nmain() {\n    _one "$@"\n}\n',
     );
     expect(parsed.functions).toStrictEqual([
-        {
-            name: '_one',
-            start: 2,
-            end: 4,
-            body: ['', '    echo 1', ''],
-            highestRead: 0,
-            branches: 0,
-            nesting: 0,
-            assignments: 0,
-        },
+        BASH_FUNCTIONS,
         {
             name: 'main',
             start: 6,
@@ -69,12 +67,7 @@ test('one-line Bash functions count only their own parameters, not those of nest
 
 test('plain trap handlers count as zero-argument calls while quoted and expanded trap bodies stay uninterpreted', async () => {
     const parsed = await parseBashScript('trap _cleanup EXIT\ntrap "_quoted" EXIT\ntrap $handler EXIT\n');
-    expect(parsed.calls).toStrictEqual([
-        { name: 'trap', count: 2, line: 1, forwards: false },
-        { name: '_cleanup', count: 0, line: 1, forwards: false },
-        { name: 'trap', count: 2, line: 2, forwards: false },
-        { name: 'trap', count: 2, line: 3, forwards: false },
-    ]);
+    expect(parsed.calls).toStrictEqual([...TRAP_CALLS]);
 });
 
 test.each([...FORWARDING_CALL_CASES])(

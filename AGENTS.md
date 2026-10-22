@@ -96,7 +96,7 @@ You can edit the other keys of that file.
 - Name a tool check after its tool. Name a built-in check after what it checks.
 - Unit tests make no network calls.
 - In unit check tests, choose the entrypoint for the assertion:
-    - Use `checkFindings` for one check's findings or error.
+    - Use `runSandboxCheck` for one check's findings or error.
     - Use `planSandboxCheck` with `findBuiltInCheck` when files or the read cache change after the session opens.
     - Use `runCheckImplementation` for a command check whose plan the test changes.
     - Use `runChecks` with `buildRunOptions` for status, notes, exit codes, skips, or cancellation.

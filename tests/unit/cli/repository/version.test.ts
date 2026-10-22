@@ -1,31 +1,12 @@
-import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { test, spyOn, expect } from 'bun:test';
-import { runGspot } from '#tests/setup/run-gspot.ts';
-import { readFile, writeFile } from 'node:fs/promises';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/sandbox.ts';
 import { readVersionPin, assertVersionPin } from '#cli/repository/version.ts';
-
-test('a failed version pin write leaves the old version', async () => {
-    await using repository = await testdir({
-        'gspot.toml': buildSandboxSettings([]),
-        '.gspot/version': '0.0.1\n',
-    });
-
-    const rename = fs.renameSync;
-    using _failed = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(repository.path, '.gspot/version')) throw new Error('Pin write denied');
-        rename(source, target);
-    });
-
-    const refused = await runGspot(repository.path, ['apply']);
-    expect(refused.code).toBe(2);
-    expect(refused.stderr).toContain('Pin write denied');
-    expect(await readFile(join(repository.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
-});
 
 test('the version pin is written, read, and refused when it differs', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });

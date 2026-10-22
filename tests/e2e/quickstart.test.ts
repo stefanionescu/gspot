@@ -1,21 +1,33 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { hasToolBuild } from '#tests/setup/system.ts';
-import { runCommand } from '#tests/setup/processes.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { listMisePins } from '#cli/configurations/declared-tools.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { TEST_RUN_FOLDER, readRuntimePins } from '#tests/setup/install.ts';
-import { TUTORIALS, listQuickstartCommands } from '#tests/data/quickstart.ts';
+import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/data/e2e/quickstart.ts';
+import { readRuntimePins, TEST_RUN_FOLDER } from '#tests/setup/runner/checkout.ts';
 
-test.each(
-    TUTORIALS.filter(
-        (row) => row.configuration !== 'swift' || (hasToolBuild('swiftlint') && Bun.which('swift') !== null),
-    ),
-)('$configuration quickstart reports its finding through the installed hook and passes after the fix', async (row) => {
+test('the Python quickstart reports its finding through the installed hook and passes after the fix', async () => {
+    await runQuickstart(PYTHON_TUTORIAL);
+});
+
+test.skipIf(!hasToolBuild('swiftlint') || Bun.which('swift') === null)(
+    'the Swift quickstart reports its finding through the installed hook and passes after the fix',
+    async () => {
+        await runQuickstart(SWIFT_TUTORIAL);
+    },
+);
+
+/**
+ * Create the tutorial project, set up gspot as the quickstart says, and check that the hook rejects the invalid source.
+ *
+ * @param row the tutorial.
+ */
+async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL): Promise<void> {
     await using sandbox = await testdir();
     const root = join(sandbox.path, row.folder);
     await mkdir(root);
@@ -47,19 +59,19 @@ test.each(
     }
     const source = join(root, row.sourcePath);
     const original = await readFile(source);
-    readGitOutput(root, ['add', '-A']);
+    runGitStep(root, ['add', '-A']);
     expect(runGit(root, ['commit', '-qm', 'chore: Set up gspot'], environment).code).toBe(0);
     await writeFile(source, row.invalidSource);
     const command = ['mise', 'exec', '--', 'gspot', 'check', '--only', row.check];
     const rejected = await runCommand(command, { cwd: root, env: environment });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
     expect(rejected.stdout).toContain(row.message);
-    rejectInvalidCommit(root, row.rule, environment);
-    readGitOutput(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', row.sourcePath]);
+    assertCommitRejected(root, row.rule, environment);
+    runGitStep(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', row.sourcePath]);
     expect(await readFile(source)).toStrictEqual(original);
     const corrected = await runCommand(command, { cwd: root, env: environment });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
+}
 
 /**
  * Link the installed tool pins into the mise folders of the tutorial.
@@ -87,9 +99,19 @@ async function linkQuickstartTools(tutorialRoot: string, environment: Record<str
 }
 
 /** Check that the installed hook rejects the invalid staged source. */
-function rejectInvalidCommit(repositoryRoot: string, rule: string, environment: Record<string, string>): void {
-    readGitOutput(repositoryRoot, ['add', '-A']);
+function assertCommitRejected(repositoryRoot: string, rule: string, environment: Record<string, string>): void {
+    runGitStep(repositoryRoot, ['add', '-A']);
     const refused = runGit(repositoryRoot, ['commit', '-qm', 'feat: Add invalid source'], environment);
     expect(refused.code).not.toBe(0);
     expect(refused.stdout + refused.stderr).toContain(rule);
+}
+
+/** The tutorial commands. The first check fails on what the fixers then correct, unless the project starts clean. */
+function listQuickstartCommands(firstCheckCode: number): { command: readonly string[]; code: number }[] {
+    return [
+        { command: ['mise', 'exec', '--', 'gspot', 'install'], code: 0 },
+        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: firstCheckCode },
+        { command: ['mise', 'exec', '--', 'gspot', 'check', '--fix'], code: 0 },
+        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: 0 },
+    ];
 }

@@ -3,19 +3,20 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import sveltePackage from 'svelte/package.json' with { type: 'json' };
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { SVELTE_CASES, SVELTE_CLEAN, SVELTE_SANDBOX } from '#tests/data/checks/svelte.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { SVELTE_CASES, CLEAN_SVELTE, SVELTE_SANDBOX } from '#tests/data/checks/svelte.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
-const installedSandbox = registerSharedSandbox({ ...SVELTE_SANDBOX, dependencies: { svelte: sveltePackage.version } });
+const installedSandbox = shareInstalledSandbox({ ...SVELTE_SANDBOX, dependencies: { svelte: sveltePackage.version } });
 
 test('Prettier reports and fixes a Svelte component through the Svelte plugin', async () => {
     const { root, environment } = installedSandbox();
     const path = join(root, 'src/Greeting.svelte');
-    await using _change = await updateSandbox(installedSandbox(), {
+    await using _change = await changeAppliedSandbox(installedSandbox(), {
         check: 'format/prettier',
-        files: { 'src/Greeting.svelte': SVELTE_CLEAN.replace('<p>', '<p     >') },
+        files: { 'src/Greeting.svelte': CLEAN_SVELTE.replace('<p>', '<p     >') },
     });
 
     const loose = parseCheckReport(
@@ -30,7 +31,7 @@ test('Prettier reports and fixes a Svelte component through the Svelte plugin', 
 
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
 
-    expect(await readFile(path, 'utf8')).toBe(SVELTE_CLEAN);
+    expect(await readFile(path, 'utf8')).toBe(CLEAN_SVELTE);
 });
 
 test.each([...SVELTE_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {

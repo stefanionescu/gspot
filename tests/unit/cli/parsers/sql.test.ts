@@ -3,6 +3,7 @@ import { getPosition } from '#cli/system/text.ts';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { QUOTED_PSQL_SOURCES } from '#tests/data/parsers/sql.ts';
 
 test('empty SQL has no statements', async () => {
     const result = await parseSqlFile('', createReadCache(process.cwd()));
@@ -49,12 +50,7 @@ test('psql commands and variables keep error positions and PostgreSQL casts', as
 });
 
 test('psql tokens inside quoted SQL and nested comments stay literal', async () => {
-    const text = [
-        "SELECT ':value', E'\\\\:value', $$:value$$, $body$\n\\set literal\n$body$;",
-        '/* :value /* :nested */ :value */',
-        '-- :value',
-        'SELECT 1::int;',
-    ].join('\n');
+    const text = [...QUOTED_PSQL_SOURCES].join('\n');
     const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
     expect(parsed.error).toBeUndefined();
     expect(parsed.source).toBe(text);

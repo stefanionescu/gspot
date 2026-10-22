@@ -1,15 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { isOnDisk, readTree } from '#tests/setup/files.ts';
-import { NPM_CHECK_IGNORES } from '#tests/data/test-setup.ts';
+import { TEST_VERSION } from '#tests/data/setup/cli.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { type DryRunJson } from '#cli/types/commands/apply.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { NPM_CHECK_IGNORES } from '#tests/data/setup/sandboxes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 
 /** Apply the sandbox and read the generated version pin that its dry runs compare. */
@@ -68,7 +69,7 @@ test.skipIf(isWindows)(
     },
 );
 
-test('a hand edit of the ESLint config shows as a byte diff without running it', async () => {
+test('apply --dry-run shows a hand edit of the ESLint config file as a diff without running it, and a repeated dry run shows the same diff', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
@@ -82,22 +83,21 @@ test('a hand edit of the ESLint config shows as a byte diff without running it',
     const authored = 'throw new Error("The preview executed authored configuration.");\n';
     await chmod(join(sandbox.path, path), 0o644);
     await writeFile(join(sandbox.path, path), authored);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const changed = (JSON.parse(preview.stdout) as DryRunJson).stale.find(({ path: output }) => output === path);
     expect(changed).toMatchObject({ kind: 'changed' });
     expect(changed?.diff).toContain(authored.trim());
-    expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
-    const unrecorded = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
-    expect(unrecorded.code, unrecorded.stdout + unrecorded.stderr).toBe(0);
-    expect((JSON.parse(unrecorded.stdout) as DryRunJson).stale.find((entry) => entry.path === path)).toStrictEqual(
+    const repeated = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
+    expect((JSON.parse(repeated.stdout) as DryRunJson).stale.find((entry) => entry.path === path)).toStrictEqual(
         changed,
     );
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
+    expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
 });
 
-test("turned-off rules have the same stray paths in a dry run and in apply's removal", async () => {
+test('turning rules off lists the same rule files as stray in apply --dry-run as apply then removes', async () => {
     await using sandbox = await testdir();
     const settings = buildSandboxSettings([], { rules: true, tables: '[rules]\nenabled = true\n' });
     await createFileTree(sandbox.path, { 'gspot.toml': settings });
@@ -124,88 +124,94 @@ test("turned-off rules have the same stray paths in a dry run and in apply's rem
     for (const path of ownedPaths) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
 });
 test('apply --dry-run lists missing generated files and writes nothing', async () => {
-    await using folder = await testdir();
+    await using sandbox = await testdir();
     const settings = buildSandboxSettings(['bash']);
-    await createFileTree(folder.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
-    const before = await readTree(folder.path);
-    const human = await runGspot(folder.path, ['apply', '--dry-run']);
+    await createFileTree(sandbox.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
+    const before = await readTree(sandbox.path);
+    const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    const { pin, stale } = JSON.parse(preview.stdout) as DryRunJson;
+    expect(stale.filter(({ kind }) => kind !== 'missing')).toStrictEqual([]);
+    expect(stale.map(({ path }) => path)).toContain('.gspot/configurations/language/bash/shellcheckrc');
+    const human = await runGspot(sandbox.path, ['apply', '--dry-run']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout).toContain('Run gspot apply to write these files.\n');
-    expect(await readTree(folder.path)).toStrictEqual(before);
-    const preview = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const result = JSON.parse(preview.stdout) as DryRunJson;
-    expect(result.dryRun).toBe(true);
-    expect(result.stale).toContainEqual(
-        matchFields({ path: '.gspot/configurations/language/bash/shellcheckrc', kind: 'missing' }),
+    expect(human.stdout).toBe(
+        [
+            `version unpinned -> ${pin.to}`,
+            `${String(stale.length)} generated files need updating:`,
+            '',
+            ...stale.map(({ path }) => `  ${path}  missing`),
+            '',
+            'Run gspot apply to write these files.',
+            'Dry run: nothing was written.\n',
+        ].join('\n'),
     );
-    expect(await isOnDisk(join(folder.path, '.gspot'))).toBe(false);
-    expect(await readTree(folder.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 test('apply --dry-run after apply reports no change and writes nothing', async () => {
-    await using folder = await testdir({
+    await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], { tables: NPM_CHECK_IGNORES }),
         'control.txt': 'preserve this source\n',
     });
 
-    const version = await prepareVersionPin(folder.path);
-    const before = await readTree(folder.path);
-    const preview = await runGspot(folder.path, ['apply', '--dry-run']);
+    const version = await prepareVersionPin(sandbox.path);
+    const before = await readTree(sandbox.path);
+    const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stderr).toBe('');
     expect(preview.stdout).toBe('No change: the 4 generated files are up to date.\nDry run: nothing was written.\n');
-    expect(await readTree(folder.path)).toStrictEqual(before);
-    const structured = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const structured = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const result = JSON.parse(structured.stdout) as DryRunJson;
     expect(result.pin).toStrictEqual({ from: version, to: version });
     expect(result.stale).toStrictEqual([]);
-    expect(await readTree(folder.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('apply --dry-run shows a changed version pin as a diff and writes nothing', async () => {
-    await using folder = await testdir({
+    await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], { tables: NPM_CHECK_IGNORES }),
         'control.txt': 'preserve this source\n',
     });
 
-    const version = await prepareVersionPin(folder.path);
-    await writeFile(join(folder.path, '.gspot/version'), '0.0.0\n');
-    const before = await readTree(folder.path);
-    const preview = await runGspot(folder.path, ['apply', '--dry-run']);
+    const version = await prepareVersionPin(sandbox.path);
+    await writeFile(join(sandbox.path, '.gspot/version'), `${TEST_VERSION}\n`);
+    const before = await readTree(sandbox.path);
+    const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stderr).toBe('');
-    const banner = `version 0.0.0 -> ${version}\n`;
+    const banner = `version ${TEST_VERSION} -> ${version}\n`;
     {
         expect(preview.stdout).toStartWith(banner);
         expect(preview.stdout).toContain('.gspot/version  changed');
-        expect(preview.stdout).toContain('-0.0.0');
+        expect(preview.stdout).toContain(`-${TEST_VERSION}`);
         expect(preview.stdout).toContain('+' + version);
         expect(preview.stdout).toEndWith('Dry run: nothing was written.\n');
     }
-    expect(await readTree(folder.path)).toStrictEqual(before);
-    const structured = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const structured = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const result = JSON.parse(structured.stdout) as DryRunJson;
-    expect(result.pin).toStrictEqual({ from: '0.0.0', to: version });
+    expect(result.pin).toStrictEqual({ from: TEST_VERSION, to: version });
     expect(result.stale).toMatchObject([{ path: '.gspot/version', kind: 'changed' }]);
-    expect(await readTree(folder.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('apply --dry-run reports a changed file, a stray, a conflict, and an edited block, and writes nothing', async () => {
-    await using folder = await testdir({
+    await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash', 'markdown'], { rules: true }),
         'entry.sh': 'echo example\n',
         'README.md': '# Example\n',
     });
 
-    const applied = await runGspot(folder.path, ['apply']);
+    const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const edit = async (path: string, text: (current: string) => string): Promise<void> => {
-        const full = join(folder.path, path);
+        const full = join(sandbox.path, path);
         await chmod(full, 0o644);
         await writeFile(full, text(await readFile(full, 'utf8')));
     };
@@ -220,11 +226,11 @@ ${current}=======
     await edit('AGENTS.md', (current) =>
         current.replace('<!-- <<< gspot managed <<< -->', 'Edited inside.\n<!-- <<< gspot managed <<< -->'),
     );
-    await unlink(join(folder.path, 'README.md'));
-    await writeFile(join(folder.path, 'settings.json'), '{}\n');
-    await writeFile(join(folder.path, 'gspot.toml'), buildSandboxSettings(['bash'], { rules: true }));
-    const before = await readTree(folder.path);
-    const preview = await runGspot(folder.path, ['apply', '--dry-run', '--json']);
+    await unlink(join(sandbox.path, 'README.md'));
+    await writeFile(join(sandbox.path, 'settings.json'), '{}\n');
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['bash'], { rules: true }));
+    const before = await readTree(sandbox.path);
+    const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const { stale } = JSON.parse(preview.stdout) as DryRunJson;
     expect(stale).toContainEqual(
@@ -242,5 +248,5 @@ ${current}=======
         matchFields({ path: '.gspot/configurations/language/markdown/markdownlint.jsonc', kind: 'stray' }),
     );
     expect(stale.some(({ path }) => path === 'README.md' || path === 'settings.json')).toBe(false);
-    expect(await readTree(folder.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

@@ -57,8 +57,6 @@ export const SECRET_KEY_READS = [
     '"sb_secret_example"',
 ] as const;
 
-export const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
-
 /** A Deno handler for the Supabase configuration tests. */
 const HELLO_EDGE_FUNCTION = 'Deno.serve(() => new Response("hello"));\n';
 
@@ -125,12 +123,28 @@ configurations = ["supabase"]
     },
 ] as const;
 
-export const DOCKER_VERSION_OUTPUT = 'Docker version 29.2.1\n';
-
-export const SUPABASE_VERSION_OUTPUT = '2.75.0\n';
-
-export const SUPABASE_PROJECT_CONFIG = 'project_id = "types-sample"\n';
-
 export const INVALID_BUCKETS_CONFIG = '[storage]\nbuckets = "avatars"\n';
 
 export const AVATARS_BUCKET_CONFIG = '[storage.buckets.avatars]\npublic = false\n';
+
+/** The client files that the service-role-key rule reports. */
+export const SERVICE_ROLE_CLIENT_FILES = [
+    'client.astro',
+    'client.cjs',
+    'client.cts',
+    'client.mts',
+    'client.svelte',
+    'client.vue',
+] as const;
+
+/** Client sources in each component and module kind that read the service role key. */
+export const SERVICE_ROLE_CLIENTS = {
+    'client.vue': '<script setup>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
+    'client.svelte': '<script>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
+    'client.astro': '---\nconst key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n---\n',
+    'client.mts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'client.cts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'client.cjs': 'exports.key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'server/allowed.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
+    'notes.txt': 'SUPABASE_SERVICE_ROLE_KEY\n',
+} as const;

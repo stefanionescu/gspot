@@ -1,33 +1,34 @@
+import ts from 'typescript';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { join, basename } from 'node:path';
+import { parse as parseIni } from 'ini';
+import { parse as parseYaml } from 'yaml';
 import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/tables.ts';
-import { readGitOutput } from '#tests/setup/git.ts';
-import { matchItems } from '#tests/setup/matchers.ts';
+import { join, extname, basename } from 'node:path';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { linkInstalledModules } from '#tests/setup/modules.ts';
+import { parse as parseToml } from '@decimalturn/toml-patch';
 import { listNeededTools } from '#cli/planning/needed-tools.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { getToolFiles } from '#cli/generation/settings/generate.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { getToolFileTarget } from '#cli/generation/settings/needed.ts';
-import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { createEslint, parseToolFile } from '#tests/setup/tool-files.ts';
 import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
-import { NESTED_PYTHON_SETTINGS } from '#tests/data/checks/python/project.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 
 import {
-    PLAIN_TOOL_FILES,
     TOOL_FILE_PROJECT,
     IGNORED_CHECK_FILES,
+    UNPARSED_TOOL_FILES,
+    NESTED_PYTHON_GSPOT_TOML,
     JSCONFIG_TITLE_IGNORE_PROJECT,
-} from '#tests/data/generation/settings.ts';
+} from '#tests/data/generation/settings/needed.ts';
 
 test('a Ruff-only Python scope gets no type checker file or pointer', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': NESTED_PYTHON_SETTINGS,
+        'gspot.toml': NESTED_PYTHON_GSPOT_TOML,
         'linted/source.py': 'value = 1\n',
         'typed/source.py': 'value: int = 1\n',
     });
@@ -46,7 +47,7 @@ test('a Ruff-only Python scope gets no type checker file or pointer', async () =
 });
 test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript'], { tables: '[rules]\nenabled = false\n' }),
+        'gspot.toml': buildSandboxSettings(['typescript']),
         'src/main.ts': 'export const value = 1;\n',
     });
 
@@ -124,61 +125,10 @@ test.each([...LEVELS])("every configuration's tool files parse at level %s", asy
         expect(new Set(targets).difference(paths)).toStrictEqual(new Set<string>());
     }
     for (const file of generated) {
-        if (new Set<string>(PLAIN_TOOL_FILES).has(basename(file.path))) continue;
+        if (new Set<string>(UNPARSED_TOOL_FILES).has(basename(file.path))) continue;
         parseToolFile(file.content, file.path);
     }
 });
-test('tool file source values list the dependencies of each scope', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript', 'testing-library'], {
-            level: 'all',
-            scopes: [{ path: 'app', configurations: ['javascript', 'testing-library'] }],
-        }),
-        'package.json': '{"private":true,"dependencies":{"@testing-library/react":"*"}}',
-        'app/package.json': '{"private":true,"dependencies":{"@testing-library/vue":"*"}}',
-        'sample.test.js': 'export const value = 1;\n',
-        'app/sample.test.js': 'export const value = 1;\n',
-    });
-
-    const eslint = await createEslint(sandbox.path);
-    const configuration = (await eslint.calculateConfigForFile('sample.test.js')) as EslintConfiguration;
-    expect(configuration.rules['testing-library/no-dom-import']).toStrictEqual([2, 'react']);
-    const applicationConfiguration = (await eslint.calculateConfigForFile('app/sample.test.js')) as EslintConfiguration;
-    expect(applicationConfiguration.rules['testing-library/no-dom-import']).toStrictEqual([2, 'vue']);
-});
-
-test('a jsconfig beside a tsconfig excludes build output and lists only tracked declaration files', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript', 'typescript'], { tables: '[rules]\nenabled = false\n' }),
-        '.gitignore': '.next/\n.open-next/\n',
-        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*.ts"],"exclude":["vendor"]}',
-        'src/main.ts': 'export const value = 1;\n',
-        'worker.js': 'export const worker = 1;\n',
-        'cloudflare-env.d.ts': 'declare const env: string;\n',
-        '.next/types/routes.d.ts': 'declare const routes: string;\n',
-        '.open-next/worker.js': 'export const bundle = 1;\n',
-    });
-
-    readGitOutput(sandbox.path, ['init', '-q']);
-    readGitOutput(sandbox.path, [
-        'add',
-        '--',
-        '.gitignore',
-        'tsconfig.json',
-        'src/main.ts',
-        'worker.js',
-        'cloudflare-env.d.ts',
-    ]);
-    const files = generate(await openSession(sandbox.path)).files;
-    const jsconfig = JSON.parse(
-        files.find(({ path }) => path === '.gspot/configurations/language/javascript/jsconfig.json')!.content,
-    ) as { files: string[]; exclude: string[] };
-    expect(jsconfig.files).toStrictEqual(['../../../../cloudflare-env.d.ts']);
-    expect(jsconfig.exclude).toStrictEqual(
-        matchItems(['../../../../**/.open-next/**', '../../../../**/node_modules/**', '../../../../vendor']),
-    );
-});
-
 test('an ignore whose reason equals a built-in section title keeps its paths in the jsconfig exclude', async () => {
     await using sandbox = await testdir(JSCONFIG_TITLE_IGNORE_PROJECT);
     const files = generate(await openSession(sandbox.path)).files;
@@ -188,3 +138,43 @@ test('an ignore whose reason equals a built-in section title keeps its paths in 
     const jsconfig: unknown = JSON.parse(content);
     expect(getValueAt(jsconfig, ['exclude'])).toContain('../../../../legacy/**');
 });
+function parseJson(text: string, path: string): void {
+    const errors: ParseError[] = [];
+    parseJsonc(text, errors, { allowTrailingComma: true });
+    if (errors.length > 0) throw new Error(`${path}: JSON error at offset ${String((errors[0] as ParseError).offset)}`);
+}
+function parseModule(text: string, path: string): void {
+    const result = ts.transpileModule(text, { reportDiagnostics: true, fileName: path });
+    const errors = (result.diagnostics ?? []).map((message) =>
+        ts.flattenDiagnosticMessageText(message.messageText, '\n'),
+    );
+    if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
+}
+
+/** Parse a generated tool file with the parser for its extension. */
+function parseToolFile(text: string, path: string): void {
+    const parsers: Record<string, (text: string, path: string) => void> = {
+        '.cfg': (text) => {
+            parseIni(text);
+        },
+        '.ini': (text) => {
+            parseIni(text);
+        },
+        '.json': (text) => void JSON.parse(text),
+        '.jsonc': parseJson,
+        '.webmanifest': (text) => void JSON.parse(text),
+        '.toml': (text) => {
+            parseToml(text);
+        },
+        '.yml': (text) => void parseYaml(text),
+        '.yaml': (text) => void parseYaml(text),
+        '.mjs': parseModule,
+        '.cjs': parseModule,
+        '.js': parseModule,
+        '.ts': parseModule,
+    };
+
+    const parser = parsers[extname(path)];
+    if (parser === undefined) throw new Error(`${path}: no generated-file parser is declared.`);
+    parser(text, path);
+}

@@ -2,16 +2,17 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import * as clack from '@clack/prompts';
 import { test, spyOn, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { TEST_VERSION } from '#tests/data/setup/cli.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { EDITED_STYLELINT_PACKAGE } from '#tests/data/apply.ts';
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
-import { EDITED_STYLELINT_PACKAGE } from '#tests/data/commands/init.ts';
-import { simulateInteractiveTerminal } from '#tests/setup/environment.ts';
 import { INVALID_CSS, STYLELINT_PACKAGE_JSON } from '#tests/data/checks/css.ts';
+import { simulateInteractiveTerminal } from '#tests/setup/system/environment.ts';
 
 test.each([
     [
@@ -49,22 +50,22 @@ test.each([
     expect(await isOnDisk(join(sandbox.path, '.gspot/version'))).toBe(true);
 });
 
-test('a failed init keeps the ordinary generated files already written', async () => {
-    await using folder = await testdir({ '.gspot/version': '0.0.1\n' });
+test('a failed init keeps the version pin it already wrote', async () => {
+    await using sandbox = await testdir({ '.gspot/version': `${TEST_VERSION}\n` });
 
-    commitAll(folder.path);
+    commitAll(sandbox.path);
     const rename = fs.renameSync;
     using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(folder.path, '.gitattributes')) throw new Error('Generated write denied');
+        if (String(target) === join(sandbox.path, '.gitattributes')) throw new Error('Generated write denied');
         rename(source, target);
     });
 
-    const refused = await runGspot(folder.path, ['init', '--yes', '--no-configurations']);
+    const refused = await runGspot(sandbox.path, ['init', '--yes', '--no-configurations']);
     expect(refused.code).toBe(2);
     expect(refused.stderr).toBe(
         'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
     );
-    expect(await readFile(join(folder.path, '.gspot/version'), 'utf8')).toBe(`${cliPackage.version}\n`);
+    expect(await readFile(join(sandbox.path, '.gspot/version'), 'utf8')).toBe(`${cliPackage.version}\n`);
 });
 
 test('init keeps the old tool file when the generated one cannot be written', async () => {
@@ -147,4 +148,24 @@ ignore = E501
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
     expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/sql/sqlfluff.cfg'))).toBe(true);
+});
+test.each([true, false])('init writes gspot.toml only when you confirm the plan (answer %s)', async (answer) => {
+    await using sandbox = await testdir({ 'README.md': '# Example\n' });
+    commitAll(sandbox.path);
+    await using _terminal = await simulateInteractiveTerminal();
+    using confirmation = spyOn(clack, 'confirm').mockResolvedValue(answer);
+    const result = await runGspot(sandbox.path, ['init']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(answer);
+    expect(confirmation).toHaveBeenCalledWith({ message: 'Continue?', initialValue: true });
+});
+test('init writes nothing and says Canceled. Nothing was written. when you cancel the confirmation', async () => {
+    await using sandbox = await testdir({ 'README.md': '# Example\n' });
+    commitAll(sandbox.path);
+    await using _terminal = await simulateInteractiveTerminal();
+    using _confirmation = spyOn(clack, 'confirm').mockResolvedValue(Symbol('cancel'));
+    const refused = await runGspot(sandbox.path, ['init']);
+    expect(refused.code).toBe(2);
+    expect(refused.stderr).toBe('Canceled. Nothing was written.\n');
+    expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });

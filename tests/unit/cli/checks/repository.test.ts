@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGit } from '#tests/setup/git.ts';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { runGit } from '#tests/setup/system/git.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
-import { TRACKED_PATTERNS, LARGE_FILE_SETTINGS, LARGE_FILE_ATTRIBUTES } from '#tests/data/checks/repository.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { LOCAL_FILE_PATHS, LARGE_FILE_TABLES, LARGE_FILE_ATTRIBUTES } from '#tests/data/checks/repository.ts';
 
-test("tracked-files follows each scope's configurations: env files, dependency folders and build output are reported", async () => {
+test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
     await using sandbox = await testdir();
-    const { refused, allowed, scopes, indexOnly } = TRACKED_PATTERNS;
+    const { refused, allowed, scopes, indexOnly } = LOCAL_FILE_PATHS;
     const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: scopes });
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
@@ -42,7 +42,7 @@ test('large files are reported in every scope except LFS, generated and vendored
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
-        tables: LARGE_FILE_SETTINGS,
+        tables: LARGE_FILE_TABLES,
     });
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,

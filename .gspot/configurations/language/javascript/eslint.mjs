@@ -1178,9 +1178,16 @@ export default [
                         ]
                     },
                     {
+                        "category": "import-rule:tests-setup",
+                        "pattern": [
+                            "tests/setup/**",
+                            "tests/schemas/**"
+                        ]
+                    },
+                    {
                         "category": "import-rule:tests",
                         "pattern": [
-                            "tests/{unit,integration,e2e,setup,schemas}/**"
+                            "tests/{unit,integration,e2e}/**"
                         ]
                     },
                     {
@@ -2236,7 +2243,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests-data\" may import its own files and \"cli-config\", \"tests\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"tests-data\" may import its own files and \"cli-config\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2251,7 +2258,7 @@ export default [
                                             "anyOf": [
                                                 "import-rule:tests-data",
                                                 "import-rule:cli-config",
-                                                "import-rule:tests"
+                                                "import-rule:tests-setup"
                                             ]
                                         }
                                     }
@@ -2297,6 +2304,65 @@ export default [
                         {
                             "from": {
                                 "file": {
+                                    "categories": "import-rule:tests-setup"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:tests-setup"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "import-rule:tests-setup",
+                                                "import-rule:cli-config",
+                                                "import-rule:cli-types",
+                                                "import-rule:system",
+                                                "import-rule:parsers",
+                                                "import-rule:configurations",
+                                                "import-rule:repository",
+                                                "import-rule:ownership",
+                                                "import-rule:settings",
+                                                "import-rule:planning",
+                                                "import-rule:generation",
+                                                "import-rule:tools",
+                                                "import-rule:session",
+                                                "import-rule:install",
+                                                "import-rule:apply",
+                                                "import-rule:runs",
+                                                "import-rule:checks",
+                                                "import-rule:commands",
+                                                "import-rule:main",
+                                                "import-rule:plugin-config",
+                                                "import-rule:plugin-types",
+                                                "import-rule:plugin",
+                                                "import-rule:docs-config",
+                                                "import-rule:docs-types",
+                                                "import-rule:docs",
+                                                "import-rule:tests-data",
+                                                "import-rule:tests-types"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
                                     "categories": "import-rule:tests"
                                 }
                             },
@@ -2307,7 +2373,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"tests\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"ownership\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2346,7 +2412,8 @@ export default [
                                                 "import-rule:docs-types",
                                                 "import-rule:docs",
                                                 "import-rule:tests-data",
-                                                "import-rule:tests-types"
+                                                "import-rule:tests-types",
+                                                "import-rule:tests-setup"
                                             ]
                                         }
                                     }
@@ -2565,6 +2632,7 @@ export default [
                                             "import-rule:docs",
                                             "import-rule:tests-data",
                                             "import-rule:tests-types",
+                                            "import-rule:tests-setup",
                                             "import-rule:tests",
                                             "import-rule:tool-files"
                                         ]
@@ -2611,6 +2679,7 @@ export default [
                                                 "import-rule:docs",
                                                 "import-rule:tests-data",
                                                 "import-rule:tests-types",
+                                                "import-rule:tests-setup",
                                                 "import-rule:tests",
                                                 "import-rule:tool-files"
                                             ]
@@ -5360,12 +5429,12 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ],
             [
                 "**/*.astro",
@@ -5375,12 +5444,12 @@ export default [
             [
                 "**/*.astro",
                 "**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.astro",
                 "**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ]
         ]
     },
@@ -5393,8 +5462,8 @@ export default [
             "packages/eslint-plugin/**",
             "tests/**",
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts",
-            "tests/setup/offline.ts"
+            "tests/setup/system/environment.ts",
+            "tests/setup/runner/unit-preload.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -5556,12 +5625,12 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "docs/**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "docs/**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ],
             [
                 "**/*.astro",
@@ -5571,12 +5640,12 @@ export default [
             [
                 "**/*.astro",
                 "docs/**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.astro",
                 "docs/**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ]
         ]
     },
@@ -5585,8 +5654,8 @@ export default [
     {
         "ignores": [
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts",
-            "tests/setup/offline.ts"
+            "tests/setup/system/environment.ts",
+            "tests/setup/runner/unit-preload.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -5748,12 +5817,12 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "packages/cli/**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "packages/cli/**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ],
             [
                 "**/*.astro",
@@ -5763,12 +5832,12 @@ export default [
             [
                 "**/*.astro",
                 "packages/cli/**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.astro",
                 "packages/cli/**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ]
         ]
     },
@@ -5777,8 +5846,8 @@ export default [
     {
         "ignores": [
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts",
-            "tests/setup/offline.ts"
+            "tests/setup/system/environment.ts",
+            "tests/setup/runner/unit-preload.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -5940,12 +6009,12 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "packages/eslint-plugin/**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "packages/eslint-plugin/**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ],
             [
                 "**/*.astro",
@@ -5955,12 +6024,12 @@ export default [
             [
                 "**/*.astro",
                 "packages/eslint-plugin/**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.astro",
                 "packages/eslint-plugin/**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ]
         ]
     },
@@ -5969,8 +6038,8 @@ export default [
     {
         "ignores": [
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts",
-            "tests/setup/offline.ts"
+            "tests/setup/system/environment.ts",
+            "tests/setup/runner/unit-preload.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6132,12 +6201,12 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "tests/**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "tests/**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ],
             [
                 "**/*.astro",
@@ -6147,12 +6216,12 @@ export default [
             [
                 "**/*.astro",
                 "tests/**/*",
-                "tests/setup/environment.ts"
+                "tests/setup/system/environment.ts"
             ],
             [
                 "**/*.astro",
                 "tests/**/*",
-                "tests/setup/offline.ts"
+                "tests/setup/runner/unit-preload.ts"
             ]
         ]
     },
@@ -6161,8 +6230,8 @@ export default [
     {
         "ignores": [
             "packages/cli/src/system/environment.ts",
-            "tests/setup/environment.ts",
-            "tests/setup/offline.ts"
+            "tests/setup/system/environment.ts",
+            "tests/setup/runner/unit-preload.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6509,10 +6578,10 @@ export default [
         "ignores": [
             "packages/cli/src/system/environment.ts",
             "packages/cli/src/system/environment.ts/**",
-            "tests/setup/environment.ts",
-            "tests/setup/environment.ts/**",
-            "tests/setup/offline.ts",
-            "tests/setup/offline.ts/**"
+            "tests/setup/system/environment.ts",
+            "tests/setup/system/environment.ts/**",
+            "tests/setup/runner/unit-preload.ts",
+            "tests/setup/runner/unit-preload.ts/**"
         ],
         rules: {
             "n/no-process-env": [

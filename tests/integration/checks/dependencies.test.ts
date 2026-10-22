@@ -1,13 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runCommand } from '#tests/setup/processes.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildInitArguments } from '#tests/setup/builders.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { SYNCPACK_FILES } from '#tests/data/checks/dependencies.ts';
+import { spawnGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 test.each([...SYNCPACK_FILES])(
     'init replaces your Syncpack file $file and keeps syncpack.config.cts and .mts',

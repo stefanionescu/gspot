@@ -2,23 +2,25 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
-import { fakeTool } from '#tests/setup/fakes.ts';
-import { isWindows } from '#tests/setup/system.ts';
-import { spawnProcess } from '#cli/system/processes.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
-import { buildProcessBackends } from '#tests/setup/processes.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import type { ProcessBackend } from '#tests/types/processes.ts';
+import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { limitToTestDeadline } from '#tests/setup/system/processes.ts';
+import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 
 test.each(buildProcessBackends())(
     '$name: a chosen program runs its sibling commands before unrelated PATH tools',
     async (backend) => {
         await using sandbox = await testdir();
-        await fakeTool(
+        await writeScriptCommand(
             sandbox.path,
             'selected/parent',
             "const child = Bun.spawnSync(['sibling'], { stdout: 'inherit', stderr: 'inherit' }); process.exitCode = child.exitCode;",
         );
-        await fakeTool(sandbox.path, 'selected/sibling', "console.log('selected');");
-        await fakeTool(sandbox.path, 'unrelated/sibling', "console.log('unrelated');");
+        await writeScriptCommand(sandbox.path, 'selected/sibling', "console.log('selected');");
+        await writeScriptCommand(sandbox.path, 'unrelated/sibling', "console.log('unrelated');");
         const result = await backend.execute(
             [join(sandbox.path, 'selected', listExecutableNames('parent')[0] as string)],
             {
@@ -32,7 +34,7 @@ test.each(buildProcessBackends())(
 );
 
 test.each(buildProcessBackends().flatMap((backend) => [0, 1].map((status) => ({ backend, status }))))(
-    '$backend.name: drains both large streams and keeps exit code $status',
+    '$backend.name: reads both large output streams to the end and keeps exit code $status',
     async ({ backend, status }) => {
         await using sandbox = await testdir();
         const script = `const text = 'é'.repeat(1024 * 1024);
@@ -63,7 +65,7 @@ test.each(buildProcessBackends())(
 
 // Windows does not enforce the executable permission bits used for this refusal.
 test.skipIf(isWindows).each(buildProcessBackends())(
-    '$name: denied execution is not a missing file',
+    '$name: a program without permission to run is not a missing program',
     async (backend) => {
         await using sandbox = await testdir({ 'denied.sh': '#!/bin/sh\nexit 0\n' });
 
@@ -167,3 +169,19 @@ test.skipIf(isWindows).each(buildProcessBackends())(
         expect(result.stdout).toBe('true');
     },
 );
+
+/** Both process functions, asynchronous and blocking, with the shared test timeout. */
+function buildProcessBackends(): ProcessBackend[] {
+    return [
+        {
+            name: 'asynchronous',
+            execute: async (command: string[], options: AsyncSpawnOptions) =>
+                await spawnProcess(command, limitToTestDeadline(command, options).options),
+        },
+        {
+            name: 'synchronous',
+            execute: (command: string[], options: AsyncSpawnOptions) =>
+                spawnProcessBlocking(command, limitToTestDeadline(command, options).options),
+        },
+    ];
+}

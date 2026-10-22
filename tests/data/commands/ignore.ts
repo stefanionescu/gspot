@@ -1,26 +1,5 @@
 const EXPIRY_IGNORE = { check: 'bash/shellcheck', rule: 'SC2086', reason: 'The sandbox preserves word splitting.' };
 
-/** Two ignore records for ShellCheck findings, to test removing only one. */
-export const TWO_IGNORE_RECORDS = `configurations = ["bash"]
-[rules]
-enabled = false
-[[ignore]]
-check = "bash/shellcheck"
-rule = "SC2086"
-reason = "Word lists pass through on purpose."
-[[ignore]]
-check = "bash/shellcheck"
-rule = "SC2034"
-reason = "The variables are read by sourcing scripts."
-`;
-
-/** A reviewed ShellCheck ignore that the unignore command removes. */
-export const SHELLCHECK_IGNORE = `[[ignore]]
-check = "bash/shellcheck"
-rule = "SC2086"
-reason = "Word splitting is intentional in this sandbox."
-`;
-
 export const PATH_IGNORE_ARGUMENTS = [
     'ignore',
     'bash/shellcheck',

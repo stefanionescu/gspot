@@ -1,17 +1,15 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { isOnDisk } from '#tests/setup/files.ts';
-import { spawnGspot } from '#tests/setup/run-gspot.ts';
-import { INIT_FILES } from '#tests/data/commands/init.ts';
-import { buildInitArguments } from '#tests/setup/builders.ts';
-import { installToolProjects } from '#tests/setup/install.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { PACKAGE_MANAGER_ROWS } from '#tests/data/install/npm-tool-project.ts';
-import { createPackageManagerSandbox } from '#tests/setup/package-manager-sandboxes.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/sandbox.ts';
+import { INIT_FILES } from '#tests/data/commands/init/replaced-files.ts';
+import { createNpmProject } from '#tests/setup/sandboxes/npm/project.ts';
+import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { PACKAGE_MANAGER_CASES } from '#tests/data/install/npm/tool-project.ts';
+import { spawnGspot, buildInitArguments, installGeneratedTools } from '#tests/setup/cli/commands.ts';
 
 test('after init and install, apply has nothing to write', async () => {
     await using sandbox = await testdir(INIT_FILES);
@@ -20,14 +18,14 @@ test('after init and install, apply has nothing to write', async () => {
     const environment = {};
     const init = await spawnGspot(sandbox.path, buildInitArguments([]), environment);
     expect(init.code, init.stdout + init.stderr).toBe(0);
-    await installToolProjects(sandbox.path);
+    await installGeneratedTools(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect((JSON.parse(applied.stdout) as DryRunJson).stale).toStrictEqual([]);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 });
 
 test('install refuses an npm tool project edited to run scripts, before it contacts the registry', async () => {
-    await using sandbox = await createPackageManagerSandbox(...PACKAGE_MANAGER_ROWS[0]);
+    await using sandbox = await createNpmProject(...PACKAGE_MANAGER_CASES[0]);
     const { root, registry } = sandbox;
     const packageJsonPath = join(root, '.gspot/package.json');
     const packageJson = await readFile(packageJsonPath);
@@ -50,13 +48,13 @@ test.each([true, false])(
     async (hasCommits) => {
         await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
 
-        readGitOutput(sandbox.path, ['init', '-q']);
+        runGitStep(sandbox.path, ['init', '-q']);
         if (hasCommits) commitAll(sandbox.path);
         await writeFile(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n');
-        readGitOutput(sandbox.path, ['add', 'scripts/a.sh']);
+        runGitStep(sandbox.path, ['add', 'scripts/a.sh']);
         await writeFile(join(sandbox.path, 'scripts/a.sh'), CLEAN_BASH_SCRIPT + '\n\n');
         await writeFile(join(sandbox.path, 'notes.txt'), 'draft\n');
-        const staged = readGitOutput(sandbox.path, ['diff', '--cached', '--binary']);
+        const staged = runGitStep(sandbox.path, ['diff', '--cached', '--binary']);
         const head = runGit(sandbox.path, ['rev-parse', '--verify', 'HEAD']);
         const environment = {};
         const preview = await spawnGspot(
@@ -73,12 +71,12 @@ test.each([true, false])(
         );
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
-        await installToolProjects(sandbox.path);
+        await installGeneratedTools(sandbox.path);
         const checked = await spawnGspot(sandbox.path, ['check', '--json'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(await readFile(join(sandbox.path, 'scripts/a.sh'), 'utf8')).toBe(CLEAN_BASH_SCRIPT + '\n\n');
         expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('draft\n');
-        expect(readGitOutput(sandbox.path, ['diff', '--cached', '--binary'])).toBe(staged);
+        expect(runGitStep(sandbox.path, ['diff', '--cached', '--binary'])).toBe(staged);
         expect(runGit(sandbox.path, ['rev-parse', '--verify', 'HEAD'])).toStrictEqual(head);
     },
 );

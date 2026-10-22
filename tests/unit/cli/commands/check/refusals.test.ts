@@ -1,16 +1,22 @@
 import * as os from 'node:os';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
-import { prepareCommand } from '#tests/setup/processes.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { FIX_REFUSALS, ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/data/commands/check.ts';
+import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { limitToTestDeadline } from '#tests/setup/system/processes.ts';
+import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
+
+import {
+    FIX_REFUSALS,
+    ARGUMENT_REFUSALS,
+    PUSH_INPUT_REFUSALS,
+    OUTSIDE_GIT_SETTINGS,
+} from '#tests/data/commands/check/refusals.ts';
 
 // A committed repository with a check whose fixer rewrites the source when it runs.
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
@@ -31,7 +37,7 @@ stage = "commit"
     return sandbox;
 }
 
-test('only refuses a commit message check outside the message stage', async () => {
+test('check refuses the commitlint check outside the commit-msg hook and names the hook command', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['commits']) });
     commitAll(sandbox.path);
     const refused = await runGspot(sandbox.path, ['check', '--only', 'commits/commitlint']);
@@ -41,33 +47,35 @@ test('only refuses a commit message check outside the message stage', async () =
     );
 });
 
-test.each(['--changed', '--staged', '--hook'])('%s outside Git reports a setup error', async (flag) => {
-    await using sandbox = await testdir();
-    const settings = `configurations = []
-[[command_check]]
-id = "sandbox/paths"
-command = ["node", "-e", "process.exitCode=0"]
-paths = ["api/**"]
-stage = "commit"
-`;
-    await createFileTree(sandbox.path, { 'gspot.toml': settings, 'api/source.txt': 'before' });
-    const result = await runGspot(sandbox.path, ['check', flag, ...(flag === '--hook' ? ['pre-push'] : []), '--json']);
-    expect(result.code).toBe(2);
-    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toBe(
-        `${flag === '--hook' ? '--hook pre-push' : flag} needs a Git repository.`,
-    );
-    expect((JSON.parse(result.stdout) as CommandFailureJson).error).toBe('git');
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-    expect(await readFile(join(sandbox.path, 'api/source.txt'), 'utf8')).toBe('before');
-});
+test.each(['--changed', '--staged', '--hook'])(
+    'check %s outside Git exits 2 with a git error and changes nothing',
+    async (flag) => {
+        await using sandbox = await testdir();
+        const settings = OUTSIDE_GIT_SETTINGS;
+        await createFileTree(sandbox.path, { 'gspot.toml': settings, 'api/source.txt': 'before' });
+        const result = await runGspot(sandbox.path, [
+            'check',
+            flag,
+            ...(flag === '--hook' ? ['pre-push'] : []),
+            '--json',
+        ]);
+        expect(result.code).toBe(2);
+        expect((JSON.parse(result.stdout) as CommandFailureJson).message).toBe(
+            `${flag === '--hook' ? '--hook pre-push' : flag} needs a Git repository.`,
+        );
+        expect((JSON.parse(result.stdout) as CommandFailureJson).error).toBe('git');
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+        expect(await readFile(join(sandbox.path, 'api/source.txt'), 'utf8')).toBe('before');
+    },
+);
 
 test.each([...FIX_REFUSALS])('check %p exits 2 and leaves the working tree as it was', async (flags, expected) => {
     await using sandbox = await createFixableSandbox();
     const refused = await runGspot(sandbox.path, ['check', ...flags, '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(expected);
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(expected);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
-    expect(readGitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
+    expect(runGitStep(sandbox.path, ['status', '--porcelain'])).toBe('');
 });
 
 test.each([...PUSH_INPUT_REFUSALS])(
@@ -81,37 +89,39 @@ test.each([...PUSH_INPUT_REFUSALS])(
             { stdin: typeof stdin === 'string' ? stdin : Buffer.from(stdin) },
         );
         expect(refused.code).toBe(2);
-        expect(refused.stderr).toContain(message);
+        expect(refused.stderr).toBe(`${message}\n`);
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
-        expect(readGitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
+        expect(runGitStep(sandbox.path, ['status', '--porcelain'])).toBe('');
     },
 );
 
-test('a staged check during a merge conflict exits 2, names the conflict, and leaves no scratch copy', async () => {
+test('a staged check during a merge conflict exits 2, names the conflict, and leaves no copy behind', async () => {
     await using sandbox = await createFixableSandbox();
-    readGitOutput(sandbox.path, ['checkout', '-qb', 'other']);
+    runGitStep(sandbox.path, ['checkout', '-qb', 'other']);
     await writeFile(join(sandbox.path, 'source.txt'), 'other\n');
-    readGitOutput(sandbox.path, ['commit', '-qam', 'Other']);
-    readGitOutput(sandbox.path, ['checkout', '-q', '-']);
+    runGitStep(sandbox.path, ['commit', '-qam', 'Other']);
+    runGitStep(sandbox.path, ['checkout', '-q', '-']);
     await writeFile(join(sandbox.path, 'source.txt'), 'main\n');
-    readGitOutput(sandbox.path, ['commit', '-qam', 'Main']);
+    runGitStep(sandbox.path, ['commit', '-qam', 'Main']);
     expect(runGit(sandbox.path, ['merge', '-q', 'other']).code).not.toBe(0);
     await using temporary = await testdir();
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Resolve index conflicts');
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(
+        'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.',
+    );
     expect(await readdir(temporary.path)).toStrictEqual([]);
 });
 
-test('a staged check over a file name that is not UTF-8 exits 2 and leaves no scratch copy', async () => {
+test('a staged check over a file name that is not UTF-8 exits 2 and leaves no copy behind', async () => {
     await using sandbox = await createFixableSandbox();
-    const hash = readGitOutput(sandbox.path, ['rev-parse', 'HEAD:source.txt']);
+    const hash = runGitStep(sandbox.path, ['rev-parse', 'HEAD:source.txt']);
     // The index takes the raw name on standard input; most file systems refuse to hold it.
     const name = Buffer.concat([Buffer.from('bad-'), Buffer.from([0xff]), Buffer.from('.txt')]);
     const line = Buffer.concat([Buffer.from(`100644 ${hash}\t`), name, Buffer.from('\n')]);
     const command = ['git', 'update-index', '--index-info'];
-    const prepared = prepareCommand(command, { cwd: sandbox.path });
+    const prepared = limitToTestDeadline(command, { cwd: sandbox.path });
     const indexed = Bun.spawn(command, {
         cwd: sandbox.path,
         stdin: line,
@@ -123,7 +133,7 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no sc
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Revision paths must be valid');
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe('Revision paths must be valid UTF-8.');
     expect(await readdir(temporary.path)).toStrictEqual([]);
 });
 
@@ -133,7 +143,7 @@ test.each([...ARGUMENT_REFUSALS])(
         await using sandbox = await createFixableSandbox();
         const refused = await runGspot(sandbox.path, [...commandArguments]);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(refused.stdout + refused.stderr).toContain(expected);
+        expect(refused.stdout + refused.stderr).toBe(`${expected.replace('<root>', sandbox.path)}\n`);
     },
 );
 
@@ -157,4 +167,24 @@ test('check reports an unreadable message file as a filesystem error and writes 
     expect(structured.stderr).toBe('');
     expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'filesystem', message });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+test('a linked .gspot folder stops check, and nothing outside changes', async () => {
+    await using sandbox = await testdir({
+        'project/source.txt': 'input\n',
+        'project/gspot.toml': buildSandboxSettings([], {
+            tables: `[[command_check]]\nid = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'console.log("Exact finding"); process.exitCode=1'])}\noutput = { format = "lines" }\n`,
+        }),
+        'outside/sentinel': 'authored outside\n',
+    });
+    const project = join(sandbox.path, 'project');
+    const outside = join(sandbox.path, 'outside');
+    await symlink(outside, join(project, '.gspot'));
+    const refused = parseCheckReport(await runGspot(project, ['check', '--json']));
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.report.checks.find((result) => result.check === 'gspot/generated-files')?.note).toBe(
+        'The gspot/generated-files check failed: A parent of .gspot/package-lock.json is a link or is not a directory. Choose a directory without links.',
+    );
+    expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored outside\n');
+    expect(await readdir(outside)).toStrictEqual(['sentinel']);
+    expect(await isOnDisk(join(project, 'gspot.toml'))).toBe(true);
 });

@@ -1,11 +1,5 @@
 import { STRICT_COMPILER_OPTIONS } from '#tests/data/checks/typescript/projects.ts';
 
-export const VUE_COMPONENT = `<script setup>
-const name = 1;
-</script>
-<template><p>{{ name }}</p></template>
-`;
-
 /** The strict compiler options a test TypeScript repository reads. */
 export const COMPONENT_TSCONFIG = { compilerOptions: STRICT_COMPILER_OPTIONS, include: ['src'] } as const;
 

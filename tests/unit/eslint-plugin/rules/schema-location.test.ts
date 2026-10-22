@@ -1,4 +1,4 @@
-import { createRuleTester } from '#tests/setup/rule-tester.ts';
+import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { schemaLocation } from '#eslint-plugin/rules/schema-location.ts';
 import type { SchemaLocationOptions } from '#eslint-plugin/types/rules.ts';
 

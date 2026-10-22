@@ -7,7 +7,7 @@ import { VALE_TOOL } from '#cli/config/checks/prose.ts';
 import { installMiseTools } from '#cli/install/mise.ts';
 import { installValePackages } from '#cli/install/vale.ts';
 import { MISE_TOOL } from '#cli/config/tools/inspection.ts';
-import { installToolProjects } from '#cli/install/tool-projects.ts';
+import { installSandboxTools } from '#cli/install/tool-projects.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import { assertPackageManagerVersion } from '#cli/install/npm/project.ts';
@@ -42,7 +42,7 @@ export async function installTools(
     try {
         await assertPackageManagerVersion(context);
         const toolNote = await installMiseTools(context);
-        notes.push(...(await installToolProjects(context)));
+        notes.push(...(await installSandboxTools(context)));
         if (configurations.some((configuration) => configuration.tools.some((tool) => tool.name === VALE_TOOL))) {
             notes.push(await installValePackages(context));
         }

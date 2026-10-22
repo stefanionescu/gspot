@@ -94,7 +94,7 @@ async function prepareLockfiles(install: ToolInstall, files: GeneratedFile[]): P
  *
  * @returns the npm and Python install notes.
  */
-export async function installToolProjects(install: ToolInstall): Promise<string[]> {
+export async function installSandboxTools(install: ToolInstall): Promise<string[]> {
     const { session, writer, generated, misePath: mise } = install;
     const configurations = session.neededToolConfigurations;
     const notes: string[] = [];

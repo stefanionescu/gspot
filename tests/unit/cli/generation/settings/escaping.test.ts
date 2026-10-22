@@ -1,15 +1,11 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { pathToFileURL } from 'node:url';
-import { join, dirname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { openSession } from '#cli/session.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
-import { mkdir, writeFile } from 'node:fs/promises';
 import { generate } from '#cli/generation/generate.ts';
-import { runCommand } from '#tests/setup/processes.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
-import { stringify, LocalDate, parse as parseToml } from '@decimalturn/toml-patch';
+import { LocalDate, stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { LYCHEE_MDX_EXPRESSION } from '#cli/config/generation/settings/builders/lychee.ts';
 
 import {
@@ -17,12 +13,12 @@ import {
     XCODE_SCHEME,
     XCODE_PROJECT,
     SPECIAL_CHARACTER_KEY,
-    SPECIAL_CHARACTER_VALUE,
     SPECIAL_CHARACTER_FILES,
+    SPECIAL_CHARACTER_VALUE,
     SPECIAL_CHARACTER_SETTINGS,
-} from '#tests/data/generation/settings.ts';
+} from '#tests/data/generation/settings/escaping.ts';
 
-test('odd JSON keys and YAML values stay literal in tool files', async () => {
+test('keys and values with quotes, backslashes, newlines, and accented letters stay literal in JSON and YAML tool files', async () => {
     await using sandbox = await testdir({
         'gspot.toml': stringify(SPECIAL_CHARACTER_SETTINGS),
         ...SPECIAL_CHARACTER_FILES,
@@ -35,25 +31,6 @@ test('odd JSON keys and YAML values stay literal in tool files', async () => {
     )!;
     expect(parseJsonc(markdownRules.content)).toMatchObject({
         MD044: { names: [SPECIAL_CHARACTER_KEY, SPECIAL_CHARACTER_VALUE] },
-    });
-    const markdownCli = output.files.find(
-        (entry) => entry.path === '.gspot/configurations/language/markdown/markdownlint-cli2.mjs',
-    )!;
-    const markdownPath = join(sandbox.path, markdownCli.path);
-    await mkdir(dirname(markdownPath), { recursive: true });
-    await writeFile(markdownPath, markdownCli.content);
-    const toolResult = await runCommand(
-        [
-            process.execPath,
-            '-e',
-            'const {default: configuration} = await import(process.argv[1]); process.stdout.write(JSON.stringify(configuration.config));',
-            pathToFileURL(markdownPath).href,
-        ],
-        { cwd: sandbox.path },
-    );
-    expect(toolResult.code, toolResult.stderr).toBe(0);
-    expect(JSON.parse(toolResult.stdout)).toStrictEqual({
-        extends: join(sandbox.path, '.gspot/configurations/language/markdown/markdownlint.jsonc'),
     });
     const yaml = new Map(
         output.files

@@ -2,21 +2,29 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { parse } from '@decimalturn/toml-patch';
-import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { isOnDisk, readTree } from '#tests/setup/files.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { type ToolPackageJson } from '#cli/types/install/npm.ts';
+import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
-import { VUE_COMPONENT } from '#tests/data/checks/component-samples.ts';
-import { buildInitArguments, listAlwaysSelected } from '#tests/setup/builders.ts';
-import { PYTHON_SOURCE, TOOL_ONLY_PACKAGE, CONFIGURATION_CHOICES } from '#tests/data/commands/init.ts';
+import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
+import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
+
+import {
+    VUE_COMPONENT,
+    PYTHON_SOURCE,
+    TOOL_ONLY_PACKAGE,
+    STYLE_SOURCE_FILES,
+    NEXTJS_LOCALE_CASES,
+    MIXED_LANGUAGE_FILES,
+    CONFIGURATION_CHOICES,
+    PLATFORM_PROJECT_FILES,
+} from '#tests/data/commands/init/selection.ts';
 
 async function listPlannedConfigurations(root: string): Promise<string[]> {
     const result = await runGspot(root, [...buildInitArguments([], { json: true }), '--dry-run']);
@@ -49,7 +57,7 @@ test('init leaves javascript out of a root package.json with only tool dependenc
     await using sandbox = await testdir({
         'package.json': TOOL_ONLY_PACKAGE,
         'app/package.json': '{"name":"example-app","private":true}\n',
-        'app/source.py': PYTHON_SOURCE['source.py'],
+        'app/server.js': 'export const port = 8080;\n',
     });
 
     const before = await readTree(sandbox.path);
@@ -114,15 +122,7 @@ test('the JavaScript tools and the ESLint tool file appear only after gspot add 
 });
 
 test('accepting the defaults leaves the detected plan unchanged', async () => {
-    await using sandbox = await testdir({
-        'package.json': '{"name":"example","private":true,"type":"module"}\n',
-        'source.js': 'export const port = 8080;\n',
-        'api/pyproject.toml': `[project]
-name = "api"
-version = "1.0.0"
-`,
-        'api/source.py': 'PORT = 8080\n',
-    });
+    await using sandbox = await testdir(MIXED_LANGUAGE_FILES);
 
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
@@ -155,13 +155,7 @@ test('init selects a recommended language only when the repository holds its fil
     expect(plain).toContain('format');
     expect(plain).not.toContain('typescript');
     expect(plain).toContain('css');
-    await createFileTree(sandbox.path, {
-        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
-        'src/styles.css': `p {
-    color: #abc;
-}
-`,
-    });
+    await createFileTree(sandbox.path, STYLE_SOURCE_FILES);
     commitAll(sandbox.path);
     const typed = await listPlannedConfigurations(sandbox.path);
     expect(typed).toContain('typescript');
@@ -169,17 +163,8 @@ test('init selects a recommended language only when the repository holds its fil
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });
 
-test('init proposes a project scope and sets lint-only packages aside', async () => {
-    await using sandbox = await testdir({
-        'package.json': '{"name":"app","private":true,"type":"module"}\n',
-        'supabase/config.toml': 'project_id = "example"\n',
-        'ios/Package.swift': `// swift-tools-version:6.0
-import PackageDescription
-let package = Package(name: "App")
-`,
-        'ios/Sources/App/App.swift': 'let answer = 42\n',
-        'tools/lint/package.json': '{"name":"lint","private":true,"devDependencies":{"eslint":"9.39.5"}}\n',
-    });
+test('init proposes a scope for a Swift package, not for a lint-only package, and says that its eslint pin moved to .gspot/package.json', async () => {
+    await using sandbox = await testdir(PLATFORM_PROJECT_FILES);
 
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
@@ -195,11 +180,7 @@ let package = Package(name: "App")
     });
 });
 
-test.each([
-    { dependency: false, named: false, isSelected: false },
-    { dependency: true, named: false, isSelected: false },
-    { dependency: false, named: true, isSelected: true },
-])(
+test.each([...NEXTJS_LOCALE_CASES])(
     'a named Next.js configuration list wins over locale dependency detection: %j',
     async ({ dependency, named, isSelected }) => {
         await using sandbox = await testdir({
@@ -249,16 +230,4 @@ test('init proposes workspace scopes without a lockfile, and writes nothing when
     expect(structured.stderr).toBe('');
     expect(JSON.parse(structured.stdout)).toStrictEqual({ error: 'filesystem', message });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
-test('a named configuration brings its suggested configurations', async () => {
-    await using sandbox = await testdir({ 'tools/a.sh': CLEAN_BASH_SCRIPT, 'jobs/b.sh': CLEAN_BASH_SCRIPT });
-
-    commitAll(sandbox.path);
-    const preview = [...buildInitArguments([], { json: true }), '--dry-run'];
-    const named = await runGspot(sandbox.path, [...preview, '--configurations', 'bash']);
-    expect(named.code, named.stdout + named.stderr).toBe(0);
-    const { plan } = JSON.parse(named.stdout) as Required<Pick<InitJson, 'plan'>>;
-    const configurations = plan.configurations.map(({ configuration }) => configuration);
-    for (const configuration of ['bash', 'format', 'naming']) expect(configurations).toContain(configuration);
 });

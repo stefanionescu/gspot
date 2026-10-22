@@ -1,0 +1,106 @@
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+
+export const KEY_PATH_CASES = [
+    {
+        name: 'a multiline array value',
+        text: `configurations = [
+"bash",
+12
+]
+`,
+        where: ['configurations.1'],
+        correction: ['12', '"data-files"'],
+    },
+    {
+        name: 'empty override paths',
+        text: buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: '[[tools.eslint.override]]\npaths = []\nrules = {eqeqeq = ["always"]}\n',
+        }),
+        correction: ['paths = []', 'paths = ["src"]'],
+        where: ['tools.eslint.override.0.paths:'],
+    },
+    {
+        name: 'numeric rule options',
+        text: buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n',
+        }),
+        correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'],
+        where: ['tools.eslint.override.0.rules.eqeqeq:'],
+    },
+    {
+        name: 'boolean rule options',
+        text: buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = true}\n',
+        }),
+        correction: ['eqeqeq = true', 'eqeqeq = ["always"]'],
+        where: ['tools.eslint.override.0.rules.eqeqeq:'],
+    },
+    {
+        name: 'an unknown override field',
+        text: buildSandboxSettings(['javascript'], {
+            rules: true,
+            tables: '[[tools.eslint.override]]\npaths = ["src"]\nrulez = {eqeqeq = ["always"]}\n',
+        }),
+        correction: ['rulez', 'rules'],
+        where: ['[tools.eslint.override.0]: `rulez` is not a gspot.toml setting.'],
+    },
+] as const;
+
+/** Unknown keys name their table; the corrected input then passes. */
+export const UNKNOWN_KEY_CASES = [
+    {
+        name: 'an unknown key names its table',
+        text: `configurations = ["bash"]
+[hooks]
+enabled = true
+psh = "all"
+`,
+        message: '[hooks]: `psh` is not a gspot.toml setting.',
+        correction: ['psh = "all"\n', ''] as const,
+    },
+    {
+        name: 'an unknown nested key',
+        text: `
+[[scope]]
+path = "api"
+kitz = []
+`,
+        message: '[[scope]] record 1: `kitz` is not a gspot.toml setting.',
+        correction: ['kitz', 'configurations'] as const,
+    },
+    {
+        name: 'a renamed key names the key that is close to it',
+        text: `[dependencies]
+scanner = "@socketsecurity/bun-security-scanner"
+`,
+        message: '[dependencies]: `scanner` is not a gspot.toml setting. Did you mean `bun_scanner`?',
+        correction: ['scanner', 'bun_scanner'] as const,
+    },
+] as const;
+
+export const RULE_FILE_SETTINGS = {
+    configurations: ['javascript', 'security'],
+    tools: {
+        eslint: { plugins: [{ name: 'root', path: 'missing-root.mjs', rules: {} }] },
+        semgrep: { rule_files: ['missing-root.yml', 'present.yml'] },
+    },
+    scope: [
+        {
+            path: 'app',
+            tools: {
+                eslint: { plugins: [{ name: 'local', path: 'missing-scope.mjs', rules: {} }] },
+                semgrep: { rule_files: ['missing-scope.yml', 'present.yml'] },
+            },
+        },
+    ],
+} as const;
+
+export const RULE_FILE_ERRORS = [
+    'gspot.toml: tools.eslint.plugins.0.path: `missing-root.mjs` names no file. Point path at a file, relative to the repository root.',
+    'gspot.toml: tools.semgrep.rule_files.0: `missing-root.yml` names no file. Point rule_files at a file, relative to the repository root.',
+    'gspot.toml: scope.0.tools.eslint.plugins.0.path: `missing-scope.mjs` names no file. Point path at a file, relative to the repository root.',
+    'gspot.toml: scope.0.tools.semgrep.rule_files.0: `missing-scope.yml` names no file. Point rule_files at a file, relative to the repository root.',
+] as const;

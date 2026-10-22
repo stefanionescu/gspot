@@ -2,12 +2,18 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { createEslint } from '#tests/setup/tool-files.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { createEslint } from '#tests/setup/eslint/lint.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { RUNTIME_CASES, FRAMEWORK_RUNTIME_CASES } from '#tests/data/generation/eslint/overrides.ts';
 
-test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart: %j', async (entry) => {
+import {
+    RUNTIME_CASES,
+    FRAMEWORK_RUNTIME_CASES,
+    RUNTIME_OVERRIDE_TABLES,
+    RUNTIME_OVERRIDE_SETTINGS,
+} from '#tests/data/generation/eslint/runtimes.ts';
+
+test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($runtime)', async (entry) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
@@ -22,16 +28,17 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart: %j'
 
     const eslint = await createEslint(sandbox.path);
     const computed = (await eslint.calculateConfigForFile('application/source.js')) as EslintConfiguration;
-    for (const name of entry.globals) expect(computed.languageOptions.globals[name]).toBeDefined();
-    for (const name of entry.absent) expect(computed.languageOptions.globals[name]).toBeUndefined();
+    const globals = Object.keys(computed.languageOptions.globals);
+    expect(entry.globals.filter((name) => !globals.includes(name))).toStrictEqual([]);
+    expect(entry.absent.filter((name) => globals.includes(name))).toStrictEqual([]);
     expect(Object.keys(computed.rules).filter((name) => name.startsWith('n/'))).toStrictEqual([
         'n/file-extension-in-import',
     ]);
     const [result] = await eslint.lintFiles(['application/source.js']);
     expect(result!.messages.some(({ ruleId }) => ruleId === 'n/no-process-exit')).toBe(false);
     expect(
-        result!.messages.find(({ ruleId, message }) => ruleId === 'no-undef' && message === "'Buffer' is not defined."),
-    ).toBeDefined();
+        result!.messages.some(({ ruleId, message }) => ruleId === 'no-undef' && message === "'Buffer' is not defined."),
+    ).toBe(true);
     const [server] = await eslint.lintFiles(['server.js']);
     expect(server!.messages.some(({ ruleId }) => ruleId === 'n/no-process-exit')).toBe(true);
 });
@@ -56,15 +63,7 @@ test('ES modules reject CommonJS globals and .cjs files keep CommonJS', async ()
 
 test('framework runtimes and your runtime settings stay inside their scopes', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            rules: true,
-            tables: '[[tools.eslint.override]]\npaths = [ "native/src/browser.js" ]\nruntime = "browser"\n\n[[tools.eslint.override]]\npaths = [ "native/scripts/worker.js" ]\nruntime = "worker"\n\n[[tools.eslint.override]]\npaths = [ "native/server/**/*" ]\nruntime = "node"\n',
-            scopes: [
-                { path: 'native', configurations: ['react-native'] },
-                { path: 'web', configurations: ['react'] },
-                { path: 'native/server', configurations: ['javascript'] },
-            ],
-        }),
+        'gspot.toml': buildSandboxSettings(['javascript'], RUNTIME_OVERRIDE_SETTINGS),
         'server.js': 'export const value = 1;\n',
         'native/src/source.js': 'export const value = 1;\n',
         'native/src/browser.js': 'export const value = 1;\n',
@@ -102,16 +101,7 @@ test('a later [[tools.eslint.override]] runtime replaces an earlier one', async 
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             rules: true,
-            tables: stringify({
-                tools: {
-                    eslint: {
-                        override: [
-                            { paths: ['**/*.js'], runtime: 'browser' },
-                            { paths: ['worker.js'], runtime: 'worker' },
-                        ],
-                    },
-                },
-            }),
+            tables: stringify(RUNTIME_OVERRIDE_TABLES),
         }),
         'application.js': 'window.alert("value");\n',
         'worker.js': 'postMessage("value");\nwindow.alert("value");\n',
@@ -124,26 +114,21 @@ test('a later [[tools.eslint.override]] runtime replaces an earlier one', async 
     expect(worker!.messages.find(({ ruleId }) => ruleId === 'no-undef')?.message).toBe("'window' is not defined.");
 });
 
-test.each([...FRAMEWORK_RUNTIME_CASES])('framework presets keep no globals of another runtime: %j', async (entry) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([entry.configuration], {
-            rules: true,
-            tables: stringify({ tools: { eslint: { override: [{ paths: ['src/**'], runtime: 'worker' }] } } }),
-        }),
-        [entry.path]: entry.source,
-    });
+test.each([...FRAMEWORK_RUNTIME_CASES])(
+    'framework presets keep no globals of another runtime ($configuration)',
+    async (entry) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([entry.configuration], {
+                rules: true,
+                tables: stringify({ tools: { eslint: { override: [{ paths: ['src/**'], runtime: 'worker' }] } } }),
+            }),
+            [entry.path]: entry.source,
+        });
 
-    const eslint = await createEslint(sandbox.path);
-    const [result] = await eslint.lintFiles([entry.path]);
-    for (const name of ['window', 'process'])
+        const eslint = await createEslint(sandbox.path);
+        const [result] = await eslint.lintFiles([entry.path]);
         expect(
-            result!.messages.find(
-                ({ ruleId, message }) => ruleId === 'no-undef' && message === `'${name}' is not defined.`,
-            ),
-        ).toBeDefined();
-    expect(
-        result!.messages.find(
-            ({ ruleId, message }) => ruleId === 'no-undef' && message === "'postMessage' is not defined.",
-        ),
-    ).toBeUndefined();
-});
+            result!.messages.filter(({ ruleId }) => ruleId === 'no-undef').map(({ message }) => message),
+        ).toStrictEqual(["'window' is not defined.", "'process' is not defined."]);
+    },
+);

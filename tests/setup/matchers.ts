@@ -1,4 +1,4 @@
-// Reads rejection messages and builds typed partial assertions.
+// Reads error and rejection messages and builds typed partial assertions.
 import { expect } from 'bun:test';
 
 /**
@@ -15,6 +15,22 @@ export async function captureRejection(promise: Promise<unknown>): Promise<strin
         throw new Error(`The promise rejected with a value that is not an error: ${String(error)}`);
     }
     throw new Error('The promise resolved, and a rejection was expected.');
+}
+
+/**
+ * Runs a function that must throw an error.
+ *
+ * @param run what must throw.
+ * @returns the message of the error it threw.
+ */
+export function captureThrow(run: () => unknown): string {
+    try {
+        run();
+    } catch (error) {
+        if (error instanceof Error) return error.message;
+        throw new Error(`The function threw a value that is not an error: ${String(error)}`);
+    }
+    throw new Error('The function returned, and an error was expected.');
 }
 
 /**

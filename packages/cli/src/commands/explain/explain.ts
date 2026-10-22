@@ -17,8 +17,8 @@ import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { ESLINT_TOOL, ESLINT_RULE_NAMES_FILE } from '#cli/config/configurations.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
+import { ESLINT_MANIFEST_TOOL, ESLINT_RULE_NAMES_FILE } from '#cli/config/configurations.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const knownSubjects = [
@@ -56,7 +56,7 @@ function explainNamed(session: Session | undefined, subject: string): Explanatio
             .names.includes(subject)
     )
         return undefined;
-    return explainLintRule(ESLINT_TOOL, subject);
+    return explainLintRule(ESLINT_MANIFEST_TOOL, subject);
 }
 
 /**

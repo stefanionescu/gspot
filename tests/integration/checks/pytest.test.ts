@@ -1,16 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { runCommand } from '#tests/setup/processes.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { COVERAGE_ZERO_LIMITS } from '#tests/data/checks/coverage.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PYTEST_PYPROJECT } from '#tests/data/checks/python/project.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { PYTEST_CASES, PYTEST_SANDBOX } from '#tests/data/checks/pytest.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { COVERAGE_ZERO_LIMITS } from '#tests/data/integration/checks/coverage.ts';
+import { PYTEST_CASES, PYTEST_SANDBOX } from '#tests/data/integration/checks/pytest.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
-const installedSandbox = registerSharedSandbox({
+const installedSandbox = shareInstalledSandbox({
     install: false,
     ...PYTEST_SANDBOX,
     async before(root) {
@@ -29,7 +30,7 @@ test.each([80, 0])(
     async (limit) => {
         const { root, environment } = installedSandbox();
         const project = PYTEST_PYPROJECT.replace(', "pytest-cov==7.1.0"', '');
-        const change = await updateSandbox(installedSandbox(), {
+        const change = await changeAppliedSandbox(installedSandbox(), {
             check: 'pytest/coverage',
             files: {
                 'pyproject.toml': project,

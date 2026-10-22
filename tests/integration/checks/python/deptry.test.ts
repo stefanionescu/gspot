@@ -1,11 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGit } from '#tests/setup/git.ts';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { installToolProjects } from '#tests/setup/install.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { runGit } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { spawnGspot, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
 
 test("deptry ignores gspot's tool folder without Git and keeps your exclude settings", async () => {
     await using sandbox = await testdir();
@@ -27,7 +26,7 @@ extend_exclude = ["^vendor/"]
         'vendor/client.py': 'import vendor_dependency\n',
     });
 
-    await installToolProjects(sandbox.path);
+    await installGeneratedTools(sandbox.path);
     const commandArguments = ['check', '--only', 'python/deptry', '--json'];
     const failed = parseCheckReport(await spawnGspot(sandbox.path, commandArguments));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);

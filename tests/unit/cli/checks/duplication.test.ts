@@ -1,17 +1,19 @@
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { join, toNamespacedPath } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { fakeNpmTool } from '#tests/setup/fakes.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { JSCPD_SCOPE_FINDINGS } from '#tests/data/checks/duplication.ts';
 
 /** Create a jscpd sandbox and apply its settings for the output failure and clone path tests. */
 async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promise<string> {
@@ -29,24 +31,26 @@ async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promi
     return folder.path;
 }
 
-test.each([1, 0])('jscpd output is kept in the error when exit %i writes no report', async (code) => {
-    await using resources = new AsyncDisposableStack();
-    const root = await prepareDuplicationSandbox(resources);
-    const session = await openSession(root);
-    const folders: string[] = [];
-    using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
-        folders.push(command[command.indexOf('--output') + 1]!);
-        return Promise.resolve(buildProcessResult({ code, stdout: 'The scanner could not write its report.\n' }));
-    });
-    const failed = await runChecks(session, buildRunOptions({ only: ['duplication/jscpd'] }));
-    expect(folders.length, JSON.stringify(failed.report)).toBeGreaterThan(0);
-
-    expect(failed.report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'error', findings: [] }]);
-    expect(failed.report.checks[0]!.note).toBe(
-        `The duplication/jscpd check failed: The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
-    );
-    for (const path of folders) expect(await isOnDisk(path)).toBe(false);
-});
+test.each([1, 0])(
+    'jscpd exit %i without a report is a check error that keeps the jscpd output in its note and removes its temporary folder',
+    async (code) => {
+        await using resources = new AsyncDisposableStack();
+        const root = await prepareDuplicationSandbox(resources);
+        const session = await openSession(root);
+        const folders: string[] = [];
+        using _spawn = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
+            folders.push(command[command.indexOf('--output') + 1]!);
+            return Promise.resolve(buildProcessResult({ code, stdout: 'The scanner could not write its report.\n' }));
+        });
+        const failed = await runChecks(session, buildRunOptions({ only: ['duplication/jscpd'] }));
+        expect(folders, JSON.stringify(failed.report)).toHaveLength(1);
+        expect(failed.report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'error', findings: [] }]);
+        expect(failed.report.checks[0]!.note).toBe(
+            `The duplication/jscpd check failed: The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
+        );
+        expect(await isOnDisk(folders[0]!)).toBe(false);
+    },
+);
 
 test.each(['relative', 'absolute', 'namespaced'])(
     `%s clone paths are reported only for files the scope covers`,
@@ -79,15 +83,7 @@ test.each(['relative', 'absolute', 'namespaced'])(
         });
         const result = await runChecks(session, buildRunOptions({ only: ['duplication/jscpd'] }));
         expect(result.report.checks[0]!.findings, JSON.stringify(result.report)).toStrictEqual([
-            {
-                check: 'duplication/jscpd',
-                help: 'Move the shared block into one function both callers use.',
-                file: 'scripts/café.sh',
-                line: 3,
-                rule: 'clone',
-                message: '30 lines repeat scripts/original.sh:7.',
-                fixable: false,
-            },
+            ...JSCPD_SCOPE_FINDINGS,
         ]);
     },
 );

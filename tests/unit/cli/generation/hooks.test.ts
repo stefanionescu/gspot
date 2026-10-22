@@ -1,28 +1,29 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { fakeTool } from '#tests/setup/fakes.ts';
-import { isWindows } from '#tests/setup/system.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { parseSettings } from '#cli/settings/read.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { runCommand } from '#tests/setup/processes.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
-import { HOOKS_SETTINGS } from '#tests/data/test-setup.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { HOOKS_SETTINGS } from '#tests/data/setup/cli.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { readGitOutput, createLfsRepository } from '#tests/setup/git.ts';
 import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
+import { createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { chmod, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
 
 import {
+    CAT_SCRIPT,
     HOOK_CASES,
-    CAT_PROGRAM,
-    HOOK_PROGRAM,
+    HOOK_SCRIPT,
+    LOGGING_SCRIPT,
     START_COMMANDS,
-    LOGGING_PROGRAM,
     HOOK_LEVEL_CASES,
-} from '#tests/data/hooks.ts';
+} from '#tests/data/generation/hooks.ts';
 
 test.each([...HOOK_LEVEL_CASES])(
     'at level $level, gspot writes a hook only for a stage with a check',
@@ -30,7 +31,7 @@ test.each([...HOOK_LEVEL_CASES])(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([], { level, tables: HOOKS_SETTINGS }),
         });
-        readGitOutput(sandbox.path, ['init', '-q']);
+        runGitStep(sandbox.path, ['init', '-q']);
         const written = generate(await openSession(sandbox.path)).files.filter((file) =>
             file.path.startsWith('.gspot/hooks/'),
         );
@@ -38,13 +39,22 @@ test.each([...HOOK_LEVEL_CASES])(
     },
 );
 
-test.each(START_COMMANDS)(
-    'each hook script uses the %s start command to run one check',
-    async (program, packageManager, prefix) => {
-        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([], { rules: true }) });
+test.each(
+    START_COMMANDS.flatMap(([program, packageManager, prefix]) =>
+        [
+            { place: 'the Git top level', folder: '' },
+            { place: 'a folder below it', folder: 'project' },
+        ].map((place) => ({ program, packageManager, prefix, ...place })),
+    ),
+)(
+    'each hook script uses the $program start command to run one check, with gspot.toml at $place',
+    async ({ program, packageManager, prefix, folder }) => {
+        await using sandbox = await testdir({
+            [join(folder, 'gspot.toml')]: buildSandboxSettings([], { rules: true }),
+        });
 
-        readGitOutput(sandbox.path, ['init', '-q']);
-        const root = sandbox.path;
+        runGitStep(sandbox.path, ['init', '-q']);
+        const root = join(sandbox.path, folder);
         if (packageManager !== undefined)
             await writeFile(
                 join(root, 'package.json'),
@@ -59,8 +69,9 @@ test.each(START_COMMANDS)(
             usesLfs: false,
         });
         expect(files.map((file) => file.path)).toStrictEqual(HOOK_CASES.map(([name]) => `.gspot/hooks/${name}`));
-        await fakeTool(sandbox.path, `bin/${program}`, HOOK_PROGRAM);
-        const cwd = await realpath(root);
+        await writeScriptCommand(sandbox.path, `bin/${program}`, HOOK_SCRIPT);
+        // Git runs each hook in its top-level folder, wherever gspot.toml lives.
+        const cwd = await realpath(sandbox.path);
         for (const [index, [name, commandArguments]] of HOOK_CASES.entries()) {
             const file = files[index]!;
             expect(file).toMatchObject({ executable: true });
@@ -90,7 +101,7 @@ test.each(START_COMMANDS)(
 
 test('a hook says how to install mise when mise is missing', async () => {
     await using sandbox = await testdir();
-    readGitOutput(sandbox.path, ['init', '-q']);
+    runGitStep(sandbox.path, ['init', '-q']);
     const settings = parseSettings(buildSandboxSettings([], { rules: true, tables: HOOKS_SETTINGS }), undefined);
     const hook = buildHookFiles(settings, await selectStartRunner(sandbox.path), {
         names: HOOK_CASES.map(([name]) => name),
@@ -117,10 +128,10 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
     expect(hooks.map((file) => file.path)).toStrictEqual(
         ['post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'].map((name) => `.gspot/hooks/${name}`),
     );
-    const bin = await fakeTool(sandbox.path, 'bin/git', LOGGING_PROGRAM);
-    await fakeTool(sandbox.path, 'bin/git-lfs', LOGGING_PROGRAM);
-    await fakeTool(sandbox.path, 'bin/mise', LOGGING_PROGRAM);
-    await fakeTool(sandbox.path, 'bin/cat', CAT_PROGRAM);
+    const bin = await writeScriptCommand(sandbox.path, 'bin/git', LOGGING_SCRIPT);
+    await writeScriptCommand(sandbox.path, 'bin/git-lfs', LOGGING_SCRIPT);
+    await writeScriptCommand(sandbox.path, 'bin/mise', LOGGING_SCRIPT);
+    await writeScriptCommand(sandbox.path, 'bin/cat', CAT_SCRIPT);
     const log = join(sandbox.path, 'calls.jsonl');
     const environment = { PATH: bin, CALLS_LOG: log };
     for (const hook of hooks) {

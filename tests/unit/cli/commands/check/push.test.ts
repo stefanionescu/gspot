@@ -1,25 +1,27 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
-import { runCommand } from '#tests/setup/processes.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/runs/run.ts';
-import { PUSH_CONTENT } from '#tests/data/test-setup.ts';
-import { CLI_BIN, runGspot } from '#tests/setup/run-gspot.ts';
+import { PUSH_CONTENT } from '#tests/data/setup/sandboxes.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/data/runs/command.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { PUSH_CHECK_ARGUMENTS } from '#tests/data/parsers/git.ts';
-import { PUSH_CHECK_COMMAND } from '#tests/data/commands/check.ts';
-import { readGitOutput, preparePushRepository } from '#tests/setup/git.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PUSH_CHECK_COMMAND } from '#tests/data/commands/check/push.ts';
+import { CLI_BIN, runGspot, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 
 /** Require the pushed tree and uncommitted source and settings to stay unchanged. */
 async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
-    expect(readGitOutput(root, ['rev-parse', 'HEAD'])).toBe(head);
+    expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(head);
     expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(PUSH_CONTENT.settings);
     expect(await readFile(join(root, 'changed.sh'), 'utf8')).toBe(PUSH_CONTENT.working);
 }
 
-async function checkBrokenPush(root: string, base: string, broken: string): Promise<RunReport> {
+async function runBrokenPushCheck(root: string, base: string, broken: string): Promise<RunReport> {
     const result = await runGspot(
         root,
         PUSH_CHECK_COMMAND,
@@ -51,18 +53,18 @@ test.each(['local', 'remote'] as const)(
     },
 );
 
-test('new references compare with remote-tracking commits and scan custom destinations conservatively', async () => {
+test('a new branch compares with the remote-tracking commit, and with a fetch mapping with the mapped commit', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
-    readGitOutput(sandbox.path, ['remote', 'add', 'origin', 'unused']);
-    readGitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
+    runGitStep(sandbox.path, ['remote', 'add', 'origin', 'unused']);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
     const protocol = { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` };
     const createdRef = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, protocol);
     expect(createdRef.code, createdRef.stdout + createdRef.stderr).toBe(0);
     expect((JSON.parse(createdRef.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
-    readGitOutput(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']);
-    readGitOutput(sandbox.path, ['update-ref', '-d', 'refs/remotes/origin/main']);
-    readGitOutput(sandbox.path, ['update-ref', 'refs/fetched/origin/main', base]);
+    runGitStep(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']);
+    runGitStep(sandbox.path, ['update-ref', '-d', 'refs/remotes/origin/main']);
+    runGitStep(sandbox.path, ['update-ref', 'refs/fetched/origin/main', base]);
     const mapped = await runGspot(sandbox.path, PUSH_CHECK_COMMAND, {}, protocol);
     expect(mapped.code, mapped.stdout + mapped.stderr).toBe(1);
     const mappedReport = JSON.parse(mapped.stdout) as PushReport;
@@ -74,13 +76,13 @@ test('new references compare with remote-tracking commits and scan custom destin
     await assertWorkingTreeKept(sandbox.path, broken);
 });
 
-test('fetch mapping selectors do not override the remote-tracking namespace', async () => {
+test('a new branch still compares with refs/remotes/origin/main when the fetch refspecs map branches elsewhere or exclude main', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
-    readGitOutput(sandbox.path, ['remote', 'add', 'origin', 'unused']);
-    readGitOutput(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']);
-    readGitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
-    readGitOutput(sandbox.path, ['config', '--add', 'remote.origin.fetch', '^refs/heads/main']);
+    runGitStep(sandbox.path, ['remote', 'add', 'origin', 'unused']);
+    runGitStep(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
+    runGitStep(sandbox.path, ['config', '--add', 'remote.origin.fetch', '^refs/heads/main']);
     const excluded = await runGspot(
         sandbox.path,
         PUSH_CHECK_COMMAND,
@@ -92,12 +94,12 @@ test('fetch mapping selectors do not override the remote-tracking namespace', as
     await assertWorkingTreeKept(sandbox.path, broken);
 });
 
-test('new references without fetched comparison objects check the full tree', async () => {
+test('a new branch whose remote has no fetched commits checks every file of the tree', async () => {
     await using sandbox = await testdir();
     const { reviewed, broken, zero } = await preparePushRepository(sandbox.path);
     const noRemote = await runGspot(
         sandbox.path,
-        [...PUSH_CHECK_ARGUMENTS, 'unseen', 'unused'],
+        [...PUSH_CHECK_COMMAND.slice(0, -2), 'unseen', 'unused'],
         {},
         { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` },
     );
@@ -115,11 +117,11 @@ test('new references without fetched comparison objects check the full tree', as
 test('an annotated tag of a commit is checked while blob tags, blobs, and deleted refs are skipped', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
-    readGitOutput(sandbox.path, ['tag', '-a', '-m', 'reviewed tag', 'reviewed-tag', reviewed]);
-    const tag = readGitOutput(sandbox.path, ['rev-parse', 'reviewed-tag']);
-    const blob = readGitOutput(sandbox.path, ['hash-object', '-w', 'changed.sh']);
-    readGitOutput(sandbox.path, ['tag', '-a', '-m', 'data tag', 'data', blob]);
-    const data = readGitOutput(sandbox.path, ['rev-parse', 'refs/tags/data']);
+    runGitStep(sandbox.path, ['tag', '-a', '-m', 'reviewed tag', 'reviewed-tag', reviewed]);
+    const tag = runGitStep(sandbox.path, ['rev-parse', 'reviewed-tag']);
+    const blob = runGitStep(sandbox.path, ['hash-object', '-w', 'changed.sh']);
+    runGitStep(sandbox.path, ['tag', '-a', '-m', 'data tag', 'data', blob]);
+    const data = runGitStep(sandbox.path, ['rev-parse', 'refs/tags/data']);
     const selected = await runGspot(
         sandbox.path,
         PUSH_CHECK_COMMAND,
@@ -139,7 +141,7 @@ test('an annotated tag of a commit is checked while blob tags, blobs, and delete
     await assertWorkingTreeKept(sandbox.path, broken);
 });
 
-test('pre-push checks exact supplied objects despite conflicting working-tree repairs', async () => {
+test('pre-push checks the pushed commits, not the repaired working tree', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken } = await preparePushRepository(sandbox.path);
     const passing = await runGspot(
@@ -155,18 +157,21 @@ test('pre-push checks exact supplied objects despite conflicting working-tree re
     expect(firstReport.comparison).toStrictEqual({ content: 'commit', reference: reviewed });
     expect(firstReport.checks[0]?.status).toBe('passed');
     expect(firstReport.checks[0]?.fileCount).toBe(1);
-    const failedReport = await checkBrokenPush(sandbox.path, base, broken);
+    const failedReport = await runBrokenPushCheck(sandbox.path, base, broken);
     expect(new Set(failedReport.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
         new Set(['changed.sh']),
     );
     await assertWorkingTreeKept(sandbox.path, broken);
 });
 
-test('pre-push text supplies an executable reproduction of the same committed findings', async () => {
+test('the pre-push report prints a command that reproduces the same findings', async () => {
     await using sandbox = await testdir();
     const { base, broken } = await preparePushRepository(sandbox.path);
-    const failedReport = await checkBrokenPush(sandbox.path, base, broken);
-    const reproduction = failedReport.checks[0]?.reproduce;
+    const failedReport = await runBrokenPushCheck(sandbox.path, base, broken);
+    const reproduction = failedReport.checks.map(({ reproduce }) => reproduce);
+    expect(reproduction).toStrictEqual([
+        `printf '%s' 'refs/heads/main ${broken} refs/heads/main ${base}\n' | gspot check --hook pre-push --only project/bash-syntax -- origin`,
+    ]);
     const repeated = await runCommand(
         [
             'bash',
@@ -175,7 +180,7 @@ test('pre-push text supplies an executable reproduction of the same committed fi
             'reproduce',
             process.execPath,
             CLI_BIN,
-            reproduction!.replace('gspot check', 'gspot check --json'),
+            reproduction[0]!.replace('gspot check', 'gspot check --json'),
         ],
         { cwd: sandbox.path },
     );
@@ -246,4 +251,38 @@ test('pre-push of a forced rewind checks the rewound commit', async () => {
     expect(forced.code, forced.stdout + forced.stderr).toBe(0);
     expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
     await assertWorkingTreeKept(sandbox.path, broken);
+});
+test('a pushed commit that changes gspot.toml checks every file of that commit', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
+        'changed.sh': 'echo base\n',
+        'legacy.sh': 'if then\n',
+    });
+
+    commitAll(sandbox.path);
+    const base = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
+    await writeFile(join(sandbox.path, 'changed.sh'), 'echo changed\n');
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK + '[hooks]\n' }),
+    );
+    runGitStep(sandbox.path, ['add', 'gspot.toml', 'changed.sh']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'full pushed tree']);
+    const pushedCommit = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
+    const all = await spawnGspot(
+        sandbox.path,
+        ['check', '--hook', 'pre-push', '--only', 'project/bash-syntax', '--json', '--', 'origin', 'unused'],
+        {},
+        {
+            stdin: `refs/heads/main ${pushedCommit} refs/heads/main ${base}\n`,
+        },
+    );
+    expect(all.code, all.stdout + all.stderr).toBe(1);
+    expect(
+        new Set(
+            (JSON.parse(all.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
+        ),
+    ).toStrictEqual(new Set(['legacy.sh']));
 });

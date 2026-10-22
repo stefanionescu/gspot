@@ -3,17 +3,16 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { runCommand } from '#tests/setup/processes.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { createEslint, compareFindings, listLintFindings } from '#tests/setup/tool-files.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createEslint, compareFindings, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
-    FIXED_JSDOC,
     JSDOC_FILES,
     JSDOC_RULES,
     TSC_ARGUMENTS,
     JSDOC_FINDINGS,
+    CORRECTED_JSDOC,
     ROOT_PARAMETERS,
 } from '#tests/data/generation/eslint/jsdoc.ts';
 
@@ -45,37 +44,17 @@ test.each([...LEVELS])(
 );
 
 test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig', async () => {
-    await using sandbox = await testdir();
-    const settings = buildSandboxSettings(['typescript'], { level: 'all' });
-    await createFileTree(sandbox.path, { ...JSDOC_FILES, 'gspot.toml': settings });
+    await using sandbox = await testdir({
+        ...JSDOC_FILES,
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+    });
     const eslint = await createEslint(sandbox.path);
-    const expectedConfiguration = {
-        'missing.js': Object.fromEntries(JSDOC_RULES.map((name) => [name, [2]])),
-        'typed.ts': Object.fromEntries(JSDOC_RULES.map((name) => [name, [0]])),
-    };
-    async function lintFiles() {
-        const configurations: Record<string, unknown> = {};
-        for (const file of ['missing.js', 'typed.ts']) {
-            const config = (await eslint.calculateConfigForFile(file)) as EslintConfiguration;
-            configurations[file] = Object.fromEntries(JSDOC_RULES.map((name) => [name, config.rules[name]]));
-        }
-        return {
-            configurations,
-            files: await listLintFindings(
-                eslint,
-                sandbox.path,
-                ['missing.js', 'malformed.js', 'capitalized.js', 'undefined.js', 'typed.ts'],
-                JSDOC_RULES,
-            ),
-        };
-    }
-    const linted = await lintFiles();
-    expect(linted).toStrictEqual({
-        configurations: expectedConfiguration,
-        files: JSDOC_FINDINGS.flatMap(({ file, findings }) =>
+    const files = ['missing.js', 'malformed.js', 'capitalized.js', 'undefined.js', 'typed.ts'];
+    expect(await listLintFindings(eslint, sandbox.path, files, JSDOC_RULES)).toStrictEqual(
+        JSDOC_FINDINGS.flatMap(({ file, findings }) =>
             findings.map(({ ruleId, line }) => ({ file, rule: ruleId, line })),
         ).toSorted(compareFindings),
-    });
+    );
     const failed = await runCommand(TSC_ARGUMENTS, { cwd: sandbox.path });
     expect(failed.code, failed.stdout + failed.stderr).toBe(2);
     const output = failed.stdout + failed.stderr;
@@ -87,12 +66,8 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['malformed.js', 'missing.js', 'undefined.js']);
     for (const { file } of JSDOC_FINDINGS.filter((entry) => entry.file.endsWith('.js')))
-        await writeFile(join(sandbox.path, file), FIXED_JSDOC);
-    const corrected = await lintFiles();
-    expect(corrected).toStrictEqual({
-        configurations: expectedConfiguration,
-        files: [],
-    });
+        await writeFile(join(sandbox.path, file), CORRECTED_JSDOC);
+    expect(await listLintFindings(eslint, sandbox.path, files, JSDOC_RULES)).toStrictEqual([]);
     const compiled = await runCommand(TSC_ARGUMENTS, { cwd: sandbox.path });
     expect(compiled.code, compiled.stdout + compiled.stderr).toBe(0);
 });

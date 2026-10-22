@@ -1,6 +1,8 @@
+import picomatch from 'picomatch';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
+import { buildFilePatterns } from '#cli/generation/eslint/files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     NESTED_ESLINT_FILES,
@@ -25,4 +27,11 @@ test('a child scope wildcard exempts its tests and scripts without exempting sib
         { file: 'sibling/build.js', rule: 'no-console', line: 1 },
         { file: 'sibling/read.js', rule: 'no-console', line: 1 },
     ]);
+});
+test('Node file patterns match a filename with a backslash and not its neighbor', () => {
+    const file = String.raw`scripts/run\name`;
+    const patterns = buildFilePatterns({ components: [], scopes: [], nodeFiles: [file] }).code;
+    const matches = picomatch(patterns, { dot: true, windows: false });
+    expect(matches(file)).toBe(true);
+    expect(matches('scripts/runname')).toBe(false);
 });

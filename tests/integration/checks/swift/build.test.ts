@@ -1,23 +1,31 @@
-import { join } from 'node:path';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { join, dirname, basename } from 'node:path';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { createCompilerCache } from '#tests/setup/check-input.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { SWIFT_PACKAGE_CASES, SWIFT_PACKAGE_SANDBOX } from '#tests/data/checks/swift/package.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
-import { XCODE_TOOL_SCHEME, XCODE_TOOL_PROJECT, XCODE_BUILD_SETTINGS } from '#tests/data/checks/xcode.ts';
-import { SWIFT_VALUE_ERROR, SWIFT_VALUE_SOURCE, SWIFT_LANGUAGE_PACKAGE } from '#tests/data/checks/swift/projects.ts';
+import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+
+import {
+    XCODE_TOOL_SCHEME,
+    SWIFT_VALUE_ERROR,
+    XCODE_BUILD_TABLES,
+    XCODE_TOOL_PROJECT,
+    SWIFT_VALUE_SOURCE,
+    SWIFT_PACKAGE_CASES,
+    SWIFT_PACKAGE_SANDBOX,
+    SWIFT_LANGUAGE_PACKAGE,
+} from '#tests/data/checks/swift/build.ts';
 
 // The manifest assigns compiler-backed Swift checks to macOS.
 test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
     await using sandbox = await testdir();
-    await using _cache = await createCompilerCache();
+    await using _cache = await redirectCacheFolder();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['swift']),
         'Package.swift': SWIFT_LANGUAGE_PACKAGE,
@@ -47,15 +55,15 @@ test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports
 
 // This check needs the Xcode toolchain supplied by macOS.
 test.skipIf(!isMacos)(
-    'Xcode reuses compiled objects and reports source errors without changing the project',
+    'swift/build reuses the compiled objects of an Xcode project and reports source errors without changing the project',
     async () => {
         await using sandbox = await testdir();
-        await using _cache = await createCompilerCache();
+        await using _cache = await redirectCacheFolder();
         const project = XCODE_TOOL_PROJECT;
         const source = 'let value: Int = 1\nprint(value)\n';
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
-                tables: XCODE_BUILD_SETTINGS,
+                tables: XCODE_BUILD_TABLES,
             }),
             'Example.xcodeproj/project.pbxproj': project,
             'Example.xcodeproj/xcshareddata/xcschemes/Example.xcscheme': XCODE_TOOL_SCHEME,
@@ -66,13 +74,16 @@ test.skipIf(!isMacos)(
         const first = await runGspot(sandbox.path, command);
         expect(first.code, first.stdout + first.stderr).toBe(0);
         const compiledFiles = await Array.fromAsync(new Bun.Glob('**/main.o').scan({ cwd: readCacheFolder() }));
-        expect(compiledFiles.length).toBeGreaterThan(0);
+        // The project builds both Mac architectures, one object each.
+        expect(
+            compiledFiles.map((file) => basename(dirname(file))).toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual(['arm64', 'x86_64']);
         const times = await Promise.all(
             compiledFiles.map((file) => stat(join(readCacheFolder(), file)).then(({ mtimeMs }) => mtimeMs)),
         );
-        const commentedBuild = parseCheckReport(await runGspot(sandbox.path, command));
-        expect(commentedBuild.code, commentedBuild.stdout + commentedBuild.stderr).toBe(0);
-        expect(commentedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+        const unchangedBuild = parseCheckReport(await runGspot(sandbox.path, command));
+        expect(unchangedBuild.code, unchangedBuild.stdout + unchangedBuild.stderr).toBe(0);
+        expect(unchangedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
         expect(
             await Promise.all(
                 compiledFiles.map((file) => stat(join(readCacheFolder(), file)).then(({ mtimeMs }) => mtimeMs)),
@@ -96,7 +107,7 @@ test.skipIf(!isMacos)(
 );
 
 describe.skipIf(!isMacos)('Swift package samples', () => {
-    const installedSandbox = registerSharedSandbox(SWIFT_PACKAGE_SANDBOX);
+    const installedSandbox = shareInstalledSandbox(SWIFT_PACKAGE_SANDBOX);
 
     for (const entry of SWIFT_PACKAGE_CASES) {
         test.skipIf(!hasToolBuild(entry.check === 'swift/swiftlint-analyze' ? 'swiftlint' : 'periphery'))(

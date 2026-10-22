@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { captureThrow } from '#tests/setup/matchers.ts';
 import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { UNIX_COMMAND_LIMIT, WINDOWS_COMMAND_LIMIT } from '#cli/config/runs/command.ts';
 
@@ -25,10 +26,10 @@ test('a long Unicode list splits under the byte limit in order, and a path or to
     expect(batches.flat()).toStrictEqual(files);
     for (const batch of batches)
         expect(Buffer.byteLength([...fixed, ...batch].join(' '))).toBeLessThanOrEqual(UNIX_COMMAND_LIMIT);
-    expect(() => splitFileArguments(['x'.repeat(UNIX_COMMAND_LIMIT + 1)], ['tool'], 'linux')).toThrow(
-        'is too long for one command line',
+    expect(captureThrow(() => splitFileArguments(['x'.repeat(UNIX_COMMAND_LIMIT + 1)], ['tool'], 'linux'))).toBe(
+        `${'x'.repeat(UNIX_COMMAND_LIMIT + 1)} is too long for one command line. Shorten its path.`,
     );
     expect(() => splitFileArguments([], ['x'.repeat(UNIX_COMMAND_LIMIT + 1)], 'linux')).toThrow(
-        'Tool arguments exceed',
+        new Error('Tool arguments exceed the command limit. Shorten the tool arguments.'),
     );
 });

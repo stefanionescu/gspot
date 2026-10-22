@@ -2,9 +2,17 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { checkFindings } from '#tests/setup/check-input.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { RLS_SOURCE, GRANT_FILES, FROZEN_GRANTS } from '#tests/data/checks/postgres.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+
+import {
+    GRANT_FILES,
+    FROZEN_GRANTS,
+    ROW_SECURITY_SQL,
+    DEFINER_FUNCTION_SQL,
+    PINNED_DEFINER_FUNCTION_SQL,
+} from '#tests/data/checks/postgres/access.ts';
 
 test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the newer ones', async (scope) => {
     const level = 'all' as const;
@@ -22,7 +30,7 @@ test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the
             }),
         );
 
-        const findings = await checkFindings(sandbox.path, 'postgres/grants', { scope });
+        const findings = await runSandboxCheck(sandbox.path, 'postgres/grants', { scope });
         expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual(
             files.map((path) => ({ file: `${prefix}${path}`, line: 1, rule: 'grant-all' })),
         );
@@ -42,14 +50,35 @@ test.each(['', 'app'])(
                 tables: '[postgres]\nclient_schemas = ["public"]\n',
                 scopes: [{ path: 'app', configurations: ['postgres'] }],
             }),
-            [path]: RLS_SOURCE,
+            [path]: ROW_SECURITY_SQL,
         });
 
-        expect(await checkFindings(sandbox.path, 'postgres/row-level-security', { scope })).toMatchObject([
+        expect(await runSandboxCheck(sandbox.path, 'postgres/row-level-security', { scope })).toMatchObject([
             { check: 'postgres/row-level-security', file: path, line: 1, column: 1, rule: 'row-security' },
         ]);
-        await writeFile(join(sandbox.path, path), `${RLS_SOURCE}ALTER TABLE private_data ENABLE ROW LEVEL SECURITY;\n`);
+        await writeFile(
+            join(sandbox.path, path),
+            `${ROW_SECURITY_SQL}ALTER TABLE private_data ENABLE ROW LEVEL SECURITY;\n`,
+        );
 
-        expect(await checkFindings(sandbox.path, 'postgres/row-level-security', { scope })).toStrictEqual([]);
+        expect(await runSandboxCheck(sandbox.path, 'postgres/row-level-security', { scope })).toStrictEqual([]);
     },
 );
+
+test('definer-search-path reports a SECURITY DEFINER function without search_path and passes once it sets one', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
+        'migrations/1_access.sql': DEFINER_FUNCTION_SQL,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([
+        matchFields({
+            file: 'migrations/1_access.sql',
+            line: 1,
+            rule: 'definer-search-path',
+            message:
+                'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.',
+        }),
+    ]);
+    await writeFile(join(sandbox.path, 'migrations/1_access.sql'), PINNED_DEFINER_FUNCTION_SQL);
+    expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([]);
+});

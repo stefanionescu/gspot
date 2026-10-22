@@ -16,7 +16,6 @@ import { buildHtmlSettings } from '#cli/generation/settings/builders/html.ts';
 import { buildLycheeFile } from '#cli/generation/settings/builders/lychee.ts';
 import { buildSquawkFile } from '#cli/generation/settings/builders/squawk.ts';
 import { buildSemgrepFile } from '#cli/generation/settings/builders/semgrep.ts';
-import { JSCPD_IGNORED } from '#cli/config/generation/settings/builders/jscpd.ts';
 import { buildHadolintFile } from '#cli/generation/settings/builders/hadolint.ts';
 import { buildJsconfigFile } from '#cli/generation/settings/builders/jsconfig.ts';
 import { buildPrettierFile } from '#cli/generation/settings/builders/prettier.ts';
@@ -37,6 +36,7 @@ import { buildEditorconfigFile } from '#cli/generation/settings/builders/editorc
 import { buildMarkdownlintFile } from '#cli/generation/settings/builders/markdownlint.ts';
 import { ANSIBLE_LINT_ALWAYS_OFF } from '#cli/config/generation/settings/builders/ansible-lint.ts';
 import { TOOL_FILE_REFERENCE, SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/settings/build.ts';
+import { JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/generation/settings/builders/jscpd.ts';
 
 import {
     type GeneratedFile,
@@ -91,6 +91,7 @@ const TOOL_FILE_BUILDERS: Readonly<Record<string, ToolFileBuilder | undefined>> 
                 minTokens: getTable(planned.scope.settings, 'duplication').min_tokens,
                 absolute: true,
                 gitignore: true,
+                ignorePattern: JSCPD_IMPORT_PATTERNS,
                 ignore: [
                     ...JSCPD_IGNORED,
                     ...convertToGlobs([

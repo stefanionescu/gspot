@@ -9,9 +9,9 @@ import {
     RECREATED_TABLE_SQL,
     EQUIVALENT_INDEXES_SQL,
     INDEXED_TABLE_DROP_SQL,
-    DROPPED_CONSTRAINTS_SQL,
     UNNAMED_FOREIGN_KEY_SQL,
-} from '#tests/data/checks/postgres.ts';
+    DROPPED_CONSTRAINTS_SQL,
+} from '#tests/data/checks/postgres/schema.ts';
 
 /**
  * A migration under migrations/, parsed.
@@ -46,7 +46,7 @@ test('table recreation discards security, keys, and indexes from the old table',
     expect(fields.foreignKeys.map((key) => key.column)).toStrictEqual(['author_id']);
 });
 
-test('removing one equivalent index preserves the other until it is removed', async () => {
+test('removing one equivalent index preserves the other until it is removed, and disabling row security removes it', async () => {
     const initial = await parseMigration('1_create.sql', EQUIVALENT_INDEXES_SQL);
     const retained = buildSchema([initial]);
     expect(retained.indexed.get('public.posts')).toStrictEqual(new Set(['author_id']));

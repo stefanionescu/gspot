@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { NESTJS_CASES, NESTJS_SANDBOX } from '#tests/data/checks/nestjs.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
-const installedSandbox = registerSharedSandbox({
+const installedSandbox = shareInstalledSandbox({
     ...NESTJS_SANDBOX,
     dependencies: {
         '@nestjs/common': testsPackage.devDependencies['@nestjs/common'],

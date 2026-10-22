@@ -5,16 +5,16 @@ import { test, expect, describe } from 'bun:test';
 import { chmod, writeFile } from 'node:fs/promises';
 import { planChecks } from '#cli/planning/checks.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { runCommand } from '#tests/setup/processes.ts';
-import { isMacos, hasToolBuild } from '#tests/setup/system.ts';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { XCODE_CASES, XCODE_SANDBOX } from '#tests/data/checks/xcode.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 describe.skipIf(!isMacos)('Xcode samples', () => {
-    const installedSandbox = registerSharedSandbox(XCODE_SANDBOX);
+    const installedSandbox = shareInstalledSandbox(XCODE_SANDBOX);
     test.each([...XCODE_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
         const result = await runCheckSample(installedSandbox(), entry, XCODE_SANDBOX);
         expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
@@ -22,7 +22,7 @@ describe.skipIf(!isMacos)('Xcode samples', () => {
 });
 
 test.skipIf(!hasToolBuild('plutil'))(
-    'xcode/plutil reports mixed parse and input failures as execution errors',
+    'xcode/plutil turns a parse error beside a missing or unreadable file into a note that names the reason, and a parse error alone into a finding',
     async () => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['xcode']),

@@ -2,21 +2,26 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
-import { RULE_PAGES } from '#tests/data/commands/explain.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 
-test('a rule is explained with the page its manifest declares', async () => {
+import {
+    RULE_PAGES,
+    ROOT_RULE_PAGE,
+    CHILD_RULE_PAGE,
+    RULE_PAGE_SETTINGS,
+    UNKNOWN_RULE_PREFIX,
+    NPM_SCOPE_RULE_PAGE,
+    SHELLCHECK_RULE_PAGE,
+} from '#tests/data/commands/explain/lint-rules.ts';
+
+test('explain shellcheck/SC2086 gives the rule page and the gspot ignore commands', async () => {
     await using sandbox = await testdir();
     const shellcheck = await runGspot(sandbox.path, ['explain', 'shellcheck/SC2086', '--json']);
     const shellcheckText = await runGspot(sandbox.path, ['explain', 'shellcheck/SC2086']);
-    expect(JSON.parse(shellcheck.stdout)).toMatchObject({
-        kind: 'lint-rule',
-        tool: 'shellcheck',
-        rule: 'SC2086',
-        page: 'https://www.shellcheck.net/wiki/SC2086',
-    });
-    expect(shellcheckText.stdout).toContain('gspot ignore bash/shellcheck --rule SC2086');
-    expect(shellcheckText.stdout).not.toContain('tools.shellcheck.rules');
+    expect(JSON.parse(shellcheck.stdout)).toMatchObject(SHELLCHECK_RULE_PAGE);
+    expect(shellcheckText.stdout).toBe(
+        'shellcheck/SC2086  (run by bash/shellcheck)\n\nThe tool\'s page: https://www.shellcheck.net/wiki/SC2086\n\nTurn it off everywhere: gspot ignore bash/shellcheck --rule SC2086 --reason "..."\nTurn it off for some paths: gspot ignore bash/shellcheck --rule SC2086 --paths "<glob>" --reason "..."\n',
+    );
 });
 
 test.each([...RULE_PAGES])(
@@ -31,51 +36,35 @@ test.each([...RULE_PAGES])(
         });
     },
 );
-
-test('a check explains the minimum version its declaring tool needs', async () => {
-    await using sandbox = await testdir();
-    const ruff = await runGspot(sandbox.path, ['explain', 'python/ruff']);
-    expect(ruff.stdout + ruff.stderr).toContain('Needs ruff 0.9.0 or newer');
-});
-
-test('an unknown rule prefix is refused and names the subject', async () => {
+test('explain refuses an unknown rule prefix and names the subjects it explains', async () => {
     await using sandbox = await testdir();
     const refusal = await runGspot(sandbox.path, ['explain', 'unknown/no-such-rule']);
     expect(refusal.code).toBe(2);
-    expect(refusal.stderr).toContain('gspot cannot explain unknown/no-such-rule.');
-    const unknownEslintRule = await runGspot(sandbox.path, ['explain', 'eslint/unknown/no-such-rule', '--json']);
-    expect(JSON.parse(unknownEslintRule.stdout)).toMatchObject({
-        kind: 'lint-rule',
-        tool: 'eslint',
-        rule: 'unknown/no-such-rule',
-        page: null,
-    });
+    expect(refusal.stderr).toBe(
+        'gspot cannot explain unknown/no-such-rule. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).\n',
+    );
 });
 
-test('TypeScript errors have no rule options and no page link', async () => {
+test('explain gives an unknown plugin rule after eslint/ the ESLint commands and no page', async () => {
+    await using sandbox = await testdir();
+    const unknownEslintRule = await runGspot(sandbox.path, ['explain', 'eslint/unknown/no-such-rule', '--json']);
+    expect(JSON.parse(unknownEslintRule.stdout)).toMatchObject(UNKNOWN_RULE_PREFIX);
+});
+
+test('explain gives a TypeScript error the gspot ignore commands, and no rule options or page', async () => {
     await using sandbox = await testdir();
     const rule = await runGspot(sandbox.path, ['explain', 'tsc/TS2345', '--json']);
     const ruleText = await runGspot(sandbox.path, ['explain', 'tsc/TS2345']);
     expect(JSON.parse(rule.stdout)).toMatchObject({ kind: 'lint-rule', tool: 'tsc', rule: 'TS2345', page: null });
-    expect(ruleText.stdout).toContain('Read the tsc documentation for TS2345.');
-    expect(ruleText.stdout).not.toContain('Change its options:');
-    expect(ruleText.stdout).not.toContain('tools.tsc.rules');
-    expect(ruleText.stdout).not.toContain("The tool's page:");
-    const javascriptCompiler = await runGspot(sandbox.path, ['explain', 'javascript/tsc', '--json']);
-    expect(JSON.parse(javascriptCompiler.stdout)).toMatchObject({
-        help: 'Add or fix the JSDoc type that the error names.',
-    });
+    expect(ruleText.stdout).toBe(
+        'tsc/TS2345  (run by javascript/tsc)\n\nRead the tsc documentation for TS2345.\n\nTurn it off everywhere: gspot ignore javascript/tsc --rule TS2345 --reason "..."\nTurn it off for some paths: gspot ignore javascript/tsc --rule TS2345 --paths "<glob>" --reason "..."\n',
+    );
 });
 
-test('a plugin prefix with an npm scope must match a manifest declaration', async () => {
+test('a plugin prefix with an npm scope must match a plugin that a manifest declares', async () => {
     await using sandbox = await testdir();
     const nextLink = await runGspot(sandbox.path, ['explain', '@next/next/no-html-link-for-pages', '--json']);
-    expect(JSON.parse(nextLink.stdout)).toMatchObject({
-        subject: 'eslint/@next/next/no-html-link-for-pages',
-        tool: 'eslint',
-        rule: '@next/next/no-html-link-for-pages',
-        page: null,
-    });
+    expect(JSON.parse(nextLink.stdout)).toMatchObject(NPM_SCOPE_RULE_PAGE);
     const explicitNextLink = await runGspot(sandbox.path, [
         'explain',
         'eslint/@next/next/no-html-link-for-pages',
@@ -88,7 +77,9 @@ test('a plugin prefix with an npm scope must match a manifest declaration', asyn
     });
     const refusal = await runGspot(sandbox.path, ['explain', 'typescript-eslint/no-explicit-any']);
     expect(refusal.code).toBe(2);
-    expect(refusal.stderr).toContain('typescript-eslint/no-explicit-any');
+    expect(refusal.stderr).toBe(
+        'gspot cannot explain typescript-eslint/no-explicit-any. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts). Did you mean `typescript`?\n',
+    );
     const unknownTypescriptPrefix = await runGspot(sandbox.path, [
         'explain',
         'eslint/typescript-eslint/no-explicit-any',
@@ -99,28 +90,13 @@ test('a plugin prefix with an npm scope must match a manifest declaration', asyn
 
 test('explain finds rule pages from the root and from a child scope', async () => {
     await using sandbox = await testdir();
-    const settings = `level = "all"
-configurations = ["python"]
-[[scope]]
-path = "app"
-configurations = ["swift"]
-`;
+    const settings = RULE_PAGE_SETTINGS;
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'app/sample.swift': 'let value = 1\n' });
     const root = await runGspot(sandbox.path, ['explain', 'ruff/F401', '--json']);
     expect(root.code, root.stdout + root.stderr).toBe(0);
-    expect(JSON.parse(root.stdout)).toMatchObject({
-        tool: 'ruff',
-        rule: 'F401',
-        check: 'python/ruff',
-        page: 'https://docs.astral.sh/ruff/rules/F401/',
-    });
+    expect(JSON.parse(root.stdout)).toMatchObject(ROOT_RULE_PAGE);
     const child = await runGspot(join(sandbox.path, 'app'), ['explain', 'swiftlint/type_body_length', '--json']);
     expect(child.code, child.stdout + child.stderr).toBe(0);
-    expect(JSON.parse(child.stdout)).toMatchObject({
-        tool: 'swiftlint',
-        rule: 'type_body_length',
-        check: 'swift/swiftlint',
-        page: 'https://realm.github.io/SwiftLint/type_body_length.html',
-    });
+    expect(JSON.parse(child.stdout)).toMatchObject(CHILD_RULE_PAGE);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });

@@ -1,13 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { buildSandboxChanges } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { RUFF_SANDBOX, VERSION_SOURCE, RUFF_VERSION_CASES } from '#tests/data/checks/python/tool-checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { RUFF_SANDBOX } from '#tests/data/integration/checks/python/sandbox.ts';
+import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { VERSION_SOURCE, RUFF_VERSION_CASES } from '#tests/data/integration/checks/python/versions.ts';
 
-const installedSandbox = registerSharedSandbox(RUFF_SANDBOX);
+const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 
 test("Ruff fixes follow each scope's minimum Python version", async () => {
     const { root } = installedSandbox();

@@ -1,7 +1,7 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { createRuleTester } from '#tests/setup/rule-tester.ts';
-import { ENVIRONMENT_GLOBALS } from '#tests/data/eslint-plugin.ts';
 import type { ClientEnvOptions } from '#eslint-plugin/types/rules.ts';
+import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { ENVIRONMENT_GLOBALS } from '#tests/data/eslint-plugin/rules/no-client-env.ts';
 
 createRuleTester().run<
     keyof (typeof plugin.rules)['no-client-env']['meta']['messages'],

@@ -3,19 +3,20 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
+import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
-    COALESCING_FIXED,
     COALESCING_SOURCE,
     LEVEL_RULE_OPTIONS,
+    COALESCING_CORRECTED,
+    DOCUMENTED_PRICE_SOURCE,
     CONFIGURATION_RULE_OPTIONS,
 } from '#tests/data/generation/eslint/levels.ts';
 
@@ -128,7 +129,7 @@ test.each([...LEVELS])(
                       ]
                     : [],
         });
-        await writeFile(join(sandbox.path, 'source.js'), COALESCING_FIXED);
+        await writeFile(join(sandbox.path, 'source.js'), COALESCING_CORRECTED);
         const corrected = await lintFiles();
         expect(corrected).toStrictEqual({ layout: [], findings: [] });
     },
@@ -136,19 +137,18 @@ test.each([...LEVELS])(
 test('switching the level and back writes the same files', async () => {
     await using sandbox = await testdir();
     await writeFile(join(sandbox.path, 'source.js'), 'export const value = 1;\n');
-    const outputs: string[] = [];
+    const outputs: { path: string; content: string }[][] = [];
     for (const level of ['recommended', 'all', 'recommended'] as const) {
         const settings = buildSandboxSettings(['javascript'], { rules: true, level });
         await writeFile(join(sandbox.path, 'gspot.toml'), settings);
         const session = await openSession(sandbox.path);
         const output = generate(session);
-        const config = output.files.find((file) => file.path.endsWith('/javascript/eslint.mjs'))!;
-        using log = openWriter(sandbox.path);
-        writeGeneratedFiles(session, output, log);
-        outputs.push(config.content);
+        using writer = openWriter(sandbox.path);
+        writeGeneratedFiles(session, output, writer);
+        outputs.push(output.files.map(({ path, content }) => ({ path, content })));
     }
-    expect(outputs[0]).not.toBe(outputs[1]);
-    expect(outputs[2]).toBe(outputs[0]);
+    expect(outputs[1]).not.toStrictEqual(outputs[0]);
+    expect(outputs[2]).toStrictEqual(outputs[0]);
 });
 
 test.each([...LEVELS])(
@@ -157,16 +157,7 @@ test.each([...LEVELS])(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], { level }),
             'package.json': '{"private":true,"type":"module"}',
-            'total.js': `/**
- * Add the two prices.
- * @param {number} first the first price.
- * @param {number} second the second price.
- * @returns {number} the total.
- */
-export function addPrices(first, second) {
-    return first + second;
-}
-`,
+            'total.js': DOCUMENTED_PRICE_SOURCE,
         });
 
         const eslint = await createEslint(sandbox.path, { fix: true });

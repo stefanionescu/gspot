@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import plugin from '#eslint-plugin/plugin.ts';
-import { createRuleTester } from '#tests/setup/rule-tester.ts';
+import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import type { TrivialFunctionsOptions } from '#eslint-plugin/types/rules.ts';
 
 createRuleTester().run<

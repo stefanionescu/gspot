@@ -3,25 +3,25 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/session.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { quoteArgument } from '#cli/system/text.ts';
 import { CI_NODE } from '#cli/config/generation/ci.ts';
-import { runCommand } from '#tests/setup/processes.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import { type Pipeline } from '#cli/types/generation/ci.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 
 import {
     SETUP_CASES,
-    MISE_PROGRAM,
-    GSPOT_PROGRAM,
-    SETUP_PROGRAM,
+    SETUP_SCRIPT,
     LINUX_PIPELINE,
     SETUP_ARGUMENTS,
-} from '#tests/data/ci.ts';
+    FAKE_MISE_SCRIPT,
+    FAKE_GSPOT_SCRIPT,
+} from '#tests/data/generation/ci.ts';
 
 /** Build the CI pipeline in a new sandbox that lives until the test ends. */
 async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline> {
@@ -64,10 +64,9 @@ test('the GitHub workflow has a check job and a manual job per operating system,
 test('the manual jobs name every manual check in one comma list', async () => {
     await using resources = new AsyncDisposableStack();
     const pipeline = await buildPipeline(resources);
-    const names = pipeline.manualChecks.map(({ check }) => check.id);
-    expect(names.length).toBeGreaterThan(1);
+    expect(pipeline.manualChecks.map(({ check }) => check.id)).toStrictEqual(['docs/lychee-external', 'project/audit']);
     const cli = `npm:@gspothq/cli@${pipeline.version}`;
-    const expected = `mise exec ${quoteArgument(CI_NODE)} ${quoteArgument(cli)} -- gspot check --only ${quoteArgument(names.join(','))}`;
+    const expected = `mise exec ${quoteArgument(CI_NODE)} ${quoteArgument(cli)} -- gspot check --only ${quoteArgument('docs/lychee-external,project/audit')}`;
     const github = parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow;
     expect(github.jobs['manual-linux']!.steps.some((step) => step.run?.includes(expected) === true)).toBe(true);
     expect(github.jobs['check-linux']!.steps.some((step) => step.run?.includes('--only') === true)).toBe(false);
@@ -101,8 +100,7 @@ test('a Swift scope adds the macOS jobs', async () => {
     const pipeline = await buildPipeline(resources);
 
     const workflow = parse(buildGithubWorkflow({ ...pipeline, hasSwift: true }).content) as GithubWorkflow;
-    expect(Object.keys(workflow.jobs)).toContain('check-macos');
-    expect(Object.keys(workflow.jobs)).toContain('manual-macos');
+    expect(Object.keys(workflow.jobs)).toStrictEqual(['check-linux', 'manual-linux', 'check-macos', 'manual-macos']);
 });
 
 test.each([...SETUP_CASES])(
@@ -112,9 +110,9 @@ test.each([...SETUP_CASES])(
         const selectedPipeline = await buildPipeline(resources);
 
         await using sandbox = await testdir({
-            'bin/mise': MISE_PROGRAM,
-            'bin/gspot': GSPOT_PROGRAM,
-            'bin/project setup': SETUP_PROGRAM,
+            'bin/mise': FAKE_MISE_SCRIPT,
+            'bin/gspot': FAKE_GSPOT_SCRIPT,
+            'bin/project setup': SETUP_SCRIPT,
         });
 
         for (const name of ['mise', 'gspot', 'project setup']) await chmod(join(sandbox.path, 'bin', name), 0o755);

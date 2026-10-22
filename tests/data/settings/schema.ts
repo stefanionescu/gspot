@@ -1,5 +1,5 @@
 /** Each folder setting refuses these unsafe paths. */
-export const UNSAFE_FOLDERS = [
+export const UNSAFE_SCOPE_PATHS = [
     '../outside',
     '/outside',
     'C:outside',
@@ -17,83 +17,6 @@ export const UNTIL_DATE_CASES = [
     { name: 'local datetime', literal: '2026-12-31T00:00:00', valid: false },
     { name: 'offset datetime', literal: '2026-12-31T00:00:00Z', valid: false },
     { name: 'local time', literal: '00:00:00', valid: false },
-] as const;
-
-/** Inputs with refinements that the published schema must keep. */
-export const PUBLISHED_SCHEMA_CASES = [
-    {
-        name: 'GitHub CI with systems',
-        input: { ci: { provider: 'github', operating_systems: ['linux'] } },
-        valid: true,
-    },
-    { name: 'GitLab CI without systems', input: { ci: { provider: 'gitlab' } }, valid: true },
-    {
-        name: 'GitLab CI with systems',
-        input: { ci: { provider: 'gitlab', operating_systems: ['linux'] } },
-        valid: false,
-    },
-    {
-        name: 'GitLab CI with an empty systems list',
-        input: { ci: { provider: 'gitlab', operating_systems: [] } },
-        valid: false,
-    },
-    {
-        name: 'an empty command',
-        input: { command_check: [{ id: 'project/lint', command: [], paths: ['src/**'], stage: 'commit' }] },
-        valid: false,
-    },
-    {
-        name: 'an empty program',
-        input: { command_check: [{ id: 'project/lint', command: [''], paths: ['src/**'], stage: 'commit' }] },
-        valid: false,
-    },
-    {
-        name: 'an empty argument',
-        input: { command_check: [{ id: 'project/lint', command: ['lint', ''], paths: ['src/**'], stage: 'commit' }] },
-        valid: true,
-    },
-    {
-        name: 'a formatter override without a setting',
-        input: { format: { override: [{ paths: ['src/**'] }] } },
-        valid: false,
-    },
-    {
-        name: 'an allowed package with a version range',
-        input: {
-            licenses: {
-                allowed_package: [{ name: 'example', version: '^1.2.3', reason: 'Reviewed its MIT license.' }],
-            },
-        },
-        valid: true,
-    },
-    {
-        name: 'an allowed package with a tag for a version',
-        input: {
-            licenses: {
-                allowed_package: [{ name: 'example', version: 'latest', reason: 'Reviewed its MIT license.' }],
-            },
-        },
-        valid: false,
-    },
-    {
-        name: 'a SQLFluff dialect that injects a directive',
-        input: { tools: { sqlfluff: { dialect: 'sqlite\nexclude_rules = ALL' } } },
-        valid: false,
-    },
-    {
-        name: 'reasoned registry hosts',
-        input: {
-            dependencies: {
-                allowed_registries: { value: ['registry.example.test'], reason: 'Reviewed the package registry.' },
-            },
-        },
-        valid: true,
-    },
-    {
-        name: 'invalid registry host',
-        input: { dependencies: { allowed_registries: { value: [false], reason: 'Reviewed the package registry.' } } },
-        valid: false,
-    },
 ] as const;
 
 export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
@@ -134,3 +57,114 @@ export const REMOVED_EXTRA_TOOLS = [
     'taplo',
     'typos',
 ] as const;
+export const REFUSED_RULE_OPTIONS = [
+    {
+        tool: 'commitlint',
+        configuration: 'commits',
+        toml: '[tools.commitlint.rules]\nheader-max-length = 0\n',
+        message:
+            'gspot.toml: tools.commitlint.rules.header-max-length: This table holds options only, without a severity; the level decides which rules run. To turn header-max-length off, run gspot ignore commits/commitlint --rule header-max-length --reason "<why>".',
+    },
+    {
+        tool: 'eslint',
+        configuration: 'javascript',
+        toml: '[tools.eslint.rules]\neqeqeq = "error"\n',
+        message:
+            'gspot.toml: tools.eslint.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
+    },
+    {
+        tool: 'markdownlint',
+        configuration: 'markdown',
+        toml: '[tools.markdownlint.rules]\nMD041 = true\n',
+        message:
+            'gspot.toml: tools.markdownlint.rules.MD041: This table holds options only, without a severity; the level decides which rules run. To turn MD041 off, run gspot ignore markdown/markdownlint --rule MD041 --reason "<why>".',
+    },
+    {
+        tool: 'markdownlint',
+        configuration: 'markdown',
+        toml: '[tools.markdownlint.rules]\ndefault = {}\n',
+        message:
+            'gspot.toml: tools.markdownlint.rules.default: This table holds options only, without a severity; the level decides which rules run. To turn default off, run gspot ignore markdown/markdownlint --rule default --reason "<why>".',
+    },
+    {
+        tool: 'stylelint',
+        configuration: 'css',
+        toml: '[tools.stylelint.rules]\ncolor-hex-length = ["short", { severity = "warning" }]\n',
+        message:
+            'gspot.toml: tools.stylelint.rules.color-hex-length: This table holds options only, without a severity; the level decides which rules run. To turn color-hex-length off, run gspot ignore css/stylelint --rule color-hex-length --reason "<why>".',
+    },
+    {
+        tool: 'yamllint',
+        configuration: 'files',
+        toml: '[tools.yamllint.rules]\ntruthy = true\n',
+        message:
+            'gspot.toml: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
+    },
+    {
+        tool: 'yamllint',
+        configuration: 'files',
+        toml: '[tools.yamllint.rules]\ntruthy = { ignore = "**" }\n',
+        message:
+            'gspot.toml: tools.yamllint.rules.truthy: This table holds options only, without a severity; the level decides which rules run. To turn truthy off, run gspot ignore data-files/yamllint --rule truthy --reason "<why>".',
+    },
+    {
+        tool: 'eslint',
+        configuration: 'javascript',
+        toml: '[tools.eslint.rules]\neqeqeq = "off"\n',
+        message:
+            'gspot.toml: tools.eslint.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
+    },
+    {
+        tool: 'eslint',
+        configuration: 'javascript',
+        toml: '[tools.eslint.rules]\neqeqeq = "warn"\n',
+        message:
+            'gspot.toml: tools.eslint.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
+    },
+    {
+        tool: 'eslint',
+        configuration: 'javascript',
+        toml: '[tools.eslint.rules]\neqeqeq = 0\n',
+        message:
+            'gspot.toml: tools.eslint.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
+    },
+    {
+        tool: 'eslint',
+        configuration: 'javascript',
+        toml: '[tools.eslint.rules]\neqeqeq = false\n',
+        message:
+            'gspot.toml: tools.eslint.rules.eqeqeq: This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".',
+    },
+    {
+        tool: 'stylelint',
+        configuration: 'css',
+        toml: '[tools.stylelint.rules]\ncolor-named = false\n',
+        message:
+            'gspot.toml: tools.stylelint.rules.color-named: This table holds options only, without a severity; the level decides which rules run. To turn color-named off, run gspot ignore css/stylelint --rule color-named --reason "<why>".',
+    },
+] as const;
+
+/** Import rules with can_import lists. */
+export const CAN_IMPORT_RULES = `[[import_rule]]
+name = "storage"
+paths = ["storage/**"]
+
+[[import_rule]]
+name = "app"
+paths = ["app/**"]
+can_import = ["storage"]
+`;
+
+/** Import rules that may import the rules above them. */
+export const ORDERED_IMPORT_RULES = `[[import_rule]]
+name = "storage"
+paths = ["storage/**"]
+
+[[import_rule]]
+name = "app"
+paths = ["app/**"]
+
+[[import_rule]]
+name = "entry"
+paths = ["entry/**"]
+`;

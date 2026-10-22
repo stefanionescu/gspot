@@ -43,7 +43,7 @@ test('tree entries keep full object IDs, modes and unquoted paths', () => {
     expect(parseTreeEntries(Buffer.alloc(0))).toStrictEqual([]);
 });
 
-test.each([...INVALID_ENTRIES])(`a Git entry listing is refused: $name`, (entry) => {
+test.each([...INVALID_ENTRIES])('a Git $listing listing is refused: $name', (entry) => {
     const { name, output } = entry;
     const message = 'message' in entry ? entry.message : ENTRY_FAILURE;
     const bytes =

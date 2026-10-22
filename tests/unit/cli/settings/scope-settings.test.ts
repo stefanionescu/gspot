@@ -12,16 +12,20 @@ import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
-import { buildSandboxSettings, buildRootScopeSettings } from '#tests/setup/settings.ts';
-import { SITE_BUILD_COMMANDS, SITE_PACKAGE_MANAGER_CASES } from '#tests/data/checks/site/build.ts';
+import { buildSandboxSettings, buildRootScopeSettings } from '#tests/setup/cli/settings.ts';
 import { getLimit, getTable, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 
 import {
     PROJECT_CHOICES,
+    SCOPE_LIMIT_VALUES,
+    SITE_BUILD_COMMANDS,
     PROJECT_SCOPE_CASES,
     IGNORE_EXPIRY_ENTRIES,
     NESTED_SCOPE_SETTINGS,
-} from '#tests/data/settings/scopes.ts';
+    OPENAPI_SCOPE_SETTINGS,
+    POSTGRES_SCOPE_SETTINGS,
+    SITE_PACKAGE_MANAGER_CASES,
+} from '#tests/data/settings/scope-settings.ts';
 
 async function readNestedScopes(): Promise<Scope[]> {
     await using sandbox = await testdir({
@@ -43,7 +47,7 @@ test.each(
         ),
     ),
 )(
-    'the site build command defaults to your package manager in "$scope" and keeps your own',
+    'the site build command defaults to $installer in "$scope" and keeps the written $commandArguments',
     async ({ files, installer, scope, commandArguments }) => {
         await using sandbox = await testdir();
         const settings =
@@ -95,12 +99,7 @@ test('the deepest scope sets a limit and a scalar setting, and a scope list adds
             getTable(settings, 'tools.swiftlint').always_keep_imports,
         ],
     ]);
-    expect(Object.fromEntries(values)).toStrictEqual({
-        '': [100, '5.0', ['Foundation']],
-        api: [80, '6.0', ['Foundation', 'UIKit']],
-        'api/v1': [60, '5.0', ['Foundation', 'UIKit', 'SwiftUI']],
-        web: [100, '5.0', ['Foundation']],
-    });
+    expect(Object.fromEntries(values)).toStrictEqual(SCOPE_LIMIT_VALUES);
 });
 
 test('a per-scope limit overrides a root language limit in the scope view', async () => {
@@ -172,12 +171,7 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
 
 test('OpenAPI stays off without a document and in a scope that removes it', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['openapi'], {
-            level: 'recommended',
-            rules: true,
-            scopes: [{ path: 'api' }],
-            tables: 'removed_configurations = { value = ["openapi"], reason = "This scope does not publish an OpenAPI document." }\n',
-        }),
+        'gspot.toml': buildSandboxSettings(['openapi'], OPENAPI_SCOPE_SETTINGS),
         'api/swagger.yaml': 'openapi: 3.1.0\n',
     });
 
@@ -191,12 +185,7 @@ test('OpenAPI stays off without a document and in a scope that removes it', asyn
 
 test('Postgres client schemas come from Supabase or from gspot.toml', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['postgres'], {
-            level: 'recommended',
-            rules: true,
-            scopes: [{ path: 'api', configurations: ['supabase'] }, { path: 'authored' }],
-            tables: 'postgres.client_schemas = ["client"]\n',
-        }),
+        'gspot.toml': buildSandboxSettings(['postgres'], POSTGRES_SCOPE_SETTINGS),
         'migration.sql': 'CREATE TABLE public.entries (id int);\n',
         'api/migration.sql': 'CREATE TABLE public.entries (id int);\n',
         'authored/migration.sql': 'CREATE TABLE client.entries (id int);\n',
@@ -212,7 +201,7 @@ test('Postgres client schemas come from Supabase or from gspot.toml', async () =
     ]);
 });
 
-test.each(PROJECT_SCOPE_CASES)('scope %s selects configuration %s: %s', (scope, name, selected) => {
+test.each(PROJECT_SCOPE_CASES)('scope $scope selects $name: $selected', (scope, name, selected) => {
     const names = selectForScope(
         {
             configurations: [...PROJECT_CHOICES.configurations],
@@ -232,4 +221,12 @@ test.each(PROJECT_SCOPE_CASES)('scope %s selects configuration %s: %s', (scope, 
     ).map((configuration) => configuration.name);
     expect(names.includes(name)).toBe(selected);
     expect(names).toContain('gspot');
+});
+test('a rule option named reason is passed on and is not a gspot reason', () => {
+    const settings = parseSettings(
+        'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = ["^[a-z]+$", { reason = false }]\n',
+        undefined,
+    );
+    const rules: unknown = getTable(buildRootScopeSettings(settings), 'tools.stylelint').rules;
+    expect(rules).toStrictEqual({ 'selector-class-pattern': ['^[a-z]+$', { reason: false }] });
 });

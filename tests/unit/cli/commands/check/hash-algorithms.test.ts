@@ -3,10 +3,10 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
-import { readGitOutput } from '#tests/setup/git.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/settings.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 // The files a check reports and the status it ends with, for a staged run and for a push of the same change.
 async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
@@ -20,19 +20,19 @@ async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
         'src/kept.ts': 'export {};\n',
     });
 
-    readGitOutput(sandbox.path, ['init', '-q', `--object-format=${format}`]);
-    readGitOutput(sandbox.path, ['add', '-A']);
-    readGitOutput(sandbox.path, ['commit', '-qm', 'base']);
-    const base = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    runGitStep(sandbox.path, ['init', '-q', `--object-format=${format}`]);
+    runGitStep(sandbox.path, ['add', '-A']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'base']);
+    const base = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
     await writeFile(join(sandbox.path, 'src/changed.ts'), 'export const changed = 1;\n');
-    readGitOutput(sandbox.path, ['add', 'src/changed.ts']);
+    runGitStep(sandbox.path, ['add', 'src/changed.ts']);
     const staged = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']),
     );
     const stagedReport = staged.report;
-    readGitOutput(sandbox.path, ['commit', '-qm', 'change']);
-    const head = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
-    readGitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
+    runGitStep(sandbox.path, ['commit', '-qm', 'change']);
+    const head = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
     const pushed = await runGspot(
         sandbox.path,
         ['check', '--hook', 'pre-push', '--only', 'sandbox/report', '--json', '--', 'origin'],

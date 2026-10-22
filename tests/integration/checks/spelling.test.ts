@@ -1,35 +1,25 @@
 import { test, expect } from 'bun:test';
-import { isWindows } from '#tests/setup/system.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { buildSandboxChanges } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { applySandboxChanges, buildSandboxChanges, changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     TYPO,
+    SPELLING_SANDBOX,
     SPELLING_IGNORE_CASES,
+    SPELLING_LOCALE_SETTINGS,
     SPELLING_CHECK_ARGUMENTS,
-    CHECKS_SPELLING_INSTALLED_SANDBOX,
 } from '#tests/data/checks/spelling.ts';
 
-const installedSandbox = registerSharedSandbox(CHECKS_SPELLING_INSTALLED_SANDBOX);
+const installedSandbox = shareInstalledSandbox(SPELLING_SANDBOX);
 
 test('typos uses the spelling locale of each scope at level all', async () => {
     const sourceFiles = {
-        'gspot.toml': buildSandboxSettings(['spelling'], {
-            level: 'all',
-            tables: `[spelling]
-locale = "en-us"
-[[scope]]
-path = "british"
-[scope.spelling]
-locale = "en-gb"
-[[scope]]
-path = "british/child"
-`,
-        }),
+        'gspot.toml': buildSandboxSettings(['spelling'], SPELLING_LOCALE_SETTINGS),
         'sample.txt': `${TYPO.color} ${TYPO.the}\n`,
         'british/sample.txt': `${TYPO.color} ${TYPO.the}\n`,
         'british/child/sample.txt': `${TYPO.color} ${TYPO.the}\n`,
@@ -104,7 +94,7 @@ async function runTyposCheck(sourceFiles: Record<string, string>) {
     const sandbox = installedSandbox();
     await using _sourceChange = await applySandboxChanges(
         sandbox,
-        buildSandboxChanges(CHECKS_SPELLING_INSTALLED_SANDBOX.files, sourceFiles),
+        buildSandboxChanges(SPELLING_SANDBOX.files, sourceFiles),
     );
     const checked = parseCheckReport(await spawnGspot(sandbox.root, SPELLING_CHECK_ARGUMENTS, sandbox.environment));
     return {
@@ -115,3 +105,19 @@ async function runTyposCheck(sourceFiles: Record<string, string>) {
             .toSorted((left, right) => left.localeCompare(right)),
     };
 }
+// typos needs an explicit option to keep exclusions for paths from the command line.
+test('typos keeps its excluded paths for a file named on the command line', async () => {
+    const { root, environment } = installedSandbox();
+    await using _change = await changeAppliedSandbox(installedSandbox(), {
+        check: 'spelling/typos',
+        files: { 'assets/mark.svg': `<svg><title>${TYPO.the}</title></svg>\n` },
+    });
+
+    const excluded = parseCheckReport(
+        await spawnGspot(root, ['check', '--only', 'spelling/typos', '--json', '--', 'assets/mark.svg'], environment),
+    );
+
+    expect(excluded.code, excluded.stdout + excluded.stderr).toBe(0);
+
+    expect(excluded.report.checks).toMatchObject([{ check: 'spelling/typos', status: 'passed', fileCount: 1 }]);
+});

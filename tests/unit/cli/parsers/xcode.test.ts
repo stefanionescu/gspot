@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { parseProjectSources } from '#cli/parsers/xcode.ts';
-import { GROUPED_PBXPROJ, PROJECT_SYNTAX_CASES, XCODE_PROJECT_REFUSALS } from '#tests/data/checks/xcode.ts';
+import { GROUPED_PBXPROJ } from '#tests/data/checks/xcode.ts';
+import { PROJECT_SYNTAX_CASES, XCODE_PROJECT_REFUSALS } from '#tests/data/parsers/xcode.ts';
 
 test('the project folder offset and source roots apply separately', () => {
     const source = GROUPED_PBXPROJ.replace('mainGroup = MAIN;', 'mainGroup = MAIN; projectDirPath = ../Code;');

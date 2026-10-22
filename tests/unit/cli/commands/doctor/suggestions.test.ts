@@ -1,19 +1,24 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
+import { STYLELINT_FILES } from '#tests/data/checks/css.ts';
 import { type DryRunJson } from '#cli/types/commands/apply.ts';
-import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
 import { COMMITLINT_PACKAGE } from '#tests/data/checks/commits.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
-import { STYLELINT_FILES, STYLELINT_SUGGESTIONS } from '#tests/data/checks/css.ts';
-import { REMOVED_CONFIGURATION_SUGGESTIONS } from '#tests/data/commands/doctor.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-test('a folder without Git keeps authored commit settings and reports its actual prerequisite', async () => {
+import {
+    REMOVE_SUGGESTIONS,
+    STYLELINT_SUGGESTIONS,
+    REMOVED_CONFIGURATION_SUGGESTIONS,
+} from '#tests/data/commands/doctor/suggestions.ts';
+
+test('doctor tells a folder without Git to run git init for a commitlint field, and apply leaves the field', async () => {
     await using sandbox = await testdir({
         'package.json': COMMITLINT_PACKAGE,
         'gspot.toml': buildSandboxSettings([], { level: 'all' }),
@@ -81,7 +86,7 @@ test('doctor suggests moving authored Stylelint fields while excluding managed f
             .map(({ path, command }) => ({ path, command })),
     ).toStrictEqual([...STYLELINT_SUGGESTIONS]);
 });
-test('doctor reports Python and submodules and does not treat tool projects as source', async () => {
+test('doctor leaves the tool projects in .gspot out of detection, detects python from your pyproject.toml, and lists a submodule', async () => {
     await using sandbox = await testdir();
     const python = `[project]
 name = "example"
@@ -110,12 +115,12 @@ dependencies = ["pytest==8.4.2"]
         },
     });
     expect(await readFile(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);
-    readGitOutput(sandbox.path, ['init']);
-    readGitOutput(sandbox.path, ['add', '.']);
-    readGitOutput(sandbox.path, ['commit', '-qm', 'Source']);
-    const commit = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    runGitStep(sandbox.path, ['init']);
+    runGitStep(sandbox.path, ['add', '.']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'Source']);
+    const commit = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
     const path = 'vendor/external project';
-    readGitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commit},${path}`]);
+    runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commit},${path}`]);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(JSON.parse(result.stdout)).toMatchObject({ submodules: [path] });
 });
@@ -162,18 +167,7 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
     const before = await readTree(sandbox.path);
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
     const missingText = await runGspot(sandbox.path, ['doctor']);
-    expect((JSON.parse(missing.stdout) as DoctorReport).suggestions.undetected).toStrictEqual([
-        {
-            configuration: 'bash',
-            evidence: 'no detection evidence in root',
-            command: 'gspot remove bash (if you no longer need it)',
-        },
-        {
-            configuration: 'python',
-            evidence: 'no detection evidence in api app',
-            command: "gspot remove python --scope 'api app' (if you no longer need it)",
-        },
-    ]);
+    expect((JSON.parse(missing.stdout) as DoctorReport).suggestions.undetected).toStrictEqual([...REMOVE_SUGGESTIONS]);
     expect(missingText.stdout).toContain('selected, but no matching files found');
     expect(missingText.stdout).toContain("gspot remove python --scope 'api app'");
     expect(await readTree(sandbox.path)).toStrictEqual(before);

@@ -22,35 +22,6 @@ export class CounterService { count = 1; }
     },
 ] as const;
 
-export const APP_JEST = `[[scope]]
-path = "app"
-configurations = [ "jest" ]
-`;
-
-// Authored import restrictions and the store convention both use the same ESLint rule.
-export const ZUSTAND_FILES = {
-    'package.json': '{"name":"restricted-imports","private":true,"type":"module","dependencies":{"zustand":"5.0.8"}}',
-    'src/widget.js': `import { create } from "zustand";
-import { readFile } from "node:fs";
-export const widget = create(() => ({ readFile }));
-`,
-    'src/store.js': `import { create } from "zustand";
-import { readFile } from "node:fs";
-export const store = create(() => ({ readFile }));
-`,
-} as const;
-
-export const RESTRICTION_TABLES = `[tools.eslint]
-restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
-[zustand]
-store_files = ["**/store.js"]
-`;
-
-export const VITEST_FILES = {
-    'package.json': '{"private":true,"type":"module"}\n',
-    'tests/unit/example.test.js': '',
-} as const;
-
 /** Matching nested TypeScript scopes and one scope with distinct test selectors. */
 export const MATCHING_SCOPE_FILES = {
     'package.json': '{"private":true,"type":"module"}',

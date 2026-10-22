@@ -4,10 +4,10 @@ import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { buildReportingCheck } from '#tests/setup/settings.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {
     const gspotToml = stringify({
@@ -25,10 +25,10 @@ test('--changed compares with the merge base, names its base, and a folder argum
         'api/source.txt': 'before',
         'web/source.txt': 'before',
     });
-    readGitOutput(sandbox.path, ['init', '-b', 'main']);
+    runGitStep(sandbox.path, ['init', '-b', 'main']);
     commitAll(sandbox.path);
-    readGitOutput(sandbox.path, ['branch', 'base']);
-    readGitOutput(sandbox.path, ['branch', '--set-upstream-to=base']);
+    runGitStep(sandbox.path, ['branch', 'base']);
+    runGitStep(sandbox.path, ['branch', '--set-upstream-to=base']);
     await writeFile(join(sandbox.path, 'api/source.txt'), 'committed change');
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'web/source.txt'), 'working change');
@@ -56,29 +56,31 @@ test('--changed compares with the merge base, names its base, and a folder argum
 test('--changed without an upstream names the fix, and uses the remote default branch', async () => {
     await using sandbox = await testdir();
     await prepareChangedRepository(sandbox.path, { '.gitignore': '.gspot/\n', 'api/source.txt': 'before' });
-    readGitOutput(sandbox.path, ['init', '-b', 'topic']);
+    runGitStep(sandbox.path, ['init', '-b', 'topic']);
     commitAll(sandbox.path);
     const absent = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json']);
     expect(absent.code).toBe(2);
-    expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toContain('use --changed <ref>');
-    readGitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
-    readGitOutput(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
+    expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toBe(
+        'No upstream or default branch is available; use --changed <ref>.',
+    );
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
     await writeFile(join(sandbox.path, 'api/source.txt'), 'changed');
     const defaultRange = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed']);
     expect(defaultRange.code, defaultRange.stdout + defaultRange.stderr).toBe(1);
-    expect(defaultRange.stdout).toContain('refs/remotes/origin/main');
+    expect(defaultRange.stdout.split('\n', 1)[0]).toBe('Checked the files changed since refs/remotes/origin/main.');
 });
 
 test('a shallow clone explains how to fetch the missing history', async () => {
     await using sandbox = await testdir();
     const source = join(sandbox.path, 'source');
     await prepareChangedRepository(source, { 'api/source.txt': 'before' });
-    readGitOutput(source, ['init', '-b', 'main']);
+    runGitStep(source, ['init', '-b', 'main']);
     commitAll(source);
-    const base = readGitOutput(source, ['rev-parse', 'HEAD']);
+    const base = runGitStep(source, ['rev-parse', 'HEAD']);
     await writeFile(join(source, 'api/source.txt'), 'after');
     commitAll(source);
-    readGitOutput(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']);
+    runGitStep(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']);
     const result = await runGspot(join(sandbox.path, 'checkout'), [
         'check',
         '--only',
@@ -88,5 +90,7 @@ test('a shallow clone explains how to fetch the missing history', async () => {
         '--json',
     ]);
     expect(result.code).toBe(2);
-    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toContain('git fetch --unshallow');
+    expect((JSON.parse(result.stdout) as CommandFailureJson).message).toBe(
+        `Git merge-base failed for ${base}: fatal: Not a valid commit name ${base}. History is cut; run git fetch --unshallow.`,
+    );
 });

@@ -3,10 +3,14 @@ import type { Finding } from '#cli/types/runs/check.ts';
 
 /** An ESLint finding with its path from the repository root. */
 export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; line: Linter.LintMessage['line'] };
+
 /** A link failure that one scope must report. */
 export type LinkFailure = { scope: string; file: string; rule: string };
 
+/** The exit code, the output, and the findings of one TypeScript project check. */
 export type TypecheckResult = { code: number; output: string; findings: Finding[] };
+
+/** A Ruff or SwiftLint finding of a function that takes too many parameters. */
 export type ParameterFinding = {
     code?: string;
     rule_id?: string;

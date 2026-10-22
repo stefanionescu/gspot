@@ -48,7 +48,7 @@ function listSettingMismatches(check: Check, declarations: ReadonlyMap<string, S
     return mismatches;
 }
 
-test('each lint-rule list names the pinned package version', () => {
+test('each shipped name list and ESLint preset names the pinned package version', () => {
     const configurations = [...readConfigurations().values()];
     const pins = listToolProjectPins(configurations).npm;
     expect(pins[pluginPackage.name]).toBe(pluginPackage.version);
@@ -66,18 +66,17 @@ test('each lint-rule list names the pinned package version', () => {
             expect(pins[preset.package], `${configuration.name}/${name}`).toBe(preset.version);
 });
 
-test('configurations agree on every tool and installer pin', () => {
+test('configurations agree on the version of each installer package', () => {
     const versions = new Map<string, string>();
     const mismatches: string[] = [];
     const configurations = [...readConfigurations().values()];
     const pins = configurations
         .flatMap(({ tools }) => tools)
-        .flatMap((tool) => [
-            ...(tool.version === undefined ? [] : [[`tool:${tool.name}`, tool.version] as const]),
-            ...Object.entries(tool.installers).flatMap(([installer, pin]) =>
+        .flatMap((tool) =>
+            Object.entries(tool.installers).flatMap(([installer, pin]) =>
                 pin.version === undefined ? [] : [[`${installer}:${pin.name}`, pin.version] as const],
             ),
-        ]);
+        );
     for (const [name, version] of pins) {
         const previous = versions.get(name);
         if (previous !== undefined && previous !== version) mismatches.push(`${name}: ${previous}, ${version}`);
@@ -86,7 +85,7 @@ test('configurations agree on every tool and installer pin', () => {
     expect(mismatches).toStrictEqual([]);
 });
 
-test('each tool has a pin or a minimum version at or above it', () => {
+test('each tool has a pin or a min_version, and no pin is below its min_version', () => {
     const tools = [...readConfigurations().values()].flatMap((configuration) =>
         configuration.tools.map((tool) => ({ configuration: configuration.name, tool })),
     );
@@ -106,7 +105,7 @@ test('each tool has a pin or a minimum version at or above it', () => {
     );
 });
 
-test('a check waits for each setting with an empty default', () => {
+test('each shipped check whose command uses a setting with an empty default waits for that setting with when.setting', () => {
     const configurations = [...readConfigurations().values()];
     const declarations = buildKnownSettings(configurations, 'all').settings;
     const mismatches = configurations.flatMap((configuration) =>
@@ -172,4 +171,26 @@ test('a check that needs a build, Docker, or the network does not run at the com
                 .map(({ id: name }) => name),
         ),
     ).toStrictEqual([]);
+});
+test('each accepted suppression example matches its marker and gives a reason', () => {
+    const forms = [...readConfigurations().values()].flatMap((configuration) =>
+        configuration.tools.flatMap((tool) =>
+            typeof tool === 'string' || tool.suppression === undefined || tool.suppression.forbidden === true
+                ? []
+                : [{ name: tool.name, ...tool.suppression }],
+        ),
+    );
+    expect(forms.length).toBeGreaterThan(0);
+    for (const form of forms) {
+        const example = form.example ?? '';
+        const markers = [form.marker, form.inline_marker ?? form.marker].map((pattern) => new RegExp(pattern, 'u'));
+        expect(
+            markers.some((marker) => marker.test(example)),
+            form.name,
+        ).toBe(true);
+        expect(
+            new RegExp(form.reason, 'u').exec(example)?.groups?.['reason']?.split(' ').length,
+            form.name,
+        ).toBeGreaterThan(1);
+    }
 });

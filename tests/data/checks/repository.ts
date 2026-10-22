@@ -1,5 +1,5 @@
 /** Paths that the tracked-file list allows, refuses, or takes only from the Git index. */
-export const TRACKED_PATTERNS = {
+export const LOCAL_FILE_PATHS = {
     indexOnly: ['.env.'],
     refused: [
         '.env',
@@ -48,9 +48,7 @@ path = "sibling"
 `,
 } as const;
 
-export const LICENSE_LIKE_SOURCES = ['license-lockfiles.test.ts', 'license.ts', 'licenses.json', 'notice.py'] as const;
-
-export const LARGE_FILE_SETTINGS = `[[scope]]
+export const LARGE_FILE_TABLES = `[[scope]]
 path = "app"
 
 [repository]

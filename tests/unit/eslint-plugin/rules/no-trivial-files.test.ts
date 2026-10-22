@@ -1,5 +1,5 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { createRuleTester } from '#tests/setup/rule-tester.ts';
+import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import type { TrivialFilesOptions } from '#eslint-plugin/types/rules.ts';
 
 createRuleTester().run<
@@ -49,6 +49,12 @@ createRuleTester().run<
         },
     ],
     invalid: [
+        // allowIndex keeps only a file named index.
+        {
+            code: 'export * from "./owner";',
+            filename: '/repo/src/owner-list.ts',
+            options: [{ allowIndex: true }] as [{ allowIndex: boolean }],
+        },
         'import { z } from "zod"; export const alias = z;',
         'import { run } from "./owner"; export const alias = run;',
         'export const name = owner.name;',

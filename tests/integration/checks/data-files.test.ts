@@ -1,20 +1,22 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGit } from '#tests/setup/git.ts';
+import { runGit } from '#tests/setup/system/git.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     FILES_CASES,
     FILES_SANDBOX,
     YAML_SCOPE_FILES,
     YAML_SCOPE_SAMPLE,
-    YAML_SCOPE_SETTINGS,
-} from '#tests/data/checks/data-files.ts';
+    YAML_SCOPE_TABLES,
+    UNQUOTED_UNTIL_CHANGE,
+} from '#tests/data/integration/checks/data-files.ts';
 
 // Checks the root and child scopes separately with yamllint.
 async function assertYamlFiles(root: string, rule?: string): Promise<void> {
@@ -31,7 +33,7 @@ async function assertYamlFiles(root: string, rule?: string): Promise<void> {
     ]);
 }
 
-const installedSandbox = registerSharedSandbox(FILES_SANDBOX);
+const installedSandbox = shareInstalledSandbox(FILES_SANDBOX);
 
 test.each([...FILES_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
     const result = await runCheckSample(installedSandbox(), entry, FILES_SANDBOX);
@@ -77,7 +79,7 @@ url = "${server.url.toString()}schema.json"
             findings: [
                 matchFields({
                     file: 'settings/café.json',
-                    message: expect.stringContaining('must be integer') as string,
+                    message: '/count must be integer',
                 }),
             ],
         },
@@ -133,7 +135,7 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
         check: 'data-files/yamllint',
         removed: Object.keys(FILES_SANDBOX.files),
         files: {
-            'gspot.toml': buildSandboxSettings([], { tables: YAML_SCOPE_SETTINGS }),
+            'gspot.toml': buildSandboxSettings([], { tables: YAML_SCOPE_TABLES }),
             ...YAML_SCOPE_FILES,
         },
     });
@@ -151,12 +153,7 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
 
 test('v8r accepts a gspot.toml with an unquoted until date', async () => {
     const { root, environment } = installedSandbox();
-    await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'data-files/v8r',
-        files: {},
-        settings:
-            '\n[[ignore]]\ncheck = "data-files/yamllint"\nreason = "The sample holds no YAML."\nuntil = 2099-01-01\n',
-    });
+    await using _change = await applySandboxChanges(installedSandbox(), UNQUOTED_UNTIL_CHANGE);
     const checked = parseCheckReport(
         await spawnGspot(root, ['check', 'gspot.toml', '--only', 'data-files/v8r', '--json'], environment),
     );

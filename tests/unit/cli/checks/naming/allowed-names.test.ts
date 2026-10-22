@@ -1,23 +1,16 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { checkFindings } from '#tests/setup/check-input.ts';
-import { UNUSED_NAME_CASES } from '#tests/data/checks/naming/settings.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { UNUSED_NAME_CASES } from '#tests/data/checks/naming/allowed-names.ts';
 
 test.each([...UNUSED_NAME_CASES])(
-    'naming/allowed-names reports allowances unused by identifiers or paths: $name',
-    async ({ files, settings, unusedNames }) => {
-        await using sandbox = await testdir();
-        const text = stringify({ level: 'all', ...settings });
-        await createFileTree(sandbox.path, { ...files, 'gspot.toml': text });
-        const findings = await checkFindings(sandbox.path, 'naming/allowed-names');
-        expect(findings).toHaveLength(unusedNames.length);
-        for (const [index, name] of unusedNames.entries()) {
-            expect(findings[index]).toMatchObject({
-                file: 'gspot.toml',
-                rule: 'unused-record',
-                message: expect.stringContaining(`"${name}"`) as string,
-            });
-        }
+    'naming/allowed-names reports allowed names that no identifier or path uses: $name',
+    async ({ files, settings, messages }) => {
+        await using sandbox = await testdir({ ...files, 'gspot.toml': stringify({ level: 'all', ...settings }) });
+        const findings = await runSandboxCheck(sandbox.path, 'naming/allowed-names');
+        expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual(
+            messages.map((message) => ({ file: 'gspot.toml', rule: 'unused-record', message })),
+        );
     },
 );

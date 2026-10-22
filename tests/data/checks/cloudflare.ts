@@ -8,6 +8,8 @@ export const CLOUDFLARE_REDIRECTS = `/old /new 200
 /old /new 404
 /old /new 410
 /old /new 302!
+/lonely
+old /new 301
 `;
 
 export const CLOUDFLARE_HEADERS = `  Header-before-path: value
@@ -19,6 +21,8 @@ export const CLOUDFLARE_HEADERS = `  Header-before-path: value
 /assets/*
   X-Frame-Options: INVALID
   No colon
+assets/*
+  X-Robots-Tag: noindex
 `;
 
 export const CLOUDFLARE_SCOPE_SETTINGS = [{ path: 'app', configurations: ['cloudflare'] }];

@@ -3,45 +3,49 @@ import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { PACKAGE_STYLE_CASES } from '#tests/data/checks/prose.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { shareProseSandbox, applySandboxChanges } from '#tests/setup/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
+import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { PACKAGE_STYLE_CASES } from '#tests/data/integration/checks/prose/scopes.ts';
 
 const installedSandbox = shareProseSandbox();
 
-test.each([...LEVELS])('prose/vale checks child files once at the root and reads the shared styles', async (level) => {
-    const { root } = installedSandbox();
-    const path = 'child/only.md';
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-        check: '',
-        files: {
-            'gspot.toml': buildSandboxSettings([], {
-                level,
-                scopes: [{ path: 'child', configurations: ['prose', 'docs'] }],
-            }),
-            [path]: `# File map
+test.each([...LEVELS])(
+    'prose/vale at level %s checks child files once at the root and reads the shared styles',
+    async (level) => {
+        const { root } = installedSandbox();
+        const path = 'child/only.md';
+        await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+            check: '',
+            files: {
+                'gspot.toml': buildSandboxSettings([], {
+                    level,
+                    scopes: [{ path: 'child', configurations: ['prose', 'docs'] }],
+                }),
+                [path]: `# File map
 
 Read [here](only.md).
 `,
-        },
-    });
+            },
+        });
 
-    const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const checks = checked.report.checks.filter((check) => check.status !== 'skipped');
-    expect(checks.map((check) => check.scope)).toStrictEqual(['']);
-    const result = checks[0]!;
-    expect(result.status, result.note).toBe('failed');
-    expect(
-        result.findings
-            .filter(({ rule }) => rule === 'gspot.banned-headings')
-            .map(({ file, line }) => ({ file, line })),
-    ).toStrictEqual(level === 'all' ? [{ file: path, line: 1 }] : []);
-    expect(
-        result.findings.filter(({ rule }) => rule === 'gspot.link-text').map(({ file, line }) => ({ file, line })),
-    ).toStrictEqual([{ file: path, line: 3 }]);
-});
+        const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
+        expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+        const checks = checked.report.checks.filter((check) => check.status !== 'skipped');
+        expect(checks.map((check) => check.scope)).toStrictEqual(['']);
+        const result = checks[0]!;
+        expect(result.status, result.note).toBe('failed');
+        expect(
+            result.findings
+                .filter(({ rule }) => rule === 'gspot.banned-headings')
+                .map(({ file, line }) => ({ file, line })),
+        ).toStrictEqual(level === 'all' ? [{ file: path, line: 1 }] : []);
+        expect(
+            result.findings.filter(({ rule }) => rule === 'gspot.link-text').map(({ file, line }) => ({ file, line })),
+        ).toStrictEqual([{ file: path, line: 3 }]);
+    },
+);
 test('a Vale ignore with a lint rule and a path keeps findings in other files', async () => {
     const { root } = installedSandbox();
     const settings = buildSandboxSettings([]);

@@ -2,17 +2,17 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { checkChanges } from '#tests/setup/sample-checks.ts';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { ESLINT_SANDBOX, JAVASCRIPT_MODULE } from '#tests/data/checks/javascript/eslint.ts';
+import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { ESLINT_SANDBOX, JAVASCRIPT_MODULE } from '#tests/data/integration/checks/javascript/eslint.ts';
 
-const installedSandbox = registerSharedSandbox(ESLINT_SANDBOX);
+const installedSandbox = shareInstalledSandbox(ESLINT_SANDBOX);
 
 test('javascript/eslint lints a project that has no TypeScript', async () => {
     const { root, environment } = installedSandbox();
     const result = parseCheckReport(
-        await checkChanges(
+        await runCheckOnChanges(
             root,
             {
                 check: 'javascript/eslint',

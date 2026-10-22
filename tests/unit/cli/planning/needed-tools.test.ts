@@ -6,38 +6,30 @@ import { planChecks } from '#cli/planning/checks.ts';
 import { type Session } from '#cli/types/session.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { listOtherTools, listNeededTools } from '#cli/planning/needed-tools.ts';
-import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/data/runs/plan.ts';
+import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/data/planning/needed-tools.ts';
 
 test.each([...NODE_REQUIREMENTS])(
     'the needed tools include Node only when an npm tool needs it: $name',
-    async ({ configurations, tables, files, node }) => {
+    async ({ configurations, tables, files, needs, skips }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(configurations, { tables }),
             ...files,
         });
 
         const session = await openSession(sandbox.path);
-        const names = session.neededToolConfigurations.flatMap((configuration) =>
-            configuration.tools.map((tool) => tool.name),
+        const names = new Set(
+            session.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
         );
-        expect(names.includes('node')).toBe(node);
-        if (new Set<string>(configurations).has('typescript')) {
-            expect(names).toContain('eslint');
-        } else if (new Set<string>(configurations).has('markdown')) {
-            expect(names).toContain('markdownlint-cli2');
-        } else {
-            expect(names).toContain('ruff');
-            expect(names).not.toContain('eslint');
-            expect(names).not.toContain('typescript');
-        }
+        expect(needs.filter((name) => !names.has(name))).toStrictEqual([]);
+        expect(skips.filter((name) => names.has(name))).toStrictEqual([]);
     },
 );
 
 test.each(ARCHITECTURE_REQUIREMENTS.flatMap((entry) => LEVELS.map((level) => ({ ...entry, level }))))(
-    'eslint-plugin-boundaries is needed for $name at the levels that use it (%j)',
+    'eslint-plugin-boundaries is needed for $name only at the levels that use it: $level',
     async ({ tables, boundary, level }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
@@ -77,7 +69,7 @@ describe.each(COVERAGE_PROVIDERS.flatMap((entry) => [0, 80].map((lines) => ({ ..
             checks = planChecks(session, { stage: 'push', only: [configuration + '/coverage'] });
         });
         afterAll(() => resources.disposeAsync());
-        test.each(['', 'app'])('scope %s needs the provider and lists it as a companion', (scope) => {
+        test.each(['', 'app'])('scope %s needs the coverage provider and lists it among the other tools', (scope) => {
             const check = checks.find((planned) => planned.scope.folder.path === scope)!;
             expect(listNeededTools(check).includes(provider)).toBe(lines !== 0);
             expect(listOtherTools(check.scope, check.check, check.check.command)).toContain(provider);

@@ -4,10 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { generate } from '#cli/generation/generate.ts';
 import { parseSource } from '#cli/parsers/grammars.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { ESLINT_FILE } from '#tests/data/generation/settings.ts';
-import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
-import { SCOPE_CONFIGURATIONS } from '#tests/data/generation/eslint/selectors.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { ESLINT_FILE, ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/data/generation/eslint/escaping.ts';
 
 /** Generate, parse, and lint one scope before returning its JavaScript syntax shape. */
 async function parseScopeShape(scope: string): Promise<string> {
@@ -15,12 +14,12 @@ async function parseScopeShape(scope: string): Promise<string> {
     await using sandbox = await testdir();
     const child = `${scope}/child`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(SCOPE_CONFIGURATIONS, {
+        'gspot.toml': buildSandboxSettings(ESCAPED_SCOPE_CONFIGURATIONS, {
             rules: true,
             tables: stringify({
                 scope: [
-                    { path: scope, configurations: SCOPE_CONFIGURATIONS },
-                    { path: child, configurations: SCOPE_CONFIGURATIONS },
+                    { path: scope, configurations: ESCAPED_SCOPE_CONFIGURATIONS },
+                    { path: child, configurations: ESCAPED_SCOPE_CONFIGURATIONS },
                 ],
             }),
         }),

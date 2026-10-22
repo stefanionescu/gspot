@@ -1,12 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { isOnDisk } from '#tests/setup/files.ts';
-import { readGitOutput } from '#tests/setup/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     STAGED_FORMAT_FILES,
@@ -20,7 +21,7 @@ import {
 } from '#tests/data/checks/format.ts';
 
 /** Check each generated formatter override against the bytes written by Prettier. */
-async function verifyFormatOverrides(root: string): Promise<void> {
+async function assertFormatOverrides(root: string): Promise<void> {
     const commandArguments = ['check', '--only', 'format/prettier', '--json'];
     const files = PRETTIER_OPTIONS_BY_FILE.map(({ file }) => file);
     const before = parseCheckReport(await spawnGspot(root, [...commandArguments, '--', ...files]));
@@ -55,13 +56,13 @@ async function verifyFormatOverrides(root: string): Promise<void> {
     expect(editor.code, editor.stdout + editor.stderr).toBe(0);
 }
 
-const installedSandbox = registerSharedSandbox({
+const installedSandbox = shareInstalledSandbox({
     configurations: ['format'],
     level: 'all',
     files: { 'package.json': '{"private":true}\n' },
 });
 
-test('Prettier uses the format overrides, and an ignore on one path stops its findings until unignore', async () => {
+test('Prettier writes each file with the tab width, quotes, semicolons, and line ending of its format override', async () => {
     const root = installedSandbox().root;
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: '',
@@ -75,7 +76,7 @@ test('Prettier uses the format overrides, and an ignore on one path stops its fi
             ),
         },
     });
-    await verifyFormatOverrides(root);
+    await assertFormatOverrides(root);
 });
 
 test('editorconfig-checker leaves indentation to the formatter and checks line endings, the final newline, and trailing spaces', async () => {
@@ -99,7 +100,9 @@ test('editorconfig-checker leaves indentation to the formatter and checks line e
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         const report = rejected.report;
         expect(report.checks).toMatchObject([{ check: 'format/editorconfig-checker', status: 'failed' }]);
-        expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toContain(file);
+        expect(new Set(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)))).toStrictEqual(
+            new Set([file]),
+        );
         expect(await readFile(join(root, file), 'utf8')).toBe(broken);
         await createFileTree(root, { [file]: corrected });
         const fixed = parseCheckReport(await spawnGspot(root, [...commandArguments, file], environment));
@@ -111,7 +114,7 @@ test('editorconfig-checker leaves indentation to the formatter and checks line e
     }
 });
 
-test('staged Prettier uses the indexed format before a later scoped apply and preserves working files', async () => {
+test('check --staged formats with the staged Prettier tool file after a later apply changes it, and leaves the working files and the index unchanged', async () => {
     const root = installedSandbox().root;
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
         check: '',
@@ -122,8 +125,8 @@ test('staged Prettier uses the indexed format before a later scoped apply and pr
     expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
     const originalConfig = await readFile(join(root, STAGED_FORMAT_PATHS.rootConfig), 'utf8');
     await writeFile(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.staged);
-    readGitOutput(root, ['add', '-A']);
-    const index = readGitOutput(root, ['write-tree']);
+    runGitStep(root, ['add', '-A']);
+    const index = runGitStep(root, ['write-tree']);
     const changed = await spawnGspot(root, [...STAGED_FORMAT_CHANGE_ARGUMENTS]);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     const applied = await spawnGspot(root, ['apply']);
@@ -145,5 +148,5 @@ test('staged Prettier uses the indexed format before a later scoped apply and pr
         { check: 'format/prettier', scope: '', status: 'passed', fileCount: 1, findings: [] },
     ]);
     for (const [path, content] of files) expect(await readFile(join(root, path), 'utf8')).toBe(content);
-    expect(readGitOutput(root, ['write-tree'])).toBe(index);
+    expect(runGitStep(root, ['write-tree'])).toBe(index);
 });

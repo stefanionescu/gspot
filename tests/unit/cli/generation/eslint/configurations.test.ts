@@ -4,8 +4,9 @@ import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { toolFileFor, createEslint } from '#tests/setup/tool-files.ts';
+import { createEslint } from '#tests/setup/eslint/lint.ts';
+import { findToolFilePath } from '#tests/setup/cli/config-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 
 import {
@@ -22,7 +23,9 @@ test("a nested scope whose configuration blocks match its parent's gets no copy,
 
     const eslint = await createEslint(sandbox.path);
     const session = await openSession(sandbox.path);
-    const generated: unknown = await import(pathToFileURL(join(sandbox.path, toolFileFor(session, 'eslint'))).href);
+    const generated: unknown = await import(
+        pathToFileURL(join(sandbox.path, findToolFilePath(session, 'eslint'))).href
+    );
     const { default: blocks } = generated as { default: Linter.Config[] };
     const tests = blocks.filter((block) => block.rules?.['@typescript-eslint/no-non-null-assertion'] === 'off');
     expect(tests).toHaveLength(2);
@@ -38,7 +41,7 @@ test("a nested scope whose configuration blocks match its parent's gets no copy,
     expect(code.rules['@typescript-eslint/no-non-null-assertion']?.[0]).toBe(2);
 });
 
-test.each([...BLOCK_SCOPE_CASES])('$configuration fragment appears once in each selected scope', async (row) => {
+test.each([...BLOCK_SCOPE_CASES])('$configuration rules apply in each scope that selects it', async (row) => {
     await using sandbox = await testdir();
     const secondPath = join('second', row.file.replace('unit/', 'specs/'));
     await createFileTree(sandbox.path, {

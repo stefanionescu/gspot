@@ -29,6 +29,7 @@ export type SampleResult = {
     failed: ProcessOutput & { report: RunReport };
     passed: ProcessOutput & { report: RunReport };
 };
+
 /** The files and settings needed to apply a sample for one check. */
 export type SampleChanges = {
     check: string;
@@ -41,9 +42,6 @@ export type SampleChanges = {
 
 /** The original bytes or link target restored after a test edit. */
 export type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
-
-/** One stored archive entry and its optional Unix file mode. */
-export type ZipEntry = readonly [name: string, data: Buffer, mode?: number];
 
 /** Exit codes and check results of the broken and corrected samples. */
 export type SampleSummary = {

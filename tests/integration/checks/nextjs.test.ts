@@ -1,21 +1,28 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import type { RunReport } from '#cli/types/runs/run.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { pathsSchema } from '#tests/schemas/checks/typescript.ts';
 import nextPackage from 'next/package.json' with { type: 'json' };
 import workspacePackage from '#root-package' with { type: 'json' };
 import reactPackage from 'react/package.json' with { type: 'json' };
 import testsPackage from '#tests/package.json' with { type: 'json' };
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import reactDomPackage from 'react-dom/package.json' with { type: 'json' };
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import type { Sandbox, InstalledSandboxPlan } from '#tests/types/sandbox.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { NEXT_PACKAGE, NEXTJS_SANDBOX, REFERENCE_PROJECT_FILES } from '#tests/data/checks/nextjs.ts';
+
+import {
+    NEXT_PACKAGE,
+    NEXTJS_SANDBOX,
+    REFERENCE_PROJECT_FILES,
+    REFERENCED_PROJECT_FINDING,
+} from '#tests/data/checks/nextjs.ts';
 
 // Runs the named checks alone, expects the exit code, and returns the report.
 async function readCheckReport(repository: Sandbox, checks: string[], code: number): Promise<RunReport> {
@@ -26,7 +33,7 @@ async function readCheckReport(repository: Sandbox, checks: string[], code: numb
     return result.report;
 }
 
-const installedSandbox = registerSharedSandbox(buildNextjsPlan());
+const installedSandbox = shareInstalledSandbox(buildNextjsPlan());
 
 function buildNextjsPlan(): InstalledSandboxPlan {
     const dependencies = Object.fromEntries(
@@ -66,20 +73,13 @@ test('nextjs/tsc generates types and checks a referenced project without writing
         references: [{ path: './compiler-ref' }],
         exclude: [...pathsSchema.parse(parsed['exclude'] ?? []), 'compiler-ref/**'],
     });
-    await using _sourceChange = await updateSandbox(installedSandbox(), {
+    await using _sourceChange = await changeAppliedSandbox(installedSandbox(), {
         check: 'nextjs/tsc',
         files: { ...REFERENCE_PROJECT_FILES, 'tsconfig.json': authored },
     });
     const failed = await readCheckReport(installedSandbox(), ['nextjs/tsc'], 1);
     expect(failed.checks).toMatchObject([{ check: 'nextjs/tsc', status: 'failed' }]);
-    expect(failed.checks[0]!.findings).toContainEqual(
-        matchFields({
-            file: 'compiler-ref/source.ts',
-            rule: 'TS2322',
-            line: 1,
-            column: 14,
-        }),
-    );
+    expect(failed.checks[0]!.findings).toContainEqual(matchFields(REFERENCED_PROJECT_FINDING));
     await writeFile(join(root, 'compiler-ref/source.ts'), 'export const value: number = 1;\n');
     const passed = await readCheckReport(installedSandbox(), ['nextjs/tsc'], 0);
     expect(passed.checks).toMatchObject([{ check: 'nextjs/tsc', status: 'passed', findings: [] }]);

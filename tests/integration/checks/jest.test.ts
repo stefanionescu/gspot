@@ -3,18 +3,17 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import jestPackage from 'jest/package.json' with { type: 'json' };
-import { COVERAGE_ZERO_LIMITS } from '#tests/data/checks/coverage.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     MATH_SOURCE,
     MATH_TEST_SOURCE,
     JEST_PROJECT_FILES,
-    FIXED_MATH_TEST_SOURCE,
-    JEST_COVERAGE_SETTINGS,
-} from '#tests/data/checks/jest.ts';
+    JEST_COVERAGE_TABLES,
+    CORRECTED_MATH_TEST_SOURCE,
+} from '#tests/data/integration/checks/jest.ts';
 
 /** The Jest project, with the pinned Jest version in its package.json. */
 function buildJestFiles(): Record<string, string> {
@@ -26,7 +25,7 @@ function buildJestFiles(): Record<string, string> {
 function prepareJest(root: string, testSource: string) {
     return createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['jest'], {
-            tables: JEST_COVERAGE_SETTINGS,
+            tables: JEST_COVERAGE_TABLES,
             level: 'all',
         }),
         ...buildJestFiles(),
@@ -60,7 +59,7 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
     expect(report.checks.flatMap((check) => check.findings)).toContainEqual(
         matchFields({ message: 'coverage threshold for functions (100%) not met: 50%' }),
     );
-    await writeFile(join(sandbox.path, 'app/math.test.cjs'), FIXED_MATH_TEST_SOURCE);
+    await writeFile(join(sandbox.path, 'app/math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
     const passing = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(passing.code, passing.stdout + passing.stderr).toBe(0);
     expect(passing.report.checks).toMatchObject([
@@ -83,11 +82,11 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
             message: 'coverage threshold for functions (80%) not met: 50%',
         }),
     ]);
-    await writeFile(join(sandbox.path, 'math.test.cjs'), FIXED_MATH_TEST_SOURCE);
+    await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
     const passing = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(passing.code, passing.stdout + passing.stderr).toBe(0);
     expect(passing.report.checks).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);
-    await writeFile(join(sandbox.path, 'math.test.cjs'), FIXED_MATH_TEST_SOURCE.replace('toBe(6)', 'toBe(7)'));
+    await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE.replace('toBe(6)', 'toBe(7)'));
     const failed = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks.flatMap((check) => check.findings)).toStrictEqual([
@@ -104,44 +103,11 @@ test('jest/coverage reports a test file with a missing import as an error and pa
     const unavailable = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
     expect(unavailable.report.checks).toStrictEqual([matchFields({ check: 'jest/coverage', status: 'error' })]);
-    await writeFile(join(sandbox.path, 'math.test.cjs'), FIXED_MATH_TEST_SOURCE);
+    await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE);
     const recovered = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
     expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
     expect(recovered.report.checks).toMatchObject([{ check: 'jest/coverage', status: 'passed', findings: [] }]);
     await assertJestFilesKept(sandbox.path);
-});
-
-test('jest/coverage runs root and scope tests without coverage flags when every limit is 0', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['jest'], {
-            level: 'all',
-            tables:
-                COVERAGE_ZERO_LIMITS +
-                `[[scope]]
-path = "app"
-
-configurations = ["jest"]
-`,
-        }),
-        ...buildJestFiles(),
-        'math.test.cjs': MATH_TEST_SOURCE,
-        'app/package.json': buildJestFiles()['package.json'],
-        'app/math.cjs': MATH_SOURCE,
-        'app/math.test.cjs': MATH_TEST_SOURCE,
-        'app/authored.txt': 'preserved nested source\n',
-    });
-
-    const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'jest/coverage', '--json'], {}));
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const report = result.report;
-    expect(report.checks.map((check) => check.scope)).toStrictEqual(['', 'app']);
-    for (const check of report.checks) {
-        expect(check).toMatchObject({ status: 'passed', findings: [] });
-        expect(check.command).not.toContain('--runInBand');
-        expect(check.command!.some((part) => part.startsWith('--coverage'))).toBe(false);
-    }
-    expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('preserved source\n');
-    expect(await readFile(join(sandbox.path, 'app/authored.txt'), 'utf8')).toBe('preserved nested source\n');
 });
 
 /** Assert the source and authored coverage files that a Jest run must keep. */

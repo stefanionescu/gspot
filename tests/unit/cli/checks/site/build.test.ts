@@ -1,21 +1,19 @@
 import { join } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { createSandbox } from '#tests/setup/sandbox.ts';
-import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { runCheckSample } from '#tests/setup/sample-checks.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { SITE_SANDBOX } from '#tests/data/checks/site/project.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { SITE_SETTINGS } from '#tests/data/checks/site/pages.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { listBuiltFiles, getSuccessfulBuild } from '#cli/checks/site/build.ts';
-import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/check-input.ts';
-import { SITE_SETTINGS, BUILT_PAGE_CASES } from '#tests/data/checks/site/built-pages.ts';
+import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { SITE_BUILD_SCRIPT, BUILD_OUTPUT_CHECKS, WORKSPACE_SITE_FILES } from '#tests/data/checks/site/build.ts';
 
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
@@ -30,7 +28,7 @@ test('build: a push run builds the site without changing committed dist files or
     const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['site/build'] }));
 
     expect(result.report.checks).toMatchObject([{ check: 'site/build', status: 'passed' }]);
-    expect(readGitOutput(sandbox.path, ['status', '--porcelain=v1'])).toBe('');
+    expect(runGitStep(sandbox.path, ['status', '--porcelain=v1'])).toBe('');
     expect(await readFile(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('committed output\n');
 });
 
@@ -58,7 +56,7 @@ ${SITE_BUILD_SCRIPT}`,
     expect(await isOnDisk(join(sandbox.path, 'dist'))).toBe(false);
 });
 
-test.each([0, 7])("build: a run deletes the build's scratch copy after exit %i", async (code) => {
+test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (code) => {
     await using sandbox = await testdir({
         'gspot.toml': SITE_SETTINGS,
         'build.js': SITE_BUILD_SCRIPT,
@@ -172,15 +170,3 @@ test('build: a failed site build skips every check that reads the build, and a n
 
     expect(rebuilt.report.checks).toMatchObject([{ check: 'site/build', status: 'passed', findings: [] }]);
 });
-test.each([...BUILT_PAGE_CASES])(
-    'built-pages: $check reports its source and accepts the corrected output',
-    async (entry) => {
-        await using repository = await createSandbox(SITE_SANDBOX);
-        const { failed, passed } = await runCheckSample(repository, entry, SITE_SANDBOX);
-        expect(passed.report.failed).toStrictEqual([]);
-
-        expect(failed.report.checks).toMatchObject([
-            { check: entry.check, status: 'failed', findings: [entry.expected] },
-        ]);
-    },
-);

@@ -1,5 +1,5 @@
 import plugin from '#eslint-plugin/plugin.ts';
-import { createRuleTester } from '#tests/setup/rule-tester.ts';
+import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 createRuleTester().run('no-renamed-exports', plugin.rules['no-renamed-exports'], {
     valid: [

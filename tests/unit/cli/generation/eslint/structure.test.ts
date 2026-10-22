@@ -4,16 +4,16 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/tool-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import type { LintFinding, SourceRuleCase, EslintConfiguration } from '#tests/types/tool-output.ts';
 
 import {
     BARREL_CASES,
     ENTRY_SOURCE,
+    ENTRY_TABLES,
     IMPORT_CASES,
     IMPORT_FILES,
-    ENTRY_TABLES,
     ENTRY_FOLDERS,
     TRIVIAL_RULES,
     REEXPORT_CASES,
@@ -52,44 +52,41 @@ async function assertSourceRules(
     }
 }
 
-test.each([...LEVELS])(
-    'entry-files > Knip entry files still get the trivial-file rules at %s, in nested scopes',
-    async (level) => {
-        await using sandbox = await testdir({
-            'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
-            'src/start.js': STARTER_SOURCE,
-            'src/main.js': ENTRY_SOURCE,
-            'src/task.js': ENTRY_SOURCE,
-            'api/src/start.js': STARTER_SOURCE,
-            'api/src/main.js': ENTRY_SOURCE,
-            'api/src/task.js': ENTRY_SOURCE,
-        });
+test.each([...LEVELS])('Knip entry files still get the trivial-file rules at %s, in nested scopes', async (level) => {
+    await using sandbox = await testdir({
+        'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
+        'src/start.js': STARTER_SOURCE,
+        'src/main.js': ENTRY_SOURCE,
+        'src/task.js': ENTRY_SOURCE,
+        'api/src/start.js': STARTER_SOURCE,
+        'api/src/main.js': ENTRY_SOURCE,
+        'api/src/task.js': ENTRY_SOURCE,
+    });
 
-        const settings = buildSandboxSettings(['javascript'], { level, tables: ENTRY_TABLES });
-        expect(listTrivialFiles(await listTrivialFindings(sandbox.path, settings))).toStrictEqual(
-            level === 'all' ? [...TRIVIAL_ENTRY_FILES] : [],
-        );
-        await writeFile(
-            join(sandbox.path, 'src/main.js'),
-            "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
-        );
-        // A file with a function does more than forward. The function rule reports the function, even when exported.
-        const mainFindings = level === 'all' ? [{ file: 'src/main.js', rule: 'gspot/no-trivial-functions' }] : [];
-        const findings = await listTrivialFindings(sandbox.path, settings);
-        expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
-        expect(listTrivialFiles(findings)).toStrictEqual(
-            level === 'all' ? TRIVIAL_ENTRY_FILES.filter((file) => file !== 'src/main.js') : [],
-        );
-        await writeFile(
-            join(sandbox.path, 'src/main.js'),
-            "import { start } from './start.js';\nexport function boot() { start(); }\n",
-        );
-        const publicFindings = await listTrivialFindings(sandbox.path, settings);
-        expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
-    },
-);
+    const settings = buildSandboxSettings(['javascript'], { level, tables: ENTRY_TABLES });
+    expect(listTrivialFiles(await listTrivialFindings(sandbox.path, settings))).toStrictEqual(
+        level === 'all' ? [...TRIVIAL_ENTRY_FILES] : [],
+    );
+    await writeFile(
+        join(sandbox.path, 'src/main.js'),
+        "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
+    );
+    // A file with a function does more than forward. The function rule reports the function, even when exported.
+    const mainFindings = level === 'all' ? [{ file: 'src/main.js', rule: 'gspot/no-trivial-functions' }] : [];
+    const findings = await listTrivialFindings(sandbox.path, settings);
+    expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
+    expect(listTrivialFiles(findings)).toStrictEqual(
+        level === 'all' ? TRIVIAL_ENTRY_FILES.filter((file) => file !== 'src/main.js') : [],
+    );
+    await writeFile(
+        join(sandbox.path, 'src/main.js'),
+        "import { start } from './start.js';\nexport function boot() { start(); }\n",
+    );
+    const publicFindings = await listTrivialFindings(sandbox.path, settings);
+    expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
+});
 
-test('structure > level all skips build output and files marked linguist-generated in .gitattributes', async () => {
+test('level all skips build output and files marked linguist-generated in .gitattributes', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
@@ -108,7 +105,7 @@ test('structure > level all skips build output and files marked linguist-generat
     }
 });
 
-test.each([...LEVELS])('structure > size limits apply to test files only at level all (%s)', async (level) => {
+test.each([...LEVELS])('size limits apply to test files only at level all (%s)', async (level) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             tables: '[limits]\nfile_lines = 8\nfunction_lines = 5\nfunction_statements = 3\n',
@@ -133,7 +130,7 @@ test.each([...LEVELS])('structure > size limits apply to test files only at leve
 });
 
 test.each([...LEVELS])(
-    'structure > trivial-file and trivial-function rules apply to root and nested files only at level all (%s)',
+    'trivial-file and trivial-function rules apply to root and nested files only at level all (%s)',
     async (level) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
@@ -161,7 +158,7 @@ test.each([...LEVELS])(
     },
 );
 
-test('structure > a JSON import attribute is accepted where your import extensions need a suffix', async () => {
+test('a JSON import attribute is accepted where your import extensions need a suffix', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
@@ -189,7 +186,7 @@ test('structure > a JSON import attribute is accepted where your import extensio
 });
 
 test.each([...LEVEL_REEXPORT_CASES])(
-    'structure > %s %s: import, re-export and barrel rules in root and child scopes',
+    'at %s with reexports = %s, import, re-export and barrel rules apply in root and child scopes',
     async (level, reexports) => {
         await using sandbox = await testdir({
             ...IMPORT_FILES,

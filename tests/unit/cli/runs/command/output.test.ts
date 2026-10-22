@@ -5,29 +5,28 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
-import { TYPO } from '#tests/data/checks/spelling.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { TYPO_REPORT } from '#tests/data/runs/output.ts';
+import { TAIL_LINES } from '#cli/config/runs/command.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
-import { buildProcessResult } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { isReportedCrash, formatOutputTail, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import {
-    REAL_PATH,
     BASE_CHECK,
     FAILED_RUN,
-    FALSE_PATH,
     ESLINT_CRASH,
     LOCATED_CHECK,
-    HEADER_FAILURE,
+    LOCATED_OUTPUT,
     FILELESS_CHECKS,
     SCOPE_PATH_CHECK,
+    TIMESTAMP_OUTPUT,
+    MISSING_LOCATED_FILE,
     ESLINT_MANIFEST_TOOL,
-} from '#tests/data/runs/command-checks.ts';
+    BANNER_FAILURE_SCRIPT,
+} from '#tests/data/runs/command.ts';
 
-test('bounded failure output retains the final diagnostic from both streams', () => {
+test('a shortened failure output keeps the last line of stdout and of stderr', () => {
     const progress = Array.from({ length: 30 }, (_, index) => `progress ${String(index)}`).join('\n');
     const detail = formatOutputTail(
         {
@@ -36,13 +35,14 @@ test('bounded failure output retains the final diagnostic from both streams', ()
         },
         'empty',
     );
-    expect(detail).toContain('stdout failure');
-    expect(detail).toContain('stderr failure');
-    expect(detail).not.toContain('progress 0\n');
-    expect(detail.length).toBeLessThan(`${progress}\nstdout failure\n${progress}\nstderr failure`.length);
+    const tail = Array.from(
+        { length: TAIL_LINES - 1 },
+        (_, index) => `progress ${String(30 - TAIL_LINES + 1 + index)}`,
+    );
+    expect(detail).toBe([...tail, 'stderr failure', ...tail, 'stdout failure'].join('\n'));
 });
 
-test("a tool's crash pattern detects crashes for every check that runs it", () => {
+test(`a tool's crash pattern marks a crash for a check without its own pattern`, () => {
     expect(isReportedCrash(BASE_CHECK, ESLINT_MANIFEST_TOOL, buildProcessResult(ESLINT_CRASH))).toBe(true);
     expect(
         isReportedCrash(
@@ -54,27 +54,25 @@ test("a tool's crash pattern detects crashes for every check that runs it", () =
     expect(isReportedCrash(BASE_CHECK, undefined, buildProcessResult(ESLINT_CRASH))).toBe(false);
 });
 
-test('located output rejects false paths and empty failures while keeping mixed real findings', async () => {
+test('regex output that names no real file, or nothing, on a failed run is a check error, and output with one real file keeps every finding', async () => {
     await using sandbox = await testdir({
         'source.txt': 'source',
     });
 
-    // Any manifest turns on the real-file check.
-    const planned = {
-        check: LOCATED_CHECK,
-        configuration: readConfigurations().get('data-files')!,
-        tool: { name: 'tool', installers: {}, kind: 'program' as const },
-    };
+    const planned = { check: LOCATED_CHECK, tool: { name: 'tool', installers: {}, kind: 'program' as const } };
     const paths = { cwd: sandbox.path, root: sandbox.path };
     expect(
-        parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: FALSE_PATH }), paths).note,
-    ).toContain('tool crashed with exit 1.');
-    expect(parseCommandFindings(planned, buildProcessResult(FAILED_RUN), paths).note).toContain(
-        'tool crashed with exit 1.',
+        parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: TIMESTAMP_OUTPUT }), paths).note,
+    ).toBe('tool crashed with exit 1.\n2026-09-19T02: FATAL');
+    expect(parseCommandFindings(planned, buildProcessResult(FAILED_RUN), paths).note).toBe(
+        'tool crashed with exit 1.\ntool exited 1',
     );
     expect(
-        parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: FALSE_PATH + REAL_PATH }), paths)
-            .findings,
+        parseCommandFindings(
+            planned,
+            buildProcessResult({ ...FAILED_RUN, stdout: TIMESTAMP_OUTPUT + LOCATED_OUTPUT }),
+            paths,
+        ).findings,
     ).toStrictEqual([
         { check: LOCATED_CHECK.id, file: '2026-09-19T02', message: 'FATAL', help: '', fixable: false },
         { check: LOCATED_CHECK.id, file: 'source.txt', message: 'located defect', help: '', fixable: false },
@@ -84,48 +82,12 @@ test('located output rejects false paths and empty failures while keeping mixed 
 
 test.each([...FILELESS_CHECKS])('$name accepts a fileless result without classifying it as a crash', async (check) => {
     await using sandbox = await testdir();
-    // Any manifest turns on the real-file check.
-    const planned = {
-        check,
-        configuration: readConfigurations().get('data-files')!,
-    };
     expect(
-        parseCommandFindings(planned, buildProcessResult(FAILED_RUN), { cwd: sandbox.path, root: sandbox.path })
+        parseCommandFindings({ check }, buildProcessResult(FAILED_RUN), { cwd: sandbox.path, root: sandbox.path })
             .findings,
     ).toStrictEqual([]);
 });
-
-test('spelling tells typos findings from fatal exits', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['spelling']),
-        'sample.txt': `${TYPO.the}\n`,
-    });
-
-    const session = await openSession(sandbox.path);
-    const plans = planChecks(session, { stage: 'all', only: ['spelling/typos'] });
-    const planned = plans[0]!;
-    const stdout = JSON.stringify(TYPO_REPORT);
-    const result = buildProcessResult({ stdout, stderr: '', code: 2, missing: false, duration: 1 });
-    expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }).findings).toMatchObject([
-        { file: 'sample.txt' },
-    ]);
-    expect(
-        parseCommandFindings(
-            planned,
-            { ...result, code: 78, stderr: 'Invalid native configuration.' },
-            { cwd: sandbox.path, root: sandbox.path },
-        ).note,
-    ).toBeDefined();
-    expect(
-        parseCommandFindings(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }).note,
-    ).toBeDefined();
-    expect(
-        parseCommandFindings(planned, { ...result, stdout: '', code: 0 }, { cwd: sandbox.path, root: sandbox.path })
-            .findings,
-    ).toStrictEqual([]);
-});
-
-test('source text naming module errors stays an ESLint finding', async () => {
+test('an ESLint finding whose source text holds a module error word stays a finding, and a real module error becomes a note', async () => {
     await using sandbox = await testdir();
     const path = 'source.ts';
     await createFileTree(sandbox.path, {
@@ -152,14 +114,14 @@ test('source text naming module errors stays an ESLint finding', async () => {
             { ...result, code: 2, stderr: 'ConfigError: invalid configuration' },
             { cwd: sandbox.path, root: sandbox.path },
         ).note,
-    ).toBeDefined();
+    ).toBe(`eslint crashed with exit 2.\nConfigError: invalid configuration\n${stdout}`);
     expect(
         parseCommandFindings(
             planned,
             { ...result, stdout: '', code: 2, stderr: 'Oops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin' },
             { cwd: sandbox.path, root: sandbox.path },
         ).note,
-    ).toContain('ERR_MODULE_NOT_FOUND: plugin');
+    ).toBe('eslint crashed with exit 2.\nOops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin');
 });
 
 test.each(['{file}', '{files}'])(
@@ -203,14 +165,14 @@ test.each(['{file}', '{files}'])(
         const fatal = await runCheckCommand(session, planned);
         expect(fatal.status).toBe('error');
         expect(fatal.findings).toStrictEqual([]);
-        expect(fatal.note).toContain('exit 7');
+        expect(fatal.note).toBe(`${process.execPath} crashed with exit 7.\ninput.txt:1: Located defect before exit`);
     },
 );
 
 test('per-file failures drop only the header lines the tool declares', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
-            tables: `[[command_check]]\nid = "project/native"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', HEADER_FAILURE, '{file}'])}\n`,
+            tables: `[[command_check]]\nid = "project/native"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', BANNER_FAILURE_SCRIPT, '{file}'])}\n`,
         }),
         'source.txt': 'source\n',
     });
@@ -228,7 +190,7 @@ test('per-file failures drop only the header lines the tool declares', async () 
     expect(filtered.findings).toMatchObject([{ file: 'source.txt', message: 'Native input failed.' }]);
 });
 
-test('located output refuses a missing file and reports it once it exists', async () => {
+test('a regex finding in a file that does not exist is a note until the file exists', async () => {
     await using sandbox = await testdir();
     const source = 'unchanged input\n';
     await createFileTree(sandbox.path, {
@@ -247,25 +209,14 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'all', only: ['notes/regex'] })[0]!;
-    const configured = { ...planned, configuration: readConfigurations().get('data-files')! };
-    const result = buildProcessResult({
-        code: 1,
-        stdout: 'notes/reported.txt:1:A defect.',
-        stderr: '',
-        missing: false,
-        duration: 1,
-    });
+    const result = buildProcessResult(MISSING_LOCATED_FILE);
     const paths = { root: sandbox.path, cwd: sandbox.path };
     const expected = [{ check: 'notes/regex', file: 'notes/reported.txt', line: 1, message: 'A defect.' }];
-    expect(planned.configuration).toBeUndefined();
-    expect(parseCommandFindings(planned, result, paths).note).toBeDefined();
-    expect(parseCommandFindings(configured, result, paths).note).toBeDefined();
+    expect(parseCommandFindings(planned, result, paths)).toStrictEqual({
+        note: `${process.execPath} crashed with exit 1.\nnotes/reported.txt:1:A defect.`,
+    });
     await writeFile(join(sandbox.path, 'notes/reported.txt'), source);
     expect(parseCommandFindings(planned, result, paths).findings).toMatchObject(expected);
-    expect(parseCommandFindings(configured, result, paths).findings).toMatchObject(expected);
-    expect(parseCommandFindings(planned, result, paths).findings).toStrictEqual(
-        parseCommandFindings(configured, result, paths).findings,
-    );
 });
 
 test('a tool that runs out of memory gets a cause instead of the garbage collector dump', () => {

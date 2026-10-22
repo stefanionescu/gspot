@@ -1,20 +1,20 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { fakeTool } from '#tests/setup/fakes.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
-import { buildToolInstall } from '#tests/setup/install.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/install/vale.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
-import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, FIXED_VALE_INSTALL_SCRIPT } from '#tests/data/checks/prose.ts';
+import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, CORRECTED_VALE_INSTALL_SCRIPT } from '#tests/data/install/vale.ts';
 
 test.each([...VALE_INSTALL_FAILURES])(
     'a failed Vale package install reports $name, and the next install succeeds after the fix',
@@ -30,7 +30,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         const tool = getTool(session.configurations.values(), 'vale');
         const executable = join(sandbox.path, 'node_modules/.bin', listExecutableNames('vale')[0]!);
         const launcher = `if(process.argv.includes('--version')) console.log(${JSON.stringify(tool.version)}); else {${script}\n}\n`;
-        await fakeTool(sandbox.path, 'node_modules/.bin/vale', launcher);
+        await writeScriptCommand(sandbox.path, 'node_modules/.bin/vale', launcher);
         using writer = openWriter(sandbox.path);
         const request = buildToolInstall(session, writer);
         expect(await captureRejection(installValePackages(request))).toContain(message);
@@ -41,7 +41,7 @@ test.each([...VALE_INSTALL_FAILURES])(
         expect(await readFile(join(sandbox.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
         await writeFile(
             join(sandbox.path, 'node_modules/.bin/vale.js'),
-            launcher.replace(script, FIXED_VALE_INSTALL_SCRIPT),
+            launcher.replace(script, CORRECTED_VALE_INSTALL_SCRIPT),
         );
         await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
         const fixed = buildToolInstall(await openSession(sandbox.path), writer);

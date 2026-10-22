@@ -1,34 +1,35 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { isOnDisk } from '#tests/setup/files.ts';
-import { isWindows } from '#tests/setup/system.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     MDX_FILES,
     MARKDOWN_FILES,
     MARKDOWN_SANDBOX,
-    MARKDOWNLINT_SETTINGS,
+    MARKDOWNLINT_TABLES,
     MARKDOWNLINT_EXECUTABLE,
 } from '#tests/data/checks/markdown.ts';
 
-const installedSandbox = registerSharedSandbox(MARKDOWN_SANDBOX);
+const installedSandbox = shareInstalledSandbox(MARKDOWN_SANDBOX);
 
 test.each([...LEVELS])(
-    "markdownlint adds lint rules at level all and applies each scope's lint rule options",
+    `markdownlint at level %s adds MD041 only at level all and applies each scope's lint rule options`,
     async (level) => {
         const { root } = installedSandbox();
         await using _change = await applySandboxChanges(installedSandbox(), {
             check: 'markdown/markdownlint',
             files: {
                 ...MARKDOWN_FILES,
-                'gspot.toml': buildSandboxSettings(['markdown'], { level, tables: MARKDOWNLINT_SETTINGS }),
+                'gspot.toml': buildSandboxSettings(['markdown'], { level, tables: MARKDOWNLINT_TABLES }),
             },
         });
         const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
@@ -51,7 +52,7 @@ test.each([...LEVELS])(
         );
         expect(changed.code, changed.stdout + changed.stderr).toBe(1);
         const changedReport = changed.report;
-        expect(changedReport.checks.flatMap(({ findings: entries }) => entries)).toContainEqual(
+        expect(changedReport.checks.flatMap(({ findings }) => findings)).toContainEqual(
             matchFields({ file: 'app/guide.md', line: 5, rule: 'MD044' }),
         );
         const fixed = await spawnGspot(root, [
@@ -78,7 +79,7 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
             ...MARKDOWN_FILES,
             'gspot.toml': buildSandboxSettings(['markdown', 'javascript'], {
                 level: 'all',
-                tables: MARKDOWNLINT_SETTINGS,
+                tables: MARKDOWNLINT_TABLES,
             }),
             'root.md': MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'),
             'title.md': `# Title
@@ -113,7 +114,7 @@ A document with a title.
 `,
             'gspot.toml': buildSandboxSettings(['markdown'], {
                 level: 'all',
-                tables: `${MARKDOWNLINT_SETTINGS}[[ignore]]
+                tables: `${MARKDOWNLINT_TABLES}[[ignore]]
 check = "markdown/markdownlint"
 rule = "MD045"
 reason = "The sample demonstrates an empty alternative."
@@ -130,7 +131,7 @@ reason = "The sample demonstrates an empty alternative."
     ]);
 });
 
-test('markdownlint JSON keeps file name delimiters, positions, and fixability', async () => {
+test('markdownlint reports line, column, and fixable for findings in files whose names hold a space, a colon, or a line break', async () => {
     const { root } = installedSandbox();
     const paths = ['space name.md', ...(isWindows ? [] : ['name:5.md', 'line\nbreak.md'])];
     await using _change = await applySandboxChanges(installedSandbox(), {

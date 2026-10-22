@@ -1,4 +1,4 @@
-import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
+import { BASE_INSTALLED_FILES } from '#tests/data/setup/sandboxes.ts';
 
 /** The paths that each spelling exclusion leaves checked. Both generated tool files must report them. */
 export const SPELLING_IGNORE_CASES = [
@@ -36,7 +36,7 @@ export const TYPO = {
     select: 'SELEC',
 } as const;
 
-export const CHECKS_SPELLING_INSTALLED_SANDBOX = {
+export const SPELLING_SANDBOX = {
     install: false,
     configurations: ['spelling'],
     level: 'all',
@@ -44,3 +44,17 @@ export const CHECKS_SPELLING_INSTALLED_SANDBOX = {
 } as const;
 
 export const SPELLING_CHECK_ARGUMENTS = ['check', '--only', 'spelling/typos', '--json'] as const;
+
+/** Settings with a root and a scope spelling locale. */
+export const SPELLING_LOCALE_SETTINGS = {
+    level: 'all',
+    tables: `[spelling]
+locale = "en-us"
+[[scope]]
+path = "british"
+[scope.spelling]
+locale = "en-gb"
+[[scope]]
+path = "british/child"
+`,
+} as const;

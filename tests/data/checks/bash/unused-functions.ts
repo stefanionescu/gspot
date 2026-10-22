@@ -1,0 +1,30 @@
+import { BASH_MAIN, BASH_HEADER } from '#tests/data/checks/bash/sandbox.ts';
+
+export const UNUSED_FUNCTION_CASES = [
+    {
+        check: 'bash/unused-functions',
+        files: {
+            'scripts/orphan.sh': `${BASH_HEADER}# _orphan: nobody calls this.
+_orphan() {
+    echo a
+    echo b
+    echo orphan
+}
+
+${BASH_MAIN}`,
+        },
+        expected: { file: 'scripts/orphan.sh', rule: 'never-called', line: 9 },
+    },
+] as const;
+export const TRAP_FUNCTION_SOURCE = String.raw`${BASH_HEADER}_cleanup() {
+    rm -f -- "$work"
+}
+
+main() {
+    work=$(mktemp)
+    trap _cleanup EXIT
+    printf '%s\n' "$work"
+}
+
+main "$@"
+`;

@@ -1,7 +1,7 @@
 import { NEXT_MESSAGES } from '#tests/data/checks/nextjs.ts';
 
 /** The translations settings that name the message folder and base locale. */
-export const NEXT_TRANSLATIONS = `[translations]
+export const TRANSLATION_TABLES = `[translations]
 messages_folder = "messages"
 base_locale = "en"
 `;
@@ -21,7 +21,7 @@ export const TRANSLATION_CASES = [
 }
 `,
         },
-        settings: NEXT_TRANSLATIONS,
+        settings: TRANSLATION_TABLES,
         expected: { file: 'messages/de.json', rule: 'missing-key', line: 1 },
     },
     {
@@ -32,7 +32,7 @@ export const TRANSLATION_CASES = [
 }
 `,
         },
-        settings: NEXT_TRANSLATIONS,
+        settings: TRANSLATION_TABLES,
         expected: { file: 'messages/de.json', rule: 'message', line: 1 },
     },
 ] as const;
@@ -76,3 +76,18 @@ export const MESSAGE_ARGUMENTS = {
         link: 'Lisez <b>ceci</b>.',
     },
 } as const;
+
+/** The findings of a translation that changes its arguments, tags, and select keys. */
+export const TRANSLATION_FINDINGS = [
+    {
+        file: 'messages/fr.json',
+        rule: 'message-arguments',
+        message: 'greet: en has {name}, which this message leaves out. This message has {nom}, which en does not have.',
+    },
+    {
+        file: 'messages/fr.json',
+        rule: 'message-arguments',
+        message:
+            'pick: en has {gender, select, female male other}, which this message leaves out. This message has {gender, select, male other}, which en does not have.',
+    },
+] as const;

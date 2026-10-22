@@ -3,42 +3,40 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { installCompiler } from '#tests/setup/install.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { updateSandbox, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
+import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/data/checks/typescript/projects.ts';
 
 import {
-    STRICT_TSCONFIG_TEXT,
-    ANCESTOR_SCOPE_SETTINGS,
-    STANDALONE_FIXED_SOURCE,
+    ANCESTOR_SCOPE_TABLES,
+    KEPT_DECLARATION_FILES,
     ANCESTOR_TYPESCRIPT_FILES,
+    TYPESCRIPT_SCOPES_SANDBOX,
     ANCESTOR_TYPESCRIPT_PROJECT,
+    STANDALONE_CORRECTED_SOURCE,
     STANDALONE_TYPESCRIPT_FILES,
+    STANDALONE_TYPESCRIPT_TABLES,
     STANDALONE_TYPESCRIPT_FINDINGS,
-    STANDALONE_TYPESCRIPT_SETTINGS,
-} from '#tests/data/checks/typescript/projects.ts';
+} from '#tests/data/integration/checks/typescript/scopes.ts';
 
-const installedSandbox = registerSharedSandbox({
-    install: false,
-    configurations: ['typescript'],
-    level: 'all',
-    files: { 'package.json': '{"private":true}\n' },
-});
+const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SCOPES_SANDBOX);
 
 /** The standalone sources for one level; .gitignore keeps tool declarations out of the source changes. */
 test.each([...LEVELS])(
     "typescript/tsc at level %s checks each scope alone and keeps your declarations, without gspot's own @types",
     async (level) => {
         const { root } = installedSandbox();
-        await using _sourceChange = await updateSandbox(installedSandbox(), {
+        await using _sourceChange = await changeAppliedSandbox(installedSandbox(), {
             check: '',
             files: {
                 ...STANDALONE_TYPESCRIPT_FILES,
                 '.gitignore': '.gspot/\nnode_modules/\n',
-                'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: STANDALONE_TYPESCRIPT_SETTINGS }),
+                'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: STANDALONE_TYPESCRIPT_TABLES }),
             },
         });
         const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
@@ -51,19 +49,14 @@ test.each([...LEVELS])(
         expect(report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
             STANDALONE_TYPESCRIPT_FINDINGS[level].map((finding) => matchFields(finding)),
         );
-        await writeFile(join(root, 'app/source.ts'), STANDALONE_FIXED_SOURCE);
+        await writeFile(join(root, 'app/source.ts'), STANDALONE_CORRECTED_SOURCE);
         const corrected = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toStrictEqual([
             matchFields({ scope: '', status: 'passed', findings: [] }),
             matchFields({ scope: 'app', status: 'passed', findings: [] }),
         ]);
-        for (const path of [
-            'app/ambient.d.ts',
-            'app/emitted/generated.ts',
-            'app/vendor/dependency.ts',
-            '.gspot/node_modules/@types/private/index.d.ts',
-        ] as const)
+        for (const path of KEPT_DECLARATION_FILES)
             expect(await readFile(join(root, path), 'utf8')).toBe(STANDALONE_TYPESCRIPT_FILES[path]);
     },
 );
@@ -74,9 +67,9 @@ test('typescript/tsc runs a covering parent tsconfig once for nested scopes', as
     await createFileTree(sandbox.path, {
         ...ANCESTOR_TYPESCRIPT_FILES,
         'tsconfig.json': authored,
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all', tables: ANCESTOR_SCOPE_SETTINGS }),
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all', tables: ANCESTOR_SCOPE_TABLES }),
     });
-    await installCompiler(sandbox.path);
+    await linkTypescript(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'typescript/tsconfig,typescript/tsc', '--json'];
@@ -115,7 +108,7 @@ test('typescript/tsc checks a scope through the parent tsconfig, alone when name
         'app/source.ts': 'export const active: boolean = 3;\n',
     });
 
-    await installCompiler(sandbox.path);
+    await linkTypescript(sandbox.path);
     const selection = ['--only', 'typescript/tsc', '--json'];
     const { mode } = await stat(join(sandbox.path, 'tsconfig.json'));
     const applied = await spawnGspot(sandbox.path, ['apply']);
@@ -138,7 +131,7 @@ test('typescript/tsc checks a scope through the parent tsconfig, alone when name
     ]);
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'app/source.ts'), 'export const active: boolean = "staged";\n');
-    readGitOutput(sandbox.path, ['add', 'app/source.ts']);
+    runGitStep(sandbox.path, ['add', 'app/source.ts']);
     await writeFile(join(sandbox.path, 'app/source.ts'), 'export const active: boolean = true;\n');
     const staged = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--staged', ...selection]));
     expect(staged.code, staged.stdout + staged.stderr).toBe(1);

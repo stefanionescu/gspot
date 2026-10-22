@@ -1,18 +1,18 @@
+import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { isOnDisk } from '#tests/setup/files.ts';
-import { join, dirname, resolve } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
-import { fakeNpmTool } from '#tests/setup/fakes.ts';
 import * as processes from '#cli/system/processes.ts';
+import { dirname, resolve, relative } from 'node:path';
 import { type Finding } from '#cli/types/runs/check.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildProcessResult } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT } from '#tests/data/checks/svelte.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { textSchema, pathsSchema, fieldsSchema } from '#tests/schemas/checks/typescript.ts';
-import { checkFindings, findBuiltInCheck, planSandboxCheck } from '#tests/setup/check-input.ts';
+import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT, SVELTE_CHECK_FINDINGS } from '#tests/data/checks/svelte.ts';
 
 /** Run svelte-check against one fake output in the selected scope. */
 async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<Finding[]> {
@@ -33,73 +33,53 @@ async function runSvelteCheck(stdout: string, options: { scope?: string } = {}):
 }
 
 test.each([...SVELTE_PROJECTS])(
-    'svelte-check uses the runtime project for $name',
-    async ({ scope, settings, authored }) => {
+    'svelte-check reads a temporary tsconfig that extends the scope tsconfig or lists the scope files: $name',
+    async ({ scope, settings, files, extends: extended, include }) => {
         await using sandbox = await testdir({
             'gspot.toml': settings,
             'Component.svelte': '<p>Root</p>\n',
             'app/Component.svelte': '<p>Nested</p>\n',
+            ...files,
         });
-
-        if (authored)
-            await createFileTree(sandbox.path, {
-                'app/tsconfig.json': JSON.stringify({
-                    compilerOptions: { strict: true },
-                    include: ['Component.svelte'],
-                }),
-            });
         await fakeNpmTool(sandbox.path, 'svelte-check');
 
         let runtimePath = '';
+        const seen: unknown[] = [];
         using run = spyOn(processes, 'spawnProcess').mockImplementation((commandArguments, options) => {
             runtimePath = textSchema.parse(commandArguments[commandArguments.indexOf('--tsconfig') + 1]);
             const config = fieldsSchema.parse(JSON.parse(readFileSync(runtimePath, 'utf8')));
-            expect(options.cwd).toBe(join(sandbox.path, scope));
-            expect(runtimePath.startsWith(sandbox.path)).toBe(false);
+            const fromSandbox = (path: string): string => relative(sandbox.path, resolve(dirname(runtimePath), path));
             const compilerOptions = fieldsSchema.parse(config['compilerOptions']);
-            expect(
-                pathsSchema.parse(compilerOptions['typeRoots']).map((path) => resolve(dirname(runtimePath), path)),
-            ).toContain(join(sandbox.path, 'node_modules/@types'));
-            if (authored) {
-                expect(resolve(dirname(runtimePath), textSchema.parse(config['extends']))).toBe(
-                    join(sandbox.path, scope, 'tsconfig.json'),
-                );
-            } else {
-                expect(
-                    pathsSchema.parse(config['include']).map((path) => resolve(dirname(runtimePath), path)),
-                ).toStrictEqual([join(sandbox.path, 'Component.svelte')]);
-            }
+            seen.push({
+                cwd: relative(sandbox.path, options.cwd),
+                insideSandbox: runtimePath.startsWith(sandbox.path),
+                typeRoots: pathsSchema.parse(compilerOptions['typeRoots']).map((path) => fromSandbox(path)),
+                extends: 'extends' in config ? fromSandbox(textSchema.parse(config['extends'])) : null,
+                include:
+                    'include' in config ? pathsSchema.parse(config['include']).map((path) => fromSandbox(path)) : null,
+            });
             return Promise.resolve(buildProcessResult());
         });
-        expect(await checkFindings(sandbox.path, 'svelte/svelte-check', { scope })).toStrictEqual([]);
+        expect(await runSandboxCheck(sandbox.path, 'svelte/svelte-check', { scope })).toStrictEqual([]);
         expect(run).toHaveBeenCalledTimes(1);
+        expect(seen).toMatchObject([
+            {
+                cwd: scope,
+                insideSandbox: false,
+                typeRoots: expect.arrayContaining(['node_modules/@types']) as string[],
+                extends: extended,
+                include,
+            },
+        ]);
         expect(await isOnDisk(runtimePath)).toBe(false);
     },
 );
 
 test('svelte-check errors and warnings become findings at one-based positions with their code as the rule', async () => {
-    expect(await runSvelteCheck(SVELTE_CHECK_OUTPUT)).toStrictEqual([
-        {
-            check: 'svelte/svelte-check',
-            file: 'src/Count.svelte',
-            line: 2,
-            column: 11,
-            rule: 'TS2322',
-            message: "Type 'string' is not assignable to type 'number'.",
-            fixable: false,
-        },
-        {
-            check: 'svelte/svelte-check',
-            file: 'src/Product.svelte',
-            line: 5,
-            column: 1,
-            rule: 'a11y_missing_attribute',
-            message: '`<img>` element should have an alt attribute',
-            fixable: false,
-        },
-    ]);
-    const nested = await runSvelteCheck(SVELTE_CHECK_OUTPUT, { scope: 'apps/web' });
-    expect(nested[0]?.file).toBe('apps/web/src/Count.svelte');
+    expect(await runSvelteCheck(SVELTE_CHECK_OUTPUT)).toStrictEqual([...SVELTE_CHECK_FINDINGS]);
+    expect(await runSvelteCheck(SVELTE_CHECK_OUTPUT, { scope: 'apps/web' })).toStrictEqual(
+        SVELTE_CHECK_FINDINGS.map((finding) => ({ ...finding, file: `apps/web/${finding.file}` })),
+    );
 });
 
 // POSIX treats a backslash as a file-name character; Windows treats it as a directory separator.

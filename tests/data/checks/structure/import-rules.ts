@@ -1,4 +1,4 @@
-const SWIFT_PACKAGE = `// swift-tools-version:5.9
+const SWIFT_TARGETS_PACKAGE = `// swift-tools-version:5.9
 import PackageDescription
 let package = Package(
     name: "App",
@@ -50,7 +50,7 @@ paths = ["Sources/FeatureKit/**"]
 `;
 
 export const SWIFT_IMPORT_FILES = {
-    'Package.swift': SWIFT_PACKAGE,
+    'Package.swift': SWIFT_TARGETS_PACKAGE,
     'Sources/Core/Model.swift': 'import Foundation\nimport Feature\npublic struct Model {}\n',
     'Sources/FeatureKit/View.swift': 'import Core\npublic struct View {}\n',
     'Sources/Loose/Helper.swift': 'public struct Helper {}\n',

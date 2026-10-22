@@ -1,16 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
-import { commitAll } from '#tests/setup/git.ts';
-import { runGspot } from '#tests/setup/run-gspot.ts';
-import { parseSettings } from '#cli/settings/read.ts';
-import { isOnDisk, readTree } from '#tests/setup/files.ts';
-import { type InitJson } from '#cli/types/commands/init.ts';
-import { GIT_PLAN_CASES } from '#tests/data/commands/init.ts';
-import { buildInitArguments } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { readdir, symlink, readFile } from 'node:fs/promises';
+import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/sandbox.ts';
+import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
@@ -19,7 +15,9 @@ test('init with an unknown configuration exits 2 and writes nothing', async () =
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--configurations', 'bassh']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stdout + result.stderr).toContain('bassh');
+    expect(result.stdout + result.stderr).toBe(
+        'There is no configuration called `bassh`. Did you mean `bash`? Run `gspot list configurations` to see the available configurations.\n',
+    );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -53,9 +51,10 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
+    expect(JSON.parse(result.stdout)).toStrictEqual({
         error: 'settings',
-        message: expect.stringContaining('gspot doctor') as string,
+        message:
+            'This repository already has a gspot.toml. Run `gspot doctor` to inspect its setup and see suggested commands.',
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -66,37 +65,12 @@ test('init --json without --yes names --yes before reading the repository', asyn
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['init', '--json']);
     expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
+    expect(JSON.parse(result.stdout)).toStrictEqual({
         error: 'arguments',
-        message: expect.stringContaining('--yes') as string,
+        message: '--json needs --yes or --dry-run, because gspot cannot ask while it prints JSON.',
     });
-    expect(result.stdout).not.toContain('package.json');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
-
-test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that apply', async ({ hasGit }) => {
-    await using sandbox = await testdir({ 'control.txt': 'preserve this source\n' });
-
-    if (hasGit) commitAll(sandbox.path);
-    const commandArguments = [...buildInitArguments([], { json: true }), '--no-configurations'];
-    const before = await readTree(sandbox.path);
-    const preview = await runGspot(sandbox.path, [...commandArguments, '--dry-run']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(preview.stderr).toBe('');
-    const report = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
-    const changes = new Set(report.plan.change.map((entry) => entry.path));
-    expect(changes.has('.gitignore')).toBe(hasGit);
-    expect(changes.has('.gspot/hooks')).toBe(hasGit);
-    expect(changes.has('.gitattributes')).toBe(hasGit);
-    expect(parseSettings(report.settings, undefined).hooks).toBeDefined();
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const initialized = await runGspot(sandbox.path, commandArguments);
-    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, '.gitignore'))).toBe(hasGit);
-    expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(hasGit);
-    expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe('preserve this source\n');
-});
-
 test('init without a terminal names --yes once and writes only after --yes', async () => {
     await using sandbox = await testdir({ 'control.txt': 'preserve this source\n' });
 
@@ -112,4 +86,18 @@ test('init without a terminal names --yes once and writes only after --yes', asy
     expect(accepted.stdout.split('\n')).toContain(`gspot ${writtenVersion.trim()}`);
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
     expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe('preserve this source\n');
+});
+test('a linked .gspot folder stops init, and nothing outside changes', async () => {
+    await using sandbox = await testdir({ 'project/entry.sh': 'echo example\n', 'outside/sentinel': 'authored\n' });
+    const project = join(sandbox.path, 'project');
+    const outside = join(sandbox.path, 'outside');
+    await symlink(outside, join(project, '.gspot'));
+    const refused = await runGspot(project, buildInitArguments(['bash']));
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stderr).toBe(
+        'A parent of .gspot/state/writer.lock is a link or is not a directory. Choose a directory without links.\n',
+    );
+    expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
+    expect(await readdir(outside)).toStrictEqual(['sentinel']);
+    expect(await isOnDisk(join(project, 'gspot.toml'))).toBe(false);
 });

@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { validateSettingsText } from '#tests/setup/settings.ts';
+import { validateSettingsText } from '#tests/setup/cli/settings.ts';
 import { buildJsonSchema } from '#cli/schemas/settings/gspot-toml.ts';
-import { PUBLISHED_SCHEMA_CASES } from '#tests/data/settings/schema.ts';
 import { publishedSettingsValidator } from '#tests/schemas/settings.ts';
+import { PUBLISHED_SCHEMA_CASES } from '#tests/data/settings/published-schema.ts';
 
 test.each([...PUBLISHED_SCHEMA_CASES])('runtime and published schemas agree on $name', ({ input, valid }) => {
     const errors = validateSettingsText(stringify(input));

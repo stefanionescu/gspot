@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import type { LinkFailure } from '#tests/types/tool-output.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { LINK_PAGE, ROOT_LINK_FILES, LINK_TEXT_CASES, LINK_SCOPE_SETTINGS } from '#tests/data/checks/docs.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { LINK_PAGE, LINK_TEXT_CASES, ROOT_LINK_FILES, LINK_SCOPE_TABLES } from '#tests/data/checks/docs.ts';
 
 // Checks the exit code, and the status and finding positions of the root and child scopes.
 async function assertLinkFailures(root: string, check: string, failures: readonly LinkFailure[]): Promise<void> {
@@ -52,7 +52,7 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
         const url = server.url.toString();
         const child = `# Links\n\nRead [the page](${url}page#setup).\n\n[Child endpoint](${url}child-only)\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings([], { tables: LINK_SCOPE_SETTINGS }),
+            'gspot.toml': buildSandboxSettings([], { tables: LINK_SCOPE_TABLES }),
             'root.md': `# Links\n\nRead [the page](${url}missing).\n\n[Root endpoint](${url}root-only)\n`,
             'app/guide.md': child,
             'page.html': LINK_PAGE,

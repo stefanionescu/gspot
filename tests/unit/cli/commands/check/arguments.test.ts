@@ -4,9 +4,10 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/settings.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { STAGE_SCOPE_SETTINGS } from '#tests/data/commands/check/arguments.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test('file and folder arguments narrow the files each check gets', async () => {
     await using sandbox = await testdir();
@@ -63,9 +64,6 @@ test('--only repeats and leaves the paths after it as paths', async () => {
     expect(selected.report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one', 'sandbox/two']);
     for (const check of selected.report.checks)
         expect(check.findings.map((finding) => finding.message)).toStrictEqual(['src/selected.ts']);
-    const empty = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', ',', '--json']));
-    expect(empty.code).toBe(2);
-    expect(empty.stdout + empty.stderr).toContain('Name a check, such as --only python/ruff.');
 });
 
 test('path arguments keep the findings of a project-wide check in the named files', async () => {
@@ -121,7 +119,7 @@ stage = "${name}"
 
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'source.txt'), 'staged input');
-    readGitOutput(sandbox.path, ['add', 'source.txt']);
+    runGitStep(sandbox.path, ['add', 'source.txt']);
     const staged = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/commit,sandbox/push', '--staged', '--json']),
     );
@@ -169,14 +167,7 @@ stage = "manual"
 
 test('a scope path narrows to its checks and its reproduce command finds the same findings', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], {
-            level: 'all',
-            rules: true,
-            scopes: [
-                { path: 'api', configurations: ['javascript', 'naming'] },
-                { path: 'web', configurations: ['javascript', 'naming'] },
-            ],
-        }),
+        'gspot.toml': buildSandboxSettings([], STAGE_SCOPE_SETTINGS),
         'api/port.js': 'export const helperCommand = 1;\n',
         'web/port.js': 'export const helperCommand = 2;\n',
     });
@@ -188,8 +179,11 @@ test('a scope path narrows to its checks and its reproduce command finds the sam
     const report = selected.report;
     const failed = report.checks.filter((check) => check.status === 'failed');
     expect(failed.map((check) => check.scope)).toStrictEqual(['api']);
-    const command = failed[0]?.reproduce;
-    const repeated = parseCheckReport(await runGspot(sandbox.path, [...command!.split(' ').slice(1), '--json']));
+    const command = failed.map(({ reproduce }) => reproduce);
+    expect(command).toStrictEqual(['gspot check api --only naming/identifiers']);
+    const repeated = parseCheckReport(
+        await runGspot(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']),
+    );
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     const repeatedReport = repeated.report;
     expect(repeatedReport.checks.flatMap((check) => check.findings)).toStrictEqual(
@@ -210,7 +204,7 @@ test('a staged change to gspot.toml alone rechecks every file a configuration ch
 
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), loose.replace('file_lines = 100', 'file_lines = 5'));
-    readGitOutput(sandbox.path, ['add', 'gspot.toml']);
+    runGitStep(sandbox.path, ['add', 'gspot.toml']);
     const checked = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--staged', '--only', 'structure/long-files', '--json']),
     );

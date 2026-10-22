@@ -1,5 +1,8 @@
-import { LOCAL_PLUGIN, LOCAL_PLUGIN_TABLES } from '#tests/data/generation/externals.ts';
-
+export const LOCAL_PLUGIN_TABLES = `[[tools.eslint.plugins]]
+name = "local"
+path = "tools/lint/plugin.mjs"
+rules = { "no-forbidden" = [] }
+`;
 export const SCOPE_PLUGIN_TABLES = `${LOCAL_PLUGIN_TABLES}
 [[scope]]
 path = "app"
@@ -11,6 +14,21 @@ rules = { "no-forbidden" = [] }
 [[scope]]
 path = "app/nested"
 configurations = ["javascript"]
+`;
+export const LOCAL_PLUGIN = `export default {
+    rules: {
+        'no-forbidden': {
+            meta: { type: 'problem', schema: [] },
+            create(context) {
+                return {
+                    Identifier(node) {
+                        if (node.name === 'forbidden') context.report({ node, message: 'Use the current API.' });
+                    },
+                };
+            },
+        },
+    },
+};
 `;
 
 export const SCOPE_PLUGIN_FILES = {
@@ -57,3 +75,11 @@ export const CONFLICTING_LOCAL_PLUGIN_FILES = {
     'tools/lint/first.mjs': LOCAL_PLUGIN,
     'tools/lint/second.mjs': LOCAL_PLUGIN,
 };
+
+/** The settings error of one plugin name with two modules. */
+export const DUPLICATE_PLUGIN_ERROR = {
+    name: 'GspotError',
+    code: 'settings',
+    message:
+        'tools.eslint.plugins: local names two modules, tools/lint/first.mjs and tools/lint/second.mjs. Give each its own prefix.',
+} as const;

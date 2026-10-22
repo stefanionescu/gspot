@@ -2,15 +2,21 @@ import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
-import { commitAll } from '#tests/setup/git.ts';
-import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { PREFIX_TREE, NEST_SUFFIX_FILES, PREFIX_CHECK_OPTIONS } from '#tests/data/checks/structure/folders.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-test('prefix checks group files and directories once and honor ignores and the limit', async () => {
+import {
+    PREFIX_TREE,
+    NEST_SUFFIX_FILES,
+    PREFIX_CHECK_OPTIONS,
+    NESTJS_PREFIX_RESULTS,
+} from '#tests/data/checks/structure/shared-prefixes.ts';
+
+test('shared-prefixes groups files and folders once, and honors an ignore and a raised limit', async () => {
     const settings = buildSandboxSettings(['typescript'], { level: 'all' });
     await using sandbox = await testdir({
         'gspot.toml': settings,
@@ -116,10 +122,5 @@ test('NestJS kind suffixes do not count in NestJS scopes; JSX files and unknown 
     const result = await runChecks(await openSession(sandbox.path), buildRunOptions(PREFIX_CHECK_OPTIONS));
     expect(
         result.report.checks.map(({ scope, findings }) => ({ scope, paths: findings.map(({ file }) => file) })),
-    ).toStrictEqual([
-        { scope: '', paths: ['feature.controller.spec.ts'] },
-        { scope: 'app', paths: ['app/custom.one.ts', 'app/jsx.controller.tsx'] },
-        { scope: 'app/deep', paths: [] },
-        { scope: 'sibling', paths: ['sibling/feature.controller.spec.ts'] },
-    ]);
+    ).toStrictEqual([...NESTJS_PREFIX_RESULTS]);
 });

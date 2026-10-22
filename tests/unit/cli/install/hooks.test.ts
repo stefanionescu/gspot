@@ -1,18 +1,19 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/system/git.ts';
-import { runGspot } from '#tests/setup/run-gspot.ts';
 import { matchItems } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { HOOKS_SETTINGS } from '#tests/data/test-setup.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandbox.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { HOOKS_SETTINGS } from '#tests/data/setup/cli.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { installHooks, readHookStatus } from '#cli/install/hooks.ts';
-import { readGitOutput, createLfsRepository } from '#tests/setup/git.ts';
-import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/data/hooks.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { HOOK_REPOSITORIES, STOCK_LFS_PRE_PUSH, HOOK_CONFIGURATION_CASES } from '#tests/data/install/hooks.ts';
 
 test.each([...HOOK_REPOSITORIES])(
     'a repository with $name keeps its hooks, gets the lines to add, and is ready only after both lines',
@@ -26,8 +27,8 @@ test.each([...HOOK_REPOSITORIES])(
             }),
             ...files,
         });
-        readGitOutput(sandbox.path, ['init', '-q']);
-        if (setting !== undefined) readGitOutput(sandbox.path, [...setting]);
+        runGitStep(sandbox.path, ['init', '-q']);
+        if (setting !== undefined) runGitStep(sandbox.path, [...setting]);
         if (gitHook) await writeFile(join(sandbox.path, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
         const before = readGitSetting(sandbox.path, 'core.hooksPath');
         const authoredPaths = gitHook ? ['.git/hooks/pre-commit'] : Object.keys(files);
@@ -78,7 +79,7 @@ test.each([...HOOK_CONFIGURATION_CASES])(
             'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),
             [path]: oneHook,
         });
-        readGitOutput(sandbox.path, ['init', '-q']);
+        runGitStep(sandbox.path, ['init', '-q']);
         const session = await openSession(sandbox.path);
         expect(readHookStatus(session, session.repository).ready).toBe(false);
         await writeFile(join(sandbox.path, path), bothHooks);
@@ -92,7 +93,7 @@ test.each([...HOOK_CONFIGURATION_CASES])(
 test('a gspot.toml without hooks installs none', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([], {}) });
 
-    readGitOutput(sandbox.path, ['init', '-q']);
+    runGitStep(sandbox.path, ['init', '-q']);
     const steps: (readonly string[])[] = [];
     const session = await openSession(sandbox.path);
     expect(installHooks(session, steps)).toBe('');
@@ -106,10 +107,10 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     const root = sandbox.path;
     const settings = buildSandboxSettings([], { tables: HOOKS_SETTINGS });
     await createFileTree(root, { 'gspot.toml': settings });
-    readGitOutput(sandbox.path, ['init', '-q']);
+    runGitStep(sandbox.path, ['init', '-q']);
     expect(await runGspot(root, ['apply'])).toHaveProperty('code', 0);
     const ownPath = '.gspot/hooks';
-    readGitOutput(root, ['config', 'core.hooksPath', ownPath]);
+    runGitStep(root, ['config', 'core.hooksPath', ownPath]);
     expect(readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
     const hook = join(root, '.gspot/hooks/pre-commit');
     const installed = await readFile(hook, 'utf8');
@@ -129,7 +130,7 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     installHooks(session, removedSteps);
     expect(removedSteps).toContainEqual(['git', 'config', '--unset', 'core.hooksPath']);
     expect(readGitSetting(root, 'core.hooksPath')).toBeUndefined();
-    readGitOutput(root, ['config', 'core.hooksPath', '.githooks']);
+    runGitStep(root, ['config', 'core.hooksPath', '.githooks']);
     const steps: (readonly string[])[] = [];
     expect(installHooks(session, steps)).toBe('');
     expect(steps).toStrictEqual([]);
@@ -150,6 +151,6 @@ test('the hooks that git lfs install wrote are not other hooks, so install point
     expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe('.gspot/hooks');
     expect(await readFile(join(sandbox.path, '.gspot/hooks/post-merge'), 'utf8')).toContain('git lfs post-merge "$@"');
     await writeFile(join(sandbox.path, '.git/hooks/post-merge'), '#!/bin/sh\ngit lfs post-merge "$@"\necho custom\n');
-    readGitOutput(sandbox.path, ['config', '--unset', 'core.hooksPath']);
+    runGitStep(sandbox.path, ['config', '--unset', 'core.hooksPath']);
     expect(installHooks(session, [])).toContain('hooks already run from .git/hooks');
 });

@@ -1,18 +1,18 @@
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
-import { isLinux } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { isLinux } from '#tests/setup/system/platform.ts';
 import { randomUUID, generateKeyPair } from 'node:crypto';
-import { runCommandBlocking } from '#tests/setup/processes.ts';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     DOCKER_CASES,
@@ -20,9 +20,10 @@ import {
     ALPINE_DOCKERFILE,
     DEBIAN_DOCKERFILE,
     TRIVY_CONFIG_PATH,
+    TRIVY_SCOPE_TABLES,
+    TRIVY_SCOPE_RESULTS,
     ROOT_USER_DOCKERFILE,
-    TRIVY_SCOPE_SETTINGS,
-} from '#tests/data/checks/docker.ts';
+} from '#tests/data/checks/docker/sandbox.ts';
 
 // Each tag gets its own payload, so a clean image never depends on the loop order.
 async function importImage(root: string, tag: string, contents: string | Buffer): Promise<void> {
@@ -41,7 +42,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
 
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
     const settings = buildSandboxSettings(['docker'], {
-        tables: TRIVY_SCOPE_SETTINGS,
+        tables: TRIVY_SCOPE_TABLES,
     });
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
@@ -49,7 +50,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
         ...Object.fromEntries(paths.map((path) => [path, ROOT_USER_DOCKERFILE])),
     });
     commitAll(sandbox.path);
-    await writeFile(join(sandbox.path, 'untracked/Dockerfile'), ROOT_USER_DOCKERFILE);
+    await createFileTree(sandbox.path, { 'untracked/Dockerfile': ROOT_USER_DOCKERFILE });
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'docker/trivy-config', '--json'];
@@ -62,12 +63,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
             status: check.status,
             files: check.findings.map((finding) => finding.file),
         })),
-    ).toStrictEqual([
-        { scope: '', status: 'failed', files: ['Dockerfile'] },
-        { scope: 'app', status: 'passed', files: [] },
-        { scope: 'app/child', status: 'passed', files: [] },
-        { scope: 'sibling', status: 'failed', files: ['sibling/Dockerfile'] },
-    ]);
+    ).toStrictEqual([...TRIVY_SCOPE_RESULTS]);
     for (const path of ['Dockerfile', 'sibling/Dockerfile'])
         await writeFile(join(sandbox.path, path), ROOT_USER_DOCKERFILE.replace('USER root', 'USER node'));
     const correctedCommand = parseCheckReport(await spawnGspot(sandbox.path, command));
@@ -76,7 +72,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
 });
 
 test.each([...LEVELS])(
-    'Hadolint checks apt and apk version pins only at level all, in the root and a scope',
+    'Hadolint at level %s checks apt and apk version pins only at level all, and reports a latest tag at both levels, in the root and a scope',
     async (level) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['docker'], {
@@ -174,7 +170,7 @@ test.skipIf(!isLinux)(
     },
 );
 
-const installedSandbox = registerSharedSandbox(DOCKER_SANDBOX);
+const installedSandbox = shareInstalledSandbox(DOCKER_SANDBOX);
 
 test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
     const expected =

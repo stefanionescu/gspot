@@ -1,4 +1,4 @@
-import { BASE_INSTALLED_FILES } from '#tests/data/test-setup.ts';
+import { BASE_INSTALLED_FILES } from '#tests/data/setup/sandboxes.ts';
 
 /** Markup with URLs that run code, at the column of each attribute, and scheme text in places that do not run it. */
 export const URL_MARKUP_CASES = [
@@ -47,7 +47,7 @@ export const CONTROLLED_PLAYBACK_PAGE = `<!doctype html>
 `;
 
 /** The app scope builds its own page; the root scope still checks its source HTML. */
-export const AUTOPLAY_SCOPE_SETTINGS = `[[scope]]\npath = "app"\nconfigurations = ["site"]\n[scope.site]\nbuild_command = ["node", "build.mjs"]\n`;
+export const AUTOPLAY_SCOPE_TABLES = `[[scope]]\npath = "app"\nconfigurations = ["site"]\n[scope.site]\nbuild_command = ["node", "build.mjs"]\n`;
 
 /** Each command runs one HTML Validate check and leaves the other source file unchanged. */
 export const AUTOPLAY_CHECKS = [
@@ -75,8 +75,21 @@ export const AUTOPLAY_CHECKS = [
     },
 ] as const;
 
-export const CHECKS_HTML_INSTALLED_SANDBOX = {
+export const HTML_SANDBOX = {
     configurations: ['html', 'site'],
     level: 'all',
     files: BASE_INSTALLED_FILES,
 } as const;
+
+/** A page with an inline script, a click handler, an inert JSON script, and a linked script. */
+export const INLINE_SCRIPT_PAGE = `<!doctype html>
+<html lang="en">
+<head><title>Shop</title></head>
+<body>
+<script>window.start();</script>
+<button onclick="start()">Start</button>
+<script type="application/json">{"name":"shop"}</script>
+<script src="app.js"></script>
+</body>
+</html>
+`;

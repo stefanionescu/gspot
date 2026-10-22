@@ -2,33 +2,34 @@ import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { readTree } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { checkFindings, openPinnedSession } from '#tests/setup/check-input.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { runSandboxCheck, openPinnedSession } from '#tests/setup/cli/checks.ts';
 
 import {
     SECRET_KEY_READS,
     STORAGE_POLICIES,
     SERVICE_KEY_READERS,
     SERVICE_KEY_SETTINGS,
+    SERVICE_ROLE_CLIENTS,
     AVATARS_BUCKET_CONFIG,
     INVALID_BUCKETS_CONFIG,
+    SERVICE_ROLE_CLIENT_FILES,
 } from '#tests/data/checks/supabase.ts';
 
-test('Supabase config.toml and function folders are read per scope', async () => {
+test('supabase/deno-lint runs in each scope folder on each edge function of its functions folder, without _shared', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['supabase'], {
             scopes: [{ path: 'apps/api', configurations: ['supabase'] }],
             tables: '[scope.supabase]\nfunctions_folder = "apps/api/edge"\n',
         }),
-        'supabase/config.toml': '[functions.missing]\nverify_jwt = true\n',
         'supabase/functions/root/index.ts': 'export {};\n',
-        'apps/api/supabase/config.toml': '[functions.hello]\nverify_jwt = true\n',
         'apps/api/edge/hello/index.ts': 'export {};\n',
         'apps/api/edge/_shared/index.ts': 'export {};\n',
     });
@@ -38,14 +39,12 @@ test('Supabase config.toml and function folders are read per scope', async () =>
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(
         buildProcessResult({ stdout: '{"diagnostics":[],"errors":[]}' }),
     );
-    for (const [scope, expected] of [
-        ['', 'supabase/functions/root'],
-        ['apps/api', 'apps/api/edge/hello'],
-    ]) {
-        expect(await checkFindings(session.root, 'supabase/deno-lint', { scope: scope! })).toStrictEqual([]);
-        expect(run.mock.calls.at(-1)?.[1].cwd).toBe(join(sandbox.path, scope!));
-        expect(run.mock.calls.at(-1)?.[0].at(-1)).toBe(join(sandbox.path, expected!));
-    }
+    expect(await runSandboxCheck(session.root, 'supabase/deno-lint', { scope: '' })).toStrictEqual([]);
+    expect(await runSandboxCheck(session.root, 'supabase/deno-lint', { scope: 'apps/api' })).toStrictEqual([]);
+    expect(run.mock.calls.map(([command, options]) => ({ cwd: options.cwd, target: command.at(-1) }))).toStrictEqual([
+        { cwd: sandbox.path, target: join(sandbox.path, 'supabase/functions/root') },
+        { cwd: join(sandbox.path, 'apps/api'), target: join(sandbox.path, 'apps/api/edge/hello') },
+    ]);
 });
 
 test('supabase/storage-policies reports nothing for a config.toml with a TOML syntax error', async () => {
@@ -53,27 +52,30 @@ test('supabase/storage-policies reports nothing for a config.toml with a TOML sy
         'gspot.toml': buildSandboxSettings(['supabase'], { scopes: [{ path: 'apps/api' }] }),
         'apps/api/supabase/config.toml': '[broken',
     });
-    expect(await checkFindings(sandbox.path, 'supabase/storage-policies', { scope: 'apps/api' })).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope: 'apps/api' })).toStrictEqual([]);
 });
 
-test.each([1, 2])("Deno lint exit %s without JSON reports Deno's error text", async (code) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['supabase']),
-        'supabase/functions/greet/index.ts': 'export {};',
-        'supabase/functions/greet/deno.json': '{',
-    });
+test.each([1, 2])(
+    "supabase/deno-lint fails with Deno's error text when Deno exits %s without a JSON report",
+    async (code) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['supabase']),
+            'supabase/functions/greet/index.ts': 'export {};',
+            'supabase/functions/greet/deno.json': '{',
+        });
 
-    using resources = new DisposableStack();
-    const session = await openPinnedSession(sandbox.path, ['deno'], resources);
-    resources.use(
-        spyOn(processes, 'spawnProcess').mockResolvedValue(
-            buildProcessResult({ code, stderr: 'The project configuration is invalid.' }),
-        ),
-    );
-    expect(await captureRejection(checkFindings(session.root, 'supabase/deno-lint'))).toBe(
-        'The project configuration is invalid.',
-    );
-});
+        using resources = new DisposableStack();
+        const session = await openPinnedSession(sandbox.path, ['deno'], resources);
+        resources.use(
+            spyOn(processes, 'spawnProcess').mockResolvedValue(
+                buildProcessResult({ code, stderr: 'The project configuration is invalid.' }),
+            ),
+        );
+        expect(await captureRejection(runSandboxCheck(session.root, 'supabase/deno-lint'))).toBe(
+            'The project configuration is invalid.',
+        );
+    },
+);
 
 test.each([...STORAGE_POLICIES])(
     "a storage policy counts only a real bucket_id = 'name' condition on storage.objects: $name",
@@ -93,7 +95,7 @@ test.each([...STORAGE_POLICIES])(
         for (const scope of ['', 'app']) {
             const path = join(scope, 'supabase/migrations/20261005000000_policy.sql');
 
-            const findings = await checkFindings(sandbox.path, 'supabase/storage-policies', { scope });
+            const findings = await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope });
             expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
                 allowed
                     ? []
@@ -108,7 +110,7 @@ test.each([...STORAGE_POLICIES])(
                 join(sandbox.path, path),
                 "CREATE POLICY p ON storage.objects USING (bucket_id = 'avatars');",
             );
-            expect(await checkFindings(sandbox.path, 'supabase/storage-policies', { scope })).toStrictEqual([]);
+            expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope })).toStrictEqual([]);
         }
     },
 );
@@ -131,26 +133,10 @@ test("service role keys are allowed in each scope's test files and refused in cl
 test('service role keys are refused in component and module clients and allowed in the functions folder', async () => {
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['supabase'], { tables: '[supabase]\nfunctions_folder = "server"\n' });
-    const sources = {
-        'client.vue': '<script setup>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
-        'client.svelte': '<script>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
-        'client.astro': '---\nconst key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n---\n',
-        'client.mts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
-        'client.cts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
-        'client.cjs': 'exports.key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
-        'server/allowed.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
-        'notes.txt': 'SUPABASE_SERVICE_ROLE_KEY\n',
-    };
+    const sources = SERVICE_ROLE_CLIENTS;
     await createFileTree(sandbox.path, { 'gspot.toml': settings, ...sources });
-    const findings = await checkFindings(sandbox.path, 'supabase/service-role-key');
-    expect(findings.map(({ file }) => file)).toStrictEqual([
-        'client.astro',
-        'client.cjs',
-        'client.cts',
-        'client.mts',
-        'client.svelte',
-        'client.vue',
-    ]);
+    const findings = await runSandboxCheck(sandbox.path, 'supabase/service-role-key');
+    expect(findings.map(({ file }) => file)).toStrictEqual([...SERVICE_ROLE_CLIENT_FILES]);
     for (const [path, text] of Object.entries(sources)) {
         if (path.startsWith('client.'))
             await writeFile(
@@ -227,5 +213,5 @@ test.each(['', 'apps/api'])(
 
 test('supabase/storage-policies reports nothing without a config.toml', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['supabase']) });
-    expect(await checkFindings(sandbox.path, 'supabase/storage-policies')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies')).toStrictEqual([]);
 });

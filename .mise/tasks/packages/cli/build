@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Build the CLI: bundle gspot.js and the PurgeCSS child process, copy the grammars and their licenses, and check the copy of the package license."
+#MISE description="Build the CLI: bundle gspot.js and the PurgeCSS child process, and copy the grammars, their licenses, and the root license."
 #MISE dir="{{config_root}}/packages/cli"
 set -euo pipefail
 
@@ -32,8 +32,5 @@ for pin in \
     fi
 done
 
-# npm packs only the package folder, so the package keeps its own copy of the root license.
-if ! cmp -s ../../LICENSE.md LICENSE.md; then
-    printf 'LICENSE.md differs from the root LICENSE.md. Copy the root file over it.\n' >&2
-    exit 1
-fi
+# npm packs only the package folder, so the package gets its own copy of the root license.
+cp ../../LICENSE.md LICENSE.md

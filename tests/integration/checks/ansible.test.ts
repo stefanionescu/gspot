@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
-import { hasToolBuild } from '#tests/setup/system.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
 import type { Level } from '#cli/types/configurations.ts';
-import { buildSandboxChanges } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { ANSIBLE_CONFIG, ANSIBLE_SANDBOX, ANSIBLE_PLAYBOOK, COMMAND_PLAYBOOK } from '#tests/data/checks/ansible.ts';
 
 /** Assert the ansible scopes behavior. */
@@ -96,8 +96,11 @@ async function assertAnsibleLevels(installedSandbox: () => Sandbox, level: Level
 }
 
 describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
-    const installedSandbox = registerSharedSandbox(ANSIBLE_SANDBOX);
-    test('ansible-lint checks each scope without ansible.cfg', assertAnsibleScopes.bind(undefined, installedSandbox));
+    const installedSandbox = shareInstalledSandbox(ANSIBLE_SANDBOX);
+    test(
+        'ansible-lint reports command-instead-of-module in the root and in a scope without ansible.cfg, and passes after the fix',
+        assertAnsibleScopes.bind(undefined, installedSandbox),
+    );
 
     test.each([...LEVELS])(
         'ansible-lint uses the profile of level %s next to the root and scope ansible.cfg files',

@@ -2,31 +2,35 @@ import executables from 'which';
 import { join, dirname } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { findCheckCode } from '#cli/checks/code.ts';
 import * as processes from '#cli/system/processes.ts';
-import { useExecutable } from '#tests/setup/processes.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import { getTable } from '#cli/settings/scope-settings.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
-import { planSandboxCheck } from '#tests/setup/check-input.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { fakeTool, fakePinnedExecutables } from '#tests/setup/fakes.ts';
-import { buildRunOptions, buildProcessResult } from '#tests/setup/builders.ts';
-import { GENERATOR_CASES, GENERATOR_SCRIPT, SUPABASE_TYPES_OUTPUT } from '#tests/data/checks/generator-outputs.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { writeScriptCommand, fakeExecutableLookup, fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 
 import {
+    GENERATOR_CASES,
     DATABASE_SCHEMAS,
+    GENERATOR_SCRIPT,
     DOCKER_VERSION_OUTPUT,
-    SUPABASE_PROJECT_CONFIG,
+    SUPABASE_TYPES_OUTPUT,
     SUPABASE_VERSION_OUTPUT,
-} from '#tests/data/checks/supabase.ts';
+    MISSING_OPENAPI_FINDINGS,
+    SUPABASE_PROJECT_FILE_SOURCE,
+    UNTRACKED_CLOUDFLARE_FINDINGS,
+} from '#tests/data/checks/generator-outputs.ts';
 
 async function prepareGeneratorCheck(root: string, row: (typeof GENERATOR_CASES)[number]) {
     await createFileTree(root, {
@@ -78,14 +82,14 @@ async function prepareSupabaseCheck(
         'gspot.toml': buildSandboxSettings(['supabase'], {
             tables: `${settings}\ntypes_file = "${prefix}database.ts"\n${declared}`,
         }),
-        [`${prefix}supabase/config.toml`]: SUPABASE_PROJECT_CONFIG,
+        [`${prefix}supabase/config.toml`]: SUPABASE_PROJECT_FILE_SOURCE,
     });
     const runStaleTypesCheck = async () => {
         const result = await runChecks(await openSession(root), buildRunOptions({ only: ['supabase/stale-types'] }));
         return result.report.checks.find((check) => check.scope === scope)!;
     };
-    const bin = await fakeTool(root, 'bin/supabase', '');
-    await fakeTool(root, 'bin/docker', '');
+    const bin = await writeScriptCommand(root, 'bin/supabase', '');
+    await writeScriptCommand(root, 'bin/docker', '');
     const supabase = executables.sync('supabase', { path: bin });
     const docker = executables.sync('docker', { path: bin });
     const requests: { commandArguments: string[]; cwd: string }[] = [];
@@ -98,7 +102,7 @@ async function prepareSupabaseCheck(
         }),
     );
     resources.use(
-        useExecutable((name) =>
+        fakeExecutableLookup((name) =>
             new Map([
                 ['supabase', supabase],
                 ['docker', docker],
@@ -143,7 +147,6 @@ test.each([...GENERATOR_CASES])(
         expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('Keep untracked notes\n');
     },
 );
-
 test('a missing OpenAPI document is reported before generation', async () => {
     using resources = new DisposableStack();
 
@@ -158,16 +161,9 @@ test('a missing OpenAPI document is reported before generation', async () => {
     const input = planSandboxCheck(session, 'openapi/stale-document');
     const run = resources.use(spyOn(processes, 'spawnProcess'));
     const missingResult = await runCheckCode(session, input, findCheckCode(input.check));
-    expect(missingResult.findings).toMatchObject([
-        {
-            file: 'openapi.json',
-            rule: 'missing',
-            message: 'The file openapi.json does not exist; run bun generate.ts and commit what it writes.',
-        },
-    ]);
+    expect(missingResult.findings).toMatchObject([...MISSING_OPENAPI_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
 });
-
 test('custom Worker type settings reach wrangler types as --env-interface', async () => {
     await using sandbox = await testdir();
     const source = 'interface CloudflareEnv {}\n';
@@ -197,7 +193,6 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     expect(await isOnDisk(folders[0]!)).toBe(false);
     expect(await readFile(join(sandbox.path, 'workers/api/cloudflare-env.d.ts'), 'utf8')).toBe(source);
 });
-
 test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and reports the file until Git tracks it', async () => {
     await using sandbox = await testdir();
     const source = 'interface CloudflareEnv {}\n';
@@ -221,13 +216,7 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         planSandboxCheck(untracked, 'cloudflare/stale-types'),
         findCheckCode(planSandboxCheck(untracked, 'cloudflare/stale-types').check),
     );
-    expect(untrackedResult.findings).toMatchObject([
-        {
-            file: 'cloudflare-env.d.ts',
-            rule: 'untracked',
-            message: 'cloudflare-env.d.ts is not tracked. Commit it, so the other checks and this check can read it.',
-        },
-    ]);
+    expect(untrackedResult.findings).toMatchObject([...UNTRACKED_CLOUDFLARE_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
     commitAll(sandbox.path);
     const tracked = await openSession(sandbox.path);
@@ -241,41 +230,42 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         ['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv'],
     ]);
 });
-
-test.each(['', 'apps/api'])('Supabase passes every configured schema as its own --schema', async (scope) => {
-    await using sandbox = await testdir();
-    using fixture = await prepareSupabaseCheck(
-        sandbox.path,
-        scope,
-        buildProcessResult({ stdout: SUPABASE_TYPES_OUTPUT }),
-        DATABASE_SCHEMAS,
-    );
-    await writeFile(join(sandbox.path, fixture.prefix, 'database.ts'), SUPABASE_TYPES_OUTPUT);
-    expect(await fixture.execute()).toMatchObject({ status: 'passed', findings: [] });
-    const request = fixture.requests[0]!;
-    expect(request.cwd).not.toBe(join(sandbox.path, scope));
-    expect(await isOnDisk(request.cwd)).toBe(false);
-    expect(fixture.requests).toStrictEqual([
-        {
-            commandArguments: [
-                'gen',
-                'types',
-                'typescript',
-                '--local',
-                ...DATABASE_SCHEMAS.flatMap((schema) => ['--schema', schema]),
-            ],
-            cwd: request.cwd,
-        },
-    ]);
-});
-
+test.each(['', 'apps/api'])(
+    'Supabase passes every configured schema as its own --schema, in the root and in a scope (%s)',
+    async (scope) => {
+        await using sandbox = await testdir();
+        using fixture = await prepareSupabaseCheck(
+            sandbox.path,
+            scope,
+            buildProcessResult({ stdout: SUPABASE_TYPES_OUTPUT }),
+            DATABASE_SCHEMAS,
+        );
+        await writeFile(join(sandbox.path, fixture.prefix, 'database.ts'), SUPABASE_TYPES_OUTPUT);
+        expect(await fixture.execute()).toMatchObject({ status: 'passed', findings: [] });
+        const request = fixture.requests[0]!;
+        expect(request.cwd).not.toBe(join(sandbox.path, scope));
+        expect(await isOnDisk(request.cwd)).toBe(false);
+        expect(fixture.requests).toStrictEqual([
+            {
+                commandArguments: [
+                    'gen',
+                    'types',
+                    'typescript',
+                    '--local',
+                    ...DATABASE_SCHEMAS.flatMap((schema) => ['--schema', schema]),
+                ],
+                cwd: request.cwd,
+            },
+        ]);
+    },
+);
 test('Supabase types need Docker before the local stack starts', async () => {
     using resources = new DisposableStack();
 
     await using sandbox = await testdir();
     using fixture = await prepareSupabaseCheck(sandbox.path, '', buildProcessResult({ stdout: SUPABASE_TYPES_OUTPUT }));
     await writeFile(join(sandbox.path, 'database.ts'), SUPABASE_TYPES_OUTPUT);
-    resources.use(useExecutable((name) => (name === 'supabase' ? '/fixture/supabase' : null)));
+    resources.use(fakeExecutableLookup((name) => (name === 'supabase' ? '/fixture/supabase' : null)));
 
     expect(await fixture.execute()).toMatchObject({
         status: 'missing',
@@ -283,7 +273,6 @@ test('Supabase types need Docker before the local stack starts', async () => {
     });
     expect(fixture.requests).toStrictEqual([]);
 });
-
 test('a [[command_check]] with outputs reports an output that differs from what its command writes', async () => {
     await using sandbox = await testdir();
     const generator = JSON.stringify([

@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { installSandbox, installToolProjects } from '#tests/setup/install.ts';
-import { COMPOSITE_ACTION, CHECKOUT_WORKFLOW } from '#tests/data/checks/github-actions.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { spawnGspot, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
+import { COMPOSITE_ACTION, CHECKOUT_WORKFLOW, REQUIRED_INPUT_WORKFLOW } from '#tests/data/checks/github-actions.ts';
 
 test('the generated GitHub workflow passes actionlint', async () => {
     await using sandbox = await testdir({ 'README.md': '# Workflow test\n' });
@@ -17,7 +17,7 @@ test('the generated GitHub workflow passes actionlint', async () => {
     commitAll(sandbox.path);
     const environment = {};
     // The sandbox needs no tool project, because mise pins actionlint.
-    await installSandbox(
+    await initSandbox(
         { root: sandbox.path, environment, run: spawnGspot },
         { configurations: ['github-actions'], install: false },
     );
@@ -61,18 +61,7 @@ jobs:
   caller:
     uses: $/.github/workflows/called.yml
 `;
-    const called = `on:
-  workflow_call:
-    inputs:
-      greeting:
-        type: string
-        required: true
-jobs:
-  greet:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo hello
-`;
+    const called = REQUIRED_INPUT_WORKFLOW;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['github-actions']),
         '.github/workflows/caller.yml': workflow,
@@ -116,7 +105,7 @@ test('zizmor checks composite actions in the root and a scope', async () => {
         'app/.github/actions/greet/action.yaml': COMPOSITE_ACTION,
     });
 
-    await installToolProjects(sandbox.path);
+    await installGeneratedTools(sandbox.path);
     const failedCommand = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/zizmor', '--json']),
     );

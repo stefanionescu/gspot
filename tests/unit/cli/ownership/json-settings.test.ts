@@ -18,21 +18,23 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     await chmod(join(sandbox.path, path), 0o640);
     const changes = [{ key: ['stylelint'], value: { extends: './.stylelintrc.json' } }];
     {
-        using log = openWriter(sandbox.path);
-        writePlans(log, [planSettingsWrite(log, path, changes)]);
-        expect(hasManagedKeys({ path, keys: changes }, log.files.read(path)!)).toBe(true);
-        const installed = log.files.read(path)!.bytes.toString('utf8');
+        using writer = openWriter(sandbox.path);
+        writePlans(writer, [planSettingsWrite(writer, path, changes)]);
+        expect(hasManagedKeys({ path, keys: changes }, writer.files.read(path)!)).toBe(true);
+        const installed = writer.files.read(path)!.bytes.toString('utf8');
         expect(installed).toBe(
             original.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.json"}'),
         );
-        writePlans(log, [planSettingsWrite(log, path, changes)]);
+        writePlans(writer, [planSettingsWrite(writer, path, changes)]);
         await writeFile(join(sandbox.path, path), installed.replace('native-project', 'edited-project'));
     }
     {
-        using log = openWriter(sandbox.path);
-        writePlans(log, [planSettingsWrite(log, path, [{ key: ['stylelint'], value: { extends: './next.json' } }])]);
-        expect(hasManagedKeys({ path, keys: changes }, log.files.read(path)!)).toBe(false);
-        writePlans(log, [planRemoval(log, path)]);
+        using writer = openWriter(sandbox.path);
+        writePlans(writer, [
+            planSettingsWrite(writer, path, [{ key: ['stylelint'], value: { extends: './next.json' } }]),
+        ]);
+        expect(hasManagedKeys({ path, keys: changes }, writer.files.read(path)!)).toBe(false);
+        writePlans(writer, [planRemoval(writer, path)]);
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
             original
                 .replace('native-project', 'edited-project')
@@ -49,16 +51,19 @@ test.each(['tool.jsonc', 'package.json'])(
         await using sandbox = await testdir();
         const original = '// Keep this comment.\n{ "kept": {}, "entries": [0, false, ""], }\n';
         await createFileTree(sandbox.path, { [path]: original });
-        using log = openWriter(sandbox.path);
+        using writer = openWriter(sandbox.path);
         const fields = [
             { key: ['created', 'nested', 'owned'], value: 0 },
             { key: ['kept', 'owned'], value: false },
         ];
-        writePlans(log, [planSettingsWrite(log, path, fields)]);
-        expect(hasManagedKeys({ path, keys: fields }, log.files.read(path)!)).toBe(true);
-        expect(log.files.read(path)!.bytes.toString('utf8')).toContain('// Keep this comment.\n');
-        writePlans(log, [planSettingsWrite(log, path, [])]);
-        expect(hasManagedKeys({ path, keys: fields }, log.files.read(path)!)).toBe(true);
+        writePlans(writer, [planSettingsWrite(writer, path, fields)]);
+        expect(hasManagedKeys({ path, keys: fields }, writer.files.read(path)!)).toBe(true);
+        const written =
+            '// Keep this comment.\n{ "kept": {"owned": false}, "entries": [0, false, ""],"created": {"nested":{"owned":0}}, }\n';
+        expect(writer.files.read(path)!.bytes.toString('utf8')).toBe(written);
+        writePlans(writer, [planSettingsWrite(writer, path, [])]);
+        expect(hasManagedKeys({ path, keys: fields }, writer.files.read(path)!)).toBe(true);
+        expect(writer.files.read(path)!.bytes.toString('utf8')).toBe(written);
     },
 );
 
@@ -67,10 +72,10 @@ test.each(['', '[]', 'false', '{"stylelint":'])(
     async (source) => {
         await using sandbox = await testdir({ 'package.json': source });
 
-        using log = openWriter(sandbox.path);
+        using writer = openWriter(sandbox.path);
         const offset = source === '' ? '0' : '13';
         expect(() =>
-            planSettingsWrite(log, 'package.json', [{ key: ['stylelint'], value: { extends: './managed.json' } }]),
+            planSettingsWrite(writer, 'package.json', [{ key: ['stylelint'], value: { extends: './managed.json' } }]),
         ).toThrow(
             matchFields<GspotError>({
                 name: 'GspotError',

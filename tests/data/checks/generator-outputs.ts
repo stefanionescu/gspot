@@ -32,3 +32,25 @@ generate_command = ["bun", "generate.ts", "openapi.json"]
 ] as const;
 
 export const SUPABASE_TYPES_OUTPUT = 'export type Database = { public: { Tables: {} } };\n';
+export const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
+export const DOCKER_VERSION_OUTPUT = 'Docker version 29.2.1\n';
+export const SUPABASE_VERSION_OUTPUT = '2.75.0\n';
+export const SUPABASE_PROJECT_FILE_SOURCE = 'project_id = "types-sample"\n';
+
+/** The finding of an untracked cloudflare-env.d.ts. */
+export const UNTRACKED_CLOUDFLARE_FINDINGS = [
+    {
+        file: 'cloudflare-env.d.ts',
+        rule: 'untracked',
+        message: 'cloudflare-env.d.ts is not tracked. Commit it, so the other checks and this check can read it.',
+    },
+] as const;
+
+/** The finding of a missing OpenAPI document. */
+export const MISSING_OPENAPI_FINDINGS = [
+    {
+        file: 'openapi.json',
+        rule: 'missing',
+        message: 'The file openapi.json does not exist; run bun generate.ts and commit what it writes.',
+    },
+] as const;

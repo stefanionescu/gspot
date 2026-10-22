@@ -3,23 +3,24 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { runCommand } from '#tests/setup/processes.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     STYLESHEETS,
     TAILWIND_FILES,
-    FIXED_STYLESHEETS,
+    TAILWIND_TABLES,
+    STYLELINT_TABLES,
     STYLELINT_COMMAND,
-    TAILWIND_SETTINGS,
-    STYLELINT_SETTINGS,
-    ALL_LEVEL_STYLELINT_SETTINGS,
+    CORRECTED_STYLESHEETS,
+    ALL_LEVEL_STYLELINT_TABLES,
 } from '#tests/data/checks/css.ts';
 
-const installedSandbox = registerSharedSandbox({
+const installedSandbox = shareInstalledSandbox({
     configurations: ['css'],
     level: 'all',
     files: { 'package.json': '{"private":true}\n', ...STYLESHEETS },
@@ -34,7 +35,7 @@ test.each([...LEVELS])(
             files: {
                 'gspot.toml': buildSandboxSettings(['css'], {
                     level,
-                    tables: level === 'all' ? ALL_LEVEL_STYLELINT_SETTINGS : STYLELINT_SETTINGS,
+                    tables: level === 'all' ? ALL_LEVEL_STYLELINT_TABLES : STYLELINT_TABLES,
                 }),
                 'package.json': '{"private":true}\n',
                 ...STYLESHEETS,
@@ -59,7 +60,7 @@ test.each([...LEVELS])(
         expect(findings.filter(({ rule }) => rule === 'number-max-precision').map(({ file }) => file)).toStrictEqual(
             level === 'all' ? ['build/site.css', 'app/site.css'] : [],
         );
-        await createFileTree(root, FIXED_STYLESHEETS);
+        await createFileTree(root, CORRECTED_STYLESHEETS);
         const corrected = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND]));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const correctedReport = corrected.report;
@@ -75,7 +76,7 @@ test("Stylelint run by an editor finds the scope's tool file and checks your bui
     await using _change = await applySandboxChanges(installedSandbox(), {
         check: '',
         files: {
-            'gspot.toml': buildSandboxSettings(['css'], { level: 'all', tables: ALL_LEVEL_STYLELINT_SETTINGS }),
+            'gspot.toml': buildSandboxSettings(['css'], { level: 'all', tables: ALL_LEVEL_STYLELINT_TABLES }),
             'package.json': '{"private":true}\n',
             ...STYLESHEETS,
         },
@@ -85,7 +86,7 @@ test("Stylelint run by an editor finds the scope's tool file and checks your bui
     const failed = await runCommand([tool, 'build/site.css'], { cwd: root });
     expect(failed.code, failed.stdout + failed.stderr).toBe(2);
     expect(failed.stdout + failed.stderr).toContain('property-no-vendor-prefix');
-    await createFileTree(root, FIXED_STYLESHEETS);
+    await createFileTree(root, CORRECTED_STYLESHEETS);
     for (const folder of ['', 'app']) {
         const native = await runCommand([tool, folder === '' ? 'build/site.css' : 'site.css'], {
             cwd: join(root, folder),
@@ -99,7 +100,7 @@ test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind
     await using _change = await applySandboxChanges(installedSandbox(), {
         check: '',
         files: {
-            'gspot.toml': buildSandboxSettings(['css', 'nextjs'], { level: 'all', tables: TAILWIND_SETTINGS }),
+            'gspot.toml': buildSandboxSettings(['css', 'nextjs'], { level: 'all', tables: TAILWIND_TABLES }),
             ...TAILWIND_FILES,
         },
     });

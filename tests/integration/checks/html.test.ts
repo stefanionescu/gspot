@@ -2,21 +2,21 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxChanges } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { COPY_PAGE_BUILD } from '#tests/data/checks/site/build.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { applySandboxChanges, registerSharedSandbox } from '#tests/setup/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
+    HTML_SANDBOX,
     AUTOPLAY_PAGE,
     AUTOPLAY_CHECKS,
-    AUTOPLAY_SCOPE_SETTINGS,
+    AUTOPLAY_SCOPE_TABLES,
     CONTROLLED_PLAYBACK_PAGE,
-    CHECKS_HTML_INSTALLED_SANDBOX,
 } from '#tests/data/checks/html.ts';
 
-const installedSandbox = registerSharedSandbox(CHECKS_HTML_INSTALLED_SANDBOX);
+const installedSandbox = shareInstalledSandbox(HTML_SANDBOX);
 
 test.each([...AUTOPLAY_CHECKS])(
     '$check reports audio and video autoplay and accepts user-controlled playback',
@@ -27,14 +27,14 @@ test.each([...AUTOPLAY_CHECKS])(
                 ? [{ check: entry.check, scope: 'app', status: 'skipped' as const, fileCount: 0, findings: [] }]
                 : [];
         const sourceFiles = {
-            'gspot.toml': buildSandboxSettings(['html'], { level: 'all', tables: AUTOPLAY_SCOPE_SETTINGS }),
+            'gspot.toml': buildSandboxSettings(['html'], { level: 'all', tables: AUTOPLAY_SCOPE_TABLES }),
             'index.html': AUTOPLAY_PAGE,
             'app/page.html': AUTOPLAY_PAGE,
             'app/build.mjs': COPY_PAGE_BUILD,
         };
         await using _sourceChange = await applySandboxChanges(
             installedSandbox(),
-            buildSandboxChanges(CHECKS_HTML_INSTALLED_SANDBOX.files, sourceFiles),
+            buildSandboxChanges(HTML_SANDBOX.files, sourceFiles),
         );
 
         const settings = await readFile(join(root, 'gspot.toml'), 'utf8');

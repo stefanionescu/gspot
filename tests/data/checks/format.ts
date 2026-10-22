@@ -1,4 +1,4 @@
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 /** Only the EditorConfig check reads the format settings. */
 export const EDITORCONFIG_SETTINGS = `configurations = ["format"]
@@ -28,45 +28,6 @@ export const PRETTIER_OPTIONS_BY_FILE = [
     { file: 'apps/web/exempt.js', tabWidth: 4, singleQuote: false, semi: false, endOfLine: 'lf' },
     { file: 'apps/web/admin/page.js', tabWidth: 8, singleQuote: false, semi: true, endOfLine: 'crlf' },
 ] as const;
-
-/** Source files outside the Prettier extension set still receive EditorConfig checks. */
-export const EDITORCONFIG_FILES = {
-    'source.py': 'VALUE = 1\n',
-    'task.sh': '#!/bin/sh\nprintf hello\n',
-    'Source.swift': 'let value = 1\n',
-    'settings.toml': 'value = 1\n',
-    'query.sql': 'SELECT 1;\n',
-    Makefile: 'build:\n\ttrue\n',
-    Dockerfile: 'FROM scratch\n',
-} as const;
-
-export const FORMAT_SETTINGS = `configurations = ["format"]
-[rules]
-enabled = false
-`;
-
-/** Selectors that EditorConfig cannot express in a section. */
-export const EDITORCONFIG_SELECTOR_ERRORS = [
-    {
-        pattern: 'src/*.+(ts|js)',
-        message:
-            'EditorConfig cannot represent selector "src/*.+(ts|js)". Keep this override in a `[[format.override]]` record with a selector that EditorConfig can read.',
-    },
-    {
-        pattern: '!src/*.js',
-        message:
-            'EditorConfig cannot represent selector "!src/*.js". Keep this override in a `[[format.override]]` record with a selector that EditorConfig can read.',
-    },
-] as const;
-
-export const PRETTIER_PATH_IGNORE = `
-[[ignore]]
-check = "format/prettier"
-paths = ["**/*.json"]
-reason = "These files retain generated formatting."
-`;
-
-export const NON_TABLE_JSON = ['null', '[]', '42'];
 
 /** A staged format check uses the root tool file until a later apply writes the scope tool file. */
 export const STAGED_FORMAT_FILES = {

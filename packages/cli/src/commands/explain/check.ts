@@ -4,9 +4,9 @@ import type { Session } from '#cli/types/session.ts';
 import { listSettings } from '#cli/settings/known.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { ESLINT_TOOL } from '#cli/config/configurations.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandCheck } from '#cli/types/settings/file.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
 import { getTool, getToolName, extractRulePrefix } from '#cli/configurations/declared-tools.ts';
@@ -172,7 +172,7 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
     const configurations = readConfigurations();
     const qualified = `${tool}/${rule}`;
     const plugin = findRulePlugin(extractRulePrefix(qualified) ?? tool, configurations);
-    const ruleTool = plugin === undefined ? tool : ESLINT_TOOL;
+    const ruleTool = plugin === undefined ? tool : ESLINT_MANIFEST_TOOL;
     const identifier = plugin === undefined ? rule : qualified;
     const found = listChecksById(configurations.values())
         .values()

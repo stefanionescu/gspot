@@ -1,66 +1,74 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { join, basename } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSchema } from '#cli/checks/postgres/schema.ts';
-import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readMigrations } from '#cli/checks/postgres/migrations.ts';
-import { MIGRATION_FILE, TEAMS_MIGRATION } from '#tests/data/checks/postgres.ts';
-import { checkFindings, planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { TEAMS_TABLE_SQL, TEAMS_MIGRATION_PATH } from '#tests/data/checks/postgres/history.ts';
+import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
-test('history: migration history reports changed committed SQL and an earlier new version, then passes after fixes', async () => {
-    const frozenCheck = findBuiltInCheck('postgres/edited-migrations');
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' }),
-        [MIGRATION_FILE]: TEAMS_MIGRATION,
-    });
-
-    readGitOutput(sandbox.path, ['init']);
-    readGitOutput(sandbox.path, ['add', '.']);
-    const session = await openSession(sandbox.path);
-    expect(await frozenCheck(session, planSandboxCheck(session, 'postgres/edited-migrations'))).toStrictEqual([]);
-    readGitOutput(sandbox.path, ['commit', '-m', 'Fixture']);
-    await writeFile(join(sandbox.path, MIGRATION_FILE), TEAMS_MIGRATION + 'ALTER TABLE teams ADD COLUMN name text;\n');
-    await createFileTree(sandbox.path, { 'migrations/20240101_early.sql': 'SELECT 1;\n' });
-    readGitOutput(sandbox.path, ['add', '.']);
-    const checkedSession = await openSession(sandbox.path);
-    const frozen = await frozenCheck(checkedSession, planSandboxCheck(checkedSession, 'postgres/edited-migrations'));
-    expect(frozen).toMatchObject([
-        {
-            check: 'postgres/edited-migrations',
-            file: MIGRATION_FILE,
+test('history: edited-migrations reports an edited committed migration and passes after the edit is undone', async () => {
+    await using sandbox = await prepareTeamsHistory();
+    await writeFile(
+        join(sandbox.path, TEAMS_MIGRATION_PATH),
+        TEAMS_TABLE_SQL + 'ALTER TABLE teams ADD COLUMN name text;\n',
+    );
+    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([
+        matchFields({
+            file: TEAMS_MIGRATION_PATH,
             line: 1,
             rule: 'frozen',
-            fixable: false,
-        },
+            message:
+                'This migration is at or before postgres.frozen_through and differs from its committed text. Restore it and write a new migration.',
+        }),
     ]);
-    expect(frozen[0]!.message).toContain('postgres.frozen_through');
-    const order = await checkFindings(sandbox.path, 'postgres/migration-order');
-    expect(order).toMatchObject([
-        {
-            check: 'postgres/migration-order',
+    await writeFile(join(sandbox.path, TEAMS_MIGRATION_PATH), TEAMS_TABLE_SQL);
+    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([]);
+});
+
+test('history: migration-order reports a new migration older than a committed one and passes after it is renamed', async () => {
+    await using sandbox = await prepareTeamsHistory();
+    await writeFile(join(sandbox.path, 'migrations/20240101_early.sql'), 'SELECT 1;\n');
+    runGitStep(sandbox.path, ['add', '.']);
+    expect(await runSandboxCheck(sandbox.path, 'postgres/migration-order')).toStrictEqual([
+        matchFields({
             file: 'migrations/20240101_early.sql',
             line: 1,
             rule: 'order',
-            fixable: false,
-        },
+            message: 'A new migration sorts before 20240201_teams.sql, which is already committed.',
+        }),
     ]);
-    expect(order[0]!.message).toContain(basename(MIGRATION_FILE));
-    await writeFile(join(sandbox.path, MIGRATION_FILE), TEAMS_MIGRATION);
-    readGitOutput(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);
-    const correctedSession = await openSession(sandbox.path);
-    expect(
-        await frozenCheck(correctedSession, planSandboxCheck(correctedSession, 'postgres/edited-migrations')),
-    ).toStrictEqual([]);
-    expect(await checkFindings(sandbox.path, 'postgres/migration-order')).toStrictEqual([]);
-    const nextSession = await openSession(sandbox.path);
-    const read = planSandboxCheck(nextSession, 'postgres/edited-migrations');
-    await writeFile(join(sandbox.path, '.git', readGitOutput(sandbox.path, ['symbolic-ref', 'HEAD'])), 'broken');
-    expect(await captureRejection(frozenCheck(nextSession, read))).toContain('Cannot read committed Git history');
+    runGitStep(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);
+    expect(await runSandboxCheck(sandbox.path, 'postgres/migration-order')).toStrictEqual([]);
 });
+
+test('history: edited-migrations fails when it cannot read the committed Git history', async () => {
+    await using sandbox = await prepareTeamsHistory();
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'postgres/edited-migrations');
+    await writeFile(join(sandbox.path, '.git', runGitStep(sandbox.path, ['symbolic-ref', 'HEAD'])), 'broken');
+    expect(await captureRejection(findBuiltInCheck('postgres/edited-migrations')(session, planned))).toContain(
+        'Cannot read committed Git history',
+    );
+});
+
+/**
+ * Commit one frozen teams migration.
+ *
+ * @returns the sandbox, which deletes itself.
+ */
+async function prepareTeamsHistory(): Promise<AsyncDisposable & { path: string }> {
+    const sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' }),
+        [TEAMS_MIGRATION_PATH]: TEAMS_TABLE_SQL,
+    });
+    commitAll(sandbox.path);
+    return sandbox;
+}
 
 test.each(['', 'V'])('history: unpadded %s migration versions replay and freeze in numeric order', async (prefix) => {
     await using sandbox = await testdir({
@@ -83,9 +91,9 @@ test.each(['', 'V'])('history: unpadded %s migration versions replay and freeze 
         { file: `migrations/${prefix}8_earlier.sql`, rule: 'order' },
     ]);
     await writeFile(join(sandbox.path, `migrations/${prefix}10_secure.sql`), 'SELECT 10;');
-    expect(await checkFindings(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toStrictEqual([]);
     await writeFile(join(sandbox.path, `migrations/${prefix}9_create.sql`), 'CREATE TABLE teams (id bigint);');
-    expect(await checkFindings(sandbox.path, 'postgres/edited-migrations')).toMatchObject([
+    expect(await runSandboxCheck(sandbox.path, 'postgres/edited-migrations')).toMatchObject([
         { file: `migrations/${prefix}9_create.sql`, rule: 'frozen' },
     ]);
 });

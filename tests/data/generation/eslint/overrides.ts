@@ -9,44 +9,6 @@ import { create } from 'zustand';
 export const store = create(() => ({ readFile, join }));
 `;
 
-/** Globals that each runtime has and lacks, to catch merged globals and a serviceworker mixed up with a worker. */
-export const RUNTIME_CASES = [
-    {
-        runtime: 'browser',
-        globals: ['window', 'document'],
-        absent: ['process', 'Buffer', 'require', '__dirname', 'importScripts'],
-    },
-    {
-        runtime: 'worker',
-        globals: ['postMessage', 'DedicatedWorkerGlobalScope', 'importScripts'],
-        absent: ['process', 'Buffer', 'require', '__dirname', 'clients'],
-    },
-    {
-        runtime: 'serviceworker',
-        globals: ['clients', 'skipWaiting', 'importScripts'],
-        absent: ['process', 'Buffer', 'require', '__dirname', 'DedicatedWorkerGlobalScope'],
-    },
-    {
-        runtime: 'react-native',
-        globals: ['__DEV__', 'process', 'require'],
-        absent: ['Buffer', '__dirname', '__filename', 'module'],
-    },
-] as const;
-
-/** Presets with their own globals must still follow an authored runtime. */
-export const FRAMEWORK_RUNTIME_CASES = [
-    {
-        configuration: 'vue',
-        path: 'src/Worker.vue',
-        source: '<script setup>postMessage("value"); window.alert("value"); process.exit(0);</script><template><p>worker</p></template>\n',
-    },
-    {
-        configuration: 'svelte',
-        path: 'src/Worker.svelte',
-        source: '<script>postMessage("value"); window.alert("value"); process.exit(0);</script><p>worker</p>\n',
-    },
-] as const;
-
 /** ESLint rules and overrides at the root and in two nested scopes. The generated tool file and a template read them. */
 export const ESLINT_OVERRIDES_SETTINGS = `configurations = [ "javascript" ]
 
@@ -125,3 +87,26 @@ restricted_imports = [{ name = "node:fs", message = "Use the storage service." }
 [scope.zustand]
 store_files = ["state/store.js"]
 `;
+
+/** The restricted-import findings of each scope. */
+export const RESTRICTED_IMPORT_FINDINGS = [
+    { file: 'app/deep/source.js', rule: 'no-restricted-imports', line: 1 },
+    { file: 'app/source.js', rule: 'no-restricted-imports', line: 1 },
+    { file: 'sibling/source.js', rule: 'no-restricted-imports', line: 2 },
+    { file: 'source.js', rule: 'no-restricted-imports', line: 2 },
+    { file: 'state/store.js', rule: 'no-restricted-imports', line: 1 },
+    { file: 'state/widget.js', rule: 'no-restricted-imports', line: 1 },
+    { file: 'state/widget.js', rule: 'no-restricted-imports', line: 3 },
+] as const;
+
+/** Settings with root and scope restricted imports. */
+export const RESTRICTED_IMPORT_SETTINGS = {
+    tables: `[[tools.eslint.restricted_imports]]
+name = "lodash"
+message = "Use the built-in methods."
+
+[[tools.eslint.override]]
+paths = ["app/**"]
+rules = { "no-restricted-imports" = [{ paths = [{ name = "moment", message = "Use Temporal." }] }] }
+`,
+} as const;

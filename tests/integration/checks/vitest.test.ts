@@ -2,19 +2,25 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { rm, readFile, writeFile } from 'node:fs/promises';
-import { linkInstalledModules } from '#tests/setup/modules.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { COVERAGE_ZERO_LIMITS } from '#tests/data/checks/coverage.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import vitestPackage from 'vitest/package.json' with { type: 'json' };
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { VITEST_SOURCE, VITEST_PACKAGE, UNTESTED_SOURCE, VITEST_PROJECT_FILES } from '#tests/data/checks/vitest.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { COVERAGE_ZERO_LIMITS } from '#tests/data/integration/checks/coverage.ts';
+
+import {
+    VITEST_SOURCE,
+    VITEST_PACKAGE,
+    UNTESTED_SOURCE,
+    VITEST_PROJECT_FILES,
+} from '#tests/data/integration/checks/vitest.ts';
 
 const vitestProjectFiles = {
     ...VITEST_PROJECT_FILES,
     'package.json': JSON.stringify({ ...VITEST_PACKAGE, devDependencies: { vitest: vitestPackage.version } }) + '\n',
 };
 
-test('vitest/coverage reports a coverage limit and passes after the fix, in the root and a scope', async () => {
+test('vitest/coverage reports coverage under its limit and passes after the fix, in the root and a scope', async () => {
     await using sandbox = await testdir(vitestProjectFiles);
 
     await createFileTree(join(sandbox.path, 'app'), vitestProjectFiles);
@@ -31,20 +37,37 @@ test('vitest/coverage reports a coverage limit and passes after the fix, in the 
     await writeFile(source, UNTESTED_SOURCE);
     const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const failedScope = failed.report.checks.find((check) => check.scope === 'app')!;
-    expect(failedScope.status).toBe('failed');
-    expect(failedScope.findings.some((finding) => finding.message.includes('100%'))).toBe(true);
+    expect(
+        failed.report.checks.map(({ scope, status, findings }) => ({
+            scope,
+            status,
+            messages: findings.map(({ message }) => message),
+        })),
+    ).toStrictEqual([
+        { scope: '', status: 'passed', messages: [] },
+        {
+            scope: 'app',
+            status: 'failed',
+            messages: [
+                'Coverage for lines (80%) does not meet global threshold (100%)',
+                'Coverage for functions (50%) does not meet global threshold (100%)',
+            ],
+        },
+    ]);
     expect(await readFile(source, 'utf8')).toBe(UNTESTED_SOURCE);
     await writeFile(source, VITEST_SOURCE);
     const corrected = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']),
     );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks.find((check) => check.scope === 'app')!.status).toBe('passed');
+    expect(corrected.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+        { scope: '', status: 'passed' },
+        { scope: 'app', status: 'passed' },
+    ]);
     expect(await readFile(source, 'utf8')).toBe(VITEST_SOURCE);
 });
 
-test.each([80, 0])('vitest/coverage with a %i limit runs without its coverage package only at 0', async (limit) => {
+test('vitest/coverage at a limit above 0 reports @vitest/coverage-v8 as missing when the project lacks it', async () => {
     await using sandbox = await testdir(vitestProjectFiles);
 
     await createFileTree(join(sandbox.path, 'app'), vitestProjectFiles);
@@ -55,7 +78,7 @@ test.each([80, 0])('vitest/coverage with a %i limit runs without its coverage pa
         buildSandboxSettings(['typescript', 'vitest'], {
             level: 'all',
             tables:
-                (limit === 0 ? COVERAGE_ZERO_LIMITS : COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80')) +
+                COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80') +
                 `[[scope]]
 path = "app"
 configurations = ["typescript", "vitest"]
@@ -63,12 +86,10 @@ configurations = ["typescript", "vitest"]
         }),
     );
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']));
-    expect(checked.code, checked.stdout + checked.stderr).toBe(limit === 0 ? 0 : 2);
-    const checks = checked.report.checks;
-    expect(checks.map((check) => check.scope)).toStrictEqual(['', 'app']);
-    for (const check of checks) {
-        expect(check.status).toBe(limit === 0 ? 'passed' : 'missing');
-        if (limit === 0) expect(check.command?.some((arg) => arg.startsWith('--coverage'))).toBe(false);
-        else expect(check.note).toContain('@vitest/coverage-v8');
-    }
+    expect(checked.code, checked.stdout + checked.stderr).toBe(2);
+    const note = '@vitest/coverage-v8 is not installed. Run: npm install --save-dev @vitest/coverage-v8';
+    expect(checked.report.checks.map(({ scope, status, note }) => ({ scope, status, note }))).toStrictEqual([
+        { scope: '', status: 'missing', note },
+        { scope: 'app', status: 'missing', note },
+    ]);
 });

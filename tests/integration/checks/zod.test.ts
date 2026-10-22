@@ -1,14 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { pinSandboxNpm } from '#tests/setup/sandbox.ts';
-import { linkInstalledModules } from '#tests/setup/modules.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { installSandbox, installToolProjects } from '#tests/setup/install.ts';
-import { LOOSE_ZOD_SCHEMA, ZOD_PROJECT_FILES } from '#tests/data/checks/zod.ts';
+import { initSandbox, pinSandboxNpm } from '#tests/setup/sandboxes/create.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { LOOSE_ZOD_SCHEMA, ZOD_PROJECT_FILES } from '#tests/data/integration/checks/zod.ts';
+import { spawnGspot, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
 
 // Creates and commits a TypeScript project with a loose Zod schema that links the workspace modules.
 async function prepareLooseSchemaProject(root: string): Promise<Record<string, string>> {
@@ -24,7 +23,7 @@ async function prepareLooseSchemaProject(root: string): Promise<Record<string, s
 test('adding the zod configuration adds its ESLint finding, and removing it drops its plugin', async () => {
     await using sandbox = await testdir();
     const environment = await prepareLooseSchemaProject(sandbox.path);
-    await installSandbox(
+    await initSandbox(
         { root: sandbox.path, environment, run: spawnGspot },
         { configurations: ['typescript'], level: 'all' },
     );
@@ -32,7 +31,7 @@ test('adding the zod configuration adds its ESLint finding, and removing it drop
     expect(before.code, before.stdout + before.stderr).toBe(0);
     const added = await spawnGspot(sandbox.path, ['add', 'zod', '--json'], environment);
     expect(added.code, added.stdout + added.stderr).toBe(0);
-    await installToolProjects(sandbox.path);
+    await installGeneratedTools(sandbox.path);
     const after = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'javascript/eslint', '--json'], environment),
     );

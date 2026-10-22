@@ -1,7 +1,9 @@
 import { test, expect } from 'bun:test';
-import { buildConfiguration } from '#tests/setup/builders.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
 
 test('adds required configurations, dependencies first, in order of first mention', () => {
     const configurations = new Map([
@@ -15,5 +17,11 @@ test('adds required configurations, dependencies first, in order of first mentio
 });
 
 test('an unknown configuration names the near matches', () => {
-    expect(() => selectConfigurations(['bassh'], readConfigurations())).toThrow('Did you mean `bash`');
+    expect(() => selectConfigurations(['bassh'], readConfigurations())).toThrow(
+        matchFields<GspotError>({
+            code: 'arguments',
+            message:
+                'There is no configuration called `bassh`. Did you mean `bash`? Run `gspot list configurations` to see the available configurations.',
+        }),
+    );
 });

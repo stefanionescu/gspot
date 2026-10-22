@@ -1,28 +1,27 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { hasToolBuild } from '#tests/setup/system.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { installToolProjects } from '#tests/setup/install.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { SEMGREP_CHECK } from '#tests/data/checks/security/semgrep-rules.ts';
+import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SEMGREP_CHECK } from '#tests/data/integration/checks/security/semgrep.ts';
+import { spawnGspot, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
 
 import {
     SENSITIVE_FILES,
     SENSITIVE_FINDINGS,
-    FIXED_SENSITIVE_FILES,
-} from '#tests/data/checks/security/sensitive-data.ts';
+    CORRECTED_SENSITIVE_FILES,
+} from '#tests/data/integration/checks/security/sensitive-data.ts';
 
 test.skipIf(!hasToolBuild('semgrep'))(
-    'Semgrep reports secrets in log calls and UserDefaults, and passes after the fix',
+    'Semgrep reports secrets in log calls and UserDefaults and a JWT check without algorithms, and passes after the fix',
     async () => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript', 'swift', 'security'], { level: 'all' }),
             ...SENSITIVE_FILES,
         });
 
-        await installToolProjects(sandbox.path);
+        await installGeneratedTools(sandbox.path);
         const failed = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = failed.report;
@@ -39,15 +38,15 @@ test.skipIf(!hasToolBuild('semgrep'))(
         expect(
             await Promise.all(Object.keys(SENSITIVE_FILES).map((file) => readFile(join(sandbox.path, file), 'utf8'))),
         ).toStrictEqual(Object.values(SENSITIVE_FILES));
-        for (const [file, source] of Object.entries(FIXED_SENSITIVE_FILES))
+        for (const [file, source] of Object.entries(CORRECTED_SENSITIVE_FILES))
             await writeFile(join(sandbox.path, file), source);
         const corrected = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
         expect(
             await Promise.all(
-                Object.keys(FIXED_SENSITIVE_FILES).map((file) => readFile(join(sandbox.path, file), 'utf8')),
+                Object.keys(CORRECTED_SENSITIVE_FILES).map((file) => readFile(join(sandbox.path, file), 'utf8')),
             ),
-        ).toStrictEqual(Object.values(FIXED_SENSITIVE_FILES));
+        ).toStrictEqual(Object.values(CORRECTED_SENSITIVE_FILES));
     },
 );

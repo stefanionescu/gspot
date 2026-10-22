@@ -5,14 +5,15 @@ import { testdir, createFileTree } from 'testdirs';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { type PushReport } from '#cli/types/commands/check.ts';
 import { type GitleaksHistory } from '#tests/types/secrets.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
-import { runGit, commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
-import { API_TOKEN, AWS_KEY_ID, SECRET_FILES, FIXED_SECRET_FILES } from '#tests/data/checks/secrets.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { API_TOKEN, AWS_KEY_ID } from '#tests/data/checks/secrets.ts';
+import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { SECRET_FILES, FIXED_SECRET_FILES } from '#tests/data/integration/checks/secrets/gitleaks.ts';
 
 async function prepareSecrets(root: string, environment: Record<string, string>): Promise<void> {
-    readGitOutput(root, ['init', '-q']);
+    runGitStep(root, ['init', '-q']);
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['secrets']),
     });
@@ -24,15 +25,15 @@ async function prepareHistory(root: string, environment: Record<string, string>)
     await prepareSecrets(root, environment);
     await createFileTree(root, FIXED_SECRET_FILES);
     commitAll(root);
-    const base = readGitOutput(root, ['rev-parse', 'HEAD']);
+    const base = runGitStep(root, ['rev-parse', 'HEAD']);
     await createFileTree(root, SECRET_FILES);
     expect(runGit(root, ['add', '-A']).code).toBe(0);
     expect(runGit(root, ['commit', '-qm', 'feat: settings']).code).toBe(0);
-    const leaked = readGitOutput(root, ['rev-parse', 'HEAD']);
+    const leaked = runGitStep(root, ['rev-parse', 'HEAD']);
     await createFileTree(root, FIXED_SECRET_FILES);
     expect(runGit(root, ['add', '-A']).code).toBe(0);
     expect(runGit(root, ['commit', '-qm', 'fix: remove settings']).code).toBe(0);
-    const removed = readGitOutput(root, ['rev-parse', 'HEAD']);
+    const removed = runGitStep(root, ['rev-parse', 'HEAD']);
     return { base, leaked, removed };
 }
 
@@ -51,7 +52,7 @@ function assertSecretFindings(check: CheckResult | undefined, output: string, pr
     for (const token of [AWS_KEY_ID, API_TOKEN]) expect(output).not.toContain(token);
 }
 
-test('the staged scan skips a folder without Git and checks staged changes once Git exists', async () => {
+test('secrets/gitleaks-staged skips a folder without Git and checks staged changes once Git exists', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['secrets']),
         'src/config.js': `const token = "${API_TOKEN}";\n`,
@@ -69,7 +70,7 @@ test('the staged scan skips a folder without Git and checks staged changes once 
     ).report.checks;
     expect(committed[0]?.status).toBe('passed');
     await createFileTree(sandbox.path, { 'src/staged.js': `const token = "${API_TOKEN}";\n` });
-    readGitOutput(sandbox.path, ['add', 'src/staged.js']);
+    runGitStep(sandbox.path, ['add', 'src/staged.js']);
     const staged = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
     ).report.checks;
@@ -105,7 +106,7 @@ test('gitleaks reports both staged secrets, hides the tokens, and passes after t
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-test('the pushed-history check reports the secrets of the pushed commits only', async () => {
+test('secrets/gitleaks-pushed reports the secrets of the pushed commits only', async () => {
     await using sandbox = await testdir();
     const environment = {};
     const { base, leaked, removed } = await prepareHistory(sandbox.path, environment);
@@ -125,7 +126,7 @@ test('the pushed-history check reports the secrets of the pushed commits only', 
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-test('the pushed-history check passes only the ignored fingerprints and never prints a token', async () => {
+test('secrets/gitleaks-pushed drops a finding only when an ignore names its exact fingerprint, and never prints a token', async () => {
     await using sandbox = await testdir();
     const environment = {};
     const { base, leaked } = await prepareHistory(sandbox.path, environment);
@@ -138,9 +139,9 @@ rule = "${leaked}:identity.py:aws-access-token:1"
 reason = "The exact historical token is an inert example."
 `;
     await writeFile(join(sandbox.path, 'gspot.toml'), settings + identityIgnore);
-    readGitOutput(sandbox.path, ['add', 'gspot.toml']);
-    readGitOutput(sandbox.path, ['commit', '-qm', 'docs: review historical token']);
-    const reviewedRevision = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    runGitStep(sandbox.path, ['add', 'gspot.toml']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'docs: review historical token']);
+    const reviewedRevision = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
     const reviewed = await spawnGspot(sandbox.path, command, environment, {
         stdin: `refs/heads/main ${reviewedRevision} refs/heads/main ${base}\n`,
     });
@@ -161,9 +162,9 @@ rule = "${leaked}:credential,é.py:generic-api-key:1"
 reason = "The other exact historical token is an inert example."
 `,
     );
-    readGitOutput(sandbox.path, ['add', 'gspot.toml']);
-    readGitOutput(sandbox.path, ['commit', '-qm', 'docs: review other historical token']);
-    const acceptedRevision = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    runGitStep(sandbox.path, ['add', 'gspot.toml']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'docs: review other historical token']);
+    const acceptedRevision = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
     const accepted = await spawnGspot(sandbox.path, command, environment, {
         stdin: `refs/heads/main ${acceptedRevision} refs/heads/main ${base}\n`,
     });

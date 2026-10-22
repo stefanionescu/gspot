@@ -1,5 +1,4 @@
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { ALT_TEXT_PAGE } from '#tests/data/checks/site/built-pages.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 export const BUILD_OUTPUT_CHECKS = [
     'site/html-validate',
@@ -9,54 +8,11 @@ export const BUILD_OUTPUT_CHECKS = [
     'site/sitemap',
 ] as const;
 
-/** Package manager files, and the package manager that the default site build uses. */
-export const SITE_PACKAGE_MANAGER_CASES = [
-    ['npm fallback', {}, 'npm'],
-    ['declared Bun', { 'package.json': '{"packageManager":"bun@1.4.2"}' }, 'bun'],
-] as const;
-
-export const SITE_BUILD_COMMANDS = [
-    ['custom-builder', '', 'two words'],
-    ['npm', 'run', 'build'],
-] as const;
-
-export const SITE_CASES = [
-    {
-        check: 'site/build',
-        files: { 'build.js': "throw new Error('the build is broken');\n" },
-        expected: { file: '', rule: 'build', line: 1 },
-    },
-] as const;
-
 /** Each scope copies its own authored page into its built output. */
 export const COPY_PAGE_BUILD = `import { mkdirSync, copyFileSync } from 'node:fs';
 mkdirSync('dist', { recursive: true });
 copyFileSync('page.html', 'dist/index.html');
 `;
-
-/** The root checks HTML; two site scopes run their own builds, and one accessibility ignore covers the app scope. */
-export const TWO_SITE_SCOPES = `[[ignore]]
-check = "site/html-validate"
-rule = "wcag/h37"
-paths = ["app/**"]
-reason = "Application alternative text is supplied by the rendering environment."
-[[scope]]
-path = "app"
-configurations = ["site"]
-site.build_command = ["node", "build.mjs"]
-site.build_folder = "app/dist"
-[[scope]]
-path = "other"
-configurations = ["site"]
-site.build_command = ["node", "build.mjs"]
-site.build_folder = "other/dist"
-`;
-
-/** Rule ignores stay inside their site, with or without an HTML configuration at the root. */
-export const BUILT_HTML_SITES = [
-    { name: 'a root HTML configuration', configurations: ['html'], files: { 'index.html': ALT_TEXT_PAGE } },
-    { name: 'site-only child configurations', configurations: [], files: {} },
-] as const;
 
 export const SITE_BUILD_SCRIPT = `import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 const hadOutput = existsSync('dist/index.html');
@@ -64,11 +20,6 @@ rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist');
 // Distinguish a fresh build from a rebuild of existing output.
 writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
-`;
-
-export const SITE_OUTPUT_BUILD = `import { cp, rm } from 'node:fs/promises';
-await rm('dist', { recursive: true, force: true });
-await cp('pages', 'dist', { recursive: true });
 `;
 
 export const WORKSPACE_SITE_FILES = {

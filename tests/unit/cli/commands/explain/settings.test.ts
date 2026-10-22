@@ -2,10 +2,15 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { runGspot } from '#tests/setup/run-gspot.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { SETTING_REASON } from '#tests/data/commands/set.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { REASON_VALUES, NAMING_SCOPE_LIMITS } from '#tests/data/commands/explain.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+
+import {
+    REASON_VALUES,
+    NAMING_SCOPE_LIMITS,
+    SCOPE_SETTING_EXPLANATION,
+} from '#tests/data/commands/explain/settings.ts';
 
 test.each([...NAMING_SCOPE_LIMITS])(
     "explain shows each scope's default and current naming limit (%j)",
@@ -42,12 +47,7 @@ test('a setting explanation lists settings set only in scopes and each inherited
 
     const result = await runGspot(sandbox.path, ['explain', 'coverage.lines', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        scopes: [
-            { scope: 'api', current: 90, source: '[scope "api"]' },
-            { scope: 'api/worker', current: 95, source: '[scope "api/worker"]' },
-        ],
-    });
+    expect(JSON.parse(result.stdout)).toMatchObject(SCOPE_SETTING_EXPLANATION);
 });
 
 test('explain reads an inherited limits.function_lines value and its reason, and writes nothing', async () => {
@@ -67,13 +67,15 @@ test('explain reads an inherited limits.function_lines value and its reason, and
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
-test.each([...REASON_VALUES])('explain $key shows each scope value and whether it needs a reason (%j)', async (row) => {
-    await using sandbox = await testdir();
-    const explanation = 'The sandbox preserves the project convention for this native setting.';
-    const separator = row.key.lastIndexOf('.');
-    const table = row.key.slice(0, separator);
-    const field = row.key.slice(separator + 1);
-    const settings = `configurations = ["naming"]
+test.each([...REASON_VALUES])(
+    'explain $key shows the value of each scope and asks for a reason only where the value loosens the default',
+    async (row) => {
+        await using sandbox = await testdir();
+        const explanation = 'The sandbox preserves the project convention for this native setting.';
+        const separator = row.key.lastIndexOf('.');
+        const table = row.key.slice(0, separator);
+        const field = row.key.slice(separator + 1);
+        const settings = `configurations = ["naming"]
 [${table}]
 ${field} = ${row.root}
 [[scope]]\npath = "app"
@@ -81,34 +83,35 @@ configurations = []
 [scope.${table}]
 ${field} = ${row.needsReason[1] ? `{ value = ${row.child}, reason = "${explanation}" }` : row.child}
 `;
-    await createFileTree(sandbox.path, {
-        'gspot.toml': settings,
-        'app/source.js': 'export const active = true;\n',
-    });
-    const result = await runGspot(sandbox.path, ['explain', row.key]);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const sections = result.stdout.split('Scope: ').slice(1);
-    expect(sections).toHaveLength(2);
-    for (const [scope, section, needsReason, target] of [
-        ['root', sections[0]!, row.needsReason[0], ''],
-        ['app', sections[1]!, row.needsReason[1], ' --scope app'],
-    ] as const) {
-        expect(section).toStartWith(`${scope}\n`);
-        expect(section.includes('If you set this value, give a reason:')).toBe(needsReason);
-        expect(section.includes(`Reason on record: ${explanation}`)).toBe(needsReason);
-        expect(section).toContain(`Change it: gspot set ${row.key} <value>${target} [--reason "..."]`);
-    }
-    const reported = await runGspot(sandbox.path, ['explain', row.key, '--json']);
-    expect(reported.code, reported.stdout + reported.stderr).toBe(0);
-    expect(JSON.parse(reported.stdout)).toMatchObject({
-        key: row.key,
-        scopes: [
-            { scope: '', current: row.current[0] },
-            { scope: 'app', current: row.current[1], ...(row.needsReason[1] ? { reason: explanation } : {}) },
-        ],
-    });
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-});
+        await createFileTree(sandbox.path, {
+            'gspot.toml': settings,
+            'app/source.js': 'export const active = true;\n',
+        });
+        const result = await runGspot(sandbox.path, ['explain', row.key]);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        const sections = result.stdout.split('Scope: ').slice(1);
+        expect(sections).toHaveLength(2);
+        for (const [scope, section, needsReason, target] of [
+            ['root', sections[0]!, row.needsReason[0], ''],
+            ['app', sections[1]!, row.needsReason[1], ' --scope app'],
+        ] as const) {
+            expect(section).toStartWith(`${scope}\n`);
+            expect(section.includes('If you set this value, give a reason:')).toBe(needsReason);
+            expect(section.includes(`Reason on record: ${explanation}`)).toBe(needsReason);
+            expect(section).toContain(`Change it: gspot set ${row.key} <value>${target} [--reason "..."]`);
+        }
+        const reported = await runGspot(sandbox.path, ['explain', row.key, '--json']);
+        expect(reported.code, reported.stdout + reported.stderr).toBe(0);
+        expect(JSON.parse(reported.stdout)).toMatchObject({
+            key: row.key,
+            scopes: [
+                { scope: '', current: row.current[0] },
+                { scope: 'app', current: row.current[1], ...(row.needsReason[1] ? { reason: explanation } : {}) },
+            ],
+        });
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+    },
+);
 test('a neutral format setting stays settable without a reason', async () => {
     const level = 'all';
     const key = 'format.indent_style';
@@ -144,10 +147,11 @@ test('explain shows the default of a path setting joined with the scope, as gspo
     const explained = await runGspot(sandbox.path, ['explain', 'site.build_folder', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const { scopes } = JSON.parse(explained.stdout) as {
-        scopes: { scope: string; default: unknown; current: unknown }[];
+        scopes: { scope: string; default: unknown; current: unknown; source: string }[];
     };
-    const web = scopes.find((entry) => entry.scope === 'web');
-    expect(web?.default).toBe(web?.current);
+    expect(scopes.filter((entry) => entry.scope === 'web')).toStrictEqual([
+        { scope: 'web', default: 'web/dist', current: 'web/dist', source: 'configuration site' },
+    ]);
 });
 
 test('explain tells you to write a record list by hand, not with gspot set', async () => {

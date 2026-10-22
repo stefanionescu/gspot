@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { simulateOperatingSystem } from '#tests/setup/system.ts';
-import { overrideEnvironment } from '#tests/setup/environment.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
 import { readCacheFolder, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 test.each(['linux', 'win32'] as const)('a relative cache folder setting is refused on %s', (operatingSystem) => {

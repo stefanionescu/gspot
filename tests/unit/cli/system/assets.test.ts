@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { cp, symlink, readFile } from 'node:fs/promises';
-import { runCommandBlocking } from '#tests/setup/processes.ts';
-import { BASH_MANIFEST, PACKAGE_FOLDER, ASSET_READER_SCRIPT, PACKAGE_FOLDER_FILES } from '#tests/data/system.ts';
+import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { BASH_MANIFEST, PACKAGE_FOLDER, ASSET_READER_SCRIPT, PACKAGE_FOLDER_FILES } from '#tests/data/system/assets.ts';
 
 /**
  * Writes a copy of the checkout whose asset reader both tests run.

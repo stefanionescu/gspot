@@ -6,8 +6,8 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { buildTrackedFile, readTestRepository } from '#tests/setup/builders.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildTrackedFile, readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
 
 import {

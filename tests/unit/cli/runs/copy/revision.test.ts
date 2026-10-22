@@ -2,18 +2,19 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { openSession } from '#cli/session.ts';
-import { isOnDisk } from '#tests/setup/files.ts';
-import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { type GitHookReport, type ProcessOutput } from '#tests/types/processes.ts';
 import { readIndexEntries, listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { listHeadEntries, listRevisionEntries } from '#cli/repository/revisions/files.ts';
-import { runGit, commitAll, readGitOutput, prepareNestedRepository } from '#tests/setup/git.ts';
 import { chmod, mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
-import { GIT_HOOK_CASES, GIT_HOOK_FIELDS, GIT_HOOK_REPORT, GIT_HOOK_SCRIPT } from '#tests/data/runs/copies.ts';
+import { GIT_HOOK_CASES, GIT_HOOK_FIELDS, GIT_HOOK_REPORT, GIT_HOOK_SCRIPT } from '#tests/data/runs/copy/revision.ts';
 
 // Run the hook with the real module entry points and the inherited Git environment.
 function runGitHook(worktree: string, index: string, folder: string, report: string): ProcessOutput {
@@ -49,7 +50,7 @@ test('a revision copy of a nested gspot.toml keeps the repository around it', as
                 source.kind === 'index' ? 'indexed' : 'pushed',
             );
             expect(await readFile(join(copy.root, '..', 'outside.txt'), 'utf8')).toBe('changed context');
-            expect(readGitOutput(copy.root, ['write-tree'])).toBe(copy.tree);
+            expect(runGitStep(copy.root, ['write-tree'])).toBe(copy.tree);
         }
     }
     expect(await readFile(join(project, 'source.txt'), 'utf8')).toBe('working');
@@ -63,24 +64,24 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
         'source.txt': 'selected source',
     });
     await createFileTree(outside.path, { 'package.json': '{', 'source.txt': 'outside source' });
-    readGitOutput(sandbox.path, ['init']);
-    readGitOutput(sandbox.path, ['add', '.']);
-    readGitOutput(sandbox.path, ['commit', '-qm', 'Source']);
-    const commitId = readGitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    runGitStep(sandbox.path, ['init']);
+    runGitStep(sandbox.path, ['add', '.']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'Source']);
+    const commitId = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
     const path = 'vendor/external project';
-    readGitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commitId},${path}`]);
-    readGitOutput(sandbox.path, ['commit', '-qm', 'Gitlink']);
+    runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commitId},${path}`]);
+    runGitStep(sandbox.path, ['commit', '-qm', 'Gitlink']);
     await mkdir(join(sandbox.path, 'vendor'));
     await symlink(outside.path, join(sandbox.path, path), 'dir');
     expect(listSubmodulePaths(await readIndexEntries(sandbox.path))).toStrictEqual([path]);
     const session = await openSession(sandbox.path);
     expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
-    const expected = readGitOutput(sandbox.path, ['write-tree']);
-    const source = kind === 'index' ? { kind } : { kind, hash: readGitOutput(sandbox.path, ['rev-parse', 'HEAD']) };
+    const expected = runGitStep(sandbox.path, ['write-tree']);
+    const source = kind === 'index' ? { kind } : { kind, hash: runGitStep(sandbox.path, ['rev-parse', 'HEAD']) };
     {
         using copy = await copyRevision(sandbox.path, source);
         expect(copy.tree).toBe(expected);
-        expect(readGitOutput(copy.root, ['write-tree'])).toBe(expected);
+        expect(runGitStep(copy.root, ['write-tree'])).toBe(expected);
         expect(await readdir(join(copy.root, path))).toStrictEqual([]);
         expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe('selected source');
         expect(listSubmodulePaths(await readIndexEntries(copy.root))).toStrictEqual([path]);
@@ -90,15 +91,15 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
 });
 
 test.each([...GIT_HOOK_CASES])(
-    'the $part command preserves the owner index and working tree: $name',
+    'a Git hook in a linked worktree copies the index and the commit, and keeps its own index, HEAD, Git settings, and cancellation',
     async ({ part }) => {
         await using sandbox = await testdir({ 'repository/nested/source.txt': 'committed\n' });
 
         const root = join(sandbox.path, 'repository');
         commitAll(root);
         const worktree = join(sandbox.path, 'linked');
-        readGitOutput(root, ['worktree', 'add', '-qb', 'hook-probe', worktree]);
-        const folder = readGitOutput(worktree, ['rev-parse', '--absolute-git-dir']);
+        runGitStep(root, ['worktree', 'add', '-qb', 'hook-probe', worktree]);
+        const folder = runGitStep(worktree, ['rev-parse', '--absolute-git-dir']);
         const index = join(folder, 'custom-index');
         const standard = await readFile(join(folder, 'index'));
         await copyFile(join(folder, 'index'), index);
@@ -119,7 +120,7 @@ test.each([...GIT_HOOK_CASES])(
         if (part === 'HEAD') {
             expect(actual.headRetained).toBe(GIT_HOOK_REPORT.headRetained);
             expect(actual.workingBytes).toBe(GIT_HOOK_REPORT.workingBytes);
-            expect(readGitOutput(worktree, ['symbolic-ref', 'HEAD'])).toBe('refs/heads/hook-probe');
+            expect(runGitStep(worktree, ['symbolic-ref', 'HEAD'])).toBe('refs/heads/hook-probe');
             expect(await readFile(join(worktree, 'nested/source.txt'), 'utf8')).toBe('working\n');
         } else {
             const fields = GIT_HOOK_FIELDS[part];
@@ -160,7 +161,7 @@ test('a revision copy keeps its source available until disposal and removes the 
         using copy = await copyRevision(sandbox.path, { kind: 'index' });
         copiedPath = join(copy.root, 'source.txt');
         expect(await readFile(copiedPath, 'utf8')).toBe('selected source');
-        expect(readGitOutput(copy.root, ['write-tree'])).toBe(copy.tree);
+        expect(runGitStep(copy.root, ['write-tree'])).toBe(copy.tree);
     }
     expect(await isOnDisk(copiedPath)).toBe(false);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('selected source');

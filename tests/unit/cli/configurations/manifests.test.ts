@@ -1,11 +1,10 @@
 import type { ZodError } from 'zod';
 import { test, expect } from 'bun:test';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { runCommand } from '#tests/setup/processes.ts';
-import { buildConfiguration } from '#tests/setup/builders.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
 
 import {
     TOOL_TABLE,
@@ -13,9 +12,12 @@ import {
     REPLACE_KEY_TABLE,
     SINGLE_TOOL_FILES,
     SEMGREP_TOOL_FILES,
+    REPLACEMENT_TABLES,
     CONFIGURATION_TABLE,
-    MINIMUM_VERSION_CASES,
+    TOOL_TABLE_REFUSALS,
+    SEMGREP_CONFIG_FILES,
     EXAMPLE_MANIFEST_PATH,
+    MINIMUM_VERSION_CASES,
     MANIFEST_READER_SCRIPT,
 } from '#tests/data/configurations/manifests.ts';
 
@@ -61,23 +63,31 @@ test('a replace_key record refuses both a key and a table', () => {
     ).toThrow(matchFields<ZodError>({ issues: [matchFields<ZodError['issues'][number]>({ path: ['tool', 0] })] }));
 });
 
-test.each(['".native"', '[""]', '[7]'])(
-    'replacement lists keep owned files and shared sections and refuse invalid items (%j)',
-    (invalid) => {
-        const tables =
-            '[[tool]]\nname = "native"\nversion = "1.0.0"\nreplace = [".native", "native.json"]\n[[tool.replace_key]]\nfile = "package.json"\nkey = "native"\n';
-        const declaration = buildConfiguration('native', { tables }).tools[0]!;
-        if (typeof declaration === 'string') throw new Error('The fixture must declare native.');
-        expect(declaration.replace).toStrictEqual(['.native', 'native.json']);
-        expect(declaration.replace_key).toStrictEqual([{ file: 'package.json', key: 'native' }]);
+test('a replacement list keeps owned files and shared sections', () => {
+    const declaration = buildConfiguration('native', { tables: REPLACEMENT_TABLES }).tools[0]!;
+    expect(declaration).toMatchObject({
+        replace: ['.native', 'native.json'],
+        replace_key: [{ file: 'package.json', key: 'native' }],
+    });
+});
 
-        expect(() =>
-            buildConfiguration('native', { tables: tables.replace('[".native", "native.json"]', invalid) }),
-        ).toThrow('replace');
+test.each([...TOOL_TABLE_REFUSALS])(
+    'a manifest [[tool]] table refuses $name at its field',
+    ({ tables, path, message }) => {
+        expect(() => buildConfiguration('native', { group: 'infrastructure', tables })).toThrow(
+            matchFields<ZodError>({
+                issues: [
+                    expect.objectContaining({
+                        path: ['tool', 0],
+                        errors: [expect.anything(), [expect.objectContaining({ path: [...path], message })]],
+                    }) as ZodError['issues'][number],
+                ],
+            }),
+        );
     },
 );
 
-test('a tool declaration refuses unknown fields', () => {
+test('a manifest [[tool]] table refuses a bare name and unknown fields, and turns an npm package name into an installer pin', () => {
     expect(manifestToolSchema.safeParse('probe').success).toBe(false);
     expect(manifestToolSchema.safeParse({ name: 'probe', mystery: true }).success).toBe(false);
     const tool = manifestToolSchema.parse({ name: 'probe', version: '1.0.0', npm: 'native-probe' });
@@ -97,30 +107,35 @@ test('a tool declared by two configurations is refused', async () => {
                 `[[tool]]\nname = "probe"\nversion = "${path.includes('/owner/') ? '1.0.0' : '2.0.0'}"\n`,
         ]),
     );
-    const error = await readTestManifests(files).catch((error: unknown) => error);
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toMatchObject({ message: expect.stringContaining('tool probe is already declared.') as string });
+    expect(await captureRejection(readTestManifests(files))).toBe(
+        'The configuration manifest for `second` is not valid:\ntool probe is already declared.',
+    );
 });
 
-test.each([false, true])(
-    'a tool named without a declaration links to the configuration that declares it, and fails when none does (%j)',
-    async (ownerFirst) => {
-        expect(manifestToolSchema.parse({ name: 'probe' })).toBe('probe');
-        const consumer = 'configurations/infrastructure/consumer/manifest.toml';
-        const owner = 'configurations/general/owner/manifest.toml';
-        const consumed = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n';
-        const declared = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
-        const error = await readTestManifests({ [consumer]: consumed }).catch((error: unknown) => error);
-        expect(error).toBeInstanceOf(Error);
-        expect(error).toMatchObject({ message: expect.stringContaining('tool probe has no declaration.') as string });
-        const paths = ownerFirst ? [owner, consumer] : [consumer, owner];
-        const files = Object.fromEntries(paths.map((path) => [path, path === consumer ? consumed : declared]));
-        const configurations = await readTestManifests(files);
-        expect(configurations.get('consumer')!.tools).toStrictEqual(configurations.get('owner')!.tools);
-    },
-);
+test('a tool that no configuration declares fails', async () => {
+    const consumer = 'configurations/infrastructure/consumer/manifest.toml';
+    const consumed = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n';
+    expect(await captureRejection(readTestManifests({ [consumer]: consumed }))).toBe(
+        'The configuration manifest for `consumer` is not valid:\ntool probe has no declaration.',
+    );
+});
 
-test('a tool rule page needs the {rule} placeholder, and its crash pattern must be a regular expression', () => {
+test.each([
+    { order: 'owner first', ownerFirst: true },
+    { order: 'consumer first', ownerFirst: false },
+])('a tool name links to the configuration that declares it, listed $order', async ({ ownerFirst }) => {
+    expect(manifestToolSchema.parse({ name: 'probe' })).toBe('probe');
+    const consumer = 'configurations/infrastructure/consumer/manifest.toml';
+    const owner = 'configurations/general/owner/manifest.toml';
+    const consumed = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n';
+    const declared = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
+    const paths = ownerFirst ? [owner, consumer] : [consumer, owner];
+    const files = Object.fromEntries(paths.map((path) => [path, path === consumer ? consumed : declared]));
+    const configurations = await readTestManifests(files);
+    expect(configurations.get('consumer')!.tools).toStrictEqual(configurations.get('owner')!.tools);
+});
+
+test('a manifest [[tool]] table keeps a rule page with {rule}, a rule prefix, and a crash pattern', () => {
     const configuration = buildConfiguration('example', {
         group: 'infrastructure',
         tables: `${TOOL_TABLE}rule_url = "https://example.test/rules/{rule}"\nrule_prefix = "@example/plugin"\ncrash_pattern = '^Fatal:'\n`,
@@ -130,21 +145,9 @@ test('a tool rule page needs the {rule} placeholder, and its crash pattern must 
         rule_prefix: '@example/plugin',
         crash_pattern: '^Fatal:',
     });
-    expect(() =>
-        buildConfiguration('example', {
-            group: 'infrastructure',
-            tables: `${TOOL_TABLE}rule_url = "https://example.test/rules"\ncrash_pattern = '^Fatal:'\n`,
-        }),
-    ).toThrow('{rule}');
-    expect(() =>
-        buildConfiguration('example', {
-            group: 'infrastructure',
-            tables: `${TOOL_TABLE}rule_url = "https://example.test/rules/{rule}"\nrule_prefix = "@example/plugin"\ncrash_pattern = '(Fatal'\n`,
-        }),
-    ).toThrow('regular expression');
 });
 
-test('the only tool of a configuration reads each of its tool files that names no consumer', async () => {
+test('a tool file that names no tool and no check goes to the only tool of its configuration', async () => {
     const configurations = await readTestManifests(
         { [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + SINGLE_TOOL_FILES },
         SEMGREP_ASSETS,
@@ -158,44 +161,45 @@ test('the only tool of a configuration reads each of its tool files that names n
     ]);
 });
 
-test('tool-files assets are discovered and their metadata selects their consumers', async () => {
+test('the files under tool-files/ become tool files, each [[tool_file]] sets its tool and condition, and a tool_file that is not a table is refused', async () => {
     const configurations = await readTestManifests(
         { [EXAMPLE_MANIFEST_PATH]: CONFIGURATION_TABLE + SEMGREP_TOOL_FILES },
         SEMGREP_ASSETS,
     );
     const configuration = configurations.get('example')!;
     expect(configuration.toolFiles.map(({ source, target }) => [source, target])).toStrictEqual([
-        ['tool-files/other.yml', '.gspot/configurations/language/example/other.yml'],
-        ['tool-files/semgrep/first.yml', '.gspot/configurations/language/example/semgrep/first.yml'],
-        ['tool-files/semgrep/second.yml', '.gspot/configurations/language/example/semgrep/second.yml'],
-        ['tool-files/semgrep/not-a-pack.txt', '.gspot/configurations/language/example/semgrep/not-a-pack.txt'],
+        ...SEMGREP_CONFIG_FILES,
     ]);
     expect(configuration.toolFiles.slice(1, 3)).toMatchObject([
         { tool: ['semgrep'], per_scope: true },
         { tool: ['semgrep'], per_scope: true },
     ]);
-    expect(() => buildConfiguration('example', { tables: 'tool_file = "invalid"\n' })).toThrow('tool_file');
+    expect(() => buildConfiguration('example', { tables: 'tool_file = "invalid"\n' })).toThrow(
+        matchFields<ZodError>({
+            issues: [
+                matchFields<ZodError['issues'][number]>({
+                    path: ['tool_file'],
+                    message: 'Invalid input: expected array, received string',
+                }),
+            ],
+        }),
+    );
 });
 
-test('each accepted suppression example matches its marker and gives a reason', () => {
-    const forms = [...readConfigurations().values()].flatMap((configuration) =>
-        configuration.tools.flatMap((tool) =>
-            typeof tool === 'string' || tool.suppression === undefined || tool.suppression.forbidden === true
-                ? []
-                : [{ name: tool.name, ...tool.suppression }],
-        ),
+test('a content detection pattern that is not a regular expression is refused', () => {
+    expect(() =>
+        buildConfiguration('content', {
+            group: 'database',
+            tables: '[detect.content]\n"prisma/schema.prisma" = "["\n',
+        }),
+    ).toThrow(
+        matchFields<ZodError>({
+            issues: [
+                matchFields<ZodError['issues'][number]>({
+                    path: ['detect', 'content', 'prisma/schema.prisma'],
+                    message: 'Use a valid Unicode regular expression.',
+                }),
+            ],
+        }),
     );
-    expect(forms.length).toBeGreaterThan(0);
-    for (const form of forms) {
-        const example = form.example ?? '';
-        const markers = [form.marker, form.inline_marker ?? form.marker].map((pattern) => new RegExp(pattern, 'u'));
-        expect(
-            markers.some((marker) => marker.test(example)),
-            form.name,
-        ).toBe(true);
-        expect(
-            new RegExp(form.reason, 'u').exec(example)?.groups?.['reason']?.split(' ').length,
-            form.name,
-        ).toBeGreaterThan(1);
-    }
 });

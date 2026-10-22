@@ -47,7 +47,12 @@ export const ACTIONLINT_EXITS = [
         findings: [{ file: '.github/workflows/caller.yml', rule: 'workflow-call' }],
         note: undefined,
     },
-    { code: 3, status: 'error', findings: [], note: 'exit 3' },
+    {
+        code: 3,
+        status: 'error',
+        findings: [],
+        note: '<actionlint> crashed with exit 3.\n.github/workflows/caller.yml:4:11: located defect [workflow-call]',
+    },
 ] as const;
 
 export const WORKFLOW_TEXT_CASES = [
@@ -68,3 +73,17 @@ export const WORKFLOW_TEXT_CASES = [
         expected: 'name: Setup\nruns:\n  using: composite\n  steps:\n    - uses: ./.github/actions/cache\n',
     })),
 ];
+
+/** A reusable workflow that requires the greeting input. */
+export const REQUIRED_INPUT_WORKFLOW = `on:
+  workflow_call:
+    inputs:
+      greeting:
+        type: string
+        required: true
+jobs:
+  greet:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hello
+`;

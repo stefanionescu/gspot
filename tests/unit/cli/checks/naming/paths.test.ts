@@ -4,11 +4,20 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rename, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
-import { checkFindings } from '#tests/setup/check-input.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { NUMBERED_PREFIX_OVERRIDE } from '#tests/data/checks/naming/settings.ts';
-import { NUMBERED_FILES, FILE_NAME_CASES, MIGRATION_FILES } from '#tests/data/checks/naming/sources.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { readNamingDefaults } from '#cli/configurations/naming.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/naming/paths.ts';
+
+import {
+    NUMBERED_FILES,
+    FILE_NAME_CASES,
+    MIGRATION_FILES,
+    NEXTJS_FOLDER_NAMES,
+    NUMBERED_FILE_FINDINGS,
+    NUMBERED_PREFIX_OVERRIDE,
+} from '#tests/data/checks/naming/paths.ts';
 
 test('[slug] path brackets are allowed in every scope and banned file names are reported', async () => {
     await using sandbox = await testdir({
@@ -28,7 +37,7 @@ test('[slug] path brackets are allowed in every scope and banned file names are 
     expect(findings.map(({ file }) => file)).toStrictEqual(['handler.ts']);
 });
 
-test.each([...FILE_NAME_CASES])('naming/paths: $name', async ({ configurations, files, invalid, renamed }) => {
+test.each([...FILE_NAME_CASES])('$name', async ({ configurations, files, invalid, renamed }) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([...configurations], { level: 'all' }),
         ...files,
@@ -55,7 +64,7 @@ test.each(['', 'app'])(
         const settings = buildSandboxSettings(['naming', 'sql'], { level: 'all', scopes: [{ path: 'app' }] });
         await writeFile(join(sandbox.path, 'gspot.toml'), settings);
 
-        const refused = await checkFindings(sandbox.path, 'naming/paths', { scope });
+        const refused = await runSandboxCheck(sandbox.path, 'naming/paths', { scope });
         expect(refused.filter(({ rule }) => rule === 'digits').map(({ file }) => file)).toStrictEqual([
             `${prefix}other/20240101000000_create_teams/query.sql`,
         ]);
@@ -64,7 +73,7 @@ test.each(['', 'app'])(
             buildSandboxSettings(['naming', 'postgres'], { level: 'all', scopes: [{ path: 'app' }] }),
         );
 
-        const allowed = await checkFindings(sandbox.path, 'naming/paths', { scope });
+        const allowed = await runSandboxCheck(sandbox.path, 'naming/paths', { scope });
         expect(allowed.filter(({ rule }) => rule === 'digits').map(({ file }) => file)).toStrictEqual([
             `${prefix}other/20240101000000_create_teams/query.sql`,
         ]);
@@ -80,12 +89,7 @@ test('a numbered file name needs an ignored_prefix override', async () => {
 
     expect(
         failed.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
-    ).toStrictEqual([
-        { file: '.mise/tasks/01-build.sh', rule: 'case' },
-        { file: '.mise/tasks/01-build.sh', rule: 'digits' },
-        { file: 'scripts/steps/01-build.sh', rule: 'case' },
-        { file: 'scripts/steps/01-build.sh', rule: 'digits' },
-    ]);
+    ).toStrictEqual([...NUMBERED_FILE_FINDINGS]);
     await writeFile(join(sandbox.path, 'gspot.toml'), settings + NUMBERED_PREFIX_OVERRIDE);
     const corrected = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));
 
@@ -111,7 +115,7 @@ test('a banned folder word such as shared is reported in folder names', async ()
     ).toStrictEqual(paths.toSorted((left, right) => left.localeCompare(right)));
 });
 
-test('paths: a mise task file named _default passes, and the same name elsewhere does not', async () => {
+test('a mise task file named _default passes, and the same name elsewhere does not', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash', 'naming'], { level: 'all' }),
         '.mise/tasks/build/_default': '#!/usr/bin/env bash\necho build\n',
@@ -136,7 +140,45 @@ test.each(['', 'apps/api'])(
             [`${prefix}supabase/functions/_shared/entry.ts`]: 'export const origin = "example.com";\n',
             [`${prefix}supabase/functions/shared/entry.ts`]: 'export const origin = "example.com";\n',
         });
-        const findings = await checkFindings(sandbox.path, 'naming/paths', { scope });
+        const findings = await runSandboxCheck(sandbox.path, 'naming/paths', { scope });
         expect(findings.map(({ file }) => file)).toStrictEqual([`${prefix}supabase/functions/shared/entry.ts`]);
     },
 );
+test('a bracketed file name is a path parameter, and other punctuation stays in the name', () => {
+    const containers = readNamingDefaults().path_containers;
+    expect(buildFileIdentifier('app/[...slug].ts', 'typescript', containers)).toMatchObject({
+        name: 'slug',
+        category: 'path_parameters',
+    });
+    for (const name of ['(group)', '@slot', '_private'])
+        expect(buildFileIdentifier(`app/${name}.ts`, 'typescript', containers)).toMatchObject({
+            name,
+            category: 'files',
+        });
+    expect(buildFileIdentifier('app/[slug].ts', 'typescript', [])).toMatchObject({
+        name: '[slug]',
+        category: 'files',
+    });
+    expect(
+        buildFolderIdentifiers('app/(group)/@slot/_private/[id]/page.ts', 'typescript', []).map(({ name }) => name),
+    ).toStrictEqual(['app', '(group)', '@slot', '_private', '[id]']);
+});
+test('a file name loses one extension or the whole .d.ts suffix, and a SQL migration keeps its full name', () => {
+    expect(buildFileIdentifier('src/a-b.test.ts', 'typescript', []).name).toBe('a-b.test');
+    expect(buildFileIdentifier('types/modules.d.ts', 'typescript', []).name).toBe('modules');
+    expect(buildFileIdentifier('db/20240101010101_add_users.sql', 'sql', []).name).toBe('20240101010101_add_users.sql');
+});
+test('Next.js route segments are unwrapped and dot folders are skipped', () => {
+    const containers = readNamingDefaults().path_containers;
+    const names = buildFolderIdentifiers(
+        'app/(marketing)/[slug]/@modal/_lib/.hidden/page.tsx',
+        'typescript',
+        containers,
+    );
+    expect(names.map((entry) => `${entry.category}:${entry.name}`)).toStrictEqual([...NEXTJS_FOLDER_NAMES]);
+    expect(names[2]?.folder).toBe('app/(marketing)/[slug]');
+    expect(buildFileIdentifier('app/[...rest]/page.tsx', 'typescript', containers)).toMatchObject({
+        name: 'page',
+        category: 'files',
+    });
+});

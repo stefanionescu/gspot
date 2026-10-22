@@ -5,4 +5,4 @@ exact = true
 scanner = "@socketsecurity/bun-security-scanner"
 
 [test]
-preload = ["./tests/setup/preload.ts"]
+preload = ["./tests/setup/runner/preload.ts"]

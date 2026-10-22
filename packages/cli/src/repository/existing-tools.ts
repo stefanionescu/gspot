@@ -2,11 +2,11 @@
 import { parseYamlFile } from '#cli/parsers/yaml.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import type { ManagedKeys } from '#cli/types/ownership.ts';
-import { ESLINT_TOOL } from '#cli/config/configurations.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { TRAILING_SLASH } from '#cli/config/system/paths.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations.ts';
 import { readGitSetting, readHooksFolder } from '#cli/system/git.ts';
 import { type Repository } from '#cli/types/repository/inventory.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -52,7 +52,7 @@ import {
 function isLintCommand(command: string): boolean {
     const words = command.split(COMMAND_SEPARATORS).filter((word) => word !== '');
     return words.some((word, index) => {
-        if (word === ESLINT_TOOL) return true;
+        if (word === ESLINT_MANIFEST_TOOL) return true;
         const next = words[index + 1];
         if (next !== undefined && LINT_PAIRS.has(`${word} ${next}`)) return true;
         if (!RUNNER_NAMES.includes(word)) return false;

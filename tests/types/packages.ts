@@ -1,7 +1,7 @@
 import type { Sandbox } from '#tests/types/sandbox.ts';
 
-/** A new project that installs the packed gspot release. */
-export type PackedSandbox = AsyncDisposable & {
+/** A new project where npm installs gspot from the local registry, as a user does. */
+export type UserProject = AsyncDisposable & {
     root: string;
     workspace: string;
     /** Install commands can reach the local registry and its upstream. */
@@ -26,8 +26,8 @@ export type PackedPackage = Omit<RegistryPackage, 'source'> & { filename: string
 /** Locally served package bytes, optionally protected by a credential. */
 export type NpmRegistry = AsyncDisposable & { url: string; npmrc: string; readonly requests: number };
 
-/** A package project in a sandbox, with its own local registry. */
-export type PackageManagerSandbox = {
+/** A project for one package manager, with its own local registry. */
+export type NpmProject = {
     root: string;
     artifacts: string;
     registry: NpmRegistry;
@@ -45,7 +45,7 @@ export type ToolProjectFiles = {
 };
 
 /** A Python project and its local package index, disposed together. */
-export type IndexedPythonSandbox = AsyncDisposable & {
+export type IndexedPythonProject = AsyncDisposable & {
     rootProject: Buffer<ArrayBuffer>;
     rootConfiguration: Buffer<ArrayBuffer>;
     projectFiles: ToolProjectFiles;

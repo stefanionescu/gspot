@@ -41,7 +41,7 @@ export function measure(value: string): number { return value.length; }
 `,
 } as const;
 
-export const FIXED_JSDOC = `/**
+export const CORRECTED_JSDOC = `/**
  * Measure the input.
  * @param {string} value The input text.
  * @returns {number} The input length.

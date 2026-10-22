@@ -6,11 +6,11 @@ import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import * as assets from '#cli/system/assets.ts';
 import { type Session } from '#cli/types/session.ts';
-import { runGspot } from '#tests/setup/run-gspot.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { type Level } from '#cli/types/configurations.ts';
 import { type RuleFile } from '#cli/types/generation/rules.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, spyOn, expect, describe, beforeAll } from 'bun:test';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
@@ -19,12 +19,12 @@ import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 
 import {
-    JAVASCRIPT_IN_APP,
     RUNTIME_RULE_CASES,
     RULE_CONFIGURATIONS,
     RULE_CORRECTNESS_CASES,
     NAMING_RULE_LEVEL_CASES,
-} from '#tests/data/rules.ts';
+    JAVASCRIPT_IN_APP_TABLES,
+} from '#tests/data/generation/rules.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir({
@@ -53,7 +53,7 @@ function selectRulesAt(session: Session, level: Level, scopes: Session['scopes']
     });
 }
 
-test('level filtering respects fenced examples, nested sections, and the next heading of the same depth', async () => {
+test('at level recommended, a rule file loses its level-all sections with their subsections, but keeps fenced examples and the next heading of the same depth', async () => {
     const before = '# Guide\n\n## Required\n\n```md\n## Example\n<!-- level: all -->\n```\n\n';
     const omitted =
         '## Convention\n<!-- level: all -->\n\nContent.\n\n### Detail\n<!-- level: all -->\n\n```md\n## Not a boundary\n```\n\n';
@@ -85,35 +85,35 @@ test('level filtering respects fenced examples, nested sections, and the next he
     ).toStrictEqual([before + after]);
 });
 
-test.each(['', 'app'].flatMap((scope) => RUNTIME_RULE_CASES.map((row) => ({ ...row, scope }))))(
-    '$runtime rules with $dependency in scope $scope select DENO.md and NODE.md',
-    async ({ scope, runtime, dependency, hasNode }) => {
-        const prefix = scope === '' ? '' : scope + '/';
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(scope === '' ? ['javascript'] : [], {
-                rules: true,
-                level: 'all',
-                tables: scope === '' ? '' : '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n',
-            }),
-            [`${prefix}main.js`]: `#!/usr/bin/env ${runtime}\nconsole.log("ready");\n`,
-            [`${prefix}package.json`]: JSON.stringify({
-                engines: { [runtime]: '>=1' },
-                dependencies: dependency === undefined ? {} : { [dependency]: '1.0.0' },
-            }),
-        });
-        const session = await openSession(sandbox.path);
-        const files = selectRulesAt(session, 'all', session.scopes);
-        const paths = files.map((file) => file.path);
-        expect(paths.includes('language/javascript/rules/DENO.md')).toBe(runtime === 'deno');
-        expect(paths.includes('language/javascript/rules/NODE.md')).toBe(hasNode);
-        expect(paths).not.toContain('platform/supabase/rules/DENO.md');
-        expect(paths).toContain('general/engineering/rules/TALKING.md');
-    },
-);
+test.each(
+    [
+        { place: 'the root', scope: '' },
+        { place: 'a scope', scope: 'app' },
+    ].flatMap((place) => RUNTIME_RULE_CASES.map((row) => ({ ...row, ...place }))),
+)('$name in $place selects the runtime rules $rules', async ({ scope, runtime, dependency, rules }) => {
+    const prefix = scope === '' ? '' : scope + '/';
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(scope === '' ? ['javascript'] : [], {
+            rules: true,
+            level: 'all',
+            tables: scope === '' ? '' : '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n',
+        }),
+        [`${prefix}main.js`]: `#!/usr/bin/env ${runtime}\nconsole.log("ready");\n`,
+        [`${prefix}package.json`]: JSON.stringify({
+            engines: { [runtime]: '>=1' },
+            dependencies: dependency === undefined ? {} : { [dependency]: '1.0.0' },
+        }),
+    });
+    const session = await openSession(sandbox.path);
+    const paths = selectRulesAt(session, 'all', session.scopes).map((file) => file.path);
+    expect(paths.filter((path) => /\/rules\/(?:DENO|NODE)\.md$/u.test(path))).toStrictEqual(
+        rules.map((rule) => `language/javascript/rules/${rule}`),
+    );
+});
 
 test('the AGENTS.md block names the folders of a scoped rule without parentheses', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { rules: true, tables: JAVASCRIPT_IN_APP }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables: JAVASCRIPT_IN_APP_TABLES }),
         'app/main.js': 'console.log("ready");\n',
     });
     const applied = await runGspot(sandbox.path, ['apply']);
@@ -158,7 +158,7 @@ test('with a check selected the block names the command, and an excluded file le
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
-describe('rules', () => {
+describe('which rule files gspot writes', () => {
     let recommended: ReadonlyMap<string, string>;
 
     let all: ReadonlyMap<string, string>;
@@ -243,7 +243,7 @@ test.each([...NAMING_RULE_LEVEL_CASES])(
         });
         const session = await openSession(sandbox.path);
         const recommended = selectRuleFiles(session).find((file) => file.path === path);
-        expect(recommended).toBeDefined();
+        expect(recommended?.path).toBe(path);
         expect(recommended?.content).not.toContain('## Naming');
         const all = selectRulesAt(session, 'all', session.scopes).find((file) => file.path === path);
         expect(all?.content).toContain('## Naming');

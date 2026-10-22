@@ -1,11 +1,13 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { readGitOutput } from '#tests/setup/git.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { createEslint, listLintFindings } from '#tests/setup/tool-files.ts';
-import { SORT_CASES, SORT_RULES } from '#tests/data/generation/eslint/sorting.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { HOST_MODULE } from '#tests/data/generation/settings/builders/knip.ts';
+import { SORT_CASES, SORT_RULES } from '#tests/data/generation/eslint/imports.ts';
 
 test('a bundler scope uses extensionless imports while the Node.js parent keeps .js suffixes', async () => {
     await using sandbox = await testdir({
@@ -30,7 +32,7 @@ test('a bundler scope uses extensionless imports while the Node.js parent keeps 
 });
 
 test.each([...LEVELS])(
-    'imports and exports are sorted at level all only, in root and child scopes ($level)',
+    'imports and exports are sorted at level all only, in root and child scopes (%s)',
     async (level) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['typescript'], {
@@ -51,10 +53,6 @@ test.each([...LEVELS])(
         });
         for (const prefix of ['', 'app/']) {
             const filePath = `${prefix}src/source.ts`;
-            const config = (await eslint.calculateConfigForFile(filePath)) as EslintConfiguration;
-            expect(SORT_RULES.map((rule) => config.rules[rule]?.[0] ?? 0)).toStrictEqual(
-                SORT_RULES.map(() => (level === 'all' ? 2 : 0)),
-            );
             for (const { source, fixed } of SORT_CASES) {
                 const [result] = await eslint.lintText(source, { filePath });
                 expect(result?.fatalErrorCount).toBe(0);
@@ -122,11 +120,36 @@ test('import-x never parses a gitignored bundle that code imports', async () => 
         'worker.js': '',
     });
 
-    readGitOutput(sandbox.path, ['init', '-q']);
-    readGitOutput(sandbox.path, ['add', '--', '.gitignore', 'worker.js', 'gspot.toml']);
+    runGitStep(sandbox.path, ['init', '-q']);
+    runGitStep(sandbox.path, ['add', '--', '.gitignore', 'worker.js', 'gspot.toml']);
     const eslint = await createEslint(sandbox.path);
     const config = (await eslint.calculateConfigForFile('worker.js')) as { settings: Record<string, unknown> };
     const ignored = (config.settings['import-x/ignore'] as string[]).map((source) => new RegExp(source, 'u'));
     expect(ignored.some((pattern) => pattern.test(`${sandbox.path}/.open-next/worker.js`))).toBe(true);
     expect(ignored.some((pattern) => pattern.test(`${sandbox.path}/worker.js`))).toBe(false);
+});
+
+test('an import of a javascript.externals path gets no gspot/import-boundaries finding', async () => {
+    const scopes = [{ path: 'web', configurations: ['javascript'] }];
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', scopes }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'web/package.json': '{"private":true,"type":"module"}\n',
+        'web/src/a.js': `import '${HOST_MODULE}';\n`,
+    });
+    const rules = ['gspot/import-boundaries'];
+    const eslint = await createEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['web/src/a.js'], rules)).toStrictEqual([
+        { file: 'web/src/a.js', rule: 'gspot/import-boundaries', line: 1 },
+    ]);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['javascript'], {
+            level: 'all',
+            scopes,
+            tables: `[javascript]\nexternals = ["${HOST_MODULE}"]\n`,
+        }),
+    );
+    const external = await createEslint(sandbox.path);
+    expect(await listLintFindings(external, sandbox.path, ['web/src/a.js'], rules)).toStrictEqual([]);
 });

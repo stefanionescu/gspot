@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
-import { registerSharedSandbox } from '#tests/setup/sandbox.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { REACT_CASES, WEB_PACKAGES, REACT_SANDBOX } from '#tests/data/checks/react.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
-const installedSandbox = registerSharedSandbox({
+const installedSandbox = shareInstalledSandbox({
     ...REACT_SANDBOX,
     dependencies: Object.fromEntries(WEB_PACKAGES.map((name) => [name, testsPackage.devDependencies[name]])),
 });

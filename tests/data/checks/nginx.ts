@@ -1,4 +1,4 @@
-export const NGINX_CONFIGURATION = `events {}
+export const NGINX_UPSTREAM_CONF = `events {}
 http {
     upstream backend {
         server api:3000;
@@ -16,9 +16,9 @@ http {
 }
 `;
 
-export const CLEAN_NGINX_CONFIG = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location / {\n            return 204;\n        }\n    }\n}\n`;
+export const CLEAN_NGINX_CONF = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location / {\n            return 204;\n        }\n    }\n}\n`;
 
-export const FORGED_NGINX_CONFIG = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n    }\n}\n`;
+export const FORGED_NGINX_CONF = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n    }\n}\n`;
 
 export const NGINX_SERVER = `server {
     listen 443 ssl;
@@ -27,7 +27,7 @@ export const NGINX_SERVER = `server {
 }
 `;
 
-export const NGINX_SCOPE_SETTINGS = `[tools.nginx]
+export const NGINX_SCOPE_TABLES = `[tools.nginx]
 image = "nginx:1.29.3-alpine@"
 [[scope]]
 path = "proxy"
@@ -45,25 +45,22 @@ export const NGINX_INCLUDE_FILES = {
     'proxy/unrelated.conf': 'include /outside/not-used.conf;\n',
 } as const;
 
-export const NGINX_DIRECTIVE_CASES = [
+/** An nginx file with dynamic and local targets, which names no host. */
+const DYNAMIC_TARGET_CASE = {
+    name: 'dynamic and local targets',
+    source: 'events {} http { server { server localhost; server unix:/tmp/socket; server ${upstream}; proxy_pass $url; unrelated api; ssl_certificate $cert; ssl_certificate_key /etc/nginx/key.pem; ssl_trusted_certificate /etc/nginx/cert.pem; ssl_certificate /etc/nginx/cert.pem; } }',
+    hosts: [],
+    certificates: ['/etc/nginx/key.pem', '/etc/nginx/cert.pem'],
+} as const;
+
+/** The mount cases: configuration text, the hosts it names, and the certificate paths it reads. */
+export const NGINX_MOUNT_CASES = [
     {
-        source: 'location / { proxy_pass "https://api:3000"; add_header X-Value "two  spaces # text"; }',
-        expected: [
-            ['location', '/'],
-            ['proxy_pass', 'https://api:3000'],
-            ['add_header', 'X-Value', 'two  spaces # text'],
-        ],
+        name: 'certificate paths and upstream hosts',
+        source: NGINX_UPSTREAM_CONF,
+        hosts: ['api:127.0.0.1', 'backend:127.0.0.1'],
+        certificates: ['/etc/nginx/ssl/fullchain.pem', '/etc/nginx/ssl/privkey.pem'],
     },
-    {
-        source: 'set $empty ""; set $value ${upstream}; include /etc/tls#local.conf; # include /ignored;\n',
-        expected: [
-            ['set', '$empty', ''],
-            ['set', '$value', '${upstream}'],
-            ['include', '/etc/tls#local.conf'],
-        ],
-    },
-    {
-        source: String.raw`set $value "tab\tnewline\nreturn\rquote\"slash\\";`,
-        expected: [['set', '$value', 'tab\tnewline\nreturn\rquote"slash\\']],
-    },
+    DYNAMIC_TARGET_CASE,
+    { name: 'empty directives', source: '# Empty configuration.\n;{};', hosts: [], certificates: [] },
 ] as const;

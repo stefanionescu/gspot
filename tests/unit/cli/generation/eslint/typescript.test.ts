@@ -3,9 +3,9 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/tool-files.ts';
-import { TYPE_EXPORT_FILES, TYPED_RULE_PROJECTS } from '#tests/data/generation/eslint/levels.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { TYPE_EXPORT_FILES, TYPED_RULE_PROJECTS } from '#tests/data/generation/eslint/typescript.ts';
 
 test.each([...TYPED_RULE_PROJECTS])('$name gets typed lint rules', async ({ configurations, tables, files, file }) => {
     await using sandbox = await testdir({
@@ -53,8 +53,10 @@ test('a default import with an inline type merges with a type-only import into c
         "import type { Level } from 'hls.js';\nimport Hls, { Events, type Config } from 'hls.js';\nexport { Hls, Events, type Config, type Level };\n";
     const [result] = await eslint.lintText(source, { filePath: 'client.ts' });
     expect(result?.fatalErrorCount).toBe(0);
-    expect(result?.output).toBeDefined();
-    const [again] = await eslint.lintText(result!.output!, { filePath: 'client.ts' });
+    const merged =
+        "import Hls, { type Level , Events, type Config } from 'hls.js';\nexport { Hls, Events, type Config, type Level };\n";
+    expect(result?.output).toBe(merged);
+    const [again] = await eslint.lintText(merged, { filePath: 'client.ts' });
     expect(again?.fatalErrorCount).toBe(0);
 });
 

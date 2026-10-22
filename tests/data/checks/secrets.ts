@@ -1,6 +1,6 @@
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-const READER_FILES = {
+const ENVIRONMENT_FUNCTION_FILES = {
     'config/example.env': 'export KNOWN=example\n# ignored\n',
     'source.ts': `Bun.env.KNOWN; Bun.env.MISSING; process.env["MISSING"];
 config.$env("CUSTOM");
@@ -18,12 +18,12 @@ export const NESTED_ENV_FILES = {
     'app/source.ts': 'process.env.KNOWN; process.env.MISSING;\n',
 } as const;
 
-const READER_TABLES = `[secrets]
+const ENVIRONMENT_FUNCTION_TABLES = `[secrets]
 env_examples = ["example.env"]
 environment_functions = ["config.$env", "$readEnv", "read_env"]
 `;
 
-export const READER_EXAMPLE = `KNOWN=example
+export const ENVIRONMENT_FUNCTION_EXAMPLE = `KNOWN=example
 MISSING=example
 CUSTOM=example
 DOLLAR=example
@@ -31,7 +31,7 @@ PYTHON=example
 OTHER=example
 `;
 
-export const READER_FINDINGS = [
+export const ENVIRONMENT_FUNCTION_FINDINGS = [
     {
         file: 'reader.py',
         line: 1,
@@ -70,7 +70,7 @@ export const READER_FINDINGS = [
     },
 ] as const;
 
-const ENVIRONMENT_READER_FILES = {
+const SCOPE_FUNCTION_FILES = {
     '.env.example': 'APP_MISSING=example\n',
     'source.ts': 'root_env("ROOT_MISSING");\n',
     'app/project.env': 'APP_KEY=example\nSIBLING_MISSING=example\n',
@@ -79,7 +79,7 @@ const ENVIRONMENT_READER_FILES = {
     'sibling/source.ts': 'Bun.env.SIBLING_MISSING;\n',
 } as const;
 
-const SCOPE_READER_TABLES = `[secrets]
+const SCOPE_FUNCTION_TABLES = `[secrets]
 environment_functions = ["root_env"]
 [[scope]]
 path = "app"
@@ -94,7 +94,7 @@ path = "sibling"
 env_examples = [".env.example"]
 `;
 
-export const SCOPE_READER_FIXES = {
+export const SCOPE_FUNCTION_CORRECTIONS = {
     '.env.example': 'APP_MISSING=example\nROOT_MISSING=example\n',
     'app/project.env': `APP_KEY=example
 SIBLING_MISSING=example
@@ -103,26 +103,6 @@ APP_MISSING=example
     'sibling/.env.example': 'KNOWN=example\nSIBLING_MISSING=example\n',
 } as const;
 
-export const DOTENV_LINTER_SANDBOX = {
-    install: false,
-    configurations: ['secrets'],
-    files: { '.env.example': 'PORT=3000\n' },
-} as const;
-
-export const DOTENV_LINTER_CASES = [
-    {
-        check: 'secrets/dotenv-linter',
-        files: {
-            '.env.example': `PORT=3000
-port=3000
-PORT=4000
-`,
-        },
-        expected: { file: '.env.example', rule: 'LowercaseKey', line: 2 },
-        corrected: { files: { '.env.example': 'PORT=3000\n' } },
-    },
-] as const;
-
 /** A harmless high-entropy API token, for the redacted generic-key report. */
 export const API_TOKEN = 'n3K5p7R9' + 't2V4w6Y8' + 'z1A3c5E7' + 'g9I2m4O6';
 
@@ -130,17 +110,7 @@ export const API_TOKEN = 'n3K5p7R9' + 't2V4w6Y8' + 'z1A3c5E7' + 'g9I2m4O6';
 export const AWS_KEY_ID = 'AKIA' + 'IOSFODNN7' + 'EXAMPLA';
 
 /** An Amazon Web Services (AWS) credentials file that holds the test credential. */
-const AWS_CREDENTIALS = `aws_access_key_id = "${AWS_KEY_ID}"\n`;
-
-export const SECRET_FILES = {
-    'credential,é.py': `api_key = "${API_TOKEN}"\n`,
-    'identity.py': AWS_CREDENTIALS,
-} as const;
-
-export const FIXED_SECRET_FILES = {
-    'credential,é.py': 'import os\napi_key = os.environ["API_KEY"]\n',
-    'identity.py': 'import os\naws_access_key_id = os.environ["AWS_ACCESS_KEY_ID"]\n',
-} as const;
+export const AWS_CREDENTIALS = `aws_access_key_id = "${AWS_KEY_ID}"\n`;
 
 export const ENV_ACCESSOR_FILES = {
     'app.astro': `---
@@ -172,11 +142,42 @@ LEGACY_API=example
 export const ENVIRONMENT_CHECK_OPTIONS = { only: ['secrets/env-examples'] };
 
 export const READER_PROJECT = {
-    ...READER_FILES,
-    'gspot.toml': buildSandboxSettings([], { tables: READER_TABLES }),
+    ...ENVIRONMENT_FUNCTION_FILES,
+    'gspot.toml': buildSandboxSettings([], { tables: ENVIRONMENT_FUNCTION_TABLES }),
 };
 
 export const SCOPE_READER_PROJECT = {
-    ...ENVIRONMENT_READER_FILES,
-    'gspot.toml': buildSandboxSettings([], { tables: SCOPE_READER_TABLES }),
+    ...SCOPE_FUNCTION_FILES,
+    'gspot.toml': buildSandboxSettings([], { tables: SCOPE_FUNCTION_TABLES }),
 };
+
+/** The missing-key findings of component and module files. */
+export const COMPONENT_ENVIRONMENT_FINDINGS = [
+    { file: 'app.astro', line: 2, rule: 'missing-key' },
+    { file: 'app.svelte', line: 1, rule: 'missing-key' },
+    { file: 'app.vue', line: 1, rule: 'missing-key' },
+    { file: 'common.cts', line: 1, rule: 'missing-key' },
+    { file: 'legacy.cjs', line: 1, rule: 'missing-key' },
+    { file: 'module.mts', line: 1, rule: 'missing-key' },
+    { file: 'worker.ts', line: 1, rule: 'missing-key' },
+] as const;
+
+/** The env-examples result for Bun.env reads. */
+export const BUN_ENVIRONMENT_RESULTS = [
+    {
+        check: 'secrets/env-examples',
+        status: 'failed',
+        findings: [{ file: 'source.ts', line: 1, rule: 'missing-key' }],
+    },
+] as const;
+
+/** The env-examples result of each scope. */
+export const ENVIRONMENT_SCOPE_RESULTS = [
+    { scope: '', status: 'failed', findings: [{ file: 'source.ts', line: 1, rule: 'missing-key' }] },
+    { scope: 'app', status: 'failed', findings: [{ file: 'app/source.ts', line: 1, rule: 'missing-key' }] },
+    {
+        scope: 'sibling',
+        status: 'failed',
+        findings: [{ file: 'sibling/source.ts', line: 1, rule: 'missing-key' }],
+    },
+] as const;

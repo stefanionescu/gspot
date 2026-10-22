@@ -2,24 +2,33 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
-import { installSandbox } from '#tests/setup/install.ts';
-import { parseCheckReport } from '#tests/setup/run-gspot.ts';
-import type { PackedSandbox } from '#tests/types/packages.ts';
-import { runCheckSample } from '#tests/setup/sample-checks.ts';
+import type { UserProject } from '#tests/types/packages.ts';
+import { runCheckSample } from '#tests/setup/cli/samples.ts';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
+import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
-import { createPackedSandbox } from '#tests/setup/packed-sandbox.ts';
-import { PROSE_CHECK, SWIFT_CHECK } from '#tests/data/packed-install.ts';
+import { PROSE_CHECK, SWIFT_CHECK } from '#tests/data/e2e/languages.ts';
 import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
+import { createUserProject } from '#tests/setup/sandboxes/user-project.ts';
+
+/** Run a sample of a check: it fails with the expected finding, and passes after its fix. */
+async function assertSample(installation: UserProject, check: typeof PROSE_CHECK | typeof SWIFT_CHECK): Promise<void> {
+    const { failed, passed } = await runCheckSample(installation.offline, check, { configurations: [], files: {} });
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(failed.report.checks).toMatchObject([{ check: check.check, status: 'failed', findings: [check.expected] }]);
+    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+    expect(passed.report.checks).toMatchObject([{ check: check.check, status: 'passed', findings: [] }]);
+}
 
 // Install the configurations and write their project vocabulary.
-async function prepareLanguages(installation: PackedSandbox): Promise<void> {
+async function prepareLanguages(installation: UserProject): Promise<void> {
     const { online } = installation;
     await createFileTree(installation.root, {
         'entry.py': 'answer = "example"\n',
         'broken.sh': '#!/usr/bin/env bash\necho example\n',
         'guide.md': '# Guide\n\nRead the guide.\n',
     });
-    await installSandbox(online, { configurations: ['bash', 'python', 'swift'] });
+    await initSandbox(online, { configurations: ['bash', 'python', 'swift'] });
     const vocabulary = await online.run(
         installation.root,
         [
@@ -34,8 +43,30 @@ async function prepareLanguages(installation: PackedSandbox): Promise<void> {
     expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);
 }
 
-// After install, gspot finds and parses SQL without the dependencies of this checkout.
-async function assertInstalledSql(installation: PackedSandbox): Promise<void> {
+test('gspot installed from npm runs Vale and the built-in Swift naming check, reports their findings, and passes after the fixes', async () => {
+    await using installation = await createUserProject();
+    await prepareLanguages(installation);
+    await assertSample(installation, PROSE_CHECK);
+    // The Swift naming check and the Vale word list run at level all.
+    const level = await installation.online.run(
+        installation.root,
+        ['set', 'level', 'all'],
+        installation.online.environment,
+    );
+    expect(level.code, level.stdout + level.stderr).toBe(0);
+    await assertSample(installation, SWIFT_CHECK);
+    const vocabulary = await readFile(
+        join(installation.root, '.gspot/configurations/general/prose/styles/config/vocabularies/words/accept.txt'),
+        'utf8',
+    );
+    const acceptedWords = vocabulary.trim().split('\n');
+    expect(acceptedWords).toContain('NebulaConfiguration');
+    expect(acceptedWords).toContain('Python');
+});
+
+test('gspot installed from npm suggests gspot add sql for a SQL file, and SQLFluff reports a parse error', async () => {
+    await using installation = await createUserProject();
+    await initSandbox(installation.online, { configurations: ['bash'] });
     const { root, offline, online } = installation;
     await writeFile(join(root, 'query.sql'), 'SELECT 1;\n');
     const listed = await offline.run(root, ['list', '--json'], offline.environment);
@@ -48,65 +79,33 @@ async function assertInstalledSql(installation: PackedSandbox): Promise<void> {
     expect(report.suggestions.detected.find((configuration) => configuration.configuration === 'sql')?.command).toBe(
         'gspot add sql',
     );
-    const added = await online.run(root, ['add', 'sql'], online.environment);
-    expect(added.code, added.stdout + added.stderr).toBe(0);
-    const configured = await online.run(root, ['set', 'tools.sqlfluff.dialect', 'postgres'], online.environment);
-    expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-    const installed = await online.run(root, ['install'], online.environment);
-    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    for (const command of [['add', 'sql'], ['set', 'tools.sqlfluff.dialect', 'postgres'], ['install']]) {
+        const result = await online.run(root, command, online.environment);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+    }
+    const sqlCheck = ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json'];
     await writeFile(join(root, 'query.sql'), 'SELECT FROM;\n');
-    const failed = parseCheckReport(
-        await offline.run(root, ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json'], offline.environment),
-    );
+    const failed = parseCheckReport(await offline.run(root, sqlCheck, offline.environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const failedReport = failed.report;
-    expect(failedReport.checks).toMatchObject([{ check: 'sql/sqlfluff', status: 'failed', fileCount: 1 }]);
-    expect(failedReport.checks[0]!.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-        { file: 'query.sql', line: 1, rule: 'PRS' },
+    expect(
+        failed.report.checks.map(({ check, status, fileCount, findings }) => ({
+            check,
+            status,
+            fileCount,
+            findings: findings.map(({ file, line, rule }) => ({ file, line, rule })),
+        })),
+    ).toStrictEqual([
+        {
+            check: 'sql/sqlfluff',
+            status: 'failed',
+            fileCount: 1,
+            findings: [{ file: 'query.sql', line: 1, rule: 'PRS' }],
+        },
     ]);
     await writeFile(join(root, 'query.sql'), 'SELECT 1;\n');
-    const sql = parseCheckReport(
-        await offline.run(root, ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json'], offline.environment),
-    );
-    expect(sql.code, sql.stdout + sql.stderr).toBe(0);
-    const sqlReport = sql.report;
-    expect(sqlReport.checks).toHaveLength(1);
-    expect(sqlReport.checks[0]).toMatchObject({
-        check: 'sql/sqlfluff',
-        status: 'passed',
-        fileCount: 1,
-        findings: [],
-    });
-}
-
-test('a packed install runs the pinned language tools, reports their findings, and passes after the fixes', async () => {
-    await using installation = await createPackedSandbox();
-
-    await prepareLanguages(installation);
-    for (const check of [PROSE_CHECK, SWIFT_CHECK]) {
-        if (check === SWIFT_CHECK) {
-            const level = await installation.online.run(
-                installation.root,
-                ['set', 'level', 'all'],
-                installation.online.environment,
-            );
-            expect(level.code, level.stdout + level.stderr).toBe(0);
-        }
-        const { failed, passed } = await runCheckSample(installation.offline, check, { configurations: [], files: {} });
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(failed.report.checks).toMatchObject([
-            { check: check.check, status: 'failed', findings: [check.expected] },
-        ]);
-        expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-        expect(passed.report.checks).toMatchObject([{ check: check.check, status: 'passed', findings: [] }]);
-    }
-    // The Vale word list exists at level all, which the Swift check turned on.
-    const vocabulary = await readFile(
-        join(installation.root, '.gspot/configurations/general/prose/styles/config/vocabularies/words/accept.txt'),
-        'utf8',
-    );
-    const acceptedWords = vocabulary.trim().split('\n');
-    expect(acceptedWords).toContain('NebulaConfiguration');
-    expect(acceptedWords).toContain('Python');
-    await assertInstalledSql(installation);
+    const passed = parseCheckReport(await offline.run(root, sqlCheck, offline.environment));
+    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+    expect(
+        passed.report.checks.map(({ check, status, fileCount, findings }) => ({ check, status, fileCount, findings })),
+    ).toStrictEqual([{ check: 'sql/sqlfluff', status: 'passed', fileCount: 1, findings: [] }]);
 });

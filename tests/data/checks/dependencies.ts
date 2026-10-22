@@ -1,3 +1,59 @@
+import type { CheckResult } from '#cli/types/runs/check.ts';
+
+/** Syncpack filenames for replacement checks. */
+export const SYNCPACK_FILES = [
+    {
+        file: '.syncpackrc.yaml',
+        source: `versionGroups:
+  - dependencies: [fixture]
+    isIgnored: true
+`,
+    },
+    {
+        file: '.syncpackrc.yml',
+        source: `versionGroups:
+  - dependencies: [fixture]
+    isIgnored: true
+`,
+    },
+    {
+        file: '.syncpackrc.ts',
+        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
+    },
+    {
+        file: '.syncpackrc.mjs',
+        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
+    },
+    {
+        file: 'syncpack.config.ts',
+        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
+    },
+] as const;
+
+export const BUN_PROJECT_FILES = {
+    'package.json': JSON.stringify({
+        name: 'shop',
+        private: true,
+        dependencies: { zod: '^4.1.0', react: '19.1.0', 'react-dom': '19.0.0' },
+        devDependencies: { typescript: '5.9.3' },
+    }),
+    'bun.lock': JSON.stringify({
+        lockfileVersion: 1,
+        workspaces: {
+            '': {
+                name: 'shop',
+                dependencies: { zod: '^4.0.0', react: '19.1.0', 'react-dom': '19.0.0', 'left-pad': '1.3.0' },
+            },
+        },
+        packages: {
+            zod: ['zod@4.0.5', '', {}, 'sha512-a'],
+            react: ['react@19.1.0', '', {}, 'sha512-b'],
+            'react-dom': ['react-dom@19.0.0', '', {}, 'sha512-c'],
+            'left-pad': ['left-pad@1.3.0', '', {}, 'sha512-d'],
+        },
+    }),
+} as const;
+
 export const DEPENDENCIES_SANDBOX = {
     configurations: ['dependencies'],
 
@@ -91,41 +147,22 @@ export const HOST_LOCKFILE = {
     },
 } as const;
 
-// A hold of fourteen days that the user wrote in bunfig.toml.
-export const TWO_WEEKS_SECONDS = 1_209_600;
+/** A binary Bun lockfile whose URL the scanner must not read as text. */
+export const BINARY_BUN_LOCKFILE = Buffer.concat([
+    Buffer.from([0xff, 0]),
+    Buffer.from('https://untrusted.invalid/package.tgz'),
+]);
 
-/** The two gspot packages, which every package manager leaves out of the hold. */
-export const OWN_PACKAGES = ['@gspothq/cli', '@gspothq/eslint-plugin'] as const;
-
-/** Syncpack filenames for replacement checks. */
-export const SYNCPACK_FILES = [
+/** The lockfile result of each scope when only the root allows a registry host. */
+export const REGISTRY_SCOPE_RESULTS: { scope: string; status: CheckResult['status']; files: string[] }[] = [
+    { scope: '', status: 'failed', files: ['package-lock.json', 'package-lock.json', 'package-lock.json'] },
+    { scope: 'app', status: 'passed', files: [] },
     {
-        file: '.syncpackrc.yaml',
-        source: `versionGroups:
-  - dependencies: [fixture]
-    isIgnored: true
-`,
+        scope: 'sibling',
+        status: 'failed',
+        files: ['sibling/package-lock.json', 'sibling/package-lock.json', 'sibling/package-lock.json'],
     },
-    {
-        file: '.syncpackrc.yml',
-        source: `versionGroups:
-  - dependencies: [fixture]
-    isIgnored: true
-`,
-    },
-    {
-        file: '.syncpackrc.ts',
-        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
-    },
-    {
-        file: '.syncpackrc.mjs',
-        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
-    },
-    {
-        file: 'syncpack.config.ts',
-        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
-    },
-] as const;
+];
 
 export const MISE_PIN_FILES = [
     { file: 'mise.toml' },
@@ -137,9 +174,3 @@ export const MISE_PIN_FILES = [
     { file: 'mise.local.toml' },
     { file: '.mise.local.toml' },
 ] as const;
-
-/** A binary Bun lockfile whose URL the scanner must not read as text. */
-export const BINARY_BUN_LOCKFILE = Buffer.concat([
-    Buffer.from([0xff, 0]),
-    Buffer.from('https://untrusted.invalid/package.tgz'),
-]);

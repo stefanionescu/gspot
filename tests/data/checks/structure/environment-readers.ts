@@ -1,4 +1,4 @@
-import { BASH_HEADER } from '#tests/data/checks/bash/samples.ts';
+import { BASH_HEADER } from '#tests/data/checks/bash/sandbox.ts';
 
 export const BASH_ENV_READ_CASES = [
     {
@@ -60,16 +60,3 @@ def bound():
 from unrelated import getenv as other
 fifth = other("KEY")
 `;
-
-/** Implicit and explicit property readers with separate observer and subscript locations. */
-export const PROPERTY_READERS = `struct A {
-    var x: Int { 1 }
-    var y = 0 {
-        willSet { save(newValue) }
-        didSet { save(oldValue) }
-    }
-    subscript(i: Int) -> Int {
-        get { 1 }
-        set { save(newValue) }
-    }
-}`;

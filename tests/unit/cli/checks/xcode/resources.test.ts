@@ -4,15 +4,22 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
-import { checkFindings } from '#tests/setup/check-input.ts';
-import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { ASSET_SETTING_CASES, UNREADABLE_RESOURCES, INVALID_RESOURCE_DOCUMENTS } from '#tests/data/checks/xcode.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+
+import {
+    ASSET_SETTING_CASES,
+    UNREADABLE_RESOURCES,
+    PARTLY_TRANSLATED_STRINGS,
+    INVALID_RESOURCE_DOCUMENTS,
+} from '#tests/data/checks/xcode.ts';
 
 test.each([...UNREADABLE_RESOURCES])(
-    'a resource file that cannot be read is an execution error for $check',
+    '$check errors on a resource file it cannot read',
     async ({ check, path, text }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['xcode']),
@@ -49,7 +56,7 @@ test('xcode/assets reports an image that the set names and the repository does n
     });
     commitAll(sandbox.path);
     await rm(join(sandbox.path, image));
-    const findings = await checkFindings(sandbox.path, 'xcode/assets');
+    const findings = await runSandboxCheck(sandbox.path, 'xcode/assets');
     expect(findings).toMatchObject([
         { file: contentsPath, line: 1, rule: 'missing-image', message: 'The image logo.png is not in the set.' },
     ]);
@@ -66,15 +73,15 @@ test('xcode/assets reports an ignored image that is on disk but not in the repos
         'App/Home.swift': 'let logo = Image("Logo")\n',
     });
     commitAll(sandbox.path);
-    expect(readGitOutput(sandbox.path, ['check-ignore', image])).toBe(image);
+    expect(runGitStep(sandbox.path, ['check-ignore', image])).toBe(image);
     expect(await readFile(join(sandbox.path, image))).toStrictEqual(Buffer.from([0, 1, 2]));
-    const findings = await checkFindings(sandbox.path, 'xcode/assets');
+    const findings = await runSandboxCheck(sandbox.path, 'xcode/assets');
     expect(findings).toMatchObject([
         { file: contentsPath, line: 1, rule: 'missing-image', message: 'The image logo.png is not in the set.' },
     ]);
 
     await writeFile(join(sandbox.path, '.gitignore'), '');
-    expect(await checkFindings(sandbox.path, 'xcode/assets')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toStrictEqual([]);
 });
 
 test.each(['logo-mark', 'logo_mark', 'Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
@@ -145,3 +152,32 @@ test.each([...INVALID_RESOURCE_DOCUMENTS])(
         ).toStrictEqual([{ file: path, line: 1, rule: 'syntax' }]);
     },
 );
+
+test('xcode/assets reports an image set that names no image file', async () => {
+    const contentsPath = 'App/Assets.xcassets/Logo.imageset/Contents.json';
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['xcode']),
+        [contentsPath]: '{"images":[{"idiom":"universal"}]}\n',
+        'App/Home.swift': 'let logo = Image("Logo")\n',
+    });
+    commitAll(sandbox.path);
+    expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toStrictEqual([
+        matchFields({ file: contentsPath, line: 1, rule: 'empty-set', message: 'This image set names no image file.' }),
+    ]);
+});
+
+test('xcode/xcstrings reports a string without a translation for a locale the catalog uses', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['xcode']),
+        'App/Localizable.xcstrings': JSON.stringify(PARTLY_TRANSLATED_STRINGS),
+    });
+    commitAll(sandbox.path);
+    expect(await runSandboxCheck(sandbox.path, 'xcode/xcstrings')).toStrictEqual([
+        matchFields({
+            file: 'App/Localizable.xcstrings',
+            line: 1,
+            rule: 'missing-translation',
+            message: '"Goodbye" has no translation for fr.',
+        }),
+    ]);
+});

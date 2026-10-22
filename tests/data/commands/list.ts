@@ -29,3 +29,11 @@ export const LIST_SCOPE_ROWS = [
     'test_files                               ["**/test/**","**/tests/**"…                     gspot.toml',
     'limits.file_lines                        200                          raising             [scope "api"]  [scope api]',
 ] as const;
+
+/** Settings with a shfmt ignore. */
+export const SHFMT_IGNORE_SETTINGS = {
+    tables: `[[ignore]]
+check = "bash/shfmt"
+reason = "Review this separately."
+`,
+} as const;

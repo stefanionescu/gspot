@@ -5,23 +5,21 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSchema } from '#cli/checks/postgres/schema.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { readMigrations } from '#cli/checks/postgres/migrations.ts';
-import { planSandboxCheck, findBuiltInCheck } from '#tests/setup/check-input.ts';
-import { MALFORMED_MIGRATION_FILES, DEFAULT_MIGRATION_FOLDER_FILES } from '#tests/data/checks/postgres.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+
+import {
+    POSTGRES_CHECKS,
+    MALFORMED_MIGRATION_FILES,
+    DEFAULT_MIGRATION_FOLDER_FILES,
+} from '#tests/data/checks/postgres/migrations.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
     await using sandbox = await testdir(MALFORMED_MIGRATION_FILES);
-    const checks = [
-        'postgres/migration-order',
-        'postgres/edited-migrations',
-        'postgres/row-level-security',
-        'postgres/grants',
-        'postgres/definer-search-path',
-        'postgres/foreign-key-indexes',
-    ];
+    const checks = [...POSTGRES_CHECKS];
 
     const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: checks }));
 

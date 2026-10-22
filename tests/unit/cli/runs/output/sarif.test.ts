@@ -10,12 +10,13 @@ import { type SarifLog } from '#cli/types/runs/tool-reports.ts';
 import { outputSchema } from '#cli/schemas/configurations/output.ts';
 
 import {
-    CODEQL_REPORT,
     CYCLIC_REPORT,
+    CODEQL_REPORT,
     ENCODED_REPORT,
     FAILED_ANALYSES,
+    SARIF_LOCATION_CASES,
     POSITIONLESS_RESULTS,
-} from '#tests/data/runs/output.ts';
+} from '#tests/data/runs/output/sarif.ts';
 
 /** Parse a Static Analysis Results Interchange Format (SARIF) report with the same check and paths for each case. */
 function parseSarifReport(report: unknown, root: string): Finding[] {
@@ -37,7 +38,7 @@ function buildLocationReport(artifactLocation: Record<string, unknown>): SarifLo
     return { version: '2.1.0', runs: [{ results: [{ locations: [{ physicalLocation: { artifactLocation } }] }] }] };
 }
 
-test('sarifFindings maps every result to its file and line', () => {
+test('a SARIF report maps every result to its file, line, and rule', () => {
     const sourceRoot = resolve('selected-source');
 
     const findings = parseSarifReport(CODEQL_REPORT, sourceRoot);
@@ -55,45 +56,43 @@ test.each([...FAILED_ANALYSES])('a failed CodeQL run in the report is an error, 
     ).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'output' }));
 });
 
-test.each([
-    { uri: 'api/some%20file.ts', uriBaseId: '%SRCROOT%' },
-    { uri: new URL('api/some%20file.ts', pathToFileURL(`${resolve('selected-source')}${sep}`).href).href },
-    { uri: 'some%20file.ts', uriBaseId: 'API' },
-    { index: 0 },
-])('source locations become repository paths before path ignores apply: %j', (artifact) => {
-    const sourceRoot = resolve('selected-source');
-    const sourceUri = pathToFileURL(`${sourceRoot}${sep}`).href;
+test.each([...SARIF_LOCATION_CASES])(
+    'source locations become repository paths before path ignores apply: %j',
+    (artifact) => {
+        const sourceRoot = resolve('selected-source');
+        const sourceUri = pathToFileURL(`${sourceRoot}${sep}`).href;
 
-    const report = {
-        version: '2.1.0',
-        runs: [
-            {
-                originalUriBaseIds: {
-                    ROOT: { uri: sourceUri },
-                    API: { uri: 'api/', uriBaseId: 'ROOT' },
-                },
-                artifacts: [{ location: { uri: 'api/some%20file.ts', uriBaseId: '%SRCROOT%' } }],
-                results: [
-                    {
-                        ruleId: 'js/sql-injection',
-                        message: { text: 'Test injection' },
-                        locations: [
-                            {
-                                physicalLocation: {
-                                    artifactLocation: artifact,
-                                    region: { startLine: 9, startColumn: 4 },
-                                },
-                            },
-                        ],
+        const report = {
+            version: '2.1.0',
+            runs: [
+                {
+                    originalUriBaseIds: {
+                        ROOT: { uri: sourceUri },
+                        API: { uri: 'api/', uriBaseId: 'ROOT' },
                     },
-                ],
-            },
-        ],
-    };
-    expect(parseSarifReport(report, sourceRoot)).toMatchObject([
-        { file: 'api/some file.ts', line: 9, column: 4, rule: 'js/sql-injection' },
-    ]);
-});
+                    artifacts: [{ location: { uri: 'api/some%20file.ts', uriBaseId: '%SRCROOT%' } }],
+                    results: [
+                        {
+                            ruleId: 'js/sql-injection',
+                            message: { text: 'Test injection' },
+                            locations: [
+                                {
+                                    physicalLocation: {
+                                        artifactLocation: artifact,
+                                        region: { startLine: 9, startColumn: 4 },
+                                    },
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
+        expect(parseSarifReport(report, sourceRoot)).toMatchObject([
+            { file: 'api/some file.ts', line: 9, column: 4, rule: 'js/sql-injection' },
+        ]);
+    },
+);
 
 test.each([
     { name: 'a path outside the root', report: buildLocationReport({ uri: '../outside.ts' }) },
@@ -136,8 +135,8 @@ test.each([...POSITIONLESS_RESULTS])(
 );
 
 test('given positions are kept without reading source bytes or encodings', async () => {
-    await using folder = await testdir();
+    await using sandbox = await testdir();
     const source = Buffer.from('first\n😀x', 'utf16le');
-    await createFileTree(folder.path, { 'source.py': source });
-    expect(parseSarifReport(ENCODED_REPORT, folder.path)).toMatchObject([{ file: 'source.py', line: 3, column: 2 }]);
+    await createFileTree(sandbox.path, { 'source.py': source });
+    expect(parseSarifReport(ENCODED_REPORT, sandbox.path)).toMatchObject([{ file: 'source.py', line: 3, column: 2 }]);
 });

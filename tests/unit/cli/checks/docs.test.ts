@@ -2,26 +2,29 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { stringify } from '@decimalturn/toml-patch';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { checkFindings, findBuiltInCheck, planSandboxCheck } from '#tests/setup/check-input.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     README,
     LICENSE,
     MDX_GUIDE,
     DOC_TASK_FILES,
-    DOC_TASK_SCOPES,
+    DOC_TASK_TABLES,
     DOC_TASK_FINDINGS,
     MISE_TASK_SOURCES,
+    IGNORED_PATH_FILES,
     LICENSE_FILE_CASES,
+    RELATIVE_PATH_FILES,
     DOC_FENCE_PATH_CASES,
     MALFORMED_TASK_FILES,
+    COVERAGE_CHECK_TABLES,
+    RELATIVE_PATH_FINDINGS,
+    MDX_MISSING_PATH_FINDINGS,
 } from '#tests/data/checks/docs.ts';
 
 async function runMissingPathsCheck(
@@ -29,7 +32,7 @@ async function runMissingPathsCheck(
     options: { paths?: string[] } = {},
 ): Promise<readonly Finding[]> {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }), ...files });
-    return await checkFindings(sandbox.path, 'docs/missing-paths', options);
+    return await runSandboxCheck(sandbox.path, 'docs/missing-paths', options);
 }
 
 test('missing-paths: a path in an .mdx page that names no tracked file is reported', async () => {
@@ -38,12 +41,7 @@ test('missing-paths: a path in an .mdx page that names no tracked file is report
         { paths: ['docs/guide.mdx'] },
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        {
-            file: 'docs/guide.mdx',
-            line: 5,
-            rule: 'missing-path',
-            message: './missing.ts names no tracked file or folder.',
-        },
+        ...MDX_MISSING_PATH_FINDINGS,
     ]);
 });
 
@@ -57,25 +55,17 @@ test('missing-paths: wildcard examples are skipped; bold, italic and code paths 
         { paths: ['a.md'] },
     );
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/missing.ts') as string },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/absent.ts') as string },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/gone.ts') as string },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: 'src/missing.ts names no tracked file or folder.' },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: 'src/absent.ts names no tracked file or folder.' },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: 'src/gone.ts names no tracked file or folder.' },
     ]);
 });
 
 test('missing-paths: gitignored paths and paths inside ignored folders count as present; others are reported', async () => {
-    const found = await runMissingPathsCheck(
-        {
-            'a.md': 'Build `output/report.json` and `app/cache`.\nSee `app/absent.ts`, `app/private.ts`, `.next/types/routes.d.ts`, and `src/gone.ts`.\n',
-            '.gitignore': '/output/report.json\n.next/\n',
-            'app/.gitignore': 'cache/\n*.ts\n!private.ts\n',
-            'src/here.ts': '',
-        },
-        { paths: ['a.md'] },
-    );
+    const found = await runMissingPathsCheck(IGNORED_PATH_FILES, { paths: ['a.md'] });
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('app/private.ts') as string },
-        { file: 'a.md', line: 2, rule: 'missing-path', message: expect.stringContaining('src/gone.ts') as string },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: 'app/private.ts names no tracked file or folder.' },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: 'src/gone.ts names no tracked file or folder.' },
     ]);
 });
 
@@ -84,9 +74,7 @@ test('missing-paths: command check names count as present; unknown ones are repo
         {
             'gspot.toml': buildSandboxSettings(['docs'], {
                 level: 'all',
-                tables: stringify({
-                    command_check: [{ id: 'tests/coverage', command: ['true'], paths: ['tests/**'], stage: 'manual' }],
-                }),
+                tables: COVERAGE_CHECK_TABLES,
             }),
             'a.md': 'Run `tests/coverage` and `tests/missing`.\n',
             'tests/example.ts': '',
@@ -101,7 +89,7 @@ test('missing-paths: command check names count as present; unknown ones are repo
             message,
         })),
     ).toStrictEqual([
-        { file: 'a.md', line: 1, rule: 'missing-path', message: expect.stringContaining('tests/missing') as string },
+        { file: 'a.md', line: 1, rule: 'missing-path', message: 'tests/missing names no tracked file or folder.' },
     ]);
 });
 
@@ -124,20 +112,9 @@ test('missing-paths: clone host names are skipped while missing repository paths
 });
 
 test('missing-paths: paths relative to the document are found, and missing ones nearby are still reported', async () => {
-    const found = await runMissingPathsCheck(
-        {
-            'docs/guide.md':
-                'See `./examples/good.ts`, `../src/here.ts`, and `src/here.ts`.\nSee `./examples/gone.ts` and `../src/gone.ts`.\nSee `./src/here.ts` and `./missing/`.\n',
-            'docs/examples/good.ts': '',
-            'src/here.ts': '',
-        },
-        { paths: ['docs/guide.md'] },
-    );
+    const found = await runMissingPathsCheck(RELATIVE_PATH_FILES, { paths: ['docs/guide.md'] });
     expect(found.map(({ line, message: description }) => [line, description])).toStrictEqual([
-        [2, './examples/gone.ts names no tracked file or folder.'],
-        [2, '../src/gone.ts names no tracked file or folder.'],
-        [3, './src/here.ts names no tracked file or folder.'],
-        [3, './missing/ names no tracked file or folder.'],
+        ...RELATIVE_PATH_FINDINGS,
     ]);
 });
 
@@ -159,24 +136,23 @@ test.each([...MALFORMED_TASK_FILES])(
 
 test('missing-paths: documented tasks are checked against their task tool and the nearest scope that defines them', async () => {
     const found = await runMissingPathsCheck({
-        'gspot.toml': buildSandboxSettings([], { level: 'recommended', tables: DOC_TASK_SCOPES }),
+        'gspot.toml': buildSandboxSettings([], { level: 'recommended', tables: DOC_TASK_TABLES }),
         ...DOC_TASK_FILES,
     });
-    expect(found).toHaveLength(DOC_TASK_FINDINGS.length);
-    for (const { command, ...place } of DOC_TASK_FINDINGS)
-        expect(found).toContainEqual(
-            matchFields({ ...place, rule: 'missing-task', message: expect.stringContaining(command) as string }),
-        );
+    expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        ...DOC_TASK_FINDINGS,
+    ]);
 });
 
 test('missing-paths: a document in a child scope does not read unrelated or shadowed package scripts', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: DOC_TASK_SCOPES }),
+        'gspot.toml': buildSandboxSettings([], { tables: DOC_TASK_TABLES }),
         ...DOC_TASK_FILES,
     });
 
     const session = await openSession(sandbox.path);
     await createFileTree(sandbox.path, { 'package.json': '{broken', 'sibling/package.json': '{broken' });
+    session.reads = createReadCache(sandbox.path);
 
     expect(
         await findBuiltInCheck('docs/missing-paths')(
@@ -187,11 +163,11 @@ test('missing-paths: a document in a child scope does not read unrelated or shad
 });
 
 test.each([...DOC_FENCE_PATH_CASES])(
-    'missing-paths: a $language fence with "$metadata" reports example paths=$reported',
-    async ({ metadata, language, reported }) => {
+    'missing-paths: a $language fence with "$info" reports example paths=$reported',
+    async ({ info, language, reported }) => {
         const pathFindings = await runMissingPathsCheck(
             {
-                'guide.md': `> ~~~${language} ${metadata}\n> cat src/example.ts\n> ~~~\n\nSee src/missing.ts.\n`,
+                'guide.md': `> ~~~${language} ${info}\n> cat src/example.ts\n> ~~~\n\nSee src/missing.ts.\n`,
             },
             { paths: ['guide.md'] },
         );
@@ -210,7 +186,7 @@ test.each([...LICENSE_FILE_CASES])(
             'README.md': README,
             [name]: LICENSE,
         });
-        const found = await checkFindings(sandbox.path, 'docs/required-files');
+        const found = await runSandboxCheck(sandbox.path, 'docs/required-files');
         expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([...findings]);
     },
 );
@@ -224,16 +200,35 @@ test('required-files: ignored README.md and LICENSE files in a Git repository ar
         'guide.md': 'Project documentation.\n',
     });
     commitAll(sandbox.path);
-    expect(readGitOutput(sandbox.path, ['check-ignore', 'README.md', 'LICENSE'])).toBe('README.md\nLICENSE');
+    expect(runGitStep(sandbox.path, ['check-ignore', 'README.md', 'LICENSE'])).toBe('README.md\nLICENSE');
     expect(await readFile(join(sandbox.path, 'README.md'), 'utf8')).toBe(README);
     expect(await readFile(join(sandbox.path, 'LICENSE'), 'utf8')).toBe(LICENSE);
 
-    const found = await checkFindings(sandbox.path, 'docs/required-files');
+    const found = await runSandboxCheck(sandbox.path, 'docs/required-files');
     expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
         { file: 'README.md', rule: 'missing-readme', message: 'The scope root has no README.md.' },
         { file: 'LICENSE', rule: 'missing-license', message: 'The root has no LICENSE file.' },
     ]);
 
     await writeFile(join(sandbox.path, '.gitignore'), '');
-    expect(await checkFindings(sandbox.path, 'docs/required-files')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'docs/required-files')).toStrictEqual([]);
+});
+
+test('required-files: a scope without README.md is reported and passes once README.md exists', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['docs'], { level: 'all', scopes: [{ path: 'app' }] }),
+        'README.md': README,
+        LICENSE,
+        'app/package.json': '{}',
+    });
+    const found = await runSandboxCheck(sandbox.path, 'docs/required-files', { scope: 'app' });
+    expect(
+        found.map(({ file, rule, message }) => ({
+            file,
+            rule,
+            message,
+        })),
+    ).toStrictEqual([{ file: 'app/README.md', rule: 'missing-readme', message: 'The scope app has no README.md.' }]);
+    await writeFile(join(sandbox.path, 'app/README.md'), README);
+    expect(await runSandboxCheck(sandbox.path, 'docs/required-files', { scope: 'app' })).toStrictEqual([]);
 });

@@ -3,73 +3,72 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import type { EslintConfiguration } from '#tests/types/tool-output.ts';
-import { PACKAGE_MANAGER_LEVELS } from '#tests/data/generation/eslint/levels.ts';
-import { createEslint, listLintFindings, listScriptFindings } from '#tests/setup/tool-files.ts';
+import type { Level } from '#cli/types/configurations.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createEslint, compareFindings, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import type { LintFinding, ScriptFindingCase, EslintConfiguration } from '#tests/types/tool-output.ts';
 
 import {
     ENGINE_PATHS,
-    ENGINE_SCOPES,
     ENGINE_PHASES,
+    ENGINE_SCOPES,
     ENGINE_SOURCE,
+    UNLINTED_FILES,
     ENGINE_FINDINGS,
     ENGINE_PACKAGES,
-} from '#tests/data/generation/eslint/engines.ts';
-import {
-    UNLINTED_FILES,
     NODE_SCRIPT_CASES,
     NODE_SCRIPT_FILES,
     NODE_SCRIPT_RULES,
     NODE_SCRIPT_TABLES,
+    PACKAGE_MANAGER_LEVELS,
     EXTENSIONLESS_SCRIPT_CASES,
     EXTENSIONLESS_SCRIPT_RULES,
-} from '#tests/data/generation/eslint/node-scripts.ts';
+} from '#tests/data/generation/eslint/node.ts';
 
-test.each([...ENGINE_PHASES])('engines > Node checks follow package engines (%j)', async (phase) => {
-    await using sandbox = await testdir({
-        ...ENGINE_PACKAGES,
-        ...Object.fromEntries(
-            ENGINE_PATHS.map((path) => [
-                path,
-                path.endsWith('.cjs')
-                    ? ENGINE_SOURCE.replace('export const grouped =', 'exports.grouped =')
-                    : ENGINE_SOURCE,
-            ]),
-        ),
-    });
+test.each([...ENGINE_PHASES])(
+    `ESLint reports Node APIs newer than the engines of each file's package ($name)`,
+    async (phase) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: ENGINE_SCOPES }),
+            ...ENGINE_PACKAGES,
+            ...Object.fromEntries(
+                ENGINE_PATHS.map((path) => [
+                    path,
+                    path.endsWith('.cjs')
+                        ? ENGINE_SOURCE.replace('export const grouped =', 'exports.grouped =')
+                        : ENGINE_SOURCE,
+                ]),
+            ),
+        });
 
-    await writeFile(
-        join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['javascript'], { level: 'all', tables: ENGINE_SCOPES }),
-    );
-    for (const path of phase.corrections) {
-        const source = await readFile(join(sandbox.path, path), 'utf8');
-        await writeFile(
-            join(sandbox.path, path),
-            source
-                .replace('Object.groupBy([1], String)', 'Object.fromEntries([["group", [1]]])')
-                .replace('process.loadEnvFile()', 'process.cwd()'),
+        for (const path of phase.corrections) {
+            const source = await readFile(join(sandbox.path, path), 'utf8');
+            await writeFile(
+                join(sandbox.path, path),
+                source
+                    .replace('Object.groupBy([1], String)', 'Object.fromEntries([["group", [1]]])')
+                    .replace('process.loadEnvFile()', 'process.cwd()'),
+            );
+        }
+        const eslint = await createEslint(sandbox.path);
+        const findings = await listLintFindings(
+            eslint,
+            sandbox.path,
+            ENGINE_PATHS,
+            ENGINE_FINDINGS.map(({ ruleId }) => ruleId),
         );
-    }
-    const eslint = await createEslint(sandbox.path);
-    const findings = await listLintFindings(
-        eslint,
-        sandbox.path,
-        ENGINE_PATHS,
-        ENGINE_FINDINGS.map(({ ruleId }) => ruleId),
-    );
-    expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
-        ENGINE_PATHS.toSorted((left, right) => left.localeCompare(right)).flatMap((file) =>
-            new Set<string>(phase.reported).has(file)
-                ? ENGINE_FINDINGS.map(({ ruleId, line }) => ({ file, rule: ruleId, line }))
-                : [],
-        ),
-    );
-});
+        expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
+            ENGINE_PATHS.toSorted((left, right) => left.localeCompare(right)).flatMap((file) =>
+                new Set<string>(phase.reported).has(file)
+                    ? ENGINE_FINDINGS.map(({ ruleId, line }) => ({ file, rule: ruleId, line }))
+                    : [],
+            ),
+        );
+    },
+);
 
 test.each([...LEVELS])(
-    'node-scripts > ESLint lints Node script files by role and shebang, and skips generated, vendored and other files (%s)',
+    'ESLint lints Node script files by role and shebang, and skips generated, vendored and other files (%s)',
     async (level) => {
         await using sandbox = await testdir({
             ...NODE_SCRIPT_FILES,
@@ -101,7 +100,7 @@ test.each([...LEVELS])(
 );
 
 test.each([...LEVELS])(
-    'node-scripts > Node scripts without an extension get syntax, global, engine, import and scope limit findings (%s)',
+    'Node scripts without an extension get syntax, global, engine, import and scope limit findings (%s)',
     async (level) => {
         await using sandbox = await testdir({
             ...NODE_SCRIPT_FILES,
@@ -122,12 +121,9 @@ test.each([...LEVELS])(
     },
 );
 
-test('package-json > every package.json gets the package-json rules and no code rules, and only the root names its package manager', async () => {
+test('every package.json gets the package-json rules and no code rules, and only the root names its package manager', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript', 'vitest'], {
-            level: 'all',
-            tables: '[rules]\nenabled = false\n',
-        }),
+        'gspot.toml': buildSandboxSettings(['typescript', 'vitest'], { level: 'all' }),
         'package.json':
             '{"name":"example","version":"1.0.0","private":true,"type":"module","dependencies":{"b":"1.0.0","a":"1.0.0"}}\n',
         'tests/package.json':
@@ -151,13 +147,13 @@ test('package-json > every package.json gets the package-json rules and no code 
     expect(findings.filter(({ rule }) => rule?.startsWith('package-json/') !== true)).toStrictEqual([]);
 });
 
-test('package-json > an ignore of a package-json rule for one file keeps the finding in other files', async () => {
+test('an ignore of a package-json rule for one file keeps the finding in other files', async () => {
     await using sandbox = await testdir();
     const packageJson = { name: 'example', version: '0.0.0', type: 'module' };
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
-            tables: '[[ignore]]\ncheck = "javascript/eslint"\nrule = "package-json/require-exports"\npaths = ["cli/package.json"]\nreason = "The command package exposes no module API."\n[rules]\nenabled = false\n',
+            tables: '[[ignore]]\ncheck = "javascript/eslint"\nrule = "package-json/require-exports"\npaths = ["cli/package.json"]\nreason = "The command package exposes no module API."\n',
         }),
         'package.json': JSON.stringify({ ...packageJson, private: true }),
         'cli/package.json': JSON.stringify(packageJson),
@@ -186,3 +182,16 @@ test.each([...PACKAGE_MANAGER_LEVELS])(
         expect(configuration.rules['package-json/require-packageManager']).toStrictEqual([severity]);
     },
 );
+
+/** List the findings each source sample expects at this level, in report order. */
+function listScriptFindings(cases: readonly ScriptFindingCase[], level: Level): LintFinding[] {
+    return cases
+        .flatMap((entry) =>
+            [...entry.recommended, ...(level === 'all' ? (entry.all ?? []) : [])].map(({ ruleId, line }) => ({
+                file: entry.file,
+                rule: ruleId,
+                line,
+            })),
+        )
+        .toSorted(compareFindings);
+}

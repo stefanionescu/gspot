@@ -2,22 +2,31 @@ import { join } from 'node:path';
 import type { ESLint } from 'eslint';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { testModules } from '#tests/setup/modules.ts';
 import { LEVELS } from '#cli/config/configurations.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { runCommand } from '#tests/setup/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { createSandbox } from '#tests/setup/sandbox.ts';
 import { NESTJS_SANDBOX } from '#tests/data/checks/nestjs.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
 import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/data/checks/typescript/projects.ts';
-import { ALIAS_IMPORT, RESPONSE_MESSAGES } from '#tests/data/generation/eslint/selectors.ts';
-import { createEslint, readEslintRules, listLintFindings } from '#tests/setup/tool-files.ts';
-import { SERVER_FILES, RAW_HTML_CASES, COMPONENT_FILES } from '#tests/data/generation/eslint/framework.ts';
+import { createEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
-test('components > Vue, Svelte and Astro files parse in their scopes, and a plain scope gets none of their rules', async () => {
+import {
+    ALIAS_IMPORT,
+    MOBILE_FILES,
+    SERVER_FILES,
+    RAW_HTML_CASES,
+    COMPONENT_FILES,
+    RESPONSE_MESSAGES,
+    EXPRESS_SAMPLE_LINES,
+    NEXTJS_ROUTE_PROJECTS,
+} from '#tests/data/generation/eslint/frameworks.ts';
+
+test('Vue, Svelte and Astro files parse in their scopes, and a plain scope gets none of their rules', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'vue', 'svelte', 'astro'], {
             level: 'all',
@@ -43,7 +52,7 @@ test('components > Vue, Svelte and Astro files parse in their scopes, and a plai
             ),
         ).toStrictEqual([]);
         const vue = (await eslint.calculateConfigForFile(`${prefix}Card.vue`)) as EslintConfiguration;
-        expect(vue.rules['vue/no-v-html']).toBeDefined();
+        expect(vue.rules['vue/no-v-html']?.[0]).toBe(2);
     }
     const plain = (await eslint.calculateConfigForFile('plain/Card.vue')) as EslintConfiguration;
     expect(
@@ -56,7 +65,7 @@ test('components > Vue, Svelte and Astro files parse in their scopes, and a plai
 });
 
 test.each([...RAW_HTML_CASES])(
-    'components > $configuration reports raw HTML and accepts text, and a plain JavaScript file gets no such rule',
+    '$configuration reports raw HTML and accepts text, and a plain JavaScript file gets no such rule',
     async (component) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
@@ -80,7 +89,7 @@ test.each([...RAW_HTML_CASES])(
 );
 
 test.each([...LEVELS])(
-    'express > Express selectors and security rules apply in the Express scope at their level (%s)',
+    'Express selectors and security rules apply in the Express scope at their level (%s)',
     async (level) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
@@ -108,8 +117,10 @@ test.each([...LEVELS])(
         const files = ['source.js', 'api/source.js', 'api/child/source.js'];
         const expected = files
             .flatMap((file) => {
-                const elevated = file === 'source.js' ? [1, 3] : [1, 2, 3];
-                const lines = level === 'all' ? elevated : [1];
+                const { aliasImport, responseMessage, logMessage } = EXPRESS_SAMPLE_LINES;
+                const elevated =
+                    file === 'source.js' ? [aliasImport, logMessage] : [aliasImport, responseMessage, logMessage];
+                const lines = level === 'all' ? elevated : [aliasImport];
                 return lines.map((line) => ({ file, rule: 'no-restricted-syntax', line }));
             })
             .toSorted((left, right) => left.file.localeCompare(right.file) || left.line - right.line);
@@ -118,7 +129,7 @@ test.each([...LEVELS])(
 );
 
 test.each(['none', 'index-only'])(
-    'nextjs > Next.js page files skip no-trivial-files and follow reexports = %s in nested scopes',
+    'Next.js page files skip no-trivial-files and follow reexports = %s in nested scopes',
     async (reexports) => {
         await using sandbox = await testdir();
         const files = ['app/page.tsx', 'app/index.ts', 'app/format.ts', 'library/page.tsx'];
@@ -153,7 +164,7 @@ configurations = ["nextjs"]
     },
 );
 
-test('nextjs > Next.js reports require-server-only in .server files and server folders', async () => {
+test('Next.js reports require-server-only in .server files and server folders', async () => {
     await using sandbox = await testdir(SERVER_FILES);
 
     const eslint = await createEslint(sandbox.path);
@@ -170,23 +181,8 @@ test('nextjs > Next.js reports require-server-only in .server files and server f
     ]);
 });
 
-test('nextjs > Next.js route rules use each project root and stay off in a scope without pages', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            level: 'all',
-            scopes: [
-                { path: 'apps/first', configurations: ['nextjs'] },
-                { path: 'apps/second', configurations: ['nextjs'] },
-                { path: 'apps/empty', configurations: ['nextjs'] },
-            ],
-        }),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'apps/first/pages/about.jsx': 'export default function About() { return <p>About</p>; }\n',
-        'apps/first/pages/index.jsx': 'export default function Home() { return <a href="/about">About</a>; }\n',
-        'apps/second/src/pages/about.jsx': 'export default function About() { return <p>About</p>; }\n',
-        'apps/second/src/pages/index.jsx': 'export default function Home() { return <a href="/about">About</a>; }\n',
-        'apps/empty/component.jsx': 'export function Empty() { return <p>Empty</p>; }\n',
-    });
+test('Next.js route rules use each project root and stay off in a scope without pages', async () => {
+    await using sandbox = await testdir(NEXTJS_ROUTE_PROJECTS);
 
     const eslint = await createEslint(sandbox.path);
     using warnings = spyOn(console, 'warn');
@@ -244,7 +240,7 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
     );
 });
 
-test('nextjs > react-refresh knows the catchError wrapper of next/error', async () => {
+test('react-refresh knows the catchError wrapper of next/error in a Next.js scope', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
@@ -275,7 +271,7 @@ test('nextjs > react-refresh knows the catchError wrapper of next/error', async 
     ]);
 });
 
-test('react-dom > a scrollable region may take tabIndex, and an article may not', async () => {
+test('in a React DOM file, a scrollable region may take tabIndex, and an article may not', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'react', 'react-dom']),
         'package.json': '{"private":true,"type":"module"}\n',
@@ -288,4 +284,32 @@ test('react-dom > a scrollable region may take tabIndex, and an article may not'
     expect(
         await listLintFindings(eslint, sandbox.path, ['log.jsx', 'story.jsx'], ['jsx-a11y/no-noninteractive-tabindex']),
     ).toStrictEqual([{ file: 'story.jsx', rule: 'jsx-a11y/no-noninteractive-tabindex', line: 2 }]);
+});
+test('Expo rules apply in the Expo scope and not in its React Native sibling', async () => {
+    await using sandbox = await testdir(MOBILE_FILES);
+
+    const eslint = await createEslint(sandbox.path);
+    expect(
+        await listLintFindings(
+            eslint,
+            sandbox.path,
+            ['bare/source.js', 'expo-app/source.js'],
+            ['expo/no-env-var-destructuring'],
+        ),
+    ).toStrictEqual([{ file: 'expo-app/source.js', rule: 'expo/no-env-var-destructuring', line: 1 }]);
+});
+test('React Native turns off DOM accessibility rules only inside its scope', async () => {
+    await using sandbox = await testdir();
+    const files = ['native/App.tsx', 'web/App.tsx'];
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings(['react-dom', 'typescript'], {
+            rules: true,
+            scopes: [{ path: 'native', configurations: ['react-native'] }],
+        }),
+        ...Object.fromEntries(files.map((file) => [file, 'export const value = 1;\n'])),
+    });
+    const eslint = await createEslint(sandbox.path);
+    const rules = await readEslintRules(eslint, files);
+    expect(rules['native/App.tsx']!['jsx-a11y/alt-text']).toBeUndefined();
+    expect(rules['web/App.tsx']!['jsx-a11y/alt-text']![0]).toBe(2);
 });

@@ -1,7 +1,7 @@
 import { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { createRuleTester } from '#tests/setup/rule-tester.ts';
+import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 test.each(['class Sample {}', 'export class Sample {}', 'export default class Sample {}'])(
     'the default JavaScript parser preserves declaration comments and fixes import headers before %s',
@@ -29,6 +29,8 @@ createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-im
 
         "// The file header.\nimport { a } from './a';\n\nexport const b = a;",
         "import { a } from './a';\n\n// Explains b.\nexport const b = a;",
+        // One blank line between the comment and the code still leaves the comment outside the imports.
+        "import { a } from './a';\n\n// Explains b.\n\nexport const b = a;",
         "import { a } from './a';\n// @ts-expect-error\nconsole.log(a);",
         "import { a } from './a';\n\n/**\n * Doc for b.\n */\nexport const b = a;",
         {

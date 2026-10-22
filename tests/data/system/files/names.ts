@@ -1,0 +1,19 @@
+/** Repository-relative paths that a write refuses, and an ordinary Unicode name that it keeps. */
+export const PORTABLE_PATHS = [
+    { path: '../outside', refused: true },
+    { path: '/outside', refused: true },
+    { path: 'a/../b', refused: true },
+    { path: 'a//b', refused: true },
+    { path: 'a/./b', refused: true },
+    { path: 'C:relative', refused: true },
+    { path: 'C:/absolute', refused: true },
+    { path: String.raw`\\server\share`, refused: true },
+    { path: String.raw`a\b`, refused: true },
+    { path: 'nul.txt', refused: true },
+    { path: 'a/COM1', refused: true },
+    { path: 'a.', refused: true },
+    { path: 'a ', refused: true },
+    { path: 'a\0b', refused: true },
+    { path: '', refused: true },
+    { path: 'documents/équipe 50%.md', refused: false },
+] as const;

@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readSettings } from '#cli/settings/read.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
-import { COMMENTED_SETTINGS } from '#tests/data/settings/edits.ts';
+import { COMMENTED_SETTINGS } from '#tests/data/settings/file.ts';
 import { link, stat, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import { parseTomlText, writeSettings, readSettingsFile } from '#cli/settings/file.ts';
@@ -33,15 +33,15 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     setKey(input.table, 'level', 'all');
     const result = buildEditedSettings(sandbox.path, input);
     await writeFile(path, `${COMMENTED_SETTINGS}# Concurrent edit.\n`);
-    using log = openWriter(sandbox.path);
+    using writer = openWriter(sandbox.path);
     expect(() => {
-        writeSettings(log, result.text, input.original);
+        writeSettings(writer, result.text, input.original);
     }).toThrow();
     expect(await readFile(path, 'utf8')).toBe(`${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     const fresh = readSettingsEdit(sandbox.path);
     setKey(fresh.table, 'level', 'all');
     const next = buildEditedSettings(sandbox.path, fresh);
-    writeSettings(log, next.text, fresh.original);
+    writeSettings(writer, next.text, fresh.original);
     expect(readSettings(sandbox.path).settings.level).toBe('all');
 });
 
@@ -58,8 +58,8 @@ test('writing an unchanged file does not touch it', async () => {
     await writeFile(path, COMMENTED_SETTINGS);
     const input = readSettingsEdit(sandbox.path);
     const before = await stat(path);
-    using log = openWriter(sandbox.path);
-    writeSettings(log, input.text, input.original);
+    using writer = openWriter(sandbox.path);
+    writeSettings(writer, input.text, input.original);
     expect(await stat(path)).toMatchObject({ ino: before.ino, mtimeMs: before.mtimeMs, mode: before.mode });
 });
 

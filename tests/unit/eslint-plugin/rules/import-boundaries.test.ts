@@ -1,7 +1,9 @@
+import { Linter } from 'eslint';
+import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { createRuleTester } from '#tests/setup/rule-tester.ts';
+import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import type { ImportBoundariesOptions } from '#eslint-plugin/types/rules.ts';
-import { IMPORT_ALIASES, PROJECT_FOLDERS } from '#tests/data/eslint-plugin.ts';
+import { IMPORT_ALIASES, PROJECT_FOLDERS } from '#tests/data/eslint-plugin/rules/import-boundaries.ts';
 
 createRuleTester().run<
     keyof (typeof plugin.rules)['import-boundaries']['meta']['messages'],
@@ -216,4 +218,15 @@ createRuleTester({ root: String.raw`c:\repo` }).run<
             ],
         },
     ],
+});
+
+test('a relative import that leaves its folder reports escape against the ESLint working folder when no root is set', () => {
+    const linter = new Linter({ configType: 'flat', cwd: '/repo' });
+    const config: object[] = [
+        { files: ['**/*.ts'], plugins: { gspot: plugin }, rules: { 'gspot/import-boundaries': 'error' } },
+    ];
+    const findings = linter.verify("import { b } from '../user/b';", config, { filename: '/repo/features/cart/a.ts' });
+    expect(findings.map(({ ruleId, messageId }) => ({ ruleId, messageId }))).toStrictEqual([
+        { ruleId: 'gspot/import-boundaries', messageId: 'escape' },
+    ]);
 });

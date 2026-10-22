@@ -1,21 +1,21 @@
 import semver from 'semver';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { isWindows } from '#tests/setup/system.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
-import { useExecutable } from '#tests/setup/processes.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
-import { buildProcessResult } from '#tests/setup/builders.ts';
-import { fakePinnedExecutables } from '#tests/setup/fakes.ts';
-import { commitAll, readGitOutput } from '#tests/setup/git.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { runGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { ZERO_COVERAGE_TABLES } from '#tests/data/commands/doctor/tools.ts';
+import { fakeExecutableLookup, fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { GSPOT_NODE_MODULES_PATH, GSPOT_PYTHON_ENVIRONMENT_PATH } from '#cli/config/gspot-paths.ts';
 import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configurations/declared-tools.ts';
 
@@ -24,11 +24,11 @@ test('doctor reports no unowned gspot files in a fresh clone', async () => {
     const source = join(sandbox.path, 'source');
     const checkout = join(sandbox.path, 'checkout');
     await createFileTree(source, { 'gspot.toml': buildSandboxSettings([]) });
-    readGitOutput(source, ['init', '-q']);
+    runGitStep(source, ['init', '-q']);
     const applied = await runGspot(source, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     commitAll(source);
-    readGitOutput(sandbox.path, ['clone', '--quiet', source, checkout]);
+    runGitStep(sandbox.path, ['clone', '--quiet', source, checkout]);
     const result = await runGspot(checkout, ['doctor', '--json']);
     const resultText = await runGspot(checkout, ['doctor']);
     expect(JSON.parse(result.stdout)).toMatchObject({ suggestions: { unowned: [] } });
@@ -89,7 +89,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
 
     const session = await openSession(sandbox.path);
     const tools = listDistinctTools(session.neededToolConfigurations);
-    using _which = useExecutable(join(sandbox.path, 'tool-bin', 'pytest'));
+    using _which = fakeExecutableLookup(join(sandbox.path, 'tool-bin', 'pytest'));
     const nativeVersion = processes.spawnProcessBlocking;
     let present = false;
     using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
@@ -121,12 +121,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['python', 'pytest'], {
             level,
-            tables: `[coverage]
-lines = { value = 0, reason = "This sandbox tests optional coverage." }
-branches = { value = 0, reason = "This sandbox tests optional coverage." }
-functions = { value = 0, reason = "This sandbox tests optional coverage." }
-statements = { value = 0, reason = "This sandbox tests optional coverage." }
-`,
+            tables: ZERO_COVERAGE_TABLES,
         }),
     );
     const zero = await runGspot(sandbox.path, ['doctor', '--json']);

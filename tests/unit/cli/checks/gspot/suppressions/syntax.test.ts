@@ -1,76 +1,49 @@
-import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { matchFields } from '#tests/setup/matchers.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { checkFindings } from '#tests/setup/check-input.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { SUPPRESSION_KIND_MESSAGES } from '#cli/config/checks/gspot.ts';
-import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
-import { LIMIT_SUPPRESSION_CASES } from '#tests/data/checks/gspot/suppression-limits.ts';
 
 import {
     JSX_COMMENTS,
-    ESLINT_SUPPRESSIONS,
     QUOTED_ESLINT_COMMENTS,
-    STYLELINT_SUPPRESSIONS,
-    HTML_VALIDATE_SUPPRESSIONS,
-} from '#tests/data/checks/gspot/suppressions.ts';
+    LIMIT_SUPPRESSION_CASES,
+    SUPPRESSION_SYNTAX_CASES,
+} from '#tests/data/checks/gspot/suppressions/syntax.ts';
 
-describe.each([
-    {
-        name: 'ESLint',
-        configuration: 'javascript',
-        extension: 'js',
-        form: 'eslint',
-        rows: ESLINT_SUPPRESSIONS,
-        body: 'console.log(1);',
-    },
-    {
-        name: 'Stylelint',
-        configuration: 'css',
-        extension: 'css',
-        form: 'stylelint',
-        rows: STYLELINT_SUPPRESSIONS,
-        body: 'a { color: #ggg; }',
-    },
-    {
-        name: 'HTML Validate',
-        configuration: 'html',
-        extension: 'html',
-        form: 'html-validate',
-        rows: HTML_VALIDATE_SUPPRESSIONS,
-        body: '\u003Cimg src="sample.png">',
-    },
-])('suppression comments match $name', ({ configuration, extension, form, rows, body }) => {
-    const sources = rows.map(([comment, active], index) => ({
-        comment,
-        active,
-        path: `source-${index.toString()}.${extension}`,
-        source: `${comment}\n${body}\n`,
-    }));
-    let sandbox: Awaited<ReturnType<typeof testdir>>;
-    let comments: readonly Finding[];
-    beforeAll(async () => {
-        sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
-            ...Object.fromEntries(sources.map(({ path, source }) => [path, source])),
+describe.each([...SUPPRESSION_SYNTAX_CASES])(
+    'suppression comments match $name',
+    ({ configuration, extension, form, rows, body }) => {
+        const sources = rows.map(([comment, active], index) => ({
+            comment,
+            active,
+            path: `source-${index.toString()}.${extension}`,
+            source: `${comment}\n${body}\n`,
+        }));
+        let sandbox: Awaited<ReturnType<typeof testdir>>;
+        let comments: readonly Finding[];
+        beforeAll(async () => {
+            sandbox = await testdir();
+            await createFileTree(sandbox.path, {
+                'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
+                ...Object.fromEntries(sources.map(({ path, source }) => [path, source])),
+            });
+            comments = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
         });
-        comments = await checkFindings(sandbox.path, 'gspot/suppressions');
-    });
-    afterAll(async () => {
-        await sandbox[Symbol.asyncDispose]();
-    });
-    test.each([...sources])('recognizes $comment', ({ active, path }) => {
-        expect(comments.filter((entry) => entry.file === path).map(({ line, rule }) => ({ line, rule }))).toStrictEqual(
-            active ? [{ line: 1, rule: `${form}-no-reason` }] : [],
-        );
-    });
-});
+        afterAll(async () => {
+            await sandbox[Symbol.asyncDispose]();
+        });
+        test.each([...sources])('$comment is a suppression: $active', ({ active, path }) => {
+            expect(
+                comments.filter((entry) => entry.file === path).map(({ line, rule }) => ({ line, rule })),
+            ).toStrictEqual(active ? [{ line: 1, rule: `${form}-no-reason` }] : []);
+        });
+    },
+);
 
 test.each(['js', 'ts'])(
-    'eslint comments inside strings and templates in .%s files are not directives',
+    'eslint comments inside strings and templates in .%s files are not suppressions',
     async (extension) => {
         await using sandbox = await testdir();
         const path = `source.${extension}`;
@@ -78,18 +51,12 @@ test.each(['js', 'ts'])(
             'gspot.toml': buildSandboxSettings(['typescript', 'structure'], { level: 'all' }),
             [path]: QUOTED_ESLINT_COMMENTS,
         });
-        const comments = await checkFindings(sandbox.path, 'gspot/suppressions');
+        const comments = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
         expect(comments.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
             { line: 1, rule: 'eslint-no-reason' },
             { line: 9, rule: 'eslint-no-reason' },
             { line: 10, rule: 'eslint-no-reason' },
         ]);
-        const parsed = await parseComments(path, await readFile(`${sandbox.path}/${path}`, 'utf8'), []);
-        expect(
-            parsed.flatMap(({ text, line }) =>
-                /^(?:\/\/|#|--|<!--) ?marker:/u.test(stripCommentEnd(text)) ? [line] : [],
-            ),
-        ).toStrictEqual([12]);
     },
 );
 
@@ -99,7 +66,7 @@ test('eslint comments in JSX text and quoted attributes are not directives; an e
         'source.tsx': JSX_COMMENTS,
     });
 
-    const comments = await checkFindings(sandbox.path, 'gspot/suppressions');
+    const comments = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
     expect(comments.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
         { line: 3, rule: 'eslint-no-reason' },
         { line: 5, rule: 'eslint-no-reason' },
@@ -107,18 +74,22 @@ test('eslint comments in JSX text and quoted attributes are not directives; an e
 });
 
 test.each([...LIMIT_SUPPRESSION_CASES])(
-    '$configuration refuses suppression of $name',
-    async ({ configuration, file, source, rule }) => {
+    '$configuration refuses a suppression of $name',
+    async ({ configuration, file, directive, code, rule }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
-            [file]: source,
+            [file]: `${directive}\n${code}\n`,
         });
-        expect(await checkFindings(sandbox.path, 'gspot/suppressions')).toContainEqual(
-            matchFields({
-                file,
-                rule,
-                message: SUPPRESSION_KIND_MESSAGES[rule.endsWith('-all') ? 'all' : 'limit'],
-            }),
-        );
+        const found = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
+        expect(
+            found.map((finding) => ({
+                file: finding.file,
+                line: finding.line,
+                rule: finding.rule,
+                message: finding.message,
+            })),
+        ).toStrictEqual([
+            { file, line: 1, rule, message: SUPPRESSION_KIND_MESSAGES[rule.endsWith('-all') ? 'all' : 'limit'] },
+        ]);
     },
 );

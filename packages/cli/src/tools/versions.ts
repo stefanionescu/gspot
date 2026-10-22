@@ -113,8 +113,11 @@ export function readToolVersion(inspected: InspectedTool, path: string): ParsedT
     const { root, cwd, tool, timeoutSeconds } = inspected;
     const npm = tool.installers['npm'];
     const installedVersion = readPackageVersion(root, path, npm?.name);
+    // A program of the gspot tool project reports its version from the gspot folder. A config file of that tool in
+    // the repository then cannot break the query.
+    const isToolProjectProgram = convertToPosixPath(relative(root, path)).startsWith(`${DOT_GSPOT}/`);
     const result = spawnProcessBlocking([path, ...(tool.version_command ?? [VERSION_FLAG])], {
-        cwd,
+        cwd: isToolProjectProgram ? join(root, DOT_GSPOT) : cwd,
         timeoutSeconds,
         env: TOOL_ENV,
     });

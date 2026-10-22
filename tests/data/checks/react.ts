@@ -80,9 +80,3 @@ export const EXPO_DEPENDENCIES = {
 
 /** The packages of a bare React Native repository. */
 export const REACT_NATIVE_DEPENDENCIES = { 'react-native': '0.81.4' } as const;
-
-/** The compiler options of a test React Native repository. */
-export const REACT_NATIVE_TSCONFIG = {
-    compilerOptions: { ...STRICT_COMPILER_OPTIONS, module: 'ESNext', moduleResolution: 'Bundler', jsx: 'react-jsx' },
-    include: ['src'],
-} as const;

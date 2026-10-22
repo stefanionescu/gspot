@@ -3,7 +3,7 @@
 import { STRICT_COMPILER_OPTIONS } from '#tests/data/checks/typescript/projects.ts';
 
 /** The Next.js configuration enabling Strict Mode. */
-const NEXT_CONFIG_FILE = `// The framework configuration.
+const NEXT_CONFIG_SOURCE = `// The framework configuration.
 const config = { reactStrictMode: true };
 
 export default config;
@@ -83,7 +83,7 @@ export const NEXTJS_SANDBOX = {
     without: ['css'],
     files: {
         '.gitignore': 'node_modules\n.next\n',
-        'next.config.mjs': NEXT_CONFIG_FILE,
+        'next.config.mjs': NEXT_CONFIG_SOURCE,
         'app/page.tsx': NEXT_PAGE,
         'app/layout.tsx': NEXT_LAYOUT,
         ...NEXT_MESSAGES,
@@ -96,77 +96,23 @@ export const REFERENCE_PROJECT_FILES = {
     'compiler-ref/source.ts': 'export const value: number = "wrong";\n',
 } as const;
 
-export const NEXT_CONFIG_CASES = [
-    {
-        name: 'keys after a nested env value',
-        source: `export default {\n  env: {\n    NESTED: { API_TOKEN: "nested text" },\n    "API_SECRET": process.env.API_SECRET,\n    ["PASSWORD"]: process.env.PASSWORD,\n    TOKEN,\n  },\n  typescript: { ["ignoreBuildErrors"]: (true as const) },\n};\n`,
-        expected: [
-            {
-                check: 'security/semgrep',
-                file: 'next.config.ts',
-                line: 4,
-                rule: 'gspot.nextjs.env-secret',
-                message: 'API_SECRET under env is written into the client bundle. Read it on the server.',
-                fixable: false,
-            },
-            {
-                check: 'security/semgrep',
-                file: 'next.config.ts',
-                line: 5,
-                rule: 'gspot.nextjs.env-secret',
-                message: 'PASSWORD under env is written into the client bundle. Read it on the server.',
-                fixable: false,
-            },
-            {
-                check: 'security/semgrep',
-                file: 'next.config.ts',
-                line: 6,
-                rule: 'gspot.nextjs.env-secret',
-                message: 'TOKEN under env is written into the client bundle. Read it on the server.',
-                fixable: false,
-            },
-            {
-                check: 'security/semgrep',
-                file: 'next.config.ts',
-                line: 8,
-                rule: 'gspot.nextjs.checks-off',
-                message: 'ignoreBuildErrors: true lets next build pass with errors. Remove it.',
-                fixable: false,
-            },
-        ],
-    },
-    {
-        name: 'quoted and asserted literal disabled checks',
-        source: `export default {\n  eslint: { "ignoreDuringBuilds": true satisfies boolean },\n  typescript: { ignoreBuildErrors: <boolean>true },\n};\n`,
-        expected: [
-            {
-                check: 'security/semgrep',
-                file: 'next.config.ts',
-                line: 2,
-                rule: 'gspot.nextjs.checks-off',
-                message: 'ignoreDuringBuilds: true lets next build pass with errors. Remove it.',
-                fixable: false,
-            },
-            {
-                check: 'security/semgrep',
-                file: 'next.config.ts',
-                line: 3,
-                rule: 'gspot.nextjs.checks-off',
-                message: 'ignoreBuildErrors: true lets next build pass with errors. Remove it.',
-                fixable: false,
-            },
-        ],
-    },
-    {
-        name: 'comments, strings, false flags, and nested env values',
-        source: `// env: { API_SECRET: "comment" }\nconst text = "ignoreBuildErrors: true";\nexport default {\n  env: { SETTINGS: { API_TOKEN: text }, PUBLIC_ENDPOINT: "https://example.com" },\n  eslint: { ignoreDuringBuilds: false },\n  typescript: { ignoreBuildErrors: enabled },\n};\n`,
-        expected: [],
-    },
-] as const;
-
 export const TSC_FAILURE_OUTPUT = 'src/app/page.ts(1,1): error TS2322: Type mismatch\n';
 
 export const NEXT_VERSION_OUTPUT = 'Next.js v16.3.5';
 
 export const TYPESCRIPT_VERSION_OUTPUT = 'Version 5.9.3';
 export const NEXT_CACHE_BYTES = [0, 255, 1, 2] as const;
+
+/** The finding of the referenced project. */
+export const REFERENCED_PROJECT_FINDING = {
+    file: 'compiler-ref/source.ts',
+    rule: 'TS2322',
+    line: 1,
+    column: 14,
+} as const;
+
+/** The Next.js output folders that a check keeps. */
+export const OUTPUT_PRESERVATION_CASES = [
+    { name: 'root', scope: '' },
+    { name: 'app', scope: 'app' },
+] as const;

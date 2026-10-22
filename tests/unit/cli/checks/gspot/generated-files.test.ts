@@ -7,11 +7,11 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { SHELLCHECK_RC } from '#tests/data/checks/bash/tool-checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SHELLCHECK_RC } from '#tests/data/checks/gspot/generated-files.ts';
 
-test('gspot/generated-files reports edited files and apply clears them while tool lockfiles remain missing', async () => {
+test('gspot/generated-files reports an edited file with the apply help and passes after apply, while tool lockfiles stay missing', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash']),
         'run.sh': '#!/usr/bin/env bash\necho ok\n',

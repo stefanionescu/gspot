@@ -1,5 +1,5 @@
 import { LICENSE } from '#tests/data/checks/docs.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/samples.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/data/checks/bash/sandbox.ts';
 
 export const COMMITLINT_EXECUTABLE = '.bin/commitlint';
 

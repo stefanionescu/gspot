@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { createSandbox } from '#tests/setup/sandbox.ts';
-import { buildRunOptions } from '#tests/setup/builders.ts';
-import { checkFindings } from '#tests/setup/check-input.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { BASH_SANDBOX } from '#tests/data/checks/bash/samples.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/sample-checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { BASH_SANDBOX } from '#tests/data/checks/bash/sandbox.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     BASH_ENV_READ_CASES,
@@ -21,7 +21,7 @@ test('Swift environment reads outside the env files are reported; comments and s
         'Sources/Screen.swift': SWIFT_ENVIRONMENT_SOURCE,
         'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
     });
-    expect(await checkFindings(sandbox.path, 'structure/environment-readers')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'structure/environment-readers')).toStrictEqual([]);
     await writeFile(
         `${sandbox.path}/gspot.toml`,
         buildSandboxSettings(['swift'], {
@@ -29,7 +29,7 @@ test('Swift environment reads outside the env files are reported; comments and s
             tables: '[structure]\nenvironment_readers = ["Sources/Environment.swift"]\n',
         }),
     );
-    const result = await checkFindings(sandbox.path, 'structure/environment-readers');
+    const result = await runSandboxCheck(sandbox.path, 'structure/environment-readers');
     expect(result.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'Sources/Screen.swift', line: 1, rule: 'read-outside-reader' },
         { file: 'Sources/Screen.swift', line: 4, rule: 'read-outside-reader' },
@@ -41,7 +41,7 @@ test('Swift environment reads outside the env files are reported; comments and s
             tables: '[structure]\nenvironment_readers = ["Sources/Screen.swift"]\n',
         }),
     );
-    expect(await checkFindings(sandbox.path, 'structure/environment-readers')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'structure/environment-readers')).toStrictEqual([]);
 });
 
 test('Python reads through os aliases are reported; shadowed and unrelated names are not', async () => {
@@ -74,7 +74,7 @@ test('Python reads through os aliases are reported; shadowed and unrelated names
     expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
 
-test('each scope uses its own env files', async () => {
+test('each scope uses its own environment readers', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',

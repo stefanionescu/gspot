@@ -1,29 +1,29 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/git.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { installSandbox } from '#tests/setup/install.ts';
-import { checkChanges } from '#tests/setup/sample-checks.ts';
-import { isLinux, hasToolBuild } from '#tests/setup/system.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/run-gspot.ts';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
+import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { isLinux, hasToolBuild } from '#tests/setup/system/platform.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     NGINX_SERVER,
-    CLEAN_NGINX_CONFIG,
-    FORGED_NGINX_CONFIG,
+    CLEAN_NGINX_CONF,
+    FORGED_NGINX_CONF,
+    NGINX_SCOPE_TABLES,
     NGINX_INCLUDE_FILES,
-    NGINX_SCOPE_SETTINGS,
 } from '#tests/data/checks/nginx.ts';
 
 // These Docker checks need the Linux Docker engine.
 test.skipIf(!isLinux)(
-    'nginx -t follows include globs to the source line and tells invalid configuration from a missing container',
+    'nginx/syntax follows include globs to the source line and tells invalid configuration from an unavailable image',
     async () => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['nginx'], { tables: NGINX_SCOPE_SETTINGS, level: 'all' }),
+            'gspot.toml': buildSandboxSettings(['nginx'], { tables: NGINX_SCOPE_TABLES, level: 'all' }),
             ...NGINX_INCLUDE_FILES,
             'proxy/conf.d/server.conf': NGINX_SERVER.replace('listen 443 ssl;', 'invalid_directive on;'),
         });
@@ -55,7 +55,7 @@ test.skipIf(!isLinux)(
         ]);
         await writeFile(
             join(sandbox.path, 'gspot.toml'),
-            buildSandboxSettings(['nginx'], { tables: NGINX_SCOPE_SETTINGS, level: 'all' }).replaceAll(
+            buildSandboxSettings(['nginx'], { tables: NGINX_SCOPE_TABLES, level: 'all' }).replaceAll(
                 '1.29.3-alpine"',
                 '1.29.3-alpine@"',
             ),
@@ -68,7 +68,7 @@ test.skipIf(!isLinux)(
         ]);
         await writeFile(
             join(sandbox.path, 'gspot.toml'),
-            buildSandboxSettings(['nginx'], { tables: NGINX_SCOPE_SETTINGS, level: 'all' }),
+            buildSandboxSettings(['nginx'], { tables: NGINX_SCOPE_TABLES, level: 'all' }),
         );
         const recovered = await spawnGspot(sandbox.path, command);
         expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
@@ -76,31 +76,36 @@ test.skipIf(!isLinux)(
     },
 );
 
-test.skipIf(!hasToolBuild('gixy'))('gixy finds the forged proxy target and passes after the fix', async () => {
-    await using sandbox = await testdir({ 'proxy/nginx.conf': CLEAN_NGINX_CONFIG });
+test.skipIf(!hasToolBuild('gixy'))(
+    'gixy reports a proxy_pass that a request can redirect (ssrf), and passes after the fix',
+    async () => {
+        await using sandbox = await testdir({ 'proxy/nginx.conf': CLEAN_NGINX_CONF });
 
-    commitAll(sandbox.path);
-    const environment = {};
-    await installSandbox(
-        { root: sandbox.path, environment, run: spawnGspot },
-        { configurations: ['nginx'], level: 'all' },
-    );
-    const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
-    expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-    const result = parseCheckReport(
-        await checkChanges(
-            sandbox.path,
-            { check: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED_NGINX_CONFIG } },
-            environment,
-        ),
-    );
-    const failed = result.report;
-    expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(failed.checks).toMatchObject([{ check: 'nginx/gixy', status: 'failed' }]);
-    expect(failed.checks[0]?.findings).toContainEqual(matchFields({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 }));
-    const corrected = parseCheckReport(
-        await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment),
-    );
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(corrected.report.checks).toMatchObject([{ check: 'nginx/gixy', status: 'passed', findings: [] }]);
-});
+        commitAll(sandbox.path);
+        const environment = {};
+        await initSandbox(
+            { root: sandbox.path, environment, run: spawnGspot },
+            { configurations: ['nginx'], level: 'all' },
+        );
+        const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
+        expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+        const result = parseCheckReport(
+            await runCheckOnChanges(
+                sandbox.path,
+                { check: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED_NGINX_CONF } },
+                environment,
+            ),
+        );
+        const failed = result.report;
+        expect(result.code, result.stdout + result.stderr).toBe(1);
+        expect(failed.checks).toMatchObject([{ check: 'nginx/gixy', status: 'failed' }]);
+        expect(failed.checks[0]?.findings).toContainEqual(
+            matchFields({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 }),
+        );
+        const corrected = parseCheckReport(
+            await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment),
+        );
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(corrected.report.checks).toMatchObject([{ check: 'nginx/gixy', status: 'passed', findings: [] }]);
+    },
+);

@@ -4,10 +4,10 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { buildSandboxSettings } from '#tests/setup/settings.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
 
-test('readTsconfigProject uses the nearest covering ancestor and refuses an excluded child', async () => {
+test('a TypeScript project comes from the nearest covering tsconfig.json and refuses an excluded file', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',

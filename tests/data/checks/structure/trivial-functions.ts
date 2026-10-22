@@ -1,6 +1,17 @@
-import { CLEAN_SWIFT } from '#tests/data/checks/swift/lint.ts';
-import { BASH_HEADER } from '#tests/data/checks/bash/samples.ts';
-import { PROPERTY_READERS } from '#tests/data/checks/structure/environment-readers.ts';
+import { BASH_HEADER } from '#tests/data/checks/bash/sandbox.ts';
+import { CLEAN_SWIFT } from '#tests/data/checks/swift/sandbox.ts';
+
+const SWIFT_ACCESSORS = `struct A {
+    var x: Int { 1 }
+    var y = 0 {
+        willSet { save(newValue) }
+        didSet { save(oldValue) }
+    }
+    subscript(i: Int) -> Int {
+        get { 1 }
+        set { save(newValue) }
+    }
+}`;
 
 export const BASH_TRIVIAL_FUNCTION_CASES = [
     {
@@ -79,7 +90,7 @@ func isNew(_ name: String) -> Bool {
     },
     {
         name: 'implicit getters, property readers, and subscript accessors',
-        source: PROPERTY_READERS,
+        source: SWIFT_ACCESSORS,
         lines: [2, 4, 5, 8, 9],
     },
     { name: 'substantial function bodies', source: CLEAN_SWIFT, lines: [] },
@@ -123,7 +134,7 @@ export const TRIVIAL_FILES = [
 alias = value
 __all__ = ["alias"]
 `,
-        expected: true,
+        expected: ['trivial-file'],
     },
     {
         name: 'a Python file with a wrapper function',
@@ -133,63 +144,63 @@ __all__ = ["alias"]
 def wrapper():
     return alias()
 `,
-        expected: false,
+        expected: ['trivial-function'],
     },
     {
         name: 'a Swift file of an import and a type alias',
         language: 'swift',
         file: 'example.swift',
         source: 'import Foundation\ntypealias Name = String\n',
-        expected: true,
+        expected: ['trivial-file'],
     },
     {
         name: 'a Swift file with a wrapper function',
         language: 'swift',
         file: 'example.swift',
         source: 'struct Wrapper { func value() { return original() } }',
-        expected: false,
+        expected: ['trivial-function'],
     },
     {
         name: 'a Bash file that only sources another script',
         language: 'bash',
         file: 'example.sh',
         source: 'source ./other.sh\n',
-        expected: true,
+        expected: ['trivial-file'],
     },
     {
         name: 'a Bash file with a wrapper function',
         language: 'bash',
         file: 'example.sh',
         source: 'source ./other.sh\nwrapper() { original; }',
-        expected: false,
+        expected: ['trivial-function'],
     },
     {
         name: 'an empty Python package file',
         language: 'python',
         file: '__init__.py',
         source: '',
-        expected: false,
+        expected: [],
     },
     {
         name: 'a Python package marker comment',
         language: 'python',
         file: '__init__.py',
         source: '# Package marker\n',
-        expected: false,
+        expected: [],
     },
     {
         name: 'a Python package with a marker comment and a docstring',
         language: 'python',
         file: '__init__.py',
         source: '# Package marker\n"""Package documentation."""\n',
-        expected: false,
+        expected: [],
     },
     {
         name: 'a Python package docstring before an import',
         language: 'python',
         file: '__init__.py',
         source: '"""Package documentation."""\nfrom other import alias\n',
-        expected: true,
+        expected: ['trivial-file'],
     },
 ] as const;
 
@@ -219,3 +230,8 @@ export const STATEMENT_COUNT_CASES = [
     ['swift', 'func example() { /* comment */ work(); work() }'],
     ['bash', 'example() { # comment\necho value; echo value\n}'],
 ] as const;
+/** Implicit and explicit property readers with separate observer and subscript locations. */
+
+/** The message of a two-statement function named example. */
+export const TRIVIAL_EXAMPLE_MESSAGE =
+    'example has 2 statements. Functions with 2 or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.';
