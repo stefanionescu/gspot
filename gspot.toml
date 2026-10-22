@@ -190,7 +190,7 @@ environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/sy
 bun_scanner = "@socketsecurity/bun-security-scanner"
 
 [docs]
-allowed_urls = { value = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$"], reason = "The npm package page returns HTTP 403 to automated requests." }
+allowed_urls = { value = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$", "^https://generativespotting\\.com/configure/customize/$"], reason = "The npm package page returns HTTP 403 to automated requests, and /configure/customize/ goes live with the docs deploy of release 0.3.6." }
 
 [licenses]
 # MIT-0 is MIT without the notice condition.
