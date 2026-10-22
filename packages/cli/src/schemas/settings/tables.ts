@@ -6,7 +6,7 @@ import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { licensesSchema } from '#cli/schemas/settings/licenses.ts';
 import { pythonSchema, javascriptSchema } from '#cli/schemas/settings/languages.ts';
-import { commandSchema, nonemptyString } from '#cli/schemas/configurations/parts.ts';
+import { commandSchema, nonemptyString } from '#cli/schemas/configurations/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { ciFields, hooksSchema, rulesSchema } from '#cli/schemas/settings/integrations.ts';
 import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
@@ -25,7 +25,7 @@ import {
     nonemptyStrings,
     destinationPath,
     allowReasonedValue,
-} from '#cli/schemas/settings/parts.ts';
+} from '#cli/schemas/settings/fields.ts';
 
 export const configurationTableSchemas = {
     format: formatSchema.optional(),

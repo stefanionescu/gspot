@@ -10,7 +10,7 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/system/git.ts';
 import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e/quickstart.ts';
-import { readRuntimePins, TEST_RUN_FOLDER } from '#tests/setup/runner/checkout.ts';
+import { readRuntimePins, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 
 test('the Python quickstart reports its finding through the installed hook and passes after the fix', async () => {
     await runQuickstart(PYTHON_TUTORIAL);
@@ -54,9 +54,13 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
     }
     await createFileTree(root, row.files);
     commitAll(root);
+    // The tutorial commands. The first check fails on what the fixers then correct, unless the project starts clean.
     for (const { command, code } of [
         { command: ['mise', 'exec', '--', 'gspot', 'init', '--yes'], code: 0 },
-        ...listQuickstartCommands(row.firstCheckCode),
+        { command: ['mise', 'exec', '--', 'gspot', 'install'], code: 0 },
+        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: row.firstCheckCode },
+        { command: ['mise', 'exec', '--', 'gspot', 'check', '--fix'], code: 0 },
+        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: 0 },
     ]) {
         const result = await runCommand([...command], { cwd: root, env: environment });
         expect(result.code, `${command.join(' ')}\n${result.stdout}${result.stderr}`).toBe(code);
@@ -110,14 +114,4 @@ function assertCommitRejected(repositoryRoot: string, rule: string, environment:
     const refused = runGit(repositoryRoot, ['commit', '-qm', 'feat: Add invalid source'], environment);
     expect(refused.code).not.toBe(0);
     expect(refused.stdout + refused.stderr).toContain(rule);
-}
-
-/** The tutorial commands. The first check fails on what the fixers then correct, unless the project starts clean. */
-function listQuickstartCommands(firstCheckCode: number): { command: readonly string[]; code: number }[] {
-    return [
-        { command: ['mise', 'exec', '--', 'gspot', 'install'], code: 0 },
-        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: firstCheckCode },
-        { command: ['mise', 'exec', '--', 'gspot', 'check', '--fix'], code: 0 },
-        { command: ['mise', 'exec', '--', 'gspot', 'check'], code: 0 },
-    ];
 }

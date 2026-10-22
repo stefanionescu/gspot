@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { TableSettings } from '#cli/types/settings/file.ts';
-import type { REASON_DESCRIPTIONS } from '#cli/config/settings/parts.ts';
+import type { REASON_DESCRIPTIONS } from '#cli/config/settings/fields.ts';
 import { type ReasonedValue, type SettingLanguage } from '#cli/types/settings/tables.ts';
 
 /**

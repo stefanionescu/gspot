@@ -7,8 +7,8 @@ import type { Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 /** Find the generated config file for a tool and scope. */
 export function findConfigFilePath(session: Session, tool: string, scopePath = ''): string {

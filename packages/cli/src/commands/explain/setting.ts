@@ -1,9 +1,9 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
+import { listRecordFields } from '#cli/schemas/settings/file.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
-import { listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
 import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 

@@ -11,7 +11,7 @@ import type { ConfigFile } from '#cli/types/configurations.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { listScopeChecks, listNeededTools } from '#cli/planning/tools.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 import type { GeneratedFile, ConfigFileOwner, PlannedPointerField } from '#cli/types/generation/files.ts';

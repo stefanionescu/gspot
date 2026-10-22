@@ -12,8 +12,8 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type KnipConfigFile } from '#tests/types/generated-files.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { HOST_MODULE } from '#tests/config/generation/configurations/language/javascript/samples.ts';
 
 import {

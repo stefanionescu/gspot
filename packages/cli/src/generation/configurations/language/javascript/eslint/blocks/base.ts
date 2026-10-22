@@ -9,7 +9,7 @@ import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { getPreset } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
-import { buildRestrictedImportBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/gspot-toml.ts';
+import { buildRestrictedImportBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
 import {
     buildScopeFiles,

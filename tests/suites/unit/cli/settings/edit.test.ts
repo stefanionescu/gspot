@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { getValueAt } from '#cli/system/tables.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
-import { localDateSchema } from '#cli/schemas/settings/parts.ts';
+import { localDateSchema } from '#cli/schemas/settings/fields.ts';
 import { DATED_IGNORE, SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/edit.ts';
 
 import {

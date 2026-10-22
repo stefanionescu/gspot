@@ -7,7 +7,7 @@ import type { ConfigFile } from '#cli/types/configurations.ts';
 import { buildConfigFile } from '#cli/generation/config-files/build.ts';
 import { CONFIG_FILE_SCOPES_FOLDER } from '#cli/config/generation/config-files/generate.ts';
 import { listPointerPaths, buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
-import { getConfigFileTarget, listOwnedConfigFiles } from '#cli/generation/config-files/needed.ts';
+import { getConfigFileTarget, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 
 import type {
     WholeConfigFile,

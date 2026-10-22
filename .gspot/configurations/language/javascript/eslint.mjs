@@ -5435,7 +5435,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ],
             [
                 "**/*.astro",
@@ -5450,7 +5450,7 @@ export default [
             [
                 "**/*.astro",
                 "**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ]
         ]
     },
@@ -5464,7 +5464,7 @@ export default [
             "tests/**",
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit-preload.ts"
+            "tests/setup/runner/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -5631,7 +5631,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "docs/**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ],
             [
                 "**/*.astro",
@@ -5646,7 +5646,7 @@ export default [
             [
                 "**/*.astro",
                 "docs/**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ]
         ]
     },
@@ -5656,7 +5656,7 @@ export default [
         "ignores": [
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit-preload.ts"
+            "tests/setup/runner/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -5823,7 +5823,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "packages/cli/**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ],
             [
                 "**/*.astro",
@@ -5838,7 +5838,7 @@ export default [
             [
                 "**/*.astro",
                 "packages/cli/**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ]
         ]
     },
@@ -5848,7 +5848,7 @@ export default [
         "ignores": [
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit-preload.ts"
+            "tests/setup/runner/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6015,7 +6015,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "packages/eslint-plugin/**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ],
             [
                 "**/*.astro",
@@ -6030,7 +6030,7 @@ export default [
             [
                 "**/*.astro",
                 "packages/eslint-plugin/**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ]
         ]
     },
@@ -6040,7 +6040,7 @@ export default [
         "ignores": [
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit-preload.ts"
+            "tests/setup/runner/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6207,7 +6207,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "tests/**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ],
             [
                 "**/*.astro",
@@ -6222,7 +6222,7 @@ export default [
             [
                 "**/*.astro",
                 "tests/**/*",
-                "tests/setup/runner/unit-preload.ts"
+                "tests/setup/runner/offline.ts"
             ]
         ]
     },
@@ -6232,7 +6232,7 @@ export default [
         "ignores": [
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/unit-preload.ts"
+            "tests/setup/runner/offline.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6581,8 +6581,8 @@ export default [
             "packages/cli/src/system/environment.ts/**",
             "tests/setup/system/environment.ts",
             "tests/setup/system/environment.ts/**",
-            "tests/setup/runner/unit-preload.ts",
-            "tests/setup/runner/unit-preload.ts/**"
+            "tests/setup/runner/offline.ts",
+            "tests/setup/runner/offline.ts/**"
         ],
         rules: {
             "n/no-process-env": [

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { relativePath } from '#cli/schemas/settings/parts.ts';
+import { relativePath } from '#cli/schemas/settings/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { type TableSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
 

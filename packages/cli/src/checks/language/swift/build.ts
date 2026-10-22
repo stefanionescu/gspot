@@ -12,7 +12,7 @@ import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import { BUILD_SOURCE_FOLDER } from '#cli/config/checks/language/swift/cache.ts';
 import { type SwiftBuildPlan, type SwiftBuildOutput } from '#cli/types/checks/language/swift.ts';

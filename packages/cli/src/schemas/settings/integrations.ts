@@ -4,7 +4,7 @@ import { type ParsedRules } from '#cli/types/settings/tables.ts';
 import { CI_PROVIDERS } from '#cli/config/settings/integrations.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { commandSchema, operatingSystemSchema } from '#cli/schemas/configurations/parts.ts';
+import { commandSchema, operatingSystemSchema } from '#cli/schemas/configurations/fields.ts';
 
 export const rulesSchema = z.strictObject({
     enabled: z

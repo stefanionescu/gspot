@@ -30,7 +30,7 @@ import {
     conditionSchema,
     commandCheckFields,
     operatingSystemSchema,
-} from '#cli/schemas/configurations/parts.ts';
+} from '#cli/schemas/configurations/fields.ts';
 
 const fileKindSchema = z.enum(FILE_KINDS) satisfies z.ZodType<FileKind>;
 

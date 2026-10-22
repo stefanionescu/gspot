@@ -8,8 +8,8 @@ import type { ConfigFile } from '#cli/types/configurations.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { FILE_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandLine, CommandPart, Substitutions } from '#cli/types/runs/command.ts';
 

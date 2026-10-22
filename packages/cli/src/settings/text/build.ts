@@ -7,7 +7,7 @@ import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';
 import { encodeSettings, listKeptComments } from '#cli/settings/text/layout.ts';
-import { settingsSchema, listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
+import { settingsSchema, listRecordFields } from '#cli/schemas/settings/file.ts';
 import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/text/build.ts';
 
 function sortTable(table: TomlTable): TomlTable {

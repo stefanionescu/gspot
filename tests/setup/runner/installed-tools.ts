@@ -6,7 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { join, dirname, delimiter } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { stopOnSignals } from '#tests/setup/system/processes.ts';
-import { TEST_RUN_FOLDER } from '#tests/setup/runner/checkout.ts';
+import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { PACKED_PACKAGES_FILE } from '#tests/config/setup/environment.ts';

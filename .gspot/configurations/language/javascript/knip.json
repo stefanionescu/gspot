@@ -119,10 +119,10 @@
     "workspaces": {
         ".": {
             "entry": [
-                "tests/setup/runner/unit-preload.ts",
+                "tests/setup/runner/offline.ts",
                 "packages/eslint-plugin/repository.mjs",
                 "tests/setup/runner/prepare.ts",
-                "tests/setup/runner/integration-preload.ts",
+                "tests/setup/runner/installed-tools.ts",
                 "packages/cli/src/checks/framework/site/purgecss-process.ts",
                 "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts",
                 "docs/src/route-data.ts",
@@ -214,9 +214,9 @@
         },
         "tests": {
             "entry": [
-                "setup/runner/unit-preload.ts",
+                "setup/runner/offline.ts",
                 "setup/runner/prepare.ts",
-                "setup/runner/integration-preload.ts",
+                "setup/runner/installed-tools.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",

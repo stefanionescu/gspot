@@ -3,7 +3,7 @@ import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type Level } from '#cli/types/configurations.ts';
-import { selectRulesAt } from '#tests/setup/cli/rules.ts';
+import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { test, expect, describe, beforeAll } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
@@ -47,7 +47,7 @@ test.each(
         }),
     });
     const session = await openSession(sandbox.path);
-    const paths = selectRulesAt(session, 'all', session.scopes).map((file) => file.path);
+    const paths = selectRuleFiles(session).map((file) => file.path);
     expect(paths.filter((path) => /\/rules\/(?:DENO|NODE)\.md$/u.test(path))).toStrictEqual(
         rules.map((rule) => `language/javascript/rules/${rule}`),
     );
@@ -59,7 +59,7 @@ test('an always-selected configuration installs its rule file once', async () =>
     const configurations = listSelectedConfigurations(session.scopes);
     const engineering = configurations.find((configuration) => configuration.name === 'engineering')!;
     for (const selected of [configurations, [...configurations, engineering]]) {
-        const files = selectRulesAt(session, 'all', [{ ...session.scopes[0]!, configurations: selected }]);
+        const files = selectRuleFiles({ ...session, scopes: [{ ...session.scopes[0]!, configurations: selected }] });
         expect(files.filter((file) => file.path === 'general/engineering/rules/TALKING.md')).toHaveLength(1);
     }
 });

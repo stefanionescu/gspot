@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { TEST_RUN_FOLDER } from '#tests/setup/runner/checkout.ts';
+import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { PACKED_PACKAGES_FILE } from '#tests/config/setup/environment.ts';
 import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/packages.ts';
 

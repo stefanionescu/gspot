@@ -7,7 +7,7 @@ import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { LimitLanguage } from '#cli/types/settings/tables.ts';
-import { unwrapSettingSchema } from '#cli/schemas/settings/parts.ts';
+import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
 import { type KnownSettings } from '#cli/types/settings/inheritance.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import type { WrittenConfiguration } from '#cli/types/configurations.ts';
@@ -16,7 +16,7 @@ import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 import { SETTINGS_REFERENCE_URL } from '#cli/config/settings/validation/schema.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
-import { scopeSchema, settingsSchema, listRecordFields } from '#cli/schemas/settings/gspot-toml.ts';
+import { scopeSchema, settingsSchema, listRecordFields } from '#cli/schemas/settings/file.ts';
 
 import {
     validateScopePaths,

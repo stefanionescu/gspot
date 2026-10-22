@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { isTable } from '#cli/system/tables.ts';
+import { findSettingSchema } from '#cli/schemas/settings/file.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { PathVisitor } from '#cli/types/settings/inheritance.ts';
-import { findSettingSchema } from '#cli/schemas/settings/gspot-toml.ts';
 
 function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
     if (schema instanceof z.ZodUnion) {

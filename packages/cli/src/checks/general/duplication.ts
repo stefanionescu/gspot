@@ -15,9 +15,9 @@ import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { parseJsonFile, parseToolReport } from '#cli/parsers/formats/json.ts';
 import { cloneReportSchema } from '#cli/schemas/checks/general/duplication.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 import {
     JSCPD,

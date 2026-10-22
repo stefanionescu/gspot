@@ -6,7 +6,7 @@ import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import {
     DUPLICATE_RULE_CASES,
     DUPLICATE_RULE_FILES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/gspot-toml.ts';
+} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
 test.each([...DUPLICATE_RULE_CASES])(
     'each pair of duplicate rules reports a defect once, from the kept rule ($kept)',

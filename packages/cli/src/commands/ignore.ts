@@ -10,7 +10,7 @@ import { LocalDate, stringify } from '@decimalturn/toml-patch';
 import { GLOB_BRACKETS } from '#cli/config/commands/ignore.ts';
 import { type IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
-import { calendarDateSchema } from '#cli/schemas/settings/parts.ts';
+import { calendarDateSchema } from '#cli/schemas/settings/fields.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';

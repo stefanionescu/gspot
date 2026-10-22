@@ -10,8 +10,8 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { WholeConfigFile } from '#cli/types/generation/files.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 import {
     MODULE_PATHS,

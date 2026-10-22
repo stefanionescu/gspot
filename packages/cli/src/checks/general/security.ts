@@ -7,7 +7,7 @@ import { type CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { SEMGREP_TOOL } from '#cli/config/checks/general/security.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 /**
  * List the Semgrep rule files that the configurations and settings of a scope name.

@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
 import { listSettings } from '#cli/settings/known.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { checkStageSchema } from '#cli/schemas/configurations/parts.ts';
+import { checkStageSchema } from '#cli/schemas/configurations/fields.ts';
 import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Explanation, ConfigurationExplanation } from '#cli/types/commands/explain.ts';
 

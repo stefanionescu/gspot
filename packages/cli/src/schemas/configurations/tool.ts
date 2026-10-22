@@ -6,7 +6,7 @@ import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { Tool, InstallerPin } from '#cli/types/configurations.ts';
 import { TOOL_KINDS, TOOL_BUILDS, MAX_EXIT_CODE } from '#cli/config/configurations/names.ts';
 import { EXTENSION_PATTERN, MINIMUM_VERSION_PATTERN } from '#cli/config/configurations/tool.ts';
-import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/configurations/parts.ts';
+import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/configurations/fields.ts';
 
 /** Normalize minimum versions when gspot reads manifest.toml, before any version comparison. */
 const minimumVersionSchema = z

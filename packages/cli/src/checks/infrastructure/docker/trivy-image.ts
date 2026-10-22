@@ -8,8 +8,8 @@ import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import type { ImageFinding } from '#cli/types/checks/infrastructure/docker.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { readComposeDocuments } from '#cli/checks/infrastructure/docker/compose.ts';
 import { imageReportSchema } from '#cli/schemas/checks/infrastructure/docker/trivy-image.ts';
 

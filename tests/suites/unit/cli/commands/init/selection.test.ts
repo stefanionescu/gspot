@@ -9,9 +9,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { type InitJson } from '#cli/types/commands/init.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { type ToolPackageJson } from '#cli/types/install/npm.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
-import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 

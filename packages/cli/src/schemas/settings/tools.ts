@@ -4,16 +4,16 @@ import { buildAssetPath } from '#cli/system/assets.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
 import { stylelintRules } from '#cli/schemas/settings/stylelint.ts';
-import { nonemptyString } from '#cli/schemas/configurations/parts.ts';
+import { nonemptyString } from '#cli/schemas/configurations/fields.ts';
+import { RULE_OPTIONS_REFUSAL } from '#cli/config/settings/rule-tables.ts';
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
-import { RULE_OPTIONS_REFUSAL } from '#cli/config/settings/rule-options.ts';
-import { buildRuleTableSchema } from '#cli/schemas/settings/rule-options.ts';
+import { buildRuleTableSchema } from '#cli/schemas/settings/rule-tables.ts';
 import { eslintRules, eslintPluginsSchema } from '#cli/schemas/settings/eslint.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { COMMITLINT_RULES } from '#cli/config/generation/configurations/general/commits.ts';
 import { YAMLLINT_RULES } from '#cli/config/generation/configurations/general/data-files/yamllint.ts';
-import { relativePath, nonemptyPaths, nonemptyStrings, allowReasonedValue } from '#cli/schemas/settings/parts.ts';
+import { relativePath, nonemptyPaths, nonemptyStrings, allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 
 import {
     RULE_CONDITIONS,

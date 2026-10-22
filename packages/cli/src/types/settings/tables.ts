@@ -16,7 +16,7 @@ import {
     type LINE_ENDINGS,
     type TRAILING_COMMAS,
     type FORMAT_INDENT_STYLES,
-} from '#cli/config/settings/parts.ts';
+} from '#cli/config/settings/fields.ts';
 
 export type ReasonedValue<Value> = { value: Value; reason: string };
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { nonemptyPaths } from '#cli/schemas/settings/parts.ts';
+import { nonemptyPaths } from '#cli/schemas/settings/fields.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import type { ImportRule, WrittenImportRule } from '#cli/types/settings/import-rules.ts';

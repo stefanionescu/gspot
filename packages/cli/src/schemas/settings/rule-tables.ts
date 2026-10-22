@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isTable } from '#cli/system/tables.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { RULE_TOKEN, RULE_OPTIONS_REFUSAL } from '#cli/config/settings/rule-options.ts';
+import { RULE_TOKEN, RULE_OPTIONS_REFUSAL } from '#cli/config/settings/rule-tables.ts';
 
 function formatRuleHelp(issue: z.core.$ZodIssue, check: string): string {
     const path = issue.path;

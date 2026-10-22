@@ -3,7 +3,7 @@ import { buildProgram } from '#cli/main.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { buildJsonSchema } from '#cli/schemas/settings/gspot-toml.ts';
+import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import { listSettings, buildKnownSettings } from '#cli/settings/known.ts';
 import type { CliReference, SettingVariant, CommandReference } from '../types/reference.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';

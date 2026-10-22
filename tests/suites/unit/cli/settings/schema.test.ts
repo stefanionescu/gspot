@@ -4,10 +4,10 @@ import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { listAllowedRules } from '#cli/settings/import-rules.ts';
 import { REVIEWED_REASON } from '#tests/config/settings/samples.ts';
-import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { publishedSettingsValidator } from '#tests/schemas/settings.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 

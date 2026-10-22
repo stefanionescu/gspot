@@ -35,7 +35,7 @@ import {
     buildRulesOffBlocks,
     buildTrivialRuleBlocks,
     buildEnvironmentRuleBlocks,
-} from '#cli/generation/configurations/language/javascript/eslint/blocks/gspot-toml.ts';
+} from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
 const PRESETS_BY_CONFIGURATION = new Map<Configuration, EslintPresets>();
 

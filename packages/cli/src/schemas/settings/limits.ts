@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
 import type { LimitSchemas } from '#cli/types/settings/definitions.ts';
 import { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
-import { wholeNumber, allowReasonedValue } from '#cli/schemas/settings/parts.ts';
+import { wholeNumber, allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 import { type WrittenLimits, type TableSettings } from '#cli/types/settings/file.ts';
 import { type LimitLanguage, type LanguageLimitField } from '#cli/types/settings/tables.ts';
 

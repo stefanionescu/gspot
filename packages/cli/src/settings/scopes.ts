@@ -1,10 +1,10 @@
 import { getValueAt, createTable } from '#cli/system/tables.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
-import { namingCategorySchema } from '#cli/schemas/settings/parts.ts';
+import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
+import { findSettingSchema, rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { findSettingSchema, rootSettingSchemas } from '#cli/schemas/settings/gspot-toml.ts';
 import { SETTING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import { selectConfigurations, listAutomaticConfigurations } from '#cli/configurations/select.ts';
 import { getSettingTable, getSettingValue, listEffectiveSettings } from '#cli/settings/inherit.ts';

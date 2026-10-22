@@ -15,8 +15,8 @@ import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 import {
     CONFIG_FILE_PROJECT,
@@ -24,7 +24,7 @@ import {
     UNPARSED_CONFIG_FILES,
     NESTED_PYTHON_GSPOT_TOML,
     JSCONFIG_TITLE_IGNORE_PROJECT,
-} from '#tests/config/generation/config-files/needed.ts';
+} from '#tests/config/generation/config-files/selection.ts';
 
 test('a Ruff-only Python scope gets no type checker file or pointer', async () => {
     await using sandbox = await testdir({

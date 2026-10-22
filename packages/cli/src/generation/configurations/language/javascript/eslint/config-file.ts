@@ -8,8 +8,8 @@ import { getPreset } from '#cli/generation/configurations/language/javascript/es
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
 import type { GeneratedFile, ConfigFileOutput, PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { buildPlannedEslintFile } from '#cli/generation/configurations/language/javascript/eslint/plan.ts';
+import { buildSelectedBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildBoundaryBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
-import { buildSelectedBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/gspot-toml.ts';
 import { serializeBlock, serializeImports } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 import { listConfigurationBlocks } from '#cli/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 

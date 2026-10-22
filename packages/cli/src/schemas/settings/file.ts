@@ -1,24 +1,16 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/parts.ts';
+import { SETTINGS_EXAMPLES, NAMED_FINDING_CHECKS } from '#cli/config/settings/file.ts';
+import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/fields.ts';
 import { ciSchema, hooksSchema, rulesSchema } from '#cli/schemas/settings/integrations.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
-import {
-    SCHEMA_URL,
-    SETTINGS_EXAMPLES,
-    INTERNAL_FACT_KEYS,
-    TABLE_DESCRIPTIONS,
-    JSON_SCHEMA_DIALECT,
-    NAMED_FINDING_CHECKS,
-} from '#cli/config/settings/gspot-toml.ts';
 import {
     formatSchema,
     relativePath,
@@ -27,7 +19,7 @@ import {
     localDateSchema,
     allowReasonedValue,
     unwrapSettingSchema,
-} from '#cli/schemas/settings/parts.ts';
+} from '#cli/schemas/settings/fields.ts';
 
 const ignoreSchema = z
     .strictObject({
@@ -251,30 +243,6 @@ export function listRecordFields(): Record<string, string[]> {
 }
 
 /**
- * Build the editor schema for this gspot version.
- *
- * @returns the JSON Schema document.
- */
-export function buildJsonSchema(): Record<string, unknown> {
-    const converted = convertToJsonSchema(settingsSchema);
-    // The tables carry no description of their own; editors show this one on hover.
-    const properties = Object.entries(converted.properties as Record<string, z.core.JSONSchema.JSONSchema>).map(
-        ([name, node]) => {
-            const description = node.description ?? TABLE_DESCRIPTIONS[name];
-            return [name, description === undefined ? node : { ...node, description }];
-        },
-    );
-    return {
-        $schema: JSON_SCHEMA_DIALECT,
-        $id: SCHEMA_URL,
-        title: SETTINGS_FILE,
-        description: 'The settings of gspot for one repository.',
-        ...converted,
-        properties: Object.fromEntries(properties),
-    };
-}
-
-/**
  * Locate one setting in the root, configuration, and tool schemas.
  *
  * @param key the dotted setting name.
@@ -296,30 +264,4 @@ export function findSettingSchema(key: string): z.ZodType | undefined {
         schema = schema.shape[part] as z.ZodType | undefined;
     }
     return schema;
-}
-
-/**
- * Convert a settings schema to JSON Schema, and keep written defaults and the setting definitions.
- *
- * @param schema the runtime validator.
- * @returns the JSON Schema, with TOML dates as calendar strings.
- */
-function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
-    return z.toJSONSchema(schema, {
-        io: 'input',
-        reused: 'ref',
-        unrepresentable: ({ zodSchema }) =>
-            zodSchema === localDateSchema
-                ? { description: 'An unquoted TOML date in YYYY-MM-DD form, such as 2026-11-08.' }
-                : 'throw',
-        override: ({ zodSchema, jsonSchema }) => {
-            if (zodSchema instanceof z.ZodArray && jsonSchema.$ref !== undefined) jsonSchema.type = 'array';
-            for (const key of INTERNAL_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);
-            if (zodSchema instanceof z.ZodDefault && zodSchema.def.innerType instanceof z.ZodUnion)
-                jsonSchema.default = zodSchema.def.defaultValue;
-            const definition = z.globalRegistry.get(zodSchema);
-            if (definition && Object.hasOwn(definition, 'examples'))
-                Object.assign(jsonSchema, { examples: definition['examples'] });
-        },
-    });
 }

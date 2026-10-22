@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
 import { namingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
-import { nonemptyPaths, namingCategorySchema } from '#cli/schemas/settings/parts.ts';
+import { nonemptyPaths, namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { type TableSettings, type WrittenNaming, type WrittenNamingOverride } from '#cli/types/settings/file.ts';
 import { type NamingCategory, type SettingLanguage, type ParsedNamingOverride } from '#cli/types/settings/tables.ts';

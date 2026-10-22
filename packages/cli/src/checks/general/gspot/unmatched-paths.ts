@@ -9,7 +9,7 @@ import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { type PathVisitor } from '#cli/types/settings/inheritance.ts';
-import { scopeSchema, settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
+import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { GROUP_HELP, UNESCAPED_GROUP, NEGATED_PATTERN } from '#cli/config/checks/general/gspot/unmatched-paths.ts';
 
 /**

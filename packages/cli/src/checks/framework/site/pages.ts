@@ -18,7 +18,7 @@ import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { PURGECSS } from '#cli/config/checks/framework/site/purgecss-process.ts';
 import { purgecssReportSchema } from '#cli/schemas/checks/framework/site/pages.ts';
 import { listBuiltFiles, getSuccessfulBuild, buildRepositoryPath } from '#cli/checks/framework/site/build.ts';

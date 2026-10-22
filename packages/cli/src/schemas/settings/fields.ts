@@ -3,7 +3,7 @@ import { LocalDate } from '@decimalturn/toml-patch';
 import { FULL_PERCENTAGE } from '#cli/config/units.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { CASE_NAMES } from '#cli/config/configurations/naming.ts';
-import { nonemptyString } from '#cli/schemas/configurations/parts.ts';
+import { nonemptyString } from '#cli/schemas/configurations/fields.ts';
 import type { ReasonedSettingDefinition } from '#cli/types/settings/definitions.ts';
 import { type WrittenFormat, type TableSettings } from '#cli/types/settings/file.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
@@ -25,7 +25,7 @@ import {
     REASON_DESCRIPTIONS,
     FORMAT_INDENT_STYLES,
     FORMAT_OVERRIDE_MIN_FIELDS,
-} from '#cli/config/settings/parts.ts';
+} from '#cli/config/settings/fields.ts';
 
 export const nonemptyStrings = z.array(nonemptyString);
 

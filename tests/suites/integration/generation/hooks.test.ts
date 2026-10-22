@@ -6,7 +6,7 @@ import { readGitSetting } from '#cli/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { readRuntimePins } from '#tests/setup/runner/checkout.ts';
+import { readRuntimePins } from '#tests/setup/runner/run-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { MISE_TRUST, PINNED_TOOLS_FILE } from '#tests/config/setup/runner.ts';

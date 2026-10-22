@@ -10,7 +10,7 @@ import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import { listPointerPaths } from '#cli/generation/config-files/pointers.ts';
-import { listOwnedConfigFiles } from '#cli/generation/config-files/needed.ts';
+import { listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {

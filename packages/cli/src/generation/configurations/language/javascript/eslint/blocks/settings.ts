@@ -34,7 +34,7 @@ import {
     TRIVIAL_FUNCTIONS_RULE,
     TRIVIAL_FUNCTION_LIMIT,
     RESTRICTED_IMPORT_RULES,
-} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/gspot-toml.ts';
+} from '#cli/config/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
 // ESLint replaces the options of a rule in each later block, so an option list of no-restricted-imports keeps the
 // bans of tools.eslint.restricted_imports in the same scope.

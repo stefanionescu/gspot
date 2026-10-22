@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { relativePath } from '#cli/schemas/settings/parts.ts';
+import { relativePath } from '#cli/schemas/settings/fields.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
 import type { ParsedTools } from '#cli/types/settings/tool-tables.ts';
 import { type JsonValue, type SchemaShape } from '#cli/types/shapes.ts';
-import { buildRuleTableSchema } from '#cli/schemas/settings/rule-options.ts';
+import { buildRuleTableSchema } from '#cli/schemas/settings/rule-tables.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { ESLINT_PLUGIN_NAME, ESLINT_PLUGIN_MODULE, ESLINT_OPTION_STRING } from '#cli/config/settings/eslint.ts';
 

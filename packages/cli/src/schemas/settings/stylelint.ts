@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { nonemptyString } from '#cli/schemas/configurations/parts.ts';
-import { buildRuleTableSchema } from '#cli/schemas/settings/rule-options.ts';
+import { nonemptyString } from '#cli/schemas/configurations/fields.ts';
+import { buildRuleTableSchema } from '#cli/schemas/settings/rule-tables.ts';
 import { type TableSettings, type StylelintOptions } from '#cli/types/settings/file.ts';
 
 const stylelintOptions = z
