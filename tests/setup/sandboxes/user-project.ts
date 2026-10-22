@@ -3,11 +3,11 @@ import { testdir } from 'testdirs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { UserProject } from '#tests/types/packages.ts';
-import { GSPOT_ENVIRONMENT } from '#tests/data/setup/cli.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import { sep, join, resolve, relative, delimiter, isAbsolute } from 'node:path';
-import { NPM_INSTALL_FLAGS, OFFLINE_ENVIRONMENT } from '#tests/data/setup/sandboxes.ts';
 import { buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { GSPOT_ENVIRONMENT, OFFLINE_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 
 const repositoryRoot = join(import.meta.dir, '../../..');
 

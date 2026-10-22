@@ -1,6 +1,6 @@
-import { REFERENCE_FACTS } from './facts.ts';
+import { CLI_REFERENCE } from './cli.ts';
 import { LEVEL_ADVICE } from '../config/reference.ts';
-import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/root-facts.ts';
+import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
 
 /**
  * Describe each level, count its shipped checks, and list the tools it adds.
@@ -8,7 +8,7 @@ import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/root-fact
  * @returns one row for each level
  */
 export function buildLevelRows(): { level: string; description: string; count: number; tools: string }[] {
-    const { checks } = REFERENCE_FACTS;
+    const { checks } = CLI_REFERENCE;
     const recommended = checks.filter(({ check }) => check.level === 'recommended');
     const listToolNames = (entries: typeof checks) =>
         new Set(entries.flatMap(({ check }) => (check.tool === undefined ? [] : [check.tool])));

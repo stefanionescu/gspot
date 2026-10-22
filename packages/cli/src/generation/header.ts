@@ -1,6 +1,6 @@
 // Formats the header of generated files.
 
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 
 import {

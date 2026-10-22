@@ -1,13 +1,13 @@
 // Writes test settings and reads settings errors.
 import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
-import { REPORT_SCRIPT } from '#tests/data/setup/cli.ts';
 import { type Level } from '#cli/types/configurations.ts';
+import { REPORT_SCRIPT } from '#tests/config/setup/cli.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
+import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
-import { selectForScope, buildScopeSettings } from '#cli/settings/scope-settings.ts';
 
 /**
  * Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.

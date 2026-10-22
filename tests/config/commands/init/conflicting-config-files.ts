@@ -1,0 +1,126 @@
+/** pyproject.toml tables that init leaves in place while a generated config file takes over. */
+
+import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
+import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
+
+export const REPLACED_PYPROJECT_TABLES = [
+    {
+        configuration: 'python',
+        table: 'tool.basedpyright',
+        text: '[tool.basedpyright]\ntypeCheckingMode = "basic"\n',
+        source: { file: 'main.py', text: 'VALUE = 1\n' },
+        generated: { folder: '', file: 'pyrightconfig.json' },
+    },
+    {
+        configuration: 'python',
+        table: 'tool.pyright',
+        text: '[tool.pyright]\ntypeCheckingMode = "basic"\n',
+        source: { file: 'main.py', text: 'VALUE = 1\n' },
+        generated: { folder: '', file: 'pyrightconfig.json' },
+    },
+    {
+        configuration: 'sql',
+        table: 'tool.sqlfluff',
+        text: '[tool.sqlfluff.core]\ndialect = "postgres"\n',
+        source: { file: 'query.sql', text: 'SELECT 1;\n' },
+        generated: { folder: '.gspot/configurations/language/sql', file: 'sqlfluff.cfg' },
+    },
+] as const;
+
+/** Existing config files that checks for level all must leave alone at level recommended. */
+export const INACTIVE_CONFIGURATIONS = {
+    '.commitlintrc.json': '{"rules":{}}\n',
+    '.commitlintrc.mts': 'export default { rules: {} };\n',
+    '.syncpackrc.json': '{"versionGroups":[]}\n',
+    '.syncpackrc.yaml': 'versionGroups: []\n',
+    'package.json': COMMITLINT_PACKAGE,
+} as const;
+
+/** A script that runs Stylelint without a path to a config file, so Stylelint finds one itself. */
+export const STYLELINT_LOOKUP_SCRIPT = `
+import stylelint from './.gspot/node_modules/stylelint/lib/index.mjs';
+const result = await stylelint.lint({ files: [process.argv[1]], cwd: process.cwd() });
+const findings = result.results.flatMap(({ warnings, parseErrors, invalidOptionWarnings }) => [
+    ...warnings.map(({ rule, line, column, severity }) => ({ rule, line, column, severity })),
+    ...parseErrors,
+    ...invalidOptionWarnings,
+]);
+process.stdout.write(JSON.stringify(findings));
+`;
+
+export const REPLACED_CONFIG_FILES = {
+    'typos.toml': `[default.extend-words]
+# The device identifier API name.
+udid = "udid"
+`,
+    '.shellcheckrc': 'disable=SC2086,SC2034\n',
+    '.markdownlint.jsonc': '// Keep long prose lines.\n{ "MD013": false, "MD033": true, }\n',
+    '.eslintrc.json': '{ "rules": { "eqeqeq": "error" } }\n',
+    '.prettierrc': '{ "semi": false }\n',
+} as const;
+
+export const INIT_FILES = {
+    ...REPLACED_CONFIG_FILES,
+    'scripts/a.sh': CLEAN_BASH_SCRIPT,
+    'src/a.js': 'export const a = 1;\n',
+    'README.md': '# test\n',
+    'quality/lint.sh': CLEAN_BASH_SCRIPT,
+} as const;
+
+/** Native Stylelint lookup before and after replacing an authored standalone file. */
+export const STYLELINT_REPLACEMENT_CASES = [
+    {
+        name: 'a root package field',
+        scope: '',
+        packageText: STYLELINT_PACKAGE_JSON,
+        command: ['init', '--yes', '--configurations', 'css'],
+        changed: ['package.json'],
+        unchangedFiles: [],
+    },
+    {
+        name: 'a scoped package field',
+        scope: 'app',
+        packageText: STYLELINT_PACKAGE_JSON,
+        command: ['init', '--yes', '--no-configurations'],
+        changed: ['app/package.json'],
+        unchangedFiles: [],
+    },
+    {
+        name: 'a standalone file',
+        scope: '',
+        packageText: '{"private":true,"type":"module"}',
+        command: ['init', '--yes', '--configurations', 'css'],
+        changed: [],
+        unchangedFiles: [{ path: 'package.json', text: '{"private":true,"type":"module"}' }],
+    },
+] as const;
+
+/** A shared setup.cfg that a link points to. */
+export const LINKED_SETUP_CONFIG = `[flake8]
+ignore = E501
+
+[sqlfluff]
+exclude_rules = LT01
+`;
+
+/** A SQL project in a package folder. */
+export const SQL_PACKAGE_FILES = {
+    'README.md': '# test\n',
+    'db/accounts.sql': 'SELECT 1;\n',
+    'db/package.json': '{"private":true}',
+    'db/.sqlfluffignore': '# Templates\ntemplates/\n',
+} as const;
+
+/** A shared setup.cfg with a SQLFluff section. */
+export const SHARED_SETUP_CONFIG = `[flake8]
+ignore = E501
+
+[sqlfluff]
+exclude_rules = LT01, RF01
+`;
+
+export const VALID_CSS = `a {
+    opacity: 1;
+}
+`;

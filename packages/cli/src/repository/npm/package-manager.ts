@@ -2,31 +2,31 @@ import semver from 'semver';
 import * as nypm from 'nypm';
 import { join, dirname } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
-import { VERSION_FLAG } from '#cli/config/tools/run.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import { readPackageJson } from '#cli/repository/dependency-files.ts';
-import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { CacheKey, ReadCache } from '#cli/types/system/files.ts';
-import { MISSING_PACKAGE_MANAGER_MESSAGE } from '#cli/config/install/npm.ts';
-import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/package-manager.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
+import { packageManagerSchema, packageManagerPinSchema } from '#cli/schemas/repository/npm.ts';
 
 import type {
     StartRunner,
     PackageManager,
     PackageManagerPin,
     PackageManagerField,
-} from '#cli/types/repository/package-manager.ts';
+} from '#cli/types/repository/npm/package-manager.ts';
 import {
     NPM_TOOL,
     START_RUNNERS,
     YARN_BERRY_MAJOR,
     NYPM_DETECTION_OPTIONS,
     PACKAGE_MANAGER_HASH_SUFFIX,
-} from '#cli/config/repository/package-manager.ts';
+    MISSING_PACKAGE_MANAGER_MESSAGE,
+} from '#cli/config/repository/npm.ts';
 
 const packageManagerVersions: CacheKey<Map<string, PackageManager>> = { create: () => new Map() };
 

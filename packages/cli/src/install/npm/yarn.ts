@@ -1,31 +1,30 @@
 import { join } from 'node:path';
 import { stringify } from 'yaml';
 import { GspotError } from '#cli/system/errors.ts';
-import { parseYamlFile } from '#cli/parsers/yaml.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { MINUTES_PER_DAY } from '#cli/config/units.ts';
 import { runInstallStep } from '#cli/install/steps.ts';
-import { parseToolReport } from '#cli/parsers/json.ts';
-import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
-import { YARN_SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { addEnvironmentReference } from '#cli/install/npm/registry.ts';
-import { getTable, findRootScope } from '#cli/settings/scope-settings.ts';
+import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/tool-project.ts';
+import { GSPOT_PACKAGES, MINUTES_PER_DAY } from '#cli/config/install/npm/release-age.ts';
 import { yarnSettingsSchema, yarnConfigEntrySchema } from '#cli/schemas/install/npm/yarn.ts';
 
 import {
-    GSPOT_PACKAGES,
     YARN_SECRET_KEYS,
     YARN_SETTING_KEYS,
-    NPM_SETTING_PREFIX,
+    YARN_SETTINGS_FILE,
     YARN_CONNECTION_KEYS,
     YARN_CONFIG_GET_FLAGS,
     YARN_CONFIG_GET_ARGUMENTS,
     YARN_ENVIRONMENT_SETTINGS,
-    YARN_CONFIG_LIST_ARGUMENTS,
     YARN_INSTALL_SETTINGS_FILE,
+    YARN_CONFIG_LIST_ARGUMENTS,
     YARN_SETTING_VARIABLE_PREFIX,
-} from '#cli/config/install/npm.ts';
+} from '#cli/config/install/npm/yarn.ts';
 
 // Convert connection settings recursively while retaining secrets for redaction.
 function convertToReference(value: unknown, key: string, env: Record<string, string>, secrets: string[]): unknown {

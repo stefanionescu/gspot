@@ -1,5 +1,5 @@
 import type { GitEntry } from '#cli/types/parsers/git.ts';
-import type { GITLINK_MODE } from '#cli/config/parsers/git.ts';
+import type { GITLINK_MODE } from '#cli/config/files/modes.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
 
 export type PendingLink = { source: string; target: string };

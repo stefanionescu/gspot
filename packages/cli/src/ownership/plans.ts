@@ -4,18 +4,18 @@ import { isInside } from '#cli/system/paths.ts';
 import type { Session } from '#cli/types/session.ts';
 import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
-import { AGENTS_FILE } from '#cli/config/generation/rules.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
+import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import type { BlockStyle } from '#cli/types/parsers/managed-blocks.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
+import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import type { Writer, WritePlan, ReplacementRequest } from '#cli/types/ownership.ts';
-import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
-import { DOT_GSPOT, STATE_PATH, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-paths.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/managed-blocks.ts';
+import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 
 /**
  * Remove only the marked block and its separating blank line.
@@ -67,7 +67,7 @@ function isOwned(path: string, disk: Files): boolean {
 export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, expected: ReadonlySet<string>): string[] {
     using disk = openFiles(session.root);
     const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
-    const installations = [STATE_PATH, ...Object.values(INSTALLED_TOOL_FOLDERS)];
+    const installations = [GSPOT_PATHS.state, ...Object.values(INSTALLED_TOOL_FOLDERS)];
     const ownFolder = disk.readStats(DOT_GSPOT);
     const ownPaths: string[] = [];
     if (ownFolder !== undefined) {

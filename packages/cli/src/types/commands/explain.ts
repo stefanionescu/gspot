@@ -1,5 +1,5 @@
+import type { FileKind } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import type { FileKind } from '#cli/types/repository/inventory.ts';
 import type { EffectiveSetting } from '#cli/types/settings/inheritance.ts';
 
 export type Explanation = {

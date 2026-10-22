@@ -12,7 +12,7 @@ import {
     UV_PROJECT_VARIABLES,
     PYTHON_PROJECT_FILES,
     PYTHON_PROJECT_IGNORES,
-} from '#tests/data/setup/sandboxes.ts';
+} from '#tests/config/setup/sandboxes.ts';
 
 /** Create a Python project with a lockfile, and point the uv variables at the sandbox. */
 export async function createPythonProject(

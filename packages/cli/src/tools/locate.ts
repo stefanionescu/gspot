@@ -8,12 +8,12 @@ import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listMisePins } from '#cli/configurations/declared-tools.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import type { ExecutableSearch } from '#cli/types/tools/inspection.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/repository/tracked.ts';
-import { DOT_GSPOT, GSPOT_PYTHON_ENVIRONMENT_PATH } from '#cli/config/gspot-paths.ts';
 import { buildVenvBinPath, convertToPosixPath, listExecutableNames } from '#cli/system/paths.ts';
 
 import {
@@ -22,14 +22,14 @@ import {
     NPM_BIN_FOLDER,
     MISE_LAUNCHER_FOLDER,
     MISE_BIN_PATHS_ARGUMENTS,
-} from '#cli/config/tools/inspection.ts';
+} from '#cli/config/tools/locate.ts';
 
 // Search folders for tool-project and system executables. A copy has no tool projects or virtual
 // environments of its own: they run from the working tree that the copy stands for.
 function listSearchFolders(root: string, options: ExecutableSearch): string[] {
     const { searchFolders, toolFolderKind } = options;
     if (toolFolderKind === 'npm') return [join(root, DOT_GSPOT, NPM_BIN_FOLDER)];
-    if (toolFolderKind === 'python') return [buildVenvBinPath(join(root, GSPOT_PYTHON_ENVIRONMENT_PATH))];
+    if (toolFolderKind === 'python') return [buildVenvBinPath(join(root, GSPOT_PATHS.pythonEnvironment))];
     return [...new Set(searchFolders)].flatMap((folder) => [
         join(folder, NPM_BIN_FOLDER),
         buildVenvBinPath(join(folder, PYTHON_ENVIRONMENT_FOLDER)),

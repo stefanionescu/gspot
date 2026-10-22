@@ -1,20 +1,22 @@
 import type { Optional } from '#cli/types/shapes.ts';
-import type { LEVELS } from '#cli/config/configurations.ts';
-import type { LIMIT_FACTS } from '#cli/config/settings/limit-facts.ts';
+import type { LEVELS } from '#cli/config/configurations/names.ts';
+import { type REEXPORT_MODES } from '#cli/config/settings/tables.ts';
+import { type CI_PROVIDERS } from '#cli/config/settings/integrations.ts';
 import type { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
-import type { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/checks/naming.ts';
+import type { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
+import { type CASE_NAMES, type NAMED_CATEGORIES } from '#cli/config/configurations/naming.ts';
 
-import type {
-    CI_PROVIDERS,
-    LINE_ENDINGS,
-    QUOTE_STYLES,
-    REEXPORT_MODES,
-    TRAILING_COMMAS,
-    SETTING_LANGUAGES,
-    FORMAT_INDENT_STYLES,
-    NAMING_TABLE_CATEGORIES,
-    NAMING_LANGUAGE_CATEGORIES,
-} from '#cli/config/settings/schema.ts';
+import {
+    type SETTING_LANGUAGES,
+    type NAMING_TABLE_CATEGORIES,
+    type NAMING_LANGUAGE_CATEGORIES,
+} from '#cli/config/settings/naming.ts';
+import {
+    type QUOTE_STYLES,
+    type LINE_ENDINGS,
+    type TRAILING_COMMAS,
+    type FORMAT_INDENT_STYLES,
+} from '#cli/config/settings/parts.ts';
 
 export type ReasonedValue<Value> = { value: Value; reason: string };
 
@@ -59,14 +61,14 @@ export type NamingLanguageFields<
 
 export type LimitFields<NumberValue> = Partial<Record<keyof ParsedLimitFields, NumberValue | undefined>>;
 
-type LimitFacts = (typeof LIMIT_FACTS)[keyof typeof LIMIT_FACTS];
+type LimitDefinition = (typeof LIMIT_DEFINITIONS)[keyof typeof LIMIT_DEFINITIONS];
 
 /** The languages that at least one limit reads. */
-export type LimitLanguage = Extract<LimitFacts, { languages: readonly string[] }>['languages'][number];
+export type LimitLanguage = Extract<LimitDefinition, { languages: readonly string[] }>['languages'][number];
 
 /** The limits that some code reads for one language. */
 export type LanguageLimitField<Language extends LimitLanguage> = {
-    [Key in keyof typeof LIMIT_FACTS]: (typeof LIMIT_FACTS)[Key] extends {
+    [Key in keyof typeof LIMIT_DEFINITIONS]: (typeof LIMIT_DEFINITIONS)[Key] extends {
         languages: readonly (infer Languages)[];
     }
         ? Language extends Languages
@@ -75,7 +77,7 @@ export type LanguageLimitField<Language extends LimitLanguage> = {
                 : never
             : never
         : never;
-}[keyof typeof LIMIT_FACTS];
+}[keyof typeof LIMIT_DEFINITIONS];
 
 /** One language's limit table: only the limits that the language reads, each inherited from the root when unset. */
 export type LanguageLimitFields<Language extends LimitLanguage, NumberValue> = Partial<

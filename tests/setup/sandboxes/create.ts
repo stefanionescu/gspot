@@ -2,21 +2,21 @@
 import { join } from 'node:path';
 import { strToU8, zipSync } from 'fflate';
 import { afterAll, beforeAll } from 'bun:test';
+import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import type { Level } from '#cli/types/configurations.ts';
-import { PROSE_SANDBOX } from '#tests/data/checks/prose.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
-import { JSON_INDENT } from '#cli/config/generation/generate.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
-import { VALE_CONFIG_FILE_PATH } from '#cli/config/gspot-paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PROSE_SANDBOX } from '#tests/config/checks/general/prose.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
-import { VALE_PACKAGES } from '#cli/config/generation/config-files/builders/vale.ts';
+import { VALE_PACKAGES } from '#cli/config/generation/configurations/general/prose.ts';
 import { type Sandbox, type SandboxPlan, type InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 import { runGspot, spawnGspot, runGspotStep, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
@@ -26,7 +26,7 @@ import {
     SANDBOX_GITIGNORE,
     VALE_PACKAGE_FILES,
     SANDBOX_PACKAGE_JSON,
-} from '#tests/data/setup/sandboxes.ts';
+} from '#tests/config/setup/sandboxes.ts';
 
 /**
  * Name the installed npm in the root package.json, as a repository at level all must.
@@ -141,10 +141,10 @@ export function shareProseSandbox(): () => Sandbox {
             ', ',
         );
         using writer = openWriter(root);
-        const file = writer.files.read(VALE_CONFIG_FILE_PATH) as FileContents;
+        const file = writer.files.read(GSPOT_PATHS.valeConfigFile) as FileContents;
         writePlans(writer, [
             planReplacement(writer, {
-                path: VALE_CONFIG_FILE_PATH,
+                path: GSPOT_PATHS.valeConfigFile,
                 next: {
                     bytes: Buffer.from(
                         file.bytes.toString('utf8').replace(/^Packages = .*$/mu, `Packages = ${packages}`),

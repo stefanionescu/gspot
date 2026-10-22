@@ -1,8 +1,8 @@
 import { isInScope } from '#cli/repository/scopes.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import type { ScopeFolder } from '#cli/types/repository/inventory.ts';
-import { type ConfigurationEvidence } from '#cli/types/repository/detection.ts';
+import type { ScopeFolder } from '#cli/types/repository/files.ts';
+import { type ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type SelectedConfigurations } from '#cli/types/settings/inheritance.ts';
 import { selectConfigurations, assertKnownConfigurations } from '#cli/configurations/select.ts';
 

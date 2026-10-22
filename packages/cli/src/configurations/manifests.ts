@@ -8,14 +8,9 @@ import type { ShippedRule } from '#cli/types/generation/rules.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
+import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/configurations/manifests.ts';
+import { CONFIGURATIONS_FOLDER, SHIPPED_CONFIG_FILES_FOLDER } from '#cli/config/configurations/names.ts';
 import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/configurations.ts';
-
-import {
-    RULES_FOLDER,
-    MANIFEST_FILE,
-    CONFIGURATIONS_FOLDER,
-    SHIPPED_CONFIG_FILES_FOLDER,
-} from '#cli/config/configurations.ts';
 
 // Every run shares the immutable declarations shipped with the package.
 let CONFIGURATIONS: Map<string, Configuration> | undefined;
@@ -31,7 +26,10 @@ function findOnlyToolName(tools: unknown): string | undefined {
 function readConfigFiles(configurationFolder: string, configFiles: unknown, tools: unknown): unknown {
     if (configFiles !== undefined && !Array.isArray(configFiles)) return configFiles;
     const entries: unknown[] = configFiles === undefined ? [] : configFiles;
-    const declaredTargets = new Set(entries.flatMap((entry) => (isTable(entry) ? [entry['target']] : [])));
+    // A record names its file by target, or by source when gspot transpiles it.
+    const declaredTargets = new Set(
+        entries.flatMap((entry) => (isTable(entry) ? [entry['target'], entry['source']] : [])),
+    );
     const folder = `${configurationFolder}/${SHIPPED_CONFIG_FILES_FOLDER}/`;
     const copied = listAssets(folder)
         .map((path) => ({ target: posix.relative(folder, path) }))

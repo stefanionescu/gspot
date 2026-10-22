@@ -48,65 +48,65 @@ allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output.ts", "packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/types/repository/detection.ts", "packages/cli/src/types/settings/**"]
+paths = ["packages/cli/src/types/checks/**", "packages/cli/src/types/commands/list.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/runs/output.ts", "packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/types/repository/detect.ts", "packages/cli/src/types/settings/**"]
 categories = ["properties"]
 cases = ["camel", "upper-snake", "snake"]
 reason = "These properties retain the serialized gspot.toml, configuration manifest and tool report field names."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/site/purgecss-process.ts"]
+paths = ["packages/cli/src/checks/framework/site/purgecss-process.ts"]
 allowed_names = ["PurgeCSS"]
 reason = "PurgeCSS exports its class under this exact name."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/licenses.ts"]
+paths = ["packages/cli/src/types/checks/general/licenses.ts"]
 allowed_names = ["Name", "Version"]
 reason = "pip-licenses identifies these JSON fields with this exact capitalization."
 
 [[naming.override]]
-paths = ["packages/cli/src/schemas/checks/prose.ts", "packages/cli/src/types/checks/prose.ts"]
+paths = ["packages/cli/src/schemas/checks/general/prose.ts", "packages/cli/src/types/checks/general/prose.ts"]
 allowed_names = ["Check", "Line", "Message", "Span"]
 reason = "Vale identifies these JSON diagnostic fields with this exact capitalization."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/docker.ts", "packages/cli/src/schemas/checks/docker/trivy-image.ts"]
+paths = ["packages/cli/src/types/checks/infrastructure/docker.ts", "packages/cli/src/schemas/checks/infrastructure/docker/trivy-image.ts"]
 allowed_names = ["PkgName", "Results", "RuleID", "SchemaVersion", "Secrets", "Title", "Vulnerabilities", "VulnerabilityID"]
 reason = "Trivy identifies these JSON report fields with these exact names."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/xcode.ts", "packages/cli/src/schemas/checks/xcode.ts"]
+paths = ["packages/cli/src/types/checks/infrastructure/xcode.ts", "packages/cli/src/schemas/checks/infrastructure/xcode.ts"]
 allowed_names = ["shouldTranslate"]
 reason = "The Xcode string format names its translation control shouldTranslate."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/python.ts", "packages/cli/src/schemas/checks/python/deptry.ts"]
+paths = ["packages/cli/src/types/checks/language/python.ts", "packages/cli/src/schemas/checks/language/python/deptry.ts"]
 allowed_names = ["extend_exclude", "known_first_party"]
 reason = "deptry names these TOML settings extend_exclude and known_first_party."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/swift.ts", "packages/cli/src/schemas/checks/swift.ts"]
+paths = ["packages/cli/src/types/checks/language/swift.ts", "packages/cli/src/schemas/checks/language/swift.ts"]
 allowed_names = ["module_type"]
 reason = "Swift coverage JSON names the module type field module_type."
 
 [[naming.override]]
-paths = ["packages/cli/src/schemas/parsers/xcode.ts"]
+paths = ["packages/cli/src/schemas/parsers/projects/xcode.ts"]
 allowed_names = ["rootObject", "objects"]
 reason = "Xcode project files name the object table objects."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/checks/supabase.ts"]
+paths = ["packages/cli/src/types/checks/platform/supabase.ts"]
 categories = ["properties"]
 allowed_names = ["diagnostics"]
 reason = "Deno names its lint findings diagnostics; Supabase names its inventory file_path."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/svelte.ts"]
+paths = ["packages/cli/src/checks/framework/svelte.ts"]
 categories = ["functions"]
 allowed_names = ["checkSvelteCheck"]
 reason = "Check functions start with check and spell the svelte/check check ID."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/supabase.ts"]
+paths = ["packages/cli/src/checks/platform/supabase.ts"]
 categories = ["functions"]
 allowed_names = ["checkSupabaseDenoCheck"]
 reason = "Check functions start with check and spell the supabase/deno-check check ID."
@@ -117,7 +117,7 @@ allowed_names = ["fixInfo"]
 reason = "markdownlint names its fix field fixInfo."
 
 [[naming.override]]
-paths = ["tests/unit/cli/generation/config-files/builders/v8r.test.ts", "tests/data/generation/config-files/builders/v8r.ts"]
+paths = ["tests/suites/unit/cli/generation/configurations/general/data-files.test.ts", "tests/config/generation/configurations/general/data-files.ts"]
 allow_digits = true
 reason = "v8r is the name of the tool."
 
@@ -133,13 +133,13 @@ allowed_names = ["when"]
 reason = "The shipped configuration manifest format names its selection condition when."
 
 [[naming.override]]
-paths = ["packages/cli/src/generation/config-files/builders/v8r.ts", "packages/cli/src/config/generation/config-files/builders/v8r.ts"]
+paths = ["packages/cli/src/generation/configurations/general/data-files/v8r.ts", "packages/cli/src/config/generation/configurations/general/data-files/v8r.ts"]
 allow_digits = true
 allowed_names = ["buildV8rFile"]
 reason = "v8r is the name of the tool."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/parsers/lockfiles.ts", "packages/cli/src/schemas/parsers/lockfiles.ts"]
+paths = ["packages/cli/src/types/parsers/projects/lockfiles.ts", "packages/cli/src/schemas/parsers/projects/lockfiles.ts"]
 allowed_names = ["resolved"]
 reason = "npm and Yarn lockfiles name each package download URL resolved."
 
@@ -154,29 +154,34 @@ allowed_names = ["_zod"]
 reason = "Zod names its schema information property _zod."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/parsers/xcode.ts"]
+paths = ["packages/cli/src/types/parsers/projects/xcode.ts"]
 allowed_names = ["objects", "fileSystemSynchronizedGroups"]
 reason = "Xcode project files name these keys objects and fileSystemSynchronizedGroups."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/package-copies.ts"]
+paths = ["packages/cli/src/types/pinned-linters.ts"]
 allowed_names = ["resolveConfig"]
 reason = "Prettier and Stylelint name their configuration methods resolveConfig."
 
 [[naming.override]]
-paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.mjs"]
+paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/types/generation/configurations/language/markdownlint-cli2.ts"]
 allowed_names = ["markdownlint-cli2"]
 reason = "The manifest loader reads this source by the external markdownlint-cli2 target filename."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/schemas/runs/output/sarif.ts", "packages/cli/src/runs/output/sarif.ts", "tests/unit/cli/runs/output/sarif.test.ts", "tests/unit/cli/runs/output/formats.test.ts"]
+paths = ["packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/schemas/runs/output/sarif.ts", "packages/cli/src/runs/output/sarif.ts", "tests/suites/unit/cli/runs/output/sarif.test.ts", "tests/suites/unit/cli/runs/output/formats.test.ts"]
 allowed_names = ["invocations"]
 reason = "SARIF names the field of a run that records each tool run invocations."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/swift/build.ts", "packages/cli/src/commands/doctor/suggestions.ts", "packages/cli/src/configurations/declared-tools.ts", "packages/cli/src/configurations/manifests.ts", "packages/cli/src/generation/config-files/build.ts", "packages/cli/src/generation/config-files/generate.ts", "packages/cli/src/generation/config-files/needed.ts", "packages/cli/src/generation/eslint/plan.ts", "packages/cli/src/runs/command/check.ts", "packages/cli/src/runs/command/placeholders.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/generation/files.ts", "tests/setup/cli/config-files.ts", "tests/types/generated-files.ts", "tests/unit/cli/generation/config-files/needed.test.ts", "tests/unit/cli/install/npm/project.test.ts"]
-allowed_names = ["BuiltConfigFile", "ConfigFile", "ConfigFileBuilder", "ConfigFileGeneration", "ConfigFileOwner", "ConfigFilePointer", "GeneratedConfigFiles", "KnipConfigFile", "OwnedConfigFile", "PlannedConfigFile", "RuffConfigFile", "StylelintConfigFile", "WholeConfigFile", "buildConfigFile", "buildConfigFiles", "buildNpmConfigFile", "extractConfigFileName", "findConfigFilePath", "findMissingConfigFile", "getConfigFile", "getConfigFileTarget", "getConfigFiles", "isConfigFileNeeded", "listCommandConfigFiles", "listConfigFileConfigurations", "listConfigFiles", "listOwnedConfigFiles", "listScopeConfigFiles", "listSwiftlintConfigFiles", "listUnownedConfigFiles", "parseConfigFile", "readConfigFiles"]
+paths = ["packages/cli/src/checks/language/swift/build.ts", "packages/cli/src/commands/doctor/suggestions.ts", "packages/cli/src/configurations/declared-tools.ts", "packages/cli/src/configurations/manifests.ts", "packages/cli/src/generation/config-files/build.ts", "packages/cli/src/generation/config-files/generate.ts", "packages/cli/src/generation/config-files/needed.ts", "packages/cli/src/generation/configurations/language/javascript/eslint/plan.ts", "packages/cli/src/runs/command/check.ts", "packages/cli/src/runs/command/placeholders.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/generation/files.ts", "tests/setup/cli/config-files.ts", "tests/types/generated-files.ts", "tests/suites/unit/cli/generation/config-files/needed.test.ts", "tests/suites/unit/cli/install/npm/tool-project.test.ts", "packages/cli/src/checks/general/gspot/conflicting-config-files.ts", "packages/cli/src/commands/init/conflicting-config-files.ts", "packages/cli/src/commands/init/init.ts", "packages/cli/src/commands/init/plan.ts", "packages/cli/src/repository/existing/config-files.ts", "packages/cli/src/types/commands/init.ts", "packages/cli/src/types/repository/existing.ts", "tests/suites/e2e/cli.test.ts"]
+allowed_names = ["BuiltConfigFile", "ConflictingConfigFile", "ConflictingConfigFiles", "ConfigFile", "ConfigFileBuilder", "ConfigFileOutput", "ConfigFileGeneration", "ConfigFileOwner", "ConfigFilePointer", "GeneratedConfigFiles", "KnipConfigFile", "OwnedConfigFile", "PlannedConfigFile", "RuffConfigFile", "StylelintConfigFile", "WholeConfigFile", "buildConfigFile", "buildConfigFiles", "buildNpmConfigFile", "extractConfigFileName", "findConfigFilePath", "findMissingConfigFile", "getConfigFile", "getConfigFileTarget", "getConfigFiles", "isConfigFileNeeded", "listCommandConfigFiles", "listConfigFileConfigurations", "listConfigFiles", "listOwnedConfigFiles", "listScopeConfigFiles", "listSwiftlintConfigFiles", "listUnownedConfigFiles", "parseConfigFile", "readConfigFiles", "addConflictingConfigFile", "assertConflictingConfigFiles", "checkConflictingConfigFiles", "deleteConflictingConfigFiles", "findConflictingConfigFiles", "formatConflictingConfigFiles", "listConflictingConfigFiles", "readConflictingConfigFiles"]
 reason = "These types and functions handle config files, the files that gspot writes for each tool. gspot 0.3.5 reserves config for values; 0.3.6 allows it in types and functions."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/generation/configurations/language/javascript/eslint-functions.ts"]
+allowed_names = ["getDocumentFragment"]
+reason = "vue-eslint-parser names this parser service getDocumentFragment."
 
 [structure]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts", "tests/setup/runner/unit-preload.ts"]
@@ -227,7 +232,7 @@ path = "packages/eslint-plugin/repository.mjs"
 schema-location = [{ folders = ["packages/cli/src/schemas", "packages/eslint-plugin/src/schemas", "tests/schemas"] }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit-preload.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration-preload.ts", "packages/cli/src/checks/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-runtime.mjs", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.mjs", "packages/cli/src/configurations/package-copies.ts"]
+entry = ["tests/setup/runner/unit-preload.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration-preload.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/pinned-linters.ts"]
 
 [[scope]]
 path = "docs"
@@ -353,7 +358,7 @@ paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
 
 [[import_rule]]
 name = "tests-data"
-paths = ["tests/data/**"]
+paths = ["tests/config/**"]
 can_import = ["cli-config", "tests-setup"]
 
 [[import_rule]]
@@ -367,12 +372,12 @@ paths = ["tests/setup/**", "tests/schemas/**"]
 
 [[import_rule]]
 name = "tests"
-paths = ["tests/{unit,integration,e2e}/**"]
+paths = ["tests/suites/**"]
 
 [[import_rule]]
 name = "config-files"
 paths = ["packages/cli/configurations/**/config-files/**"]
-can_import = []
+can_import = ["cli-types"]
 
 [[ignore]]
 check = "dependencies/osv-scanner"
@@ -393,7 +398,7 @@ reason = "Paths in shipped rules are examples for user projects."
 
 [[ignore]]
 check = "duplication/jscpd"
-paths = ["tests/integration/checks/swift/swiftlint.test.ts", "tests/integration/checks/css.test.ts", "tests/integration/checks/sql.test.ts", "tests/integration/checks/data-files.test.ts", "tests/unit/cli/checks/python/vulture.test.ts", "tests/unit/cli/checks/python/deptry.test.ts"]
+paths = ["tests/suites/integration/checks/language/swift/swiftlint.test.ts", "tests/suites/integration/checks/language/css.test.ts", "tests/suites/integration/checks/language/sql.test.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/suites/unit/cli/checks/language/python/vulture.test.ts", "tests/suites/unit/cli/checks/language/python/deptry.test.ts", "tests/suites/unit/cli/checks/language/python/pydoclint.test.ts", "tests/suites/unit/cli/checks/framework/nextjs.test.ts", "tests/suites/unit/cli/checks/language/bash/unused-functions.test.ts", "tests/suites/unit/cli/checks/language/bash/script-layout.test.ts"]
 reason = "These files share only an import list, which gspot 0.3.6 leaves out of jscpd; step 8.08 removes this ignore."
 until = 2026-11-30
 
@@ -401,6 +406,13 @@ until = 2026-11-30
 check = "javascript/eslint"
 rule = "import-x/exports-last"
 reason = "This repository exports declarations inline. Its ESLint generator omits import-x/exports-last."
+
+[[ignore]]
+check = "javascript/eslint"
+rule = "n/no-unpublished-import"
+paths = ["packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts"]
+reason = "These shipped sources import only types, which the transpiled modules drop; gspot 0.3.6 sets ignoreTypeImport for this rule."
+until = 2026-11-30
 
 [[ignore]]
 check = "javascript/eslint"
@@ -422,7 +434,7 @@ reason = "This file reproduces upstream license notices and terms whose wording 
 [[ignore]]
 check = "prose/vale"
 rule = "gspot.session-identifiers"
-paths = ["tests/data/integration/checks/prose/scopes.ts"]
+paths = ["tests/config/integration/checks/general/prose/scopes.ts"]
 reason = "This sample URL holds a session identifier so that the Vale test sees the rule report it."
 
 [[ignore]]
@@ -457,13 +469,13 @@ reason = "Starlight and Expressive Code write this markup."
 
 [[ignore]]
 check = "spelling/typos"
-paths = ["tests/data/checks/spelling.ts"]
+paths = ["tests/config/checks/general/spelling.ts"]
 reason = "This literal supplies a deliberate misspelling to the spelling checks and their corrections."
 
 [[ignore]]
 check = "structure/lone-files"
 rule = "lone-file"
-paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.mjs"]
+paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts"]
 reason = "The manifest loader discovers config files in config-files/ and reads this module by its external markdownlint-cli2 target filename."
 
 [[ignore]]
@@ -473,10 +485,10 @@ reason = "Astro fixes this name beside the content folder."
 
 [[ignore]]
 check = "structure/shared-prefixes"
-paths = ["packages/cli/src/generation/eslint/configurations/react*.ts"]
-reason = "The files are named after their topic and their npm packages."
+paths = ["packages/cli/src/generation/configurations/framework/react*.ts"]
+reason = "The react and react-dom configurations name these generators, after their npm packages."
 
 [[ignore]]
 check = "structure/shared-prefixes"
-paths = ["packages/eslint-plugin/src/rules/**", "tests/unit/eslint-plugin/rules/**"]
+paths = ["packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/src/config/rules/**", "tests/suites/unit/eslint-plugin/rules/**"]
 reason = "ESLint rule IDs are the file names, and they share their first word by convention."

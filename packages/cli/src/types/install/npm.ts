@@ -1,4 +1,4 @@
-import type { PackageManager } from '#cli/types/repository/package-manager.ts';
+import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
 /** One package-manager operation with its repository routing. */
 export type PackageManagerCommand = {

@@ -1,28 +1,28 @@
 import type { Session } from '#cli/types/session.ts';
+import { listNeededTools } from '#cli/planning/tools.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { stripBlock } from '#cli/parsers/managed-blocks.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
-import { AGENTS_FILE } from '#cli/config/generation/rules.ts';
-import { buildBunScannerEdits } from '#cli/generation/bun.ts';
 import type { RuleFile } from '#cli/types/generation/rules.ts';
-import { listNeededTools } from '#cli/planning/needed-tools.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
-import { SWIFT_CONFIGURATION } from '#cli/config/configurations.ts';
+import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import { listHookNames, buildHookFiles } from '#cli/generation/hooks.ts';
+import { SWIFT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { getTable, findRootScope } from '#cli/settings/scope-settings.ts';
+import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
+import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
 import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts';
-import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/inventory.ts';
-import { GITIGNORE_FILE, GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
+import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
+import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
+import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
 import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/projects.ts';
+import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/tool-projects.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
-import { DOT_GSPOT, STATE_PATH, VERSION_PIN_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-paths.ts';
 import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
 import {
@@ -98,7 +98,7 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
  * @returns the paths that Git must leave untracked.
  */
 function buildGitignoreBlock(): string {
-    const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), STATE_PATH].map((path) => `${path}/`);
+    const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), GSPOT_PATHS.state].map((path) => `${path}/`);
     return [...toolProjectPaths, `${DOT_GSPOT}/${YARN_INSTALL_SETTINGS_FILE}`].join('\n');
 }
 
@@ -169,7 +169,7 @@ export function generate(session: Session): GenerationResult {
     const packageManager = session.packageManager?.name;
     const configurations = session.neededToolConfigurations;
     const generated: GenerationResult = {
-        files: [{ path: VERSION_PIN_FILE, content: cliPackage.version + '\n' }],
+        files: [{ path: GSPOT_PATHS.versionPin, content: cliPackage.version + '\n' }],
         blocks: [],
         managedKeys: [],
     };

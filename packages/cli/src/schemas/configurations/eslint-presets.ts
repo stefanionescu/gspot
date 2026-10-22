@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { EslintPresets } from '#cli/types/generation/eslint.ts';
+import type { EslintPresets } from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 
 /** One block of a shipped ESLint preset copy: its files, ignores, base path, rules, and whether it sets a parser. */
 const eslintPresetBlockSchema = z.strictObject({

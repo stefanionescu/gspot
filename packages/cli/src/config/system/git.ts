@@ -49,5 +49,3 @@ export const NOT_REPOSITORY_MESSAGE = 'fatal: not a git repository (or any ';
 export const GIT_SETTING_ARGUMENTS = ['config', '--null', '--get'] as const;
 
 export const GIT_HOOKS_ARGUMENTS = ['rev-parse', '--git-path', 'hooks'] as const;
-
-export const GIT_SHALLOW_ARGUMENTS = ['rev-parse', '--is-shallow-repository'] as const;

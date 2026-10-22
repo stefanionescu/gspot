@@ -1,7 +1,3 @@
-export const RESULT_JSON_INDENT = 2;
-
-export const SIGNAL_EXIT_CODES = { SIGINT: 130, SIGTERM: 143 } as const;
-
 /** The exit of a command that did not finish: an error, a refusal, an unreadable file, or a cancellation. */
 export const EXIT_ERROR = 2;
 
@@ -9,5 +5,3 @@ export const EXIT_ERROR = 2;
 export const EXIT_FINDINGS = 1;
 
 export const ROOT_SCOPE_LABEL = 'root';
-
-export const DRY_RUN_NOTE = 'Dry run: nothing was written.';

@@ -3,7 +3,7 @@ import { join, dirname, delimiter } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { FOLDER_LINK_TYPE } from '#tests/setup/system/platform.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
+import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { mkdir, readdir, symlink, readFile, realpath } from 'node:fs/promises';
 
 /** The node_modules folder of the repository root, where each package sits beside its dependencies. */

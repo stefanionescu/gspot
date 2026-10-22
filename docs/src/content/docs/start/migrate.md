@@ -30,7 +30,7 @@ settings. A tool that gspot does not run can run as a [command check](/configure
 ## Old settings files after init
 
 When you raise the level or add a configuration later, a tool that starts to run can find its old settings file.
-`gspot/replaced-files` reports such a file, such as `.commitlintrc.json` while commitlint runs. Delete it, and move
+`gspot/conflicting-config-files` reports such a file, such as `.commitlintrc.json` while commitlint runs. Delete it, and move
 any rule you need into `gspot.toml`.
 
 If Husky, Lefthook, or your own hooks folder runs your Git hooks, gspot

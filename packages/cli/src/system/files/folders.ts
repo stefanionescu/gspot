@@ -3,11 +3,12 @@ import { tmpdir } from 'node:os';
 import picomatch from 'picomatch';
 import { join, relative } from 'node:path';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
+import { PARENT_SEGMENT } from '#cli/config/system/files/folders.ts';
+import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
-import { GLOB_EXCLUDE, DRIVE_LETTER, PARENT_SEGMENT, FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
+import { DRIVE_LETTER, GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
 
 // Refuses a pattern that climbs out of the folder it scans, in plain form, or hidden in a brace alternative.
 function assertInsideFolder(pattern: string): void {

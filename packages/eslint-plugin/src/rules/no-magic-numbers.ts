@@ -2,8 +2,8 @@ import { createRequire } from 'node:module';
 import { FUNCTION_TYPES } from '../config/syntax.ts';
 import { createRule } from '../schemas/rules/options.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';
-import { UPSTREAM_RULE, UPSTREAM_PACKAGE } from '../config/magic-numbers.ts';
 import { magicNumbersOptionsSchema } from '../schemas/rules/no/magic-numbers.ts';
+import { UPSTREAM_RULE, UPSTREAM_PACKAGE } from '../config/rules/no-magic-numbers.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const requireModule = createRequire(import.meta.url);

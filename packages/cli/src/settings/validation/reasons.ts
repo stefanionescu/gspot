@@ -1,10 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import type { ReasonNeeded } from '#cli/types/settings/facts.ts';
-import { REASON_WORDS_MIN } from '#cli/config/settings/schema.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import type { ReasonNeeded } from '#cli/types/settings/definitions.ts';
+import { REASON_WORDS_MIN } from '#cli/config/settings/validation/reasons.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 
 function buildErrorsAt(path: KeyPath, text: string | undefined): SettingsError[] {

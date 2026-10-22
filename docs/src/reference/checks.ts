@@ -1,15 +1,15 @@
 import type { Tool } from '#cli/types/configurations.ts';
-import { REFERENCE_FACTS, type readReferenceFacts } from './facts.ts';
+import { CLI_REFERENCE, type readCliReference } from './cli.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
-import { WHOLE_SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { getTool, getToolName } from '#cli/configurations/declared-tools.ts';
-import type { GuideCheck, ReferencePage, ReferenceFacts } from '../types/reference.ts';
+import type { GuideCheck, CliReference, ReferencePage } from '../types/reference.ts';
+import { WHOLE_SETTING_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import { CHECK_RUN_LABELS, CHECK_NEEDS_LABELS, SUPPRESSIONS_CHECK } from '../config/reference.ts';
 import { formatList, formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 
 type Suppression = NonNullable<Tool['suppression']>;
 
-const configurations = REFERENCE_FACTS.configurations;
+const configurations = CLI_REFERENCE.configurations;
 
 /**
  * Name the tool that a check runs; a built-in check runs none.
@@ -115,7 +115,7 @@ export function buildCheckPage(
  * @param groups the title of each folder of configurations
  * @returns the index page
  */
-export function buildCheckIndex(checks: ReferenceFacts['checks'], groups: Record<string, string>): ReferencePage {
+export function buildCheckIndex(checks: CliReference['checks'], groups: Record<string, string>): ReferencePage {
     return buildReferencePage(
         'Checks',
         `${String(checks.length)} checks declared by shipped configurations.`,
@@ -156,7 +156,7 @@ export function listSuppressions(configurations: Configuration[]): Map<string, S
  * @returns one row per check
  */
 export function listGuideChecks(configurations: string[]): GuideCheck[] {
-    return REFERENCE_FACTS.checks
+    return CLI_REFERENCE.checks
         .filter(({ configuration }) => configurations.includes(configuration.name))
         .map(({ check }) => ({
             name: check.id,
@@ -184,7 +184,7 @@ export function formatCheckTable(checks: Check[]): string {
     );
 }
 
-type Configuration = ReturnType<typeof readReferenceFacts>['configurations'][number];
+type Configuration = ReturnType<typeof readCliReference>['configurations'][number];
 
 type Check = Configuration['checks'][number];
 

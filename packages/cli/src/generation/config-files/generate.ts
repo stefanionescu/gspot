@@ -37,7 +37,7 @@ function groupToolOutputs(
     const owners = entries[0]?.configFile.per_scope === true ? entries : entries.slice(0, 1);
     const outputs = owners.map((entry) => ({
         ...entry,
-        file: buildConfigFile(
+        ...buildConfigFile(
             {
                 ...entry.owner,
                 configFile: entry.configFile,
@@ -63,9 +63,9 @@ function addToolOutput(
 ): void {
     const [first] = group as [BuiltConfigFile, ...BuiltConfigFile[]];
     const chosen = index === 0 ? declared : buildPerScopeTarget(first.configFile, first.owner.scope.folder.path);
-    const file =
+    const { file, companions } =
         chosen === declared
-            ? first.file
+            ? first
             : buildConfigFile(
                   {
                       ...first.owner,
@@ -75,7 +75,7 @@ function addToolOutput(
                   },
                   generated.targets,
               );
-    generated.files.set(chosen, file);
+    for (const written of [file, ...companions]) generated.files.set(written.path, written);
     for (const { owner } of group) {
         const scope = owner.scope.folder.path;
         const paths = generated.targets.get(scope) ?? new Map<string, string>();

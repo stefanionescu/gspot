@@ -1,9 +1,9 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { getValueAt } from '#cli/system/tables.ts';
-import { parseToolReport } from '#cli/parsers/json.ts';
-import { JSON_START } from '#cli/config/runs/output.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { ToolOutput } from '#cli/types/runs/output.ts';
+import { JSON_START } from '#cli/config/runs/output/json.ts';
+import { parseToolReport } from '#cli/parsers/formats/json.ts';
 
 // Get the list at a dotted path of the report, or the whole report for an empty path.
 function listAt(value: unknown, path: string | undefined): unknown[] {

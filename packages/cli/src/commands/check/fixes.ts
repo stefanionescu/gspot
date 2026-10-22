@@ -8,14 +8,14 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';
 import type { CheckRunOptions } from '#cli/types/runs/check.ts';
-import type { GrammarName } from '#cli/types/parsers/grammars.ts';
 import type { PreparedCommand } from '#cli/types/runs/command.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { findTool, runToolProcess } from '#cli/runs/command/tool.ts';
 import { createCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
-import { FIX_ROUNDS, FIX_DIFF_CONTEXT } from '#cli/config/runs/fixes.ts';
-import { parseSource, findGrammarByExtension } from '#cli/parsers/grammars.ts';
+import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
 import type { FixReport, FixResult, FixOptions } from '#cli/types/runs/fixes.ts';
+import { FIX_ROUNDS, FIX_DIFF_CONTEXT } from '#cli/config/commands/check/fixes.ts';
+import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { copyCheckFiles, prepareCommand, prepareCommandIn, prepareToolEnvironment } from '#cli/runs/command/check.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {

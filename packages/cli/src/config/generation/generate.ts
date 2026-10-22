@@ -1,8 +1,4 @@
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
-
-export const CONFIG_FILE_TOML_FORMAT = { inlineTableStart: Number.MAX_SAFE_INTEGER, bracketSpacing: false } as const;
-
-export const JSON_INDENT = 4;
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 
 export const AUTO_LF_ATTRIBUTES = ['text=auto', 'eol=lf'] as const;
 

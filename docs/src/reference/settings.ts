@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
 import { SCHEMA_FILE } from '#cli/config/settings/schema.ts';
-import type { ReferencePage, ReferenceFacts } from '../types/reference.ts';
+import type { CliReference, ReferencePage } from '../types/reference.ts';
 import { formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 
 import {
@@ -93,7 +93,7 @@ function listSchemaProperties(
     return map?.properties === undefined ? fixed : [...fixed, { name: MAP_KEY_NAME, node: map, required: false }];
 }
 
-function formatDefaults(variants: ReferenceFacts['settings']): string {
+function formatDefaults(variants: CliReference['settings']): string {
     return variants
         .map(({ setting, owners }) => {
             const recommended = setting.default;
@@ -108,7 +108,7 @@ function formatDefaults(variants: ReferenceFacts['settings']): string {
 }
 
 // The languages whose default differs from the default of the key.
-function formatLanguageDefaults(variants: ReferenceFacts['settings']): string {
+function formatLanguageDefaults(variants: CliReference['settings']): string {
     const defaults = variants.flatMap(({ setting }) =>
         setting.language_defaults === undefined ? [] : Object.entries(setting.language_defaults),
     );
@@ -117,7 +117,7 @@ function formatLanguageDefaults(variants: ReferenceFacts['settings']): string {
 }
 
 function formatSetting(
-    facts: ReferenceFacts,
+    facts: CliReference,
     key: string,
     { node, required }: { node: JSONSchema.JSONSchema; required: boolean },
 ): string {
@@ -147,7 +147,7 @@ function isSettingValue(schema: JSONSchema.JSONSchema, node: JSONSchema.JSONSche
 
 // Each key of a table or a record under its own heading, one level below the table, with the full key as its anchor.
 function formatSettingKeys(
-    facts: ReferenceFacts,
+    facts: CliReference,
     prefix: string,
     keys: ReturnType<typeof listSchemaProperties>,
     level: number,
@@ -200,7 +200,7 @@ function formatVariantSection(schema: JSONSchema.JSONSchema, key: string, node: 
 
 // A table or a record: its description and its keys, then the tables and records inside it, one heading level down.
 function formatSettingTable(
-    facts: ReferenceFacts,
+    facts: CliReference,
     key: string,
     subschema: JSONSchema.JSONSchema | boolean,
     level: number,
@@ -227,7 +227,7 @@ function formatSettingTable(
 }
 
 // A scope takes its own keys and every root table, apart from the keys that only the root takes.
-function formatScopeSection(facts: ReferenceFacts, subschema: JSONSchema.JSONSchema | boolean): string {
+function formatScopeSection(facts: CliReference, subschema: JSONSchema.JSONSchema | boolean): string {
     const { schema } = facts;
     const node = getSchemaNode(schema, subschema);
     const children = listSchemaProperties(schema, node);
@@ -289,7 +289,7 @@ export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string 
  * @param facts the CLI reference facts
  * @returns the settings page, whose table of contents lists the tables only.
  */
-export function buildSettingsPage(facts: ReferenceFacts): ReferencePage {
+export function buildSettingsPage(facts: CliReference): ReferencePage {
     const { schema } = facts;
     const roots = listSchemaProperties(schema, schema);
     const sections = roots

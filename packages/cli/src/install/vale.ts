@@ -5,15 +5,15 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { runInstallStep } from '#cli/install/steps.ts';
 import { getMiseBinPaths } from '#cli/tools/locate.ts';
-import { VALE_TOOL } from '#cli/config/checks/prose.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
+import { VALE_TOOL } from '#cli/config/checks/general/prose.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { redactInstallOutput } from '#cli/install/credentials.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
 import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { DOT_GSPOT, VALE_PACKAGES_PATH, VALE_CONFIG_FILE_PATH } from '#cli/config/gspot-paths.ts';
 
 import {
     VALE_INSTALL_PREFIX,
@@ -31,10 +31,10 @@ import {
  */
 export function hasValePackages(repositoryRoot: string, level: Settings['level']): boolean {
     using files = openFiles(repositoryRoot);
-    if (files.read(VALE_CONFIG_FILE_PATH) === undefined) return false;
+    if (files.read(GSPOT_PATHS.valeConfigFile) === undefined) return false;
     if (level === 'recommended') return true;
     return VALE_PACKAGE_FOLDERS.every(
-        (name) => files.readStats(`${VALE_PACKAGES_PATH}/${name}`)?.isDirectory() === true,
+        (name) => files.readStats(`${GSPOT_PATHS.valePackages}/${name}`)?.isDirectory() === true,
     );
 }
 
@@ -58,15 +58,15 @@ export async function installValePackages(install: ToolInstall): Promise<string>
     using files = openFiles(root);
     const temporary = mkdtempSync(join(files.readRealPath(DOT_GSPOT), VALE_INSTALL_PREFIX));
     try {
-        const config = join(temporary, VALE_CONFIG_FILE_PATH);
-        const text = readText(root, VALE_CONFIG_FILE_PATH);
+        const config = join(temporary, GSPOT_PATHS.valeConfigFile);
+        const text = readText(root, GSPOT_PATHS.valeConfigFile);
         // Vale downloads into the last StylesPath, so that one stays relative to the temporary folder; the others point
         // back to the repository.
         const last = [...text.matchAll(VALE_STYLES_PATH_PATTERN)].at(-1);
         const content = text.replaceAll(VALE_STYLES_PATH_PATTERN, (line, path: string, offset: number) =>
             offset === last?.index
                 ? line
-                : `StylesPath = ${convertToPosixPath(resolve(root, dirname(VALE_CONFIG_FILE_PATH), path.trim()))}`,
+                : `StylesPath = ${convertToPosixPath(resolve(root, dirname(GSPOT_PATHS.valeConfigFile), path.trim()))}`,
         );
         mkdirSync(dirname(config), { recursive: true });
         writeFileSync(config, content);
@@ -77,9 +77,9 @@ export async function installValePackages(install: ToolInstall): Promise<string>
                 'install',
                 `Vale sync failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
             );
-        files.deleteTree(VALE_PACKAGES_PATH);
-        renameSync(join(temporary, VALE_PACKAGES_PATH), join(root, VALE_PACKAGES_PATH));
-        return `installed Vale packages in ${VALE_PACKAGES_PATH}`;
+        files.deleteTree(GSPOT_PATHS.valePackages);
+        renameSync(join(temporary, GSPOT_PATHS.valePackages), join(root, GSPOT_PATHS.valePackages));
+        return `installed Vale packages in ${GSPOT_PATHS.valePackages}`;
     } finally {
         rmSync(temporary, { recursive: true, force: true });
     }

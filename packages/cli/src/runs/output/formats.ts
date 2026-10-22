@@ -5,14 +5,14 @@ import { hasErrorCode } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { DRIVE_LETTER } from '#cli/config/system/paths.ts';
 import { parseJsonFindings } from '#cli/runs/output/json.ts';
 import { parseKnipFindings } from '#cli/runs/output/knip.ts';
 import { parseSarifFindings } from '#cli/runs/output/sarif.ts';
 import { parseTyposFindings } from '#cli/runs/output/typos.ts';
+import { DRIVE_LETTER } from '#cli/config/files/path-patterns.ts';
 import { parseSemgrepFindings } from '#cli/runs/output/semgrep.ts';
-import { FILE_GROUP, MISSING_PATH_CODES } from '#cli/config/runs/output.ts';
 import { parseMarkdownlintFindings } from '#cli/runs/output/markdownlint.ts';
+import { FILE_GROUP, MISSING_PATH_CODES } from '#cli/config/runs/output/formats.ts';
 import type { CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/runs/output.ts';
 import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/runs/output/text.ts';
 

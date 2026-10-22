@@ -7,14 +7,13 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import { detectConditions } from '#cli/repository/detect.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { SETTINGS_COMMANDS } from '#cli/config/settings/file.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
-import { type Repository } from '#cli/types/repository/inventory.ts';
-import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
+import { type Repository } from '#cli/types/repository/files.ts';
+import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { type Level, type Configuration } from '#cli/types/configurations.ts';
 import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cli/types/generation/rules.ts';
@@ -25,6 +24,7 @@ import {
     RULES_HEADING,
     ALL_LEVEL_MARKER,
     MARKDOWN_HEADING,
+    SETTINGS_COMMANDS,
     RULE_OPENING_PREFIX,
 } from '#cli/config/generation/rules.ts';
 
@@ -85,7 +85,7 @@ function formatRulesIndex(files: RuleFile[]): string[] {
     return [
         'Read these rules first:',
         '',
-        ...FIRST_READ.map((path) => `- \`${GSPOT_CONFIGURATIONS_PATH}/${path}\``),
+        ...FIRST_READ.map((path) => `- \`${GSPOT_PATHS.configurations}/${path}\``),
         '',
         'Read a rule below when its sentence fits your task.',
         'A rule marked `in <folder>/` applies only to files in that folder.',
@@ -166,7 +166,7 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
         .filter(
             ({ path }) =>
                 !rules.exclude.some((entry) =>
-                    isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${path}`, trimTrailingSlashes(entry)),
+                    isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(entry)),
                 ),
         )
         .flatMap(({ source, path, group }) => {
@@ -174,7 +174,7 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
             const content = buildLevelRuleText(text, level);
             if (content !== text && !parseHeadingSections(content).some((section) => section.depth > 1)) return [];
             const scopes = scopeRules.filter((scope) => scope.rules.has(path)).map((scope) => scope.path);
-            return [{ path, target: `${GSPOT_CONFIGURATIONS_PATH}/${path}`, content, group, scopes }];
+            return [{ path, target: `${GSPOT_PATHS.configurations}/${path}`, content, group, scopes }];
         })
         .toArray();
 }

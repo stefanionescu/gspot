@@ -1,26 +1,8 @@
-import { EXECUTABLE_FILE, PERMISSION_BITS, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-
-export const GITLINK_MODE = '160000';
-
-export const SYMLINK_MODE = '120000';
-
-export const ENTRY_FILE_MODES = {
-    '100644': OWNER_WRITABLE_FILE,
-    '100755': EXECUTABLE_FILE,
-    [SYMLINK_MODE]: PERMISSION_BITS,
-} as const;
-
-export const REGULAR_FILE_MODES: ReadonlySet<string> = new Set(
-    Object.keys(ENTRY_FILE_MODES).filter((mode) => mode !== SYMLINK_MODE),
-);
+import { HASH_SOURCE } from '#cli/config/repository/revisions/push.ts';
+import { GITLINK_MODE, ENTRY_FILE_MODES } from '#cli/config/files/modes.ts';
 
 export const UNSUPPORTED_ENTRY =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
-
-/** Match a full SHA-1 or SHA-256 Git object hash. */
-const HASH_SOURCE = '(?:[a-f0-9]{40}|[a-f0-9]{64})';
-
-export const HASH_PATTERN = new RegExp(`^${HASH_SOURCE}$`, 'u');
 
 export const BLOB_HEADER = new RegExp(String.raw`^(${HASH_SOURCE}) blob (\d+)$`, 'u');
 
@@ -70,3 +52,5 @@ export const GIT_ENTRY_MODES = [
     ...(Object.keys(ENTRY_FILE_MODES) as (keyof typeof ENTRY_FILE_MODES)[]),
     GITLINK_MODE,
 ] as const;
+
+export const ANY_FOLDER_PREFIX = '**/';

@@ -1,7 +1,12 @@
 import { type SettingValue } from '#cli/types/settings/tables.ts';
 import { type StylelintOptions } from '#cli/types/settings/file.ts';
 import { type Optional, type JsonValue } from '#cli/types/shapes.ts';
-import type { RULE_CONDITIONS, DOCSTRING_CONVENTIONS, IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
+
+import {
+    type RULE_CONDITIONS,
+    type DOCSTRING_CONVENTIONS,
+    type IMPORT_EXTENSION_STYLES,
+} from '#cli/config/settings/tools.ts';
 
 export type WrittenTools = {
     hadolint?: { trusted_registries?: string[] | undefined } | undefined;

@@ -1,13 +1,13 @@
 import { isDeepStrictEqual } from 'node:util';
-import { openJsonFile } from '#cli/parsers/json.ts';
 import { normalizeTables } from '#cli/system/tables.ts';
+import { openJsonFile } from '#cli/parsers/formats/json.ts';
 import { decodeUtf8Text } from '#cli/system/files/reads.ts';
-import { openTomlFile } from '#cli/parsers/toml/document.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { openTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
 import type { Writer, WritePlan, ManagedKeys } from '#cli/types/ownership.ts';
-import { TOML_EXTENSION, EMPTY_JSON_TEXT, JSON_SETTINGS_EXTENSIONS } from '#cli/config/ownership.ts';
+import { TOML_EXTENSION, EMPTY_JSON_TEXT, JSON_SETTINGS_EXTENSIONS } from '#cli/config/ownership/file-settings.ts';
 
 /**
  * Open a shared settings file after checking its encoding.

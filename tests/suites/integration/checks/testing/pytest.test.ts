@@ -1,0 +1,74 @@
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { COVERAGE_ZERO_LIMITS } from '#tests/config/integration/checks/testing/samples.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { PYTEST_CASES, PYTEST_SANDBOX, PYTEST_PYPROJECT } from '#tests/config/integration/checks/testing/pytest.ts';
+
+const installedSandbox = shareInstalledSandbox({
+    install: false,
+    ...PYTEST_SANDBOX,
+    async before(root) {
+        const installed = await runCommand(['uv', 'sync'], { cwd: root });
+        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    },
+});
+
+test.each([...PYTEST_CASES])('$check reports the required coverage and passes after the fix', async (entry) => {
+    const result = await runCheckSample(installedSandbox(), entry, PYTEST_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+});
+
+test.each([80, 0])(
+    "pytest/coverage with a %i limit uses the project's Python and needs pytest-cov only above 0",
+    async (limit) => {
+        const { root, environment } = installedSandbox();
+        const project = PYTEST_PYPROJECT.replace(', "pytest-cov==7.1.0"', '');
+        const change = await changeAppliedSandbox(installedSandbox(), {
+            check: 'pytest/coverage',
+            files: {
+                'pyproject.toml': project,
+                'uv.lock': await readFile(join(root, 'uv.lock'), 'utf8'),
+                'app/test_child.py': 'def test_child():\n    assert 3 * 2 == 6\n',
+                'gspot.toml': buildSandboxSettings(['python', 'pytest'], {
+                    level: 'all',
+                    tables:
+                        (limit === 0
+                            ? COVERAGE_ZERO_LIMITS
+                            : COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80')) +
+                        `[[scope]]
+path = "app"
+configurations = ["python", "pytest"]
+`,
+                }),
+            },
+        });
+        try {
+            const installed = await runCommand(['uv', 'sync'], { cwd: root, env: environment });
+            expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+            const lockfile = await readFile(join(root, 'uv.lock'), 'utf8');
+            const checked = parseCheckReport(
+                await spawnGspot(root, ['check', '--only', 'pytest/coverage', '--json'], environment),
+            );
+            expect(checked.code, checked.stdout + checked.stderr).toBe(limit === 0 ? 0 : 2);
+            const checks = checked.report.checks;
+            expect(checks.map((check) => check.scope)).toStrictEqual(['', 'app']);
+            for (const check of checks) {
+                expect(check.status).toBe(limit === 0 ? 'passed' : 'missing');
+                if (limit === 0) expect(check.command?.some((arg) => arg.startsWith('--cov'))).toBe(false);
+                else expect(check.note).toContain('pytest-cov');
+            }
+            expect(await readFile(join(root, 'pyproject.toml'), 'utf8')).toBe(project);
+            expect(await readFile(join(root, 'uv.lock'), 'utf8')).toBe(lockfile);
+        } finally {
+            await change[Symbol.asyncDispose]();
+            const restored = await runCommand(['uv', 'sync'], { cwd: root, env: environment });
+            expect(restored.code, restored.stdout + restored.stderr).toBe(0);
+        }
+    },
+);

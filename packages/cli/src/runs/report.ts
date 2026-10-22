@@ -5,9 +5,10 @@ import { listCheckedFiles } from '#cli/planning/files.ts';
 import type { FixReport } from '#cli/types/runs/fixes.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { FAILED_STATUSES } from '#cli/config/runs/check.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
+import { INCOMPLETE_STATUSES } from '#cli/config/runs/report.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/terminal.ts';
-import { FAILED_STATUSES, INCOMPLETE_STATUSES } from '#cli/config/runs/run.ts';
 import type { FinishedRun, ReproduceOptions } from '#cli/types/runs/report.ts';
 
 function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {

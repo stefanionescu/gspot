@@ -1,7 +1,7 @@
 import type { Tool } from '#cli/types/configurations.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
-import type { PackageManager } from '#cli/types/repository/package-manager.ts';
+import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
 /** An action commit and the release that its comment names. */
 export type ActionPin = { name: string; sha: string; version: string };

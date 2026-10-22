@@ -1,24 +1,24 @@
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
-import { LEADING_SLASH } from '#cli/config/system/paths.ts';
-import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { listIgnores } from '#cli/settings/scope-settings.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { listIgnores } from '#cli/settings/scopes.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
+import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
+import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
+import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import { listPointerPaths } from '#cli/generation/config-files/pointers.ts';
 import { listOwnedConfigFiles } from '#cli/generation/config-files/needed.ts';
 import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { PRETTIERIGNORE_PURPOSE } from '#cli/config/generation/config-files/builders/prettier.ts';
 
 import {
     BUILD_OUTPUT_FOLDERS,
+    IGNORE_SECTION_TITLES,
     BUILD_OUTPUT_PATTERNS,
     GSPOT_FOLDER_PATTERNS,
-    IGNORE_SECTION_TITLES,
+    PRETTIERIGNORE_PURPOSE,
     LOCAL_ENVIRONMENT_PATTERNS,
 } from '#cli/config/generation/config-files/ignore-files.ts';
 

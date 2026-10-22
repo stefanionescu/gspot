@@ -1,0 +1,142 @@
+export const XCTEST_SETTINGS = `configurations = ["swift", "xcode"]
+[[coverage.swift_target]]
+name = "Example"
+lines = 80
+
+[swift]
+xcode_project = "Example.xcodeproj"
+xcode_scheme = "Example"
+`;
+
+export const XCTEST_FAILURES = [
+    {
+        failure: 'no-project',
+        note: undefined,
+        settings: `configurations = ["swift", "xcode"]
+[[coverage.swift_target]]
+name = "Example"
+lines = 80
+
+[swift]
+xcode_scheme = "Example"
+`,
+        build: '',
+        coverage: 1,
+        code: 0,
+        status: 'skipped',
+        produced: false,
+    },
+    {
+        failure: 'failed-test',
+        note: 'test run exited 65',
+        settings: XCTEST_SETTINGS,
+        build: 'process.exitCode = 65;',
+        coverage: 1,
+        code: 2,
+        status: 'error',
+        produced: false,
+    },
+    {
+        failure: 'malformed',
+        note: 'xccov printed output that gspot cannot read.',
+        settings: XCTEST_SETTINGS,
+        build: '',
+        coverage: undefined,
+        code: 2,
+        status: 'error',
+        produced: true,
+    },
+    {
+        failure: 'under-minimum',
+        note: undefined,
+        settings: XCTEST_SETTINGS,
+        build: '',
+        coverage: 0.5,
+        code: 1,
+        status: 'failed',
+        produced: true,
+    },
+] as const;
+
+export const SWIFT_PACKAGE_COVERAGE_TARGETS = [
+    {
+        name: 'Core',
+        path: 'Custom/Core',
+        type: 'library',
+        module_type: 'SwiftTarget',
+        sources: ['First.swift', 'Second.swift'],
+    },
+    { name: 'API', path: 'Sources/API', type: 'library', module_type: 'SwiftTarget', sources: ['API.swift'] },
+    {
+        name: 'CoreTests',
+        path: 'Tests/CoreTests',
+        type: 'test',
+        module_type: 'SwiftTarget',
+        sources: ['CoreTests.swift'],
+    },
+    { name: 'Native', path: 'Sources/Native', type: 'library', module_type: 'ClangTarget', sources: ['native.c'] },
+] as const;
+
+export const SWIFT_PACKAGE_COVERAGE_FILES = [
+    { filename: 'Custom/Core/First.swift', summary: { lines: { count: 3, covered: 1 } } },
+    { filename: 'Custom/Core/Second.swift', summary: { lines: { count: 1, covered: 1 } } },
+    { filename: 'Sources/API/API.swift', summary: { lines: { count: 3, covered: 2 } } },
+    { filename: 'Tests/CoreTests/CoreTests.swift', summary: { lines: { count: 2, covered: 2 } } },
+] as const;
+
+/** One coverage report for the app and library targets, checked against different limits. */
+const SWIFT_TARGET_COVERAGE_REPORT = {
+    targets: [
+        { name: 'App', lineCoverage: 0.6 },
+        { name: 'Library', lineCoverage: 0.75 },
+    ],
+} as const;
+
+/** Shared and per-target coverage limits, written as the TOML each run reads. */
+export const COVERAGE_LIMIT_CASES = [
+    {
+        name: 'a named target passes its limit',
+        report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
+        tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "App"\nlines = 61\nreason = "Required target coverage."\n',
+        expected: [],
+    },
+    {
+        name: 'a named target misses its limit',
+        report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
+        tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "App"\nlines = 62\nreason = "Required target coverage."\n',
+        expected: ['App covers 61% of its lines, under the limit of 62%.'],
+    },
+    {
+        name: 'a named target is absent',
+        report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
+        tables: '[coverage]\nlines = 0\n[[coverage.swift_target]]\nname = "Widget"\nlines = 10\nreason = "Required target coverage."\n',
+        expected: ['The coverage report has no target named Widget.'],
+    },
+    {
+        name: 'a target misses the shared limit',
+        report: SWIFT_TARGET_COVERAGE_REPORT,
+        tables: '[coverage]\nlines = 70\nswift_target = []\n',
+        expected: ['App covers 60% of its lines, under the limit of 70%.'],
+    },
+    {
+        name: 'a named target overrides the shared limit',
+        report: SWIFT_TARGET_COVERAGE_REPORT,
+        tables: '[coverage]\nlines = 70\n[[coverage.swift_target]]\nname = "App"\nlines = 60\nreason = "Required target coverage."\n',
+        expected: [],
+    },
+    {
+        name: 'no coverage limit is enabled',
+        report: SWIFT_TARGET_COVERAGE_REPORT,
+        tables: '[coverage]\nlines = 0\nswift_target = []\n',
+        expected: [],
+    },
+] as const;
+
+/** The swift/coverage results of a scope without Swift tests. */
+export const UNTESTED_COVERAGE_RESULTS = [
+    {
+        check: 'swift/coverage',
+        status: 'skipped',
+        note: 'Needs files marked swift-test or swift-test-target in this scope.',
+    },
+] as const;

@@ -11,7 +11,7 @@ import {
     GIT_BLOBS_ARGUMENTS,
     GIT_TREE_ENTRIES_ARGUMENTS,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
-} from '#cli/config/repository/revisions.ts';
+} from '#cli/config/repository/revisions/files.ts';
 
 /**
  * Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.

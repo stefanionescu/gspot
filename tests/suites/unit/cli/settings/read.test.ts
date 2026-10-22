@@ -1,0 +1,151 @@
+import { join } from 'node:path';
+import { testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { symlink } from 'node:fs/promises';
+import { stringify } from '@decimalturn/toml-patch';
+import { parseSettings } from '#cli/settings/read.ts';
+import { captureThrow } from '#tests/setup/matchers.ts';
+import { FIRST_READ } from '#cli/config/generation/rules.ts';
+import { REVIEWED_REASON } from '#tests/config/settings/samples.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+
+import {
+    KEY_PATH_CASES,
+    RULE_FILE_ERRORS,
+    UNKNOWN_KEY_CASES,
+    RULE_FILE_SETTINGS,
+} from '#tests/config/settings/read.ts';
+
+test('rules.exclude accepts a rule file path and a configuration folder', () => {
+    expect(() =>
+        parseSettings(
+            '[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESSIBILITY.md", ".gspot/configurations/library"]\n',
+            undefined,
+        ),
+    ).not.toThrow();
+});
+
+test('a rules.exclude entry that matches no rule file names the near match', () => {
+    expect(
+        captureThrow(() =>
+            parseSettings(
+                '[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESIBILITY.md"]\n',
+                undefined,
+            ),
+        ),
+    ).toBe(
+        'gspot.toml: rules.exclude.0: [rules] exclude names `.gspot/configurations/general/engineering/rules/ACCESIBILITY.md`, which matches no rule. Did you mean `.gspot/configurations/general/engineering/rules/ACCESSIBILITY.md`, `.gspot/configurations/general/engineering/rules/CLI.md`, `.gspot/configurations/general/engineering/rules/TESTING.md`?',
+    );
+});
+
+test.each([...FIRST_READ.slice(0, 1), 'general/prose'])(
+    'rules.exclude refuses %s, a rule file that every agent reads first',
+    (entry) => {
+        expect(
+            captureThrow(() => parseSettings(`[rules]\nexclude = [".gspot/configurations/${entry}"]\n`, undefined)),
+        ).toBe(
+            `gspot.toml: rules.exclude.0: [rules] exclude names \`.gspot/configurations/${entry}\`, which holds a file every agent opens first (\`general/engineering/rules/WORKING.md\`, \`general/prose/rules/WRITING.md\`, \`general/engineering/rules/TALKING.md\`). Remove the entry.`,
+        );
+    },
+);
+
+test('a limit looser than the default needs a reason, and a tighter one does not', () => {
+    expect(
+        captureThrow(() => parseSettings('configurations = ["bash"]\n[limits]\nfile_lines = 1000\n', undefined)),
+    ).toBe(
+        'gspot.toml: limits.file_lines: `limits.file_lines = 1000` is looser than the shipped default 300, so it needs a reason. Run: gspot set limits.file_lines 1000 --reason "<why>"',
+    );
+    expect(() => parseSettings('configurations = ["bash"]\n[limits]\nfile_lines = 100\n', undefined)).not.toThrow();
+});
+
+test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {
+    expect(() => parseSettings(row.text, undefined)).toThrow(row.message);
+    expect(() => parseSettings(row.text.replace(row.correction[0], row.correction[1]), undefined)).not.toThrow();
+});
+test('a record without a reason is refused at its reason field', () => {
+    const text = 'configurations = ["bash"]\n[[ignore]]\ncheck = "bash/shellcheck"\n';
+    expect(captureThrow(() => parseSettings(text, undefined))).toBe(
+        'gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this record.',
+    );
+    expect(() => parseSettings(text + `reason = "${REVIEWED_REASON}"\n`, undefined)).not.toThrow();
+});
+
+test.each([
+    { reason: '', refused: 'an empty reason' },
+    { reason: 'because', refused: '"because"' },
+    { reason: 'Codex', refused: '"Codex"' },
+])('a word with the reason "$reason" is refused', ({ reason, refused }) => {
+    expect(
+        captureThrow(() =>
+            parseSettings(
+                `configurations = ["prose"]\n[spelling]\nallowed_words = { Codex = ${JSON.stringify(reason)} }\n`,
+                undefined,
+            ),
+        ),
+    ).toBe(
+        `gspot.toml: spelling.allowed_words.Codex: spelling.allowed_words.Codex needs a reason that says something: ${refused} is refused. Write one sentence saying why.`,
+    );
+});
+
+test.each([...KEY_PATH_CASES])(
+    'an error names the key path of $name, and the fix clears it',
+    ({ text, where, correction }) => {
+        const found = validateSettingsText(text);
+        expect(found.map((line) => where.find((path) => line.startsWith(`gspot.toml: ${path}`)))).toStrictEqual([
+            ...where,
+        ]);
+        expect(validateSettingsText(text.replace(correction[0], correction[1]))).toStrictEqual([]);
+    },
+);
+
+test.each(['\n', '\r\n'])(
+    'a TOML syntax error names its line and does not copy the source: %j line endings',
+    (newline: string) => {
+        const invalid = ['# private fixture marker', 'configurations = ?', ''].join(newline);
+        const found = validateSettingsText(invalid);
+        expect(found).toHaveLength(1);
+        expect(found[0]).toMatch(/^gspot\.toml:2:\d+ is not valid TOML:/u);
+        expect(found[0]).not.toContain('private fixture marker');
+        expect(found[0]).not.toContain('\n');
+        expect(validateSettingsText(invalid.replace('configurations = ?', 'configurations = []'))).toStrictEqual([]);
+    },
+);
+
+test('unknown configurations are refused where they are written, with a suggestion', () => {
+    const errors = validateSettingsText(
+        buildSandboxSettings(['bas', 'bash', 'bas'], {
+            rules: true,
+            scopes: [{ path: 'api', configurations: ['pythonn', 'bas'] }],
+        }),
+    );
+    const suggestion = 'Run `gspot list configurations` to see the available configurations.';
+    expect(errors).toStrictEqual([
+        `gspot.toml: configurations.0: There is no configuration called \`bas\`. Did you mean \`bash\`, \`css\`, \`supabase\`? ${suggestion}`,
+        `gspot.toml: configurations.2: There is no configuration called \`bas\`. Did you mean \`bash\`, \`css\`, \`supabase\`? ${suggestion}`,
+        `gspot.toml: scope.0.configurations.0: There is no configuration called \`pythonn\`. Did you mean \`python\`? ${suggestion}`,
+        `gspot.toml: scope.0.configurations.1: There is no configuration called \`bas\`. Did you mean \`bash\`, \`css\`, \`supabase\`? ${suggestion}`,
+    ]);
+});
+
+test('a scope path through a link to a folder outside the repository is refused', async () => {
+    await using sandbox = await testdir({ 'project/.keep': '', 'outside/nested/sentinel': 'unchanged' });
+
+    const root = join(sandbox.path, 'project');
+    await symlink('../outside', join(root, 'linked'));
+    const found = validateSettingsText(
+        buildSandboxSettings(['bash'], { rules: true, scopes: [{ path: 'linked' }] }),
+        root,
+    );
+    expect(found).toHaveLength(1);
+    expect(found[0]).toBe('gspot.toml: scope.linked: linked is a link. gspot does not write through links.');
+});
+
+test('a Semgrep rule file or a scope plugin module that names no file is refused at its key', async () => {
+    await using sandbox = await testdir({ 'present.mjs': 'export default {};', 'present.yml': 'rules: []' });
+    const text = stringify(RULE_FILE_SETTINGS);
+    expect(validateSettingsText(text, sandbox.path)).toStrictEqual([...RULE_FILE_ERRORS]);
+    const corrected = text
+        .replaceAll(/missing-(?:root|scope)\.mjs/gu, 'present.mjs')
+        .replaceAll(/missing-(?:root|scope)\.yml/gu, 'present.yml');
+    expect(validateSettingsText(corrected, sandbox.path)).toStrictEqual([]);
+});

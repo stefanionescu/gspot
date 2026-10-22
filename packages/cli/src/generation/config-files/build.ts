@@ -1,45 +1,42 @@
+import ts from 'typescript';
 import { readFileSync } from 'node:fs';
+import { JSON_INDENT } from '#cli/config/text.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { join, dirname, relative } from 'node:path/posix';
-import { JSON_INDENT } from '#cli/config/generation/generate.ts';
-import { buildEslintFile } from '#cli/generation/eslint/config-file.ts';
-import { buildV8rFile } from '#cli/generation/config-files/builders/v8r.ts';
-import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
-import { buildGixyFile } from '#cli/generation/config-files/builders/gixy.ts';
-import { buildKnipFile } from '#cli/generation/config-files/builders/knip.ts';
-import { buildRuffFile } from '#cli/generation/config-files/builders/ruff.ts';
-import { buildTaploFile } from '#cli/generation/config-files/builders/taplo.ts';
-import { buildTyposFile } from '#cli/generation/config-files/builders/typos.ts';
-import { buildHtmlSettings } from '#cli/generation/config-files/builders/html.ts';
-import { buildLycheeFile } from '#cli/generation/config-files/builders/lychee.ts';
-import { buildSquawkFile } from '#cli/generation/config-files/builders/squawk.ts';
-import { buildSemgrepFile } from '#cli/generation/config-files/builders/semgrep.ts';
-import { buildHadolintFile } from '#cli/generation/config-files/builders/hadolint.ts';
-import { buildJsconfigFile } from '#cli/generation/config-files/builders/jsconfig.ts';
-import { buildPrettierFile } from '#cli/generation/config-files/builders/prettier.ts';
-import { buildPurgecssFile } from '#cli/generation/config-files/builders/purgecss.ts';
-import { buildSpectralFile } from '#cli/generation/config-files/builders/spectral.ts';
-import { buildSqlfluffFile } from '#cli/generation/config-files/builders/sqlfluff.ts';
-import { buildYamllintFile } from '#cli/generation/config-files/builders/yamllint.ts';
-import { buildPeripheryFile } from '#cli/generation/config-files/builders/periphery.ts';
-import { buildStylelintFile } from '#cli/generation/config-files/builders/stylelint.ts';
-import { buildSwiftlintFile } from '#cli/generation/config-files/builders/swiftlint.ts';
-import { buildCommitlintFile } from '#cli/generation/config-files/builders/commitlint.ts';
-import { buildShellcheckFile } from '#cli/generation/config-files/builders/shellcheck.ts';
-import { buildOsvScannerFile } from '#cli/generation/config-files/builders/osv-scanner.ts';
-import { buildSwiftformatFile } from '#cli/generation/config-files/builders/swiftformat.ts';
-import { TRIVY_SKIPPED_FOLDERS } from '#cli/config/generation/config-files/builders/trivy.ts';
-import { buildBasedpyrightFile } from '#cli/generation/config-files/builders/basedpyright.ts';
-import { buildEditorconfigFile } from '#cli/generation/config-files/builders/editorconfig.ts';
-import { buildMarkdownlintFile } from '#cli/generation/config-files/builders/markdownlint.ts';
-import { ANSIBLE_LINT_ALWAYS_OFF } from '#cli/config/generation/config-files/builders/ansible-lint.ts';
-import { CONFIG_FILE_REFERENCE, SEMGREP_RULE_PACK_FILE } from '#cli/config/generation/config-files/build.ts';
-import { JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/generation/config-files/builders/jscpd.ts';
+import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
+import { buildSemgrepFile } from '#cli/generation/config-files/semgrep.ts';
+import { buildSquawkFile } from '#cli/generation/configurations/postgres.ts';
+import { buildLycheeFile } from '#cli/generation/configurations/general/docs.ts';
+import { buildHtmlSettings } from '#cli/generation/config-files/html-validate.ts';
+import { buildSqlfluffFile } from '#cli/generation/configurations/language/sql.ts';
+import { buildTyposFile } from '#cli/generation/configurations/general/spelling.ts';
+import { buildStylelintFile } from '#cli/generation/configurations/language/css.ts';
+import { buildPurgecssFile } from '#cli/generation/configurations/framework/site.ts';
+import { buildShellcheckFile } from '#cli/generation/configurations/language/bash.ts';
+import { buildGixyFile } from '#cli/generation/configurations/infrastructure/nginx.ts';
+import { buildRuffFile } from '#cli/generation/configurations/language/python/ruff.ts';
+import { buildCommitlintFile } from '#cli/generation/configurations/general/commits.ts';
+import { buildV8rFile } from '#cli/generation/configurations/general/data-files/v8r.ts';
+import { buildKnipFile } from '#cli/generation/configurations/language/javascript/knip.ts';
+import { buildTaploFile } from '#cli/generation/configurations/general/data-files/taplo.ts';
+import { buildHadolintFile } from '#cli/generation/configurations/infrastructure/docker.ts';
+import { buildMarkdownlintFile } from '#cli/generation/configurations/language/markdown.ts';
+import { buildOsvScannerFile } from '#cli/generation/configurations/general/dependencies.ts';
+import { buildSpectralFile } from '#cli/generation/configurations/infrastructure/openapi.ts';
+import { buildPrettierFile } from '#cli/generation/configurations/general/format/prettier.ts';
+import { buildPeripheryFile } from '#cli/generation/configurations/language/swift/periphery.ts';
+import { buildSwiftlintFile } from '#cli/generation/configurations/language/swift/swiftlint.ts';
+import { buildYamllintFile } from '#cli/generation/configurations/general/data-files/yamllint.ts';
+import { buildJsconfigFile } from '#cli/generation/configurations/language/javascript/jsconfig.ts';
+import { buildSwiftformatFile } from '#cli/generation/configurations/language/swift/swiftformat.ts';
+import { buildEditorconfigFile } from '#cli/generation/configurations/general/format/editorconfig.ts';
+import { buildBasedpyrightFile } from '#cli/generation/configurations/language/python/basedpyright.ts';
+import { buildEslintFile } from '#cli/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import {
-    type GeneratedFile,
+    type BuiltConfigFile,
     type PlannedConfigFile,
     type ConfigFileBuilder,
     type ConfigFileGeneration,
@@ -50,6 +47,15 @@ import {
     buildPrettierignoreFile,
     listCheckIgnoreSections,
 } from '#cli/generation/config-files/ignore-files.ts';
+import {
+    JSCPD_IGNORED,
+    TRANSPILE_OPTIONS,
+    TRIVY_SKIPPED_FOLDERS,
+    JSCPD_IMPORT_PATTERNS,
+    CONFIG_FILE_REFERENCE,
+    SEMGREP_RULE_PACK_FILE,
+    ANSIBLE_LINT_ALWAYS_OFF,
+} from '#cli/config/generation/config-files/build.ts';
 import {
     buildValeIniFile,
     buildAltTextStyle,
@@ -62,7 +68,7 @@ import {
     buildBannedHeadingsStyle,
     buildSentenceLengthStyle,
     buildParagraphLengthStyle,
-} from '#cli/generation/config-files/builders/vale.ts';
+} from '#cli/generation/configurations/general/prose.ts';
 
 const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefined>> = {
     'ansible/ansible-lint.yml': (planned) =>
@@ -140,13 +146,16 @@ const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefine
 };
 
 /**
- * Build the text of one config file.
+ * Build the text of one config file, and of the files that it imports.
  *
  * @param planned the config file with its scope, level, and target path.
  * @param targets the config file path for each scope.
- * @returns the generated file, with paths relative to where it sits.
+ * @returns the generated file, with paths relative to where it sits, and its companion files.
  */
-export function buildConfigFile(planned: PlannedConfigFile, targets: ConfigFileGeneration['targets']): GeneratedFile {
+export function buildConfigFile(
+    planned: PlannedConfigFile,
+    targets: ConfigFileGeneration['targets'],
+): Pick<BuiltConfigFile, 'file' | 'companions'> {
     const { configFile, targetPath } = planned;
     // Every semgrep.yml config file has the same builder; any other config file has its own, keyed by configuration and
     // file.
@@ -154,17 +163,25 @@ export function buildConfigFile(planned: PlannedConfigFile, targets: ConfigFileG
         configFile.file === SEMGREP_RULE_PACK_FILE
             ? buildSemgrepFile
             : CONFIG_FILE_BUILDERS[`${planned.configuration.name}/${configFile.file}`];
-    const source = (
-        builder === undefined
-            ? readFileSync(buildAssetPath(`${planned.configuration.folder}/${configFile.source}`), 'utf8')
-            : builder(planned)
-    ).replaceAll(CONFIG_FILE_REFERENCE, (match: string, path: string) => {
+    let built: ReturnType<ConfigFileBuilder>;
+    if (builder === undefined) {
+        // A shipped TypeScript source becomes the JavaScript module that the target names.
+        const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${configFile.source}`), 'utf8');
+        built = configFile.source.endsWith('.ts')
+            ? ts.transpileModule(shipped, { compilerOptions: TRANSPILE_OPTIONS }).outputText
+            : shipped;
+    } else built = builder(planned);
+    const { content, companions } = typeof built === 'string' ? { content: built, companions: [] } : built;
+    const source = content.replaceAll(CONFIG_FILE_REFERENCE, (match: string, path: string) => {
         const declared = join(dirname(configFile.target), path);
         const chosen = targets.get(planned.scope.folder.path)?.get(declared);
         return chosen === undefined ? match : match.replace(path, relative(dirname(targetPath), chosen));
     });
     return {
-        path: targetPath,
-        content: `${formatHeader(targetPath)}${source.trimEnd()}\n`,
+        file: { path: targetPath, content: `${formatHeader(targetPath)}${source.trimEnd()}\n` },
+        companions: companions.map((companion) => ({
+            path: companion.path,
+            content: `${formatHeader(companion.path)}${companion.content.trimEnd()}\n`,
+        })),
     };
 }

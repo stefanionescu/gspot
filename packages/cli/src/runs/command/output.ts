@@ -8,8 +8,8 @@ import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { Tool, Check } from '#cli/types/configurations.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
-import { TAIL_LINES, OUT_OF_MEMORY } from '#cli/config/runs/command.ts';
 import { parseOutput, outputFormats } from '#cli/runs/output/formats.ts';
+import { TAIL_LINES, OUT_OF_MEMORY } from '#cli/config/runs/command/output.ts';
 
 import type {
     CommandRun,

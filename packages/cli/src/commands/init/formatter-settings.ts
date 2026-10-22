@@ -1,32 +1,32 @@
 import { posix } from 'node:path';
 import { DIGITS_ONLY } from '#cli/config/text.ts';
-import { parseJsonFile } from '#cli/parsers/json.ts';
 import { findText } from '#cli/system/files/reads.ts';
+import { selectForScope } from '#cli/settings/scopes.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers/python.ts';
-import { selectForScope } from '#cli/settings/scope-settings.ts';
-import { DEFAULT_QUOTES } from '#cli/config/settings/defaults.ts';
+import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { FORMAT_CONFIGURATION } from '#cli/config/configurations.ts';
-import type { Repository } from '#cli/types/repository/inventory.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/code/python.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import { buildSelectedConfigurations } from '#cli/commands/init/selection.ts';
 import type { SettingsDraft, PrettierOptions } from '#cli/types/commands/init.ts';
-import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
-import { PYTHON_FILES } from '#cli/config/generation/config-files/builders/ruff.ts';
 import { ruffFormatSchema, prettierSettingsSchema } from '#cli/schemas/commands.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
+import { PYTHON_FILES } from '#cli/config/generation/configurations/language/python/ruff.ts';
+import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general/format/prettier.ts';
 
 import {
-    EDITORCONFIG_FILE,
     PRETTIER_DEFAULTS,
-    RUFF_SETTINGS_FILES,
+    EDITORCONFIG_FILE,
     PRETTIER_JSON_FILES,
+    RUFF_SETTINGS_FILES,
+    FORMAT_CONFIGURATION,
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
-} from '#cli/config/commands/init.ts';
+} from '#cli/config/commands/init/formatter-settings.ts';
 
 function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | undefined {
     if (singleQuote === undefined) return undefined;

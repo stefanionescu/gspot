@@ -1,12 +1,12 @@
-import { REFERENCE_FACTS } from './facts.ts';
+import { CLI_REFERENCE } from './cli.ts';
 import { buildCommandPage } from './commands.ts';
 import { buildSettingsPage } from './settings.ts';
 import { buildPluginPages } from './eslint-plugin.ts';
 import type { Loader, DataStore } from 'astro/loaders';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import type { ReferencePage } from '../types/reference.ts';
-import { GROUP_LABELS } from '#cli/config/configurations.ts';
 import { buildConfigurationPages } from './configurations.ts';
+import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import { buildCheckPage, buildCheckIndex, listSuppressions } from './checks.ts';
 
 import {
@@ -38,7 +38,7 @@ function readGuideTitles(store: DataStore): Map<string, string> {
  * @returns pages keyed by their Markdown path
  */
 function buildReferencePages(guideTitles: Map<string, string>): Map<string, ReferencePage> {
-    const facts = REFERENCE_FACTS;
+    const facts = CLI_REFERENCE;
     const pages = new Map([
         [`${REFERENCE_FOLDERS.commands}/index.md`, buildCommandPage(facts)],
         ...buildConfigurationPages(facts, guideTitles),

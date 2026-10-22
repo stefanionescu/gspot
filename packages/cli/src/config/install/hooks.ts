@@ -1,4 +1,4 @@
-import { HOOKS_PATH_SETTING } from '#cli/config/repository/hooks.ts';
+import { HOOKS_PATH_SETTING } from '#cli/config/repository/existing/tools.ts';
 
 export const SAMPLE_HOOK_SUFFIX = '.sample';
 

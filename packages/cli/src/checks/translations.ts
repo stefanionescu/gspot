@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
+import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Parsed } from '#cli/types/shapes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { parseJsonFile } from '#cli/parsers/json.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
-import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { messagesSchema } from '#cli/schemas/checks/translations.ts';
 import type { MessageFiles } from '#cli/types/checks/translations.ts';
 import { ARGUMENT_FORMATS, MESSAGE_FILE_SUFFIX } from '#cli/config/checks/translations.ts';

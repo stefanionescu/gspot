@@ -1,4 +1,4 @@
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 
 export const LOCAL_ENVIRONMENT_PATTERNS = ['.env*'] as const;
 
@@ -6,6 +6,10 @@ export const LOCAL_ENVIRONMENT_PATTERNS = ['.env*'] as const;
 export const BUILD_OUTPUT_FOLDERS: ReadonlySet<string> = new Set(['.build', 'DerivedData']);
 
 export const BUILD_OUTPUT_PATTERNS = ['dist/', 'build/', 'coverage/'] as const;
+
+export const GSPOT_FOLDER_PATTERNS = [`${DOT_GSPOT}/**`] as const;
+
+export const PRETTIERIGNORE_PURPOSE = 'Editors and gspot checks use the same ordered ignore patterns.';
 
 export const IGNORE_SECTION_TITLES = {
     build: 'Build output',
@@ -16,5 +20,3 @@ export const IGNORE_SECTION_TITLES = {
     lockfiles: 'Lockfiles',
     environment: 'Local environment files',
 } as const;
-
-export const GSPOT_FOLDER_PATTERNS = [`${DOT_GSPOT}/**`] as const;

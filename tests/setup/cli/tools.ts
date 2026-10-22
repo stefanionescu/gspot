@@ -5,13 +5,13 @@ import type { Session } from '#cli/types/session.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { generate } from '#cli/generation/generate.ts';
 import type { Tool } from '#cli/types/configurations.ts';
-import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
-import { selectLockfileName } from '#cli/install/npm/tool-project.ts';
+import { selectLockfileName } from '#cli/install/npm/package-json.ts';
 import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
-import type { PackageManager } from '#cli/types/repository/package-manager.ts';
+import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
+import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
 /** Read a tool project file, its lockfile, and the lockfile mode. */
 export async function readToolProjectFiles(
@@ -69,7 +69,7 @@ export function buildProgramPin(name: string, version: string, npm?: string): To
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,
-        timeoutSeconds: SETTING_FACTS['tool_timeout_seconds'].default,
+        timeoutSeconds: SETTING_DEFINITIONS['tool_timeout_seconds'].default,
         inspections: new Map(),
         ...fields,
     };

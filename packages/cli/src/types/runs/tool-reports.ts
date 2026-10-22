@@ -1,4 +1,4 @@
-import type { KNIP_ISSUE_TYPES } from '#cli/config/runs/output.ts';
+import type { KNIP_ISSUE_TYPES } from '#cli/config/runs/output/knip.ts';
 
 export type SarifMessage = { text?: string | undefined };
 

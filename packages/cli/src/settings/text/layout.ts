@@ -7,15 +7,19 @@ import { stringify, parseDocument } from '@decimalturn/toml-patch';
 import { type KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { type LayoutSection, type TomlCommentAnchor } from '#cli/types/settings/text.ts';
 import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
-import { TOML_HEADER_FORMAT, IGNORE_IDENTITY_FIELDS, TOML_ASSIGNMENT_FORMAT } from '#cli/config/settings/text.ts';
 
+import {
+    TOML_HEADER_FORMAT,
+    IGNORE_IDENTITY_FIELDS,
+    TOML_ASSIGNMENT_FORMAT,
+} from '#cli/config/settings/text/layout.ts';
 import {
     isTomlKind,
     getTomlRange,
     addTomlComment,
     insertTomlComments,
     listAnchoredComments,
-} from '#cli/parsers/toml/syntax.ts';
+} from '#cli/parsers/formats/toml/syntax.ts';
 import {
     type TomlBlock,
     type TomlSyntax,
@@ -24,7 +28,7 @@ import {
     type TomlCommentNode,
     type TomlAnchoredComment,
     type TomlCommentPlacement,
-} from '#cli/types/parsers/toml.ts';
+} from '#cli/types/parsers/formats/toml.ts';
 
 function encodeAssignment(key: string, value: unknown, path: KeyPath): { text: string; pair: TomlKeyValue } {
     const assignment = stringify({ [key]: value }, TOML_ASSIGNMENT_FORMAT);

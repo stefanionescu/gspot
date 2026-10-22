@@ -5,7 +5,7 @@ import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import type { IgnoreRemoval } from '#cli/types/commands/unignore.ts';
-import { NO_CHECK_IGNORE_TEXTS } from '#cli/config/commands/ignore.ts';
+import { NO_CHECK_IGNORE_TEXTS } from '#cli/config/commands/unignore.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';

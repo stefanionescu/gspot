@@ -26,6 +26,7 @@ tool = "markdownlint-cli2"
 
 [[config_file]]
 per_scope = true
+source = "markdownlint-cli2.ts"
 target = "markdownlint-cli2.mjs"
 tool = "markdownlint-cli2"
 

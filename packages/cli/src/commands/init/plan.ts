@@ -2,14 +2,16 @@ import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { getColors } from '#cli/system/terminal.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
-import { GROUP_LABELS } from '#cli/config/configurations.ts';
-import { readLintJobs } from '#cli/repository/existing-tools.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { readLintJobs } from '#cli/repository/existing/tools.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { GITIGNORE_FILE } from '#cli/config/repository/tracked.ts';
-import { readPackageJson } from '#cli/repository/dependency-files.ts';
+import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import type { PackageJson } from '#cli/types/parsers/dependencies.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
+import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 
 import {
@@ -20,22 +22,15 @@ import {
     type DetectionSummary,
 } from '#cli/types/commands/init.ts';
 import {
-    DOT_GSPOT,
-    SETTINGS_FILE,
-    NPM_TOOL_PROJECT_FILE,
-    MISE_TOOL_PROJECT_FILE,
-    PYTHON_TOOL_PROJECT_FILE,
-} from '#cli/config/gspot-paths.ts';
-import {
     HOOKS_ROW,
     COLUMN_GAP,
     ORIGIN_WIDTH,
     CI_FILE_NOTES,
     ATTRIBUTES_ROW,
-    CONFIGURATION_WIDTH,
     DETECTION_GAP_WIDTH,
+    CONFIGURATION_WIDTH,
     DETECTION_LABEL_WIDTH,
-} from '#cli/config/commands/init.ts';
+} from '#cli/config/commands/init/plan.ts';
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
     const pins = listToolProjectPins(configurations);
@@ -43,15 +38,15 @@ function buildToolProjectRows(configurations: Configuration[]): InitPlan['change
     const rows: InitPlan['change'] =
         count === 0
             ? []
-            : [{ path: NPM_TOOL_PROJECT_FILE, note: `${formatCount(count, 'pinned npm tool')}; matching lockfile` }];
+            : [{ path: GSPOT_PATHS.npmProject, note: `${formatCount(count, 'pinned npm tool')}; matching lockfile` }];
     const python = pins.python.length;
     if (python > 0)
         rows.push({
-            path: PYTHON_TOOL_PROJECT_FILE,
+            path: GSPOT_PATHS.pythonProject,
             note: `${formatCount(python, 'pinned Python tool')}; matching uv.lock and tool environment`,
         });
     const mise = listMisePins(configurations).length;
-    if (mise > 0) rows.unshift({ path: MISE_TOOL_PROJECT_FILE, note: formatCount(mise, 'tool pin') });
+    if (mise > 0) rows.unshift({ path: GSPOT_PATHS.miseProject, note: formatCount(mise, 'tool pin') });
     return rows;
 }
 
@@ -82,7 +77,7 @@ function buildPinnedDependencyRows(
         return [
             {
                 path,
-                note: `${subject} ${verb} now pinned in ${NPM_TOOL_PROJECT_FILE}; remove ${pronoun} from package.json if nothing else uses ${pronoun}`,
+                note: `${subject} ${verb} now pinned in ${GSPOT_PATHS.npmProject}; remove ${pronoun} from package.json if nothing else uses ${pronoun}`,
             },
         ];
     });
@@ -152,7 +147,7 @@ export function planInitFiles(
         generated,
     }: { settings: Settings; settingsText: string; requirements: Configuration[]; generated: GenerationResult },
 ): InitPlan {
-    const { repository, existingTools, answers, replaced } = scan;
+    const { repository, existingTools, answers, conflicts } = scan;
     const { root, hasGit } = repository;
     const change = buildToolProjectRows(requirements);
     if (hasGit) {
@@ -165,7 +160,7 @@ export function planInitFiles(
         ...[...generated.files, ...generated.blocks]
             .filter(({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && !change.some((row) => row.path === path))
             .map(({ path }) => {
-                if (replaced.deleted.some((row) => row.path === path))
+                if (conflicts.deleted.some((row) => row.path === path))
                     return { path, note: `replaces your file; read the old one with git show HEAD:${path}` };
                 return {
                     path,
@@ -179,14 +174,14 @@ export function planInitFiles(
         level: settings.level,
         configurations: buildConfigurationRows(scan, settings),
         write,
-        delete: replaced.deleted.filter(({ path }) => !write.some((row) => row.path === path)),
+        delete: conflicts.deleted.filter(({ path }) => !write.some((row) => row.path === path)),
         retained: [
-            ...replaced.retained,
+            ...conflicts.retained,
             ...listSubmodulePaths(repository.index).map((path) => ({ path, note: 'submodule; init does not read it' })),
             ...buildKeptCiRows(answers.ci, existingTools.ci, readLintJobs(root, existingTools.ci)),
             ...scan.foreignDisableComments,
         ],
-        change: [...change, ...replaced.changed, ...buildPinnedDependencyRows(scan, requirements)],
+        change: [...change, ...conflicts.changed, ...buildPinnedDependencyRows(scan, requirements)],
         noLongerRuns: existingTools.lintFolders.map((folder) => ({
             path: `${folder}/`,
             note: 'a folder of lint scripts; check remaining references before deleting it',
@@ -249,7 +244,7 @@ function formatExistingTools(summary: DetectionSummary): (string | undefined)[] 
     ];
 }
 
-function formatReplacedFiles(summary: DetectionSummary): string[] {
+function formatConflictingConfigFiles(summary: DetectionSummary): string[] {
     const lines = [
         formatDetectionRow('gspot replaces', summary.owned),
         formatDetectionRow('gspot leaves', summary.unowned),
@@ -303,6 +298,6 @@ export function formatDetection(summary: DetectionSummary): string {
         '',
         ...rows,
         '',
-        ...formatReplacedFiles(summary),
+        ...formatConflictingConfigFiles(summary),
     ].join('\n');
 }

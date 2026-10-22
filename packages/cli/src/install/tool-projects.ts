@@ -4,26 +4,20 @@ import type { Session } from '#cli/types/session.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { isLockfileCurrent } from '#cli/install/npm/lockfiles.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
-import { parseToolPackageJson } from '#cli/install/npm/tool-project.ts';
+import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import type { StaleLockfile } from '#cli/types/install/tool-projects.ts';
 import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
 import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
-import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
+import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/tool-project.ts';
 import { installPythonTools, preparePythonLockfile, isPythonLockfileCurrent } from '#cli/install/python/project.ts';
-
-import {
-    UV_LOCKFILE,
-    YARN_SETTINGS,
-    NPM_TOOL_PROJECT_FILE,
-    PYTHON_TOOL_PROJECT_FILE,
-} from '#cli/config/gspot-paths.ts';
 
 // Preparation may replace a lockfile in the command's generated files.
 function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
@@ -48,10 +42,10 @@ export function listStaleLockfiles(
     return generated
         .filter(
             (toolProjectFile) =>
-                toolProjectFile.path === NPM_TOOL_PROJECT_FILE || toolProjectFile.path === PYTHON_TOOL_PROJECT_FILE,
+                toolProjectFile.path === GSPOT_PATHS.npmProject || toolProjectFile.path === GSPOT_PATHS.pythonProject,
         )
         .flatMap((toolProjectFile) => {
-            if (toolProjectFile.path === NPM_TOOL_PROJECT_FILE) {
+            if (toolProjectFile.path === GSPOT_PATHS.npmProject) {
                 const name = assertPackageManager(session.packageManager).name;
                 const project = parseToolPackageJson(toolProjectFile.content, name);
                 const path = project.lockfilePath;
@@ -61,7 +55,7 @@ export function listStaleLockfiles(
                 return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
             }
             const project = toolPyprojectSchema.parse(parseToml(toolProjectFile.content));
-            const path = UV_LOCKFILE;
+            const path = GSPOT_PATHS.uvLockfile;
             const recorded = files.read(path);
             if (recorded === undefined) return [{ path, kind: 'missing' as const }];
             const matches = isPythonLockfileCurrent(project, recorded.bytes.toString('utf8'));
@@ -76,12 +70,16 @@ export function listStaleLockfiles(
  * @param files the generated list to add to.
  */
 async function prepareLockfiles(install: ToolInstall, files: GeneratedFile[]): Promise<void> {
-    const packages = files.find((file) => file.path === NPM_TOOL_PROJECT_FILE);
-    const python = files.find((file) => file.path === PYTHON_TOOL_PROJECT_FILE);
+    const packages = files.find((file) => file.path === GSPOT_PATHS.npmProject);
+    const python = files.find((file) => file.path === GSPOT_PATHS.pythonProject);
     if (packages !== undefined)
         setLockfile(
             files,
-            await prepareNpmLockfile(install, packages, files.find((file) => file.path === YARN_SETTINGS)?.content),
+            await prepareNpmLockfile(
+                install,
+                packages,
+                files.find((file) => file.path === GSPOT_PATHS.yarnSettings)?.content,
+            ),
         );
     if (python !== undefined) setLockfile(files, await preparePythonLockfile(install, python));
 }
@@ -100,7 +98,7 @@ export async function installSandboxTools(install: ToolInstall): Promise<string[
     const uvPath = mise !== null || which.sync(UV_TOOL, { nothrow: true }) !== null ? getUvPath(session) : undefined;
     const toolProjectFiles =
         uvPath === undefined
-            ? generated.files.filter((file) => file.path !== PYTHON_TOOL_PROJECT_FILE)
+            ? generated.files.filter((file) => file.path !== GSPOT_PATHS.pythonProject)
             : generated.files;
     await prepareLockfiles(install, toolProjectFiles);
     writePlans(

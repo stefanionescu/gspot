@@ -1,5 +1,5 @@
 import type { Configuration } from '#cli/types/configurations.ts';
-import type { ScopeFolder, GeneratedPaths } from '#cli/types/repository/inventory.ts';
+import type { ScopeFolder, GeneratedPaths } from '#cli/types/repository/files.ts';
 
 export type RepositoryReadOptions = {
     generatedPaths: GeneratedPaths[];

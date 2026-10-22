@@ -1,15 +1,16 @@
 import { cp } from 'node:fs/promises';
 import { runGit } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { MODE_BITS } from '#cli/config/system/modes.ts';
+import { MODE_BITS } from '#cli/config/files/modes.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
+import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
-import { GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/runs/copy.ts';
-import { readTsconfig, listSourceFiles } from '#cli/parsers/tsconfig.ts';
-import { TSCONFIG_FILE, JSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
+import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
+import { GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/runs/copy/dependencies.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 
 import type {

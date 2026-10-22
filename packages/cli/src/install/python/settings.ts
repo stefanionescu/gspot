@@ -3,13 +3,13 @@ import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import { findText } from '#cli/system/files/reads.ts';
-import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
-import { HTTP_URL } from '#cli/config/install/credentials.ts';
-import { parseTomlFile } from '#cli/parsers/toml/document.ts';
+import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
+import { HTTP_URL } from '#cli/config/install/npm/lockfiles.ts';
 import { extractUrlPasswords } from '#cli/install/credentials.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/dependencies.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import type { PythonIndexSettings } from '#cli/types/install/python.ts';
-import { URL_SCHEME, INDEX_SETTINGS, UV_SETTINGS_FILE } from '#cli/config/install/python.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
+import { URL_SCHEME, INDEX_SETTINGS, UV_SETTINGS_FILE } from '#cli/config/install/python/settings.ts';
 
 import {
     uvIndexesSchema,

@@ -1,16 +1,16 @@
 import { z } from 'zod';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
-import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
-import { CATEGORY_PARENTS } from '#cli/config/checks/naming.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { commandSchema } from '#cli/schemas/configurations/parts.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/parts.ts';
 import { findSettingSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
-import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
+import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
-import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inheritance.ts';
+import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming/settings.ts';
+import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
 
 import {
     type Setting,

@@ -3,7 +3,7 @@ import type { ClientEnvOptions } from '../types/rules.ts';
 import { PUBLIC_PREFIXES, CLIENT_DIRECTIVE } from '../config/nextjs.ts';
 import { clientEnvOptionsSchema } from '../schemas/rules/no/client-env.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { ENVIRONMENT_HOSTS, ENVIRONMENT_PROPERTY, ALLOWED_ENVIRONMENT_NAMES } from '../config/environment.ts';
+import { ENVIRONMENT_HOSTS, ENVIRONMENT_PROPERTY, ALLOWED_ENVIRONMENT_NAMES } from '../config/rules/no-client-env.ts';
 
 // ReferenceTracker skips hosts that the config does not declare as globals, so this reads their env member and
 // destructuring directly.

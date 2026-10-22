@@ -4,9 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { ALL_FILES_GLOB } from '#cli/config/system/paths.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { GRAMMARS_FOLDER, CLI_PACKAGE_JSON, PACKAGE_SEARCH_DEPTH } from '#cli/config/system/assets.ts';
+import { ALL_FILES_GLOB, GRAMMARS_FOLDER, CLI_PACKAGE_JSON, PACKAGE_SEARCH_DEPTH } from '#cli/config/system/assets.ts';
 
 // Find the nearest folder above the running code with a package.json and the configurations, or undefined.
 function findNearestPackage(): string | undefined {

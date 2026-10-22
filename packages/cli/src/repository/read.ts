@@ -2,21 +2,23 @@
 import { statSync, realpathSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { join, posix, dirname, resolve } from 'node:path';
-import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { stripBlock } from '#cli/parsers/managed-blocks.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { findScopeFolders } from '#cli/repository/scopes.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
-import { detectSwiftTags } from '#cli/repository/swift-tags.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import { runGitBlocking, isGitRepository } from '#cli/system/git.ts';
-import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
-import { readDependencyFiles } from '#cli/repository/dependency-files.ts';
+import { readDependencyFiles } from '#cli/repository/dependencies.ts';
+import { detectSwiftTags } from '#cli/repository/files/swift-tags.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedText, readCachedPrefix } from '#cli/system/files/reads.ts';
+import { SWIFT_EXTENSION, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { listTrackedFiles, readIndexEntries } from '#cli/repository/files/tracked.ts';
-import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
+import { FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/read.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
+import { SET_VALUES, VENDORED_ATTRIBUTE, GENERATED_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
 
 import {
     GIT_LOCALE,
@@ -26,14 +28,6 @@ import {
     GIT_TOP_LEVEL_ARGUMENTS,
     GIT_WORK_TREE_ARGUMENTS,
 } from '#cli/config/system/git.ts';
-import {
-    SET_VALUES,
-    SWIFT_EXTENSION,
-    FILE_PREFIX_BYTES,
-    VENDORED_ATTRIBUTE,
-    GENERATED_ATTRIBUTE,
-    GIT_CHECK_ATTRIBUTES_ARGUMENTS,
-} from '#cli/config/repository/inventory.ts';
 
 /**
  * Read the Git attributes of each tracked path.

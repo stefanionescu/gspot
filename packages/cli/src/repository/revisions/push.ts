@@ -3,11 +3,10 @@ import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
-import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
-import { GIT_SHALLOW_ARGUMENTS } from '#cli/config/system/git.ts';
 import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
+import { GIT_SHALLOW_ARGUMENTS, GIT_DIFF_NAMES_ARGUMENTS } from '#cli/config/repository/revisions/changes.ts';
 
 import {
     type PushLine,
@@ -17,20 +16,20 @@ import {
     type PushedRevisions,
 } from '#cli/types/repository/revisions.ts';
 import {
-    ABSENT_HASH,
-    PEEL_SUFFIX,
     TREE_SUFFIX,
+    PEEL_SUFFIX,
+    ABSENT_HASH,
+    HASH_PATTERN,
     REMOTES_OPTION,
     GIT_LOG_ARGUMENTS,
-    GIT_PEEL_ARGUMENTS,
     GIT_TREE_ARGUMENTS,
+    GIT_PEEL_ARGUMENTS,
     GIT_REMOTE_ARGUMENTS,
     GIT_REV_LIST_ARGUMENTS,
-    GIT_DIFF_NAMES_ARGUMENTS,
-    GIT_SHALLOW_FILE_ARGUMENTS,
     GIT_ROOT_COMMITS_ARGUMENTS,
+    GIT_SHALLOW_FILE_ARGUMENTS,
     MISSING_PUSH_REVISION_MESSAGE,
-} from '#cli/config/repository/revisions.ts';
+} from '#cli/config/repository/revisions/push.ts';
 
 // Check whether a pre-push field pair holds two object IDs of the same hash length.
 function isHashPair(localHash: string, remoteHash: string): boolean {

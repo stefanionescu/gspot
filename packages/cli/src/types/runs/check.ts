@@ -1,5 +1,5 @@
 import type { Session } from '#cli/types/session.ts';
-import type { CHECK_STATUSES } from '#cli/config/runs/run.ts';
+import type { CHECK_STATUSES } from '#cli/config/runs/check.ts';
 import type { SkipCause, PlannedCheck } from '#cli/types/planning.ts';
 
 type CheckStatus = (typeof CHECK_STATUSES)[number];

@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { listScopeChecks, listNeededTools } from '#cli/planning/needed-tools.ts';
+import { listScopeChecks, listNeededTools } from '#cli/planning/tools.ts';
 import type { UsedNames, OwnedConfigFile, ConfigFileGeneration } from '#cli/types/generation/files.ts';
 
 /**

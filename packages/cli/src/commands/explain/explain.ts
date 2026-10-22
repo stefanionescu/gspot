@@ -7,18 +7,19 @@ import { findText } from '#cli/system/files/reads.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Command } from '@commander-js/extra-typings';
-import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { listEffectiveSettings } from '#cli/settings/inherit.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
+import { ESLINT_RULE_NAMES_FILE } from '#cli/config/commands/explain.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
 import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
-import { ESLINT_MANIFEST_TOOL, ESLINT_RULE_NAMES_FILE } from '#cli/config/configurations.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const knownSubjects = [

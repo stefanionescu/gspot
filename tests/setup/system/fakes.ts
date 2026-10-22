@@ -5,13 +5,13 @@ import { quoteArgument } from '#cli/system/text.ts';
 import { join, dirname, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
 import type { Tool } from '#cli/types/configurations.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
 import type { spawnProcess } from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
-import { EXECUTABLE_MODE } from '#tests/data/setup/system/fakes.ts';
-import { GSPOT_NODE_MODULES_PATH } from '#cli/config/gspot-paths.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { EXECUTABLE_MODE } from '#tests/config/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 /**
@@ -113,10 +113,10 @@ export async function fakeNpmPackage(
     npmPackage: { name: string; version: string; script: string; bin?: string },
 ): Promise<void> {
     const { name, version, script, bin = name } = npmPackage;
-    const path = join(root, GSPOT_NODE_MODULES_PATH, name);
+    const path = join(root, GSPOT_PATHS.nodeModules, name);
     await mkdir(path, { recursive: true });
     await writeFile(join(path, 'package.json'), JSON.stringify({ name, version }));
-    await writeScriptCommand(root, `${GSPOT_NODE_MODULES_PATH}/.bin/${bin}`, script);
+    await writeScriptCommand(root, `${GSPOT_PATHS.nodeModules}/.bin/${bin}`, script);
 }
 
 /**

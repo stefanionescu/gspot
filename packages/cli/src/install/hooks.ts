@@ -1,17 +1,17 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { join, resolve, relative } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
-import { HOOKS_PATH } from '#cli/config/gspot-paths.ts';
 import { listHookNames } from '#cli/generation/hooks.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { readHooks } from '#cli/repository/existing-tools.ts';
+import { readHooks } from '#cli/repository/existing/tools.ts';
 import { statSync, readdirSync, readFileSync } from 'node:fs';
-import { HOOKS_PATH_SETTING } from '#cli/config/repository/hooks.ts';
-import { type Repository } from '#cli/types/repository/inventory.ts';
+import { type Repository } from '#cli/types/repository/files.ts';
+import { type ExistingTools } from '#cli/types/repository/existing.ts';
 import type { HookPlan, HookStatus } from '#cli/types/install/hooks.ts';
-import { type ExistingTools } from '#cli/types/repository/existing-tools.ts';
+import { HOOKS_PATH_SETTING } from '#cli/config/repository/existing/tools.ts';
 import { readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
-import { LFS_HOOKS, HOOK_SHEBANG, HOOK_ARGUMENTS, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
+import { LFS_HOOKS, HOOK_CHECKS, HOOK_SHEBANG, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
 import { LFS_PUSH_CALLS, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install/hooks.ts';
 
 // Check whether git lfs install wrote a hook: a shebang, an optional git-lfs guard, and the git lfs call.
@@ -53,7 +53,7 @@ function readForeignHooks(root: string, own: string): ExistingTools['hooks'] {
 function formatForeignHooks(hooks: ExistingTools['hooks'], session: Session): string {
     const runner = session.startRunner;
     const names = listHookNames(session.configuredChecks);
-    const lines = names.map((name) => `  ${name}: ${runner.command} ${HOOK_ARGUMENTS[name]}`);
+    const lines = names.map((name) => `  ${name}: ${runner.command} ${HOOK_CHECKS[name].arguments}`);
     return `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
 }
 
@@ -68,14 +68,14 @@ function planHooks(session: Session): HookPlan {
     const { repository } = session;
     const { settings } = session.settingsFile;
     if (settings.hooks?.enabled !== true)
-        return readGitSetting(repository.root, HOOKS_PATH_SETTING) === HOOKS_PATH
+        return readGitSetting(repository.root, HOOKS_PATH_SETTING) === GSPOT_PATHS.hooks
             ? { command: UNSET_HOOKS_PATH, note: 'disabled hooks: unset core.hooksPath' }
             : { note: '' };
-    const foreign = readForeignHooks(repository.root, HOOKS_PATH);
+    const foreign = readForeignHooks(repository.root, GSPOT_PATHS.hooks);
     if (foreign.length > 0) return { note: formatForeignHooks(foreign, session) };
     return {
-        command: [...SET_HOOKS_PATH, HOOKS_PATH],
-        note: `set core.hooksPath to ${HOOKS_PATH}`,
+        command: [...SET_HOOKS_PATH, GSPOT_PATHS.hooks],
+        note: `set core.hooksPath to ${GSPOT_PATHS.hooks}`,
     };
 }
 
@@ -110,8 +110,8 @@ export function readHookStatus(session: Session, clone: Pick<Repository, 'root' 
     const { settings } = session.settingsFile;
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };
     if (!clone.hasGit) return { ready: false, text: 'not installed: no Git repository' };
-    if (readGitSetting(clone.root, HOOKS_PATH_SETTING) === HOOKS_PATH) return { ready: true, text: 'installed' };
-    const foreign = readForeignHooks(clone.root, HOOKS_PATH);
+    if (readGitSetting(clone.root, HOOKS_PATH_SETTING) === GSPOT_PATHS.hooks) return { ready: true, text: 'installed' };
+    const foreign = readForeignHooks(clone.root, GSPOT_PATHS.hooks);
     if (foreign.length > 0) {
         const paths = foreign.flatMap((hook) => {
             if (hook.files.length === 0) return [resolve(clone.root, hook.path)];

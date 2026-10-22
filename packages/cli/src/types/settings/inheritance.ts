@@ -1,8 +1,9 @@
-import type { ReasonNeeded } from '#cli/types/settings/facts.ts';
+import type { PATH_ROLES } from '#cli/config/settings/known.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { ScopeFolder } from '#cli/types/repository/inventory.ts';
-import type { PATH_ROLES, SETTING_TYPES } from '#cli/config/settings/schema.ts';
+import type { ReasonNeeded } from '#cli/types/settings/definitions.ts';
+import type { SETTING_TYPES } from '#cli/config/settings/inheritance.ts';
 import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/file.ts';
 
 /** Configuration choices declared at the root and in project scopes. */

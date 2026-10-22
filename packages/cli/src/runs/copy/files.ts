@@ -3,19 +3,18 @@ import { setImmediate } from 'node:timers/promises';
 import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { NODE_MODULES } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
-import { PERMISSION_BITS } from '#cli/config/system/modes.ts';
-import { NODE_MODULES } from '#cli/config/repository/tracked.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { copyDependencies } from '#cli/runs/copy/dependencies.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { SYMLINK_MODE, ENTRY_FILE_MODES } from '#cli/config/parsers/git.ts';
 import { type Files, type TemporaryFolder } from '#cli/types/system/files.ts';
 import { listWorkspaceDependencySources } from '#cli/repository/npm/workspaces.ts';
+import { SYMLINK_MODE, PERMISSION_BITS, ENTRY_FILE_MODES } from '#cli/config/files/modes.ts';
 import type { CopyFile, CopyPlan, CopyPaths, DependencyCopy } from '#cli/types/runs/copy.ts';
-import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/runs/copy.ts';
+import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/runs/copy/files.ts';
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
 
 // Source reads go through the confined reader, so they stay inside the repository.

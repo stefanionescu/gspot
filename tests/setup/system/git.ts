@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { stat, chmod } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { EXECUTABLE_BITS } from '#cli/config/system/modes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { GIT_CONFIG_ARGUMENTS, GIT_ISOLATION_ENVIRONMENT } from '#tests/data/setup/system/git.ts';
+import { EXECUTABLE_BITS } from '#cli/config/repository/files/tracked.ts';
+import { GIT_CONFIG_ARGUMENTS, GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/system/git.ts';
 
 /**
  * Run git with a throwaway identity, keeping the line endings the sandbox specifies.

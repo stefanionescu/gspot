@@ -1,17 +1,17 @@
 import { isTable } from '#cli/system/tables.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { FIRST_READ } from '#cli/config/generation/rules.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { SETTING_RULES } from '#cli/config/settings/schema.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
-import { ESLINT_LIMIT_RULES } from '#cli/config/generation/eslint/base.ts';
+import { SETTING_RULES } from '#cli/config/settings/validation/values.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
+import { ESLINT_LIMIT_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
 
 /**
  * Refuse scope paths that name a file, and keep written scopes whose folder does not exist yet.
@@ -97,18 +97,18 @@ export function validateRuleExcludes(exclude: string[], configurations: Map<stri
         listRuleFiles(configuration).map((file) => file.path),
     );
     return exclude.flatMap((entry, index) => {
-        if (FIRST_READ.some((file) => isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${file}`, trimTrailingSlashes(entry))))
+        if (FIRST_READ.some((file) => isInScope(`${GSPOT_PATHS.configurations}/${file}`, trimTrailingSlashes(entry))))
             return [
                 {
                     path: ['rules', 'exclude', index],
                     message: `[rules] exclude names ${formatCodeList([entry])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
                 },
             ];
-        if (paths.some((path) => isInScope(`${GSPOT_CONFIGURATIONS_PATH}/${path}`, trimTrailingSlashes(entry))))
+        if (paths.some((path) => isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(entry))))
             return [];
         const suggestion = formatSimilarNames(
             entry,
-            paths.map((path) => `${GSPOT_CONFIGURATIONS_PATH}/${path}`),
+            paths.map((path) => `${GSPOT_PATHS.configurations}/${path}`),
         );
         return [
             {

@@ -1,7 +1,7 @@
 import type { Check } from '#cli/types/configurations.ts';
-import type { STAGES } from '#cli/config/configurations.ts';
+import type { STAGES } from '#cli/config/configurations/names.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { REEXPORT_MODES } from '#cli/config/settings/schema.ts';
+import type { REEXPORT_MODES } from '#cli/config/settings/tables.ts';
 import type { Defined, Optional, SchemaShape } from '#cli/types/shapes.ts';
 import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';

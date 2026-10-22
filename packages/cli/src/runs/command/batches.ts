@@ -8,7 +8,7 @@ import {
     WINDOWS_COMMAND_LIMIT,
     WINDOWS_ESCAPE_EXPANSION,
     WINDOWS_ARGUMENT_OVERHEAD,
-} from '#cli/config/runs/command.ts';
+} from '#cli/config/runs/command/batches.ts';
 
 function measureArgumentSize(argument: string, platform: NodeJS.Platform): number {
     return platform === 'win32'

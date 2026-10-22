@@ -1,13 +1,13 @@
 import { GspotError } from '#cli/system/errors.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
-import { COMMAND_CHECK_DEFAULTS } from '#cli/config/configurations.ts';
+import { COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/read.ts';
 import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
-import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/settings.ts';
+import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/schema.ts';
 import { type Settings, type TomlTable, type SettingsFile, type ParsedSettings } from '#cli/types/settings/file.ts';
 
 /**

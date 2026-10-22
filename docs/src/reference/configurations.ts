@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import { linkSetting } from './settings.ts';
 import { formatCheckTable } from './checks.ts';
-import type { readReferenceFacts } from './facts.ts';
-import { GROUP_LABELS } from '#cli/config/configurations.ts';
-import type { ReferencePage, ReferenceFacts } from '../types/reference.ts';
+import type { readCliReference } from './cli.ts';
+import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
+import type { CliReference, ReferencePage } from '../types/reference.ts';
 import { isInstalledByGspot } from '#cli/configurations/declared-tools.ts';
 import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../config/reference.ts';
 import { formatList, formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
@@ -49,7 +49,7 @@ function formatLintRulesOff(configuration: Configuration): string {
 }
 
 // How gspot selects a configuration: always, by its files and dependencies, or by another configuration.
-function formatSelection(configuration: Configuration, facts: ReferenceFacts): string {
+function formatSelection(configuration: Configuration, facts: CliReference): string {
     if (configuration.always_selected)
         return configuration.when?.git === true ? 'Always selected in a Git repository.' : 'Always selected.';
     const conditions = formatDetectionConditions(configuration.detect);
@@ -104,7 +104,7 @@ function formatConfigurationGuide(name: string, guideTitles: Map<string, string>
  */
 function buildConfigurationPage(
     configuration: Configuration,
-    facts: ReferenceFacts,
+    facts: CliReference,
     guideTitles: Map<string, string>,
 ): ReferencePage {
     const selection = formatSelection(configuration, facts);
@@ -147,7 +147,7 @@ function buildConfigurationPage(
  * @returns the index and each configuration page, keyed by path
  */
 export function buildConfigurationPages(
-    facts: ReferenceFacts,
+    facts: CliReference,
     guideTitles: Map<string, string>,
 ): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>([
@@ -180,4 +180,4 @@ export function buildConfigurationPages(
     return pages;
 }
 
-type Configuration = ReturnType<typeof readReferenceFacts>['configurations'][number];
+type Configuration = ReturnType<typeof readCliReference>['configurations'][number];

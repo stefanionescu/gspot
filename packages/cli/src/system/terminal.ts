@@ -1,6 +1,7 @@
 import pc from 'picocolors';
+import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { EXIT_ERROR, SIGNAL_EXIT_CODES, RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
+import { SIGNAL_EXIT_CODES, RESULT_JSON_INDENT } from '#cli/config/system/terminal.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJson } from '#cli/types/terminal.ts';
 
 let options: OutputOptions = { json: false, color: false };

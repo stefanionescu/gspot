@@ -7,17 +7,18 @@ import type { Session } from '#cli/types/session.ts';
 import { runBuiltInCheck } from '#cli/runs/built-in.ts';
 import { readSessionRepository } from '#cli/session.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
-import { DOCKER_TOOL } from '#cli/config/checks/docker.ts';
+import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
+import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
+import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/runs/check.ts';
+import { DOCKER_MISSING_MESSAGE } from '#cli/config/commands/check/run.ts';
 import type { Run, RunResult, RunOptions, PlanAfterFixes } from '#cli/types/runs/run.ts';
 import { buildRunReport, buildBaseResult, formatReproduceCommand } from '#cli/runs/report.ts';
-import { RAN_STATUSES, FAILED_STATUSES, DOCKER_MISSING_MESSAGE } from '#cli/config/runs/run.ts';
 import type { Finding, CheckCode, CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
 
 /**

@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
 import { DESCRIPTION } from './config/site.ts';
 import { AGENT_STEPS } from './config/setup.ts';
-import { DIGEST_ALGORITHM } from '#cli/config/text.ts';
 import type { AgentSkillsIndex } from './types/agents.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
+import { DIGEST_ALGORITHM } from '#cli/config/checks/language/swift/cache.ts';
 
 import {
     LLMS_FILE,

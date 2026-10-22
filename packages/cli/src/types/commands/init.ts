@@ -1,11 +1,11 @@
 import type { Session } from '#cli/types/session.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import type { ExistingTools } from '#cli/types/repository/existing.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
-import type { ExistingTools } from '#cli/types/repository/existing-tools.ts';
+import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
-import type { ConfigurationEvidence } from '#cli/types/repository/detection.ts';
-import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
 
 export type InitScan = {
     reads: ReadCache;
@@ -15,7 +15,7 @@ export type InitScan = {
     configurations: InitConfigurations;
     everySelected: Configuration[];
     answers: InitAnswers;
-    replaced: ReplacedFiles;
+    conflicts: ConflictingConfigFiles;
     foreignDisableComments: InitFileRow[];
 };
 
@@ -30,7 +30,7 @@ export type InitPlan = {
 };
 
 /** Your own tool settings files that init replaces: what it read, what it deletes, and what stays for you. */
-export type ReplacedFiles = {
+export type ConflictingConfigFiles = {
     changed: InitFileRow[];
     read: Map<string, FileContents | undefined>;
     deleted: InitFileRow[];

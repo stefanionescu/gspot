@@ -7,13 +7,12 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
-import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import { PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import type { ReasonedValue } from '#cli/types/settings/tables.ts';
 import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
+import { SETTINGS_FILE, PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
 
 /**
  * Identify a written setting that carries both its value and its reason.

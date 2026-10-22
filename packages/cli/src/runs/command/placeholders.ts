@@ -5,29 +5,28 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToSystemPath } from '#cli/system/paths.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
 import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
+import { FILE_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandLine, CommandPart, Substitutions } from '#cli/types/runs/command.ts';
 
 import {
-    EACH_PLACEHOLDER,
-    FILE_PLACEHOLDER,
     ROOT_PLACEHOLDER,
+    EACH_PLACEHOLDER,
     FILES_PLACEHOLDER,
-    LEVEL_PLACEHOLDER,
     SCOPE_PLACEHOLDER,
+    LEVEL_PLACEHOLDER,
     INDENT_PLACEHOLDER,
     POINTER_PLACEHOLDER,
-    SETTING_PLACEHOLDER,
     EXISTING_PLACEHOLDER,
     WORKSPACE_PLACEHOLDER,
     CONFIG_FILE_PLACEHOLDER,
     MESSAGE_FILE_PLACEHOLDER,
     WHOLE_SETTING_PLACEHOLDER,
-} from '#cli/config/placeholders.ts';
+} from '#cli/config/runs/command/placeholders.ts';
 
 function assertArgumentList(value: unknown, name: string): string[] {
     if (!Array.isArray(value) || !value.every((item) => typeof item === 'string'))

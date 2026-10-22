@@ -1,7 +1,7 @@
 // Checks system paths and portable generated file names.
 import { GspotError } from '#cli/system/errors.ts';
-import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-paths.ts';
-import { DEVICE_NAME, UNSAFE_PATH_END, RESERVED_SEGMENTS, UNSAFE_CHARACTERS } from '#cli/config/system/files.ts';
+import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
+import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files/names.ts';
 
 // Check whether one segment of a portable path means something different on a supported system.
 function isUnsafeSegment(part: string): boolean {

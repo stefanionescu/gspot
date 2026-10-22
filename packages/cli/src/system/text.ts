@@ -1,6 +1,6 @@
 import { distance } from 'fastest-levenshtein';
 import type { TextPosition } from '#cli/types/text.ts';
-import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, PLAIN_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/text.ts';
+import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, PLAIN_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system/text.ts';
 
 /**
  * Skip a quoted span before looking for comment openers outside it.

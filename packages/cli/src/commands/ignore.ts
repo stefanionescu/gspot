@@ -12,8 +12,8 @@ import { type IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import { calendarDateSchema } from '#cli/schemas/settings/parts.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
 

@@ -1,4 +1,4 @@
-import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
+import type { ToolProjectLockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
 
 /** A validated npm tool project: its dependencies and lockfile. */
 export type NpmToolProject = {

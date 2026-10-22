@@ -1,16 +1,16 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { buildSettings } from '#cli/settings/read.ts';
+import { selectForScope } from '#cli/settings/scopes.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { type WrittenTable } from '#cli/types/settings/text.ts';
-import { selectForScope } from '#cli/settings/scope-settings.ts';
-import { DETECTED_SETTINGS } from '#cli/config/settings/defaults.ts';
 import { settingsSchema } from '#cli/schemas/settings/gspot-toml.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { DETECTED_SETTINGS } from '#cli/config/settings/text/defaults.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 
 function isInheritedValueChanged(

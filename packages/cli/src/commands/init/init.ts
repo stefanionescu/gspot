@@ -6,40 +6,40 @@ import { readGitSetting } from '#cli/system/git.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { LEVELS } from '#cli/config/configurations.ts';
-import { DRY_RUN_NOTE } from '#cli/config/terminal.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
-import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { print, getColors } from '#cli/system/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
+import { LEVELS } from '#cli/config/configurations/names.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
+import { CI_FILE_LABELS } from '#cli/config/commands/doctor.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { readReplacedFiles } from '#cli/commands/init/replaced-files.ts';
+import type { ExistingTools } from '#cli/types/repository/existing.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import type { ExistingTools } from '#cli/types/repository/existing-tools.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { readLintJobs, readExistingTools } from '#cli/repository/existing-tools.ts';
+import { readLintJobs, readExistingTools } from '#cli/repository/existing/tools.ts';
 import { listForeignDisableComments } from '#cli/commands/init/eslint-disable-comments.ts';
+import { readConflictingConfigFiles } from '#cli/commands/init/conflicting-config-files.ts';
 import { planInitFiles, formatInitPlan, formatDetection } from '#cli/commands/init/plan.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
-import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/existing-tools.ts';
+import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/existing/tools.ts';
 
 import {
     REMOTE_URL_USER,
     REMOTE_URL_SCHEME,
-    INIT_INSTALL_NOTES,
     ORIGIN_URL_SETTING,
-} from '#cli/config/commands/init.ts';
+    INIT_INSTALL_NOTES,
+} from '#cli/config/commands/init/init.ts';
 import type {
     InitJson,
     InitScan,
@@ -148,9 +148,9 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const everySelected = listSelectedConfigurations(session.scopes);
     const applicable = session.neededToolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
-    const detectedTools = [...new Set(existingTools.replacedFiles.map((configFile) => configFile.tool))].toSorted(
-        (a, b) => a.localeCompare(b),
-    );
+    const detectedTools = [
+        ...new Set(existingTools.conflictingConfigFiles.map((configFile) => configFile.tool)),
+    ].toSorted((a, b) => a.localeCompare(b));
     const detection: DetectionSummary = {
         files: repository.files,
         detected: initConfigurations.detected,
@@ -162,7 +162,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
         hasGit: repository.hasGit,
     };
     const generated = generate(session);
-    const replaced = readReplacedFiles(root, existingTools, tools, generated.managedKeys);
+    const conflicts = readConflictingConfigFiles(root, existingTools, tools, generated.managedKeys);
     const planning: InitScan = {
         reads,
         repository: session.repository,
@@ -171,7 +171,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
         configurations: initConfigurations,
         everySelected,
         answers,
-        replaced,
+        conflicts,
         foreignDisableComments: listForeignDisableComments(session),
     };
     const plan = planInitFiles(planning, { settings, settingsText, requirements: applicable, generated });
@@ -182,7 +182,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
         plan,
         settingsText,
         deleted: plan.delete,
-        read: replaced.read,
+        read: conflicts.read,
     };
 }
 
@@ -196,8 +196,8 @@ async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
     return answer;
 }
 
-// Delete a replaced file only when its bytes still match the plan.
-function deleteReplacedFiles(
+// Delete a conflicting config file only when its bytes still match the plan.
+function deleteConflictingConfigFiles(
     writer: Writer,
     deleted: InitPrepared['deleted'],
     read: ReadonlyMap<string, FileContents | undefined>,
@@ -214,7 +214,7 @@ function deleteReplacedFiles(
 }
 
 /**
- * Write the settings and generated files, and delete the replaced config files.
+ * Write the settings and generated files, and delete the conflicting config files.
  *
  * @param root the folder where init writes the accepted changes.
  * @param prepared the plan and file reads from planInit.
@@ -225,7 +225,7 @@ function writeInitFiles(root: string, prepared: InitPrepared): string[] {
     const { session, generated } = prepared;
     writeSettings(writer, prepared.settingsText, prepared.read.get(SETTINGS_FILE));
     const applied = writeGeneratedFiles(session, generated, writer, { reviewedOriginals: prepared.read });
-    const kept = deleteReplacedFiles(writer, prepared.deleted, prepared.read);
+    const kept = deleteConflictingConfigFiles(writer, prepared.deleted, prepared.read);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
     const version = getColors().dim(`gspot ${cliPackage.version}`);
     return [

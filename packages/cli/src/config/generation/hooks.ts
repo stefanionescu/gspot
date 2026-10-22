@@ -10,18 +10,12 @@ export const PUSH_INPUT_REPLAY = String.raw`printf '%s\n' "$input" | `;
 
 export const LFS_GUARD_PREFIX = 'command -v git-lfs >/dev/null 2>&1 || ';
 
-export const HOOK_ARGUMENTS = {
-    'pre-commit': 'check --hook pre-commit',
-    'pre-push': 'check --hook pre-push -- "$@"',
-    'commit-msg': 'check --hook commit-msg -- "$1"',
-} as const satisfies Record<(typeof CHECK_HOOKS)[number], string>;
-
-/** The stages of the checks that each hook runs. */
-export const HOOK_STAGES = {
-    'pre-commit': ['commit'],
-    'pre-push': ['commit', 'push'],
-    'commit-msg': ['message'],
-} as const satisfies Record<(typeof CHECK_HOOKS)[number], readonly string[]>;
+/** The gspot arguments of each hook, and the stages of the checks that it runs. */
+export const HOOK_CHECKS = {
+    'pre-commit': { arguments: 'check --hook pre-commit', stages: ['commit'] },
+    'pre-push': { arguments: 'check --hook pre-push -- "$@"', stages: ['commit', 'push'] },
+    'commit-msg': { arguments: 'check --hook commit-msg -- "$1"', stages: ['message'] },
+} as const satisfies Record<(typeof CHECK_HOOKS)[number], { arguments: string; stages: readonly string[] }>;
 
 export const HOOK_SHEBANG = '#!/bin/sh';
 

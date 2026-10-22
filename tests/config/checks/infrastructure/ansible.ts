@@ -1,0 +1,1 @@
+export const COMMAND_PLAYBOOK = `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n    - name: Restart the service\n      ansible.builtin.command: systemctl restart test\n      changed_when: true\n`;

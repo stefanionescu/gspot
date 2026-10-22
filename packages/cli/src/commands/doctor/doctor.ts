@@ -12,17 +12,23 @@ import type { Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { readVersionPin } from '#cli/repository/version.ts';
-import { CI_FILE_LABELS } from '#cli/config/generation/ci.ts';
+import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
+import { AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
 import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspection.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { findMissingBuild, listDistinctTools } from '#cli/configurations/declared-tools.ts';
-import { VERSION_GAP, COLUMN_WIDTHS, TOOL_STATE_COLORS, SUGGESTION_SECTIONS } from '#cli/config/commands/doctor.ts';
+
+import {
+    VERSION_GAP,
+    COLUMN_WIDTHS,
+    CI_FILE_LABELS,
+    TOOL_STATE_COLORS,
+    SUGGESTION_SECTIONS,
+} from '#cli/config/commands/doctor.ts';
 
 /**
  * Check whether a tool runs at a supported version.

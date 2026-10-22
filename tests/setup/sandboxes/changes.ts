@@ -10,7 +10,21 @@ import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runGit, markExecutable } from '#tests/setup/system/git.ts';
 import type { OriginalFile, SampleChanges } from '#tests/types/samples.ts';
-import { rm, open, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
+
+import {
+    rm,
+    open,
+    chmod,
+    lstat,
+    mkdir,
+    rmdir,
+    unlink,
+    symlink,
+    readFile,
+    readlink,
+    writeFile,
+    appendFile,
+} from 'node:fs/promises';
 
 /**
  * Reset the index entries of these paths to the last commit, which undoes what markExecutable staged on Windows.
@@ -83,8 +97,8 @@ async function writeChanges(cwd: string, changes: SampleChanges, settings: strin
 }
 
 /**
- * Change a sandbox, and restore its files, index, and `HEAD` on disposal. It saves file bytes and modes before the first
- * change, so a failed change still restores them.
+ * Change a sandbox, and restore its files on disposal, and in a Git repository its index and `HEAD` too. It saves file
+ * bytes and modes before the first change, so a failed change still restores them.
  *
  * @param sandbox the installed sandbox to change.
  * @param changes the files, settings, removals, and executable bits to apply.
@@ -93,7 +107,7 @@ async function writeChanges(cwd: string, changes: SampleChanges, settings: strin
 export async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
     const tree = runGit(cwd, ['write-tree']).stdout.trim();
-    const head = runGit(cwd, ['rev-parse', 'HEAD']).stdout.trim();
+    const head = runGit(cwd, ['rev-parse', 'HEAD']);
     const untracked = new Set(
         runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z']).stdout.split('\0').filter(Boolean),
     );
@@ -127,7 +141,9 @@ export async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): P
                 .filter(Boolean))
                 if (!untracked.has(path)) await rm(join(cwd, path), { force: true });
             await restore();
-            const reset = runGit(cwd, ['reset', '--soft', head]);
+            // A sandbox outside Git, such as a new user project, has only its files to restore.
+            if (head.code !== 0) return;
+            const reset = runGit(cwd, ['reset', '--soft', head.stdout.trim()]);
             if (reset.code !== 0) throw new Error(reset.stderr);
             const restored = runGit(cwd, ['read-tree', tree]);
             if (restored.code !== 0) throw new Error(restored.stderr);
@@ -171,4 +187,17 @@ export function buildSandboxChanges(
         files,
         removed: Object.keys(originalFiles).filter((path) => path !== '.gitignore' && !Object.hasOwn(files, path)),
     };
+}
+
+/**
+ * Append settings to the gspot.toml of an installed sandbox, then write and format the generated files again, as a
+ * repository does after it edits its settings by hand.
+ *
+ * @param sandbox the installed sandbox.
+ * @param settings the TOML text to append.
+ */
+export async function appendSandboxSettings(sandbox: Sandbox, settings: string): Promise<void> {
+    await appendFile(join(sandbox.root, 'gspot.toml'), settings);
+    await runGspotStep(sandbox, ['apply']);
+    await runGspotStep(sandbox, ['check', '--only', 'format/prettier', '--fix']);
 }

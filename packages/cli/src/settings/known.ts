@@ -1,17 +1,22 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
-import { PATH_ROLES } from '#cli/config/settings/schema.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/parts.ts';
-import { OVERRIDING_GROUPS } from '#cli/config/settings/inheritance.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/gspot-toml.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
-import { BUILD_SCRIPT, OPENNEXT_PACKAGE, OPENNEXT_TYPE_DEFAULTS } from '#cli/config/settings/defaults.ts';
 import { type Setting, type KnownSettings, type SettingDefault } from '#cli/types/settings/inheritance.ts';
+
+import {
+    PATH_ROLES,
+    BUILD_SCRIPT,
+    OPENNEXT_PACKAGE,
+    OVERRIDING_GROUPS,
+    OPENNEXT_TYPE_DEFAULTS,
+} from '#cli/config/settings/known.ts';
 
 function getSchemaPathRole(schema: z.core.JSONSchema.JSONSchema): unknown {
     if (schema['path_role'] !== undefined) return schema['path_role'];
@@ -147,7 +152,7 @@ export function buildKnownSettings(configurations: Configuration[], level: Level
 }
 
 /**
- * List the settings that one configuration declares, with their defaults, from the facts of the settings schemas.
+ * List the settings that one configuration declares, with their defaults, from the definitions in the settings schemas.
  *
  * @param configuration the configuration name.
  * @returns the settings of this configuration.
@@ -158,14 +163,14 @@ export function listSettings(configuration: string): Setting[] {
     function addSettings(schema: z.ZodType, name: string): void {
         if (visited.has(schema)) return;
         visited.add(schema);
-        const facts = schema.meta();
-        const owners = facts?.['configurations'];
+        const definition = schema.meta();
+        const owners = definition?.['configurations'];
         if (Array.isArray(owners) && owners.includes(configuration)) {
             settings.push({
                 name,
                 ...getSettingType(schema),
                 default: schema.parse(undefined),
-                ...facts,
+                ...definition,
                 description: schema.description ?? '',
             });
         }

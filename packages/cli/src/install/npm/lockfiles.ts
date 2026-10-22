@@ -5,27 +5,27 @@ import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
-import { parseJsonFile } from '#cli/parsers/json.ts';
-import { parseYamlFile } from '#cli/parsers/yaml.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
 import type { BunPackage } from '#cli/types/install/npm.ts';
-import { HTTP_URL } from '#cli/config/install/credentials.ts';
-import type { YarnPackage } from '#cli/types/parsers/lockfiles.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { isYarnBerry } from '#cli/repository/npm/package-manager.ts';
-import { PNPM_ROOT_IMPORTER } from '#cli/config/parsers/lockfiles.ts';
-import { selectLockfileName } from '#cli/install/npm/tool-project.ts';
-import type { DependencyMap } from '#cli/types/parsers/dependencies.ts';
-import type { PackageManager } from '#cli/types/repository/package-manager.ts';
+import { selectLockfileName } from '#cli/install/npm/package-json.ts';
+import type { YarnPackage } from '#cli/types/parsers/projects/lockfiles.ts';
+import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/tool-project.ts';
+import { PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects/lockfiles.ts';
+import type { DependencyMap } from '#cli/types/parsers/projects/dependencies.ts';
+import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { bunPackageSchema, npmToolLockSchemas } from '#cli/schemas/install/npm/lockfiles.ts';
-import { bunLockSchema, yarnLockSchema, yarnPackageSchema } from '#cli/schemas/parsers/lockfiles.ts';
+import { bunLockSchema, yarnLockSchema, yarnPackageSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
 
 import {
+    HTTP_URL,
     INTEGRITY,
-    NPM_SETTING_PREFIX,
     LOCKFILE_WORKSPACE_KEYS,
     YARN_DESCRIPTOR_SEPARATOR,
-} from '#cli/config/install/npm.ts';
+} from '#cli/config/install/npm/lockfiles.ts';
 
 // Check whether a parsed Yarn lockfile resolves each requested descriptor to its pinned version.
 function isYarnLockfileCurrent(

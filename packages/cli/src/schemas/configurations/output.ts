@@ -1,8 +1,9 @@
 // Validates how a check declares the output format of its tool.
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
+import { DEFAULT_PATTERN } from '#cli/config/configurations/names.ts';
 import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output.ts';
-import { DEFAULT_PATTERN, DEFAULT_FILE_PATTERN, DEFAULT_GROUPED_PATTERN } from '#cli/config/runs/output.ts';
+import { DEFAULT_FILE_PATTERN, DEFAULT_GROUPED_PATTERN } from '#cli/config/configurations/output.ts';
 
 export const outputSchema = z
     .strictObject({

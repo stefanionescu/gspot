@@ -42,11 +42,15 @@
         "**/bower_components/**",
         "**/bun.lock",
         "**/.env*",
-        "tests/integration/checks/swift/swiftlint.test.ts",
-        "tests/integration/checks/css.test.ts",
-        "tests/integration/checks/sql.test.ts",
-        "tests/integration/checks/data-files.test.ts",
-        "tests/unit/cli/checks/python/vulture.test.ts",
-        "tests/unit/cli/checks/python/deptry.test.ts"
+        "tests/suites/integration/checks/language/swift/swiftlint.test.ts",
+        "tests/suites/integration/checks/language/css.test.ts",
+        "tests/suites/integration/checks/language/sql.test.ts",
+        "tests/suites/integration/checks/general/data-files.test.ts",
+        "tests/suites/unit/cli/checks/language/python/vulture.test.ts",
+        "tests/suites/unit/cli/checks/language/python/deptry.test.ts",
+        "tests/suites/unit/cli/checks/language/python/pydoclint.test.ts",
+        "tests/suites/unit/cli/checks/framework/nextjs.test.ts",
+        "tests/suites/unit/cli/checks/language/bash/unused-functions.test.ts",
+        "tests/suites/unit/cli/checks/language/bash/script-layout.test.ts"
     ]
 }

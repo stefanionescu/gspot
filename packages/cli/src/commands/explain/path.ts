@@ -3,10 +3,10 @@ import { type Session } from '#cli/types/session.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { listCoveredFiles } from '#cli/repository/covered-files.ts';
-import { type TrackedFile } from '#cli/types/repository/inventory.ts';
+import { type TrackedFile } from '#cli/types/repository/files.ts';
+import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
+import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { type Explanation, type PathExplanation } from '#cli/types/commands/explain.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | undefined {

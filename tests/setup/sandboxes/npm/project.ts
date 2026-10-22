@@ -11,7 +11,7 @@ import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import type { NpmProject, NpmRegistry } from '#tests/types/packages.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import { createNpmRegistry } from '#tests/setup/sandboxes/npm/registry.ts';
-import type { PackageManager } from '#cli/types/repository/package-manager.ts';
+import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
 import {
     REGISTRY_HOST,
@@ -21,7 +21,7 @@ import {
     NPM_PROJECT_IGNORES,
     YARN_VERSION_THRESHOLD,
     NPM_PROJECT_ROOT_PACKAGE,
-} from '#tests/data/setup/sandboxes.ts';
+} from '#tests/config/setup/sandboxes.ts';
 
 async function writeNpmProject(options: {
     root: string;

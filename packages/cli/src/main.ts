@@ -11,30 +11,28 @@ import { registerRemove } from '#cli/commands/remove.ts';
 import { registerInit } from '#cli/commands/init/init.ts';
 import { registerInstall } from '#cli/commands/install.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { registerCheck } from '#cli/commands/check/check.ts';
 import { registerUnignore } from '#cli/commands/unignore.ts';
-import { assertVersionPin } from '#cli/repository/version.ts';
 import { registerDoctor } from '#cli/commands/doctor/doctor.ts';
+import { assertVersionPin } from '#cli/repository/version-pin.ts';
 import { registerExplain } from '#cli/commands/explain/explain.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { Command, type Argument, CommanderError } from '@commander-js/extra-typings';
 import { printError, printResult, isColorAllowed, setOutputOptions } from '#cli/system/terminal.ts';
 
 import {
-    COMMAND_SUGGESTION,
-    UNKNOWN_COMMAND_NAME,
-    VERSION_PIN_COMMANDS,
-    COMMANDER_ERROR_PREFIX,
-} from '#cli/config/commands/program.ts';
-import {
     CODE_MARK,
-    COMMAND_HELP,
     GLOBAL_OPTIONS,
     HELP_TERM_WIDTH,
     EXIT_CODE_SPACING,
+    COMMAND_SUGGESTION,
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
-} from '#cli/config/commands/help.ts';
+    VERSION_PIN_COMMANDS,
+    UNKNOWN_COMMAND_NAME,
+    COMMANDER_ERROR_PREFIX,
+} from '#cli/config/main.ts';
 
 /**
  * Format Commander argument errors with the command suggestions.

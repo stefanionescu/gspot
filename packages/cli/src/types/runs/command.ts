@@ -2,7 +2,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ProcessFailure } from '#cli/types/tools/run.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/system/processes.ts';
 import type { Finding, CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
 

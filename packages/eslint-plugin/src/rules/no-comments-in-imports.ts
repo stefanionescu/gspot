@@ -10,7 +10,7 @@ import {
     TYPESCRIPT_DIRECTIVE,
     TOOL_DIRECTIVE_PREFIXES,
     LEADING_COMMENT_LINE_BREAKS,
-} from '../config/comments.ts';
+} from '../config/rules/no-comments-in-imports.ts';
 
 /**
  * Check whether a comment holds a tool directive, such as a suppression, a global declaration, or a coverage mark.

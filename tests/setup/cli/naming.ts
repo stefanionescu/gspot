@@ -1,13 +1,13 @@
 // Builds the naming settings, file naming, and identifiers of the naming tests.
 import { parseSettings } from '#cli/settings/read.ts';
-import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
+import { selectForScope } from '#cli/settings/scopes.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
-import { selectForScope } from '#cli/settings/scope-settings.ts';
-import { readNamingSettings } from '#cli/checks/naming/settings.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildRootScopeSettings } from '#tests/setup/cli/settings.ts';
-import type { FileNaming, Identifier, NamingSettings } from '#cli/types/checks/naming.ts';
+import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
+import type { FileNaming, Identifier, NamingSettings } from '#cli/types/checks/general/naming.ts';
 
 /** Read the naming settings that apply in one scope of this settings text. */
 export function buildScopeNamingSettings(text: string, scope = ''): NamingSettings {

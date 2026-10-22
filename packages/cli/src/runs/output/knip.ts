@@ -1,8 +1,8 @@
-import { parseToolReport } from '#cli/parsers/json.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { ToolOutput } from '#cli/types/runs/output.ts';
+import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { knipReportSchema } from '#cli/schemas/runs/output/knip.ts';
-import { KNIP_ISSUE_TYPES, KNIP_ISSUE_MESSAGES } from '#cli/config/runs/output.ts';
+import { KNIP_ISSUE_TYPES, KNIP_ISSUE_MESSAGES } from '#cli/config/runs/output/knip.ts';
 
 /**
  * Read the Knip JSON categories, and keep grouped symbols and source positions.

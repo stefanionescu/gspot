@@ -2,20 +2,20 @@ import { join, posix } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import type { Substitutions } from '#cli/types/runs/command.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { type GeneratorOutput } from '#cli/types/configurations.ts';
+import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
 import { readBytes, findCachedText } from '#cli/system/files/reads.ts';
-import { GENERATOR_IGNORED_FOLDERS } from '#cli/config/checks/gspot.ts';
 import type { GeneratorRun } from '#cli/types/checks/generator-outputs.ts';
+import { GENERATOR_IGNORED_FOLDERS } from '#cli/config/checks/generator-outputs.ts';
 import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
 
 function listMissingOutputs(

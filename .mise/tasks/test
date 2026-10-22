@@ -7,8 +7,8 @@ set -euo pipefail
 
 suite=${1:-unit}
 if [[ ${suite} == unit ]]; then
-    bun test --parallel --preload ./tests/setup/runner/unit-preload.ts tests/unit
+    bun test --parallel --preload ./tests/setup/runner/unit-preload.ts tests/suites/unit
 else
     bun tests/setup/runner/prepare.ts
-    bun test --parallel --preload ./tests/setup/runner/integration-preload.ts "tests/${suite}"
+    bun test --parallel --preload ./tests/setup/runner/integration-preload.ts "tests/suites/${suite}"
 fi

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { BunPackage } from '#cli/types/install/npm.ts';
-import { npmLockSchema, bunLockSchema, pnpmLockSchema } from '#cli/schemas/parsers/lockfiles.ts';
+import { npmLockSchema, bunLockSchema, pnpmLockSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
 
 export const bunPackageSchema = z.tuple([
     z.string(),

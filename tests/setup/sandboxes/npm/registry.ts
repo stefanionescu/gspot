@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/checkout.ts';
-import { PACKED_PACKAGES_FILE } from '#tests/data/setup/runner.ts';
+import { PACKED_PACKAGES_FILE } from '#tests/config/setup/environment.ts';
 import type { NpmRegistry, PackedPackage, RegistryPackage } from '#tests/types/packages.ts';
 
 import {
@@ -13,7 +13,7 @@ import {
     UPSTREAM_REGISTRY,
     PACKED_PUBLISH_TIME,
     GSPOT_PACKAGE_SCOPE,
-} from '#tests/data/setup/sandboxes.ts';
+} from '#tests/config/setup/sandboxes.ts';
 
 /** Pack the local npm packages once for the current integration run. */
 export async function runNpmPack(work: string, declarations: readonly RegistryPackage[]): Promise<string> {

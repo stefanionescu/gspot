@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { DenoLintReport, SupabaseProjectFile } from '#cli/types/checks/supabase.ts';
+import type { DenoLintReport, SupabaseProjectFile } from '#cli/types/checks/platform/supabase.ts';
 
 export const supabaseProjectFileSchema = z.object({
     storage: z

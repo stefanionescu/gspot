@@ -1,5 +1,5 @@
 import type { Session } from '#cli/types/session.ts';
-import { RAN_STATUSES } from '#cli/config/runs/run.ts';
+import { RAN_STATUSES } from '#cli/config/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { readPushedCommits } from '#cli/repository/revisions/push.ts';

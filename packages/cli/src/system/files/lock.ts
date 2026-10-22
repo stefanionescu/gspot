@@ -1,11 +1,12 @@
 // Lock managed writes and release their locks.
 import { randomUUID } from 'node:crypto';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system/modes.ts';
+import { PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/files/modes.ts';
 import type { FileBounds, FileContents } from '#cli/types/system/files.ts';
+import { TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files/entries.ts';
 import { linkSync, mkdirSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { readEntry, preparePath, buildContainedPath } from '#cli/system/files/entries.ts';
-import { LOCK_TOKEN_SEPARATOR, LOCK_RECOVERY_SUFFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
+import { LOCK_RECOVERY_SUFFIX, LOCK_TOKEN_SEPARATOR } from '#cli/config/system/files/lock.ts';
 
 // Creates the lock file with the token, or returns false when another holder already owns the file.
 function writeLockFile(absolutePath: string, token: string): boolean {

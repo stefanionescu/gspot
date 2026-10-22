@@ -2,15 +2,15 @@ import { PurgeCSS } from 'purgecss';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { DIGEST_ALGORITHM } from '#cli/config/text.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { glob, rename, readFile, writeFile } from 'node:fs/promises';
+import { DIGEST_ALGORITHM } from '#cli/config/checks/language/swift/cache.ts';
 
 import {
     PURGECSS_EXTRACTOR,
     PURGECSS_TOKEN_END,
     PURGECSS_PSEUDO_CLASS_PATTERN,
-} from '#cli/config/generation/config-files/builders/purgecss.ts';
+} from '#cli/config/generation/configurations/framework/site.ts';
 import {
     STYLESHEETS,
     STYLE_CONTENT,

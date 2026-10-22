@@ -1,22 +1,22 @@
 import type { CheckOutput } from '#cli/types/runs/output.ts';
-import type { NamingOverride } from '#cli/types/checks/naming.ts';
+import type { FileKind } from '#cli/types/repository/files.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { FileKind } from '#cli/types/repository/inventory.ts';
-import type { TOOL_FOLDER_KINDS } from '#cli/config/gspot-paths.ts';
 import { type Optional, type JsonValue } from '#cli/types/shapes.ts';
+import type { NamingOverride } from '#cli/types/checks/general/naming.ts';
 import type { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
-import type { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependencies.ts';
+import type { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
 
-import type {
-    LEVELS,
-    STAGES,
-    GROUPS,
-    TOOL_KINDS,
-    CHECK_RUNS,
-    TOOL_BUILDS,
-    CHECK_NEEDS,
-    CHECK_WORKING_FOLDERS,
-} from '#cli/config/configurations.ts';
+import {
+    type LEVELS,
+    type STAGES,
+    type GROUPS,
+    type TOOL_KINDS,
+    type CHECK_RUNS,
+    type TOOL_BUILDS,
+    type CHECK_NEEDS,
+    type TOOL_FOLDER_KINDS,
+    type CHECK_WORKING_FOLDERS,
+} from '#cli/config/configurations/names.ts';
 
 type ConfigFilePointer = {
     path: string;

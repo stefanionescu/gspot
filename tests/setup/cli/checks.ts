@@ -8,12 +8,11 @@ import { runCheckCode } from '#cli/commands/check/run.ts';
 import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
-import { SWIFT_PACKAGE } from '#tests/data/checks/swift/build.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
 import { getTool, getToolName } from '#cli/configurations/declared-tools.ts';
+import { SWIFT_PACKAGE } from '#tests/config/checks/language/swift/build.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**
@@ -82,7 +81,7 @@ export async function prepareSwiftCheck(
     files: DirectoryJSON = {},
 ): Promise<AsyncDisposable & { session: Session; planned: PlannedCheck }> {
     await using resources = new AsyncDisposableStack();
-    resources.use(simulateOperatingSystem('darwin'));
+    resources.use(spyOn(environment, 'getOperatingSystem').mockReturnValue('macos'));
     resources.use(
         fakePinnedExecutables([...readConfigurations().values()].flatMap((configuration) => configuration.tools)),
     );

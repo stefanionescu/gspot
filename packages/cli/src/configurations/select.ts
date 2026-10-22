@@ -2,8 +2,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
-import { SOURCE_FILE_GROUPS } from '#cli/config/configurations.ts';
-import type { Repository } from '#cli/types/repository/inventory.ts';
+import type { Repository } from '#cli/types/repository/files.ts';
+import { SOURCE_FILE_GROUPS } from '#cli/config/configurations/select.ts';
 import { type Configuration, type RequirementWalk, type WrittenConfiguration } from '#cli/types/configurations.ts';
 
 function visit(walk: RequirementWalk, configurationName: string): void {

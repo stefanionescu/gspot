@@ -241,7 +241,8 @@ target = "semgrep.yml"
 tool = "semgrep"
 
 [[config_file]]
-target = "eslint-runtime.mjs"
+source = "eslint-functions.ts"
+target = "eslint-functions.mjs"
 tool = "eslint"
 
 [[check]]

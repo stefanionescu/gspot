@@ -1,11 +1,11 @@
+import { listIgnores } from '#cli/settings/scopes.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
-import { listIgnores } from '#cli/settings/scope-settings.ts';
 import type { Tool, Check } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { Repository } from '#cli/types/repository/inventory.ts';
+import type { Repository } from '#cli/types/repository/files.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import { findMissingBuild } from '#cli/configurations/declared-tools.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import type { Host, Skip, PlannedCheck, PlannedScope, SettingsSkip } from '#cli/types/planning.ts';
 
 // A check that needs a dependency skips a scope whose projects declare none of them.

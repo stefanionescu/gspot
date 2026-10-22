@@ -1,21 +1,26 @@
 // A pointer, such as eslint.config.mjs, sits where a tool or editor looks by default, and loads the real
 // config file in .gspot.
 import { isDeepStrictEqual } from 'node:util';
-import { parseJsonFile } from '#cli/parsers/json.ts';
 import type { Session } from '#cli/types/session.ts';
 import { posix, dirname, relative } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import type { ManagedKeys } from '#cli/types/ownership.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
-import { listCoveredFiles } from '#cli/repository/covered-files.ts';
+import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
+import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import { listScopeChecks, listNeededTools } from '#cli/planning/tools.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/needed.ts';
-import { listScopeChecks, listNeededTools } from '#cli/planning/needed-tools.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 import type { GeneratedFile, ConfigFileOwner, PlannedPointerField } from '#cli/types/generation/files.ts';
-import { TARGET_PLACEHOLDER, TARGET_JSON_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
+
+import {
+    TARGET_PLACEHOLDER,
+    TARGET_JSON_PLACEHOLDER,
+    TARGET_MODULE_PLACEHOLDER,
+} from '#cli/config/generation/config-files/pointers.ts';
 
 /**
  * Resolve target placeholders in pointer text.

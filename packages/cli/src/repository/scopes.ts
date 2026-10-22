@@ -1,14 +1,14 @@
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
-import { ROOT_SCOPE } from '#cli/config/repository/scopes.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { LINT_FOLDERS } from '#cli/config/repository/existing-tools.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependencies.ts';
-import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
-import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/tracked.ts';
-import type { ScopeFolder, TrackedFile } from '#cli/types/repository/inventory.ts';
-import { GLOB_EXCLUDE, FOLDER_CONTENTS, WHOLE_TREE_GLOBS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/system/paths.ts';
+import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
+import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
+import { LINT_FOLDERS } from '#cli/config/repository/existing/tools.ts';
+import type { ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
+import { ROOT_SCOPE, WHOLE_TREE_GLOBS } from '#cli/config/repository/scopes.ts';
+import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
+import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/tracked.ts';
+import { GLOB_EXCLUDE, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 
 /**
  * Test scope containment. The empty root path matches every file.

@@ -3,17 +3,17 @@ import { getColors } from '#cli/system/terminal.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { FixReport } from '#cli/types/runs/fixes.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { PROGRESS_CLEAR } from '#cli/config/commands/check/check.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import type { RunReport, CheckProgress } from '#cli/types/runs/run.ts';
 
 import {
     NOTE_STATUSES,
     FINDINGS_SHOWN,
-    PROGRESS_CLEAR,
-    CHECK_STATUS_COLORS,
     FIXER_ERROR_MESSAGE,
+    CHECK_STATUS_COLORS,
     COMMIT_PREFIX_LENGTH,
-} from '#cli/config/commands/check.ts';
+} from '#cli/config/commands/check/report.ts';
 
 function formatCheckedContent(comparison: CheckProgress['comparison']): string {
     if (comparison?.content === 'index') return 'the staged files';

@@ -16,8 +16,8 @@ import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { PROGRESS_CLEAR, CHECK_LIST_SEPARATOR } from '#cli/config/commands/check.ts';
 import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
+import { PROGRESS_CLEAR, CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/check.ts';
 
 // Read the lines that Git writes to the pre-push hook; the signal stops the read.

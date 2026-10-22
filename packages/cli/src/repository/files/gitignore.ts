@@ -4,9 +4,9 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { GITIGNORE_FILE } from '#cli/config/repository/tracked.ts';
-import type { PathIgnore } from '#cli/types/repository/inventory.ts';
-import { GITIGNORE_COMMENT, GITIGNORE_NEGATION } from '#cli/config/repository/gitignore.ts';
+import type { PathIgnore } from '#cli/types/repository/files.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
+import { GITIGNORE_COMMENT, GITIGNORE_NEGATION } from '#cli/config/repository/files/gitignore.ts';
 
 function readPatternLines(reads: ReadCache, file: string): string[] {
     return readCachedText(reads, file)

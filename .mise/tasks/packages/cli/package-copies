@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-#MISE description="Copy the rule blocks and name lists of the pinned linter packages into packages/cli/configurations. Run it after you change a linter pin."
-#MISE dir="{{config_root}}/packages/cli"
-set -euo pipefail
-
-bun src/configurations/package-copies.ts

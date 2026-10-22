@@ -1,6 +1,4 @@
-import { NAMED_FINDING_CHECKS } from '#cli/config/settings/schema.ts';
-
-export const GLOBAL_OPTIONS = { '--version': 'Print the version', '-h, --help': 'Print help' } as const;
+import { NAMED_FINDING_CHECKS } from '#cli/config/settings/gspot-toml.ts';
 
 /** Command registration and reference pages share this help text. */
 export const COMMAND_HELP = {
@@ -255,19 +253,3 @@ export const COMMAND_HELP = {
         example: 'gspot doctor',
     },
 } as const;
-
-export const HELP_TERM_WIDTH = 29;
-
-export const EXIT_CODE_SPACING = 2;
-
-export const CODE_MARK = '`';
-
-export const PROGRAM_EXIT_CODES = [
-    ['0', 'The command finished. For check: no findings remain.'],
-    ['1', 'check found findings, or doctor found a setup problem.'],
-    ['2', 'The command could not finish, or an argument is not valid.'],
-    ['130, 143', 'check or install stopped because of Ctrl-C or SIGTERM.'],
-] as const;
-
-export const PROGRAM_HELP_FOOTER =
-    'Example:\n  gspot init --dry-run\n\nRun gspot <command> --help to see the options of one command.\n';

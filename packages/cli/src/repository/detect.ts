@@ -1,20 +1,20 @@
 // Proposes configurations from repository files and dependencies; it never selects them.
 import { findText } from '#cli/system/files/reads.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import type { DependencyFile } from '#cli/types/parsers/dependencies.ts';
-import { listToolOnlyPackages } from '#cli/repository/dependency-files.ts';
-import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
-import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
+import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
+import type { Repository, TrackedFile } from '#cli/types/repository/files.ts';
+import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
+import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/files/classify.ts';
 import { isInScope, joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
-import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/matchers.ts';
+import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/files/matchers.ts';
 
 import {
     type ScopeContents,
     type DetectionEvidence,
     type ConfigurationEvidence,
-} from '#cli/types/repository/detection.ts';
+} from '#cli/types/repository/detect.ts';
 
 function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scope: string): ScopeContents {
     const scopeFiles = files.filter(

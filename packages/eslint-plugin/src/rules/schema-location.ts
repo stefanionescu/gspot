@@ -21,7 +21,9 @@ export const schemaLocation = createRule<SchemaLocationOptions, 'location'>({
         messages: { location: 'Declare this Zod schema in a configured schema folder: {{folders}}.' },
     },
     create(context, [options]) {
-        const path = context.physicalFilename.replaceAll('\\', '/').replace(/^[a-z]:/u, (drive) => drive.toUpperCase());
+        const path = resolve(context.cwd, context.physicalFilename)
+            .replaceAll('\\', '/')
+            .replace(/^[a-z]:/u, (drive) => drive.toUpperCase());
         const folders = options.folders.map((folder) =>
             resolve(context.cwd, folder)
                 .replaceAll('\\', '/')

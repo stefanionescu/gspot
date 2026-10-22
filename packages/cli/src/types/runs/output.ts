@@ -1,5 +1,5 @@
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { CHECK_RUNS } from '#cli/config/configurations.ts';
+import type { CHECK_RUNS } from '#cli/config/configurations/names.ts';
 
 export type ToolOutput = OutputPaths & {
     check: string;

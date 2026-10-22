@@ -3,14 +3,14 @@ import { GspotError } from '#cli/system/errors.ts';
 import { join, posix, dirname, relative } from 'node:path';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
-import { FOLDER_CONTENTS } from '#cli/config/system/paths.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import { readPackageJson } from '#cli/repository/dependency-files.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { listSourceFiles, readTsconfigProject } from '#cli/parsers/tsconfig.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
+import type { TrackedFile } from '#cli/types/repository/files.ts';
+import { FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool, type Package } from '@manypkg/tools';
+import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { isInside, convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 
 function listWorkspacePackages(root: string): Package[] {

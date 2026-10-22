@@ -1,24 +1,24 @@
 import { readSettings } from '#cli/settings/read.ts';
 import type { Session } from '#cli/types/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
-import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import type { Repository } from '#cli/types/repository/inventory.ts';
+import { selectNeededConfigurations } from '#cli/planning/tools.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Settings, SettingsFile } from '#cli/types/settings/file.ts';
-import { selectNeededConfigurations } from '#cli/planning/needed-tools.ts';
 import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { listAutomaticConfigurations } from '#cli/configurations/select.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
-import type { PackageManagerPin } from '#cli/types/repository/package-manager.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { buildKnownSettings, applyDetectedDefaults } from '#cli/settings/known.ts';
+import type { PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
+import { findRootScope, selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { classifyFile, listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { findRootScope, selectForScope, buildScopeSettings } from '#cli/settings/scope-settings.ts';
 
 // Resolve every scope: its configurations, known settings, and merged settings.
 async function buildScopes(

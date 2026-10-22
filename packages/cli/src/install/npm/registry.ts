@@ -5,25 +5,24 @@ import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
 import { realpathSync, writeFileSync } from 'node:fs';
-import { PRIVATE_FILE } from '#cli/config/system/modes.ts';
+import { NPM_TOOL } from '#cli/config/repository/npm.ts';
+import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { extractUrlPasswords } from '#cli/install/credentials.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
-import { NPM_TOOL } from '#cli/config/repository/package-manager.ts';
+import { NPMRC_FILE, NPM_SETTING_PREFIX } from '#cli/config/install/npm/tool-project.ts';
 
 import {
-    NPMRC_FILE,
     CREDENTIAL_KEY,
     CONNECTION_KEYS,
-    CERTIFICATE_KEYS,
     REGISTRY_ALIASES,
+    CERTIFICATE_KEYS,
     REGISTRY_AUTH_KEY,
     CONNECTION_URL_KEY,
-    NPM_SETTING_PREFIX,
-    ENCODED_CREDENTIAL_KEY,
     NPM_SCOPE_REGISTRY_KEY,
+    ENCODED_CREDENTIAL_KEY,
     NPM_SETTING_VARIABLE_PREFIX,
-} from '#cli/config/install/npm.ts';
+} from '#cli/config/install/npm/registry.ts';
 
 // Read and validate the npm settings before returning the registry settings that apply.
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {

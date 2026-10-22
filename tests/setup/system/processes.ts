@@ -1,11 +1,11 @@
 // Starts test commands and limits them to the current test timeout, and builds process results.
 import { stat } from 'node:fs/promises';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { SIGNAL_EXIT_CODES } from '#cli/config/terminal.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
-import { TEST_TIMEOUT_MILLISECONDS } from '#tests/data/setup/runner.ts';
-import { POLL_MILLISECONDS } from '#tests/data/setup/system/processes.ts';
+import { SIGNAL_EXIT_CODES } from '#cli/config/system/terminal.ts';
+import { POLL_MILLISECONDS } from '#tests/config/setup/system/processes.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
+import { TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/environment.ts';
 import type { CapturedChild, CapturedProcess } from '#tests/types/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 

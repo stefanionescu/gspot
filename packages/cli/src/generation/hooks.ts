@@ -1,15 +1,14 @@
-import { HOOKS_PATH } from '#cli/config/gspot-paths.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
-import type { StartRunner } from '#cli/types/repository/package-manager.ts';
 import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
+import type { StartRunner } from '#cli/types/repository/npm/package-manager.ts';
 
 import {
     LFS_HOOKS,
     CHECK_HOOKS,
-    HOOK_STAGES,
+    HOOK_CHECKS,
     HOOK_SHEBANG,
-    HOOK_ARGUMENTS,
     PUSH_INPUT_SAVE,
     LFS_GUARD_PREFIX,
     PUSH_INPUT_REPLAY,
@@ -35,7 +34,7 @@ function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { use
             : []),
         ...absolutePath,
         `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${missing} Install gspot with: ${installCommand}' >&2; exit 2; }`,
-        `${lfs ? replay : 'exec '}${runner.command} ${HOOK_ARGUMENTS[name]}`,
+        `${lfs ? replay : 'exec '}${runner.command} ${HOOK_CHECKS[name].arguments}`,
         '',
     ].join('\n');
     return `${HOOK_SHEBANG}\n${body}`;
@@ -50,7 +49,7 @@ function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { use
  */
 export function listHookNames(checks: PlannedCheck[]): HookName[] {
     const stages = new Set<string>(checks.map((planned) => planned.check.stage));
-    return CHECK_HOOKS.filter((name) => HOOK_STAGES[name].some((stage) => stages.has(stage)));
+    return CHECK_HOOKS.filter((name) => HOOK_CHECKS[name].stages.some((stage) => stages.has(stage)));
 }
 
 /**
@@ -77,5 +76,5 @@ export function buildHookFiles(
             name,
             content: `${HOOK_SHEBANG}\n${LFS_GUARD_PREFIX}exit 0\nexec git lfs ${name} "$@"\n`,
         })),
-    ].map(({ name, content }) => ({ path: `${HOOKS_PATH}/${name}`, content, executable: true }));
+    ].map(({ name, content }) => ({ path: `${GSPOT_PATHS.hooks}/${name}`, content, executable: true }));
 }

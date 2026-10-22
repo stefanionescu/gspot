@@ -1,18 +1,19 @@
 // Read and compare installed tool versions.
 import semver from 'semver';
 import { realpathSync } from 'node:fs';
+import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/tools/locate.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { spawnProcessBlocking } from '#cli/system/processes.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/tools/inspection.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import { TOOL_ENV, NO_VERSION, VERSION_FLAG } from '#cli/config/tools/run.ts';
+import { NO_VERSION, VERSION_FLAG } from '#cli/config/tools/versions.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { readHostPackage, readToolProjectPackage } from '#cli/repository/npm/installed-packages.ts';
 import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools/inspection.ts';
 

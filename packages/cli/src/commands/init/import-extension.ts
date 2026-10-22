@@ -2,17 +2,17 @@ import ts from 'typescript';
 import { join } from 'node:path';
 import { setKey } from '#cli/settings/edit.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { readTsconfig } from '#cli/parsers/tsconfig.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/tsconfig.ts';
+import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import type { Repository } from '#cli/types/repository/inventory.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations.ts';
-import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/schema.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts';
-import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands/init.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
+import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/tools.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands/init/import-extension.ts';
 
 function detectImportExtension(
     repository: Repository,

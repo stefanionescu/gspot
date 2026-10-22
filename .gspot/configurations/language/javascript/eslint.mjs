@@ -1168,7 +1168,7 @@ export default [
                     {
                         "category": "import-rule:tests-data",
                         "pattern": [
-                            "tests/data/**"
+                            "tests/config/**"
                         ]
                     },
                     {
@@ -1187,7 +1187,7 @@ export default [
                     {
                         "category": "import-rule:tests",
                         "pattern": [
-                            "tests/{unit,integration,e2e}/**"
+                            "tests/suites/**"
                         ]
                     },
                     {
@@ -2433,7 +2433,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"config-files\" may import only its own files, not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
+                            "message": "Import rule \"config-files\" may import its own files and \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, or add that rule to can_also_import or can_import."
                         },
                         {
                             "from": {
@@ -2446,7 +2446,8 @@ export default [
                                     "file": {
                                         "categories": {
                                             "anyOf": [
-                                                "import-rule:config-files"
+                                                "import-rule:config-files",
+                                                "import-rule:cli-types"
                                             ]
                                         }
                                     }
@@ -6674,6 +6675,56 @@ export default [
                 "**/*.astro",
                 "**/*",
                 "**/*"
+            ]
+        ]
+    },
+
+    // JavaScript and repository settings
+    {
+        "ignores": [],
+        rules: {
+            "n/no-unpublished-import": "off"
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "**/*",
+                "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "**/*",
+                "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts/**"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "**/*",
+                "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts"
+            ],
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "**/*",
+                "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts/**"
+            ],
+            [
+                "**/*.astro",
+                "**/*",
+                "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts"
+            ],
+            [
+                "**/*.astro",
+                "**/*",
+                "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts/**"
+            ],
+            [
+                "**/*.astro",
+                "**/*",
+                "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts"
+            ],
+            [
+                "**/*.astro",
+                "**/*",
+                "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts/**"
             ]
         ]
     },

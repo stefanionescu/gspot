@@ -1,11 +1,11 @@
 import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { listStaleFiles } from '#cli/apply/stale.ts';
 import { installTools } from '#cli/install/tools.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type Command } from '@commander-js/extra-typings';
+import { listStaleFiles } from '#cli/apply/stale-files.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
 import { TOOL_PROJECT_FILES } from '#cli/config/commands/install.ts';

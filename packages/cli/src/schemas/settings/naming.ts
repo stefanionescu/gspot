@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
-import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
 import { namingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
 import { nonemptyPaths, namingCategorySchema } from '#cli/schemas/settings/parts.ts';
+import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { type TableSettings, type WrittenNaming, type WrittenNamingOverride } from '#cli/types/settings/file.ts';
 import { type NamingCategory, type SettingLanguage, type ParsedNamingOverride } from '#cli/types/settings/tables.ts';
-import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/schema.ts';
+import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 
 const namingLanguageSchema = namingCategorySchema.extend(
     Object.fromEntries(
@@ -29,23 +29,23 @@ namingLanguageSchema.register(z.globalRegistry, { id: 'namingLanguage' });
 const namingLists = {
     banned_words: z
         .array(z.string())
-        .default(SETTING_FACTS['naming.banned_words'].default)
-        .meta(SETTING_FACTS['naming.banned_words']),
+        .default(SETTING_DEFINITIONS['naming.banned_words'].default)
+        .meta(SETTING_DEFINITIONS['naming.banned_words']),
     override: z
         .array(
             namingOverrideSchema.extend({
                 paths: nonemptyPaths
-                    .default(SETTING_FACTS['naming.override.paths'].default)
+                    .default(SETTING_DEFINITIONS['naming.override.paths'].default)
                     .describe(namingOverrideSchema.shape.paths.description as string),
                 languages: z
                     .array(z.enum(SETTING_LANGUAGES))
                     .optional()
                     .describe(namingOverrideSchema.shape.languages.description as string),
                 allow_digits: namingOverrideSchema.shape.allow_digits.default(
-                    SETTING_FACTS['naming.override.allow_digits'].default,
+                    SETTING_DEFINITIONS['naming.override.allow_digits'].default,
                 ),
                 allow_repeated_words: namingOverrideSchema.shape.allow_repeated_words.default(
-                    SETTING_FACTS['naming.override.allow_repeated_words'].default,
+                    SETTING_DEFINITIONS['naming.override.allow_repeated_words'].default,
                 ),
                 reason: z.string().describe(namingOverrideSchema.shape.reason.description as string),
             } satisfies SchemaShape<
@@ -53,8 +53,8 @@ const namingLists = {
                 Pick<WrittenNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>
             >),
         )
-        .default(SETTING_FACTS['naming.override'].default)
-        .meta(SETTING_FACTS['naming.override']),
+        .default(SETTING_DEFINITIONS['naming.override'].default)
+        .meta(SETTING_DEFINITIONS['naming.override']),
 };
 
 export const namingSchema = z.strictObject({

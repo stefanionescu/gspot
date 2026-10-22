@@ -4,16 +4,17 @@ import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
+import { MISE_TOOL } from '#cli/config/tools/locate.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolAvailability } from '#cli/types/tools/run.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { readToolVersion, classifyToolVersion } from '#cli/tools/versions.ts';
 import { findToolProjectPackage } from '#cli/configurations/declared-tools.ts';
-import { DOT_GSPOT, GSPOT_NODE_MODULES_PATH } from '#cli/config/gspot-paths.ts';
-import type { InstalledDependency } from '#cli/types/repository/installed-packages.ts';
+import { MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
+import type { InstalledDependency } from '#cli/types/repository/npm/installed-packages.ts';
 import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/tools/inspection.ts';
-import { MISE_TOOL, MISE_INSTALL_URL, AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspection.ts';
 import { readToolProjectPackage, findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 
 /**
@@ -62,7 +63,7 @@ function inspectLibrary(inspected: InspectedTool): ToolInspection {
         installed = findInstalledDependency(root, join(relative(root, cwd), PACKAGE_JSON), name);
     } else {
         using files = openFiles(root);
-        const path = join(root, GSPOT_NODE_MODULES_PATH, name, PACKAGE_JSON);
+        const path = join(root, GSPOT_PATHS.nodeModules, name, PACKAGE_JSON);
         installed = { path, version: readToolProjectPackage(files, root, path)?.version };
     }
     return installed?.version === undefined

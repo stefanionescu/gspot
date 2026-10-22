@@ -2,14 +2,13 @@ import { posix } from 'node:path';
 import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { stripBlock } from '#cli/parsers/managed-blocks.ts';
-import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { buildPathMatcher } from '#cli/repository/matchers.ts';
+import { GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { MARKERS } from '#cli/config/parsers/managed-blocks.ts';
-import { GITATTRIBUTES_FILE } from '#cli/config/repository/tracked.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependencies.ts';
-import { DOT_GSPOT, VALE_PACKAGES_PATH } from '#cli/config/gspot-paths.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
+import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import type { ConfigFile, Configuration } from '#cli/types/configurations.ts';
-import { HEADER_LINES_CHECKED, GENERATED_HEADER_LINE } from '#cli/config/generation/header.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
 
 import type {
     FileTags,
@@ -18,33 +17,33 @@ import type {
     FileKindRules,
     GeneratedPaths,
     FileClassification,
-} from '#cli/types/repository/inventory.ts';
+} from '#cli/types/repository/files.ts';
 import {
     TEXT_TAG,
-    BINARY_TAG,
+    SET_VALUES,
     LFS_FILTER,
     SCRIPT_TAG,
-    SET_VALUES,
-    NOTICE_FILE,
+    BINARY_TAG,
     RUNTIME_TAG,
     SHEBANG_TAG,
     SOURCE_KIND,
+    NOTICE_FILE,
     UNSET_VALUE,
     BANNER_BYTES,
-    KIND_ORIGINS,
     LICENSE_FILE,
-    LICENSE_TAGS,
     SHEBANG_TAGS,
-    ATTRIBUTE_SET,
-    DOTENV_PREFIX,
+    KIND_ORIGINS,
+    LICENSE_TAGS,
     FILENAME_TAGS,
-    ENV_SPLIT_FLAG,
-    EXTENSION_TAGS,
-    SHEBANG_PREFIX,
+    DOTENV_PREFIX,
+    ATTRIBUTE_SET,
     TEXT_ATTRIBUTE,
-    BUILD_LAUNCHERS,
+    ENV_SPLIT_FLAG,
+    SHEBANG_PREFIX,
+    EXTENSION_TAGS,
     DEFAULT_DIALECT,
     DOCKERFILE_NAME,
+    BUILD_LAUNCHERS,
     FILTER_ATTRIBUTE,
     TRAILING_VERSION,
     VENDORED_FOLDERS,
@@ -53,11 +52,13 @@ import {
     VENDORED_ATTRIBUTE,
     GENERATED_ATTRIBUTE,
     DOCKERFILE_EXTENSION,
+    HEADER_LINES_CHECKED,
     INTERPRETER_DIALECTS,
     SHEBANG_INTERPRETERS,
+    GENERATED_HEADER_LINE,
     ENV_EXECUTABLE_SUFFIX,
     GENERATOR_OUTPUT_BANNERS,
-} from '#cli/config/repository/inventory.ts';
+} from '#cli/config/repository/files/classify.ts';
 
 // A Git attribute wins over a configuration declaration.
 function findDeclaredKind(path: string, rules: FileKindRules): FileClassification | undefined {
@@ -86,7 +87,7 @@ function isLicenseFile(path: string): boolean {
 
 // Tool paths and banners identify generated files; downloaded Vale styles belong to another party.
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
-    if (path.startsWith(`${VALE_PACKAGES_PATH}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
+    if (path.startsWith(`${GSPOT_PATHS.valePackages}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
     if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
     if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildWrapper };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');

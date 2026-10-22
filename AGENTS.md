@@ -96,18 +96,23 @@ You can edit the other keys of that file.
 - Name a tool check after its tool. Name a built-in check after what it checks.
 - A unit test runs the source in process. It may run Git and the tools of `tests/node_modules`, but makes no network
   call.
-- A test that installs tools, runs the packed packages, or contacts a registry belongs in `tests/integration/`.
-  `tests/e2e/` installs the packed packages into a fresh project.
+- A test that installs tools, runs the packed packages, or contacts a registry belongs in `tests/suites/integration/`.
+  `tests/suites/e2e/` installs the packed packages into a fresh project.
 - In unit check tests, choose the entrypoint for the assertion:
     - Use `runSandboxCheck` for one check's findings or error.
     - Use `planSandboxCheck` with `findBuiltInCheck` when files or the read cache change after the session opens.
     - Use `runCheckCode` for a command check whose plan the test changes.
     - Use `runChecks` with `buildRunOptions` for status, notes, skip causes, or cancellation.
     - Use `runCheckSample` for a sample that fails and passes after its fix.
-- Keep CLI calls and direct imports of check functions out of `tests/unit/cli/checks/`. Exit codes, JSON output, and
-  other CLI behavior belong to `tests/unit/cli/commands/`.
+- Keep CLI calls and direct imports of check functions out of `tests/suites/unit/cli/checks/`. Exit codes, JSON output, and
+  other CLI behavior belong to `tests/suites/unit/cli/commands/`.
 - In source, describe an unexported helper with a line comment. Give every exported declaration a doc comment.
 - Export a declaration where you declare it. End no file with an export list.
+- Write every type as a TypeScript `type` alias. Never write JSDoc type tags in a `.ts` file.
+- Use the types that a package publishes when the code already depends on that package. Do not add a dependency for its
+  types alone.
+- Write a JavaScript module that gspot ships as a TypeScript source in `packages/cli/configurations/`. The manifest
+  names it as the `source` of its config file, and gspot transpiles it.
 - Do not use subagents or parallel agents unless asked in the conversation.
 - Keep the owner's descriptions word for word: the first sentence of `README.md`, and the `description` in
   `packages/cli/package.json`. Their copies in the docs, `llms.txt`, and `gspot --help` match them.
@@ -131,29 +136,39 @@ repository.
 - Declare a list of allowed names as an `as const` array in `config/`, its type as `(typeof LIST)[number]` in
   `types/`, and its schema as `z.enum(LIST)`. A list whose values each carry a description keeps its schema literals
   as the one list.
-- `packages/cli/src/checks/` has one file per configuration, `checks/<configuration>.ts`.
-- When the checks of a configuration pass the file length limit, they move to a folder `checks/<configuration>/`. That
+- `packages/cli/src/checks/` has one file per configuration, `checks/<group>/<configuration>.ts`, under the group of
+  its folder in `packages/cli/configurations/`.
+- When the checks of a configuration pass the file length limit, they move to a folder `checks/<group>/<configuration>/`. That
   folder has one file per check, named after it, or per input that several checks read.
 - Code that checks of several configurations share sits at the top of `checks/`.
+- The code of one configuration sits at the same path in every tree. Its shipped files sit in
+  `packages/cli/configurations/<group>/<configuration>/`, and its checks in `packages/cli/src/checks/<group>/`.
+- The code that writes a config file sits in `packages/cli/src/generation/configurations/<group>/<configuration>/`,
+  named for the file it writes. gspot writes that file to `.gspot/configurations/<group>/<configuration>/`.
+- A folder of one code file merges into its parent folder. For example, the one generator of the `dependencies`
+  configuration sits in `packages/cli/src/generation/configurations/general/dependencies.ts`.
+- Code that several configurations share stays at the top of `checks/` or in `generation/config-files/`.
 - `packages/cli/src/commands/` has one file per command, `commands/<command>.ts`. A command that needs more files gets
   a folder `commands/<command>/` with the entry file `<command>.ts`.
 - `system/` holds the code every layer may import: access to files, processes, Git, the environment, and the terminal,
   and the pure text and value helpers that `parsers/` needs.
-- A unit test file mirrors the source file it tests, with the same name. `tests/unit/<package>/<path>.test.ts` tests
+- A unit test file mirrors the source file it tests, with the same name. `tests/suites/unit/<package>/<path>.test.ts` tests
   `packages/<package>/src/<path>.ts`. A test of a whole source folder takes the folder name.
 - When the tests of one source file or folder pass 300 lines, they become a folder of that name with one file per
   scenario.
-- An integration test mirrors what it runs: `tests/integration/checks/<configuration>.test.ts`,
+- An integration test mirrors what it runs: `tests/suites/integration/checks/<group>/<configuration>.test.ts`,
   `commands/<command>.test.ts`, or `install/<module>.test.ts`. Past 300 lines, the tests of one configuration become a
   folder with one file per tool.
-- `tests/data/` mirrors the tests. `tests/data/<path>.ts` holds the values of `tests/<suite>/<path>.test.ts`, and the
-  test files of one folder may share `tests/data/<folder>.ts`.
-- `unit/cli/` drops out of a data path. Values that only the integration suites read live under
-  `tests/data/integration/`.
-- A value goes to `tests/data/` when two test files read it, when it forms a `test.each` table with expected results,
+- `tests/config/` mirrors the tests. `tests/config/<path>.ts` holds the values of `tests/suites/<suite>/<path>.test.ts`, and the
+  test files of one folder may share `tests/config/<folder>.ts`.
+- `suites/` and `unit/cli/` drop out of a `tests/config/` path. Values that only the integration suites read live under
+  `tests/config/integration/`.
+- A value goes to `tests/config/` when two test files read it, when it forms a `test.each` table with expected results,
   or when it has more than five lines. RuleTester cases and the arguments of a command stay beside their call.
-- `tests/setup/` holds the code that tests share, in one subfolder per job. `tests/types/` holds the types that two or
-  more test files share.
+- `tests/suites/` holds the `unit/`, `integration/`, and `e2e/` suites. `tests/setup/` holds the code that tests share,
+  in one subfolder per job.
+- `tests/types/` holds the types that two or more test files share, and `tests/schemas/` the schemas that read tool
+  output in tests.
 
 ## Dependency overrides
 

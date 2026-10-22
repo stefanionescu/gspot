@@ -4,7 +4,7 @@ import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { gitEntrySchema } from '#cli/schemas/parsers/git.ts';
-import { LEADING_SLASH, ANY_FOLDER_PREFIX } from '#cli/config/system/paths.ts';
+import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import type { GitEntry, GitStream, GitIndexEntry, AttributePattern } from '#cli/types/parsers/git.ts';
 
 import {
@@ -16,6 +16,7 @@ import {
     ATTRIBUTE_LINE,
     OCTAL_PATH_BYTE,
     ATTRIBUTE_FIELDS,
+    ANY_FOLDER_PREFIX,
     QUOTED_PATH_PARTS,
     BINARY_ATTRIBUTES,
     UNSUPPORTED_ENTRY,

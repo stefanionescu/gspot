@@ -2,23 +2,16 @@ import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { writePlans } from '#cli/ownership/writer.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
-import { listExpectedPaths } from '#cli/apply/stale.ts';
+import { listExpectedPaths } from '#cli/apply/stale-files.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
 import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
 import { planSettingsWrite } from '#cli/ownership/file-settings.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system/modes.ts';
-import { MANAGED_KEYS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply.ts';
+import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/ownership/plans.ts';
-
-import {
-    HOOKS_PATH,
-    VALE_CONFIG_FILE_PATH,
-    NPM_TOOL_PROJECT_FILE,
-    INSTALLED_TOOL_FOLDERS,
-    PYTHON_TOOL_PROJECT_FILE,
-} from '#cli/config/gspot-paths.ts';
+import { MANAGED_KEYS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply/write.ts';
 
 /**
  * Say that the generated files need no change.
@@ -49,9 +42,9 @@ export function formatApplyReport(report: ApplyReport): string {
 
 function removeUnusedToolFolders(writer: Writer, paths: ReadonlySet<string>): void {
     for (const [path, keep] of [
-        [INSTALLED_TOOL_FOLDERS.npm, paths.has(NPM_TOOL_PROJECT_FILE)],
-        [INSTALLED_TOOL_FOLDERS.python, paths.has(PYTHON_TOOL_PROJECT_FILE)],
-        [INSTALLED_TOOL_FOLDERS.vale, paths.has(VALE_CONFIG_FILE_PATH)],
+        [INSTALLED_TOOL_FOLDERS.npm, paths.has(GSPOT_PATHS.npmProject)],
+        [INSTALLED_TOOL_FOLDERS.python, paths.has(GSPOT_PATHS.pythonProject)],
+        [INSTALLED_TOOL_FOLDERS.vale, paths.has(GSPOT_PATHS.valeConfigFile)],
     ] as const) {
         if (!keep) writer.files.deleteTree(path);
     }
@@ -61,7 +54,7 @@ function addInstallationNote(session: Session, generated: GenerationResult, repo
     const dependenciesChanged = generated.files.some(
         (file) =>
             report.written.includes(file.path) &&
-            (file.kind === 'lock' || [NPM_TOOL_PROJECT_FILE, PYTHON_TOOL_PROJECT_FILE].includes(file.path)),
+            (file.kind === 'lock' || file.path === GSPOT_PATHS.npmProject || file.path === GSPOT_PATHS.pythonProject),
     );
     const hasDrift = listStaleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
     if (dependenciesChanged || hasDrift) report.notes.push(INSTALL_NEEDED_NOTE);
@@ -133,7 +126,7 @@ export function writeGeneratedFiles(
         ...[...blocks, ...managedKeyPlans].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
     );
     report.removed.push(...pruning.map(({ path }) => path));
-    if ([...report.removed, ...report.written].some((path) => path.startsWith(`${HOOKS_PATH}/`)))
+    if ([...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`)))
         report.notes.push(HOOKS_CHANGED_NOTE);
     addInstallationNote(session, generated, report);
     if (generated.managedKeys.length > 0) report.notes.push(MANAGED_KEYS_NOTE);

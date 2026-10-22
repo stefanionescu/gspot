@@ -5,16 +5,15 @@ import { isDeepStrictEqual } from 'node:util';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { type FileBounds, type FileContents } from '#cli/types/system/files.ts';
-import { TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files.ts';
+import { MODE_BITS, PRIVATE_FILE, PERMISSION_BITS } from '#cli/config/files/modes.ts';
 
 import {
-    MODE_BITS,
-    PRIVATE_FILE,
     WRITABLE_FILE,
     READ_ONLY_FILE,
     OWNER_WRITE_BIT,
-    PERMISSION_BITS,
-} from '#cli/config/system/modes.ts';
+    TEMPORARY_FILE_SUFFIX,
+    TEMPORARY_FILE_PREFIX,
+} from '#cli/config/system/files/entries.ts';
 import {
     openSync,
     lstatSync,

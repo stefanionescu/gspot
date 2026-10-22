@@ -1,9 +1,9 @@
 import { ENVIRONMENT_VARIABLES } from '../config/reference.ts';
+import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
+import { type CliReference, type ReferencePage } from '../types/reference.ts';
 import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
-import { type ReferencePage, type ReferenceFacts } from '../types/reference.ts';
-import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/commands/help.ts';
 
-type Command = ReferenceFacts['commands'][number];
+type Command = CliReference['commands'][number];
 
 function formatOptionValues(option: { choices?: string[]; default?: unknown }): string {
     return (
@@ -43,7 +43,7 @@ function formatCommand(command: Command): string {
  * @param data.commands the help data the CLI registers
  * @returns the Commands page, with its title, description, and Markdown body
  */
-export function buildCommandPage({ commands }: Pick<ReferenceFacts, 'commands'>): ReferencePage {
+export function buildCommandPage({ commands }: Pick<CliReference, 'commands'>): ReferencePage {
     return buildReferencePage(
         'Commands',
         'Every gspot command, its options, and its exit codes.',

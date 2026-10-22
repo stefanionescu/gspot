@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
-import { SETTINGS_FILE } from '#cli/config/gspot-paths.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
-import { SETTING_FACTS } from '#cli/config/settings/facts.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
+import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/parts.ts';
 import { ciSchema, hooksSchema, rulesSchema } from '#cli/schemas/settings/integrations.ts';
 import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
@@ -18,7 +18,7 @@ import {
     TABLE_DESCRIPTIONS,
     JSON_SCHEMA_DIALECT,
     NAMED_FINDING_CHECKS,
-} from '#cli/config/settings/schema.ts';
+} from '#cli/config/settings/gspot-toml.ts';
 import {
     formatSchema,
     relativePath,
@@ -31,14 +31,14 @@ import {
 
 const ignoreSchema = z
     .strictObject({
-        check: z.string().optional().describe(SETTING_FACTS['ignore.check'].description),
-        rule: z.string().optional().describe(SETTING_FACTS['ignore.rule'].description),
-        names: z.array(z.string().min(1)).min(1).optional().describe(SETTING_FACTS['ignore.names'].description),
-        paths: relativePaths.optional().describe(SETTING_FACTS['ignore.paths'].description),
+        check: z.string().optional().describe(SETTING_DEFINITIONS['ignore.check'].description),
+        rule: z.string().optional().describe(SETTING_DEFINITIONS['ignore.rule'].description),
+        names: z.array(z.string().min(1)).min(1).optional().describe(SETTING_DEFINITIONS['ignore.names'].description),
+        paths: relativePaths.optional().describe(SETTING_DEFINITIONS['ignore.paths'].description),
         reason: z
             .string({ error: 'needs a reason. Add `reason = "..."` to this record.' })
-            .describe(SETTING_FACTS['ignore.reason'].description),
-        until: localDateSchema.optional().meta(SETTING_FACTS['ignore.until']),
+            .describe(SETTING_DEFINITIONS['ignore.reason'].description),
+        until: localDateSchema.optional().meta(SETTING_DEFINITIONS['ignore.until']),
     } satisfies SchemaShape<
         NonNullable<ParsedSettings['ignore']>[number],
         NonNullable<WrittenSettings['ignore']>[number]
@@ -62,16 +62,16 @@ const ignoreSchema = z
     });
 
 const commandCheckSchema = z.strictObject({
-    id: z.string().min(1).describe(SETTING_FACTS['command_check.id'].description),
-    command: commandCheckFields.command.unwrap().meta(SETTING_FACTS['command_check.command']),
-    paths: nonemptyPaths.meta(SETTING_FACTS['command_check.paths']),
-    outputs: relativePaths.optional().describe(SETTING_FACTS['command_check.outputs'].description),
-    stage: commandCheckFields.stage.exclude(['message']).meta(SETTING_FACTS['command_check.stage']),
-    summary: commandCheckFields.summary.meta(SETTING_FACTS['command_check.summary']),
-    help: commandCheckFields.help.meta(SETTING_FACTS['command_check.help']),
-    fix: commandCheckFields.fix.meta(SETTING_FACTS['command_check.fix']),
-    exit_codes: commandCheckFields.exit_codes.meta(SETTING_FACTS['command_check.exit_codes']),
-    output: commandCheckFields.output.meta(SETTING_FACTS['command_check.output']),
+    id: z.string().min(1).describe(SETTING_DEFINITIONS['command_check.id'].description),
+    command: commandCheckFields.command.unwrap().meta(SETTING_DEFINITIONS['command_check.command']),
+    paths: nonemptyPaths.meta(SETTING_DEFINITIONS['command_check.paths']),
+    outputs: relativePaths.optional().describe(SETTING_DEFINITIONS['command_check.outputs'].description),
+    stage: commandCheckFields.stage.exclude(['message']).meta(SETTING_DEFINITIONS['command_check.stage']),
+    summary: commandCheckFields.summary.meta(SETTING_DEFINITIONS['command_check.summary']),
+    help: commandCheckFields.help.meta(SETTING_DEFINITIONS['command_check.help']),
+    fix: commandCheckFields.fix.meta(SETTING_DEFINITIONS['command_check.fix']),
+    exit_codes: commandCheckFields.exit_codes.meta(SETTING_DEFINITIONS['command_check.exit_codes']),
+    output: commandCheckFields.output.meta(SETTING_DEFINITIONS['command_check.output']),
 } satisfies SchemaShape<
     NonNullable<ParsedSettings['command_check']>[number],
     NonNullable<WrittenSettings['command_check']>[number]
@@ -144,26 +144,32 @@ const scopeBody = {
 
 /** One scope record: its path, configuration choices, and settings tables. */
 export const scopeSchema = z.strictObject({
-    path: relativePath.describe(SETTING_FACTS['scope.path'].description),
+    path: relativePath.describe(SETTING_DEFINITIONS['scope.path'].description),
     configurations: z
         .array(z.string())
-        .default(SETTING_FACTS['scope.configurations'].default)
-        .describe(SETTING_FACTS['scope.configurations'].description),
-    removed_configurations: allowReasonedValue(z.array(z.string()), SETTING_FACTS['scope.removed_configurations']),
-    test_files: z.array(relativePath).optional().describe(SETTING_FACTS['scope.test_files'].description),
+        .default(SETTING_DEFINITIONS['scope.configurations'].default)
+        .describe(SETTING_DEFINITIONS['scope.configurations'].description),
+    removed_configurations: allowReasonedValue(
+        z.array(z.string()),
+        SETTING_DEFINITIONS['scope.removed_configurations'],
+    ),
+    test_files: z.array(relativePath).optional().describe(SETTING_DEFINITIONS['scope.test_files'].description),
     ...scopeBody,
 }) satisfies z.ZodType<NonNullable<ParsedSettings['scope']>[number], WrittenScope>;
 
 /** Top-level gspot.toml keys that gspot list settings and the settings reference show. */
 export const rootSettingSchemas = {
-    level: levelSchema.default(SETTING_FACTS['level'].default).meta(SETTING_FACTS['level']),
+    level: levelSchema.default(SETTING_DEFINITIONS['level'].default).meta(SETTING_DEFINITIONS['level']),
     tool_timeout_seconds: z
         .number()
         .int()
         .positive()
-        .default(SETTING_FACTS['tool_timeout_seconds'].default)
-        .meta(SETTING_FACTS['tool_timeout_seconds']),
-    test_files: z.array(relativePath).default(SETTING_FACTS['test_files'].default).meta(SETTING_FACTS['test_files']),
+        .default(SETTING_DEFINITIONS['tool_timeout_seconds'].default)
+        .meta(SETTING_DEFINITIONS['tool_timeout_seconds']),
+    test_files: z
+        .array(relativePath)
+        .default(SETTING_DEFINITIONS['test_files'].default)
+        .meta(SETTING_DEFINITIONS['test_files']),
 };
 
 export const settingsSchema = z
@@ -171,9 +177,9 @@ export const settingsSchema = z
         ...rootSettingSchemas,
         configurations: z
             .array(z.string())
-            .default(SETTING_FACTS['configurations'].default)
-            .describe(SETTING_FACTS['configurations'].description),
-        removed_configurations: allowReasonedValue(z.array(z.string()), SETTING_FACTS['removed_configurations']),
+            .default(SETTING_DEFINITIONS['configurations'].default)
+            .describe(SETTING_DEFINITIONS['configurations'].description),
+        removed_configurations: allowReasonedValue(z.array(z.string()), SETTING_DEFINITIONS['removed_configurations']),
         scope: z.array(scopeSchema).optional(),
         ...rootBody,
         import_rule: importRulesSchema,
@@ -293,7 +299,7 @@ export function findSettingSchema(key: string): z.ZodType | undefined {
 }
 
 /**
- * Convert a settings schema to JSON Schema, and keep written defaults and the setting facts.
+ * Convert a settings schema to JSON Schema, and keep written defaults and the setting definitions.
  *
  * @param schema the runtime validator.
  * @returns the JSON Schema, with TOML dates as calendar strings.
@@ -311,8 +317,9 @@ function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
             for (const key of INTERNAL_FACT_KEYS) Reflect.deleteProperty(jsonSchema, key);
             if (zodSchema instanceof z.ZodDefault && zodSchema.def.innerType instanceof z.ZodUnion)
                 jsonSchema.default = zodSchema.def.defaultValue;
-            const facts = z.globalRegistry.get(zodSchema);
-            if (facts && Object.hasOwn(facts, 'examples')) Object.assign(jsonSchema, { examples: facts['examples'] });
+            const definition = z.globalRegistry.get(zodSchema);
+            if (definition && Object.hasOwn(definition, 'examples'))
+                Object.assign(jsonSchema, { examples: definition['examples'] });
         },
     });
 }

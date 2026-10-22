@@ -1,17 +1,17 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
-import type { LimitSchemas } from '#cli/types/settings/facts.ts';
-import { LIMIT_FACTS } from '#cli/config/settings/limit-facts.ts';
+import type { LimitSchemas } from '#cli/types/settings/definitions.ts';
+import { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
 import { wholeNumber, allowReasonedValue } from '#cli/schemas/settings/parts.ts';
 import { type WrittenLimits, type TableSettings } from '#cli/types/settings/file.ts';
 import { type LimitLanguage, type LanguageLimitField } from '#cli/types/settings/tables.ts';
 
 const limitFields = Object.fromEntries(
-    Object.entries(LIMIT_FACTS).map(([key, facts]) => [
+    Object.entries(LIMIT_DEFINITIONS).map(([key, definition]) => [
         key.slice('limits.'.length),
         allowReasonedValue(
             key === 'limits.trivial_function_statements' ? z.number().int().positive() : wholeNumber,
-            facts,
+            definition,
         ),
     ]),
 ) as LimitSchemas;
@@ -24,7 +24,7 @@ function buildLanguageMask<Language extends LimitLanguage>(
     language: Language,
 ): Record<LanguageLimitField<Language>, true> {
     return Object.fromEntries(
-        Object.entries(LIMIT_FACTS).flatMap(([key, declaration]) =>
+        Object.entries(LIMIT_DEFINITIONS).flatMap(([key, declaration]) =>
             'languages' in declaration && (declaration.languages as readonly string[]).includes(language)
                 ? [[key.slice(key.indexOf('.') + 1), true]]
                 : [],

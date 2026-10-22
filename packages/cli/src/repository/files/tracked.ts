@@ -7,20 +7,20 @@ import { isInScope } from '#cli/repository/scopes.ts';
 import { parseIndexEntries } from '#cli/parsers/git.ts';
 import { isIgnored } from '#cli/repository/files/gitignore.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
-import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-paths.ts';
 import { readText, decodeUtf8 } from '#cli/system/files/reads.ts';
+import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
-import { GITLINK_MODE, ENTRY_FILE_MODES } from '#cli/config/parsers/git.ts';
-import { EXECUTABLE_BITS, EXECUTABLE_FILE } from '#cli/config/system/modes.ts';
-import type { ListedFile, PathIgnore, PendingFolder, FolderListing } from '#cli/types/repository/inventory.ts';
+import { GITLINK_MODE, EXECUTABLE_FILE, ENTRY_FILE_MODES } from '#cli/config/files/modes.ts';
+import type { ListedFile, PathIgnore, PendingFolder, FolderListing } from '#cli/types/repository/files.ts';
 
 import {
     GIT_FOLDER,
     GITIGNORE_FILE,
+    EXECUTABLE_BITS,
     GIT_INDEX_FILES_ARGUMENTS,
     INSTALLED_DEPENDENCY_FOLDERS,
     GIT_UNTRACKED_FILES_ARGUMENTS,
-} from '#cli/config/repository/tracked.ts';
+} from '#cli/config/repository/files/tracked.ts';
 
 // A link to a folder, or one that leaves the repository, stays out of the inventory, so checks cannot read past it. A
 // dangling link remains listed with no size.

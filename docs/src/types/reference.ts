@@ -18,7 +18,7 @@ export type CommandReference = {
 export type SettingVariant = { setting: Setting; owners: string[] };
 
 /** The facts about commands, configurations, checks, and settings that the docs pages read. */
-export type ReferenceFacts = {
+export type CliReference = {
     commands: CommandReference[];
     configurations: Configuration[];
     checks: ConfigurationCheck[];

@@ -1,0 +1,73 @@
+import type { StylelintComponent } from '#cli/types/generation/files.ts';
+
+const VUE_STYLELINT_OVERRIDE = {
+    files: ['**/*.vue'],
+    customSyntax: 'postcss-html',
+    ignorePseudoClasses: ['deep', 'global', 'slotted'],
+    functions: ['v-bind'],
+} as const;
+
+const SVELTE_STYLELINT_OVERRIDE = {
+    files: ['**/*.svelte'],
+    customSyntax: 'postcss-html',
+    ignorePseudoClasses: ['global'],
+} as const;
+
+export const STYLELINT_RULE_NAMES_FILE = 'configurations/language/css/stylelint-rule-names.json';
+
+export const STYLELINT_BASE_RULES = { 'no-descending-specificity': true, 'import-notation': 'string' } as const;
+
+export const TAILWIND_AT_RULES = [
+    'tailwind',
+    'apply',
+    'layer',
+    'theme',
+    'utility',
+    'variant',
+    'custom-variant',
+    'source',
+    'plugin',
+    'config',
+    'reference',
+] as const;
+
+/** CSS Modules syntax, as stylelint-config-css-modules 4.6.0 accepts it: composes, :global and :export, and @value. */
+export const CSS_MODULES_OVERRIDE = {
+    files: ['**/*.module.css'],
+    suffix: '.module.css',
+    rules: {
+        'selector-pseudo-class-no-unknown': [
+            true,
+            { ignorePseudoClasses: ['export', 'import', 'global', 'local', 'external'] },
+        ],
+        'selector-type-no-unknown': [true, { ignore: ['custom-elements'], ignoreTypes: ['from'] }],
+        'property-no-unknown': [
+            true,
+            { ignoreProperties: ['composes', 'compose-with'], ignoreSelectors: [':export', '/^:import/'] },
+        ],
+    },
+    atRules: ['value'],
+} as const;
+
+export const STYLELINT_RECOMMENDED_OFF: ReadonlySet<string> = new Set([
+    'no-descending-specificity',
+    'container-name-pattern',
+    'custom-media-pattern',
+    'custom-property-pattern',
+    'declaration-block-no-redundant-longhand-properties',
+    'keyframes-name-pattern',
+    'layer-name-pattern',
+    'number-max-precision',
+    'selector-class-pattern',
+    'selector-id-pattern',
+    'selector-not-notation',
+]);
+
+const VUE_CONFIGURATION = 'vue';
+
+const SVELTE_CONFIGURATION = 'svelte';
+
+export const STYLELINT_COMPONENTS: Readonly<Record<string, StylelintComponent>> = {
+    [VUE_CONFIGURATION]: VUE_STYLELINT_OVERRIDE,
+    [SVELTE_CONFIGURATION]: SVELTE_STYLELINT_OVERRIDE,
+};

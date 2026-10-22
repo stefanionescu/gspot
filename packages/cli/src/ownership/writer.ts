@@ -1,8 +1,8 @@
 // Take the writer lock, and write or delete the files of a write plan.
 import { GspotError } from '#cli/system/errors.ts';
-import { WRITER_LOCK_FILE } from '#cli/config/ownership.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
 import type { Writer, WritePlan } from '#cli/types/ownership.ts';
+import { WRITER_LOCK_FILE } from '#cli/config/ownership/writer.ts';
 import { openFiles, removeEmptyFolders } from '#cli/system/files/open.ts';
 
 function writeBatch(writer: Writer, plans: WritePlan[]): void {

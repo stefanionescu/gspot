@@ -3,16 +3,16 @@ import { join } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { runInstallStep } from '#cli/install/steps.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { readMiseBinPaths } from '#cli/tools/locate.ts';
+import { listNeededTools } from '#cli/planning/tools.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
-import { listNeededTools } from '#cli/planning/needed-tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { redactInstallOutput } from '#cli/install/credentials.ts';
-import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/inspection.ts';
+import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/locate.ts';
 import { MISE_TRUST_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/install/mise.ts';
 
 import {

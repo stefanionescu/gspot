@@ -1,8 +1,8 @@
 // Check the Node.js or Bun version before loading the gspot modules, because they call newer runtime APIs as they load.
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { PROCESS_ARGUMENTS_START } from '#cli/config/bin.ts';
 import { validateRuntimeVersion } from '#cli/system/runtime.ts';
-import { PROCESS_ARGUMENTS_START } from '#cli/config/commands/program.ts';
 
 const runtimeError = validateRuntimeVersion(process.versions, cliPackage.engines);
 if (runtimeError === undefined) {

@@ -5,11 +5,11 @@ import { afterAll, beforeAll } from 'bun:test';
 import { markExecutable } from '#tests/setup/system/git.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
-import { BASH_SANDBOX } from '#tests/data/checks/bash/sandbox.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import { type Sandbox, type SandboxPlan } from '#tests/types/sandbox.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
 import { changeSandbox, applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import type {

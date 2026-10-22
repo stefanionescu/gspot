@@ -1,12 +1,12 @@
 import { SIDEBAR } from './navigation.ts';
 import { SITE_URL, DOCS_PATH } from './site.ts';
+import { START_RUNNERS } from '#cli/config/repository/npm.ts';
 import { REFERENCE_PATH, REFERENCE_FOLDERS } from './reference.ts';
 import cliPackage from '@gspothq/cli/package.json' with { type: 'json' };
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { START_RUNNERS } from '#cli/config/repository/package-manager.ts';
 import { SKILLS_FOLDER, SKILLS_INDEX_FILE, MARKDOWN_COPY_FILE } from './agents.ts';
 import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/generation/ci.ts';
-import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/root-facts.ts';
+import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
 
 /** The name of each package manager as the docs show it, and the lockfile that a clone installs from. */
 const PACKAGE_MANAGER_DOCS = {

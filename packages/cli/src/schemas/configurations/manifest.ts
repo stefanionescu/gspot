@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { FILE_KINDS } from '#cli/config/repository/inventory.ts';
-import type { FileKind } from '#cli/types/repository/inventory.ts';
-import { RULE_FILE_PATTERN } from '#cli/config/generation/rules.ts';
-import { GSPOT_CONFIGURATIONS_PATH } from '#cli/config/gspot-paths.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import type { FileKind } from '#cli/types/repository/files.ts';
+import { FILE_KINDS } from '#cli/config/repository/files/classify.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/dependencies.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
 import { declaredNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
+import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/configurations/manifest.ts';
 
 import type {
     ConfigFile,
@@ -20,10 +20,9 @@ import {
     GROUPS,
     CHECK_RUNS,
     CHECK_NEEDS,
-    NAME_PATTERN,
     CHECK_WORKING_FOLDERS,
     SHIPPED_CONFIG_FILES_FOLDER,
-} from '#cli/config/configurations.ts';
+} from '#cli/config/configurations/names.ts';
 import {
     levelSchema,
     regexSchema,
@@ -76,6 +75,9 @@ const configFileSchema = z
     .strictObject({
         level: levelSchema.optional(),
         target: z.string(),
+        // The shipped file in config-files when its name differs from the target: gspot transpiles a TypeScript source
+        // to the JavaScript module that the target names.
+        source: z.string().min(1).optional(),
         // A root file sits in the scope folder; every other config file sits in the folder of its configuration.
         root: z.boolean().default(false),
         // Generate the file when a check in its scope runs any named tool.
@@ -97,7 +99,7 @@ const configFileSchema = z
         return {
             ...configFile,
             file: configFile.target,
-            source: posix.join(SHIPPED_CONFIG_FILES_FOLDER, configFile.target),
+            source: posix.join(SHIPPED_CONFIG_FILES_FOLDER, configFile.source ?? configFile.target),
         };
     }) satisfies z.ZodType<ConfigFile>;
 
@@ -278,7 +280,7 @@ export const manifestSchema = z
             target: configFile.root
                 ? configFile.file
                 : posix.join(
-                      GSPOT_CONFIGURATIONS_PATH,
+                      GSPOT_PATHS.configurations,
                       rest.configuration.group,
                       rest.configuration.name,
                       configFile.file,

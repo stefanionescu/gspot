@@ -1,8 +1,6 @@
 /** The longest install output that gspot shows after it removes credentials. */
 export const INSTALL_OUTPUT_LIMIT = 4000;
 
-export const HTTP_URL = /^https?:\/\//u;
-
 export const URL_CREDENTIALS = /(https?:\/\/)[^\s/@]+@/giu;
 
 /** A URL password cannot enter a portable tool lockfile. */

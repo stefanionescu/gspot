@@ -6,14 +6,14 @@ import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { readCachedPrefix } from '#cli/system/files/reads.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
-import { BANNER_BYTES } from '#cli/config/repository/inventory.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { type GenerationResult } from '#cli/types/generation/files.ts';
+import { BANNER_BYTES } from '#cli/config/repository/files/classify.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import type { ConfigurationEvidence } from '#cli/types/repository/detection.ts';
+import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
-import { type ReplacedFile, type ExistingTools } from '#cli/types/repository/existing-tools.ts';
-import { readLintJobs, isEditedInPlace, readExistingTools } from '#cli/repository/existing-tools.ts';
+import { type ExistingTools, type ConflictingConfigFile } from '#cli/types/repository/existing.ts';
+import { readLintJobs, isEditedInPlace, readExistingTools } from '#cli/repository/existing/tools.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
     const { root, repository, configurations, settingsFile } = session;
@@ -86,7 +86,11 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
     };
 }
 
-function buildInactiveFileRow(session: Session, configFile: ReplacedFile, configuration: Configuration): SuggestionRow {
+function buildInactiveFileRow(
+    session: Session,
+    configFile: ConflictingConfigFile,
+    configuration: Configuration,
+): SuggestionRow {
     if (configuration.when?.git === true && !session.repository.hasGit)
         return { path: configFile.path, note: `${configFile.tool} requires a Git repository`, command: 'git init' };
     const checks = configuration.checks.filter(
@@ -106,7 +110,7 @@ function buildInactiveFileRow(session: Session, configFile: ReplacedFile, config
 
 function buildFileRow(
     session: Session,
-    configFile: ReplacedFile,
+    configFile: ConflictingConfigFile,
     tools: Set<string>,
     configuration: Configuration,
 ): SuggestionRow {
@@ -133,7 +137,7 @@ function listUnownedConfigFiles(
 ): SuggestionRow[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     const generatedPaths = new Set(generated.files.map((file) => file.path));
-    return existingTools.replacedFiles
+    return existingTools.conflictingConfigFiles
         .filter((configFile) => tracked.has(configFile.path) && !generatedPaths.has(configFile.path))
         .filter((configFile) => !isEditedInPlace(configFile, generated.managedKeys))
         .filter(

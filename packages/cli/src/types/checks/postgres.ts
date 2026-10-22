@@ -1,6 +1,6 @@
 import type { AlterTableCmd } from '@pgsql/types';
 import type { Finding } from '#cli/types/runs/check.ts';
-import type { SqlFile, SqlStatement, SqlNodeFields } from '#cli/types/parsers/sql.ts';
+import type { SqlFile, SqlStatement, SqlNodeFields } from '#cli/types/parsers/code/sql.ts';
 
 /**
  * Where the migrations declare something: the file, the offset, and the statement text, so that a finding can point at
