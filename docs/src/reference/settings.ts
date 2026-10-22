@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { JSONSchema } from 'zod/v4/core';
-import { SCHEMA_FILE } from '#cli/config/settings/schema.ts';
+import { SCHEMA_FILE } from '#cli/config/settings/json-schema.ts';
 import type { CliReference, ReferencePage } from '../types/reference.ts';
 import { formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 

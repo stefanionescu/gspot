@@ -50,3 +50,4 @@ export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     rules: 'Whether gspot writes rules for coding agents, and which rule files it leaves out.',
 };
 export const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';
+export const SCHEMA_FILE = 'gspot.schema.json';

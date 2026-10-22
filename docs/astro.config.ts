@@ -6,9 +6,9 @@ import starlightLlmsTxt from 'starlight-llms-txt';
 import { pruneUnusedStyles } from './src/styles.ts';
 import { SIDEBAR } from './src/config/navigation.ts';
 import { CLI_REFERENCE } from './src/reference/cli.ts';
-import { SCHEMA_FILE } from '#cli/config/settings/schema.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 import { LLMS_PAGES, AGENT_STEPS } from './src/config/setup.ts';
+import { SCHEMA_FILE } from '#cli/config/settings/json-schema.ts';
 
 import {
     FAVICON,

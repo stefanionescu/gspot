@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGit } from '#tests/setup/system/git.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { buildJsonSchema } from '#cli/settings/json-schema.ts';
+import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -153,10 +154,32 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
 
 test('v8r accepts a gspot.toml with an unquoted until date', async () => {
     const { root, environment } = installedSandbox();
-    await using _change = await applySandboxChanges(installedSandbox(), UNQUOTED_UNTIL_CHANGE);
+    await using state = new AsyncDisposableStack();
+    // v8r reads the schema that this checkout builds, not the schema of the published site.
+    let schemaRequests = 0;
+    const server = Bun.serve({
+        hostname: '127.0.0.1',
+        port: 0,
+        fetch: () => {
+            schemaRequests += 1;
+            return Response.json(buildJsonSchema());
+        },
+    });
+    state.defer(async () => {
+        await server.stop(true);
+    });
+    state.use(
+        await applySandboxChanges(installedSandbox(), {
+            ...UNQUOTED_UNTIL_CHANGE,
+            settings: `${UNQUOTED_UNTIL_CHANGE.settings}[[tools.v8r.schema]]\npaths = ["gspot.toml"]\nurl = "${server.url.toString()}gspot.schema.json"\n`,
+        }),
+    );
     const checked = parseCheckReport(
         await spawnGspot(root, ['check', 'gspot.toml', '--only', 'data-files/v8r', '--json'], environment),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(checked.report.checks).toMatchObject([{ check: 'data-files/v8r', status: 'passed', fileCount: 1 }]);
+    expect(checked.report.checks).toMatchObject([
+        { check: 'data-files/v8r', status: 'passed', command: matchItems(['gspot.toml']) },
+    ]);
+    expect(schemaRequests).toBeGreaterThan(0);
 });
