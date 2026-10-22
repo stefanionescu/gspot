@@ -49,7 +49,7 @@ export const KEY_PATH_CASES = [
     },
 ] as const;
 
-/** Unknown keys name their table; the corrected input then passes. */
+/** Unknown keys name their table; the corrected text then passes. */
 export const UNKNOWN_KEY_CASES = [
     {
         name: 'an unknown key names its table',

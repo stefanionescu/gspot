@@ -1,4 +1,6 @@
-/** Function and assignment captures used by source checks. */
+/**
+ * The syntax tree queries that the trivial-function and environment-reader checks run on Bash, Python, and Swift files.
+ */
 export const SOURCE_QUERIES = {
     bash: `(function_definition) @function
 (variable_assignment) @assignment`,
@@ -12,8 +14,10 @@ export const INDEX_BASE_NAMES = new Set(['index', 'mod', '__init__']);
 /** Comment styles for the languages whose code lines gspot counts. */
 export const COMMENT_MARKERS = { bash: '#', python: '#', sql: '--' } as const;
 
-// Syntax tree nodes that count as statements in Python, Swift, and Bash, to tell a trivial file from a real one.
-
+/**
+ * Nested function nodes in Python, Swift, and Bash: their body statements count toward the function around them, and a
+ * lambda counts as one statement itself.
+ */
 export const COUNTED_FUNCTION_NODES = new Set([
     'function_definition',
     'function_declaration',
@@ -99,7 +103,7 @@ export const PYTHON_FROM_STATEMENT = 'import_from_statement';
 
 export const RELATIVE_IMPORT = 'relative_import';
 
-/** The folders where SwiftPM looks for a target without a path, in its order, by target kind. */
+/** The folders where Swift Package Manager looks for a target without a path, in its order, by target kind. */
 export const SWIFTPM_TARGET_FOLDERS: Readonly<Record<string, readonly string[]>> = {
     target: ['Sources', 'Source', 'src', 'srcs'],
     executableTarget: ['Sources', 'Source', 'src', 'srcs'],

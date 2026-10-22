@@ -112,7 +112,7 @@ test.each(['setup.cfg', 'tox.ini'])('init leaves a shared %s in place and names 
 async function assertRetainedFile(root: string, path: string, original: string, initialized: InitJson): Promise<void> {
     expect(initialized.plan.retained).toContainEqual({
         path,
-        note: expect.stringContaining('Delete the section when ready') as string,
+        note: expect.stringContaining('Delete the section; the generated tool file replaces it.') as string,
     });
     expect(await readFile(join(root, path), 'utf8')).toBe(original);
     const attributes = await stat(join(root, path));
@@ -158,7 +158,7 @@ test.each([true, false])(
         const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
         expect(plan.retained).toContainEqual({
             path: 'setup.cfg',
-            note: expect.stringContaining('Delete the section when ready') as string,
+            note: expect.stringContaining('Delete the section; the generated tool file replaces it.') as string,
         });
         expect(plan.delete.some((entry) => entry.path === 'setup.cfg')).toBe(false);
         expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));

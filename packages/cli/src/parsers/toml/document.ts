@@ -144,7 +144,7 @@ export function openTomlFile(path: string, text: string): EditableFile {
         set(keys, value) {
             if (keys.some((key) => typeof key !== 'string')) throw new Error(`${path} requires TOML table keys.`);
             const key = keys.at(-1);
-            if (key === undefined) throw new Error(`${path} has an empty configuration key path.`);
+            if (key === undefined) throw new Error(`${path} has an empty key path.`);
             const table = findTomlTable(document, {
                 filePath: path,
                 keys: keys.slice(0, -1),

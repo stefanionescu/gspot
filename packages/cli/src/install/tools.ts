@@ -19,7 +19,7 @@ import type { ToolInstall, InstallResult } from '#cli/types/install/tools.ts';
  * @param session the repository to install for.
  * @param writer the locked repository handle.
  * @param generated the tool projects to install.
- * @returns the commands that ran, the install summary, and the exit code.
+ * @returns the commands that ran and the install summary.
  */
 export async function installTools(
     session: Session,
@@ -51,7 +51,7 @@ export async function installTools(
     } catch (error) {
         session.cancelSignal?.throwIfAborted();
         if (!(error instanceof GspotError) || !['tool', 'install'].includes(error.code)) throw error;
-        throw new GspotError('install', `${error.message}\nTool installation is incomplete. Run: gspot install`, {
+        throw new GspotError('install', `${error.message}\nTool installation is incomplete. Run gspot install.`, {
             cause: error,
         });
     }

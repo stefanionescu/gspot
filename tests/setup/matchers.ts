@@ -2,7 +2,7 @@
 import { expect } from 'bun:test';
 
 /**
- * Awaits a promise that must reject with an error.
+ * Await a promise that must reject with an error.
  *
  * @param promise what must reject.
  * @returns the message of the error it rejected with.
@@ -18,7 +18,7 @@ export async function captureRejection(promise: Promise<unknown>): Promise<strin
 }
 
 /**
- * Runs a function that must throw an error.
+ * Run a function that must throw an error.
  *
  * @param run what must throw.
  * @returns the message of the error it threw.

@@ -107,7 +107,7 @@ why = "Without a summary, the reader must trace the function in their head, and 
 
 [[check]]
 example = "A private function `_orphan` that no script calls reports a finding. Delete it, or record a hook that needs it with `gspot ignore` and a reason."
-help = "Delete the function. For a required hook entry point, run `gspot ignore bash/unused-functions --paths <file> --reason <why>`."
+help = "Delete the function. For a required hook entry point, run `gspot ignore bash/unused-functions --paths <file> --reason \"<why>\"`."
 level = "recommended"
 name = "unused-functions"
 runs = "scope"
@@ -145,7 +145,7 @@ why = "No check reads code inside a heredoc."
 
 [[check]]
 example = "`killall worker` reports `broad-kill`. Stop the one process by its ID, or ignore the rule for that script with a reason."
-help = "Handle the failure. For required cleanup, use `gspot ignore bash/safety` with `--rule`, `--paths`, and `--reason`."
+help = "Stop one process by its ID, delete only paths the script created, and handle each failure. Accept a required cleanup with `gspot ignore bash/safety --rule <rule> --paths <glob> --reason \"<why>\"`."
 level = "recommended"
 name = "safety"
 stage = "commit"

@@ -1,6 +1,6 @@
 import type { EslintPlugins } from '#cli/types/generation/eslint.ts';
 
-/** Test correctness rules shared by the two test plugins, without their namespace. */
+/** Test correctness rules that the two test plugins share, without their namespace. */
 export const TEST_RULE_NAMES = [
     'no-focused-tests',
     'no-disabled-tests',
@@ -250,7 +250,7 @@ export const CONFIGURATION_PLUGINS = {
     jest: { jest: ['jest', 'eslint-plugin-jest'] },
 } as const satisfies Record<string, EslintPlugins>;
 
-/** Import statements, selectors, and lint rules for the fragments with no configuration-specific calculation. */
+/** The imports, plugins, files, and rules of the configuration blocks that need no code of their own. */
 export const PLUGIN_RULE_BLOCKS: Readonly<
     Record<
         string,

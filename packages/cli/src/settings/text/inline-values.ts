@@ -3,7 +3,7 @@ import { type TomlValue, type TomlComments } from '#cli/types/parsers/toml.ts';
 import { isTomlKind, getTomlRange, insertTomlComments } from '#cli/parsers/toml/syntax.ts';
 
 /**
- * Write nested TOML arrays and inline tables, and keep their comments.
+ * Build the text of a nested TOML array or inline table, and keep its comments.
  *
  * @param node the parsed value whose layout supplies the source ranges.
  * @param text the TOML source of those ranges.

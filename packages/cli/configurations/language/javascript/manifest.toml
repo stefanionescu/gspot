@@ -62,7 +62,7 @@ version = "9.39.5"
 [tool.suppression]
 marker = "^(?:/\\*\\s*eslint-disable(?:-next-line|-line)?|//\\s*eslint-disable-(?:next-)?line)(?=\\s|$)(?<rules>[\\s\\S]*)"
 reason = " -- (?<reason>\\S.*)"
-example = "// eslint-disable-next-line no-console -- the command prints its result"
+example = "// eslint-disable-next-line no-console -- reason: the command prints its result"
 separator = "\\s--"
 all_rules = "^$"
 limit_rules = "(?:^|[\\s,])(?:complexity|sonarjs/cognitive-complexity|max-lines|max-lines-per-function|max-statements|max-params|max-depth|max-nested-callbacks)(?=$|[\\s,])"
@@ -200,7 +200,6 @@ replace = ["knip.json", "knip.jsonc", ".knip.json", ".knip.jsonc", "knip.ts", "k
 version = "6.35.1"
 
 [[tool]]
-install_help = "Run: npm install --save-dev typescript"
 name = "tsc"
 npm = "typescript"
 system = true
@@ -210,7 +209,7 @@ version_command = ["--version"]
 [tool.suppression]
 marker = "@ts-(?:ignore|expect-error|nocheck)\\b"
 reason = "@ts-(?:ignore|expect-error|nocheck):?\\s+(?<reason>\\S.*)"
-example = "// @ts-expect-error: the library types omit this overload"
+example = "// @ts-expect-error reason: the library types omit this overload"
 
 [eslint]
 required_tools = ["@eslint/js", "@gspothq/eslint-plugin", "eslint-plugin-sonarjs", "eslint-plugin-unicorn", "eslint-plugin-security", "eslint-plugin-barrel-files", "eslint-plugin-perfectionist", "eslint-plugin-n", "eslint-plugin-jsdoc", "eslint-plugin-regexp", "eslint-plugin-import-x", "eslint-import-resolver-typescript", "eslint-plugin-boundaries", "eslint-plugin-package-json", "eslint-config-prettier", "globals", "picomatch"]

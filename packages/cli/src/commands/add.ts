@@ -1,5 +1,3 @@
-// The add command: add configurations to gspot.toml.
-
 import { getScopeTable } from '#cli/settings/edit.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
@@ -55,8 +53,8 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
 /**
  * Register the add command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerAdd(program: Command, onResult: CommandCompletion): void {
     program

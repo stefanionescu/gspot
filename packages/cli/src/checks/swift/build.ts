@@ -101,7 +101,8 @@ async function runSwiftBuild(
             files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
         const cwd = join(source, planned.scope.folder.path);
         const result = await runCheckTool(session, planned, plan.commandArguments, { cwd });
-        // Match SwiftLint paths and expose response-file sources in the compiler log.
+        // Drop the macOS /private prefix so the paths match those of SwiftLint, and list the files of each response
+        // file in the compiler log.
         const output = `${result.stdout}\n${result.stderr}`
             .split('\n')
             .map((line) =>

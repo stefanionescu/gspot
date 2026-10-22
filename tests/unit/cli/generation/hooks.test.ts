@@ -141,8 +141,8 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
         await chmod(path, 0o755);
     }
     // The process runner puts the folder of an absolute program first on the search path, so /usr/bin/sh brings
-    // /usr/bin/git ahead of the fakes. Each hook runs by its own path; Windows runs it through the sh of Git for Windows,
-    // whose folder holds no git.
+    // /usr/bin/git ahead of the fakes. Each hook runs by its own path; Windows runs it through the sh of Git for
+    // Windows, whose folder holds no git.
     const shExecutable = Bun.which('sh')!;
     const runHook = (name: string, ...hookArguments: string[]): string[] => {
         const path = join(sandbox.path, '.gspot/hooks', name);

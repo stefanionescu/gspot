@@ -39,7 +39,7 @@ function formatCommand(command: Command): string {
 /**
  * Build the Commands page from the CLI help data, with a section per command in program order.
  *
- * @param data the CLI reference data
+ * @param data the CLI reference facts
  * @param data.commands the help data the CLI registers
  * @returns the Commands page, with its title, description, and Markdown body
  */
@@ -47,7 +47,7 @@ export function buildCommandPage({ commands }: Pick<ReferenceFacts, 'commands'>)
     return buildReferencePage(
         'Commands',
         'Every gspot command, its options, and its exit codes.',
-        `Run gspot from any folder in the repository; it finds the nearest \`gspot.toml\`. Start each command the way your repository runs gspot, such as \`npx gspot\` or \`mise exec -- gspot\`. See [Install](/start/install/#choose-how-to-install). Commands that change settings write generated files too.\n\n` +
+        `Run gspot from any folder of the repository; it uses the \`gspot.toml\` at the top of the Git repository. Start each command the way your repository runs gspot, such as \`npm exec --no -- gspot\` or \`mise exec -- gspot\`. See [Installation](/start/install/#choose-how-to-install). Commands that change settings write generated files too.\n\n` +
             formatTable(
                 ['Command', 'What it does'],
                 commands.map((command) => [`[\`gspot ${command.name}\`](#gspot-${command.name})`, command.summary]),

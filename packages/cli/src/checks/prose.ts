@@ -26,7 +26,7 @@ import {
 } from '#cli/config/checks/prose.ts';
 
 /**
- * Parses the Vale JSON output into alerts.
+ * Reads the alerts of each file from the Vale JSON output.
  *
  * @param stdout what Vale printed.
  * @returns the alerts of every file.
@@ -43,7 +43,8 @@ function parseValeAlerts(stdout: string): ValeAlert[] {
     );
 }
 
-// Vale runs with --no-exit, so alerts leave the exit code at 0. Any other code means Vale itself failed, which never counts as a pass.
+// Vale runs with --no-exit, so alerts leave the exit code at 0. Any other code means Vale itself failed, which never
+// counts as a pass.
 function assertValeRan(result: SpawnResult): void {
     if (result.code === 0 && !result.missing) return;
     const lines = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
@@ -150,7 +151,7 @@ function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
  */
 export async function checkProseVale(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     if (!hasValePackages(session.installedRoot, session.settingsFile.settings.level))
-        throw new GspotError('tool', 'The Vale packages are not installed. Run: gspot install');
+        throw new GspotError('tool', 'The Vale packages are not installed. Run gspot install.');
     const folder = dirname(join(session.root, VALE_TOOL_FILE_PATH));
     const groups = groupRoutes(planned.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];

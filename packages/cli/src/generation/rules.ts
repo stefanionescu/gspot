@@ -21,6 +21,7 @@ import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cl
 
 import {
     FIRST_READ,
+    BLANK_LINE,
     RULES_HEADING,
     ALL_LEVEL_MARKER,
     MARKDOWN_HEADING,
@@ -40,21 +41,25 @@ function listConfigurationRules(configurations: Configuration[], repository: Rep
 }
 
 /**
- * Drop the marked Markdown sections and their subsections at level recommended.
+ * Build the text of a rule file for a level: at recommended without its level-all sections, at all without the level
+ * markers, which mean nothing to the reader.
  *
- * @param text the authored rule with Markdown level markers.
+ * @param text the rule as written, with Markdown level markers.
  * @param level recommended or all.
- *
- * @returns the original bytes outside the dropped sections.
+ * @returns the original bytes outside the dropped sections or markers.
  */
-function stripAllLevelSections(text: string, level: Level): string {
-    if (level === 'all') return text;
+function buildLevelRuleText(text: string, level: Level): string {
     let through = 0;
     const output: string[] = [];
-    for (const section of parseHeadingSections(text).filter((entry) => entry.all)) {
-        if (section.start < through) continue;
-        output.push(text.slice(through, section.start));
-        through = section.end;
+    for (const { start, end, marker } of parseHeadingSections(text)) {
+        if (marker === undefined || start < through) continue;
+        // At level all, cut the marker line and one of the line breaks around it; at recommended, cut the whole
+        // section.
+        const markerEnd =
+            text.startsWith(BLANK_LINE, marker.end) && text.endsWith(BLANK_LINE, marker.start) ? BLANK_LINE.length : 1;
+        const cut = level === 'all' ? { start: marker.start, end: marker.end + markerEnd } : { start, end };
+        output.push(text.slice(through, cut.start));
+        through = cut.end;
     }
     output.push(text.slice(through));
     return output.join('');
@@ -104,17 +109,23 @@ function formatSettingsCommands(startCommand: string): string {
 /**
  * Find heading sections and their level markers, and skip headings inside code fences.
  *
- * @param text the authored Markdown rule.
- *
- * @returns source ranges, depths, and level markers for each heading.
+ * @param text the Markdown rule as written.
+ * @returns the source range and depth of each heading, and the source range of its level marker.
  */
 function parseHeadingSections(text: string): RuleSection[] {
     const nodes = fromMarkdown(text).children;
     const headings = nodes.flatMap((node, index) => {
         if (node.type !== 'heading') return [];
         const start = (node.position as SourcePosition).start.offset;
-        const marker = nodes[index + 1];
-        return [{ start, depth: node.depth, all: marker?.type === 'html' && marker.value.trim() === ALL_LEVEL_MARKER }];
+        const next = nodes[index + 1];
+        const marker =
+            next?.type === 'html' && next.value.trim() === ALL_LEVEL_MARKER
+                ? {
+                      start: (next.position as SourcePosition).start.offset,
+                      end: (next.position as SourcePosition).end.offset,
+                  }
+                : undefined;
+        return [{ start, depth: node.depth, marker }];
     });
     return headings.map((heading, index) => ({
         ...heading,
@@ -122,7 +133,7 @@ function parseHeadingSections(text: string): RuleSection[] {
     }));
 }
 
-// List the rule files of each scope before selecting shared content.
+// List the rule file paths of the configurations that one scope selects.
 function listScopeRules(scope: Scope): Set<string> {
     return new Set(
         scope.configurations.flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path)),
@@ -160,7 +171,7 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
         )
         .flatMap(({ source, path, group }) => {
             const text = readFileSync(buildAssetPath(source), 'utf8');
-            const content = stripAllLevelSections(text, level);
+            const content = buildLevelRuleText(text, level);
             if (content !== text && !parseHeadingSections(content).some((section) => section.depth > 1)) return [];
             const scopes = scopeRules.filter((scope) => scope.rules.has(path)).map((scope) => scope.path);
             return [{ path, target: `${GSPOT_CONFIGURATIONS_PATH}/${path}`, content, group, scopes }];
@@ -173,7 +184,7 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
  *
  * @param block what the block lists.
  * @param block.files the rules with their content.
- * @param block.generatedPaths the files gspot writes outside .gspot, with managed keys.
+ * @param block.generatedPaths the files gspot writes outside .gspot.
  * @param block.managedKeys the keys that gspot manages inside authored tool files.
  * @param block.hasChecks whether any configuration runs a check.
  * @param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
@@ -224,7 +235,7 @@ export function buildAgentsBlock({
 /**
  * Check whether Markdown text has a top heading, outside code blocks.
  *
- * @param text the authored part of the file.
+ * @param text the text of AGENTS.md outside the gspot block.
  * @returns whether a level-one heading exists.
  */
 export function hasTopHeading(text: string): boolean {

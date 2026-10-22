@@ -8,9 +8,9 @@ import {
 } from '#cli/config/generation/settings/builders/sqlfluff.ts';
 
 /**
- * Build the SQLFluff file from the settings.
+ * Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclusions.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the SQL dialect, formatting choices, and SQLFluff rule exclusions.
  */
 export function buildSqlfluffFile(planned: PlannedToolFile): string {

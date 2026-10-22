@@ -33,7 +33,7 @@ export type Scope = {
     settings: ScopeSettings;
 };
 
-/** Values validated once for one scope, then read by checks and generators. */
+/** Values that gspot validates once for one scope, and that checks and generators then read. */
 export type ScopeValues = {
     settings: Record<string, unknown>;
     values: TableValues;
@@ -70,14 +70,14 @@ export type KnownSettings = {
     errors: { key: string; message: string }[];
 };
 
-/** A written key matched to its declaration and its declared language and category. */
+/** A written key matched to its setting, language, and category. */
 export type SettingMatch = { setting: Setting; language?: string; category?: string };
 
 export type WrittenSetting = Pick<EffectiveSetting, 'value' | 'reason'>;
 
 export type WrittenScopeTable = { table: SettingsTable; scope?: string; path: KeyPath };
 
-/** A setting default and the configuration responsible for it. */
+/** A setting default and the configuration that sets it. */
 export type SettingDefault = { value: unknown; configuration: string };
 
 /** Transform or observe one declared path without changing its role. */

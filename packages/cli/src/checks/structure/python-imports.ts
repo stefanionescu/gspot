@@ -73,12 +73,12 @@ function listRelativeImports(node: Node, prefix: Node, file: string, search: Pyt
 }
 
 /**
- * Find the repository files that the imports of one Python file load. Modules that the repository does not
- * hold, and the modules that python.externals names, have no path.
+ * Find the repository files that the imports of one Python file load. Modules that the repository does not hold, and
+ * the modules that python.externals names, load no repository file.
  *
  * @param root the syntax tree of the file.
  * @param file the repository-relative path of the file.
- * @param search the repository files, the folders of absolute imports, and the host modules.
+ * @param search the repository files, the folders that absolute imports start from, and the python.externals modules.
  * @returns each import with the file it loads.
  */
 export function listPythonImports(root: Node, file: string, search: PythonSearch): LocatedImport[] {

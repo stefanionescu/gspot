@@ -5,11 +5,11 @@ export const ALIAS_FILES = [
     },
     {
         path: 'tsconfig.json',
-        message: 'Cannot read TypeScript configuration {PATH}',
+        message: 'Cannot read the tsconfig file {PATH}',
     },
 ] as const;
 
-/** Root and child alias declarations that conflict. The tests check which declaration wins. */
+/** Root and child aliases that conflict. The tests check which one wins. */
 export const ALIAS_PROJECT = {
     'package.json': '{"imports":{"#app/*":"./src/*","#root/*":"./root/*","#shared/*":"./package/*"}}',
     'tsconfig.json': '{"compilerOptions":{"paths":{"@root/*":["./typed/*"],"#shared/*":["./compiler/*"]}}}',

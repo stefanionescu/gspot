@@ -25,8 +25,7 @@ const count: number = 1;
     'source.ts': 'export const count: number = 1;\n',
     'source.js': 'export const count = 1;\n',
 } as const;
-// Each framework exposes the same security finding through its own markup syntax.
-
+/** Each framework exposes the same security finding through its own markup syntax. */
 export const RAW_HTML_CASES = [
     {
         configuration: 'react',

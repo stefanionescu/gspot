@@ -36,11 +36,11 @@ function assertArgumentList(value: unknown, name: string): string[] {
 }
 
 /**
- * Expands an each part, or returns undefined for another part kind.
+ * Expand {each:<flag>:<setting>}: the flag before each item of the list setting.
  *
  * @param planned the check, whose scope holds the settings.
  * @param part one argument of the manifest command.
- * @returns the expanded arguments.
+ * @returns the expanded arguments, or undefined for another part kind.
  */
 function expandEachPlaceholder(planned: PlannedCheck, part: string): string[] | undefined {
     const groups = EACH_PLACEHOLDER.exec(part)?.groups;
@@ -68,7 +68,7 @@ function expandExistingPlaceholder(repositoryRoot: string, part: string): string
 }
 
 function listToolFiles(session: Session, planned: PlannedCheck): ToolFile[] {
-    // The own targets of the check come first, because getToolFile takes the first match.
+    // The tool files of the configurations of the check come first, because the lookup takes the first match.
     const own = planned.scope.configurations
         .filter((configuration) => configuration.checks.some((check) => check.id === planned.check.id))
         .flatMap((configuration) => configuration.toolFiles);
@@ -106,12 +106,12 @@ function expandPlainPart(
 }
 
 /**
- * Finds the whole-file tool file declaration that a check names.
+ * Find the tool file that {tool_file:<name>} names, with the configurations of the check first.
  *
- * @param session the repository and manifests.
+ * @param session the repository and its configurations.
  * @param planned the check that names it.
- * @param name the tool or setting it belongs to.
- * @returns the manifest record of that tool file.
+ * @param name the tool file path without its extensions.
+ * @returns the [[tool_file]] table of that tool file.
  */
 export function getToolFile(session: Session, planned: PlannedCheck, name: string): ToolFile {
     const target = listToolFiles(session, planned).find((toolFile) => extractToolFileName(toolFile.file) === name);
@@ -122,7 +122,7 @@ export function getToolFile(session: Session, planned: PlannedCheck, name: strin
 /**
  * Lists the tool files that a check command or its environment names.
  *
- * @param session the repository and manifests.
+ * @param session the repository and its configurations.
  * @param planned the check that runs.
  * @param command the arguments to scan.
  * @returns the tool file paths, relative to the root.
@@ -157,7 +157,7 @@ export function listCommandToolFiles(session: Session, planned: PlannedCheck, co
 /**
  * Lists the source and tool files that a copy needs for a command.
  *
- * @param session the repository and manifests.
+ * @param session the repository and its configurations.
  * @param planned the check and its files.
  * @param command the arguments, with tool file placeholders.
  * @returns repository-relative paths for the copy.
@@ -228,7 +228,7 @@ export function replacePlaceholders(
  *
  * @param session the repository and settings.
  * @param planned the check and its scope.
- * @param command the authored arguments.
+ * @param command the arguments as declared.
  * @param substitutions the expansion values.
  * @returns argument text and file markers.
  */

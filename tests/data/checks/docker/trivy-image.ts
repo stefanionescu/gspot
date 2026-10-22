@@ -42,7 +42,7 @@ export const INVALID_COMPOSE_SOURCES = [
 export const TRIVY_IMAGE_FINDINGS = [
     {
         check: 'docker/trivy-image',
-        help: 'Move to a newer tag of the image. Accept one advisory with `gspot ignore docker/trivy-image --rule <id> --reason "..."`.',
+        help: 'Move to a newer tag of the image. Accept one advisory with `gspot ignore docker/trivy-image --rule <rule> --reason "<why>"`.',
         file: 'compose.yaml',
         line: 1,
         rule: 'CVE-example',

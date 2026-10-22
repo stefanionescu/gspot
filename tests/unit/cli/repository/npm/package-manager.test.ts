@@ -94,7 +94,7 @@ test('install runs the real bun version check when package.json declares bun@0.0
     expect(version?.stdout.trim()).not.toBe('0.0.0');
     expect(failure.code).toBe(2);
     expect(failure.stderr).toBe(
-        `The tool project requires bun@0.x, and found ${version?.stdout.trim() ?? ''}. Install that package manager version first.\nTool installation is incomplete. Run: gspot install\n`,
+        `The tool project requires bun@0.x, and found ${version?.stdout.trim() ?? ''}. Install that package manager version first.\nTool installation is incomplete. Run gspot install.\n`,
     );
     for (const [path, content] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);

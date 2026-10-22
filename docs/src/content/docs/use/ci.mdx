@@ -3,6 +3,8 @@ title: Continuous integration
 description: Run checks in GitHub Actions, GitLab, or an existing pipeline.
 ---
 
+import { LOCKFILE_INSTALLS } from '../../../config/setup.ts';
+
 `gspot init` plans a workflow for GitHub or GitLab. It picks the provider from `.github/workflows/` or `.gitlab-ci.yml`,
 or else from an `origin` remote on github.com or gitlab.com.
 
@@ -57,14 +59,27 @@ GitLab job needs mise on the CI machine.
 Before `gspot install`, the GitHub job installs the locked dependencies of the root and of each scope, so the checks
 that read them find them:
 
-| Lockfile                | Command                          |
-| ----------------------- | -------------------------------- |
-| `package-lock.json`     | `npm ci`                         |
-| `pnpm-lock.yaml`        | `pnpm install --frozen-lockfile` |
-| `yarn.lock`, Yarn 2 on  | `yarn install --immutable`       |
-| `yarn.lock`, Yarn 1     | `yarn install --frozen-lockfile` |
-| `bun.lock`, `bun.lockb` | `bun install --frozen-lockfile`  |
-| `uv.lock`               | `uv sync --locked`               |
+<table>
+    <thead>
+        <tr>
+            <th>Lockfile</th>
+            <th>Command</th>
+        </tr>
+    </thead>
+    <tbody>
+        {LOCKFILE_INSTALLS.map(({ lockfile, note, command }) => (
+            <tr>
+                <td>
+                    <code>{lockfile}</code>
+                    {note !== undefined && `, ${note}`}
+                </td>
+                <td>
+                    <code>{command}</code>
+                </td>
+            </tr>
+        ))}
+    </tbody>
+</table>
 
 Each command fails on a lockfile that does not match its project. In a Next.js scope, the step then runs
 `next typegen`, so the typed lint rules find the route types.
@@ -83,7 +98,7 @@ limit for anonymous requests. In other pipelines, set `MISE_GITHUB_TOKEN` yourse
 ## Your own pipeline
 
 Install mise and the runtime of your project. Then install your dependencies and run gspot the way your repository
-starts it; see [Install gspot](/start/install/#choose-how-to-install). With npm:
+starts it; see [Installation](/start/install/#choose-how-to-install). With npm:
 
 ```shell
 npm ci

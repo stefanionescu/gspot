@@ -1,4 +1,3 @@
-// The set command: validate and write one setting.
 import { GspotError } from '#cli/system/errors.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
@@ -46,7 +45,7 @@ function parseSettingValue(values: string[], setting: Setting): ParsedSettingVal
         if (issue !== undefined)
             throw new GspotError(
                 'arguments',
-                `The value \`${values.join(' ')}\` is not valid for ${setting.name}. Use ${issue.values.map(String).join(' or ')}.`,
+                `The value ${values.join(' ')} is not valid for ${setting.name}. Use ${issue.values.map(String).join(' or ')}.`,
             );
     }
     if (setting.type === 'list') return { type: 'list', value: Array.isArray(scalar) ? scalar : parsed };
@@ -58,7 +57,7 @@ function parseReasonEntries(options: SetOptions): ParsedSettingValue {
     if (reason === undefined)
         throw new GspotError(
             'arguments',
-            `${options.key} keeps a reason for each entry. Add --reason "..." with why each one belongs.`,
+            `${options.key} keeps a reason for each entry. Add --reason "<why>" with why each one belongs.`,
         );
     return { type: 'scalar', value: Object.fromEntries(options.values.map((item) => [item, reason])) };
 }
@@ -125,7 +124,7 @@ function assertCompleteReason({ options, setting, change, previous, shippedDefau
 }
 
 /**
- * Write a setting, add list items, or change table entries.
+ * Write a setting, add list items, or change the keys of a table.
  *
  * @param options the parsed flags.
  * @returns the command result.
@@ -134,7 +133,9 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     if (Object.hasOwn(listRecordFields(), options.key))
         throw new GspotError(
             'arguments',
-            `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
+            options.key === 'ignore'
+                ? 'Run gspot ignore <check> --reason "<why>" to add an ignore.'
+                : `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
         );
     const edit = prepareSettingsEdit(options.cwd);
     const { root, input, settings } = edit;
@@ -164,8 +165,8 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
 /**
  * Register the set command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerSet(program: Command, onResult: CommandCompletion): void {
     program

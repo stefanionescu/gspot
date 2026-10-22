@@ -1,10 +1,10 @@
-// Changes environment variables for a scope and restores them when it ends.
+// Change environment variables and the terminal for a test, and restore them when its scope ends.
 
 import { mock } from 'bun:test';
 import * as systemEnvironment from 'std-env';
 
 /**
- * Sets or clears one environment variable for this process and the tools it spawns.
+ * Set or clears one environment variable for this process and the tools it spawns.
  *
  * @param name the key in process.env to set or remove.
  * @param value text to set, or undefined to clear.
@@ -30,7 +30,7 @@ export function overrideEnvironment(variables: Record<string, string | undefined
     };
 }
 
-/** Make the terminal look interactive and not CI, until the returned resource gets disposed. */
+/** Make the terminal look interactive and not CI, until the caller disposes the returned resource. */
 export async function simulateInteractiveTerminal(): Promise<AsyncDisposable> {
     const resources = new AsyncDisposableStack();
     const previousEnvironment = { ...systemEnvironment };

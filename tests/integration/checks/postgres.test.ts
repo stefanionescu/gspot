@@ -13,7 +13,7 @@ import {
     SQUAWK_CHILD_MIGRATION_PATH,
 } from '#tests/data/integration/checks/postgres.ts';
 
-test("Squawk uses each scope's assume_in_transaction setting, and false under Supabase", async () => {
+test("Squawk uses each scope's assume_in_transaction setting", async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['supabase'], {
             tables: SQUAWK_SCOPE_SETTINGS,

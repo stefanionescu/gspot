@@ -18,11 +18,10 @@ export const outputSchema = z
                 }),
                 z
                     .literal('sarif')
-                    .meta({ description: 'Read SARIF results, rule metadata, source locations, and fixes.' }),
+                    .meta({ description: 'Read SARIF results with their rule IDs and source locations.' }),
                 z.literal('knip').meta({ description: 'Read Knip JSON issue categories and source positions.' }),
                 z.literal('semgrep').meta({
-                    description:
-                        'Read Semgrep JSON results, locations, rule IDs, messages, and fixes provided by Semgrep.',
+                    description: 'Read Semgrep JSON results and source parse errors, with locations and rule IDs.',
                 }),
                 z
                     .literal('typos')
@@ -71,10 +70,13 @@ export const outputSchema = z
             .optional(),
         file_pattern: z
             .string()
-            .describe('For regex: the pattern for a line that names the file of the findings below it.')
+            .describe('For grouped: the pattern for a line that names the file of the findings below it.')
             .optional(),
         fixable: z.string().describe('For regex: the pattern that marks a fixable finding.').optional(),
-        message: z.string().describe('For regex: the pattern for the message.').optional(),
+        message: z
+            .string()
+            .describe('For regex: the message of every finding whose pattern has no message group.')
+            .optional(),
     })
     .transform((output): CheckOutput => {
         switch (output.format) {

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { matchFields, captureThrow } from '#tests/setup/matchers.ts';
 import { rm, link, mkdir, symlink, writeFile } from 'node:fs/promises';
 
 import {
@@ -75,9 +75,11 @@ test('reads refuse a link chain that leaves the folder and work after the link i
 
     const root = join(sandbox.path, 'project');
     await symlink('../outside/source.txt', join(root, 'linked.txt'));
-    expect(() => readText(root, 'linked.txt')).toThrow('Source link leaves the repository: linked.txt');
+    expect(captureThrow(() => readText(root, 'linked.txt'))).toBe(
+        'linked.txt links to a file outside the repository. Replace the link with the file.',
+    );
     expect(() => readCachedPrefix(createReadCache(root), 'linked.txt', 4)).toThrow(
-        'Source link leaves the repository: linked.txt',
+        'linked.txt links to a file outside the repository. Replace the link with the file.',
     );
     await rm(join(root, 'linked.txt'));
     await symlink('inside.txt', join(root, 'linked.txt'));

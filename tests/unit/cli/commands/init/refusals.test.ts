@@ -95,7 +95,7 @@ test('a linked .gspot folder stops init, and nothing outside changes', async () 
     const refused = await runGspot(project, buildInitArguments(['bash']));
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toBe(
-        'A parent of .gspot/state/writer.lock is a link or is not a directory. Choose a directory without links.\n',
+        'A parent of .gspot/state/writer.lock is a link or is not a folder. Choose a folder without links.\n',
     );
     expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
     expect(await readdir(outside)).toStrictEqual(['sentinel']);

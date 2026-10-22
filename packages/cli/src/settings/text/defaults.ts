@@ -129,7 +129,8 @@ export function stripDefaults(settings: TomlTable): TomlTable {
             };
         }),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
-    // The writer has no project input to prove a computed default. Keep a written choice until the writer knows that input.
+    // A detected default depends on project files that the writer does not read, so a written value of a detected
+    // setting always stays.
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.known.defaults.delete(key);
     const scopeValues = scopes.map((table) => {
         const scopePath = trimTrailingSlashes(table['path'] as string);

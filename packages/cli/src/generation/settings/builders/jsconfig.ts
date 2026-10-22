@@ -20,8 +20,8 @@ import {
     JAVASCRIPT_BUNDLED_IMPORTS,
 } from '#cli/config/generation/settings/builders/jsconfig.ts';
 
-// An exclude here replaces the inherited one and the compiler defaults, so it repeats the authored entries. TypeScript
-// takes the exclude of the nearest file in the extends chain, relative to that file.
+// An exclude here replaces the inherited one and the compiler defaults, so it repeats the entries of your own tsconfig.
+// TypeScript takes the exclude of the nearest file in the extends chain, relative to that file.
 function buildExtendedExclude(
     planned: PlannedToolFile,
     paths: { prefix: string; owner: string; ignoredGlobs: string[] },
@@ -60,9 +60,9 @@ function listTrackedDeclarationFiles(planned: PlannedToolFile, authored: TypeScr
 }
 
 /**
- * Build the jsconfig file from the settings.
+ * Build jsconfig.json: the JavaScript type-checking project and its scoped source selectors.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the JavaScript type-checking project and its scoped source selectors.
  */
 export function buildJsconfigFile(planned: PlannedToolFile): string {

@@ -38,7 +38,7 @@ test('ignore of an unknown check exits 2 and leaves gspot.toml byte for byte', a
     const result = await runGspot(sandbox.path, UNKNOWN_IGNORE_ARGUMENTS);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toBe(
-        'There is no check called `bash/shelcheck`. Did you mean `bash/shellcheck`?\n',
+        'There is no check called bash/shelcheck. Did you mean `bash/shellcheck`?\n',
     );
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
@@ -126,7 +126,7 @@ test('ignore refuses an invalid --until date and leaves gspot.toml unchanged', a
     expect(invalid.stderr).toBe('');
     expect(JSON.parse(invalid.stdout)).toStrictEqual({
         error: 'arguments',
-        message: '--until must be a valid calendar date in YYYY-MM-DD form.',
+        message: '--until needs a calendar date in YYYY-MM-DD form, such as 2027-01-31.',
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(before);
 });

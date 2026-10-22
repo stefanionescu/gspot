@@ -31,8 +31,8 @@ import type {
  * Edit settings, check them, and write them and their generated files. Installs nothing.
  *
  * @param repositoryRoot the folder where gspot writes settings and generated files.
- * @param options the settings edit and its summary
- * @returns the apply report and whether the written settings changed
+ * @param options the settings edit and its summary.
+ * @returns the apply report and whether the written settings changed.
  */
 export async function applySettingsEdit(
     repositoryRoot: string,
@@ -62,7 +62,7 @@ export async function applySettingsEdit(
             { cause: error },
         );
     }
-    const shown = result.changed ? summary : 'No change: gspot.toml already has this value.';
+    const shown = result.changed ? summary : 'No change: gspot.toml stays the same.';
     return {
         text: `${shown === '' ? '' : shown + '\n'}${formatApplyReport(report)}`,
         json: { ...report, changed: result.changed },
@@ -74,7 +74,7 @@ export async function applySettingsEdit(
  * Read and validate the settings once before a command edits them.
  *
  * @param cwd the folder where the command starts.
- * @returns the starting state of one edit.
+ * @returns the settings and the gspot.toml text before the edit.
  */
 export function prepareSettingsEdit(cwd: string): PreparedSettingsEdit {
     const root = findRoot(cwd);
@@ -88,7 +88,7 @@ export function prepareSettingsEdit(cwd: string): PreparedSettingsEdit {
  * Validate the configuration names and the scope for add and remove before either command edits a list.
  *
  * @param options where the command starts, the configurations, and the scope.
- * @returns the validated edit, the scope's own lists and effective selection, and the shipped manifests.
+ * @returns the validated edit, the lists of that scope, and the shipped configurations.
  */
 export function prepareConfigurationEdit(options: ConfigurationsOptions): {
     root: string;
@@ -115,10 +115,10 @@ export function prepareConfigurationEdit(options: ConfigurationsOptions): {
 }
 
 /**
- * Look up a setting in one scope with the configurations that the session selects, including the ones that the
- * files of the repository select.
+ * Look up a setting in one scope with the configurations that the session selects, including the ones that the files of
+ * the repository select.
  *
- * @param prepared the state from before the edit.
+ * @param prepared the settings from before the edit.
  * @param prepared.root the repository root.
  * @param prepared.input the settings text and table before the edit.
  * @param prepared.settings the parsed gspot.toml before the edit.
@@ -148,7 +148,7 @@ export async function readSetting(
         if (selectedScope !== undefined)
             throw new GspotError(
                 'arguments',
-                `A configuration has the setting \`${key}\` in the scope \`${selectedScope}\`; add --scope ${quoteArgument(selectedScope)}.`,
+                `A configuration has the setting ${key} in the scope ${selectedScope}; add --scope ${quoteArgument(selectedScope)}.`,
             );
         throw new GspotError('arguments', formatUnknownSetting(knownSettings, key));
     }

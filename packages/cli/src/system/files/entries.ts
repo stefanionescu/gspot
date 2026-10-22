@@ -45,7 +45,7 @@ function prepareParentFolder(folder: string): Stats {
     return lstatSync(folder);
 }
 
-// Read the bytes and mode of a private regular file.
+// Read the bytes and mode of a regular file with one link.
 function readRegularFile(absolutePath: string, stat: Stats, path: string): FileContents {
     if (!stat.isFile() || stat.nlink !== 1)
         throw new GspotError(
@@ -66,7 +66,7 @@ function walkParentFolders(bounds: FileBounds, path: string, statParent: (path: 
         if (!stat.isDirectory() || stat.isSymbolicLink())
             throw new GspotError(
                 'filesystem',
-                `A parent of ${path} is a link or is not a directory. Choose a directory without links.`,
+                `A parent of ${path} is a link or is not a folder. Choose a folder without links.`,
             );
     }
     return join(bounds.root, ...parts);
@@ -88,7 +88,7 @@ function writeStagedFile(temporary: string, contents: FileContents): void {
 }
 
 // Windows cannot rename over a read-only file, so that file goes first. Recovery after an interrupted replacement
-// treats an absent target as not written.
+// treats an absent destination as not written.
 function isRenameBlocked(expected: FileContents | undefined): boolean {
     if (process.platform !== 'win32' || expected === undefined || expected.isLink === true) return false;
     return (expected.mode & OWNER_WRITE_BIT) === 0;
@@ -171,7 +171,7 @@ export function readEntryKeepingLinks(bounds: FileBounds, path: string): FileCon
     try {
         const target = buildContainedPath(bounds, path);
         const stat = lstatSync(target);
-        // A symbolic link reads as its target text, with its own mode.
+        // Read the file contents of a symbolic link: the path it points to, and its own mode.
         return stat.isSymbolicLink()
             ? { bytes: Buffer.from(readlinkSync(target)), mode: PERMISSION_BITS, isLink: true }
             : readRegularFile(target, stat, path);
@@ -202,7 +202,7 @@ export function replaceEntry(
         writeStagedFile(temporary, contents);
         staged = true;
         if (!isSameContents(readEntry(bounds, path), expected))
-            throw new Error(`Destination changed during the operation: ${path}`);
+            throw new GspotError('filesystem', `${path} changed while gspot wrote it. Run the command again.`);
         if (isRenameBlocked(expected)) unlinkSync(target);
         renameSync(temporary, target);
         staged = false;

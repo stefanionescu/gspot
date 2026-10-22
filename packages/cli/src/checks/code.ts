@@ -89,7 +89,7 @@ import {
     checkSupabaseStoragePolicies,
 } from '#cli/checks/supabase.ts';
 
-/** Execution callbacks, keyed by the declared check ID. */
+/** The code of each check, keyed by check ID. */
 const CHECK_CODE: Record<string, CheckCode> = {
     'ansible/ansible-lint': { check: checkAnsibleLint },
     'bash/doc-comments': { check: checkBashDocComments },
@@ -188,10 +188,10 @@ const CHECK_CODE: Record<string, CheckCode> = {
 };
 
 /**
- * Find the check implementation of one check: the stale-output check, or the implementation under its check ID.
+ * Find the code of one check: the generator output check, or the code under its check ID.
  *
  * @param check the check to run.
- * @returns the implementation, or undefined for a tool check that runs only its command.
+ * @returns the check code, or undefined for a check that runs only its declared command.
  */
 export function findCheckCode(check: Pick<Check, 'id' | 'generator_outputs'>): CheckCode | undefined {
     if (check.generator_outputs !== undefined) return { check: checkGeneratorOutputs };

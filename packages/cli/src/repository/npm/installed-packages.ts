@@ -14,7 +14,7 @@ import type { InstalledDependency } from '#cli/types/repository/installed-packag
  * Read and validate a package.json outside the tool project, without its boundary.
  *
  * @param path the absolute package.json file.
- * @returns the package metadata, or undefined when the file does not exist.
+ * @returns the package fields, or undefined when the file does not exist.
  */
 export function readHostPackage(path: string): PackageJson | undefined {
     let text: string;
@@ -28,12 +28,12 @@ export function readHostPackage(path: string): PackageJson | undefined {
 }
 
 /**
- * Read and validate installed metadata through the tool-project boundary.
+ * Read and validate an installed package.json through the tool-project boundary.
  *
  * @param files the confined file handle of the tool project.
  * @param repositoryRoot the boundary for resolving and validating installed package.json paths.
  * @param path the absolute package.json file.
- * @returns the package metadata, or undefined when the file does not exist.
+ * @returns the package fields, or undefined when the file does not exist.
  */
 export function readToolProjectPackage(files: Files, repositoryRoot: string, path: string): PackageJson | undefined {
     let target: string;

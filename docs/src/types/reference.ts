@@ -14,10 +14,10 @@ export type CommandReference = {
     example: string;
 };
 
-/** A setting declaration and the configurations with the same defaults. */
+/** A setting and the configurations with the same defaults. */
 export type SettingVariant = { setting: Setting; owners: string[] };
 
-/** Plain data read by the documentation build. */
+/** The facts about commands, configurations, checks, and settings that the docs pages read. */
 export type ReferenceFacts = {
     commands: CommandReference[];
     configurations: Configuration[];

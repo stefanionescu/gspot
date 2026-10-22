@@ -3,7 +3,10 @@ import type { TableSettings } from '#cli/types/settings/file.ts';
 import type { REASON_DESCRIPTIONS } from '#cli/config/settings/schema.ts';
 import { type ReasonedValue, type SettingLanguage } from '#cli/types/settings/tables.ts';
 
-/** The schema metadata of a setting that takes a reasoned value: what it holds, and which change needs a reason. */
+/**
+ * The facts that the schema keeps about a setting that takes a reasoned value: what it holds, and which change needs a
+ * reason.
+ */
 export type ReasonedSettingFacts = Required<Pick<SettingFacts, 'description' | 'reason_needed'>>;
 
 export type ReasonNeeded = keyof typeof REASON_DESCRIPTIONS;

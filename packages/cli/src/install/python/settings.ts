@@ -18,18 +18,18 @@ import {
     uvProjectSettingsSchema,
 } from '#cli/schemas/install/python/settings.ts';
 
-// Preserve absolute URLs and paths; resolve an authored local index against its repository.
+// Keep absolute URLs and paths; resolve a relative local index path against the repository.
 function normalizeIndexLocation(root: string, location: string): string {
     if (URL_SCHEME.test(location)) return location;
     return resolve(root, location);
 }
 
 /**
- * Copy repository uv index settings into the temporary folder, make relative paths absolute, and collect registry credentials.
+ * Copy repository uv index settings into the temporary folder, make relative paths absolute, and collect registry
+ * credentials.
  *
  * @param repositoryRoot the base folder for reading uv settings and resolving local index paths.
  * @param settingsFolder the folder where the resolution runs.
- *
  * @returns index credentials that must stay out of generated lockfiles.
  */
 export function writePythonSettings(repositoryRoot: string, settingsFolder: string): string[] {
@@ -42,7 +42,6 @@ export function writePythonSettings(repositoryRoot: string, settingsFolder: stri
  * Read repository index settings and resolve their local paths for a temporary uv project.
  *
  * @param repositoryRoot the base for local index paths.
- *
  * @returns the index settings, and the passwords to keep out of generated lockfiles and messages.
  */
 export function readPythonSettings(repositoryRoot: string): PythonIndexSettings {

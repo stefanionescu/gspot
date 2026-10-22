@@ -14,7 +14,7 @@ export const FILE_EXTENSION_RULE = 'n/file-extension-in-import';
 
 export const IMPORT_BOUNDARIES_RULE = 'gspot/import-boundaries';
 
-/** Import resolution finds your own TypeScript modules before it checks output suffixes. */
+/** The extensions that eslint-plugin-n tries, in this order, when an import names a file without one. */
 export const IMPORT_EXTENSIONS = [
     '.js',
     '.ts',

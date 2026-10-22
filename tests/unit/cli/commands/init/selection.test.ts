@@ -52,7 +52,6 @@ test.each([...CONFIGURATION_CHOICES])(
     },
 );
 
-// The init plan picks languages from the sources and keeps package boundaries.
 test('init leaves javascript out of a root package.json with only tool dependencies and selects it in the app package scope', async () => {
     await using sandbox = await testdir({
         'package.json': TOOL_ONLY_PACKAGE,
@@ -176,7 +175,7 @@ test('init proposes a scope for a Swift package, not for a lint-only package, an
     expect(output.plan.noLongerRuns).toStrictEqual([]);
     expect(output.plan.change).toContainEqual({
         path: 'tools/lint/package.json',
-        note: 'eslint is now pinned in .gspot/package.json; remove it from devDependencies if nothing else uses it',
+        note: 'eslint is now pinned in .gspot/package.json; remove it from package.json if nothing else uses it',
     });
 });
 

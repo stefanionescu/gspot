@@ -43,7 +43,8 @@ const filesSchema = z.strictObject({
     tags: optionalStringList,
     paths: optionalStringList,
     languages: z.boolean().default(false),
-    // The file types that the Prettier plugins of the configurations in use format, such as .astro, join the owned ones.
+    // The file types that the Prettier plugins of the configurations in use format, such as .astro, join the owned
+    // ones.
     prettier_plugins: z.boolean().default(false),
     // The file types that the ESLint plugins of the configurations in use lint, such as .vue, join the owned ones.
     eslint_plugins: z.boolean().default(false),
@@ -65,7 +66,7 @@ const pointerSchema = z.strictObject({
     inherit: z.boolean().optional(),
 } satisfies SchemaShape<NonNullable<ToolFile['pointer']>>);
 
-// A tool-file consumer accepts one declared name or a nonempty list of names.
+// The tool and check fields of a tool file take one name or a nonempty list of names.
 const consumerNamesSchema = z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .transform((names) => (typeof names === 'string' ? [names] : names))
@@ -98,7 +99,8 @@ const toolFileSchema = z
 
 const checkFields = z.strictObject({
     ...commandCheckFields,
-    // The name inside the configuration; the check ID joins the configuration name, a slash, and this name, as python/ruff.
+    // The name inside the configuration; the check ID joins the configuration name, a slash, and this name, as
+    // python/ruff.
     name: z.string().regex(NAME_PATTERN),
     level: levelSchema,
     runs: z.enum(CHECK_RUNS).default('files'),
@@ -146,7 +148,7 @@ const checkFields = z.strictObject({
     help: nonemptyString,
 } satisfies SchemaShape<Omit<ParsedCheck, 'tool' | 'other_tools'> & { tool?: string | string[] | undefined }>);
 
-// A check runs its command, or gspot runs it itself when the check registry names its ID. A list of tools names the
+// A check runs its command, or gspot runs it itself when gspot has check code for its ID. A list of tools names the
 // tool the check runs, then the tools its command starts, such as the bash that runs Bats; each must work.
 const checkSchema = checkFields.transform(({ tool, ...check }) => {
     const [first, ...others] = Array.isArray(tool) ? tool : [];
@@ -220,17 +222,20 @@ export const manifestSchema = z
         detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
         tool: z.array(manifestToolSchema).default([]),
-        // Files under semgrep/ become per-scope Semgrep packs when the scope selects security; explicit tool files supply pack-specific metadata.
+        // Each file in the tool-files folder becomes a tool file. A [[tool_file]] record adds the tools and checks that
+        // read it, and its generation settings.
         tool_file: z.array(toolFileSchema).default([]),
         check: z.array(checkSchema).default([]),
-        // The naming rules of the framework or platform, merged after the shipped settings and before the repository's own.
+        // The naming rules of the framework or platform, merged after the shipped settings and before the repository's
+        // own.
         naming: z
             .strictObject({
                 override: z.array(declaredNamingOverrideSchema).default([]),
             } satisfies SchemaShape<NonNullable<ParsedManifest['naming']>>)
             .optional(),
-        // Rule files, by name, that install only when their condition holds. Every other file in the rules folder installs
-        // with the configuration. Detection reads each condition as it reads a detection table, with the other lists empty.
+        // Rule files, by name, that install only when their condition holds. Every other file in the rules folder
+        // installs with the configuration. Detection reads each condition as it reads a detection table, with the other
+        // lists empty.
         rules: z
             .record(
                 z.string().regex(RULE_FILE_PATTERN),
@@ -261,7 +266,7 @@ export const manifestSchema = z
     // A manifest writes one [[tool]], [[tool_file]], or [[check]] record for each item; the code reads them as lists.
     .transform(({ tool, tool_file: toolFiles, check, detect, ...rest }) => ({
         ...rest,
-        // An absent detection table inherits only the matcher fields of the validated file declaration.
+        // An absent detection table inherits only the matcher fields of the validated [files] table.
         detect: detect ?? detectionSchema.strip().parse(rest.files),
         tools: tool,
         toolFiles: toolFiles.map((toolFile) => ({

@@ -147,8 +147,8 @@ function normalizeIdentity(identity: string): string {
 // environment stays out.
 async function scanProject(session: Session, planned: PlannedCheck, project: LicenseProject): Promise<ProjectLicenses> {
     const { dependencyFile, scope } = project;
-    // The hook checks a pushed revision in a copy without a Python environment, so the scan reads the working tree's. The
-    // node_modules folders reach the copy through links.
+    // The hook checks a pushed revision in a copy without a Python environment, so the scan reads the working tree's.
+    // The node_modules folders reach the copy through links.
     const folder = dirname(dependencyFile);
     const { scan, start, lockfiles, ecosystem } =
         basename(dependencyFile) === PACKAGE_JSON
@@ -178,7 +178,8 @@ async function scanProject(session: Session, planned: PlannedCheck, project: Lic
     return { dependencyFile, packages, locked: [...(lockedKeys ?? [])], ecosystem, settings };
 }
 
-// Each installed project uses its deepest scope; authored exceptions keep the table they came from.
+// Scan each project that has dependencies with the licenses settings of the deepest scope that holds it, and list the
+// projects that a skip setting leaves out.
 async function scanLicenses(session: Session, planned: PlannedCheck) {
     const projects = listLicenseProjects(planned.files, session.scopes, session.settingsFile.settings, planned.check);
     if (projects.length === 0) throw new GspotError('skip', 'Set licenses.allowed to check licenses.');

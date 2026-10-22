@@ -16,7 +16,7 @@ import {
     SQLFLUFF_DIALECT_SETTINGS,
 } from '#tests/data/integration/checks/sql.ts';
 
-/** Find SQL parse errors in the check report. */
+/** Whether the report holds a SQLFluff parse error, the rule `PRS`. */
 function hasSqlParseError(output: ProcessOutput): boolean {
     return parseCheckReport(output)
         .report.checks.flatMap((check) => check.findings)

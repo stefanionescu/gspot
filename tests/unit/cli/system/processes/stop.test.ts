@@ -11,7 +11,7 @@ import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes
 import { isWindows, simulateOperatingSystem } from '#tests/setup/system/platform.ts';
 import { waitForExit, waitForFile, startCommand, limitToTestDeadline } from '#tests/setup/system/processes.ts';
 
-// What the supervisor leaves on a child it stopped: a signal on a POSIX host, an exit code on Windows.
+/** Whether the supervisor stopped the child: a signal on a POSIX host, an exit code on Windows. */
 function isStopped(child: childProcess.ChildProcess | undefined): boolean {
     if (child === undefined) return false;
     if (isWindows) return child.exitCode !== null;

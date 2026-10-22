@@ -2,7 +2,7 @@
 description = "Sites built to a folder: the build, broken links, page weight, and the sitemap."
 requires = ["html"]
 suggests = ["css", "javascript"]
-title = "Static Site"
+title = "Static site"
 
 [detect]
 filenames = ["site.webmanifest", "sitemap.xml"]

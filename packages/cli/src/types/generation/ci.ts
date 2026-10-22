@@ -13,7 +13,7 @@ export type Pipeline = {
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     projectInstall: string[];
     operatingSystems: NonNullable<Settings['ci']>['operating_systems'];
-    /** Whether a scope includes Swift. */
+    /** Whether any scope uses the Swift configuration, which adds a macOS job. */
     hasSwift: boolean;
     /** The manual checks that the configurations declare, which the final job step runs by name. */
     manualChecks: PlannedCheck[];

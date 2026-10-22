@@ -11,7 +11,7 @@ export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN
 /** The exit code that Semgrep returns when it cannot parse a source file. */
 export const SEMGREP_PARSE_EXIT = 3;
 
-/** The Knip JSON finding types, and the meaning that each finding keeps. */
+/** The Knip JSON issue types. */
 export const KNIP_ISSUE_TYPES = [
     'binaries',
     'catalog',
@@ -32,6 +32,7 @@ export const KNIP_ISSUE_TYPES = [
     'unresolved',
 ] as const;
 
+/** The message of each Knip issue type. */
 export const KNIP_ISSUE_MESSAGES = {
     binaries: 'Unlisted binary',
     catalog: 'Unused catalog entry',

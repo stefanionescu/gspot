@@ -1,7 +1,7 @@
 import type { parseDocument } from '@decimalturn/toml-patch';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 
-/** Exact text and position keep merged owned comments in their physical order. */
+/** One comment: its text, its offset, and its line. */
 type TomlComment = { raw: string; start: number; line: number };
 
 /** Free comments keep their spacing; owned comments move with their key. */
@@ -18,7 +18,7 @@ export type TomlCommentNode = Extract<TomlBlock, { type: 'Comment' }>;
 /** Source extent of a parsed concrete syntax node. */
 export type SourceRange = { range?: readonly [number, number] };
 
-/** The authored file and its TOML text. */
+/** A TOML file: its path and its text. */
 
 /** A parent table to retrieve or create while editing a file. */
 export type TomlTableOptions = { filePath: string; keys: KeyPath; create: boolean };
@@ -30,7 +30,7 @@ export type TomlPathNode = { path: KeyPath } & (
     | { kind: 'header'; node: Exclude<TomlBlock, TomlKeyValue | TomlCommentNode>['key'] }
 );
 
-/** Original concrete syntax and its authored values, before defaults. */
+/** The syntax tree of a TOML file and its values as written, before defaults. */
 export type TomlSyntax = {
     document: ReturnType<typeof parseDocument>;
     value: Record<string, unknown>;
@@ -38,7 +38,7 @@ export type TomlSyntax = {
     comments: TomlCommentNode[];
 };
 
-/** Source owners and target owners use the same semantic key paths. */
+/** The comments to place, by the kind and key path of the entry that keeps them. */
 export type TomlComments = Map<string, TomlCommentBlock>;
 
 /** Table paths track array-of-table positions while reading one document. */
@@ -48,10 +48,10 @@ export type TomlTablePositions = {
     active: Map<string, number>;
 };
 
-/** A syntax chunk inserted, kept, or left out around its owner. */
+/** A text replacement: the text that takes the place of the range from start to end. */
 export type TomlTextChunk = { start: number; end: number; text: string };
 
-/** Original comment identity distinguishes repeated physical text with different owners. */
+/** A comment, the entry it describes, and an identity that keeps equal comments on different entries apart. */
 export type TomlAnchoredComment = { comment: TomlCommentNode; anchor: TomlPathNode | undefined; identity: string };
 
 /** One original TOML comment and the syntax entry that keeps it. */

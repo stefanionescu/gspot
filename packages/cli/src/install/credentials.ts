@@ -27,8 +27,7 @@ export function assertCredentialFreeLockfile(lockfile: string, credentials: stri
 /**
  * Read both encoded and decoded passwords from a registry or proxy URL.
  *
- * @param url the authored registry or proxy address.
- *
+ * @param url the registry or proxy address as written in your settings.
  * @returns the password forms to keep out of generated lockfiles and messages.
  */
 export function extractUrlPasswords(url: string): string[] {
@@ -52,7 +51,7 @@ export function redactInstallOutput(result: Pick<SpawnResult, 'stdout' | 'stderr
     let output = `${result.stdout}\n${result.stderr}`;
     for (const secret of secrets) output = output.replaceAll(secret, REDACTED);
     output = output.replace(URL_CREDENTIALS, `$1${REDACTED}@`).trim();
-    if (output === '') return 'The package manager printed no error output.';
+    if (output === '') return 'The command printed no output.';
     return output.length > INSTALL_OUTPUT_LIMIT
         ? `[Earlier output omitted]\n${output.slice(-INSTALL_OUTPUT_LIMIT)}`
         : output;

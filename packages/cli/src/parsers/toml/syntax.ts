@@ -1,4 +1,4 @@
-// Keep TOML comments at their syntax entries.
+// Indexes the keys, headers, and items of TOML text, and keeps each comment at the entry it describes.
 import { getValueAt } from '#cli/system/tables.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
@@ -136,7 +136,7 @@ export function parseTomlSyntax(source: string, parsed: Record<string, unknown>)
 }
 
 /**
- * Place comments just before their own key, header, or array item, without column alignment.
+ * Place comments directly before their own key, header, or array item, without column alignment.
  *
  * @param comments the original syntax entries.
  * @param kind the type of the entry.
@@ -165,7 +165,7 @@ export function insertTomlComments(comments: TomlComments, kind: string, path: K
 }
 
 /**
- * Keep each comment tied to its entry through document edits.
+ * Find the entry that each comment describes, with an identity that stays the same through document edits.
  *
  * @param syntax the indexed entries.
  * @returns comments with their original anchors and stable path identities.

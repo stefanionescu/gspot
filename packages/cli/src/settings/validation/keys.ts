@@ -25,10 +25,11 @@ function formatLooseningError(
     const scopeFlag = scope === undefined ? '' : ` --scope ${quoteArgument(scope)}`;
     const value = JSON.stringify(written.value);
     const argument = typeof written.value === 'string' ? written.value : value;
-    return `\`${key} = ${value}\` is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "..."`;
+    return `\`${key} = ${value}\` is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
 }
 
-// List the errors of a written list: bad items, and loosening items without a reason when the declaration requires reasons.
+// Check the reason of a written list: a list that loosens the default needs a reason, and gspot must accept each written
+// reason.
 function validateWrittenList(
     key: string,
     written: WrittenSetting,
@@ -83,7 +84,8 @@ function validateWrittenKey(
     return validateWrittenScalar(key, written, match, scope, shipped);
 }
 
-// Configuration defaults that conflict in the root or a scope. No written table settles them.
+// List the conflicts between configuration defaults that no written table settles. The root table and every scope table
+// get their own list.
 function listUnsettledConflicts(
     knownSettings: KnownSettings,
     settings: Settings,
@@ -110,7 +112,7 @@ function listUnsettledConflicts(
 /**
  * Name an unknown setting, and list the closest keys in the same table.
  *
- * @param knownSettings the declarations of the configurations.
+ * @param knownSettings the settings of the configurations.
  * @param key the written dotted name.
  * @returns the error, with a command that lists the settings.
  */
@@ -125,7 +127,7 @@ export function formatUnknownSetting(knownSettings: KnownSettings, key: string):
     const near = selectSimilarNames(key.slice(prefix.length + 1), keys);
     const rest = keys.filter((item) => !near.includes(item));
     const suggestions = [...near, ...rest];
-    return `No selected configuration has the setting \`${key}\`. ${
+    return `No selected configuration has the setting ${key}. ${
         suggestions.length === 0
             ? 'No setting exists under that table.'
             : 'The settings that exist under that table are ' + formatCodeList(suggestions) + '.'
@@ -135,10 +137,10 @@ export function formatUnknownSetting(knownSettings: KnownSettings, key: string):
 /**
  * Validate every written key against the known settings and the loosening rule.
  *
- * @param knownSettings the declarations and defaults of the selection.
+ * @param knownSettings the settings and defaults of the selected configurations.
  * @param settings the parsed gspot.toml.
- * @param scopeKnown the declarations of each scope by path, which its own table uses.
- * @param everyConfiguration the settings of every shipped configuration, so a root table may keep a setting whose configuration this repository does not select.
+ * @param scopeKnown the settings of each scope by path, which its own table uses.
+ * @param everyConfiguration the settings saved for configurations whose repository evidence disappeared.
  * @returns the errors in plain English, empty when the settings pass validation.
  */
 export function validateKeys(
@@ -164,7 +166,7 @@ export function validateKeys(
         )
         .map(({ index }) => ({
             path: ['coverage', 'swift_target', index, 'reason'],
-            message: 'A lower coverage target needs a reason.',
+            message: 'A Swift target with a lower line minimum than coverage.lines needs a reason.',
         }));
     errors.push(...targetErrors);
     for (const { table, scope, path } of listSettingsTables(settings)) {

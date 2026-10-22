@@ -1,4 +1,4 @@
-// Reads and shapes plain values: records, nested keys, and tables.
+// Reads and shapes plain values: tables and nested keys.
 import type { Defined } from '#cli/types/shapes.ts';
 
 /**
@@ -15,8 +15,7 @@ export function stripUndefined<T extends object>(value: T): Defined<T> {
 /**
  * Check whether a parsed value holds named fields without an array or date prototype.
  *
- * @param value the parsed input to distinguish from arrays, dates, and null.
- *
+ * @param value the parsed value to tell apart from arrays, dates, and null.
  * @returns whether the value holds keys.
  */
 export function isTable(value: unknown): value is Record<string, unknown> {
@@ -24,11 +23,10 @@ export function isTable(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Read the value at a key path in a parsed object.
+ * Get the value at a key path in a parsed object.
  *
  * @param value the parsed object.
  * @param keys the property names, outermost first.
- *
  * @returns the value, or undefined when any key along the path has no value.
  */
 export function getValueAt(value: unknown, keys: readonly (string | number)[]): unknown {
@@ -62,8 +60,7 @@ export function normalizeTables(value: unknown): unknown {
  *
  * @param raw the parsed document.
  * @param path the table names from the root down.
- *
- * @returns the table at the end of the path, or undefined when the path runs through a missing or single value.
+ * @returns the table at the end of the path, or undefined when the path runs through a value other than a table.
  */
 export function createTable(
     raw: Record<string, unknown>,

@@ -101,7 +101,7 @@ function buildInactiveFileRow(session: Session, toolFile: ReplacedFile, configur
         checks.every((check) => check.level === 'all')
     )
         return { path: toolFile.path, note, command: 'gspot set level all' };
-    return { path: toolFile.path, note, command: 'none; add the source files required by this check' };
+    return { path: toolFile.path, note: `${note}; add the source files that this check reads` };
 }
 
 function buildFileRow(
@@ -113,10 +113,9 @@ function buildFileRow(
     if (tools.has(toolFile.tool))
         return {
             path: toolFile.path,
-            note: `beside the generated ${toolFile.tool} tool file`,
-            command: toolFile.shared
-                ? `move any ${toolFile.table ?? toolFile.key ?? toolFile.tool} setting you still need into gspot.toml, then delete the section`
-                : 'move any setting you still need into gspot.toml, then delete the file',
+            note: toolFile.shared
+                ? `beside the generated ${toolFile.tool} tool file; move any ${toolFile.table ?? toolFile.key ?? toolFile.tool} setting you still need into gspot.toml, then delete the section`
+                : `beside the generated ${toolFile.tool} tool file; move any setting you still need into gspot.toml, then delete the file`,
         };
     if (configuration.group === 'general') return buildInactiveFileRow(session, toolFile, configuration);
     return {
@@ -167,6 +166,6 @@ export function listSuggestions(session: Session): Suggestions {
         lintJobs: readLintJobs(
             session.root,
             existingTools.ci.filter((path) => !workflows.has(path)),
-        ).map((path) => ({ path, note: 'an existing lint job', command: 'none; informational' })),
+        ).map((path) => ({ path, note: 'an existing lint job' })),
     };
 }

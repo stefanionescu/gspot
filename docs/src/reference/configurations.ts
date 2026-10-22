@@ -10,7 +10,7 @@ import { formatList, formatTable, formatSection, buildReferencePage, formatRefer
 
 const DETECTION_LIST_FORMAT = new Intl.ListFormat('en', { type: 'disjunction' });
 
-// The conditions that select: every kind with patterns, apart from the dependencies that rule a selection out.
+// The conditions that select a configuration: every kind with patterns, apart from the dependencies that rule it out.
 function formatDetectionConditions(detect: Configuration['detect']): string[] {
     return Object.entries(detect).flatMap(([kind, patterns]) => {
         if (kind === 'absent_dependencies') return [];
@@ -48,7 +48,7 @@ function formatLintRulesOff(configuration: Configuration): string {
     return formatTable(['Lint rules', 'Files', 'Why'], rows);
 }
 
-// How a configuration gets selected: always, by its files and dependencies, or by another configuration.
+// How gspot selects a configuration: always, by its files and dependencies, or by another configuration.
 function formatSelection(configuration: Configuration, facts: ReferenceFacts): string {
     if (configuration.always_selected)
         return configuration.when?.git === true ? 'Always selected in a Git repository.' : 'Always selected.';
@@ -75,7 +75,7 @@ function listInstalledSections(configuration: Configuration): [string, string][]
         (tool.version === undefined ? 'Any' : `\`${tool.version}\``) +
             (isInstalledByGspot(tool) ? '' : ', install it yourself'),
     ]);
-    // Two pointers can share one target, so each file appears once.
+    // Two tool files can share one target, so each target appears once.
     const targets = [...new Set(configuration.toolFiles.map((toolFile) => `\`${toolFile.target}\``))];
     const ignored = configuration.ignored_paths.map((path) => `\`${path}\``);
     return [
@@ -95,10 +95,10 @@ function formatConfigurationGuide(name: string, guideTitles: Map<string, string>
 }
 
 /**
- * Build the reference page of a shipped configuration: how it gets selected, its settings, and its checks.
+ * Build the reference page of a shipped configuration: how gspot selects it, its settings, and its checks.
  *
  * @param configuration the parsed configuration
- * @param facts everything the CLI exports for the reference
+ * @param facts the CLI reference facts
  * @param guideTitles the authored guide titles keyed by slug.
  * @returns the title, summary, and Markdown body
  */
@@ -142,7 +142,7 @@ function buildConfigurationPage(
 /**
  * Build the grouped configuration index and its pages.
  *
- * @param facts everything the CLI exports for the reference
+ * @param facts the CLI reference facts
  * @param guideTitles the authored guide titles keyed by slug.
  * @returns the index and each configuration page, keyed by path
  */

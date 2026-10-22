@@ -13,7 +13,7 @@ function detectLanguage(file: TrackedFile): ParsedLanguage | undefined {
     return file.tags.includes('shell') ? 'bash' : undefined;
 }
 
-// Each grammar's query supplies both readers with the same captures.
+// One query per grammar collects the function and assignment nodes that the checks read.
 function captureSource(source: ParsedSource): void {
     const query = new Query(source.tree.language, SOURCE_QUERIES[source.language]);
     try {
@@ -28,11 +28,11 @@ function captureSource(source: ParsedSource): void {
 }
 
 /**
- * Parses Bash, Python, and Swift sources and collects their convention captures.
+ * Parses the Bash, Python, and Swift files of the scope and collects the nodes that the convention queries match.
  *
  * @param session the repository reads and parse resources.
  * @param planned the scope files to parse.
- * @returns the convention sources, with live syntax trees.
+ * @returns the parsed files; releaseConventionSources frees their syntax trees.
  */
 async function readParsedSources(
     session: Pick<Session, 'root' | 'reads' | 'resources'>,

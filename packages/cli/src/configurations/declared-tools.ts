@@ -19,7 +19,7 @@ import type {
 /**
  * Find the mise package and version, with the backend that the manifest names.
  *
- * @param tool the declaration to read.
+ * @param tool the tool to read.
  * @returns the installer pin with its backend prefix, or undefined for a system tool.
  */
 function findMiseInstaller(tool: Tool): InstallerPin | undefined {
@@ -49,7 +49,8 @@ export function isInstalledByGspot(tool: Tool): boolean {
 }
 
 /**
- * Select the tools that mise installs, apart from those in the npm and Python tool projects.
+ * List the tools that mise installs, apart from those in the npm and Python tool projects, and add uv when a Python
+ * tool project needs it.
  *
  * @param configurations the configurations in use.
  * @returns the name and version of each mise tool.
@@ -73,7 +74,7 @@ export function listMisePins(configurations: Configuration[]): MisePin[] {
 /**
  * Find the mise pin of one tool: its version, its systems, and its backend options.
  *
- * @param tool the declaration to read.
+ * @param tool the tool to read.
  * @returns the mise pin, or undefined when mise does not install the tool.
  */
 export function findMisePin(tool: Tool): MisePin | undefined {
@@ -108,7 +109,7 @@ export function listToolProjectPins(configurations: Configuration[]): ToolProjec
  * List each tool once, sorted by name.
  *
  * @param configurations the configurations in use.
- * @returns the tool declarations.
+ * @returns the first declaration of each tool name.
  */
 export function listDistinctTools(configurations: Configuration[]): Tool[] {
     const tools = new Map<string, Tool>();
@@ -123,11 +124,11 @@ export function listDistinctTools(configurations: Configuration[]): Tool[] {
 }
 
 /**
- * Resolve a pin from the owning configuration, shared declarations, or a repository command.
+ * Find a tool in the owning configuration first, then in any configuration.
  *
  * @param configurations the configurations that may declare the tool.
  * @param name the executable to find.
- * @returns the declaration, or a system command when no configuration declares the tool.
+ * @returns the tool, or a system program when no configuration declares the tool.
  */
 export function getTool(configurations: Iterable<Configuration>, name: string): Tool {
     for (const configuration of configurations) {
@@ -138,9 +139,9 @@ export function getTool(configurations: Iterable<Configuration>, name: string): 
 }
 
 /**
- * Read the declared executable or the first argument of a manifest command.
+ * Get the tool that a check names, or the first word of its command.
  *
- * @param check the validated declaration.
+ * @param check the validated check.
  * @returns the executable, or undefined for a built-in check without a tool.
  */
 export function getToolName(check: Check): string | undefined {
@@ -150,7 +151,7 @@ export function getToolName(check: Check): string | undefined {
 /**
  * Find the npm or Python package that installs a tool. Generated projects and lookup both use it.
  *
- * @param tool the declaration to read.
+ * @param tool the tool to read.
  * @returns the package to install, or undefined when the system or mise gives the tool.
  */
 export function findToolProjectPackage(tool: Tool): ToolProjectPackage | undefined {
@@ -170,7 +171,7 @@ export function findToolProjectPackage(tool: Tool): ToolProjectPackage | undefin
 /**
  * List the exact npm package names that the configurations declare.
  *
- * @param configurations the configuration declarations.
+ * @param configurations the configurations in use.
  * @returns the names, for tool-only package detection.
  */
 export function listNpmToolNames(configurations: Iterable<Configuration>): Set<string> {
@@ -187,7 +188,7 @@ export function listNpmToolNames(configurations: Iterable<Configuration>): Set<s
 /**
  * Find the build that a tool lacks on a system such as Windows or arm64 Linux.
  *
- * @param tool the declaration with its builds.
+ * @param tool the tool with its builds.
  * @param host the system name and architecture.
  * @returns the words for the missing build, or undefined when the tool has a build.
  */

@@ -1,4 +1,4 @@
-// One output setting per format. Each carries the patterns or fields its format needs.
+/** One output setting per format. Each carries the patterns or fields its format needs. */
 
 import { win32 } from 'node:path';
 

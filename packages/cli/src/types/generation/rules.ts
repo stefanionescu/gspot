@@ -9,7 +9,7 @@ export type RuleFile = {
     group: Configuration['group'];
 };
 
-/** The rule settings, and the rule files that generation writes. */
+/** What the managed block of AGENTS.md lists: the rule files, the generated files and keys, and the start command. */
 export type AgentsBlockContent = {
     files: RuleFile[];
     generatedPaths: string[];
@@ -19,10 +19,15 @@ export type AgentsBlockContent = {
     hasOwnTitle: boolean;
 };
 
-/** The source range, depth, and all-level marker of one Markdown heading. */
-export type RuleSection = { start: number; end: number; depth: number; all: boolean };
+/** The source range and depth of one Markdown heading, and the source range of its level-all marker, if any. */
+export type RuleSection = {
+    start: number;
+    end: number;
+    depth: number;
+    marker: { start: number; end: number } | undefined;
+};
 
-/** A shipped rule asset and its path before selection. */
+/** A shipped rule asset and its path, before gspot chooses which rules to write. */
 export type ShippedRule = {
     source: string;
     path: string;

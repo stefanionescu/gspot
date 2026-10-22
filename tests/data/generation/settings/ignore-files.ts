@@ -13,7 +13,7 @@ export const PRETTIER_IGNORE_SETTINGS = {
     ],
 } as const;
 
-/** Build folders, declarations, and some lockfiles stay ignored; other source files get formatted. */
+/** Build folders, generated and vendored files, a path ignore, and lockfiles stay ignored; Prettier formats the rest. */
 export const PRETTIER_IGNORE_CASES = [
     { file: 'tests/build/Scenario.ts', ignored: true },
     { file: 'src/dist/source.ts', ignored: true },

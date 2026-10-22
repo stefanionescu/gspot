@@ -8,8 +8,9 @@ rules:
           - metavariable-regex:
                 metavariable: $SOURCE
                 regex: ^(body|query|params)$
-      message: 'SQL injection risk: request data is interpolated into a database call.
-          Use parameterised queries or an ORM.'
+      message: >-
+          Request data goes into the SQL text of a database call, which allows SQL injection. Pass the value as a query
+          parameter.
       languages:
           - typescript
           - javascript
@@ -24,8 +25,9 @@ rules:
                 - pattern: res.redirect(req.body.$VALUE)
                 - pattern: res.redirect(req.query.$VALUE)
                 - pattern: res.redirect(req.params.$VALUE)
-      message: 'Open redirect: request data is passed directly to res.redirect().
-          Validate against an allowlist of URLs.'
+      message: >-
+          res.redirect() takes its target from the request, which allows an open redirect. Redirect only to a URL on an
+          allowlist.
       languages:
           - typescript
           - javascript
@@ -42,8 +44,9 @@ rules:
           - metavariable-regex:
                 metavariable: $SOURCE
                 regex: ^(body|query|params)$
-      message: 'Reflected XSS risk: request data is sent as text or HTML. Escape HTML
-          output or use res.json() to send JSON.'
+      message: >-
+          res.send() returns request data as HTML, which allows reflected XSS. Escape the value, or send JSON with
+          res.json().
       languages:
           - typescript
           - javascript

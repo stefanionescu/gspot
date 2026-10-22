@@ -25,7 +25,7 @@ import {
 } from '#cli/config/generation/projects.ts';
 
 /**
- * Generate the mise tool project without the runtime pins of the repository.
+ * Build the mise tool project without the runtime pins of the repository.
  *
  * @param configurations the configurations in use.
  *
@@ -47,7 +47,7 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
 }
 
 /**
- * Generate the npm tools as a tool project, and add no dependencies to the repository.
+ * Build the npm tools as a tool project, and add no dependencies to the repository.
  *
  * @param project what the tool project holds.
  * @param project.root the repository folder.
@@ -96,11 +96,10 @@ export function buildNpmProject({ root, scopes, configurations, isYarnBerry }: P
 }
 
 /**
- * Generate the Python tool project that holds the Python lint tools.
+ * Build the Python tool project that holds the Python lint tools.
  *
  * @param configurations the configurations in use.
- * @param days the release hold, so uv installs no release newer than that.
- *
+ * @param days the minimum release age, so uv installs no release newer than that.
  * @returns the Python tool project files, or none without Python tools.
  */
 export function buildPythonProject(configurations: Configuration[], days: number): GeneratedFile[] {
@@ -111,6 +110,8 @@ export function buildPythonProject(configurations: Configuration[], days: number
             path: PYTHON_TOOL_PROJECT_FILE,
             content:
                 stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, TOOL_FILE_TOML_FORMAT) +
+                // toml-patch writes an empty [tool] table before [tool.uv], so this code writes the table header
+                // itself.
                 `\n${UV_PROJECT_TABLE}\n` +
                 stringify({ package: false, 'exclude-newer': `${String(days)} days` }, TOOL_FILE_TOML_FORMAT),
         },

@@ -1,7 +1,7 @@
 import { NPM_PROJECT_PACKAGE } from '#tests/data/hooks.ts';
 import { HUSKY_STUBS } from '#tests/data/repository/existing-tools.ts';
 
-/** The authored hook managers and the local Git hook script that init must keep. */
+/** The hook setups and the local Git hook script that install must keep. */
 export const HOOK_REPOSITORIES = [
     {
         name: 'another hooks folder',

@@ -1,5 +1,6 @@
 import { REFERENCE_FACTS } from './facts.ts';
-import { LEVEL_DESCRIPTIONS } from '../config/reference.ts';
+import { LEVEL_ADVICE } from '../config/reference.ts';
+import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/root-facts.ts';
 
 /**
  * Describe each level, count its shipped checks, and list the tools it adds.
@@ -16,7 +17,17 @@ export function buildLevelRows(): { level: string; description: string; count: n
         .filter((tool) => !usual.has(tool))
         .toSorted((first, second) => first.localeCompare(second));
     return [
-        { level: 'recommended', description: LEVEL_DESCRIPTIONS.recommended, count: recommended.length, tools: '—' },
-        { level: 'all', description: LEVEL_DESCRIPTIONS.all, count: checks.length, tools: extra.join(', ') },
+        {
+            level: 'recommended',
+            description: `${LEVEL_SUMMARY} ${LEVEL_ADVICE.recommended}`,
+            count: recommended.length,
+            tools: '—',
+        },
+        {
+            level: 'all',
+            description: `${ALL_LEVEL_SUMMARY} ${LEVEL_ADVICE.all}`,
+            count: checks.length,
+            tools: extra.join(', '),
+        },
     ];
 }

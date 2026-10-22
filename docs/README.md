@@ -13,6 +13,9 @@ settings, and ESLint plugin reference pages from the implementation. `src/config
 The release deploys the site to the `gspot-docs` Worker at `generativespotting.com`, with the Wrangler login of the
 person who releases.
 
+A Cloudflare rule on the zone serves `<path>index.md` when a request accepts `text/markdown`. `public/_headers` sends
+`Vary: Accept` for it. Keep the rule when you move the site.
+
 ## Asset licenses
 
 Keep the required notices with every distributed copy of the assets.

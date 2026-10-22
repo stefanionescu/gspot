@@ -1,6 +1,8 @@
 import { ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/data/repository/dependency-files.ts';
 
-// A check that fails while a file holds its first argument, and a correction that replaces that text with its second.
+/**
+ * A check that fails while a file holds its first argument, and a correction that replaces that text with its second.
+ */
 export const TEXT_CHECK_SCRIPT =
     'const [, text, ...paths] = process.argv; const bodies = await Promise.all(paths.map((path) => Bun.file(path).text())); process.exitCode = bodies.some((body) => body.includes(text)) ? 1 : 0;';
 

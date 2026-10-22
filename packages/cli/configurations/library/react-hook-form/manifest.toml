@@ -11,5 +11,5 @@ message = "Give useForm a resolver, so the schema that types the form also valid
 selector = "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))"
 
 [[eslint.selectors]]
-message = "Drop value or use Controller."
+message = "A registered field that also takes `value` acts as a controlled field. Drop `value`, or use Controller."
 selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name=register]):has(JSXAttribute[name.name=value]):not(:has([name.name=type]>[value=/^(checkbox|radio)$/]))"

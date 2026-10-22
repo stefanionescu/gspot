@@ -11,7 +11,7 @@ function assertValeMatches(installed: Files, destination: Files, config: string)
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
         throw new GspotError(
             'copy',
-            'Installed Vale packages do not match the revision configuration. Check this commit in its own clone after running gspot apply and gspot install there.',
+            'The installed Vale packages do not match the Vale settings of this revision. Check this commit in its own clone after running gspot apply and gspot install there.',
         );
 }
 

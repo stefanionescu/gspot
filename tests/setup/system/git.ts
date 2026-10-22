@@ -1,4 +1,4 @@
-// Creates test commits and reads Git output.
+// Run Git in test sandboxes, and prepare repositories with commits, pushes, nested scopes, and Git Large File Storage.
 import { join } from 'node:path';
 import { stat, chmod } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -9,7 +9,7 @@ import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { GIT_CONFIG_ARGUMENTS, GIT_ISOLATION_ENVIRONMENT } from '#tests/data/setup/system/git.ts';
 
 /**
- * Runs git with a throwaway identity, keeping the line endings the sandbox specifies.
+ * Run git with a throwaway identity, keeping the line endings the sandbox specifies.
  *
  * @param cwd the sandbox.
  * @param commandArguments everything after git.
@@ -29,7 +29,7 @@ export function runGit(
 }
 
 /**
- * Runs git and returns what it printed; throws when git fails.
+ * Run git and returns what it printed; throws when git fails.
  *
  * @param cwd the sandbox.
  * @param commandArguments everything after git.
@@ -43,7 +43,7 @@ export function runGitStep(cwd: string, commandArguments: readonly string[]): st
 }
 
 /**
- * Makes the test folder a Git repository with one commit, the state init expects.
+ * Make the test folder a Git repository with one commit, the state init expects.
  *
  * @param cwd the sandbox.
  */
@@ -60,8 +60,8 @@ export function commitAll(cwd: string, message = 'init'): string {
 }
 
 /**
- * Marks a test file executable in the file mode and, on Windows, whose file systems keep no mode bits, in the Git
- * index.
+ * Make a test file executable: set its file mode, and on Windows, whose file systems keep no mode bits, set the mode in
+ * the Git index too.
  *
  * @param cwd the sandbox.
  * @param path the repository-relative file.

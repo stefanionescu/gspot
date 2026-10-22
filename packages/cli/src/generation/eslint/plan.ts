@@ -31,13 +31,13 @@ const PRESETS_BY_CONFIGURATION = new Map<Configuration, EslintPresets>();
 const PRESET_ASSET_PATHS = new Set(listAssets(CONFIGURATIONS_FOLDER));
 
 /**
- * Select the configurations whose fragments add to this tool file.
- * A tool file for one scope asks that scope; a tool file written once asks every scope.
+ * Select the configurations that may add blocks to this tool file. A tool file per scope takes those of the scope; a
+ * tool file written once takes those of every scope.
  *
  * @param scopes every project and its settings.
  * @param scope the scope that gets the tool file.
  * @param toolFile the tool file declaration and its scope requirements.
- * @returns each configuration with a fragment for this tool file, once.
+ * @returns each of those configurations, once.
  */
 function listToolFileConfigurations(scopes: Scope[], scope: Scope, toolFile: ToolFile): Configuration[] {
     if (toolFile.per_scope) return scope.configurations;
@@ -84,10 +84,10 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeF
 }
 
 /**
- * Build the ESLint context of one scope.
+ * Collect what the ESLint tool file of one scope needs: its file patterns, presets, rule options, and settings blocks.
  *
  * @param planned the tool file to build.
- * @returns the context that the ESLint file needs.
+ * @returns the scopes, presets, rule options, and settings blocks of the ESLint file.
  */
 export function buildPlannedEslintFile(planned: PlannedToolFile): PlannedEslintFile {
     const { session, scope, toolFile } = planned;

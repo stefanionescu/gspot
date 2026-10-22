@@ -35,7 +35,7 @@ export type RequirementWalk = {
     seen: Set<string>;
 };
 
-/** manifest.toml as the schema accepts it. */
+/** manifest.toml as the schema returns it. */
 export type ParsedManifest = {
     folder: string;
     defaults: Record<string, JsonValue>;
@@ -101,9 +101,12 @@ export type ToolFile = {
     check: string[];
     pointer?: ToolFilePointer | undefined;
     per_scope: boolean;
-    /** Rule ID prefixes of a Semgrep pack that stay only when the scope depends on one of the packages. */
+    /** Rule ID prefixes of a Semgrep tool file that stay only when the scope depends on one of the packages. */
     rule_dependencies?: Record<string, string[]> | undefined;
-    /** The setting that names the folder each rule of a Semgrep pack covers, in every scope with this configuration. */
+    /**
+     * The setting that names the folder that each rule of a Semgrep tool file covers, in every scope with this
+     * configuration.
+     */
     paths_setting?: string | undefined;
 } & (
     | { source: string }
@@ -113,13 +116,15 @@ export type ToolFile = {
       }
 );
 
-/** A validated check declaration with its check ID, such as python/ruff. Repository commands need no reference example. */
+/** A validated check, with its check ID, such as python/ruff. A [[command_check]] needs no example. */
 export type Check = Omit<ParsedCheck, 'example' | 'name'> & {
     id: string;
     example?: string;
 };
 
-/** One [[check]] record as written. Its name follows the configuration name in the check ID. */
+/**
+ * One [[check]] record of a manifest, as the schema returns it. Its name follows the configuration name in the check ID.
+ */
 export type ParsedCheck = {
     name: string;
     level: Level;
@@ -147,16 +152,16 @@ export type ParsedCheck = {
     help: string;
 };
 
-/** A configuration with flat metadata and the full declaration of each named tool. */
+/** A configuration with each named tool in full. */
 export type Configuration = Omit<ParsedManifest, 'tools' | 'configuration'> &
     ParsedManifest['configuration'] & { tools: Tool[] };
 
-/** Public check identity and the configuration that ships its behavior. */
+/** A shipped check and the configuration that declares it. */
 export type KnownCheck = { check: Check; configuration?: Configuration | undefined };
 
 export type ConfigurationCheck = KnownCheck & { configuration: Configuration };
 
-/** A configuration name and its exact written settings location. */
+/** A configuration name and the key path where gspot.toml names it. */
 export type WrittenConfiguration = { name: string; path: KeyPath };
 
 /** A pinned package installed in the npm or Python tool project. */
@@ -189,7 +194,7 @@ export type InstallerPin = {
     options?: Record<string, string | boolean> | undefined;
 };
 
-/** Resolved tool metadata derives from the validated manifest; installer declarations become named pins. */
+/** A tool that a manifest declares, with one installer pin for each installer it names. */
 export type Tool = {
     installers: Record<string, InstallerPin>;
     name: string;
@@ -236,7 +241,7 @@ export type Group = (typeof GROUPS)[number];
 export type Stage = (typeof STAGES)[number];
 export type GeneratorOutput = NonNullable<Check['generator_outputs']>[number];
 
-/** Manifest conditions before each consumer selects its supported fields. */
+/** Every field that a manifest condition can name; each condition reads only the fields it supports. */
 export type ConditionFields = Pick<
     ParsedManifest['detect'],
     'dependencies' | 'absent_dependencies' | 'filenames' | 'tags' | 'runtimes'

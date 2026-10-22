@@ -30,7 +30,7 @@ export function openFiles(root: string): Files {
         deleteTree(path) {
             const stat = files.readStats(path);
             if (stat?.isDirectory() === false)
-                throw new GspotError('filesystem', `${path} is not a directory. Choose a directory.`);
+                throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
             if (stat !== undefined) rmSync(buildContainedPath(state, path), { recursive: true, force: true });
         },
         readRealPath: (path) => readContainedPath(state.root, path),
@@ -38,7 +38,7 @@ export function openFiles(root: string): Files {
             try {
                 const target = path === '' ? state.root : buildContainedPath(state, path);
                 if (!lstatSync(target).isDirectory())
-                    throw new GspotError('filesystem', `${path || '.'} is not a directory. Choose a directory.`);
+                    throw new GspotError('filesystem', `${path || '.'} is not a folder. Choose a folder.`);
                 return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
             } catch (error) {
                 if (hasErrorCode(error, 'ENOENT')) return [];
@@ -71,7 +71,7 @@ export function openFiles(root: string): Files {
                 if (!hasErrorCode(error, 'EEXIST')) throw error;
             }
             if (!lstatSync(target).isDirectory())
-                throw new GspotError('filesystem', `${path} is not a directory. Choose a directory.`);
+                throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
             chmodSync(target, mode);
         },
         createLock: createLock.bind(undefined, state),
@@ -83,7 +83,7 @@ export function openFiles(root: string): Files {
 }
 
 /**
- * Remove empty parent folders left by a removed file, stopping at the root.
+ * Remove the empty parent folders that a removed file leaves, stopping at the root.
  *
  * @param files the file handle of the root.
  * @param path the removed file.

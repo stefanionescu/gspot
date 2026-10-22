@@ -12,7 +12,7 @@ const STRICT_TYPE_FLAGS = {
     noPropertyAccessFromIndexSignature: true,
 } as const;
 
-/** Compiler options required by the all-level TypeScript policy. */
+/** Compiler options that the all-level TypeScript policy requires. */
 export const STRICT_COMPILER_OPTIONS = {
     ...STRICT_TYPE_FLAGS,
     target: 'ES2022',

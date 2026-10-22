@@ -81,13 +81,12 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
 }
 
 /**
- * Build the blocks before the fragment blocks: default lint rules, pinned presets, and project settings.
+ * Build the blocks before the configuration blocks: default lint rules, pinned presets, and project settings.
  *
  * @param planned the ESLint context of the scope.
  * @param plugins the import names and packages to load.
  * @param boundaryBlocks the project classifications and dependency policies.
  * @param ignoredGlobs the shared ignored paths.
- *
  * @returns the blocks for source syntax and lint rules.
  */
 export function buildOpeningBlocks(
@@ -143,12 +142,11 @@ export function buildOpeningBlocks(
 }
 
 /**
- * Build the blocks after the fragment blocks: runtime, selector, test, script, and final pinned rules.
+ * Build the blocks after the configuration blocks: runtime, selector, test, script, and final pinned rules.
  *
  * @param planned the ESLint context of the scope.
- * @param selectorGroups the selectors that fragments add.
+ * @param selectorGroups the syntax selectors that the configurations and settings add.
  * @param runtimeBlocks the runtime declarations shared with file matchers.
- *
  * @returns the blocks for package and file conventions.
  */
 export function buildClosingBlocks(
@@ -245,7 +243,6 @@ function buildConsoleBlocks(
  *
  * @param planned the ESLint context of the scope.
  * @param boundaryBlocks the project classifications that require the boundaries plugin.
- *
  * @returns the ESLint plugins to load.
  */
 export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): EslintPlugins {

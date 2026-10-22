@@ -10,8 +10,7 @@ import { z } from 'zod';
 export const loose = z.object({ value: z.any() });
 `;
 
-// The package.json files of test TypeScript repositories.
-
+/** The package.json of the Zod sample, which selects the zod configuration. */
 const ZOD_PACKAGE = `{
     "name": "example",
     "version": "1.0.0",

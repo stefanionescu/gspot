@@ -17,7 +17,7 @@ extensions = [".css"]
 name = "stylelint"
 npm = "stylelint"
 replace = [".stylelintrc", ".stylelintrc.json", ".stylelintrc.js", ".stylelintrc.cjs", ".stylelintrc.mjs", ".stylelintrc.yml", ".stylelintrc.yaml", "stylelint.config.js", "stylelint.config.cjs", "stylelint.config.mjs"]
-suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:\\*/)?$", example = "/* stylelint-disable-next-line declaration-no-important -- the vendor widget sets its own color */" }
+suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:\\*/)?$", example = "/* stylelint-disable-next-line declaration-no-important -- reason: the vendor widget sets its own color */" }
 version = "16.23.1"
 
 [[tool.replace_key]]
@@ -49,7 +49,7 @@ example = "The declaration `color: #ggg` holds an invalid hex value and reports 
 exit_codes = [2]
 files = { extensions = [".css", ".vue", ".svelte"] }
 fix = ["stylelint", "--config", "{tool_file:stylelint}", "--config-basedir", "{root}/.gspot", "--fix", "--allow-empty-input", "{files}"]
-help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore css/stylelint --rule <name> --reason \"<why>\"`."
+help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore css/stylelint --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "stylelint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$" }

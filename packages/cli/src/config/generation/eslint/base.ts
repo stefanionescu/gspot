@@ -1,5 +1,5 @@
 /** The source label of shared ESLint blocks. */
-export const ESLINT_BASE_LABEL = 'JavaScript and repository settings';
+export const ESLINT_BASE_LABEL = 'javascript';
 
 export const PACKAGE_JSON_PATTERN = '**/package.json';
 
@@ -21,7 +21,7 @@ export const IMPORT_LAYOUT_RULES = {
 
 export const BARREL_FILES_RULE = 'barrel-files/avoid-barrel-files';
 
-/** Plugins used by the shared JavaScript rule tables. */
+/** Plugins that the shared JavaScript rule tables use. */
 export const ESLINT_PLUGIN_IMPORTS = {
     gspot: ['gspot', '@gspothq/eslint-plugin'],
     'import-x': ['importX', 'eslint-plugin-import-x'],
@@ -57,3 +57,6 @@ export const LEVEL_ALL_PLUGIN_IMPORTS = {
 
 /** The boundaries plugin accompanies emitted dependency policies. */
 export const BOUNDARIES_PLUGIN_IMPORT = { boundaries: ['boundaries', 'eslint-plugin-boundaries'] } as const;
+
+/** The plugin prefix of a rule name, such as `n` in `n/no-process-exit`; a core rule has none. */
+export const RULE_PLUGIN_PREFIX = /^(?<prefix>.+)\/[^/]+$/u;

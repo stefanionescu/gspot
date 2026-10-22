@@ -141,7 +141,7 @@ test('a failed version check blocks a check and its fix without changing source 
 
     const checked = await runCheckCommand(session, planned);
     expect(checked.status).toBe('error');
-    expect(checked.note).toBe('version-teller version inspection exited 7: 3.8.1');
+    expect(checked.note).toBe('The version command of version-teller exited 7: 3.8.1');
     const fixed = await runFixers(session, [planned], {
         isDryRun: false,
     }).then(({ results }) => results[0]!);

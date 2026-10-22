@@ -17,7 +17,7 @@ export type ConfigurationsListJson = {
     available: { name: string; description: string }[];
 };
 
-/** Effective settings printed by list settings. */
+/** The settings and their values that gspot list settings prints. */
 export type SettingsListJson = { settings: SettingRow[] };
 
 export type ListKind = (typeof LIST_KINDS)[number];

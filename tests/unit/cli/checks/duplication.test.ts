@@ -15,7 +15,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { JSCPD_SCOPE_FINDINGS } from '#tests/data/checks/duplication.ts';
 
-/** Create a jscpd sandbox and apply its settings for the output failure and clone path tests. */
+/** Create a jscpd sandbox with a fake jscpd and generated settings. */
 async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promise<string> {
     const folder = resources.use(await testdir());
     await fakeNpmTool(folder.path, 'jscpd');

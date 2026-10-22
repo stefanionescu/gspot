@@ -17,7 +17,7 @@ function measureArgumentSize(argument: string, platform: NodeJS.Platform): numbe
 }
 
 /**
- * Splits a command into runs that fit the system argument limit.
+ * Splits a command into command lines that fit the system argument limit.
  *
  * @param planned the check to run.
  * @param expansion what to run.
@@ -55,7 +55,6 @@ export function buildCommandLines(
  * @returns the batches, in order.
  */
 export function splitFileArguments(files: string[], fixed: string[], platform: NodeJS.Platform): string[][] {
-    // Reserve space below the 8191-character limit of cmd.exe for the npm wrapper.
     const limit = platform === 'win32' ? WINDOWS_COMMAND_LIMIT : UNIX_COMMAND_LIMIT;
     const budget = limit - fixed.reduce((size, argument) => size + measureArgumentSize(argument, platform), 0);
     if (budget < 0) throw new Error('Tool arguments exceed the command limit. Shorten the tool arguments.');

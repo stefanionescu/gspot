@@ -74,20 +74,8 @@ run.
 
 ## Read the output
 
-`output.format` selects the parser:
-
-| Format         | What it reads                                                                                  |
-| -------------- | ---------------------------------------------------------------------------------------------- |
-| `regex`        | Lines matched by `pattern`, with named `file`, `line`, `column`, `rule`, and `message` groups. |
-| `grouped`      | A file heading matched by `file_pattern`, then findings matched by `pattern`.                  |
-| `sarif`        | SARIF results, rule metadata, source locations, and fixes.                                     |
-| `knip`         | Knip JSON issue categories and source positions.                                               |
-| `semgrep`      | Semgrep JSON results, locations, lint rule IDs, messages, and fixes.                           |
-| `typos`        | typos JSON, with byte offsets converted to character columns.                                  |
-| `markdownlint` | markdownlint result objects and their lint rule and source locations.                          |
-| `json`         | JSON findings selected by `items`, `children`, and `fields`.                                   |
-| `lines`        | Each nonempty output line as a finding without a source location.                              |
-| `none`         | Exit status only, without output findings.                                                     |
+`output.format` selects the parser; [the format list](/reference/gspot-toml/#command_check.output.format) says what each
+one reads.
 
 The regex groups have these meanings:
 
@@ -116,4 +104,4 @@ reads what another fixer wrote. Then it runs the checks again. The fix commands 
 If the fix command exits with one of the `exit_codes`, gspot reports remaining findings.
 Other nonzero exits count as a failed run.
 
-[Command check settings](/reference/gspot-toml/#command_check) lists the accepted inputs.
+[Command check settings](/reference/gspot-toml/#command_check) lists the keys and the values they accept.

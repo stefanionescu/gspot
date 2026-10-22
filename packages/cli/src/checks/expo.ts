@@ -36,7 +36,7 @@ function isBlockEnd(line: string): boolean {
 }
 
 /**
- * Parses the Expo Doctor output.
+ * Turns each failed Expo Doctor check into one message with its details.
  *
  * @param stdout what Doctor printed.
  * @returns one message per failed Doctor check, with its details.
@@ -68,7 +68,7 @@ export async function checkExpoDoctor(session: Session, planned: PlannedCheck): 
     if (!hasInstalledExpo(join(session.root, planned.scope.folder.path)))
         throw new GspotError(
             'tool',
-            'Expo is not installed in this scope; Expo Doctor reads an installed Expo project.',
+            'Install the project dependencies of this scope; Expo Doctor reads an installed Expo project.',
         );
     const result = await runCheckTool(session, planned, EXPO_DOCTOR_COMMAND, {
         cwd: join(session.root, planned.scope.folder.path),

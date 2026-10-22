@@ -1,4 +1,4 @@
-// Compiler suppression comments keep their source location and authored reason.
+/** The TypeScript compiler suppressions that need a reason. */
 export const TYPESCRIPT_SUPPRESSIONS = ['ignore', 'expect-error', 'nocheck'] as const;
 export const COMPILER_REASON = 'A separate sandbox checks the external declaration.';
 

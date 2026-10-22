@@ -153,7 +153,7 @@ function listLocalNames(root: Node): Set<string> {
     );
 }
 
-// Reassigning the same variable in its function makes a deferred cleanup target ambiguous.
+// Reassigning the same variable in its function makes the path that a deferred cleanup removes ambiguous.
 function buildScriptTemporaryPaths(root: Node): ScriptTemporaryPaths {
     const assignments = root.descendantsOfType('variable_assignment');
     const locals = listLocalNames(root);
@@ -197,7 +197,7 @@ function findTemporaryPath(
     return temporaryPaths.variables.get(target);
 }
 
-// All removals on a source line must target known temporaries before that line receives an exemption.
+// All removals on a source line must remove known temporary paths before that line receives an exemption.
 function addRemovals(removals: Node[], cleanup: TrapCleanup): void {
     const { lineOffset, owner, registry, lines } = cleanup;
     for (const removal of removals) {
@@ -208,7 +208,7 @@ function addRemovals(removals: Node[], cleanup: TrapCleanup): void {
     }
 }
 
-// After --, arguments beginning with a dash also name removal targets.
+// After --, arguments beginning with a dash also name removed paths.
 function listRemovedPaths(command: Node): Node[] {
     const targets: Node[] = [];
     let isOptions = true;
@@ -269,11 +269,11 @@ async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCac
 }
 
 /**
- * Parse comments, function ranges, calls, parameter reads, and file content through one Bash syntax tree.
+ * Parse a Bash script once: its code with comments blanked out, its functions, its calls, and its temporary files.
  *
  * @param text the exact source.
- * @param cache the parser state for this run.
- * @returns syntax data that stays valid after the tree goes away.
+ * @param cache the parser grammars of this run.
+ * @returns the parsed facts, which stay valid after the tree goes away.
  */
 export async function parseBashScript(text: string, cache?: ParseCache): Promise<ScriptSyntax> {
     const tree = await parseSource('bash', text, cache);
@@ -314,7 +314,7 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
 /**
  * Select non-blank code lines after the parser has masked comments.
  *
- * @param lines the masked code, split by row.
+ * @param lines the masked code, one entry per line.
  * @returns trimmed code and one-based positions.
  */
 export function listCodeLines(lines: string[]): NumberedLine[] {

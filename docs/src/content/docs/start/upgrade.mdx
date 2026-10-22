@@ -10,7 +10,7 @@ Commit first, so you can go back. Pick a [release](https://github.com/stefanione
 and put it in place of `<version>` below.
 
 <Tabs syncKey="package-manager">
-    {SETUP_COMMANDS.filter(({ label }) => label !== 'mise').map(({ label, start, lines }) => (
+    {SETUP_COMMANDS.map(({ label, start, lines }) => (
         <TabItem label={label}>
             <Code
                 lang="shell"
@@ -18,17 +18,6 @@ and put it in place of `<version>` below.
             />
         </TabItem>
     ))}
-<TabItem label="mise">
-
-```shell
-mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@<version>
-mise exec -- gspot apply
-mise exec -- gspot install
-mise exec -- gspot check
-```
-
-</TabItem>
-
 </Tabs>
 
 `gspot apply` writes the new version to `.gspot/version` and updates the generated
@@ -40,4 +29,5 @@ and either `package.json` with its lockfile or `mise.toml`, together. Commit `gs
 findings. Every other clone then runs `gspot install`. See
 [Set up a clone](/start/install/#set-up-a-clone).
 
-If `gspot apply` reports files it did not overwrite, move each one aside. Then run `gspot apply` again.
+If `gspot apply` says that it did not overwrite some files, gspot did not write them. Move each one aside, then run
+`gspot apply` again.

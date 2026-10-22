@@ -21,9 +21,9 @@ function selectPythonFormat(scopeSettings: PlannedToolFile['scope']['settings'])
 }
 
 /**
- * Build the Ruff file from the settings.
+ * Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Ruff lint rules, import settings, and source exclusions.
  */
 export function buildRuffFile(planned: PlannedToolFile): string {

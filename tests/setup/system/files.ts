@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { open, lstat, access, readdir, readlink } from 'node:fs/promises';
 
 /**
- * Reads every path in a repository with its mode and contents, to check that a write kept them.
+ * Read every path in a repository with its mode and contents, to check that a write kept them.
  *
  * @param repositoryRoot folder to read.
  * @returns each path and its mode and contents.
@@ -30,7 +30,7 @@ export async function readTree(repositoryRoot: string): Promise<Record<string, s
 }
 
 /**
- * Checks whether a filesystem path exists, following symbolic links.
+ * Check whether a filesystem path exists, following symbolic links.
  *
  * @param path the file or folder.
  * @returns whether the path exists; false when access fails.

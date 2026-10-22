@@ -4,9 +4,9 @@ import { getPreset, convertPresetWarnings, buildArrayPresetBlocks } from '#cli/g
 import { SVELTE_FILES, SVELTE_RULES, CONFIGURATION_PLUGINS } from '#cli/config/generation/eslint/configurations.ts';
 
 /**
- * Apply the Svelte presets and typed component parsing.
+ * Apply the Astro presets and the Astro component parser.
  *
- * @param scope the ESLint inputs of the scope.
+ * @param scope the planned ESLint file of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 export function buildSvelteBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {

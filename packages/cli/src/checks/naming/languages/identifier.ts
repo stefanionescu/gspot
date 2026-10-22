@@ -24,7 +24,7 @@ export function createIdentifier(
  * @param found the file and the identifiers found so far.
  * @param node the parsed declaration.
  * @param category the kind of declared name.
- * @param name the authored spelling, after any language change.
+ * @param name the name as written, after any language change.
  */
 export function addIdentifier(found: FileIdentifiers, node: Node, category: NamedCategory, name = node.text): void {
     if (name === '' || name === '_') return;

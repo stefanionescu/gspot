@@ -17,7 +17,7 @@ import {
     EXTERNAL_DEPENDENCY_FILES,
 } from '#tests/data/runs/copy/dependencies.ts';
 
-/** Stages dependency declarations and authored files for a revision copy. */
+/** Initialize Git in the sandbox and stage its files for a revision copy. */
 function stageRevision(root: string): void {
     runGitStep(root, ['init']);
     runGitStep(root, ['add', '.']);
@@ -115,7 +115,7 @@ test.each(['', 'nested/'])('revision copies reuse the installed Vale packages un
     expect(await readFile(join(sandbox.path, packagePath), 'utf8')).toBe('extends: existence\n');
     await writeFile(join(sandbox.path, config), 'Packages = Different\n');
     expect(await captureRejection(copyRevision(sandbox.path, { kind: 'index' }))).toBe(
-        'Installed Vale packages do not match the revision configuration. Check this commit in its own clone after running gspot apply and gspot install there.',
+        'The installed Vale packages do not match the Vale settings of this revision. Check this commit in its own clone after running gspot apply and gspot install there.',
     );
 });
 
@@ -154,7 +154,7 @@ test('cancellation waits for the dependency copies to finish before removing the
     let destination: string | undefined;
     using _copy = spyOn(promises, 'cp').mockImplementation(async (...copyArguments) => {
         pending += 1;
-        // The copied node_modules folder sits one level below the scratch root.
+        // The copied node_modules folder sits one level below the root of the copy.
         if (typeof copyArguments[1] === 'string') destination = dirname(copyArguments[1]);
         try {
             await original(...copyArguments);

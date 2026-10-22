@@ -1,9 +1,9 @@
 import { PROSE_GRAMMARS } from '#cli/config/checks/prose.ts';
 
-/** The upstream styles shipped at level all. */
+/** The Vale packages that gspot installs at level all. */
 export const VALE_PACKAGES = ['Google', 'write-good', 'proselint', 'alex', 'Harper'] as const;
 
-/** The release of each upstream style that gspot installs, so every clone checks prose with the same rules. */
+/** The release of each Vale package that gspot installs, so every clone checks prose with the same rules. */
 export const VALE_PACKAGE_RELEASES = {
     Google: 'v0.7.1',
     'write-good': 'v0.4.1',
@@ -12,7 +12,7 @@ export const VALE_PACKAGE_RELEASES = {
     Harper: 'v0.1.0',
 } as const;
 
-/** The upstream styles: this prefix, then `<name>/releases/download/<release>/<name>.zip`. */
+/** Where the Vale packages download from: this prefix, then `<name>/releases/download/<release>/<name>.zip`. */
 export const VALE_PACKAGE_REPOSITORY = 'https://github.com/vale-cli/';
 
 /** Comment extensions and their Vale format. */
@@ -44,9 +44,10 @@ export const ALT_TEXT_TOKENS = [
 export const BLOCK_IGNORES = [String.raw`(?s)^---\n.*?\n---\n`] as const;
 
 /**
- * Skip task metadata, URLs, documentation-tag syntax, snake_case identifiers, and upper-case file names; check tag
- * descriptions and suppression reasons as prose. A name starts a line or follows a space or tab. Vale wraps each match in
- * backticks: a match inside a code span breaks the span, and a match that holds a line break breaks a code fence.
+ * Skip the `#MISE` headers of mise tasks, URLs, documentation-tag syntax, snake_case identifiers, and upper-case file
+ * names; check tag descriptions and suppression reasons as prose. A name starts a line or follows a space or tab. Vale
+ * wraps each match in backticks: a match inside a code span breaks the span, and a match that holds a line break breaks
+ * a code fence.
  */
 export const TOKEN_IGNORES = [
     String.raw`(?m)(^MISE[ \t]+[a-z_][a-z0-9_-]*[ \t]*=[^\r\n]*)`,
@@ -87,14 +88,14 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'Harper.ExpandMemoryShorthands': 'MB and GB are the units',
     'Harper.MoreAdjective2': 'it reports that an inflected form exists, which is not an error',
     'Harper.MoreAdjective4': 'it reports that an inflected form exists, which is not an error',
-    'Google.Semicolons': 'gspot.semicolons holds the semicolon rule',
+    'Google.Semicolons': 'it reports every semicolon',
     'Google.WordListCase': 'Google product terminology: command-line tool for CLI',
     'Harper.OkToOkay': 'OK names a successful status and a button action',
     'write-good.Passive': 'Google.Passive owns passive voice',
     'Harper.NumericRangeEnDash': 'gspot.en-dashes owns ranges',
 } as const;
 
-/** Common technical abbreviations used in prose and shipped rules. */
+/** Technical abbreviations that Vale accepts as words in every repository. */
 export const ACRONYMS = [
     'API',
     'CLI',
@@ -106,7 +107,7 @@ export const ACRONYMS = [
     'SQL',
     'UI',
     'URL',
-    // eslint-disable-next-line unicorn/text-encoding-identifier-case -- reason: ASCII spells the acronym accepted by the prose vocabulary.
+    // eslint-disable-next-line unicorn/text-encoding-identifier-case -- reason: ASCII spells the acronym that the prose vocabulary accepts.
     'ASCII',
     'BSD',
     'CPU',

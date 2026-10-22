@@ -14,7 +14,7 @@ import { ESLINT_LIMIT_RULES } from '#cli/config/generation/eslint/base.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 
 /**
- * Refuse scope paths that name a file or repeat, and keep written scopes whose folder does not exist yet.
+ * Refuse scope paths that name a file, and keep written scopes whose folder does not exist yet.
  *
  * @param repositoryRoot the base folder for each written scope path.
  * @param settings the normalized gspot.toml.
@@ -32,7 +32,7 @@ export function validateScopePaths(repositoryRoot: string, settings: Settings): 
                 : [
                       {
                           path: location,
-                          message: `The scope \`${path}\` names a file. Declare a directory under the repository root.`,
+                          message: `The scope \`${path}\` names a file. Name a folder under the repository root.`,
                       },
                   ];
         } catch (error) {
@@ -84,10 +84,11 @@ export function validateRuleFilePaths(repositoryRoot: string, settings: Settings
 }
 
 /**
- * Find the errors in [rules] exclude: an item that matches no rule, and an item that hides a file that the reader opens first.
+ * Find the errors in [rules] exclude: an item that matches no rule, and an item that hides a file that the reader opens
+ * first.
  *
  * @param exclude the written items, relative to the rules folder.
- * @param configurations the shipped configuration declarations indexed by name.
+ * @param configurations the shipped configurations by name.
  * @returns each error with its position in the exclusion list.
  */
 export function validateRuleExcludes(exclude: string[], configurations: Map<string, Configuration>): SettingsError[] {

@@ -62,7 +62,7 @@ function buildCheckScript(command: string): string {
     ].join('\n');
 }
 
-// The package manager runs through the same mise command as Node and the published CLI.
+// The package manager runs through the same mise command as Node.js and the published gspot package.
 function buildGspotCommand(pipeline: Pipeline): string {
     const { packageManager } = pipeline;
     const tools = [CI_NODE, `npm:${cliPackage.name}@${pipeline.version}`];
@@ -158,7 +158,7 @@ function listManualLines(command: string, manual: { checks: string[]; tools: str
 }
 
 /**
- * Generate the check job and the manual jobs for each machine with one mise setup.
+ * Build the check job and the manual jobs for each machine with one mise setup.
  *
  * @param pipeline what the workflow runs.
  *
@@ -214,7 +214,7 @@ export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
 }
 
 /**
- * Generate a GitLab include, and leave the authored pipeline unchanged. Platform and Swift choices do not apply.
+ * Build a GitLab include, and leave the authored pipeline unchanged. Platform and Swift choices do not apply.
  *
  * @param pipeline what the include runs.
  *
@@ -267,7 +267,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
 function buildFrozenInstall(session: Session, lockfile: string): readonly string[] | undefined {
     if (lockfile === PROJECT_UV_LOCKFILE) {
         const { version } = getTool(session.configurations.values(), UV_TOOL);
-        if (version === undefined) throw new Error('The uv tool declaration has no pinned version.');
+        if (version === undefined) throw new Error('The uv tool in the shipped manifests has no pinned version.');
         return ['mise', 'exec', `${UV_TOOL}@${version}`, '--', ...(FROZEN_INSTALLS[lockfile] ?? [])];
     }
     const declared =

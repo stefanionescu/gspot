@@ -6,15 +6,17 @@ export const EXIT_CALL = /\bexit(?:\s|$)/u;
 /** The line every executable ends with. */
 export const MAIN_CALL = 'main "$@"';
 
-/** A shebang that names another shell; Bash requirements exclude these files. */
+/** A shebang that names another shell; the Bash layout check skips these files. */
 export const OTHER_SHEBANG = /^#!.*\b(?:zsh|sh|dash|ksh)\b/u;
 
 export const READONLY_WORD = 'readonly';
 
-/** Strict mode supported by every declared Bash version. */
+/** The strict mode line, which every Bash release from 3.0 on accepts. */
 export const STRICT_MODE = 'set -euo pipefail';
 
-/** Inline runtime embeds, and what to say about them. */
+/**
+ * Commands that run code of another language inline, such as python -c, and the words that name each one in a finding.
+ */
 export const RUNTIME_EMBEDS = [
     [/\bpython[0-9.]*\s+-c\b/u, 'an inline Python command'],
     [/\bpython[0-9.]*\s+<</u, 'an inline Python heredoc'],
@@ -29,7 +31,7 @@ export const RUNTIME_EMBEDS = [
     [/\bruby(?:\s+-[a-zA-Z]+)*?\s+-[a-zA-Z]*e(?=\s|$)/u, 'an inline Ruby command'],
 ] as const;
 
-/** Safety patterns and their finding text. */
+/** The safety pattern that only level `all` reports: a failure that `|| true` discards. */
 export const ALL_LEVEL_SAFETY_PATTERNS = [
     [
         /\|\|\s*true(?:\s|$)/u,
@@ -59,7 +61,6 @@ export const TOP_LEVEL_ASSIGNMENT = /^(?<name>[A-Z_][A-Z0-9_]*)=/u;
 /** The function that every script may leave uncalled. */
 export const MAIN_FUNCTION = 'main';
 
-/** A source statement. */
 export const SOURCE_STATEMENT = /^(?:source|\.)\s+/u;
 
 export const WORD = /[A-Za-z0-9]+/gu;

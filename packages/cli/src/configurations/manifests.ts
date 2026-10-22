@@ -20,14 +20,14 @@ import {
 // Every run shares the immutable declarations shipped with the package.
 let CONFIGURATIONS: Map<string, Configuration> | undefined;
 
-// A configuration with exactly one tool gives that tool to each tool file that names no consumer.
+// A configuration with exactly one tool gives that tool to each tool file that names none.
 function findOnlyToolName(tools: unknown): string | undefined {
     if (!Array.isArray(tools) || tools.length !== 1) return undefined;
     const tool: unknown = tools.at(0);
     return isTable(tool) && typeof tool['name'] === 'string' ? tool['name'] : undefined;
 }
 
-// Every tool-files asset has one canonical output; metadata adds consumers and generation settings.
+// Add a tool file for each file in the tool-files folder that no [[tool_file]] record names.
 function readToolFiles(configurationFolder: string, toolFiles: unknown, tools: unknown): unknown {
     if (toolFiles !== undefined && !Array.isArray(toolFiles)) return toolFiles;
     const entries: unknown[] = toolFiles === undefined ? [] : toolFiles;
@@ -45,10 +45,10 @@ function readToolFiles(configurationFolder: string, toolFiles: unknown, tools: u
 }
 
 /**
- * Link each named tool to its full declaration.
+ * Link each named tool to the [[tool]] table that declares it.
  *
- * @param manifests the parsed configuration declarations.
- * @returns the configurations by name, with full tool declarations.
+ * @param manifests the parsed configurations.
+ * @returns the configurations by name, with each tool in full.
  */
 function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
     const entries = listDeclaredTools(manifests);
@@ -71,11 +71,11 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
 }
 
 /**
- * Parse one manifest text into validated declarations; invalid input throws GspotError with code manifest.
+ * Parse one manifest.toml text into a validated configuration; invalid text throws GspotError with code configuration.
  *
  * @param text the `manifest.toml` content.
  * @param configurationFolder the asset path that gives the name and group.
- * @returns validated declarations with qualified check IDs and discovered tool files.
+ * @returns the configuration, with qualified check IDs and the tool files found in its folder.
  */
 function parseManifest(text: string, configurationFolder: string): ParsedManifest {
     const parsed = parseToml(text) as Record<string, unknown>;
@@ -98,7 +98,8 @@ function parseManifest(text: string, configurationFolder: string): ParsedManifes
     return result.data;
 }
 
-// Parse shipped declarations only for the first manifest read in the process.
+// Parse every shipped manifest, and link each tool name to the [[tool]] table that declares it. MANIFESTS keeps the
+// result for the read cache.
 function readShippedConfigurations(): Map<string, Configuration> {
     const manifests = new Map<string, ParsedManifest>();
     const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));
@@ -153,8 +154,8 @@ export function listCheckIds(checks: readonly Pick<Check, 'id'>[]): string[] {
 /**
  * List the files in the rules folder of a configuration.
  *
- * @param configuration the shipped bundle that owns the rule assets.
- * @returns each file with its path inside the rules folder.
+ * @param configuration the shipped configuration that owns the rule files.
+ * @returns each file with its asset source, its group, and its path under the configurations folder.
  */
 export function listRuleFiles(configuration: Configuration): ShippedRule[] {
     const { group } = configuration;
@@ -183,9 +184,9 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
 }
 
 /**
- * Index the tool declarations by name, and refuse two declarations of one tool.
+ * Index the tools by name, and refuse a tool that two configurations declare.
  *
- * @param manifests the parsed configuration declarations.
+ * @param manifests the parsed configurations.
  * @returns the tools by name.
  */
 function listDeclaredTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
@@ -209,5 +210,5 @@ function listDeclaredTools(manifests: Iterable<ParsedManifest>): Map<string, Too
 export function assertKnownCheck(name: string, settings: Pick<Settings, 'commandChecks'>): void {
     const known = listCheckIds(Object.values(settings.commandChecks));
     if (!known.includes(name))
-        throw new GspotError('arguments', `There is no check called \`${name}\`.${formatSimilarNames(name, known)}`);
+        throw new GspotError('arguments', `There is no check called ${name}.${formatSimilarNames(name, known)}`);
 }

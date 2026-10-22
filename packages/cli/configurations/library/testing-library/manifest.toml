@@ -1,5 +1,5 @@
 [configuration]
-description = "Lint rules for test files in projects that depend on Testing Library."
+description = "Testing Library tests: the lint rules of Testing Library for each framework package in use."
 requires = ["javascript"]
 title = "Testing Library"
 

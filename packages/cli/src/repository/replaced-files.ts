@@ -14,8 +14,9 @@ import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ReplacedFile } from '#cli/types/repository/existing-tools.ts';
 import { INI_EXTENSIONS, YAML_EXTENSIONS } from '#cli/config/repository/existing-tools.ts';
 
-// A dotfile such as .prettierrc.json applies in any folder. A plain name such as knip.ts counts only at the root of a
-// project, because a source file deeper in the code can share it.
+// List the root and every folder that a project file marks. A plain tool file name such as knip.ts counts only in these
+// folders, because a source file deeper in the code can share it. A dotfile such as .prettierrc.json counts in any
+// folder.
 function listProjectFolders(inventory: Set<string>, configurations: Configuration[]): Set<string> {
     const patterns = configurations.flatMap((configuration) => configuration.detect.project_files);
     const folders = new Set(['']);
@@ -69,7 +70,7 @@ function parseSharedFile(text: string, extension: string, path: string): unknown
     if (extension === '.json') return parseJsonFile(path, text);
     if (YAML_EXTENSIONS.includes(extension)) return parseYamlFile(path, text);
     if (extension === '.toml') return parseTomlFile(path, text);
-    throw new Error(`${path}: shared configuration format is unsupported.`);
+    throw new Error(`${path}: gspot cannot read the settings format of this shared file.`);
 }
 
 function hasToolSection(text: string, path: string, selector: Pick<ReplacedFile, 'key' | 'table'>): boolean {

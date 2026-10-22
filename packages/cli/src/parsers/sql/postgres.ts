@@ -66,11 +66,11 @@ async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: 
 }
 
 /**
- * Select one payload from the one-key node union of PostgreSQL.
+ * Get the fields of a PostgreSQL parse tree node when the node has the given kind.
  *
- * @param node the parse tree item, if any.
- * @param kind the payload type to select.
- * @returns the typed fields of that kind, or undefined for another kind.
+ * @param node the parse tree node, if any.
+ * @param kind the node kind to select.
+ * @returns the fields of that kind, or undefined for another kind.
  */
 export function getNodeFields<Kind extends keyof SqlNodeFields>(
     node: Node | undefined,
@@ -81,11 +81,11 @@ export function getNodeFields<Kind extends keyof SqlNodeFields>(
 }
 
 /**
- * Select the typed payloads of one kind from a node list.
+ * List the fields of the nodes of one kind in a node list.
  *
  * @param nodes the nodes, if any.
- * @param kind the payload type to select.
- * @returns the matching payloads in source order.
+ * @param kind the node kind to select.
+ * @returns the fields of the matching nodes, in source order.
  */
 export function listNodeFields<Kind extends keyof SqlNodeFields>(
     nodes: Node[] | undefined,

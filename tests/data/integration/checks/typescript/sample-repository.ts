@@ -1,4 +1,4 @@
-// The entry may import the orders, and the orders only each other.
+/** The entry may import the orders, and the orders only each other. */
 export const ARCHITECTURE_SETTINGS = `
 [[import_rule]]
 name = "orders"

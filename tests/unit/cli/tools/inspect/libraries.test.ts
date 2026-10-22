@@ -103,7 +103,11 @@ test('a library linked inside the tool project is accepted and one linked outsid
     await unlink(link);
     await symlink(outside.path, link);
     context.inspections.clear();
-    expect(() => inspectTool(context, tool)).toThrow('Source link leaves the repository');
+    expect(() => inspectTool(context, tool)).toThrow(
+        new Error(
+            '.gspot/node_modules/globals/package.json links to a file outside the repository. Replace the link with the file.',
+        ),
+    );
 });
 
 test('library reads are kept per session and see a new install in the next session', async () => {

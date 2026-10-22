@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Spelling in every text file, with a reason for each allowed word."
+description = "Every text file: spelling, with a reason for each allowed word."
 title = "Spelling"
 
 [files]

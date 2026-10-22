@@ -18,7 +18,7 @@ import {
     OUTSIDE_GIT_SETTINGS,
 } from '#tests/data/commands/check/refusals.ts';
 
-// A committed repository with a check whose fixer rewrites the source when it runs.
+/** Create a committed repository with a check whose fixer rewrites the source when it runs. */
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = [process.execPath, '-e', String.raw`require('node:fs').writeFileSync('source.txt', 'fixed\n')`];
     const check = `[[command_check]]
@@ -133,7 +133,9 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no co
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe('Revision paths must be valid UTF-8.');
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toBe(
+        'Git listed a path that is not valid UTF-8.',
+    );
     expect(await readdir(temporary.path)).toStrictEqual([]);
 });
 
@@ -150,7 +152,7 @@ test.each([...ARGUMENT_REFUSALS])(
 test('check reports an unreadable message file as a filesystem error and writes nothing', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['commits']) });
     const before = await readTree(sandbox.path);
-    const message = `The commit message file ${join(sandbox.path, 'missing-message.txt')} cannot be read.`;
+    const message = `gspot cannot read the commit message file ${join(sandbox.path, 'missing-message.txt')}.`;
     const human = await runGspot(sandbox.path, ['check', '--hook', 'commit-msg', '--', 'missing-message.txt']);
     expect(human.code).toBe(2);
     expect(human.stdout).toBe('');
@@ -182,7 +184,7 @@ test('a linked .gspot folder stops check, and nothing outside changes', async ()
     const refused = parseCheckReport(await runGspot(project, ['check', '--json']));
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.report.checks.find((result) => result.check === 'gspot/generated-files')?.note).toBe(
-        'The gspot/generated-files check failed: A parent of .gspot/package-lock.json is a link or is not a directory. Choose a directory without links.',
+        'The gspot/generated-files check failed: A parent of .gspot/package-lock.json is a link or is not a folder. Choose a folder without links.',
     );
     expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored outside\n');
     expect(await readdir(outside)).toStrictEqual(['sentinel']);

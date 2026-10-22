@@ -79,7 +79,7 @@ function addToolOutput(declared: string, group: BuiltToolFile[], index: number, 
     }
 }
 
-// Whole-file outputs establish destinations before pointer fragments resolve against them.
+// Build the tool files that have their own text first, so that the pointers can name their paths.
 function buildWholeFiles(toolFiles: OwnedToolFile[], generated: GeneratedToolFiles): void {
     const whole = toolFiles.filter(
         (entry): entry is OwnedToolFile & { toolFile: WholeToolFile } => entry.toolFile.source !== undefined,
@@ -90,7 +90,7 @@ function buildWholeFiles(toolFiles: OwnedToolFile[], generated: GeneratedToolFil
     }
 }
 
-// A pointer-only declaration replaces the generic one for the same scope and declared target.
+// A pointer-only tool file replaces the generic one for the same scope and target.
 function listPointerOnlyPaths(toolFiles: OwnedToolFile[], selected: OwnedToolFile): Set<string> {
     return new Set(
         toolFiles
@@ -145,7 +145,7 @@ function buildToolFiles(session: Session): ToolFileGeneration {
  * Name the path of a tool file that a scope writes with its own text: a root file in the scope folder, and any other
  * tool file in scopes/<scope>/ of the folder of its configuration.
  *
- * @param toolFile the declaration.
+ * @param toolFile the tool file to place.
  * @param scope the folder of the scope.
  * @returns the repository-relative path.
  */

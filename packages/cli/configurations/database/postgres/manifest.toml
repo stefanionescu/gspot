@@ -1,7 +1,7 @@
 allowed_words = ["PostgreSQL", "Postgres"]
 
 [configuration]
-description = "Postgres migrations that do not lock tables or break running code, run in order, and never change after they ran, and schemas with row security, explicit grants, and an index under every foreign key."
+description = "Postgres migrations: no locking or breaking changes, a fixed order, no edits after they ran, row-level security, explicit grants, and an index under every foreign key."
 requires = ["sql"]
 title = "Postgres"
 
@@ -14,6 +14,7 @@ paths = ["db/migrations/*.sql", "migrations/*.sql", "**/supabase/migrations/*.sq
 
 [defaults]
 "tools.sqlfluff.dialect" = "postgres"
+"tools.squawk.assume_in_transaction" = true
 
 [[tool]]
 min_version = "2.0.0"
@@ -31,7 +32,7 @@ tool = "squawk"
 command = ["squawk", "--config", "{tool_file:squawk}", "--reporter", "json", "{files}"]
 example = "A migration that adds a constraint with a full table scan reports a finding. Create the constraint first, and validate it in a separate migration."
 files = { paths = ["{setting:postgres.migrations_folder}/**/*.sql"] }
-help = "Follow the advice squawk prints for the rule. Turn one rule off with `gspot ignore postgres/squawk --rule <name> --reason \"<why>\"`."
+help = "Follow the advice squawk prints for the rule. Turn one rule off with `gspot ignore postgres/squawk --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "squawk"
 output = { format = "json", line_base = 0, fields = { file = "file", line = "line", column = "column", rule = "rule_name", message = "message" } }
@@ -61,12 +62,12 @@ why = "An applied migration never runs again, so an edit reaches only new databa
 
 [[check]]
 example = "A new table without row-level security reports a finding. Add `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` for it."
-help = "Enable row level security on the table."
+help = "Enable row-level security on the table."
 level = "recommended"
 name = "row-level-security"
 runs = "scope"
 stage = "commit"
-summary = "Checks that every table in a client schema turns on row level security."
+summary = "Checks that every table in a client schema turns on row-level security."
 why = "In an exposed schema, every client with the public key can read and write a table that has no row security."
 
 [[check]]

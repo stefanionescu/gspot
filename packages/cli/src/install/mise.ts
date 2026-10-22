@@ -51,8 +51,7 @@ function selectHookTools(session: Session, tools: Tool[]) {
  * Install the mise tools, and read their executable folders again.
  *
  * @param install what install needs for this step.
- *
- * @returns the note about missing programs.
+ * @returns the trust note, or the note about missing programs.
  */
 export async function installMiseTools(install: ToolInstall): Promise<string> {
     const { session, tools, misePath, steps } = install;

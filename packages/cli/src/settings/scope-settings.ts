@@ -21,9 +21,8 @@ import type {
 /**
  * Find the nearest scope that holds a path.
  *
- * @param scopes every project selection.
+ * @param scopes every project scope.
  * @param path the repository-relative destination.
- *
  * @returns the scope, or undefined at the root.
  */
 export function findParentScope(scopes: Scope[], path: string): Scope | undefined {
@@ -34,15 +33,15 @@ export function findParentScope(scopes: Scope[], path: string): Scope | undefine
 }
 
 /**
- * Select the manifests of the root and each parent scope, each once, in order.
+ * Select the configurations of the root and each parent scope, each once, in order.
  *
- * @param selected the written selections.
+ * @param selected the configuration lists as written.
  * @param selected.configurations the root choices.
  * @param selected.scopes each folder with its written choices.
  * @param selected.removed_configurations the names that you removed.
  * @param scope the folder to select for.
- * @param configurations every configuration manifest.
- * @returns the manifests in order.
+ * @param configurations every configuration.
+ * @returns the configurations in order.
  */
 export function selectForScope(
     selected: SelectedConfigurations,
@@ -91,13 +90,14 @@ function listLimitVariants(knownSettings: KnownSettings, settings: Settings, sco
 }
 
 /**
- * Build the merged view of a scope from the known settings, the written settings, and the configurations of the scope.
+ * Build the merged settings of a scope from the known settings, the written settings, and the configurations of the
+ * scope.
  *
- * @param knownSettings the declarations and defaults of the selection.
+ * @param knownSettings the settings and defaults of the selected configurations.
  * @param settings the written root values and scoped overrides.
- * @param configurations the manifests of the scope.
+ * @param configurations the configurations that the scope selects.
  * @param scope the folder, '' for the root.
- * @returns the view the templates read.
+ * @returns the scope settings that planning, checks, and the tool file builders read.
  */
 export function buildScopeSettings(
     knownSettings: KnownSettings,
@@ -183,7 +183,7 @@ export function listIgnoredRules(scope: Scope, check: string): string[] {
  * @param knownSettings the declarations and defaults.
  * @param settings the written gspot.toml.
  * @param scope the folder to resolve for.
- * @returns typed execution values without adding defaults to written tables.
+ * @returns typed values for the run without adding defaults to written tables.
  */
 function buildScopeValues(knownSettings: KnownSettings, settings: Settings, scope: string): ScopeValues {
     const listed = listEffectiveSettings(knownSettings, settings, scope);
@@ -204,7 +204,7 @@ function buildScopeValues(knownSettings: KnownSettings, settings: Settings, scop
  * Fill settings tables from direct settings and their declared naming variants.
  *
  * @param tables the run tables of the scope.
- * @param rows the values that the declarations already resolved.
+ * @param rows the values already resolved.
  */
 function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting[]): void {
     const entries = rows
@@ -231,10 +231,10 @@ function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting
 }
 
 /**
- * Find the selection of the repository root, which every run has.
+ * Find the root scope, which every run has.
  *
- * @param scopes the selection of each scope, the root among them.
- * @returns the selection of the scope with an empty path.
+ * @param scopes every scope, the root among them.
+ * @returns the scope with an empty path.
  */
 export function findRootScope(scopes: readonly Scope[]): Scope {
     const root = scopes.find((scope) => scope.folder.path === '');

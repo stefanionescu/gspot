@@ -60,7 +60,7 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
     expect(installationError).toMatchObject({
         name: 'GspotError',
         code: 'install',
-        message: `UV ${step} failed (exit 7). Check Python downloads and index settings, then run: gspot install.\nindex password [redacted] [redacted]\ninterpreter unavailable`,
+        message: `uv ${step} failed (exit 7).\nindex password [redacted] [redacted]\ninterpreter unavailable`,
     });
     expect(calls).toHaveLength(step === 'venv' ? 1 : 2);
     expect(await readFile(join(sandbox.path, '.gspot/uv.lock'), 'utf8')).toBe(lockfileText);

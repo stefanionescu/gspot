@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Checks for known advisories, one version per package, exact pins, one package manager, and a lockfile that matches its dependency file."
+description = "Dependencies: known advisories, one version per package, exact pins, one package manager, and a lockfile that matches its dependency file."
 title = "Dependencies"
 
 [files]
@@ -63,12 +63,12 @@ why = "Two versions of a dependency in one workspace behave differently, so a bu
 [[check]]
 example = "A lockfile URL outside `dependencies.allowed_registries` reports its host. Install the package again from an allowed registry, or add that host to the list."
 files = { filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"], kinds = ["source", "generated"] }
-help = "Install the package from the registry again, or add the host to dependencies.allowed_registries."
+help = "Install the package again from an allowed registry, or add the host to `dependencies.allowed_registries`. Keep the lockfile of one package manager, and delete the others."
 level = "recommended"
 name = "lockfiles"
 runs = "scope"
 stage = "commit"
-summary = "Checks that npm, pnpm, Yarn, and text Bun lockfile downloads in each project scope use HTTPS and allowed registry hosts."
+summary = "Checks that npm, pnpm, Yarn, and text Bun lockfile downloads in each scope use HTTPS and an allowed registry host, and that the scope holds the lockfiles of one package manager."
 why = "A lockfile line from another host installs code nobody chose, and reviewers rarely read those files."
 
 [[check]]

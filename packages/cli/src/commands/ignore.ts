@@ -34,8 +34,8 @@ function assertIgnoreOptions(options: IgnoreOptions, settings: Settings): void {
         );
 }
 
-// A path through a route group or a dynamic segment holds parentheses or brackets that read as glob syntax. The
-// existing part of each path gets escaped, so the pattern matches that folder.
+// A path through a route group or a dynamic segment holds parentheses or brackets that read as glob syntax. Escape the
+// existing part of each path, so the pattern matches that folder.
 function escapeExistingPaths(root: string, paths: string[] | undefined): string[] | undefined {
     return paths?.map((path) => {
         const parts = path.split('/');
@@ -93,15 +93,16 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
  */
 function parseExpiryDate(text: string): LocalDate {
     const result = calendarDateSchema.safeParse(text);
-    if (!result.success) throw new GspotError('arguments', '--until must be a valid calendar date in YYYY-MM-DD form.');
+    if (!result.success)
+        throw new GspotError('arguments', '--until needs a calendar date in YYYY-MM-DD form, such as 2027-01-31.');
     return new LocalDate(result.data);
 }
 
 /**
  * Register the ignore command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerIgnore(program: Command, onResult: CommandCompletion): void {
     program

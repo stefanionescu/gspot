@@ -25,26 +25,18 @@ paths = ["src/app/**"]
 ```
 
 Code may import its own files and the files of every rule above it, never below. Here `features` may import
-`core`, and `app` may import both. An import from `core` into `features` reports the rule that refused it:
+`core`, and `app` may import both. A `core` file that imports a `features` file reports the rule that refused it:
 
 ```text
-Import rule "core" may import only its own files, not ../features/cart.ts from import-rule:features. Move the code, or add that rule to can_also_import or can_import.
+Import rule "core" may import only its own files, not ../features/cart.ts from import-rule:features. Move the code, move that rule above this one, or list the rules it may import in can_import.
 ```
 
 A file belongs to the first rule whose paths match it.
 
-## Add or replace allowed rules
+## Allow a rule listed below
 
-`can_also_import` adds rules listed below the record:
-
-```toml
-[[import_rule]]
-name = "core"
-paths = ["src/core/**"]
-can_also_import = ["telemetry"]
-```
-
-`can_import` gives the exact list, and replaces the rules above. A plugin that may import only the SDK:
+To let a rule import a rule listed below it, move that rule above it. `can_import` gives the exact list instead, and
+replaces the rules above. A plugin that may import only the SDK:
 
 ```toml
 [[import_rule]]
@@ -53,7 +45,7 @@ paths = ["src/plugins/**"]
 can_import = ["sdk"]
 ```
 
-A record takes one of the two fields, never both. Each name must match an import rule.
+Each name must match an import rule.
 
 ## Every code file belongs to a rule
 

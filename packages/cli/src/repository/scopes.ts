@@ -81,7 +81,7 @@ export function joinScope(scope: string, path: string): string {
  * Find the project scopes for init and for runs. Leave out the root and tool-only packages.
  *
  * @param files the repository inventory.
- * @param dependencyFiles the parsed package declarations.
+ * @param dependencyFiles the parsed dependency files.
  * @param configurations the configurations with project files and npm tools.
  * @returns project scopes in path order.
  */
@@ -142,7 +142,7 @@ export function findProjectFolder(path: string, pattern: string): string | undef
  * Find the scope of a file: the deepest scope that contains it, else the root.
  *
  * @param path the file to place.
- * @param scopeFolders the candidates to search.
+ * @param scopeFolders the scopes to search.
  * @returns the deepest matching scope, or the root.
  */
 export function findScopeFolder(path: string, scopeFolders: ScopeFolder[]): ScopeFolder {

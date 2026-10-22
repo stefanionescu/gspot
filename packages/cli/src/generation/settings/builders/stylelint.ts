@@ -32,9 +32,8 @@ function dropChosenRules(
  *
  * @param configurations the configuration names in use.
  * @param tailwindFunctions the Tailwind helpers that component styles may call.
- * @param chosen the authored rule options.
+ * @param chosen your own rule options.
  * @param off the disabled lint rule names.
- *
  * @returns the component parser overrides.
  */
 function buildComponentOverrides(
@@ -93,10 +92,29 @@ function buildCssModulesOverrides(
     ];
 }
 
+// gspot sets options only for the Stylelint rules that run at the level. The refusal names its case: a rule of level
+// all, a Stylelint rule that runs at no level, or a rule that Stylelint does not have.
+function assertStylelintRulesRun(rules: string[], activeRules: Set<string>, knownRules: string[]): void {
+    const refused = rules.filter((rule) => !activeRules.has(rule));
+    if (refused.length === 0) return;
+    throw new GspotError(
+        'settings',
+        refused
+            .map((rule) => {
+                if (STYLELINT_RECOMMENDED_OFF.has(rule))
+                    return `${rule} runs only at level all. gspot sets options only for the rules that run at level recommended.`;
+                return knownRules.includes(rule)
+                    ? `gspot runs ${rule} at no level, so it takes no options.`
+                    : `${rule} belongs to no plugin that gspot loads.`;
+            })
+            .join('\n'),
+    );
+}
+
 /**
- * Build the Stylelint file from the settings.
+ * Build stylelint.json: the CSS lint presets and rules for this level.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the CSS lint presets and rules for this level.
  */
 export function buildStylelintFile(planned: PlannedToolFile): string {
@@ -116,14 +134,7 @@ export function buildStylelintFile(planned: PlannedToolFile): string {
     const activeRules = new Set(
         [...stylelintRuleNames, 'function-no-unknown'].filter((rule) => isAll || !STYLELINT_RECOMMENDED_OFF.has(rule)),
     );
-    const refused = Object.keys(options.rules).filter((rule) => !activeRules.has(rule));
-    if (refused.length > 0)
-        throw new GspotError(
-            'settings',
-            refused
-                .map((rule) => `${rule} does not run at level ${level}; gspot sets options only for rules it runs.`)
-                .join('\n'),
-        );
+    assertStylelintRulesRun(Object.keys(options.rules), activeRules, stylelintRuleNames);
     const chosen = options.rules;
     const tailwind = scopeDependencies.includes('tailwindcss');
     const tailwindAtRules = tailwind ? TAILWIND_AT_RULES : [];

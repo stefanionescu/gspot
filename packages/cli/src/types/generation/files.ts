@@ -25,10 +25,10 @@ export type GenerationResult = {
     managedKeys: ManagedKeys[];
 };
 
-/** The declaring configuration and the inputs of its scope. */
+/** The configuration that declares the tool file, and its scope. */
 export type ToolFileOwner = { session: Session; scope: Scope; configuration: Configuration };
 
-/** Generated tool files and the chosen target for each scope and declaration. */
+/** Generated tool files and the chosen target for each scope and tool file. */
 export type ToolFileGeneration = {
     files: GeneratedFile[];
     targets: ReadonlyMap<string, ReadonlyMap<string, string>>;
@@ -48,7 +48,7 @@ export type PlannedNpmProject = {
 
 export type WholeToolFile = Extract<ToolFile, { source: string }>;
 
-/** The repository, scope, declaration, and destination for one whole tool file. */
+/** The repository, scope, tool file, and destination of one whole tool file. */
 export type PlannedToolFile = ToolFileOwner & { targetPath: string; level: Level; toolFile: WholeToolFile };
 
 /** Build the text of one tool file; buildToolFile adds the header and the final newline. */
@@ -68,19 +68,19 @@ export type PlannedPointerField = {
 /** One ignore group and the reason shown above its paths. */
 export type IgnoreSection = { key: keyof typeof IGNORE_SECTION_TITLES | 'settings'; title: string; patterns: string[] };
 
-/** A declaration paired with the repository and scope that own it. */
+/** A tool file paired with the repository and scope that own it. */
 export type OwnedToolFile = { toolFile: ToolFile; owner: ToolFileOwner };
 
-/** A whole-file declaration with the text built for one scope. */
+/** A whole tool file with the text built for one scope. */
 export type BuiltToolFile = OwnedToolFile & { toolFile: WholeToolFile; file: GeneratedFile };
 
 /** The mutable destinations and output files collected during one generation. */
 export type GeneratedToolFiles = { targets: Map<string, Map<string, string>>; files: Map<string, GeneratedFile> };
 
-/** The check and program names that make a tool-file declaration applicable. */
+/** The check and program names that make a tool file apply. */
 export type UsedNames = { tools: Set<string>; checks: Set<string> };
 
-/** A component file dialect, its parser, and syntax allowances. */
+/** A component file dialect, its parser, and the syntax it allows. */
 export type StylelintComponent = {
     files: readonly string[];
     customSyntax: string;

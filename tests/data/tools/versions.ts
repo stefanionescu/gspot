@@ -5,7 +5,7 @@ export const VERSION_OUTPUTS = [
         script: 'console.log("3.8.1"); process.exitCode = 7;',
         state: 'error',
         found: undefined,
-        note: 'version-teller version inspection exited 7: 3.8.1',
+        note: 'The version command of version-teller exited 7: 3.8.1',
     },
     {
         name: 'text without a version',

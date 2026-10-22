@@ -19,11 +19,10 @@ export function findQuotedEnd(line: string, start: number): number {
 }
 
 /**
- * Select up to three names close enough to look like a typo, closest first.
+ * Select up to SUGGESTION_LIMIT names close enough to look like a typo, closest first.
  *
  * @param name the text as typed.
  * @param knownNames the names that exist.
- *
  * @returns the closest names.
  */
 export function selectSimilarNames(name: string, knownNames: string[]): string[] {
@@ -79,11 +78,10 @@ export function quoteArgument(argument: string): string {
 }
 
 /**
- * Compute the line and column of an offset in a text, both from one.
+ * Get the line and column of an offset in a text, both from one.
  *
  * @param text the source for counting line breaks before the offset.
  * @param offset the index into it.
- *
  * @returns the one-based line and column.
  */
 export function getPosition(text: string, offset: number): TextPosition {
@@ -93,7 +91,7 @@ export function getPosition(text: string, offset: number): TextPosition {
 }
 
 /**
- * Print a count with its singular or plural noun.
+ * Format a count with its singular or plural noun.
  *
  * @param count the quantity that selects the noun ending.
  * @param noun the singular word.

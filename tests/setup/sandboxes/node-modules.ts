@@ -57,8 +57,8 @@ export async function linkInstalledModules(modulesFolder: string): Promise<void>
 }
 
 /**
- * Link declared packages and the installed packages they depend on, so a scratch copy of node_modules holds only those.
- * A test package wins over a workspace package of the same name, as in linkInstalledModules.
+ * Link declared packages and the installed packages they depend on, so a copy of node_modules holds only those. A test
+ * package wins over a workspace package of the same name, as in linkInstalledModules.
  *
  * @param modulesFolder the node_modules folder to create.
  * @param names packages that the sandbox project declares.

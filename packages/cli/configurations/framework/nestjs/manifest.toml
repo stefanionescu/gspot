@@ -30,7 +30,7 @@ reason = "A Nest module is an empty decorated class that registers providers and
 rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
 
 [[eslint.selectors]]
-message = "forwardRef papers over two modules that import each other. Move what both need into a third module."
+message = "forwardRef hides a cycle between two modules that import each other. Move what both need into a third module."
 selector = "CallExpression[callee.name='forwardRef']"
 
 [[eslint.selectors]]

@@ -1,6 +1,6 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-/** Only the EditorConfig check reads the format settings. */
+/** The format configuration with Prettier ignored, so only editorconfig-checker runs. */
 export const EDITORCONFIG_SETTINGS = `configurations = ["format"]
 [[ignore]]
 check = "format/prettier"

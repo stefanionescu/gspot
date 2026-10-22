@@ -81,7 +81,8 @@ export async function checkSecretsGitleaksPushed(session: Session, planned: Plan
 }
 
 /**
- * Reports environment reads that no env example lists, or skips the check without an env example.
+ * Reports each environment variable that the code reads and no example environment file lists, or skips the check when
+ * the scope has no example environment file.
  *
  * @param session the repository and its tools.
  * @param planned the scope to check.
@@ -96,7 +97,7 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
     if (examples.length === 0)
         throw new GspotError(
             'skip',
-            `No example environment file exists in ${planned.scope.folder.path === '' ? 'the repository root' : planned.scope.folder.path}. Declare the example environment files under secrets.env_examples.`,
+            `No example environment file exists in ${planned.scope.folder.path === '' ? 'the repository root' : planned.scope.folder.path}. List the example environment files in secrets.env_examples.`,
         );
     const known = new Set(
         examples.flatMap((file) => {

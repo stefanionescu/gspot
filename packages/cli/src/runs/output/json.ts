@@ -5,7 +5,7 @@ import { JSON_START } from '#cli/config/runs/output.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { ToolOutput } from '#cli/types/runs/output.ts';
 
-// The manifest names where the list of findings sits and the field of each value.
+// Get the list at a dotted path of the report, or the whole report for an empty path.
 function listAt(value: unknown, path: string | undefined): unknown[] {
     const found = path === undefined || path === '' ? value : getValueAt(value, path.split('.'));
     if (!Array.isArray(found))

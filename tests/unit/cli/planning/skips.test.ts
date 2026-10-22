@@ -23,7 +23,7 @@ test('a check whose required setting is missing is skipped with a note naming th
         {
             check: 'xcode/entitlements',
             status: 'skipped',
-            note: 'requires project setting xcode.allowed_entitlements',
+            note: 'needs the setting xcode.allowed_entitlements',
         },
     ]);
 });

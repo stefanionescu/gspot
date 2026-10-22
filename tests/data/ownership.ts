@@ -1,5 +1,4 @@
-// Authored markers in every malformed layout, in both supported file formats.
-
+/** The two managed block formats. */
 export const BLOCK_FORMATS = [
     {
         path: 'AGENTS.md',

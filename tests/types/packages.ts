@@ -10,7 +10,7 @@ export type UserProject = AsyncDisposable & {
     offline: Sandbox;
 };
 
-/** Package metadata and its local source to pack for installation. */
+/** A package.json and the local source to pack for installation. */
 export type RegistryPackage = {
     name: string;
     source: string;

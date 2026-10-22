@@ -198,7 +198,6 @@ mobile-starlight-toc .display-current {
     }
 }
 
-/* Sidebar. */
 .sidebar-pane {
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--sl-color-gray-3) 70%, transparent) transparent;
@@ -256,7 +255,6 @@ mobile-starlight-toc .display-current {
     line-height: 20px;
 }
 
-/* Limit hover styles to devices with a hovering pointer. */
 @media (hover: hover) {
     mobile-starlight-toc details .toggle:hover,
     .sidebar-content a:hover {
@@ -363,7 +361,6 @@ mobile-starlight-toc .display-current {
     padding-inline-end: 3rem;
 }
 
-/* Tables. */
 .sl-markdown-content:where(:not(:has(> .landing))) table {
     width: max-content;
     max-width: 100%;

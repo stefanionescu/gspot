@@ -35,7 +35,6 @@ test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header w
 
     expect(await readFile(path, 'utf8')).toBe(SOURCE_HEADER + CLEAN_SWIFT);
 });
-// SwiftFormat has no Windows build.
 test.skipIf(!hasToolBuild('swiftformat'))(
     'at level recommended, SwiftFormat leaves Swift block comments unchecked',
     async () => {
@@ -60,7 +59,6 @@ async function readDocumentationFindings(root: string, code: 0 | 1, scope: strin
     ]);
     return report.checks.flatMap(({ findings }) => findings.filter(({ rule }) => rule === 'blockComments'));
 }
-// The pinned SwiftFormat tool has no Windows build.
 test.skipIf(!hasToolBuild('swiftformat'))(
     'at level all, SwiftFormat reports and fixes Swift block comments, and an ignore in gspot.toml stops the finding',
     async () => {
@@ -94,7 +92,6 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
     },
 );
-// The pinned SwiftFormat tool has no Windows build.
 test.skipIf(!hasToolBuild('swiftformat'))(
     'SwiftFormat reports inline block comments at their positions and keeps the file mode and swiftformat:disable comments',
     async () => {
@@ -122,7 +119,6 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         expect(correctedText).toContain('/** A retained declaration. */');
     },
 );
-// The pinned SwiftFormat tool has no Windows build.
 test.skipIf(!hasToolBuild('swiftformat'))(
     'an ignore limited to a scope path stops SwiftFormat block-comment findings until unignore',
     async () => {

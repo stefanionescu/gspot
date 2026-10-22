@@ -15,7 +15,7 @@ import { INDEX_COMMAND, SAMPLE_COMMAND } from '#tests/data/generation/hooks.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, spawnGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
-// A fresh clone installs the locked tools, then rejects and accepts a real staged commit.
+/** Check that a fresh clone installs the locked tools, then rejects and accepts a real staged commit. */
 async function assertCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
     await using cloneRoot = await testdir();
     const clone = join(cloneRoot.path, 'clone');

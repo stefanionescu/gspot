@@ -31,7 +31,8 @@ function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repos
     return marked ? undefined : { cause: 'condition', note: `Needs files marked ${tags.join(' or ')} in this scope.` };
 }
 
-// Conditions belong to the planned check, so its declaration and scope cannot disagree.
+// Skip the check when its scope lacks a configuration, a dependency, or a tagged file that the check needs, or when a
+// history check runs outside Git.
 function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | undefined {
     const { configuration, git, dependencies, tags } = { ...check.configuration?.when, ...check.check.when };
     const scope = check.scope.folder.path;
@@ -50,7 +51,7 @@ function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | 
     };
 }
 
-// Find the skip that an ignore record without a rule or paths causes: the whole check turns off.
+// Find the [[ignore]] of the check with no rule that has no paths or covers the whole scope: it turns the check off.
 function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
     const ignored = listIgnores(scope.settings, check.id).find(
         (entry) =>
@@ -69,10 +70,10 @@ function findEmptySetting(scope: Scope, check: Check): string | undefined {
 }
 
 /**
- * Check for an inactive setting, including a table with empty lists.
+ * Check whether a setting holds no value: unset, false, an empty string, or a table of empty lists.
  *
  * @param value the resolved setting.
- * @returns whether the setting leaves its consumer inactive.
+ * @returns whether the setting holds no value.
  */
 export function isSettingEmpty(value: unknown): boolean {
     if (typeof value === 'object' && value !== null) return Object.values(value).flat().length === 0;
@@ -83,10 +84,9 @@ export function isSettingEmpty(value: unknown): boolean {
 /**
  * Skip checks for other systems, or for tools with no build for this system.
  *
- * @param check the declaration to read.
- * @param tool the declaration and its pin.
+ * @param check the check to read.
+ * @param tool the tool and its pin.
  * @param host the system and architecture.
- *
  * @returns the system skip, or undefined when this system can run the check.
  */
 export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host): Skip | undefined {
@@ -106,16 +106,16 @@ export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host)
  *
  * @param settings the validated gspot.toml.
  * @param scope the settings of the project folder.
- * @param check the declaration and project prerequisites.
+ * @param check the check and its project prerequisites.
  * @returns the skip reason, or undefined for an active check.
  */
 export function findSettingsSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
     if (settings.level !== 'all' && check.level !== 'recommended')
-        return { cause: 'level', note: 'disabled at level recommended' };
+        return { cause: 'level', note: 'off at level recommended' };
     const ignored = findIgnoreSkip(scope, check);
     if (ignored !== undefined) return ignored;
     const setting = findEmptySetting(scope, check);
-    return setting === undefined ? undefined : { cause: 'setting', note: `requires project setting ${setting}` };
+    return setting === undefined ? undefined : { cause: 'setting', note: `needs the setting ${setting}` };
 }
 
 /**

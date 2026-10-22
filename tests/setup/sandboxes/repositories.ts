@@ -9,7 +9,7 @@ import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { PUSH_CONTENT, LFS_ATTRIBUTES, NESTED_SCOPE_FILES } from '#tests/data/setup/sandboxes.ts';
 
 /**
- * Creates base, reviewed, and broken commits, plus different working-tree bytes, for the push tests.
+ * Create base, reviewed, and broken commits, plus different working-tree bytes, for the push tests.
  *
  * @param sandboxRoot folder for the repository.
  * @returns the commit hashes and the zero hash for a new ref.

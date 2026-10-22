@@ -7,7 +7,7 @@ export const CONFLICTING_DEFAULT_ERRORS = [
     {
         path: ['configurations'],
         message:
-            'The configurations `sql` and `alternate-sql` set `tools.sqlfluff.dialect` to different values. Set it yourself in gspot.toml to decide.',
+            'The configurations sql and alternate-sql set tools.sqlfluff.dialect to different values. Set it yourself in gspot.toml to decide.',
     },
 ] as const;
 

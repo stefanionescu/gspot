@@ -6,10 +6,11 @@ import { listProjectDependencyNames } from '#cli/repository/dependency-files.ts'
 import type { PlannedToolFile, SemgrepDocument } from '#cli/types/generation/files.ts';
 
 /**
- * Build the Semgrep pack with its dependency and scope paths.
+ * Build a Semgrep tool file: drop the rules whose packages the scope does not depend on, and point folder-limited rules
+ * at the configured folders.
  *
  * @param planned the tool file to build.
- * @returns the Semgrep rules with paths relative to the tool file.
+ * @returns the Semgrep rules as YAML.
  */
 export function buildSemgrepFile(planned: PlannedToolFile): string {
     const { scope, toolFile } = planned;

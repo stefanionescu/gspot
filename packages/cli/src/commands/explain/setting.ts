@@ -34,7 +34,7 @@ function formatChangeLines(key: string, setting: Setting, entry: SettingScope): 
               ]
             : []),
         ...(effective?.reason === undefined ? [] : [`Reason on record: ${effective.reason}`]),
-        `Change it: gspot set ${quoteArgument(key)} <value>${target} [--reason "..."]`,
+        `Change it: gspot set ${quoteArgument(key)} <value>${target} [--reason "<why>"]`,
         `Back to the default: gspot unset ${quoteArgument(key)}${target}`,
     ];
 }
@@ -69,8 +69,9 @@ export function explainSetting(session: Session | undefined, key: string): Expla
         key,
         '',
         first.setting.description,
-        '',
-        ...(first.setting.reason_needed === undefined ? [] : [`Reason: ${first.setting.reason_needed} needs a reason`]),
+        ...(first.setting.reason_needed === undefined
+            ? []
+            : ['', `Reason: ${first.setting.reason_needed} needs a reason`]),
         ...scopes.flatMap((entry) => formatSettingScope(key, first.setting, entry)),
     ];
     return {

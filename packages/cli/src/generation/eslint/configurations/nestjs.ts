@@ -12,9 +12,10 @@ import {
 } from '#cli/config/generation/eslint/configurations.ts';
 
 /**
- * Apply the NestJS lint rules and the TypeScript parsing mode of the scope.
+ * Apply the NestJS presets to the TypeScript files of the scope, with the no-Swagger preset when the scope does not use
+ * @nestjs/swagger.
  *
- * @param scope the ESLint inputs of the scope.
+ * @param scope the planned ESLint file of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 export function buildNestjsBlocks(

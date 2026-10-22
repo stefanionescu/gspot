@@ -1,4 +1,7 @@
-/** Every lockfile gspot knows, which package manager writes it, and which consumers use it. */
+/**
+ * Every lockfile gspot knows: its configuration, the package manager that writes it, and how gspot tool projects use
+ * it.
+ */
 export const LOCKFILES = [
     {
         file: 'bun.lock',

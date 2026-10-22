@@ -140,15 +140,16 @@ const TOOL_FILE_BUILDERS: Readonly<Record<string, ToolFileBuilder | undefined>> 
 };
 
 /**
- * Build one tool file and its pointers.
+ * Build the text of one tool file.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @param targets the tool file path for each scope.
  * @returns the generated file, with paths relative to where it sits.
  */
 export function buildToolFile(planned: PlannedToolFile, targets: ToolFileGeneration['targets']): GeneratedFile {
     const { toolFile, targetPath } = planned;
-    // Every Semgrep rule pack has the same builder; any other tool file has its own by configuration and file.
+    // Every semgrep.yml tool file has the same builder; any other tool file has its own, keyed by configuration and
+    // file.
     const builder =
         toolFile.file === SEMGREP_RULE_PACK_FILE
             ? buildSemgrepFile

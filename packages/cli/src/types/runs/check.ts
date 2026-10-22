@@ -2,10 +2,12 @@ import type { Session } from '#cli/types/session.ts';
 import type { CHECK_STATUSES } from '#cli/config/runs/run.ts';
 import type { SkipCause, PlannedCheck } from '#cli/types/planning.ts';
 
-/** The completion status of a check. */
 type CheckStatus = (typeof CHECK_STATUSES)[number];
 
-/** The code of one check: a built-in check or its own run, and the arguments and tool files of a tool check. */
+/**
+ * The code of one check: a built-in check or its own run, or the arguments and tool files of a check that runs its
+ * declared command.
+ */
 export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) &
     Pick<CheckRunOptions, 'listFileArguments' | 'listToolFiles'>;
 
@@ -15,7 +17,7 @@ type CheckRun = (
     options?: CheckRunOptions,
 ) => CheckResult | Promise<CheckResult>;
 
-/** The command or copy root that a check gives. */
+/** The command, copy folder, file arguments, and tool files that a check run takes. */
 export type CheckRunOptions = {
     command?: string[];
     copyRoot?: string;

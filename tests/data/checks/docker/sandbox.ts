@@ -1,6 +1,6 @@
 import type { CheckResult } from '#cli/types/runs/check.ts';
 
-// Trivy uses this configured exit code when an image report contains findings.
+/** Trivy uses this configured exit code when an image report contains findings. */
 export const TRIVY_CONFIG_PATH = '.gspot/configurations/infrastructure/docker/trivy.yml';
 
 export const TRIVY_REPORT =

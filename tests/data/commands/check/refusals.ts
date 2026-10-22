@@ -2,7 +2,7 @@ const INVALID_UTF8_BYTE = 0xff;
 const UTF16_MARKER_BYTE = 0xfe;
 const LINE_FEED_BYTE = 0x0a;
 
-// Options that the check command refuses, with each error; the working tree must stay unchanged.
+/** Options that the check command refuses, with each error; the working tree must stay unchanged. */
 export const FIX_REFUSALS = [
     [
         ['--staged', '--fix'],
@@ -38,7 +38,7 @@ export const ARGUMENT_REFUSALS = [
     [
         'a message file that does not exist',
         ['check', '--hook', 'commit-msg', '--', 'missing-message.txt'],
-        'The commit message file <root>/missing-message.txt cannot be read.',
+        'gspot cannot read the commit message file <root>/missing-message.txt.',
     ],
     [
         'an empty --only list',

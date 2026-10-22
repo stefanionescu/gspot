@@ -108,8 +108,11 @@ export async function waitForExit(pid: number): Promise<void> {
 }
 
 /**
- * Wait until a child writes its ready file, or the test runs out of time.
- * A child creates the file before it writes the content, so the file counts as ready once it holds bytes.
+ * Wait until a child writes its ready file, or the test runs out of time. A child creates the file before it writes the
+ * content, so the file counts as ready once it holds bytes.
+ *
+ * @param path the ready file.
+ * @returns whether the file holds bytes.
  */
 export async function waitForFile(path: string): Promise<boolean> {
     const deadline = timeoutAt ?? performance.now() + TEST_TIMEOUT_MILLISECONDS;
@@ -183,7 +186,7 @@ export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnR
     };
 }
 
-/** Drains a child's output and guarantees termination when a test leaves its scope. */
+/** Drain the output of a child process, and end it when a test leaves its scope. */
 export function captureChild(child: CapturedProcess): CapturedChild {
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();

@@ -33,7 +33,7 @@ function parseSarifReport(report: unknown, root: string): Finding[] {
     );
 }
 
-/** A report with one result at the given artifact location. */
+/** Build a report with one result at the given artifact location. */
 function buildLocationReport(artifactLocation: Record<string, unknown>): SarifLog {
     return { version: '2.1.0', runs: [{ results: [{ locations: [{ physicalLocation: { artifactLocation } }] }] }] };
 }

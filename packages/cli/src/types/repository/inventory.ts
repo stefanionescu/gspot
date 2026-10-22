@@ -49,5 +49,5 @@ export type FolderListing = { entries: Dirent[]; ignores: PathIgnore[] };
 /** A folder waiting for a read, with its inherited ignore rules. */
 export type PendingFolder = { folder: string; ignores: PathIgnore[] };
 
-/** Authored declarations and effective Git attributes used for classification. */
+/** The generated paths that the selected configurations declare, and the Git attributes of each path. */
 export type FileKindRules = { generatedPaths: GeneratedPaths[]; attributes: Repository['attributes'] };

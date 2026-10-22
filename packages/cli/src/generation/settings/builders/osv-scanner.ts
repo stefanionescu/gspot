@@ -5,9 +5,9 @@ import { TOOL_FILE_TOML_FORMAT } from '#cli/config/generation/generate.ts';
 import { OSV_SCANNER_NOTES } from '#cli/config/generation/settings/builders/osv-scanner.ts';
 
 /**
- * Build the `osv-scanner` tool file from the settings.
+ * Build osv-scanner.toml: a note on why the file exists, and the package ignores, reasons, and expiration dates.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns a note on why the file exists, and the package ignores, reasons, and expiration dates.
  */
 export function buildOsvScannerFile(planned: PlannedToolFile): string {

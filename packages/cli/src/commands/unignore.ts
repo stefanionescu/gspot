@@ -5,6 +5,7 @@ import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import type { IgnoreRemoval } from '#cli/types/commands/unignore.ts';
+import { NO_CHECK_IGNORE_TEXTS } from '#cli/config/commands/ignore.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
@@ -59,7 +60,6 @@ async function runUnignoreCommand(
 ): Promise<CommandResult> {
     const { root, input, settings } = prepareSettingsEdit(options.cwd);
     if (options.check !== undefined) assertKnownCheck(options.check, settings);
-    const target = options.check ?? 'every check';
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
     const [verb, pronoun] = everywhere === 1 ? ['covers', 'it'] : ['cover', 'them'];
     const warning =
@@ -67,15 +67,22 @@ async function runUnignoreCommand(
             ? ''
             : `Kept ${formatCount(everywhere, 'ignore')} that ${verb} every path. To delete ${pronoun}, run gspot unignore without --paths.\n`;
     const warningFields = stripUndefined({ warning: everywhere === 0 ? undefined : warning.trim() });
+    const target =
+        options.check === undefined
+            ? NO_CHECK_IGNORE_TEXTS
+            : { noMatch: `${options.check} has no matching ignore`, removed: `for ${options.check}` };
     if (deleted + changedIgnores === 0) {
         return {
-            text: `No change: ${target} has no matching ignore.\n${warning}`,
+            text: `No change: ${target.noMatch}.\n${warning}`,
             json: { changed: false, ...warningFields },
             exitCode: 0,
         };
     }
     const summary = [
-        { count: deleted, message: `Removed ${formatCount(deleted, 'ignore')} for ${target}.` },
+        {
+            count: deleted,
+            message: `Removed ${formatCount(deleted, 'ignore')} ${target.removed}.`,
+        },
         {
             count: changedIgnores,
             message: `Removed ${formatCount(removedPaths, 'path')} from ${formatCount(changedIgnores, 'ignore')}.`,
@@ -93,8 +100,8 @@ async function runUnignoreCommand(
 /**
  * Register the unignore command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerUnignore(program: Command, onResult: CommandCompletion): void {
     program

@@ -122,7 +122,7 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     });
     expect(await readFile(hook, 'utf8')).toBe(installed);
     const removed = await runGspot(root, ['apply']);
-    expect(removed).toMatchObject({ code: 0, stdout: expect.stringContaining('Run: gspot install') as string });
+    expect(removed).toMatchObject({ code: 0, stdout: expect.stringContaining('Run gspot install.') as string });
     expect(await isOnDisk(hook)).toBe(false);
     expect(readGitSetting(root, 'core.hooksPath')).toBe(ownPath);
     const removedSteps: (readonly string[])[] = [];

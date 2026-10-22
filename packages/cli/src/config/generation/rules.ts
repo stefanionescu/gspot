@@ -12,6 +12,9 @@ export const AGENTS_FILE = 'AGENTS.md';
 
 export const ALL_LEVEL_MARKER = '<!-- level: all -->';
 
+/** The blank line around a level marker, which leaves with the marker at level all. */
+export const BLANK_LINE = '\n\n';
+
 export const RULE_OPENING_PREFIX = 'Read this rule ';
 
 export const MARKDOWN_HEADING = /^(#{1,5}) /u;

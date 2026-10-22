@@ -139,11 +139,11 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
 }
 
 /**
- * Format the report and its summary from one result list.
+ * Format the check lines, the ignores, and the summary of a run.
  *
  * @param report the check results and totals.
  * @param options how to show the report.
- * @param options.verbose whether to show passing checks and full tool output.
+ * @param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
  * @returns the check lines and the summary.
  */
 export function formatRunReport(report: RunReport, options: { verbose: boolean }): string {
@@ -175,9 +175,9 @@ export function printProgress(progress: CheckProgress): void {
 }
 
 /**
- * Describe the fixes, and keep tool output and passing fixes out of the warnings.
+ * Format the fixes as lines: the dry-run diffs, or the changed files and the files that the fixers broke.
  *
- * @param fixes the fixer results and the verification state.
+ * @param fixes the fixer results, the changed and broken files, and the diffs.
  * @param options how to show the fixes.
  * @param options.isDryRun whether the run shows fixes and writes nothing.
  * @returns the lines that describe the fixes.
@@ -193,7 +193,7 @@ export function formatFixes(fixes: FixReport, options: { isDryRun: boolean }): s
         ];
     if (count === 0) return ['No fixer changed anything.'];
     return [
-        `fixed ${formatCount(count, 'file')}: ${fixes.changed.join(', ')}. The changes are not staged.`,
+        `Fixed ${formatCount(count, 'file')}: ${fixes.changed.join(', ')}. The changes are not staged.`,
         ...fixes.broken.map(
             (path) =>
                 `The fixers left a syntax error in ${path}. Restore it with git checkout -- ${path}, then fix it by hand.`,

@@ -17,14 +17,14 @@ export function listAlwaysSelected(): string[] {
 }
 
 /**
- * Parse a configuration manifest for one test.
+ * Parse a manifest.toml for one test.
  *
  * @param name what to call the configuration.
  * @param fields extra manifest tables and fields.
  * @param fields.requires configurations that it needs.
  * @param fields.tables extra TOML for the manifest.
  * @param fields.group where the configuration sits.
- * @returns the configuration with resolved tools.
+ * @returns the parsed configuration.
  */
 export function buildConfiguration(
     name: string,

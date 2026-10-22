@@ -11,7 +11,8 @@ import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tre
 import { extractBaseName, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
 import { SPEC_SUFFIX, INDEX_BASE_NAMES, COMPANION_SUFFIX } from '#cli/config/checks/structure.ts';
 
-// A configuration such as NestJS declares <name>.<kind>.<ext> file names, so these do not count as a shared prefix.
+// NestJS names files <name>.<kind>.ts, so these do not count as a shared prefix. Its kind suffixes apply to .ts and .js
+// files, never to .tsx or .jsx.
 function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);
     if (extension.endsWith('x') || !listTaggedExtensions('javascript', 'typescript').includes(extension)) return false;
@@ -21,7 +22,7 @@ function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
 }
 
 /**
- * Extracts the grouping prefix: the stem up to its first dash or dot.
+ * Extracts the grouping prefix: the file name up to its first dash or dot.
  *
  * @param baseName the file name without its extension.
  * @returns the part before the first dash or dot, or all of it.

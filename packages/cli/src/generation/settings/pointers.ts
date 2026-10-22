@@ -1,3 +1,5 @@
+// A pointer, such as eslint.config.mjs, sits where a tool or editor looks by default, and loads the real
+// tool file in .gspot.
 import { isDeepStrictEqual } from 'node:util';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -42,9 +44,8 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
 /**
  * Name the tool file relative to its pointer, with the local-module prefix.
  *
- * @param pointerPath the authored pointer file.
+ * @param pointerPath the path of the pointer file.
  * @param targetPath the generated tool file.
- *
  * @returns a relative path that tool loaders read on every system.
  */
 function buildRelativeTarget(pointerPath: string, targetPath: string): string {
@@ -53,13 +54,12 @@ function buildRelativeTarget(pointerPath: string, targetPath: string): string {
 }
 
 /**
- * Generate a pointer: the header, then the body with the target placeholder filled.
+ * Build a pointer: the header, then the body with the target placeholder filled.
  *
- * @param pointer the declaration to build.
+ * @param pointer the pointer that the manifest declares.
  * @param pointerPath where the pointer goes.
  * @param targetPath the generated tool file.
- *
- * @returns the path and generated text ready for the writer.
+ * @returns the path and text of the pointer.
  */
 function buildPointerFile(
     pointer: NonNullable<ToolFile['pointer']>,
@@ -76,12 +76,12 @@ function buildPointerFile(
 }
 
 /**
- * Resolve declared pointer paths.
+ * List the paths where a tool file puts its pointer: one path, or one in each folder that holds files of the
+ * configuration and matches pointer.folders.
  *
  * @param owner the repository and the scope.
- * @param toolFile the declaration from the manifest.
- *
- * @returns the root or folder paths.
+ * @param toolFile the tool file from the manifest.
+ * @returns each path where the pointer goes, from the repository root.
  */
 export function listPointerPaths(owner: ToolFileOwner, toolFile: ToolFile): string[] {
     const { scope, configuration } = owner;
@@ -149,7 +149,7 @@ function listPointerFieldTargets({
  *
  * @param session the repository files and scopes.
  * @param generated the tool files that this run generates.
- * @param targets the tool file path for each scope and declaration.
+ * @param targets the tool file path for each scope and tool file.
  * @returns changes to the declared package fields.
  */
 export function buildPointerFieldEdits(
@@ -200,11 +200,10 @@ export function buildPointerFieldEdits(
 }
 
 /**
- * Build the declared pointers for one generated tool file.
- * Root and folder pointers use their body or the generated formatter settings.
+ * Build the pointers of one generated tool file.
  *
  * @param owner the repository and the scope.
- * @param toolFile the shipped declaration.
+ * @param toolFile the shipped tool file.
  * @param target the tool file path.
  * @returns the pointer files for the tool file.
  */

@@ -101,7 +101,7 @@ test('remove refuses a dependency required by a parent configuration and leaves 
     expect(JSON.parse(result.stdout)).toStrictEqual({
         error: 'arguments',
         message:
-            'Cannot remove `javascript`: typescript requires javascript. Remove `typescript` first, or keep `javascript`.',
+            'Cannot remove javascript: typescript requires javascript. Remove typescript first, or keep javascript.',
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

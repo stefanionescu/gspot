@@ -8,15 +8,16 @@ import type { UsedNames, OwnedToolFile, ToolFileGeneration } from '#cli/types/ge
  * Find the repository-relative path of the tool file for a scope.
  *
  * @param scope the folder, empty for the root.
- * @param toolFile the declaration from the manifest.
- * @param targets the generated paths by scope and file stem.
+ * @param toolFile the tool file from the manifest.
+ * @param targets the generated paths by scope and file name without extension.
  * @returns the file of the scope, or the root file as a fallback.
  */
 export function getToolFileTarget(scope: string, toolFile: ToolFile, targets: ToolFileGeneration['targets']): string {
     return toolFile.per_scope ? (targets.get(scope)?.get(toolFile.target) ?? toolFile.target) : toolFile.target;
 }
 
-// Constraints select declarations without treating an empty constraint as a requirement.
+// gspot writes a tool file when its level applies and its configuration condition holds. A check must also use one of
+// its tools or count among its checks; an empty list asks for nothing.
 function isToolFileNeeded(session: Session, file: ToolFile, used: UsedNames): boolean {
     if (file.level === 'all' && session.settingsFile.settings.level !== 'all') return false;
     const constraints = [
@@ -28,7 +29,7 @@ function isToolFileNeeded(session: Session, file: ToolFile, used: UsedNames): bo
     return true;
 }
 
-// Each scope uses its own checks for scoped declarations and the repository programs for shared declarations.
+// Each scope uses its own checks for its own tool files and the repository programs for shared tool files.
 function listScopeToolFiles(session: Session, scope: Scope, repositoryNames: UsedNames): OwnedToolFile[] {
     const checks = listScopeChecks(session, scope);
     const used = {
@@ -46,10 +47,10 @@ function listScopeToolFiles(session: Session, scope: Scope, repositoryNames: Use
 }
 
 /**
- * List the tool file declarations that this run writes, with the scope that owns each.
+ * List the tool files that this run writes, with the scope that owns each.
  *
  * @param session the repository to build for.
- * @returns each needed declaration and its owner.
+ * @returns each needed tool file and its owner.
  */
 export function listOwnedToolFiles(session: Session): OwnedToolFile[] {
     const repositoryNames = {

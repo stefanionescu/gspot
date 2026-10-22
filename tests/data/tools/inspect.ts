@@ -1,4 +1,4 @@
-/** Installed package metadata with a name or version that holds no string. */
+/** An installed package.json whose name or version holds no string. */
 export const PACKAGE_METADATA_FAILURES = [
     { field: 'name', packageJson: { name: false, version: '5.0.1' } },
     { field: 'version', packageJson: { name: 'teller', version: false } },
@@ -19,7 +19,7 @@ export const SYSTEM_PLUGIN_REPORTS = [
         code: 0,
         missing: false,
         state: 'missing',
-        note: 'pytest-cov is not reported',
+        note: 'The version command of the host tool does not list pytest-cov.',
     },
     {
         name: 'invalid',

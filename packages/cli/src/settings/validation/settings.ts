@@ -92,7 +92,7 @@ function throwErrors(errors: SettingsError[]): never {
 }
 
 /**
- * Validate written selections, tool options, ignores, and paths before a command uses them.
+ * Validate the written configuration lists, tool options, ignores, and paths before a command uses them.
  *
  * @param settings the parsed gspot.toml.
  * @param repositoryRoot the optional folder for checking declared scope paths.
@@ -143,7 +143,7 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
                 : [
                       {
                           path: ['ignore', index, 'check'],
-                          message: `There is no check called \`${entry.check}\`.${formatSimilarNames(entry.check, checks)}`,
+                          message: `There is no check called ${entry.check}.${formatSimilarNames(entry.check, checks)}`,
                       },
                   ],
         ),

@@ -33,7 +33,7 @@ function listExceptions(words: string[]): string[] {
 /**
  * Build the Vale sentence-case rule for headings below the title.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the heading capitalization rule.
  */
 export function buildHeadingCaseStyle(planned: PlannedToolFile): string {
@@ -50,7 +50,7 @@ export function buildHeadingCaseStyle(planned: PlannedToolFile): string {
 /**
  * Build the Vale title-case rule for the document title.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the title capitalization rule.
  */
 export function buildTitleCaseStyle(planned: PlannedToolFile): string {
@@ -65,9 +65,9 @@ export function buildTitleCaseStyle(planned: PlannedToolFile): string {
 }
 
 /**
- * Build the Vale acronyms style from the settings.
+ * Build the `acronyms` style of Vale: the Vale acronym rule with the allowed acronyms.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Vale acronym rule with the allowed acronyms.
  */
 export function buildAcronymsStyle(planned: PlannedToolFile): string {
@@ -75,7 +75,7 @@ export function buildAcronymsStyle(planned: PlannedToolFile): string {
 
     return stringify({
         extends: 'conditional',
-        message: "'%s' is used without being spelled out on first use.",
+        message: "Spell out '%s' on first use.",
         level: 'error',
         ignorecase: false,
         first: String.raw`\b([A-Z]{3,6})\b`,
@@ -85,9 +85,9 @@ export function buildAcronymsStyle(planned: PlannedToolFile): string {
 }
 
 /**
- * Build the Vale INI file from the settings.
+ * Build vale.ini: the Vale style locations and rule levels for the prose checks.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Vale style locations and rule levels for the prose checks.
  */
 export function buildValeIniFile(planned: PlannedToolFile): string {
@@ -125,9 +125,9 @@ export function buildValeIniFile(planned: PlannedToolFile): string {
 }
 
 /**
- * Build the Vale alt text style from the settings.
+ * Build the `alt-text` style of Vale: the Vale alternative-text rule.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Vale alternative-text rule.
  */
 export function buildAltTextStyle(planned: PlannedToolFile): string {
@@ -144,16 +144,16 @@ export function buildAltTextStyle(planned: PlannedToolFile): string {
 }
 
 /**
- * Build the Vale banned headings style from the settings.
+ * Build the `banned-headings` style of Vale: the Vale rule for the banned headings.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Vale rule for the banned headings.
  */
 export function buildBannedHeadingsStyle(planned: PlannedToolFile): string {
     const headings = [...new Set([...BANNED_HEADINGS, ...getTable(planned.scope.settings, 'docs').banned_headings])];
     return stringify({
         extends: 'existence',
-        message: "Heading '%s' inventories the tree. Document behavior and ownership instead.",
+        message: "Heading '%s' lists files and folders. Describe behavior and ownership instead.",
         level: 'error',
         ignorecase: true,
         scope: 'heading',
@@ -165,10 +165,10 @@ export function buildBannedHeadingsStyle(planned: PlannedToolFile): string {
 }
 
 /**
- * Build the Vale list item style from the settings.
+ * Build the `item-length` style of Vale: the Vale rule for the longest list item, in words.
  *
- * @param planned the tool file to build.
- * @returns the Vale list-item punctuation rule.
+ * @param planned the tool file with its scope, level, and target path.
+ * @returns the Vale list-item length rule.
  */
 export function buildListItemStyle(planned: PlannedToolFile): string {
     const max = getTable(planned.scope.settings, 'prose').max_list_item_words;
@@ -181,9 +181,9 @@ export function buildListItemStyle(planned: PlannedToolFile): string {
 }
 
 /**
- * Build the Vale paragraph length style from the settings.
+ * Build the `paragraph-length` style of Vale: the Vale paragraph length rule with the configured ceiling.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Vale paragraph length rule with the configured ceiling.
  */
 export function buildParagraphLengthStyle(planned: PlannedToolFile): string {
@@ -197,9 +197,9 @@ export function buildParagraphLengthStyle(planned: PlannedToolFile): string {
 }
 
 /**
- * Build the Vale sentence length style from the settings.
+ * Build the `sentence-length` style of Vale: the Vale sentence length rule with the configured ceiling.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Vale sentence length rule with the configured ceiling.
  */
 export function buildSentenceLengthStyle(planned: PlannedToolFile): string {
@@ -213,9 +213,9 @@ export function buildSentenceLengthStyle(planned: PlannedToolFile): string {
 }
 
 /**
- * Build the Vale possessives style from the settings.
+ * Build the `possessives` style of Vale: the Vale possessive-form rule.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Vale possessive-form rule.
  */
 export function buildPossessivesStyle(planned: PlannedToolFile): string {
@@ -233,9 +233,9 @@ export function buildPossessivesStyle(planned: PlannedToolFile): string {
 }
 
 /**
- * Build the Vale accepted words file from the settings.
+ * Build the accepted words of Vale: the accepted product names and your own allowed words, one per line.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the accepted product names and your own allowed words, one per line.
  */
 export function buildAcceptedWordsFile(planned: PlannedToolFile): string {

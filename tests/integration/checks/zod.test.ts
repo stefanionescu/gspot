@@ -9,7 +9,7 @@ import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { LOOSE_ZOD_SCHEMA, ZOD_PROJECT_FILES } from '#tests/data/integration/checks/zod.ts';
 import { spawnGspot, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
 
-// Creates and commits a TypeScript project with a loose Zod schema that links the workspace modules.
+/** Create and commit a TypeScript project with a loose Zod schema that links the workspace modules. */
 async function prepareLooseSchemaProject(root: string): Promise<Record<string, string>> {
     await createFileTree(root, {
         ...ZOD_PROJECT_FILES,

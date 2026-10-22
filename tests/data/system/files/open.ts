@@ -6,7 +6,7 @@ export const MODE_REPLACEMENTS = [
 export const OUTSIDE_LINKS = [
     {
         path: 'escape/sentinel',
-        refusal: 'A parent of escape/sentinel is a link or is not a directory. Choose a directory without links.',
+        refusal: 'A parent of escape/sentinel is a link or is not a folder. Choose a folder without links.',
     },
     {
         path: 'linked',

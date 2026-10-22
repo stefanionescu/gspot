@@ -4,7 +4,10 @@ export const PBXPROJ = '.xcodeproj/project.pbxproj';
 
 export const PBXPROJ_NAME = 'project.pbxproj';
 
-/** Sticky tokenization refuses unclosed strings, comments, and unsupported syntax. */
+/**
+ * One token of a project.pbxproj file. The parser matches each token right where the last one ended, so it stops at an
+ * unclosed string or comment and at text that no branch matches.
+ */
 export const PROJECT_TOKENS = [
     /\s+/y,
     /\/\*[\s\S]*?\*\//y,

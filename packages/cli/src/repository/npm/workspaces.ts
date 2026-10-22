@@ -40,12 +40,13 @@ function listWorkspacePackages(root: string): Package[] {
 const WORKSPACE_SOURCES = { create: () => new Map<string, string[]>() };
 
 /**
- * Select the declared workspace sources from the inventory of this run.
+ * List the files of the workspace packages that a project imports or depends on, and the files that those packages
+ * publish.
  *
- * @param reads the run cache and base for resolving package and compiler files.
+ * @param reads the run cache.
  * @param scope the owning project.
  * @param files the source inventory.
- * @returns workspace dependency paths.
+ * @returns the repository-relative paths.
  */
 export function listWorkspaceDependencySources(reads: ReadCache, scope: string, files: TrackedFile[]): string[] {
     const source = reads.root;

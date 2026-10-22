@@ -3,7 +3,10 @@ import { parseComments, stripCommentEnd } from '#cli/parsers/comments.ts';
 import { MARKER_COMMENT, COMMENT_BOUNDARIES } from '#tests/data/parsers/comments.ts';
 import { QUOTED_ESLINT_COMMENTS } from '#tests/data/checks/gspot/suppressions/syntax.ts';
 
-// Find comments that start with the marker. Skip markers inside strings and block values.
+/**
+ * List the lines of the comments that start with the marker; parseComments skips markers inside strings and block
+ * values.
+ */
 async function listMarkedLines(path: string, source: string, tags: readonly string[]): Promise<number[]> {
     const comments = await parseComments(path, source, tags);
     return comments

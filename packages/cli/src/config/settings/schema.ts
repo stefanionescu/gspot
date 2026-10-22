@@ -25,7 +25,7 @@ export const PRINT_WIDTH_MAX = 400;
 
 export const RULE_TOKEN = '{rule}';
 
-/** Complete written examples used by the editor schema and settings reference. */
+/** Complete written examples for the editor schema and the settings reference. */
 export const SETTINGS_EXAMPLES = [
     { level: 'recommended' },
     { configurations: ['typescript', 'nextjs', 'markdown'] },
@@ -213,5 +213,5 @@ export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'ta
 
 export const PATH_ROLES = ['source', 'destination', 'build'] as const;
 
-/** An exact package version such as 2.0.0.post1, a semver range such as ^1.2.0 or >=1 <2, or * for every version. */
+/** An exact package version such as 2.0.0.post1, a version range such as ^1.2.0 or >=1 <2, or * for every version. */
 export const ALLOWED_VERSION = /^(?:\*|\d[^\s@<>=~^*|,]*|[\d.xX*^~<>=|\s-]+)$/u;

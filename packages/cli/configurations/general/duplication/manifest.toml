@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Reports copied code across every language a configuration claims."
+description = "Code in every language a configuration claims: blocks copied between files."
 title = "Duplication"
 
 [files]

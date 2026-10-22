@@ -76,7 +76,9 @@ test('at level recommended, a rule file loses its level-all sections with their 
     ]);
     expect(recommended.map(({ content }) => content)).toStrictEqual([before + after]);
     const all = selectRulesAt(session, 'all', [{ ...session.scopes[0]!, configurations: [configuration] }]);
-    expect(all.map(({ content }) => content)).toStrictEqual([text]);
+    expect(all.map(({ content }) => content)).toStrictEqual([
+        before + '## Convention\n\nContent.\n\n### Detail\n\n```md\n## Not a boundary\n```\n\n' + after,
+    ]);
     writeFileSync(join(sandbox.path, 'rules/GUIDE.md'), before + after);
     expect(
         selectRulesAt(session, 'recommended', [{ ...session.scopes[0]!, configurations: [configuration] }]).map(

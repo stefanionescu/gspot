@@ -29,7 +29,7 @@ import {
 } from '#tests/data/checks/nextjs.ts';
 
 /**
- * Create a Next.js project with tracked source and untracked build output, for the scratch build checks.
+ * Create a Next.js project with tracked source and untracked build output, for the checks that build in a copy.
  *
  * @param sandboxRoot folder for the project.
  * @param scope folder of the Next.js project.

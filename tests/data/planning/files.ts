@@ -17,7 +17,7 @@ export const EDITORCONFIG_FILES = {
     Dockerfile: 'FROM scratch\n',
 } as const;
 
-/** A path ignore applies to one check and keeps the rule findings of the others. */
+/** A path ignore removes the ignored file from its own check; a rule ignore or another check's ignore keeps it. */
 export const PROJECT_PATH_IGNORES = [
     {
         name: 'a deleted ignored input',
@@ -93,7 +93,7 @@ export const PROJECT_TRIGGERS = [
     ['rename', 'changed'],
 ] as const;
 
-/** Lockfile changes start the dependency advisory scan. Other inputs only feed the analysis. */
+/** Lockfile changes start the dependency advisory scan. Other files only feed the analysis. */
 export const LOCKFILE_TRIGGER_NAMES = [
     'bun.lock',
     'package-lock.json',

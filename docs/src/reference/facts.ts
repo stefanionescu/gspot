@@ -68,9 +68,9 @@ function buildCommandReference(command: ReturnType<typeof buildProgram>['command
 }
 
 /**
- * Read the CLI facts once for the documentation build.
+ * Build the reference facts that the docs pages read.
  *
- * @returns the data for the reference pages.
+ * @returns the facts for the reference pages.
  */
 export function readReferenceFacts(): ReferenceFacts {
     const configurations = [...readConfigurations().values()].toSorted((first, second) =>

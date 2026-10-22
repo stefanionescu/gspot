@@ -34,7 +34,7 @@ export const TYPOS_REPORT_ERRORS = [
     {
         name: 'outside offset',
         output: { ...TYPO_REPORT, byte_offset: 99 },
-        message: 'Typos reported a position outside the source: sample.txt',
+        message: 'typos reported a position outside the file: sample.txt',
     },
     {
         name: 'missing source',
@@ -44,6 +44,6 @@ export const TYPOS_REPORT_ERRORS = [
     {
         name: 'large offset',
         output: { ...TYPO_REPORT, byte_offset: 999 },
-        message: 'Typos reported a position outside the source: sample.txt',
+        message: 'typos reported a position outside the file: sample.txt',
     },
 ] as const;

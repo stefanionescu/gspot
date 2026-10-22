@@ -1,4 +1,4 @@
-// Reads dependency declarations across supported package formats.
+// Reads the dependencies that each supported package format declares.
 import { posix } from 'node:path';
 import { parseJsonFile } from '#cli/parsers/json.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';

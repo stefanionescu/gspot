@@ -14,7 +14,7 @@ import {
 } from '#tests/data/checks/postgres/schema.ts';
 
 /**
- * A migration under migrations/, parsed.
+ * Parse SQL text as the migration `migrations/<name>`, with the first character of the name as its version.
  *
  * @param name file under migrations/.
  * @param text the SQL.

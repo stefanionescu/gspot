@@ -10,7 +10,6 @@ import { writeYarnSettings } from '#cli/install/npm/yarn.ts';
 import { rmSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/dependencies.ts';
-import { REINSTALL_HELP } from '#cli/config/install/credentials.ts';
 import { prepareReleaseAge } from '#cli/install/npm/release-age.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
@@ -62,10 +61,7 @@ async function createNpmLockfile(
         install.session.reads,
     );
     if (which.sync(NODE_TOOL, { nothrow: true }) === null)
-        throw new GspotError(
-            'install',
-            'node is required by the npm tool project. Install it before it creates its lockfile.',
-        );
+        throw new GspotError('install', 'The npm tool project needs Node.js to create its lockfile. Install Node.js.');
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PACKAGE_JSON), toolProjectFile.content);
@@ -75,8 +71,8 @@ async function createNpmLockfile(
         writeFileSync(join(runFolder, project.lockfile), recorded);
     const lockfileArguments = selectPackageManagerArguments(packageManager).lockfile;
     const days = getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days;
-    // The hold goes where versions get chosen. A frozen install takes them from the lockfile, and npm ci ignores
-    // min-release-age-exclude for lockfile entries without a URL.
+    // The minimum release age applies where npm chooses versions. A frozen install takes them from the lockfile, and
+    // npm ci ignores min-release-age-exclude for lockfile entries without a URL.
     const run = await runPackageManager(install, {
         runFolder,
         packageManager,
@@ -87,14 +83,14 @@ async function createNpmLockfile(
     assertCredentialFreeLockfile(
         readFileSync(lockfilePath, 'utf8'),
         run.credentials,
-        'The package manager included registry credentials in its lockfile. Existing files were preserved.',
+        'The package manager wrote registry credentials into its lockfile. gspot kept the existing files.',
     );
     stripRegistryUrls(lockfilePath, packageManager, run.env);
     const lockfile = readFileSync(join(runFolder, project.lockfile), 'utf8');
     if (!isLockfileCurrent(packageManager.name, lockfile, project.dependencies))
         throw new GspotError(
             'install',
-            `${packageManager.name} produced a mismatched tool lockfile. Existing files were preserved.`,
+            `${packageManager.name} wrote a tool lockfile that does not match the tool project. gspot kept the existing files.`,
         );
     return lockfile;
 }
@@ -143,7 +139,7 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerCo
         if (result.code !== 0) {
             throw new GspotError(
                 'install',
-                `${packageManager.name} ${failure} (exit ${String(result.code)}). ${REINSTALL_HELP}.\n${redactInstallOutput(result, credentials)}`,
+                `${packageManager.name} ${failure} (exit ${String(result.code)}).\n${redactInstallOutput(result, credentials)}`,
             );
         }
         return { env, credentials };
@@ -153,9 +149,9 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerCo
 }
 
 /**
- * Verify the package manager executable before install changes any tool inputs.
+ * Verify the package manager executable before install changes any tool project file.
  *
- * @param install what install needs for this step.
+ * @param install the tool install of this step.
  */
 export async function assertPackageManagerVersion(install: ToolInstall): Promise<void> {
     const { session } = install;
@@ -218,7 +214,7 @@ export async function prepareNpmLockfile(
         assertCredentialFreeLockfile(
             recorded,
             extractRegistryCredentials(await readRegistryEnvironment(root)),
-            'The npm lockfile includes repository registry credentials. Existing files were preserved. Remove credentials from the registry URL and run: gspot install',
+            'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.',
         );
         return { path: project.lockfilePath, content: recorded, kind: 'lock', read: original };
     }

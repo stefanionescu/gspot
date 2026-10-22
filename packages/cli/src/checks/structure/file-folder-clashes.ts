@@ -6,7 +6,7 @@ import { extractBaseName, extractParentFolder } from '#cli/system/paths.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/structure/folder-tree.ts';
 
 /**
- * Reports each file whose stem matches the name of a sibling folder.
+ * Reports each file whose name without its extension matches the name of a sibling folder.
  *
  * @param _session the repository and its tools.
  * @param planned the scope files.

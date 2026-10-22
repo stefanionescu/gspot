@@ -36,11 +36,11 @@ import {
 } from '#cli/config/repository/inventory.ts';
 
 /**
- * Read the attribute rules once per repository read.
+ * Read the Git attributes of each tracked path.
  *
  * @param repositoryRoot the folder where Git runs.
- * @param paths the tracked .gitattributes files.
- * @returns the parsed rules, or none when the optional file does not exist.
+ * @param paths every tracked path.
+ * @returns the attributes by path.
  */
 function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
@@ -118,7 +118,7 @@ export async function readRepository(
  *
  * @param reads the run cache.
  * @param paths the tracked root-relative files.
- * @returns the selectors declared by Git attributes.
+ * @returns the selectors that Git attributes declare.
  */
 export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[] {
     return [
@@ -154,10 +154,12 @@ export function findRoot(start: string): string {
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS);
     const gitRoot = top.code === 0 ? resolve(top.stdout.replace(TRAILING_NEWLINE, '')) : undefined;
     if (gitRoot !== undefined) return gitRoot;
-    // Broken Git metadata stops the search; a folder outside any repository does not.
+    // A broken .git stops the search; a folder outside any repository does not.
     const inspection = runGitBlocking(folder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code !== NOT_REPOSITORY_CODE || !inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
-        throw new Error(`Git root discovery failed in ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`);
+        throw new Error(
+            `Git could not find the repository root of ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`,
+        );
     let current = folder;
     while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
         const parent = dirname(current);

@@ -1,4 +1,4 @@
-/** Authored package data whose Stylelint field hides the generated pointer. */
+/** Your own package.json, whose Stylelint field hides the generated pointer. */
 export const STYLELINT_PACKAGE_JSON = `{
   "name": "native-project",
   "private": true,
@@ -38,7 +38,7 @@ export const STYLELINT_TABLES = `[tools.stylelint.rules]\ncolor-hex-length = "sh
 
 export const ALL_LEVEL_STYLELINT_TABLES = `[tools.stylelint.rules]\ncolor-hex-length = "short"\nnumber-max-precision = 0\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-hex-length = "long"\n`;
 
-/** Standard properties and the scoped color option fix every finding at the level. */
+/** Standard properties, whole pixels, and the hex length that each scope asks for fix every finding at both levels. */
 export const CORRECTED_STYLESHEETS = {
     'build/site.css': `a {
     color: #f00;

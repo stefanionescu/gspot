@@ -14,7 +14,7 @@ import {
     MINIMUM_VERSION_PATTERN,
 } from '#cli/config/configurations.ts';
 
-/** Normalize minimum versions when gspot reads the manifest, before any version comparison. */
+/** Normalize minimum versions when gspot reads manifest.toml, before any version comparison. */
 const minimumVersionSchema = z
     .string()
     .regex(MINIMUM_VERSION_PATTERN)
@@ -105,7 +105,8 @@ const toolSchema = z
         prettier: z
             .strictObject({
                 entry: z.string().min(1),
-                // The file types the plugin formats; a configuration whose files take plugins owns them while the selection includes this tool.
+                // The file types the plugin formats; a configuration whose files take plugins owns them while a
+                // selected configuration uses this tool.
                 extensions: z.array(z.string().regex(EXTENSION_PATTERN)).default([]),
                 overrides: z
                     .array(
@@ -117,7 +118,8 @@ const toolSchema = z
                     .default([]),
             } satisfies SchemaShape<NonNullable<Tool['prettier']>>)
             .optional(),
-        // The file types an ESLint plugin or parser lints; a configuration whose files take plugins owns them while the selection includes it.
+        // The file types an ESLint plugin or parser lints; a configuration whose files take plugins owns them while a
+        // selected configuration uses it.
         eslint: z
             .strictObject({ extensions: z.array(z.string().regex(EXTENSION_PATTERN)).min(1) } satisfies SchemaShape<
                 NonNullable<Tool['eslint']>
@@ -163,7 +165,7 @@ const toolSchema = z
         return { ...stripUndefined(tool), installers };
     }) satisfies z.ZodType<Tool>;
 
-/** A record with only a name points to the full declaration in another configuration. */
+/** A record with only a name points to the full [[tool]] table in another configuration. */
 export const manifestToolSchema = z.union([
     z
         .looseObject({ name: z.string() } satisfies SchemaShape<{ name: string }>)

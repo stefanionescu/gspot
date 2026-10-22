@@ -23,11 +23,10 @@ import {
 } from '#cli/config/install/vale.ts';
 
 /**
- * Check that the upstream styles exist before prose checks run.
+ * Check that the Vale packages exist before prose checks run.
  *
- * @param repositoryRoot the root with the generated Vale files and style folders.
+ * @param repositoryRoot the root with the generated Vale files and package folders.
  * @param level recommended or all, which decides the packages.
- *
  * @returns whether the Vale settings and the package folders exist.
  */
 export function hasValePackages(repositoryRoot: string, level: Settings['level']): boolean {
@@ -40,10 +39,9 @@ export function hasValePackages(repositoryRoot: string, level: Settings['level']
 }
 
 /**
- * Download the upstream packages for the level, and replace the installed ones. Needs the network.
+ * Download the Vale packages for the level, and replace the installed ones. Needs the network.
  *
  * @param install what install needs for this step.
- *
  * @returns the install summary.
  */
 export async function installValePackages(install: ToolInstall): Promise<string> {
@@ -62,6 +60,8 @@ export async function installValePackages(install: ToolInstall): Promise<string>
     try {
         const config = join(temporary, VALE_TOOL_FILE_PATH);
         const text = readText(root, VALE_TOOL_FILE_PATH);
+        // Vale downloads into the last StylesPath, so that one stays relative to the scratch copy; the others point
+        // back to the repository.
         const last = [...text.matchAll(VALE_STYLES_PATH_PATTERN)].at(-1);
         const content = text.replaceAll(VALE_STYLES_PATH_PATTERN, (line, path: string, offset: number) =>
             offset === last?.index

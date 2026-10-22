@@ -42,8 +42,8 @@ rules:
           - metavariable-regex:
                 metavariable: $KEY
                 regex: (?i).*(token|password|secret|credential).*
-      message: Sensitive data stored in UserDefaults (unencrypted plist). Use the
-          Keychain for tokens, passwords, and credentials.
+      message: >-
+          UserDefaults stores this secret unencrypted. Keep tokens, passwords, and credentials in the Keychain.
       languages:
           - swift
       severity: ERROR
@@ -59,8 +59,8 @@ rules:
           - metavariable-regex:
                 metavariable: $KEY
                 regex: .*(Secret|Password|PrivateKey).*
-      message: 'Reading secrets from Info.plist: plist values are not encrypted. Use
-          the Keychain or environment-injected configuration.'
+      message: >-
+          Info.plist ships this secret unencrypted in the app. Read it from the Keychain.
       languages:
           - swift
       severity: ERROR
@@ -115,8 +115,8 @@ rules:
                       - metavariable-regex:
                             metavariable: $LEVEL
                             regex: ^(trace|debug|info|notice|warning|warn|error|fault|critical|log)$
-      message: Potentially logging sensitive data. Redact tokens, passwords, and
-          credentials before logging.
+      message: >-
+          The log may write a token, password, or credential. Redact it before you log.
       languages:
           - swift
       severity: ERROR

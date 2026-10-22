@@ -105,7 +105,7 @@ function formatCheckState(check: PlannedCheck | undefined): string {
 }
 
 /**
- * Run the list command and return its output.
+ * List the selected configurations with the state of each check, or every setting with its value and source.
  *
  * @param cwd the folder where the command starts.
  * @param kind whether to list configurations or settings.
@@ -121,8 +121,8 @@ async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResul
 /**
  * Register the list command. It runs no checks and changes no files.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerList(program: Command, onResult: CommandCompletion): void {
     program

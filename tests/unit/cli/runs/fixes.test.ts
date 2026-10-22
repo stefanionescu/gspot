@@ -92,7 +92,7 @@ test('a fix in a copy refuses to overwrite a file changed while it ran, and remo
     planned.check.run_in_copy = true;
     expect(
         await captureRejection(runFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!)),
-    ).toBe('Destination changed during the operation: z-last.txt');
+    ).toBe('z-last.txt changed while gspot wrote it. Run the command again.');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('isolated correction');
     expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
     expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);

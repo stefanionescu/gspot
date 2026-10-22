@@ -39,12 +39,12 @@ export type SpawnCompletion = Pick<
 
 export type StdoutReader = (chunks: AsyncIterable<Buffer>) => Promise<void>;
 
-/** The completion state of a process tree, and its stop and disposal operations. */
+/** How a process tree ended, and its stop and disposal steps. */
 export type ProcessTreeControl = {
     state: { timedOut: boolean; canceled: boolean };
     stop: () => void;
     release: (executionFailure: unknown) => Promise<void>;
 };
 
-/** Completion and stdout required by the shared piped-process reader. */
+/** A running process: its completion and its stdout stream. */
 export type RunningProcess = PromiseLike<SpawnCompletion> & { stdout: Readable };

@@ -58,7 +58,7 @@ export const VENDORED_FOLDERS: ReadonlySet<string> = new Set([
     '.build',
 ]);
 
-/** License filenames accepted by the repository inventory and README checks. */
+/** License filenames that the repository inventory and README checks accept. */
 export const LICENSE_FILE = /^(?:LICEN[CS]E|COPYING)(?:$|[.-])/iu;
 
 /** Notice filenames identify legal text but do not satisfy the license requirement. */

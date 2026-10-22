@@ -7,7 +7,8 @@ export const importBoundariesOptionsSchema = buildOptionsSchema({
         items: { type: 'string' },
     },
     aliases: {
-        description: 'Import alias prefixes mapped to repository folders for fixes.',
+        description:
+            'Import alias prefixes mapped to repository folders for fixes. Keys and folders may end in `/*`, as in tsconfig paths.',
         type: 'object',
         additionalProperties: { type: 'string' },
     },

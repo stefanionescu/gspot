@@ -8,9 +8,9 @@ import {
 } from '#cli/config/generation/settings/builders/shellcheck.ts';
 
 /**
- * Build the ShellCheck file from the settings.
+ * Build shellcheckrc: the ShellCheck source-path and excluded-rule settings.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the ShellCheck source-path and excluded-rule settings.
  */
 export function buildShellcheckFile(planned: PlannedToolFile): string {

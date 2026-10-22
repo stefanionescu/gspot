@@ -108,7 +108,7 @@ function buildSettingsTable(
  * @param draft the settings choices.
  * @param repository the tracked source files.
  * @param configurations the configurations to choose from.
- * @returns TOML with its schema line and preface.
+ * @returns the TOML text, with the preface comment and the line that names the template.
  */
 export function buildInitSettings(
     draft: SettingsDraft,
@@ -134,7 +134,7 @@ export function buildInitSettings(
  * @param configurations the configurations and scopes.
  * @param answers the integration choices.
  * @param options the authored level, when selected.
- * @returns the root and scope choices: the answers and the inferred commit scopes.
+ * @returns the root and scope configurations with the answers.
  */
 export function buildSettingsDraft(
     configurations: InitConfigurations,

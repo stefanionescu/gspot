@@ -33,13 +33,8 @@ gspot set format.quotes single
 
 ## Modules from outside the project
 
-Name the modules that a host application provides at run time in `python.externals`, so deptry and
-`structure/import-rules` skip them:
-
-```toml
-[python]
-externals = { value = ["folder_paths", "comfy"], reason = "ComfyUI provides these modules at run time." }
-```
+Name the modules that a host application provides in `python.externals`; see
+[modules that the host provides](/configure/import-rules/#modules-that-the-host-provides).
 
 `python.extra_paths` adds folders inside the scope where basedpyright looks for imports. For a host outside the
 repository, add a `.pth` file to the `site-packages` folder of `.venv` that lists the host folder. Python and

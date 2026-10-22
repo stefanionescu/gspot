@@ -1,4 +1,4 @@
-// Each Ruff directive, whether Ruff honors it for F401, and whether gspot records it as a directive on line 1.
+/** Each Ruff suppression, whether Ruff honors it for F401, and whether gspot records it as a suppression on line 1. */
 export const RUFF_SUPPRESSIONS = [
     { source: 'import os # noqa: F401\n', suppressed: true, directive: true },
     { source: 'import os # NOQA: F401\n', suppressed: true, directive: true },
@@ -18,7 +18,7 @@ export const RUFF_SUPPRESSIONS = [
     { source: 'import os # noqa: F821\n', suppressed: false, directive: true },
 ] as const;
 
-/** The check refuses Vale directives and keeps code examples and ordinary comments. */
+/** The check refuses Vale suppressions and keeps code examples and ordinary comments. */
 export const VALE_SUPPRESSIONS = [
     { source: '<!-- vale off -->', suppressed: true, directive: true },
     { source: '<!-- vale Example.Concrete = NO -->', suppressed: true, directive: true },

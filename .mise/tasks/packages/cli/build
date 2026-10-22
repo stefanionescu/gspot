@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-#MISE description="Build the CLI: bundle gspot.js and the PurgeCSS child process, and copy the grammars, their licenses, and the root license."
+#MISE description="Build the CLI: bundle gspot.js and the PurgeCSS child process, and copy the grammars and their licenses."
 #MISE dir="{{config_root}}/packages/cli"
 set -euo pipefail
 
-# Git Bash on Windows rewrites a path inside an argument to a Windows program, such as a hashbang, so printf writes it.
+# Git Bash on Windows rewrites paths in the arguments of a Windows program such as bun, so printf, a shell builtin,
+# writes the hashbang instead of a bun build flag.
 mkdir -p dist
 {
     printf '%s\n' '#!/usr/bin/env node'
@@ -31,6 +32,3 @@ for pin in \
         sha256sum -c - <<<"${checksum}  ${file}"
     fi
 done
-
-# npm packs only the package folder, so the package gets its own copy of the root license.
-cp ../../LICENSE.md LICENSE.md

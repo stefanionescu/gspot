@@ -37,7 +37,7 @@ test.each(['javascript', 'typescript'].flatMap((language) => [7, 8].map((maximum
                 return `export function ${name}(${parameters.join(', ')}) { return ${names.join(' + ')}; }`;
             })
             .join('\n');
-        // The shipped limit allows seven parameters; the other row changes it.
+        // The row at the shipped default writes no setting; the other row changes the limit.
         const limits =
             maximum === 7
                 ? ''

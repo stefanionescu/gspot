@@ -20,7 +20,7 @@ async function assertSample(installation: UserProject, check: typeof PROSE_CHECK
     expect(passed.report.checks).toMatchObject([{ check: check.check, status: 'passed', findings: [] }]);
 }
 
-// Install the configurations and write their project vocabulary.
+/** Install the configurations with the packed CLI, and add the project name to allowed_words. */
 async function prepareLanguages(installation: UserProject): Promise<void> {
     const { online } = installation;
     await createFileTree(installation.root, {

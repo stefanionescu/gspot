@@ -2,22 +2,16 @@
 
 Read this rule when you change Svelte components or SvelteKit routes.
 
-## Components
-
-<!-- level: all -->
-
-- Pass a prop or callback instead of changing state through `bind:this`.
-
 ## Runes and reactivity
 
 - Use `$state` for a value that changes and `$derived` for one computed from others.
 - Use `$effect` for work outside Svelte: a request, a timer, storage, or the DOM. Do not use it to derive state.
 - An `$effect` that starts something returns a function that stops it.
 - Keep derived expressions free of side effects. Do not mutate state while computing a derivation.
-- Temporarily override a mutable `$derived` value for optimistic UI only in Svelte 5.25 and later.
-  Reconcile it with the authoritative result and restore the prior value when the operation fails.
-- Do not mix runes with `$:` statements or `export let` inside one component.
-  Components using different supported modes can coexist during a migration.
+- Temporarily override a mutable `$derived` value for optimistic UI only in Svelte 5.25 and later. Reconcile it with the
+  authoritative result and restore the prior value when the operation fails.
+- Do not mix runes with `$:` statements or `export let` inside one component. Components using different supported modes
+  can coexist during a migration.
 
 ## Props and events
 

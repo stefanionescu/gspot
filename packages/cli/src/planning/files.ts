@@ -14,7 +14,7 @@ import { extractToolFileName } from '#cli/configurations/declared-tools.ts';
 import type { Check, KnownCheck, Configuration } from '#cli/types/configurations.ts';
 import type { ToolIgnore, PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 
-// Read the ignore syntax from the authored or generated ignore file of the check.
+// Read the ignore syntax from your own ignore file of the check, or from the generated one.
 function readToolIgnore(session: Session, check: PlannedCheck): ToolIgnore | undefined {
     const argument = check.check.command?.indexOf(TOOL_IGNORE_ARGUMENT) ?? -1;
     const file = argument < 0 ? undefined : check.check.command?.[argument + 1];
@@ -23,7 +23,7 @@ function readToolIgnore(session: Session, check: PlannedCheck): ToolIgnore | und
     return { file, matches: matcher.ignores.bind(matcher) };
 }
 
-// List every tracked file under the scope.
+// A scope check leaves out the files of child scopes.
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');
     return planned.session.repository.files.filter(
@@ -53,7 +53,8 @@ function listProjectCheckFiles(planned: PlannedScope, known: KnownCheck, scopePa
     return check.runs === 'scope' ? scopeFiles : scopeFiles.filter((file) => file.kind !== 'binary');
 }
 
-// Per-file checks select their owners. Project checks keep all inputs after a declared trigger matches.
+// A per-file check reads the files that its owners cover. A project check reads every file of the scope once one of its
+// files matches.
 function listCheckFiles(planned: PlannedScope, known: KnownCheck, scopePath: string): TrackedFile[] {
     const { session, scope } = planned;
     const { check, configuration } = known;
@@ -69,7 +70,8 @@ function listCheckFiles(planned: PlannedScope, known: KnownCheck, scopePath: str
     });
 }
 
-// Check-specific settings ignores apply to live files and deleted project triggers alike.
+// Drop the paths that an [[ignore]] of the check names, for tracked files and deleted trigger paths alike, and skip the
+// check when none remain.
 function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pick<PlannedCheck, 'files' | 'skip'> {
     const paths = listIgnores(scope.settings, check.id).flatMap((entry) =>
         entry.rule === undefined && entry.names === undefined ? entry.paths : [],
@@ -79,12 +81,13 @@ function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pi
     return {
         files: selected,
         ...(files.length > 0 && selected.length === 0
-            ? { skip: { cause: 'ignore' as const, note: 'all selected paths are disabled by gspot.toml' } }
+            ? { skip: { cause: 'ignore' as const, note: 'every selected path is ignored in gspot.toml' } }
             : {}),
     };
 }
 
-// Narrow the files to the selection; a project check keeps everything when the selection touches it.
+// Keep the narrowed paths. A project check keeps every file when the selection touches one of its files, and every
+// check keeps every file when gspot.toml or .gspot changed.
 function filterNarrowedFiles(planned: PlannedScope, known: KnownCheck, files: TrackedFile[]): TrackedFile[] {
     const { narrowedPaths } = planned;
     if (!narrowedPaths) return files;
@@ -131,11 +134,10 @@ function listDeletedTriggers(planned: PlannedScope, known: KnownCheck, scopePath
 }
 
 /**
- * List the files that the configurations of a check own, apart from the inputs of a project-wide run.
+ * List the files that the configurations of a check own, apart from the files of a project-wide run.
  *
  * @param scopes every scope of the session; a scope-wide run leaves out the files of its child scopes.
  * @param check the plan to read.
- *
  * @returns the files that the owners of the check select.
  */
 export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedFile[] {
@@ -152,12 +154,11 @@ export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedF
 }
 
 /**
- * Restrict file checks through their declared ignore files.
+ * Drop the files of a per-file check that its --ignore-path file ignores, and skip the check when no file remains.
  *
  * @param session the repository with its file cache.
  * @param check the plan to narrow.
- *
- * @returns the check with its files restricted.
+ * @returns the check with fewer files, or skipped.
  */
 export function stripToolIgnoredFiles(session: Session, check: PlannedCheck): PlannedCheck {
     if (check.skip !== undefined || check.check.runs !== 'files' || check.files.length === 0) return check;
@@ -165,7 +166,7 @@ export function stripToolIgnoredFiles(session: Session, check: PlannedCheck): Pl
     if (toolIgnore === undefined) return check;
     const files = check.files.filter((file) => !toolIgnore.matches(file.path));
     return files.length === 0
-        ? { ...check, skip: { cause: 'ignore', note: `all selected paths are disabled by ${toolIgnore.file}` } }
+        ? { ...check, skip: { cause: 'ignore', note: `every selected path is ignored by ${toolIgnore.file}` } }
         : { ...check, files };
 }
 
@@ -173,8 +174,7 @@ export function stripToolIgnoredFiles(session: Session, check: PlannedCheck): Pl
  * List the scopes nested inside a scope. Their files belong to them, not to it.
  *
  * @param scopes the scopes of this run.
- * @param scope the parent selection.
- *
+ * @param scope the parent scope.
  * @returns the child scope paths.
  */
 export function listChildScopes(scopes: Scope[], scope: Scope): string[] {
@@ -188,8 +188,7 @@ export function listChildScopes(scopes: Scope[], scope: Scope): string[] {
  * Check whether a general per-file check runs once at the root. A check that reads a scope tool file does not.
  *
  * @param configuration the configuration that declares the check.
- * @param check the declaration to inspect.
- *
+ * @param check the check to inspect.
  * @returns true when the check runs once for the repository.
  */
 export function isRootOnlyCheck(configuration: Configuration | undefined, check: Check): boolean {

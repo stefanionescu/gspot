@@ -6,11 +6,12 @@ These rules cover XCTest, Swift Testing, and snapshot tests.
 
 ## What to test
 
-- Unit test domain entities, value objects, mapping, and application operations. When the
-  project uses view models, test their behavior too.
+- Unit test domain entities, value objects, mapping, and application operations. When the project uses view models, test
+  their behavior too.
 - Test a use case with mocked repository protocols or network and database clients.
 - Test repository mapping apart from use case behavior.
-- When the project uses view models, assert state transitions and what the application shows to the user, never private method calls.
+- When the project uses view models, assert state transitions and what the application shows to the user, never private
+  method calls.
 - Test invalid payload mapping and validate external data when it enters the program.
 - Test cancellation and stale results for asynchronous operations.
 - Do not mock SwiftUI.
@@ -23,11 +24,12 @@ These rules cover XCTest, Swift Testing, and snapshot tests.
 - Use case tests cover success, repository failure, validation failure, cancellation, and policy decisions.
 - Repository tests cover record mapping and error translation.
 - Network client tests cover the URL, the method, the headers, and the encoded body.
-- Network client tests also cover a non-HTTP response, a status outside 200 to 299, a decoding failure, and cancellation.
-- When the project uses view models, test initial, loading, success, empty, and error states,
-  then retry and stale results.
-- When the project uses coordinators, test route stack changes, modal state, dismissal, root
-  resets, and deep link translation.
+- Network client tests also cover a non-HTTP response, a status outside 200 to 299, a decoding failure, and
+  cancellation.
+- When the project uses view models, test initial, loading, success, empty, and error states, then retry and stale
+  results.
+- When the project uses coordinators, test route stack changes, modal state, dismissal, root resets, and deep link
+  translation.
 
 ## Test data
 
@@ -50,8 +52,6 @@ private extension Message {
 }
 ```
 
-A test setup API never becomes a second model layer.
-
 ## Style
 
 <!-- level: all -->
@@ -60,11 +60,12 @@ A test setup API never becomes a second model layer.
 - In Swift Testing, prefer `try #require`.
 - Avoid `guard` in a test when an assertion helper states the failure directly.
 - Make helpers and test data private unless several tests need them.
+- Name Swift test files `<Type>Tests.swift`.
 
 ## Disabled tests
 
-- Pass the reason to `XCTSkip` or `.disabled`. Name the issue, release, or platform version
-  that lets the test run again.
+- Pass the reason to `XCTSkip` or `.disabled`. Name the issue, release, or platform version that lets the test run
+  again.
 - Delete a test that nobody plans to turn back on.
 
 ## Time
@@ -77,5 +78,3 @@ A test setup API never becomes a second model layer.
 - Look at every reference image before committing it.
 - Keep each folder of references beside the test file it belongs to, and delete both together.
 - UI test critical navigation, authentication, submission, purchase, and recovery flows.
-
-Name Swift test files `<Type>Tests.swift`.

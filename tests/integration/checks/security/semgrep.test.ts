@@ -192,7 +192,7 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
         assertAuthoredRules.bind(undefined, installedSandbox),
     );
 
-    // The Next.js configuration rules run through the same Semgrep command as the other shipped packs.
+    // The Next.js configuration rules run through the same Semgrep command as the other shipped Semgrep rules.
     test.each([...NEXT_CONFIG_CASES])(
         'the Next.js Semgrep rules report exactly the expected lines of next.config: $name',
         assertNextjsRules.bind(undefined, installedSandbox),

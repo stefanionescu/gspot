@@ -217,7 +217,7 @@ async function listBrokenSyntax(
 }
 
 /**
- * Runs fixes in rounds and collects their results. A dry run always removes its copy.
+ * Runs fixes in passes and collects their results. A dry run always removes its copy.
  *
  * @param session the repository and its tools.
  * @param planned the checks to fix.

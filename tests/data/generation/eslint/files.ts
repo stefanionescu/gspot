@@ -25,7 +25,6 @@ export const NESTED_ESLINT_PATHS = [
 export const NESTED_ESLINT_RULES = [
     'jsdoc/require-jsdoc',
     'jsdoc/require-param',
-    'jsdoc/require-returns',
     'n/no-unpublished-import',
     'n/no-process-exit',
     'unicorn/no-process-exit',

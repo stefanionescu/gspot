@@ -57,8 +57,10 @@ function formatSuggestions(suggestions: Suggestions): string[] {
     const sections = SUGGESTION_SECTIONS.map(({ key, title }) => {
         const rows = suggestions[key].map((entry) => {
             const name = ('configuration' in entry ? entry.configuration : entry.path).padEnd(COLUMN_WIDTHS.name);
-            const detail = ('evidence' in entry ? entry.evidence : entry.note).padEnd(COLUMN_WIDTHS.note);
-            return `  ${name} ${detail} ${entry.command}`;
+            const detail = 'evidence' in entry ? entry.evidence : entry.note;
+            return entry.command === undefined
+                ? `  ${name} ${detail}`
+                : `  ${name} ${detail.padEnd(COLUMN_WIDTHS.note)} ${entry.command}`;
         });
         return rows.length === 0 ? [] : [title, ...rows, ''];
     });
@@ -73,15 +75,15 @@ function formatGspotVersion(report: DoctorReport): string {
 }
 
 /**
- * Inspect the tools, the Git hooks, and the version pin.
+ * Inspect the tools, the Git hooks, the version pin, and the setup suggestions.
  *
  * @param session the tools and scopes to inspect.
  * @param pinned the version that `.gspot/version` pins, if any.
- * @returns the report, with exit code 1 when tools or Git hooks need changes.
+ * @returns the report. Its exit code becomes EXIT_FINDINGS when a tool or the Git hooks need changes.
  */
 function buildDoctorReport(session: Session, pinned: string | undefined): DoctorReport {
     const platform = getOperatingSystem();
-    // The session leaves out a tool with no build for this system, so its checks skip here.
+    // Leave out each tool with no build for this system; its checks skip here.
     const inspections = new Map<string, ToolInspection>();
     const pins = listDistinctTools(session.neededToolConfigurations).filter(
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
@@ -118,7 +120,7 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
 }
 
 /**
- * Format the report: one line per tool, then the other sections.
+ * Format the report: one line per tool that cannot run, the count of ready tools, then the other sections.
  *
  * @param report what doctor found.
  * @returns the text for stdout.
@@ -139,7 +141,7 @@ function formatDoctorReport(report: DoctorReport): string {
 }
 
 /**
- * Report configuration and tool errors.
+ * Report the tools, Git hooks, setup suggestions, and version pin of the repository around a folder.
  *
  * @param cwd where to look for the repository.
  * @returns the command result.
@@ -158,8 +160,8 @@ async function runDoctorCommand(cwd: string): Promise<CommandResult> {
 /**
  * Register the doctor command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerDoctor(program: Command, onResult: CommandCompletion): void {
     program

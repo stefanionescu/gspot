@@ -17,7 +17,7 @@ import {
 } from '#cli/parsers/environment.ts';
 
 /**
- * Reports environment reads outside the environment readers.
+ * Reports each line that reads an environment variable outside the files that structure.environment_readers lists.
  *
  * @param session the repository and its tools.
  * @param planned the scope sources and roles.

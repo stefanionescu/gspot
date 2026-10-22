@@ -91,6 +91,8 @@ async function linkQuickstartTools(tutorialRoot: string, environment: Record<str
         );
         expect(installed.code, `Quickstart tool lookup failed: ${installed.stdout}${installed.stderr}`).toBe(0);
         const location = installed.stdout.trim();
+        // The uv archive keeps its program in a subfolder of its install folder, so link the folder that holds the
+        // program.
         const folder = pin.name === 'uv' ? dirname(location) : location;
 
         const linked = await runCommand(['mise', 'link', requirement, folder], { cwd: tutorialRoot, env: environment });

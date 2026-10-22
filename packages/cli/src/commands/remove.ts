@@ -18,7 +18,7 @@ function assertNotRequired(names: string[], kept: string[], configurations: Map<
         if (chain)
             throw new GspotError(
                 'arguments',
-                `Cannot remove \`${configuration}\`: ${chain.join(' requires ')}. Remove \`${chain[0] as string}\` first, or keep \`${configuration}\`.`,
+                `Cannot remove ${configuration}: ${chain.join(' requires ')}. Remove ${chain[0] as string} first, or keep ${configuration}.`,
             );
     }
 }
@@ -67,7 +67,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
  *
  * @param required the required configuration.
  * @param from the configuration where the chain starts.
- * @param configurations every configuration manifest.
+ * @param configurations every configuration.
  * @returns the names along the chain, or undefined when no chain exists.
  */
 function findRequirementChain(
@@ -92,8 +92,8 @@ function findRequirementChain(
 /**
  * Register the remove command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerRemove(program: Command, onResult: CommandCompletion): void {
     program

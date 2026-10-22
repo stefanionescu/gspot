@@ -16,11 +16,12 @@ function splitKey(key: string): SettingKey {
 }
 
 /**
- * Validate a captured settings change.
+ * Apply a settings change to the parsed table, check the result, and build the new gspot.toml text. The change edits
+ * input.table in place.
  *
  * @param repositoryRoot the folder against which the edited scope paths resolve.
  * @param edit the settings read before the edit.
- * @returns the validated table, text, and change status.
+ * @returns the new gspot.toml text, the settings that it holds, and whether the text changed.
  */
 export function buildEditedSettings(repositoryRoot: string, edit: SettingsEdit): EditedSettings {
     const { text, table } = edit;
@@ -40,14 +41,14 @@ export function buildEditedSettings(repositoryRoot: string, edit: SettingsEdit):
 export function setKey(table: TomlTable, key: string, value: unknown): void {
     const { path, name } = splitKey(key);
     const parent = createTable(table, path);
-    if (parent === undefined) throw new Error(`\`${key}\` runs through a value that is not a table.`);
+    if (parent === undefined) throw new Error(`${key} runs through a value that is not a table.`);
     parent[name] = value;
 }
 
 /**
- * Deletes a dotted key and the empty tables it leaves behind.
+ * Delete a dotted key and the empty tables it leaves behind.
  *
- * @param table the table to edit
+ * @param table the table to edit.
  * @param key the dotted setting name.
  */
 export function deleteKey(table: TomlTable, key: string): void {
@@ -79,7 +80,7 @@ export function deleteKey(table: TomlTable, key: string): void {
 export function addToList(table: TomlTable, key: string, entries: unknown[]): void {
     const { path, name } = splitKey(key);
     const parent = createTable(table, path);
-    if (parent === undefined) throw new Error(`\`${key}\` runs through a value that is not a table.`);
+    if (parent === undefined) throw new Error(`${key} runs through a value that is not a table.`);
     const written = parent[name];
     const value = getWrittenValue(written);
     const existing: unknown[] = Array.isArray(value) ? value : [];
@@ -154,7 +155,7 @@ export function getScopeTable(table: TomlTable, scope: string | undefined): Toml
  * Read the bytes and mode of gspot.toml before an edit.
  *
  * @param repositoryRoot the folder that holds gspot.toml.
- * @returns the edit input, with the original file contents.
+ * @returns the settings before the edit, with the original file contents.
  */
 export function readSettingsEdit(repositoryRoot: string): SettingsEdit {
     const { text, original } = readSettingsFile(repositoryRoot);
@@ -165,7 +166,7 @@ export function readSettingsEdit(repositoryRoot: string): SettingsEdit {
 /**
  * Read a written setting value from its reasoned value or its plain value.
  *
- * @param written the authored setting.
+ * @param written the setting as written.
  * @returns the value that a settings edit changes.
  */
 export function getWrittenValue(written: unknown): unknown {

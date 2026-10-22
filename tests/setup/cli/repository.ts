@@ -6,7 +6,7 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 
 /**
- * One tracked source file of one byte with no captured prefix.
+ * One tracked source file of one byte, without the executable bit.
  *
  * @param path location from the repository root.
  * @param tags labels that the file extension gives.
@@ -16,7 +16,7 @@ export function buildTrackedFile(path: string, tags: string[] = ['text']): Track
     return { path, kind: 'source', kindOrigin: SOURCE_KIND.origin, tags, executable: false, size: 1 };
 }
 
-/** Read the files of a sandbox with the shipped manifests, no scopes, and no declarations. */
+/** Read the files of a sandbox with the shipped configurations, no scopes, and no generated or vendored paths. */
 export function readTestRepository(root: string): Promise<Repository> {
     return readRepository(createReadCache(root), {
         generatedPaths: [],

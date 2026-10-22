@@ -6,9 +6,9 @@ import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import { SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/settings/builders/squawk.ts';
 
 /**
- * Build the Squawk file from the settings.
+ * Build squawk.toml: the disabled Squawk migration rules.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the disabled Squawk migration rules.
  */
 export function buildSquawkFile(planned: PlannedToolFile): string {

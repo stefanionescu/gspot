@@ -23,14 +23,12 @@ function filterDistinctLists(lists: string[][]): string[][] {
 }
 
 /**
- * Group the selectors that fragments add, so each file set gets one no-restricted-syntax rule.
- *
- * A selector without files applies to every code file. The except paths of a selector leave it out of the groups for
- * those paths. Each intersection of files and except paths makes its own block, with every selector that applies
+ * Group the syntax selectors that the configurations and settings add, so each file set gets one no-restricted-syntax
+ * rule. A selector without files applies to every code file. The except paths of a selector leave it out of the groups
+ * for those paths. Each intersection of files and except paths makes its own block, with every selector that applies
  * there, in first-mention order.
  *
- * @param selectors the fragment syntax patterns with their covered and skipped paths.
- *
+ * @param selectors the syntax patterns with their covered and skipped paths.
  * @returns the groups, where an absent files list means every code file.
  */
 function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
@@ -86,12 +84,11 @@ function buildSelectorPaths(scope: Scope, entry: Configuration['eslint']['select
 }
 
 /**
- * Resolve the selectors that fragments add in each project scope.
+ * Resolve the syntax selectors that the configurations and settings add in each project scope.
  *
- * @param scopes every project selection.
+ * @param scopes every project scope.
  * @param level the selected lint rule level.
  * @param reexports the export convention.
- *
  * @returns selector groups with their owning scope and excluded child projects.
  */
 export function buildSelectorGroups(

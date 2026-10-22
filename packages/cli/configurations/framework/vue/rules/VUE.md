@@ -2,16 +2,10 @@
 
 Read this rule when you change Vue components, composables, or stores.
 
-## Components
-
-<!-- level: all -->
-
-- Pass a prop or call an exposed method instead of changing state through a template ref.
-
 ## Props and events
 
-- Require a prop when the component cannot operate without it. An optional prop can remain
-  undefined when absence has defined behavior; supply a default only when that matches the contract.
+- Require a prop when the component cannot operate without it. An optional prop can remain undefined when absence has
+  defined behavior; supply a default only when that matches the contract.
 
 ### Event naming
 
@@ -31,7 +25,7 @@ Name an event for what happened, in the past tense or as a noun, such as `saved`
 <!-- level: all -->
 
 - Local state stays in the component. Shared state goes in a store, one per domain.
-- A store exposes actions that say what happened. Components do not assign to store state.
+- A store exposes actions named for their domain operation, such as `addItem`. Components do not assign to store state.
 - Fetch data in a composable or a store action, never inline in a template event.
 - Name a composable `use` and its subject, such as `useCart`. Return reactive values when callers need reactivity.
 

@@ -19,7 +19,7 @@ import { TOOL_PROJECT_BYTE_ATTRIBUTES } from '#tests/data/integration/install/np
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
 import { REGISTRY_HOST, PNPM_WORKSPACE, NPM_REGISTRY_TOKEN } from '#tests/data/setup/sandboxes.ts';
 
-// Serves an authenticated registry for a real package manager and counts its requests.
+/** Serve an authenticated registry for a real package manager and count its requests. */
 function createAuthenticatedRegistry(token: string) {
     const requests = { rejected: 0, authenticated: 0 };
     const server = Bun.serve({

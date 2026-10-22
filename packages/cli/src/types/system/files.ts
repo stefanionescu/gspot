@@ -1,6 +1,6 @@
 import type { Stats } from 'node:fs';
 
-/** File bytes and mode, or the target bytes and mode of a symbolic link. */
+/** File bytes and mode; for a symbolic link, the bytes of the path it points to and the mode of the link. */
 export type FileContents = { bytes: Buffer; mode: number; isLink?: true };
 
 export type FileBounds = {
@@ -13,9 +13,12 @@ export type Files = {
     readRealPath(path: string): string;
     /** Return the sorted entry names of a folder, or an empty list if the folder does not exist. */
     list(path: string): string[];
-    /** Return metadata for an entry excluding symbolic links, or undefined if absent. */
+    /** Return the stats of an entry, or undefined if absent; refuse a symbolic link. */
     readStats(path: string): Stats | undefined;
-    /** Read file bytes or the target bytes of a symbolic link, or return undefined if absent. */
+    /**
+     * Read the bytes of a file, or the path that a symbolic link points to without following it; return undefined if
+     * absent.
+     */
     readKeepingLinks(path: string): FileContents | undefined;
     /** Read a regular file with no other hard link, or return undefined if absent. */
     read(path: string): FileContents | undefined;
@@ -31,11 +34,14 @@ export type Files = {
     deleteTree(path: string): void;
     /** Take a writer lock, and replace a lock whose process has exited. */
     createLock(path: string): void;
-    /** Release the writer locks still owned by this root. */
+    /** Release the writer locks that this root still owns. */
     [Symbol.dispose](): void;
 };
 
-/** A stable producer binds a run-owned cache entry to its value type. */
+/**
+ * The key of a cached value: the function that creates the value. The same key object finds the same value for the
+ * whole run.
+ */
 export type CacheKey<Value extends object> = Readonly<{ create: () => Value }>;
 
 /** The source bytes and derived values of one run. */
@@ -48,7 +54,7 @@ export type ReadCache = {
 /** A temporary folder that removes itself when disposed. */
 export type TemporaryFolder = Disposable & { path: string };
 
-/** Inputs whose parsed values belong to the run and its cleanup stack. */
+/** The files to parse, whose parsed values belong to the run and its cleanup stack. */
 export type CachedSourceFiles = { reads: ReadCache; resources: DisposableStack; files: { path: string }[] };
 
 /** A stable key owns one reader, its result type, and its cleanup operation. */

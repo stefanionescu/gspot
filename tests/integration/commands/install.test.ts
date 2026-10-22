@@ -38,7 +38,7 @@ test('install refuses an npm tool project edited to run scripts, before it conta
     const requests = registry.requests;
     const refused = await spawnGspot(root, ['install', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stdout).toContain('Run gspot apply first');
+    expect(refused.stdout).toContain('The tool projects in .gspot do not match gspot.toml. Run gspot apply first.');
     expect(registry.requests).toBe(requests);
     expect(await readFile(packageJsonPath, 'utf8')).toBe(hasScript);
 });

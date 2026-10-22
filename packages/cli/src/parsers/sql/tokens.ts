@@ -74,7 +74,7 @@ function matchQuotedToken(text: string, at: number): MatchedToken {
     return { end: findDoubledQuoteEnd(text, at + 1, text[at] ?? ''), kind: 'other' };
 }
 
-// The reader for each character that can start a lexeme.
+// The matcher for each character that can start a token.
 const TOKEN_MATCHERS: Record<string, (text: string, at: number) => MatchedToken | undefined> = {
     '-': (text, at) => {
         return text[at + 1] === '-' ? { end: findLineEnd(text, at, '\n'), kind: 'line-comment' } : undefined;
@@ -110,7 +110,8 @@ function findBlockCommentEnd(text: string, from: number): number {
     return text.length;
 }
 
-// Find the index past the whole lexeme: a block comment closes with nesting, and a dollar quote at the return of its tag.
+// Find the index past the whole token: a block comment closes with nesting, and a dollar quote at the return of its
+// tag.
 function findTokenEnd(text: string, at: number, token: MatchedToken): number {
     if (token.kind === 'block-comment') return findBlockCommentEnd(text, token.end);
     if (token.kind !== 'dollar') return token.end;
@@ -148,7 +149,7 @@ export function* listSqlTokens(text: string): Generator<SqlToken> {
 }
 
 /**
- * Prepare client-side psql syntax without changing SQL lexeme positions or quoted bodies.
+ * Prepare client-side psql syntax without changing SQL token positions or quoted bodies.
  *
  * @param text the SQL source with client commands and substitutions.
  * @returns parser text and substitution ranges in original UTF-16 coordinates.

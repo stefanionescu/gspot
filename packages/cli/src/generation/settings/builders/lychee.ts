@@ -12,9 +12,9 @@ import {
 } from '#cli/config/generation/settings/builders/lychee.ts';
 
 /**
- * Build the Lychee file from the settings.
+ * Build lychee.toml: a note on why the file exists, and the lychee link exclusions as TOML.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns a note on why the file exists, and the lychee link exclusions as TOML.
  */
 export function buildLycheeFile(planned: PlannedToolFile): string {

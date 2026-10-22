@@ -18,7 +18,7 @@ export const VALE_TOOL_FILE_PATH = `${GSPOT_CONFIGURATIONS_PATH}/general/prose/v
 /** The styles folder that Vale reads for the gspot style. */
 export const VALE_STYLES_PATH = `${GSPOT_CONFIGURATIONS_PATH}/general/prose/styles`;
 
-/** Keep upstream Vale packages apart from generated and authored styles. */
+/** The folder of the downloaded Vale packages. The generated styles and your own styles live elsewhere. */
 export const VALE_PACKAGES_PATH = `${DOT_GSPOT}/vale`;
 
 export const GSPOT_NODE_MODULES_PATH = `${DOT_GSPOT}/${NODE_MODULES}`;
@@ -33,7 +33,7 @@ export const YARN_SETTINGS = `${DOT_GSPOT}/${YARN_SETTINGS_FILE}`;
 
 export const VERSION_PIN_FILE = `${DOT_GSPOT}/version`;
 
-/** The locks and temporary run state, never committed. */
+/** The locks and temporary run files, never committed. */
 export const STATE_PATH = `${DOT_GSPOT}/state`;
 
 /** The folder of the hook scripts gspot writes, which core.hooksPath names. */
@@ -48,7 +48,7 @@ export const INSTALLED_TOOL_FOLDERS = {
     vale: VALE_PACKAGES_PATH,
 } as const;
 
-/** Command checks and generated plans never include the state folder. */
+/** The file inventory and the write plans leave out the state folder. */
 export const STATE_FOLDER_PATTERN = new RegExp(`(?:^|/)\\${STATE_PATH}(?:/|$)`, 'iu');
 
 /** Tool folders replaced as complete installations. */

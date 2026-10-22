@@ -1,4 +1,4 @@
-// Start gspot. The CLI modules use new runtime APIs as they load, so an old Node.js or Bun gets the minimum version first.
+// Check the Node.js or Bun version before loading the gspot modules, because they call newer runtime APIs as they load.
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { validateRuntimeVersion } from '#cli/system/runtime.ts';

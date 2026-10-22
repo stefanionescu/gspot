@@ -22,7 +22,7 @@ export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
 
 export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
 
-/** Shared pins for generation, installation, downloads, and maintenance checks. */
+/** The actions, mise release, and machines of the generated GitHub workflow. */
 export const CI_PINS = {
     mise: { version: '2026.10.7' },
     actions: {

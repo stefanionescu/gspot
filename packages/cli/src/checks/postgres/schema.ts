@@ -100,7 +100,7 @@ const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, schema, mi
         if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(schema, at, command);
 };
 
-// A dropped table leaves the state, so no check reports it.
+// A dropped table leaves the schema, so no check reports it.
 const readDrop: StatementReader<'DropStmt'> = (statement, schema) => {
     for (const item of listNodeFields(statement.fields.objects, 'List')) {
         const parts = listNodeFields(item.items, 'String').map((part) => part.sval ?? '');
@@ -148,7 +148,8 @@ function buildDatabaseSchema(schema: DatabaseSchema): Schema {
 }
 
 /**
- * Reads every migration in order and gathers what they declare.
+ * Replays the parsed migrations in version order and collects the tables, foreign keys, indexed columns, and tables
+ * with row security that they leave.
  *
  * @param migrations parsed SQL files in version order.
  * @returns the schema summary.

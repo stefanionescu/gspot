@@ -44,7 +44,7 @@ export type RunReport = {
     unstagedChanges: number;
     /** Whether the run read only part of the repository: the staged files, a change set, or named paths. */
     partial: boolean;
-    /** The checks that failed, with the checks whose fixer failed although the check passed. */
+    /** The checks that failed or stopped with an error, and the checks whose fixer failed although the check passed. */
     failed: readonly string[];
     exitCode: number;
 };

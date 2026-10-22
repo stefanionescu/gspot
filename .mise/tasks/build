@@ -1,4 +1,11 @@
 #!/usr/bin/env bash
-#MISE description="Build both npm packages: the CLI and the ESLint plugin."
+#MISE description="Build both npm packages: the CLI and the ESLint plugin, each with a copy of the root license, and the CLI with a copy of the root README."
 #MISE depends=["packages:cli:build", "packages:eslint-plugin:build"]
 set -euo pipefail
+
+# npm packs only the package folder, so each package gets its own copy of the root license, and the CLI package gets the
+# root README for its npm page.
+for package in packages/cli packages/eslint-plugin; do
+    cp LICENSE.md "${package}/LICENSE.md"
+done
+cp README.md packages/cli/README.md

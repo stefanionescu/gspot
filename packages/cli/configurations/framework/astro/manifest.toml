@@ -60,6 +60,7 @@ reason = "A component is markup, never a file that only forwards: a script that 
 rules = ["gspot/no-trivial-files"]
 
 [[check]]
+# astro-check drops its first two arguments, the ones that `astro check` passes, so the command repeats them.
 command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--minimumFailingSeverity", "warning"]
 cwd = "scope"
 example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."

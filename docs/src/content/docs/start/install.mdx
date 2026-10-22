@@ -4,7 +4,12 @@ description: Choose an installation method for your repository and prepare its c
 ---
 
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
-import { SETUP_COMMANDS, RUNTIME_MINIMUMS, RELEASE_AGE_EXCLUSIONS } from '../../../config/setup.ts';
+import {
+    SETUP_COMMANDS,
+    RUNTIME_MINIMUMS,
+    YARN_CLASSIC_INSTALL,
+    RELEASE_AGE_EXCLUSIONS,
+} from '../../../config/setup.ts';
 
 ## What you need
 
@@ -58,13 +63,9 @@ last column shows.
     </tbody>
 </table>
 
-Then run `gspot init` and `gspot install`, as the [Quickstart](/start/quickstart/) shows. With mise, `--pin` writes exact
-Node.js and gspot versions to `mise.toml`. mise requires approval for a new npm package or one with few downloads;
+Then run `gspot init` and `gspot install`, as the [Quickstart](/start/quickstart/) shows. With mise, `--pin` writes the
+exact gspot version to `mise.toml`. mise requires approval for a new npm package or one with few downloads;
 `allow_low_downloads=true` approves gspot.
-
-:::caution
-Install `@gspothq/cli` before you run `npx gspot`. npm has no package named `gspot`, so without the install, npx stops with a 404 error.
-:::
 
 ## Set up a clone
 
@@ -73,52 +74,16 @@ Install the dependencies from the committed lockfile first; it pins the gspot ve
 and prints the install command. `gspot init` refuses to run where `gspot.toml` exists, so run `gspot install` instead.
 
 <Tabs syncKey="package-manager">
-<TabItem label="npm">
-
-```shell
-npm ci
-npx gspot install
-npx gspot check
-```
-
-</TabItem>
-<TabItem label="pnpm">
-
-```shell
-pnpm install --frozen-lockfile
-pnpm exec gspot install
-pnpm exec gspot check
-```
-
-</TabItem>
-<TabItem label="Yarn">
-
-```shell
-yarn install --immutable
-yarn exec gspot install
-yarn exec gspot check
-```
-
-Yarn Classic installs with `yarn install --frozen-lockfile`.
-
-</TabItem>
-<TabItem label="Bun">
-
-```shell
-bun install --frozen-lockfile
-bunx gspot install
-bunx gspot check
-```
-
-</TabItem>
-<TabItem label="mise">
-
-```shell
-mise exec -- gspot install
-mise exec -- gspot check
-```
-
-</TabItem>
+    {SETUP_COMMANDS.map(({ label, clone }) => (
+        <TabItem label={label}>
+            <Code lang="shell" code={clone.join('\n')} />
+            {label === 'Yarn' && (
+                <p>
+                    Yarn Classic installs with <code>{YARN_CLASSIC_INSTALL}</code>.
+                </p>
+            )}
+        </TabItem>
+    ))}
 </Tabs>
 
 `gspot install` installs the tools and turns on hooks in this clone.

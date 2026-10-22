@@ -20,7 +20,7 @@ import { PROGRESS_CLEAR, CHECK_LIST_SEPARATOR } from '#cli/config/commands/check
 import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/check.ts';
 
-// Read the pre-push lines from standard input until the signal stops the run.
+// Read the lines that Git writes to the pre-push hook; the signal stops the read.
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
     cancelSignal.throwIfAborted();
     const decoder = new TextDecoder('utf-8', { fatal: true });
@@ -146,7 +146,9 @@ function assertReadableMessageFile(options: CheckOptions): void {
     try {
         accessSync(commitFile, constants.R_OK);
     } catch (error) {
-        throw new GspotError('filesystem', `The commit message file ${commitFile} cannot be read.`, { cause: error });
+        throw new GspotError('filesystem', `gspot cannot read the commit message file ${commitFile}.`, {
+            cause: error,
+        });
     }
 }
 
@@ -181,7 +183,7 @@ async function checkStaged(
     });
 }
 
-// Validate the input, then check the working tree or a copy.
+// Check the pushed revisions, a copy of the staged index, or the working tree.
 async function runCheckCommand(
     root: string,
     options: CheckOptions,
@@ -210,8 +212,8 @@ async function runCheck(paths: string[], flags: CheckFlags, cwd: string): Promis
 /**
  * Register the check command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerCheck(program: Command, onResult: CommandCompletion): void {
     program

@@ -24,8 +24,7 @@ import {
     TYPESCRIPT_PROJECTS_SANDBOX,
 } from '#tests/data/checks/typescript/projects.ts';
 
-// The installed TypeScript compiler checks project references, authored compiler settings, and build output bounds.
-// Runs the TypeScript check and returns its exit code, output, and findings.
+/** Run the TypeScript check and return its exit code, output, and findings. */
 async function runTscCheck(root: string): Promise<TypecheckResult> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
     const output = result.stdout + result.stderr;

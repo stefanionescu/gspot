@@ -29,9 +29,9 @@ export const MANIFEST_FILE = 'manifest.toml';
 
 export const CONFIGURATIONS_FOLDER = 'configurations';
 
-/** The rules folder in each shipped configuration. */
 export const RULES_FOLDER = 'rules';
 
+/** The configuration groups that a manifest folder may name. */
 export const GROUPS = [
     'language',
     'framework',
@@ -43,7 +43,7 @@ export const GROUPS = [
     'general',
 ] as const;
 
-/** Display labels for each configuration group, in init order. */
+/** The title of each configuration group. init and the docs list the groups in this order. */
 export const GROUP_LABELS = {
     language: 'Languages',
     framework: 'Frameworks',
@@ -57,7 +57,7 @@ export const GROUP_LABELS = {
 
 export const MAX_EXIT_CODE = 255;
 
-/** The levels, in selection order. */
+/** The levels, from the fewest checks to the most. */
 export const LEVELS = ['recommended', 'all'] as const;
 
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;

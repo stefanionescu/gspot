@@ -9,7 +9,6 @@ export const RULE_FOLDERS = ['rules', '.rules', '.cursor/rules', 'docs/rules', '
 // The words in a CI job name that say it lints.
 export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
 
-// Two-word lint commands.
 export const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
 
 export const FOREIGN_CI_FILES = new Set([

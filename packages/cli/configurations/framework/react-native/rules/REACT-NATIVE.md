@@ -1,10 +1,11 @@
 # React Native
 
-Read this rule when you change a React Native or Expo app. Read the React rule first.
+Read this rule when you change a React Native or Expo app. Read REACT.md first.
 
 ## Components and touch
 
-- Give every touch target a size of at least 44 points on iOS or 48 dp on Android, with `hitSlop` where the drawing takes less space.
+- Give every touch target a size of at least 44 points on iOS or 48 dp on Android, with `hitSlop` where the drawing
+  takes less space.
 - Do not read `Dimensions` at module load. Use `useWindowDimensions`, which follows rotation and split view.
 - Respect the safe area on every screen, through the safe area context.
 
@@ -37,7 +38,8 @@ Read this rule when you change a React Native or Expo app. Read the React rule f
 
 ## Performance
 
-- Keep work off the JavaScript thread during a gesture or an animation. Run animations on the native driver or the UI thread.
+- Keep work off the JavaScript thread during a gesture or an animation. Run animations on the native driver or the UI
+  thread.
 - Size an image to the box it fills, and cache remote images.
 - Do not log in a hot path, and strip console output from a release build.
 - Tell the user to measure on a low-end Android device in a release build.

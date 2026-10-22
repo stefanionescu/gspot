@@ -17,7 +17,7 @@ const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
  * @param title the visible heading
  * @param description the one-line summary
  * @param body the Markdown text
- * @returns the page data and its escaped Markdown
+ * @returns the page and its escaped Markdown
  */
 export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
     // A flag outside code goes into a code span, so Markdown does not turn its two hyphens into a dash.

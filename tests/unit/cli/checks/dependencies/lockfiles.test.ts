@@ -116,7 +116,7 @@ test('dependencies/lockfiles reports the lockfile of a second package manager in
             file: 'yarn.lock',
             line: 1,
             rule: 'foreign-lockfile',
-            message: 'The repository holds lockfiles of 2 package managers: package-lock.json, yarn.lock. Keep one.',
+            message: 'This scope holds lockfiles of 2 package managers: package-lock.json, yarn.lock. Keep one.',
         }),
     ]);
     await unlink(join(sandbox.path, 'yarn.lock'));

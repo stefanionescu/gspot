@@ -25,7 +25,7 @@ mise = "swiftlint"
 name = "swiftlint"
 replace = [".swiftlint.yml", ".swiftlint.yaml"]
 rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
-suppression = { marker = "\\bswiftlint:disable\\b(?::(?:next|this|previous))?(?<rules>.*)", reason = " - (?<reason>\\S.*)", example = "// swiftlint:disable:next force_unwrapping - the URL is a literal", separator = "\\s-\\s", all_rules = "^all(?=$|\\s)", limit_rules = "(?:^|[\\s,])(?:cyclomatic_complexity|function_body_length|file_length|type_body_length|function_parameter_count)(?=$|[\\s,])" }
+suppression = { marker = "\\bswiftlint:disable\\b(?::(?:next|this|previous))?(?<rules>.*)", reason = " - (?<reason>\\S.*)", example = "// swiftlint:disable:next force_unwrapping - reason: the URL is a literal", separator = "\\s-\\s", all_rules = "^all(?=$|\\s)", limit_rules = "(?:^|[\\s,])(?:cyclomatic_complexity|function_body_length|file_length|type_body_length|function_parameter_count)(?=$|[\\s,])" }
 version = "0.63.2"
 version_command = ["version"]
 
@@ -34,7 +34,7 @@ builds = ["macos", "linux"]
 min_version = "0.54.0"
 name = "swiftformat"
 replace = [".swiftformat"]
-suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)", example = "// swiftformat:disable:next redundantSelf - the closure needs self" }
+suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)", example = "// swiftformat:disable:next redundantSelf - reason: the closure needs self" }
 version = "0.61.1"
 # The GitHub release ships an app bundle beside the executable, which mise skips.
 mise = { name = "swiftformat", version = "0.61.1", options = { no_app = true, rename_exe = "swiftformat" } }
@@ -45,7 +45,7 @@ min_version = "3.0.0"
 mise = "periphery"
 name = "periphery"
 replace = [".periphery.yml", ".periphery.yaml"]
-suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)", example = "// periphery:ignore - the runtime calls it by name" }
+suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)", example = "// periphery:ignore - reason: the runtime calls it by name" }
 version = "3.6.0"
 version_command = ["version"]
 
@@ -54,7 +54,7 @@ name = "swift"
 system = true
 
 [[tool]]
-install_help = "install Xcode from the App Store"
+install_help = "Install Xcode from the App Store."
 name = "xcodebuild"
 system = true
 
@@ -91,7 +91,7 @@ cwd = "scope"
 example = "`value as! NSString` reports `force_cast`. Use `as?` and handle the failure, or change the input type so no cast remains."
 files = { extensions = [".swift"] }
 fix = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
-help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore swift/swiftlint --rule <id> --reason \"<why>\"`."
+help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore swift/swiftlint --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "swiftlint"
 output = { format = "json", fields = { file = "file", line = "line", column = "character", rule = "rule_id", message = "reason" } }

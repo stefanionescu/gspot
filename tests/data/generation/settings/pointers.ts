@@ -1,4 +1,4 @@
-/** Uniform Resource Identifier delimiters and Unicode must remain literal module target names. */
+/** Uniform Resource Identifier delimiters and Unicode must stay literal in module paths. */
 export const MODULE_PATHS = ['100%', '#fragment', '?query', "author's", 'café'] as const;
 export const MODULE_VALUE = { location: 'the requested module' } as const;
 

@@ -12,7 +12,7 @@ export const NPM_SETTING_VARIABLE_PREFIX = 'GSPOT_PACKAGE_SETTING_';
 
 export const YARN_SETTING_VARIABLE_PREFIX = 'GSPOT_YARN_SETTING_';
 
-// A package that fetches its binary at install time can fail for a reason the package manager does not name.
+// The npm settings that route registry and proxy connections; the isolated install receives them.
 export const CONNECTION_KEYS = new Set([
     'registry',
     'proxy',
@@ -116,7 +116,7 @@ export const YARN_SETTING_KEYS = {
 
 export const YARN_CONFIG_GET_FLAGS = ['--json', '--no-redacted'] as const;
 
-/** The Bun and pnpm settings files that hold back new releases while gspot installs its own tools. */
+/** The Bun and pnpm settings files that set the minimum release age while gspot installs its own tools. */
 export const RELEASE_AGE_FILES = { bun: 'bunfig.toml', pnpm: 'pnpm-workspace.yaml' } as const;
 
 /** The two gspot packages. gspot pins them itself, so no installer holds them back. */

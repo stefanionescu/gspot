@@ -8,7 +8,7 @@ import { type PushReport } from '#cli/types/commands/check.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-// The files a check reports and the status it ends with, for a staged run and for a push of the same change.
+/** Collect the exit code, the statuses, and the finding messages of a staged run and of a push of the same change. */
 async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {

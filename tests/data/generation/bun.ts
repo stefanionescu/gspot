@@ -8,5 +8,5 @@ export const BUN_SCANNER_KEYS: ManagedKeys[] = [
     },
 ];
 
-/** A hold of fourteen days that the user wrote in bunfig.toml. */
+/** A minimum release age of fourteen days that the user wrote in bunfig.toml. */
 export const TWO_WEEKS_SECONDS = 1_209_600;

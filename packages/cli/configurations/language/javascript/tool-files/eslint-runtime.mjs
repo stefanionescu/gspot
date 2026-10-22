@@ -40,12 +40,14 @@ export function mergePresetRules(blocks) {
 }
 
 /**
- * Remove host runtime globals while retaining framework compiler and test names. Runtime APIs use their own file
- * selectors.
+ * Remove host runtime globals while retaining framework compiler and test names.
+ *
+ * Runtime APIs get their globals from blocks with their own file selectors.
  *
  * @param {FrameworkBlock} block the framework ESLint configuration block.
  * @param {Record<string, object>} globalsByRuntime the globals tables keyed by runtime name.
- * @returns {FrameworkBlock} the same block with runtime names removed from its globals.
+ * @returns {FrameworkBlock} a copy of the block without the runtime names in its globals, or the block itself when it
+ * declares no globals.
  */
 export function stripRuntimeGlobals(block, globalsByRuntime) {
     const blockGlobals = block.languageOptions?.globals;
@@ -75,7 +77,7 @@ export function stripRuntimeGlobals(block, globalsByRuntime) {
 /**
  * Select the last runtime declaration that covers each file path.
  *
- * @param {number} index the position of the runtime declaration represented by this matcher.
+ * @param {number} index the position of the runtime declaration that this matcher represents.
  * @param {{scope: string, includes: string[], excludes: string[]}[]} runtimes the ordered runtime declarations.
  * @returns {function(string): boolean} whether a file belongs to this declaration after later overrides.
  */
@@ -115,9 +117,10 @@ function isParseError(error) {
     return error instanceof SyntaxError || (error instanceof Error && error.name === 'TSError');
 }
 
-// Component parsers preserve script-language attributes. The final parser reports syntax errors.
 /**
  * Select Vue files whose script attributes request TypeScript parsing.
+ *
+ * The final parser reports syntax errors, so a file that does not parse counts as untyped.
  *
  * @param {{parseForESLint: (text: string, options: object) => VueProgram}} parser the component syntax reader.
  * @returns {function(string): boolean} whether a file contains a typed script block.
@@ -147,6 +150,8 @@ export function vueComponentMatches(parser) {
 
 /**
  * Select Svelte files whose script attributes request TypeScript parsing.
+ *
+ * The final parser reports syntax errors, so a file that does not parse counts as untyped.
  *
  * @param {{parseForESLint: (text: string, options: object) => SvelteProgram}} parser the component syntax reader.
  * @param {object} typescriptParser the parser supplied to typed script blocks.

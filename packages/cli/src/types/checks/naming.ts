@@ -10,10 +10,10 @@ export type BannedWord = { word: string; parts: string[]; setting: string; group
 /** The naming settings and the test-file status. */
 export type FileNaming = { check: Check; settings: NamingSettings; isTestFile: boolean };
 
-/** The input and finding location that the checks of one identifier share. */
+/** The identifier, its naming settings, its finding place, and its prefix, which the checks of one name share. */
 export type CheckedIdentifier = FileNaming & { identifier: Identifier; place: FindingPlace; prefix: string };
 
-/** A path-scoped rule, compiled. */
+/** One [[naming.override]] record, with its paths turned into a matcher and its patterns into regular expressions. */
 export type CompiledOverride = {
     matches: (path: string) => boolean;
     languages: Set<string> | undefined;
@@ -40,13 +40,16 @@ export type NamingSettings = {
     isRepeatAllowed: boolean;
 };
 
-/** Framework punctuation removed before checking the name of a path segment. */
+/**
+ * A bracket pair that a framework puts around a path segment, such as [id], which the check strips before it checks the
+ * name.
+ */
 export type PathContainer = { open: string; close: string; category: NamedCategory };
 
 /** A source file and its language configuration. */
 export type NamedFile = { file: TrackedFile; language: string };
 
-/** Identifier spellings associated with one file for cross-project comparisons. */
+/** The path names and declared names of one file, which the allowed-names check searches. */
 export type FileNames = {
     path: string;
     stem: string;
@@ -68,7 +71,7 @@ export type NamingDefaults = {
     override: NamingOverride[];
 };
 
-/** One path-specific naming rule in settings or shipped configuration data. */
+/** One path-specific naming rule in gspot.toml or in a shipped configuration. */
 export type NamingOverride = {
     paths?: string[] | undefined;
     languages?: string[] | undefined;
@@ -103,5 +106,5 @@ export type SqlNamed = { category: NamedCategory; name: string; location?: numbe
 /** Where an extractor puts what it finds. */
 export type FileIdentifiers = { file: string; language: string; out: Identifier[] };
 
-/** Declarations or the located SQL syntax failure that prevented extraction. */
+/** The names that a file declares, or the SQL syntax error that stopped the reading. */
 export type IdentifierRead = { identifiers: Identifier[]; error: SqlFile['error'] };

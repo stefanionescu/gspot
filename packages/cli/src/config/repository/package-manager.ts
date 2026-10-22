@@ -2,7 +2,7 @@ export const NPM_TOOL = 'npm';
 
 export const NYPM_DETECTION_OPTIONS = { ignoreArgv: true, ignorePackageJSON: true, includeParentDirs: false } as const;
 
-/** The runner and exact pin command for each package manager. */
+/** The runner, the install help, and the exact pin command of each package manager. */
 export const START_RUNNERS = {
     npm: {
         command: 'npm exec --no -- gspot',

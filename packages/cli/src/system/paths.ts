@@ -5,9 +5,9 @@ import { EXECUTABLE_LAYOUTS, DECLARATION_EXTENSIONS } from '#cli/config/system/p
 const systemExecutables = EXECUTABLE_LAYOUTS[process.platform === 'win32' ? 'windows' : 'posix'];
 
 /**
- * Convert a path to forward slashes on every system, for selectors, records, and output.
+ * Convert a path to forward slashes on every system, for path patterns, stored paths, and output.
  *
- * @param path the input, with system separators.
+ * @param path the path, with system separators.
  * @returns the path with forward slashes.
  */
 export function convertToPosixPath(path: string): string {
@@ -17,7 +17,7 @@ export function convertToPosixPath(path: string): string {
 /**
  * Convert a POSIX path to the form of this system, for tool arguments.
  *
- * @param path the input, with forward slashes.
+ * @param path the path, with forward slashes.
  * @returns the path in the form of this system.
  */
 export function convertToSystemPath(path: string): string {
@@ -37,7 +37,7 @@ export function isInside(local: string): boolean {
 /**
  * Extract the extension with its dot, in lower case. Double extensions such as '.d.ts' stay whole.
  *
- * @param path the input, with forward slashes.
+ * @param path the path, with forward slashes.
  * @returns the extension, '' without an extension.
  */
 export function extractExtension(path: string): string {
@@ -99,10 +99,10 @@ export function includeParentFolders(paths: readonly string[]): Set<string> {
 }
 
 /**
- * Name executable candidates in the system's preferred shim order.
+ * List the file names that an executable can have on this system, in the order the system tries them.
  *
  * @param name the executable without a suffix.
- * @returns names used by tool-project verification and tool discovery.
+ * @returns the names to look for.
  */
 export function listExecutableNames(name: string): string[] {
     return systemExecutables.executableSuffixes.map((suffix) => name + suffix);

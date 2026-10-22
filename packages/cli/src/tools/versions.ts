@@ -34,10 +34,9 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
 /**
  * Read the version that a package.json above the real file of an npm tool holds, for the package that the pin names.
  *
- * @param repositoryRoot the boundary for validating managed package metadata reads.
+ * @param repositoryRoot the boundary for reading the package.json files of managed tools.
  * @param path the executable.
  * @param name the npm package, or undefined for tools outside npm.
- *
  * @returns the declared version, or undefined when no package.json above the file names the package.
  */
 function readPackageVersion(repositoryRoot: string, path: string, name: string | undefined): string | undefined {
@@ -68,25 +67,24 @@ function findVersionFailure(
     text: string,
     version: string | undefined,
 ): ParsedToolVersion | undefined {
-    if (result.timedOut) return { state: 'error', note: `${tool.name} version inspection timed out.` };
+    if (result.timedOut) return { state: 'error', note: `Reading the version of ${tool.name} timed out.` };
     if (result.missing) return { state: 'missing', note: text };
     // A shim without a set version starts nothing, whatever other mise installs exist.
     if (text.includes(NO_VERSION)) return { state: 'missing', note: 'not installed' };
     if (result.code !== (tool.version_exit_code ?? 0))
-        return { state: 'error', note: `${tool.name} version inspection exited ${String(result.code)}: ${text}` };
+        return { state: 'error', note: `The version command of ${tool.name} exited ${String(result.code)}: ${text}` };
     if (version === undefined && tool.kind === 'library')
-        return { state: 'missing', note: `${tool.name} is not reported by its host version command.` };
+        return { state: 'missing', note: `The version command of the host tool does not list ${tool.name}.` };
     return undefined;
 }
 
 /**
- * Classify a reported version against its pin and minimum.
+ * Classify a reported version against its pin and minimum version.
  *
  * @param found the version the tool reported.
  * @param want the pinned version.
  * @param minimum the lowest version the configuration accepts.
- *
- * @returns ok, outdated below the minimum, newer above the pin, or error for no version.
+ * @returns ok, outdated below the minimum, newer above the pin, system without a pin, or error for no version.
  */
 export function classifyToolVersion(
     found: string,
@@ -102,11 +100,10 @@ export function classifyToolVersion(
 }
 
 /**
- * Read version output, using installed npm metadata when the declared package supplies the executable.
+ * Read version output, using the installed package.json when the declared package supplies the executable.
  *
  * @param inspected the tool, installed metadata boundary, working folder, and query timeout.
  * @param path the resolved executable.
- *
  * @returns the version or the query failure.
  */
 export function readToolVersion(inspected: InspectedTool, path: string): ParsedToolVersion {
@@ -125,11 +122,10 @@ export function readToolVersion(inspected: InspectedTool, path: string): ParsedT
 }
 
 /**
- * Compare a version with its accepted minimum.
+ * Compare a version with its minimum.
  *
  * @param found the observed version.
  * @param minimum the accepted minimum.
- *
  * @returns whether the observed version falls below the minimum.
  */
 function isBelowMinimum(found: string | undefined, minimum: string | undefined): boolean {
@@ -141,10 +137,9 @@ function isBelowMinimum(found: string | undefined, minimum: string | undefined):
 /**
  * Read a declared tool version from captured process output.
  *
- * @param tool the declaration and its pin.
+ * @param tool the tool and its pin.
  * @param result what the process printed, and its exit code.
  * @param installedVersion what the package.json of the install declares.
- *
  * @returns the parsed version or its inspection failure.
  */
 function parseVersionOutput(tool: Tool, result: SpawnResult, installedVersion: string | undefined): ParsedToolVersion {

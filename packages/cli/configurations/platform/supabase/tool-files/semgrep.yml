@@ -21,8 +21,8 @@ rules:
     - id: gspot.supabase.edge-cors-wildcard-with-credentials
       pattern: '{..., "Access-Control-Allow-Origin": "*", ...,
           "Access-Control-Allow-Credentials": "true", ...}'
-      message: Wildcard origins cannot be used with credentialed requests. List the
-          permitted origins.
+      message: >-
+          Browsers refuse a wildcard origin on a request with credentials. List the allowed origins.
       languages:
           - typescript
           - javascript
@@ -45,8 +45,8 @@ rules:
                 const $BODY = await req.json()
                 ...
                 $SCHEMA.safeParse($BODY)
-      message: Request body consumed without schema validation. Use zod or similar to
-          validate the parsed JSON.
+      message: >-
+          The function reads the request body without a schema. Parse it with a schema, such as a Zod schema.
       languages:
           - typescript
           - javascript

@@ -189,7 +189,7 @@ export function detectConfigurations(
  *
  * @param conditions the detection rules of the manifests.
  * @param files the repository source inventory.
- * @param dependencyFiles the parsed package declarations.
+ * @param dependencyFiles the parsed dependency files.
  * @returns the conditions that match.
  */
 export function detectConditions(

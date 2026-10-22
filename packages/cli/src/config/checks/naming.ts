@@ -210,7 +210,7 @@ export const TYPESCRIPT_PATTERN_FIELDS = {
 
 export const TYPESCRIPT_PATTERN_LISTS = new Set(['rest_pattern', 'object_pattern', 'array_pattern']);
 
-/** The names accepted by case validation, in their display order. */
+/** The names that case validation accepts, in their display order. */
 export const CASE_NAMES = [
     'camel',
     'pascal',

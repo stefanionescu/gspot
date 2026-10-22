@@ -82,7 +82,7 @@ test('apply --json prints one error object when an unowned file blocks generatio
     const failure = JSON.parse(refused.stdout) as CommandFailureJson;
     expect(Object.keys(failure)).toStrictEqual(['error', 'message']);
     expect(failure.message).toBe(
-        'These files were not overwritten by gspot: .editorconfig. Move them aside, then run the command again.',
+        'gspot did not overwrite these files: .editorconfig. Move them aside, then run the command again.',
     );
 });
 test('a malformed reason reports a settings error and apply preserves the authored settings', async () => {

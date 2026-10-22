@@ -55,7 +55,7 @@ function buildToolProjectRows(configurations: Configuration[]): InitPlan['change
     return rows;
 }
 
-// Name the dependencies that the generated tool project pins. Keep the authored dependency file.
+// Name the dependencies that the generated tool project pins. Keep your own dependency file.
 function buildPinnedDependencyRows(
     { repository, existingTools }: InitScan,
     requirements: Configuration[],
@@ -82,13 +82,14 @@ function buildPinnedDependencyRows(
         return [
             {
                 path,
-                note: `${subject} ${verb} now pinned in ${NPM_TOOL_PROJECT_FILE}; remove ${pronoun} from devDependencies if nothing else uses ${pronoun}`,
+                note: `${subject} ${verb} now pinned in ${NPM_TOOL_PROJECT_FILE}; remove ${pronoun} from package.json if nothing else uses ${pronoun}`,
             },
         ];
     });
 }
 
-// List the CI files that init leaves alone: all of them when init writes no workflow, and every existing lint job.
+// List the CI files that init leaves alone: every CI file when init writes no workflow and finds no lint job, and every
+// lint job.
 function buildKeptCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: string[]): InitPlan['retained'] {
     const untouched =
         ci === 'none' && lintJobs.length === 0
@@ -131,13 +132,14 @@ function formatConfigurationSection(rows: InitPlan['configurations'], level: Ini
 }
 
 /**
- * Build the file writes and integrations that init shows before it asks you to accept.
+ * Build the plan that init shows before you accept it: the configurations, and the files that init writes, deletes,
+ * leaves in place, and changes.
  *
  * @param scan the repository facts, answers, and configurations.
  * @param settings the validated gspot.toml and its generated files.
  * @param settings.settings the parsed gspot.toml for file generation.
  * @param settings.settingsText the proposed gspot.toml text.
- * @param settings.requirements the configurations to install.
+ * @param settings.requirements the configurations whose tools the checks need.
  * @param settings.generated the files to write and their ownership plan.
  * @returns the plan that init proposes.
  */
@@ -180,7 +182,7 @@ export function planInitFiles(
         delete: replaced.deleted.filter(({ path }) => !write.some((row) => row.path === path)),
         retained: [
             ...replaced.retained,
-            ...listSubmodulePaths(repository.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
+            ...listSubmodulePaths(repository.index).map((path) => ({ path, note: 'submodule; init does not read it' })),
             ...buildKeptCiRows(answers.ci, existingTools.ci, readLintJobs(root, existingTools.ci)),
             ...scan.foreignDisableComments,
         ],

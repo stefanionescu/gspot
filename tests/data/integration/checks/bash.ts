@@ -70,9 +70,9 @@ export const SHELLCHECK_DIALECT_FINDINGS = [
     { file: 'unchecked.sh', rule: 'SC2164' },
 ] as const;
 
-/** File selection and syntax findings for each interpreter. */
+/** The zsh syntax case. */
 export const SYNTAX_CASES = [
-    // Zsh reports a parse error at the end of this one-line input, on line 2.
+    // Zsh reports a parse error at the end of this one-line script, on line 2.
     {
         check: 'bash/zsh-syntax',
         path: 'script.zsh',

@@ -19,11 +19,11 @@ gspot check --json
 | `started`         | Start time as an ISO 8601 timestamp.                                                         |
 | `duration`        | Elapsed run time in milliseconds.                                                            |
 | `comparison`      | When present, the selected content (`working-tree`, `index`, or `commit`) and its reference. |
-| `checks`          | Results for checks that ran, including their findings.                                       |
+| `checks`          | The result of every planned check, skipped ones included, with their findings.               |
 | `ignores`         | Ignores in effect, with their check, optional lint rule, paths, and names, and reason.       |
 | `unstagedChanges` | Number of changed files left out when the run reads the staging area.                        |
 | `partial`         | Whether the run selected only staged files, changed files, or named paths.                   |
-| `failed`          | Check IDs that failed, including checks whose fixer failed.                                  |
+| `failed`          | Check IDs that failed or stopped with an error, and the checks whose fixer failed.           |
 | `exitCode`        | The process exit code. See [Exit codes](/reference/commands/#exit-codes).                    |
 
 ## Check results
@@ -32,8 +32,8 @@ Each `checks` item has `check`, `scope`, `status`, `fileCount`, `duration`, and 
 It can also have `files`, `note`, `reproduce`, and `command`. A skipped result carries its `cause`. The status takes one of `passed`, `failed`, `missing`, `error`, or
 `skipped`. `missing` and `error` make the run incomplete and produce exit code `2`.
 
-Each finding has `check`, `file`, `message`, and `fixable`. Optional fields include `line`, `column`, `rule`, and
-`help`. Source lines and columns start at `1`. A finding without a source location can have an empty `file`.
+Each finding has `check`, `file`, `message`, and `fixable`. Optional fields include `line`, `column`, `rule`, `help`,
+and `name`, the definition that a `structure/trivial-functions` or `python/vulture` finding names. Source lines and columns start at `1`. A finding without a source location can have an empty `file`.
 
 The `cause` of a skip takes one of `level`, `system`, `replaced`, `setting`, `condition`, `ignore`, or
 `no-files`.
@@ -47,7 +47,7 @@ The `cause` of a skip takes one of `level`, `system`, `replaced`, `setting`, `co
 | `revisions`            | One item per distinct tree: `hash`, `refs`, `commits`, `historyComplete`, and `report`. |
 | `skipped`              | Pushed refs that gspot did not check, with `ref`, `hash`, and `reason`.                 |
 | `exitCode`             | The process exit code.                                                                  |
-| `canceled.pendingRefs` | When a signal stopped the run, the refs that were not checked.                          |
+| `canceled.pendingRefs` | When a signal stopped the run, the refs that gspot did not check.                       |
 
 Each `report` holds the report fields above. `historyComplete` holds `false` when the pushed history reaches the
 boundary of a shallow clone. Checks that read history then refuse to run.
@@ -62,7 +62,7 @@ Commands with `--json` report an error with `error` and `message`. `error` holds
 | `arguments`     | Command arguments or flags.                                                             |
 | `git`           | A Git operation.                                                                        |
 | `copy`          | Copying the files of a check into a temporary folder.                                   |
-| `writing`       | Saving gspot.toml.                                                                      |
+| `writing`       | Writing `gspot.toml` or a generated file.                                               |
 | `filesystem`    | A file of the repository: missing, not readable, not valid, or at a path gspot refuses. |
 | `settings`      | A setting or the gspot.toml format.                                                     |
 | `configuration` | A shipped configuration.                                                                |
@@ -70,6 +70,6 @@ Commands with `--json` report an error with `error` and `message`. `error` holds
 | `tool`          | Finding or running a tool.                                                              |
 | `output`        | Reading a tool's output.                                                                |
 | `pin`           | The repository's version pin.                                                           |
-| `prompt`        | Asking for a plan to be accepted.                                                       |
+| `prompt`        | A question that asks you to accept a plan.                                              |
 | `unexpected`    | An unexpected error; the message names it.                                              |
 | `canceled`      | A signal stopped the command. The object also holds `exitCode`.                         |

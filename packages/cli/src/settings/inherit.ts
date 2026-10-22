@@ -91,7 +91,8 @@ function mergeTable(
 }
 
 /**
- * Merge two values: command arguments replace whole, other lists append, per-rule tables merge, and single values replace.
+ * Merge two values: lists of plain values append without repeats, tables merge their keys, and command arguments, lists
+ * of tables, and single values replace.
  *
  * @param setting the setting whose schema selects the merge rule.
  * @param current the value so far.
@@ -146,9 +147,9 @@ export function listApplicableTables(settings: Settings, scope: string | undefin
 }
 
 /**
- * Match a written key to its declaration. Per-language and per-category keys map back to their base declaration.
+ * Match a written key to its setting. Per-language and per-category keys map back to their base setting.
  *
- * @param knownSettings the declarations and defaults of the selection.
+ * @param knownSettings the settings and defaults of the selected configurations.
  * @param key the dotted name as written.
  * @returns the match with its language and category, or undefined.
  */
@@ -161,7 +162,7 @@ export function findSetting(knownSettings: KnownSettings, key: string): SettingM
 }
 
 /**
- * Read the written value of a dotted key.
+ * Get the written value of a dotted key.
  *
  * @param settings the root table or one scope.
  * @param key the dotted setting name.
@@ -179,11 +180,11 @@ export function getWrittenSetting(settings: Pick<Settings, 'written'>, key: stri
 }
 
 /**
- * Resolve a written language or category key after its broader declaration.
+ * List the keys whose written values apply to a language or category key, from the broadest setting to the key itself.
  *
- * @param match the declaration and the written selector.
+ * @param match the setting and the written selector.
  * @param key the dotted name as written.
- * @returns candidate keys from the broadest declaration to the named field.
+ * @returns the key as written; for a language key, the setting name, the category key, and the key, broadest first.
  */
 function listPossibleKeys(match: SettingMatch, key: string): string[] {
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
@@ -205,9 +206,9 @@ function listPossibleKeys(match: SettingMatch, key: string): string[] {
 /**
  * Resolve one default against its language, scope, and site build folder.
  *
- * @param knownSettings the declarations and defaults of the configurations in use.
- * @param settings the parsed gspot.toml.
- * @param match the declaration and its language, if any.
+ * @param knownSettings the settings and defaults of the configurations in use.
+ * @param settings reads a value from the settings tables of the caller.
+ * @param match the setting and its language, if any.
  * @param scope the project whose shipped paths apply.
  * @returns the default with repository-relative paths, or undefined.
  */
@@ -235,9 +236,9 @@ export function findSettingDefault(
 }
 
 /**
- * Resolve one key: configuration default, root table, then scope table. Lists append without repeats; single values replace.
+ * Resolve one key: the configuration default, then the root table, then each scope table; mergeValue merges them.
  *
- * @param knownSettings the declarations and defaults of the selection.
+ * @param knownSettings the settings and defaults of the selected configurations.
  * @param settings the parsed gspot.toml.
  * @param key the dotted setting name.
  * @param scope the folder whose table applies last, if any.
@@ -290,7 +291,7 @@ function isKeyGroup(knownSettings: KnownSettings, key: string, value: unknown): 
  * List every setting key that a settings table writes, in dotted form.
  *
  * @param settings the root table or one scope.
- * @param knownSettings the declarations, with nested tool keys.
+ * @param knownSettings the known settings, with nested tool keys.
  * @returns all known written keys, plus unknown keys from open settings tables.
  */
 export function listWrittenKeys(settings: SettingsTable, knownSettings: KnownSettings): string[] {
@@ -323,7 +324,7 @@ export function listWrittenKeys(settings: SettingsTable, knownSettings: KnownSet
 /**
  * List the settings that apply, with language defaults and written variants, in key order.
  *
- * @param knownSettings the declarations and defaults of the selection.
+ * @param knownSettings the settings and defaults of the selected configurations.
  * @param settings the parsed gspot.toml.
  * @param scope the folder whose table applies last, if any.
  * @returns the resolved settings in key order.
@@ -346,7 +347,7 @@ export function listEffectiveSettings(
 }
 
 /**
- * Read the table of a setting or of a tool.
+ * Get the table name of a setting: tools.<tool> for a tool setting, else the first part of the key.
  *
  * @param key the full setting name.
  * @returns its table name.

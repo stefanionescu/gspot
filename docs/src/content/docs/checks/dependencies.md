@@ -38,7 +38,7 @@ version = "0.4.6"
 reason = "BSD. Installed metadata reports the reviewed BSD license in its short form."
 ```
 
-`version` takes an exact version, a semver range such as `^1.2.0`, or `*`. `name` takes a glob for a package built for
+`version` takes an exact version, a version range such as `^1.2.0`, or `*`. `name` takes a glob for a package built for
 each platform:
 
 ```toml

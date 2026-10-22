@@ -94,8 +94,8 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
 /**
  * Register the init command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerInit(program: Command, onResult: CommandCompletion): void {
     program
@@ -206,7 +206,6 @@ function deleteReplacedFiles(
     const plans: WritePlan[] = [];
     for (const entry of deleted) {
         const expected = read.get(entry.path);
-        // The writer deletes the file only when its bytes still match the reviewed contents.
         if (expected === undefined) kept.push(entry.path);
         else plans.push({ path: entry.path, before: expected, status: 'changed' });
     }

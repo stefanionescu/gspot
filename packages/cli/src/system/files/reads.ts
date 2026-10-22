@@ -7,7 +7,6 @@ import { splitSystemPath } from '#cli/system/files/names.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openSync, readSync, closeSync, readFileSync, realpathSync } from 'node:fs';
 
-// Close the descriptor even when a bounded read fails.
 function readFilePrefix(source: string, limit: number): Buffer {
     const buffer = Buffer.alloc(limit);
     const descriptor = openSync(source, 'r');
@@ -130,13 +129,17 @@ export function readCachedText(reads: ReadCache, path: string): string {
 /**
  * Resolve a source path, and refuse links outside the root.
  *
- * @param root the canonical folder for checking symbolic link destinations.
+ * @param root the real path of the repository folder.
  * @param path the root-relative file.
- * @returns the resolved file location after the boundary check.
+ * @returns the real path of the file.
  */
 export function readContainedPath(root: string, path: string): string {
     const target = realpathSync(join(root, ...splitSystemPath(path)));
-    if (!isInside(relative(root, target))) throw new Error(`Source link leaves the repository: ${path}`);
+    if (!isInside(relative(root, target)))
+        throw new GspotError(
+            'filesystem',
+            `${path} links to a file outside the repository. Replace the link with the file.`,
+        );
     return target;
 }
 

@@ -29,7 +29,7 @@ export type InitPlan = {
     noLongerRuns: InitFileRow[];
 };
 
-/** The authored tool files that init replaces: what it read, what it deletes, and what stays for you. */
+/** Your own tool settings files that init replaces: what it read, what it deletes, and what stays for you. */
 export type ReplacedFiles = {
     changed: InitFileRow[];
     read: Map<string, FileContents | undefined>;
@@ -50,7 +50,7 @@ export type InitAnswers = {
     rules: boolean;
 };
 
-/** Everything init computes before it asks to continue. */
+/** Everything init works out before it asks to continue. */
 export type InitPrepared = {
     detection: DetectionSummary;
     session: Session;
@@ -88,7 +88,7 @@ export type InitOptions = {
 
 export type ConfigurationOrigin = 'named' | 'detected' | 'suggested' | 'required';
 
-/** The configurations init selects: at the root, per scope, and the closure of both. */
+/** The configurations init selects: at the root, per scope, and every configuration they require. */
 export type InitConfigurations = {
     scopes: ScopeFolder[];
     rootNames: string[];
@@ -98,14 +98,13 @@ export type InitConfigurations = {
     origins: Map<string, ConfigurationOrigin>;
 };
 
-/** The inputs to init selection. */
 export type InitRepository = {
     repository: Repository;
     configurations: Map<string, Configuration>;
     options: Pick<InitOptions, 'configurations'>;
 };
 
-/** Explicit, detected, and recommended choices, to explain the init selection. */
+/** Explicit, detected, and recommended choices, to explain the configurations that init picks. */
 export type ConfigurationChoices = { named: Set<string>; detected: Set<string>; written: Set<string> };
 
 export type PrettierOptions = {

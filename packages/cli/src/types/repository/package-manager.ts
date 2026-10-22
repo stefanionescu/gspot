@@ -10,7 +10,7 @@ export type StartRunner = {
 
 export type PackageManager = { name: (typeof PACKAGE_MANAGERS)[number]; version: string };
 
-/** A validated package manager name and its authored or detected version, when present. */
+/** A validated package manager name and its version as written or detected, when present. */
 export type PackageManagerPin = { name: (typeof PACKAGE_MANAGERS)[number]; version?: string | undefined };
 
 export type PackageManagerField = PackageManagerPin & { declared: string; field: string };

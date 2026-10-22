@@ -20,6 +20,6 @@ gspot is a command-line tool that lints AI-generated code and installs rules for
 - Vulnerable dependencies and licenses that you do not allow
 - Formatting, broken links, and spelling
 - Lint rules turned off without a reason
-- At [level](/start/concepts/#levels) `all`: naming, wording, structure, doc comments, duplication, and complexity
+- At level `all`: the stricter checks that [Levels](/start/concepts/#levels) lists
 
 Continue with the [Quickstart](/start/quickstart/).

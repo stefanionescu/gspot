@@ -1,4 +1,4 @@
-/** External inputs stop at the settings or file access check. */
+/** Files that link outside the repository, and the error that refuses each one. */
 export const LINKED_FILE_CASES = [
     {
         path: 'gspot.toml',

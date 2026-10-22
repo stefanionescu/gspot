@@ -6,7 +6,7 @@ export const BASH_SIZE_CASES = [
     { file: 'scripts/mutable.sh', rule: 'function-assignments', line: 9 },
 ] as const;
 
-/** Loop headers do not count as body assignments; both loop forms count as branches and nesting. */
+/** A C-style for loop counts as a branch and a nesting level; its header assignments do not count. */
 export const COUNTED_LOOPS = `main() {
     local declared=0
     for ((i=0; i<2; i=i+1)); do

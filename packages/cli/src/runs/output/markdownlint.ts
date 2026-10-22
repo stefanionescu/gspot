@@ -8,7 +8,7 @@ import { markdownlintReportSchema } from '#cli/schemas/runs/output/markdownlint.
  * Read the findings in the markdownlint JSON report.
  *
  * @param output the tool output to read.
- * @returns the findings, with positions and lint rule names resolved against the tool folder.
+ * @returns the findings, with file paths resolved against the tool folder.
  */
 export function parseMarkdownlintFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help, cwd } = output;

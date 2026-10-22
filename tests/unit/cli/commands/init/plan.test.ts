@@ -31,7 +31,7 @@ test('init names pinned dependencies without proposing to delete the package man
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.change).toContainEqual({
         path: 'package.json',
-        note: 'typescript is now pinned in .gspot/package.json; remove it from devDependencies if nothing else uses it',
+        note: 'typescript is now pinned in .gspot/package.json; remove it from package.json if nothing else uses it',
     });
     expect([...plan.delete, ...plan.noLongerRuns].map(({ path }) => path)).not.toContain('package.json');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
@@ -47,16 +47,16 @@ test('the init plan keeps existing CI jobs apart from tool settings that the gen
     expect(preview.stderr).toBe('');
     const retained = preview.stdout.split('left in place\n', 2)[1]?.split('\n\n', 1)[0];
     expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section when ready.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
+        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section; the generated tool file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
     expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section when ready.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
+        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section; the generated tool file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
     expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section when ready.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
+        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section; the generated tool file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
     expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section when ready.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
+        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff tool file takes over. Delete the section; the generated tool file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
@@ -98,7 +98,7 @@ test('the init plan lists each submodule once and reads none of it', async () =>
     const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--no-configurations', '--json']);
     expect(result.code).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
-        plan: { retained: [{ path: 'external project', note: 'submodule; contents are not read' }] },
+        plan: { retained: [{ path: 'external project', note: 'submodule; init does not read it' }] },
     });
     expect(await readFile(join(outside.path, 'package.json'), 'utf8')).toBe('{');
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);

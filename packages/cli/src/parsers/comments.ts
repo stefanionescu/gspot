@@ -73,7 +73,7 @@ function findCommentStart(line: string, openers: readonly string[]): number | un
     return undefined;
 }
 
-// Read SCSS comments outside quoted values without adding the format to unrelated syntax tables.
+// Read SCSS comments outside quoted values.
 function parseScssComments(text: string): SourceComment[] {
     return text.split('\n').flatMap((line, index) => {
         const start = findCommentStart(line, SCSS_COMMENT_OPENERS);
@@ -127,7 +127,7 @@ function extractMarkdownHtml(text: string): string {
     return pieces.join('');
 }
 
-// TOML comments retain the source positions of strings and multiline values.
+// Read TOML comments from the syntax tree, so a # inside a string or a multiline value never counts as a comment.
 function parseTomlComments(text: string, path: string): SourceComment[] {
     return parseTomlSyntax(text, parseTomlFile(path, text)).comments.map((comment) => {
         const [start, end] = getTomlRange(comment);
@@ -156,7 +156,7 @@ const COMMENT_PARSERS = new Map<string, CommentParser>([
     ['.css', parseGrammarComments.bind(undefined, 'css')],
 ]);
 
-// Parse retained syntax while classifying each comment against its original text.
+// Parse the prepared source, which keeps every offset, and read each comment from the original text.
 async function parseSyntaxComments(grammar: GrammarName, source: string, text: string): Promise<SourceComment[]> {
     const tree = await parseSource(grammar, source);
     try {

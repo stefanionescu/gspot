@@ -32,7 +32,7 @@ tool = "semgrep"
 per_scope = true
 `;
 
-/** One tool, a tool file that names no consumer, and one that names a check. */
+/** One tool, a tool file that names no tool or check, and one that names a check. */
 export const SINGLE_TOOL_FILES = `
 [[tool]]
 name = "semgrep"

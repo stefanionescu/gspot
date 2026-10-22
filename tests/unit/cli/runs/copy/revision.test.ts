@@ -16,7 +16,7 @@ import { listHeadEntries, listRevisionEntries } from '#cli/repository/revisions/
 import { chmod, mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 import { GIT_HOOK_CASES, GIT_HOOK_FIELDS, GIT_HOOK_REPORT, GIT_HOOK_SCRIPT } from '#tests/data/runs/copy/revision.ts';
 
-// Run the hook with the real module entry points and the inherited Git environment.
+/** Run the hook with the real module entry points and the inherited Git environment. */
 function runGitHook(worktree: string, index: string, folder: string, report: string): ProcessOutput {
     const revision = pathToFileURL(Bun.resolveSync('#cli/runs/copy/revision.ts', import.meta.dir)).href;
     const owner = pathToFileURL(Bun.resolveSync('#cli/system/git.ts', import.meta.dir)).href;

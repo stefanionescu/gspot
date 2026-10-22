@@ -53,7 +53,7 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
                     id,
                     ...COMMAND_CHECK_DEFAULTS,
                     summary: entry.summary ?? `Runs the repository's own check ${id}.`,
-                    why: 'The repository declared this command in gspot.toml as part of its gate.',
+                    why: 'This repository runs this command as one of its checks.',
                     help: entry.help ?? 'Read the command output; this repository declares the check.',
                     files: { ...structuredClone(COMMAND_CHECK_DEFAULTS.files), paths },
                 },
@@ -63,11 +63,12 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
 }
 
 /**
- * Build the settings values from the parsed document.
+ * Normalize the validated document: fill the table defaults, key the scopes by path, and turn each [[command_check]]
+ * into a check.
  *
  * @param parsed the validated document.
- * @param written the raw authored table.
- * @returns normalized tables that keep the defaults and the authored scope values.
+ * @param written the table as written in gspot.toml.
+ * @returns normalized tables that keep the defaults and the scope values as written.
  */
 export function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
     const { command_check: commandChecks, ...document } = parsed;

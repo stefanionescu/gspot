@@ -1,4 +1,3 @@
-// Defines coded errors for command failures.
 import type { z } from 'zod';
 import type { ErrorCode } from '#cli/types/system/errors.ts';
 

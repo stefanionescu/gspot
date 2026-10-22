@@ -26,10 +26,10 @@ export function isReasonedValue(value: unknown): value is ReasonedValue<unknown>
 }
 
 /**
- * Parse written settings, and keep TOML date kinds and source locations.
+ * Parse written settings or a template, keep TOML date types, and name the file, line, and column of a syntax error.
  *
  * @param text the written TOML.
- * @param path the source file.
+ * @param path the source file or URL.
  * @returns the parsed table, without defaults.
  */
 export function parseTomlText(text: string, path: string): TomlTable {
@@ -45,10 +45,10 @@ export function parseTomlText(text: string, path: string): TomlTable {
 }
 
 /**
- * Read settings text through the repository file boundary.
+ * Read gspot.toml without following a link out of the repository.
  *
  * @param repositoryRoot the folder that contains gspot.toml.
- * @returns the UTF-8 text and captured file identity.
+ * @returns the text, and the bytes and mode as read, which writeSettings compares before it writes.
  */
 export function readSettingsFile(repositoryRoot: string): SettingsFileContents {
     using files = openFiles(repositoryRoot);

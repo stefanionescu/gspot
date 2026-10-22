@@ -26,7 +26,7 @@ test('apply starts no npm, and install reports a failed npm version lookup in te
     expect(human.code, human.stdout + human.stderr).toBe(2);
     expect(human.stdout).toBe('');
     expect(human.stderr).toBe(
-        'Cannot determine the npm version for the tool project.\nTool installation is incomplete. Run: gspot install\n',
+        'Cannot determine the npm version for the tool project.\nTool installation is incomplete. Run gspot install.\n',
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const structured = await runGspot(sandbox.path, ['install', '--json']);
@@ -35,7 +35,7 @@ test('apply starts no npm, and install reports a failed npm version lookup in te
     expect(JSON.parse(structured.stdout)).toStrictEqual({
         error: 'install',
         message:
-            'Cannot determine the npm version for the tool project.\nTool installation is incomplete. Run: gspot install',
+            'Cannot determine the npm version for the tool project.\nTool installation is incomplete. Run gspot install.',
     });
     expect(boundary).toHaveBeenCalledWith(['npm', '--version'], expect.objectContaining({ cwd: sandbox.path }));
     expect(await readTree(sandbox.path)).toStrictEqual(before);

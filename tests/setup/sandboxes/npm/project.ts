@@ -60,7 +60,7 @@ async function writeNpmProject(options: {
     return { rootPackage, yarnConfiguration };
 }
 
-/** Creates an authenticated registry and an authored project for a package manager. */
+/** Create an authenticated registry and an authored project for a package manager. */
 export async function createNpmProject(
     packageManager: PackageManager['name'],
     projectPath: string,

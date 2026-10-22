@@ -21,7 +21,10 @@ export type ScriptFunction = {
 /** A mktemp assignment and the trap lines that remove its unchanged path. */
 export type TemporaryPath = { name: string; line: number; cleanupLines: number[] };
 
-/** Created paths remain visible even when reassignment prevents an exact cleanup binding. */
+/**
+ * Every mktemp path, the paths that a cleanup can name by their variable, and the variables that each function
+ * declares.
+ */
 export type ScriptTemporaryPaths = {
     paths: TemporaryPath[];
     variables: Map<string, TemporaryPath>;

@@ -80,11 +80,9 @@ test('doctor suggests moving authored Stylelint fields while excluding managed f
     expect(suggestions.unowned.filter((row) => ['package.json', 'app/package.json'].includes(row.path))).toStrictEqual(
         [],
     );
-    expect(
-        suggestions.unowned
-            .filter((row) => row.note.includes('stylelint'))
-            .map(({ path, command }) => ({ path, command })),
-    ).toStrictEqual([...STYLELINT_SUGGESTIONS]);
+    expect(suggestions.unowned.filter((row) => row.note.includes('stylelint'))).toStrictEqual([
+        ...STYLELINT_SUGGESTIONS,
+    ]);
 });
 test('doctor leaves the tool projects in .gspot out of detection, detects python from your pyproject.toml, and lists a submodule', async () => {
     await using sandbox = await testdir();

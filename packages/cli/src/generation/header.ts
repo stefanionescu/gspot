@@ -1,4 +1,4 @@
-// Formats the ownership notice for generated files.
+// Formats the header of generated files.
 
 import { DOT_GSPOT } from '#cli/config/gspot-paths.ts';
 import { extractExtension } from '#cli/system/paths.ts';
@@ -18,17 +18,17 @@ function formatCommentBlock(lines: string[], mark: string): string {
 }
 
 /**
- * Format the generated-file notice for a file outside .gspot.
+ * Format the header of a generated file outside .gspot.
  *
  * @param path the generated file.
- * @param notes lines to add after the notice.
- * @returns the comment block with a final newline, or '' for JSON.
+ * @param notes lines to add after the header text.
+ * @returns the comment block with a final newline, or '' inside .gspot and for JSON.
  */
 export function formatHeader(path: string, notes: string[] = []): string {
     if (path.startsWith(`${DOT_GSPOT}/`)) return '';
     const extension = extractExtension(path);
-    const lines = [GENERATED_HEADER_TEXT, GENERATED_EDIT_LINE, ...(notes.length === 0 ? [] : ['', ...notes])];
     if (JSON_EXTENSIONS.has(extension)) return '';
+    const lines = [GENERATED_HEADER_TEXT, GENERATED_EDIT_LINE, ...(notes.length === 0 ? [] : ['', ...notes])];
     if (SLASH_COMMENT_EXTENSIONS.has(extension)) return formatCommentBlock(lines, '//');
     if (HTML_COMMENT_EXTENSIONS.has(extension)) {
         const indented = lines.map((line) => `  ${line}`).join('\n');

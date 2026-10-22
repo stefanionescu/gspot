@@ -39,12 +39,12 @@ why = "Sibling files with one prefix split a single concept by suffix, and a fol
 
 [[check]]
 example = "A `report.ts` beside a `report/` folder reports a clash. Rename one after its job, and update each reference."
-help = "Rename the file or the folder so their stems differ."
+help = "Rename the file or the folder so their names differ."
 level = "all"
 name = "file-folder-clashes"
 runs = "scope"
 stage = "commit"
-summary = "Finds a file and a folder with one stem in the same place, such as `turn.ts` beside `turn/`."
+summary = "Finds a file and a folder with the same name, apart from the extension, in the same place, such as `turn.ts` beside `turn/`."
 why = "An import of ./turn names both, and a reader cannot tell which one loads."
 
 [[check]]

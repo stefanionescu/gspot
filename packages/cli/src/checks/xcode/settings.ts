@@ -9,7 +9,7 @@ import { listSourcePaths } from '#cli/repository/covered-files.ts';
 import { PLIST_KEY, PLIST_SUFFIX, ENTITLEMENTS_SUFFIX, INSECURE_TRANSPORT_SETTING } from '#cli/config/checks/xcode.ts';
 
 /**
- * Reports each entitlement outside xcode.allowed_entitlements, which planning requires.
+ * Reports each entitlement that xcode.allowed_entitlements does not list.
  *
  * @param session the repository and its tools.
  * @param planned the scope files and allowed entitlements.

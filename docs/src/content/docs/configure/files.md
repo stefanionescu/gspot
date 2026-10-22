@@ -31,7 +31,9 @@ lib/upstream/** linguist-vendored
 
 ## Leave files out of every check
 
-Leave out the check to keep paths out of every check and every generated tool file:
+Mark generated and vendored files in `.gitattributes`: that states what each file holds, and GitHub reads it too. For your
+own files that a check misjudges, record an ignore with a reason. Leave out the check to keep paths out of every check
+and every generated tool file:
 
 ```shell
 gspot ignore --paths "vendor/**" --reason "Vendored releases of upstream packages."

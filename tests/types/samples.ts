@@ -40,7 +40,7 @@ export type SampleChanges = {
     executable?: readonly string[] | undefined;
 };
 
-/** The original bytes or link target restored after a test edit. */
+/** The original bytes, or the path a link points to, restored after a test edit. */
 export type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
 
 /** Exit codes and check results of the broken and corrected samples. */

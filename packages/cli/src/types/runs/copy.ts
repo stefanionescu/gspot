@@ -29,7 +29,7 @@ export type CopyPlan = {
     cancelSignal?: AbortSignal | undefined;
 };
 
-/** Exact source files and explicitly owned dependency trees. */
+/** The files and installed dependency trees that a copy needs. */
 export type CopyPaths = Omit<CopyPlan, 'target' | 'files'> & {
     paths: string[];
 };

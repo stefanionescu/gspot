@@ -14,7 +14,7 @@ export const LINKED_CONFIG_FOLDERS = [
     { link: '.config', target: '../outside', pattern: '.config/sub/tool.toml' },
 ] as const;
 
-/** Files for the glob include and exclude tests. */
+/** Hidden files and folders, a name in another case, and a file under node_modules, for glob matching. */
 export const GLOB_FILES = {
     'src/a.ts': '',
     'src/.leaf.ts': '',
@@ -24,7 +24,7 @@ export const GLOB_FILES = {
     'node_modules/.hidden/foreign.ts': '',
 } as const;
 
-/** Source and external settings for linked mise folder checks. */
+/** Files for the linked config folder glob test. */
 export const LINKED_CONFIG_FILES = {
     'project/source.ts': 'export {};\n',
     'outside/sub/tool.toml': 'setting = "external"\n',

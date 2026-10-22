@@ -23,7 +23,7 @@ const namingGroupSchema = z.strictObject({ terms: z.array(z.string()) } satisfie
     NamingDefaults['groups'][string]
 >);
 
-/** A path-specific naming override shared by settings, manifests, and shipped naming data. */
+/** A path-specific naming override that settings, manifests, and the shipped naming lists share. */
 export const namingOverrideSchema = z.strictObject({
     paths: z
         .array(z.string().min(1).meta({ pathRole: 'source' }))

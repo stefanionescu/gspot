@@ -114,12 +114,12 @@ function readEditorconfig(folder: string): PrettierOptions | null {
 }
 
 /**
- * Read JSON Prettier settings or EditorConfig sections, and run no authored code.
+ * Read JSON Prettier settings or the matching EditorConfig section, and run no code from the repository.
  *
  * @param file the path of the project package.json.
  * @param dependencies what the project package.json declares.
  * @param prettierFiles the Prettier settings that init found.
- * @returns the formatting options and overrides, or null when neither formatter has settings.
+ * @returns the three formatting options, or null when neither formatter has settings.
  */
 function readFormatOptions(
     file: string,
@@ -182,10 +182,10 @@ function readScopeFormat(
 /**
  * Read the formatting options for each scope that init sets up.
  *
- * @param draft the configurations.
+ * @param draft the configurations and the template.
  * @param repository the root and the tracked files.
  * @param configurations every configuration.
- * @returns the formatting tables.
+ * @returns the formatting tables, with the template values kept.
  */
 export function readFormatTables(
     draft: SettingsDraft,

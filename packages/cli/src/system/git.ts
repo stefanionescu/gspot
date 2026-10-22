@@ -67,7 +67,7 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
     return { folder, env };
 }
 
-// The metadata of the target decides whether inherited repository-local variables stay valid.
+// The Git folder of the repository that Git runs in decides whether inherited repository-local variables stay valid.
 function readFolderGitEnvironment(root: string, source: GitRepository, environment: GitVariableGroups): GitEnvironment {
     const { isolated, overrides, explicit } = environment;
     const target = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_FOLDER_ARGUMENTS], {
@@ -83,8 +83,8 @@ function readFolderGitEnvironment(root: string, source: GitRepository, environme
 }
 
 /**
- * Build the environment for one Git command. Git names the local variables and worktree metadata;
- * the caller overrides apply last.
+ * Build the environment for one Git command. Git lists the repository-local variables and the worktree settings; the
+ * caller overrides apply last.
  *
  * @param workingFolder the repository folder.
  * @param commandArguments everything after `git`, literally.
@@ -155,7 +155,7 @@ export function runGitBlocking(
 }
 
 /**
- * Run Git with cancellation.
+ * Run one Git command and wait for it; the cancel signal in the options stops it.
  *
  * @param workingFolder where Git runs.
  * @param commandArguments the arguments after git.
@@ -252,7 +252,7 @@ export function readHooksFolder(workingFolder: string): string {
 }
 
 /**
- * Read what a Git command prints, or the selection error that it failed with.
+ * Read what a Git command prints, and throw a GspotError when it fails.
  *
  * @param workingFolder the repository root.
  * @param commandArguments the arguments after git.
@@ -312,7 +312,7 @@ export async function readGitPaths(
  *
  * @param workingFolder the folder to test.
  * @returns whether Git confirms a work tree.
- * @throws when Git cannot establish the repository state.
+ * @throws when Git cannot tell whether the folder holds a repository.
  */
 export function isGitRepository(workingFolder: string): boolean {
     const inspection = runGitBlocking(workingFolder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
@@ -320,6 +320,6 @@ export function isGitRepository(workingFolder: string): boolean {
     if (inspection.code === NOT_REPOSITORY_CODE && inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE)) return false;
     throw new GspotError(
         'git',
-        `Git ${GIT_WORK_TREE_ARGUMENTS[0]} failed in ${workingFolder} (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
+        `Git could not tell whether ${workingFolder} is a work tree (exit ${String(inspection.code)}): ${inspection.stderr.trim()}`,
     );
 }

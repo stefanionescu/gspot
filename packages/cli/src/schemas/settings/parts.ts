@@ -99,7 +99,7 @@ export const namingCategorySchema = z.strictObject({
 
 namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
 
-/** The calendar form of CLI date arguments and of the editor JSON. */
+/** The calendar form of date arguments on the command line and in the editor JSON schema. */
 export const calendarDateSchema = z.iso.date();
 
 /** Runtime expiry values keep unquoted TOML local dates. */
@@ -154,7 +154,7 @@ export const formatSchema = formatFields.extend({
  *
  * @param schema the value validator.
  * @param facts the description of the setting and the change that needs a reason.
- * @returns the setting schema with its default and metadata.
+ * @returns the setting schema with its default and facts.
  */
 export function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
@@ -167,11 +167,11 @@ export function allowReasonedValue<Output, Input>(
 }
 
 /**
- * Read one value with its required reason.
+ * Build the schema of a reasoned value, { value, reason }, that returns the value alone.
  *
  * @param schema the validator of the value.
  * @param facts the description of the setting and the change that needs a reason.
- * @returns the value read from its strict reasoned value.
+ * @returns a schema that accepts the value alone or with its reason.
  */
 function buildReasonedValueSchema<Output, Input>(
     schema: z.ZodType<Output, Input>,

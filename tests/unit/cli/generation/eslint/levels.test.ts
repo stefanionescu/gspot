@@ -16,6 +16,8 @@ import {
     COALESCING_SOURCE,
     LEVEL_RULE_OPTIONS,
     COALESCING_CORRECTED,
+    UNAPPLIED_RULE_OPTIONS,
+    UNAPPLIED_RULE_REFUSALS,
     DOCUMENTED_PRICE_SOURCE,
     CONFIGURATION_RULE_OPTIONS,
 } from '#tests/data/generation/eslint/levels.ts';
@@ -84,17 +86,15 @@ test('all applies your rule options except in script and test files', async () =
     expect(source.rules['gspot/no-trivial-functions']).toStrictEqual([2, { trivialFunctionStatements: 4 }]);
 });
 
-test('recommended refuses options for rules that only level all runs', async () => {
+test('recommended refuses options for a rule of level all, a rule that runs at no level, and a rule of no loaded plugin', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'recommended', tables: LEVEL_RULE_OPTIONS }),
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'recommended', tables: UNAPPLIED_RULE_OPTIONS }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
     });
     const refused = await runGspot(sandbox.path, ['apply']);
     expect(refused.code).toBe(2);
-    expect(refused.stdout + refused.stderr).toContain(
-        'n/no-process-exit does not run at level recommended; gspot sets options only for rules it runs. Use tools.eslint.plugins for your own rules.',
-    );
+    expect(refused.stderr).toBe(`${UNAPPLIED_RULE_REFUSALS.join('\n')}\n`);
 });
 
 test.each([...LEVELS])(

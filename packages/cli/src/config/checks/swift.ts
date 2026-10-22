@@ -19,7 +19,7 @@ export const PACKAGE_COMMANDS = {
     coverage: ['test', '--enable-code-coverage'],
 } as const;
 
-/** Xcode operations for each independent Swift consumer. */
+/** The xcodebuild actions for each build purpose. */
 export const XCODE_COMMANDS = {
     compile: ['build-for-testing'],
     analyze: ['clean', 'build-for-testing'],
@@ -32,7 +32,7 @@ export const MACOS_PRIVATE_REPLACEMENT = '$<before>/$<folder>/';
 
 export const BUILD_LEVELS: ReadonlySet<string> = new Set(['error']);
 
-/** The tool file names that the Swift build checks pass to SwiftLint and Periphery. */
+/** The tool file name that the Swift build checks pass to SwiftLint. */
 export const SWIFTLINT_TOOL_FILE = 'swiftlint';
 
 export const SWIFTLINT_ANALYZE_COMMAND = ['swiftlint', 'analyze', '--strict', '--quiet'] as const;
@@ -43,6 +43,7 @@ export const COMPILER_LOG_FLAG = '--compiler-log-path';
 
 export const REPORTED_LEVELS: ReadonlySet<string> = new Set(['error', 'warning']);
 
+/** The tool file name that the Swift build checks pass to Periphery. */
 export const PERIPHERY_TOOL_FILE = 'periphery';
 
 export const PERIPHERY_COMMAND = [

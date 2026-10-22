@@ -9,7 +9,7 @@ export const TOOLS = [
     { name: 'Knip', icon: '/tools/knip.svg' },
     { name: 'Trivy', icon: '/tools/trivy.svg' },
 ] as const;
-/** The six tiles of "What gspot does": one use case each, with the stroke paths of its icon. */
+/** The tiles of "What gspot does": one use case each, with the stroke paths of its icon. */
 export const USE_CASES = [
     {
         title: 'Blocks bad code',
@@ -28,7 +28,7 @@ export const USE_CASES = [
     },
     {
         title: 'Checks the packages you install',
-        text: 'gspot warns you about packages with known security holes or a license you do not allow, and checks that brand-new releases wait a few days before they install.',
+        text: 'gspot warns you about packages with known security holes or a license you do not allow.',
         icon: ['M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z', 'M4 7.5l8 4.5 8-4.5', 'M12 12v9'],
     },
     {

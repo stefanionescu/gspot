@@ -20,7 +20,7 @@ export const LOCATED_CHECK = {
     output: { format: 'regex', pattern: '^(?<file>[^:]+): (?<message>.*)$' },
 } as const;
 
-/** A command check for repository and revision tests. */
+/** A command check that runs `bash -n` on each shell script at the commit stage. */
 export const BASH_SYNTAX_CHECK = String.raw`[[command_check]]
 id = "project/bash-syntax"
 command = ["bash", "-n", "{file}"]
@@ -29,7 +29,7 @@ stage = "commit"
 output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
 `;
 
-/** A local SQL check program for the file selection and fix tests. */
+/** A Node program that reports each SQL file that holds `CREATE FUNCTION`. */
 const SQL_CHECK_SCRIPT = `const fs = require('node:fs'); for (const path of process.argv.slice(1)) { if (fs.readFileSync(path, 'utf8').includes('CREATE FUNCTION')) { console.log(path + ':1: Replace the sample function.'); process.exitCode = 1; } }`;
 export const SQL_COMMAND_CHECK_TABLES = `[[command_check]]
 id = "project/read-sql"
@@ -56,7 +56,7 @@ export const PENDING_NOTE_RESULTS = [
         findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
     },
 ] as const;
-// Prints each line of the listed files that holds PENDING as file:line:text, the way grep -n -H does.
+/** Prints each line of the listed files that holds PENDING as file:line:text, the way grep -n -H does. */
 export const PENDING_NOTES_SCRIPT = String.raw`let found = false;
 for (const file of process.argv.slice(1)) {
     for (const [index, line] of (await Bun.file(file).text()).split('\n').entries())

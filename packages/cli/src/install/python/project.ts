@@ -39,14 +39,15 @@ import {
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/install/python.ts';
 
-// A temporary lockfile must not publish credentials supplied through repository index settings.
+// Read the uv lockfile of the temporary project, and refuse it when it holds an index credential or does not match the
+// tool project.
 function readPythonLockfile(runFolder: string, credentials: string[], project: ToolPyproject): string {
     const lockfile = readFileSync(join(runFolder, PROJECT_UV_LOCKFILE), 'utf8');
     assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
     if (!isPythonLockfileCurrent(project, lockfile))
         throw new GspotError(
             'install',
-            'The uv lockfile does not match the tool project. Existing files were preserved.',
+            'The uv lockfile does not match the tool project. gspot kept the existing files.',
         );
     return lockfile;
 }
@@ -81,7 +82,7 @@ async function runUv(
     if (result.code !== 0)
         throw new GspotError(
             'install',
-            `UV ${String(commandArguments[0])} failed (exit ${String(result.code)}). Check Python downloads and index settings, then run: gspot install.\n${redactInstallOutput(result, credentials)}`,
+            `uv ${String(commandArguments[0])} failed (exit ${String(result.code)}).\n${redactInstallOutput(result, credentials)}`,
         );
     return result;
 }
@@ -195,8 +196,7 @@ export async function installPythonTools(install: ToolInstall, executable: strin
  *
  * @param project the parsed tool project file.
  * @param lockfile the recorded uv.lock contents.
- *
- * @returns whether both validated inputs describe the same requirements.
+ * @returns whether the two files describe the same requirements.
  */
 export function isPythonLockfileCurrent(project: ToolPyproject, lockfile: string | undefined): lockfile is string {
     if (lockfile === undefined) return false;

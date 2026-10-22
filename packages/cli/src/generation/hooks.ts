@@ -16,9 +16,10 @@ import {
     COMMIT_MESSAGE_PATH_LINES,
 } from '#cli/config/generation/hooks.ts';
 
-// The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there
-// becomes absolute first, in the Windows spelling under Git for Windows. In a repository that uses Git Large File Storage (LFS), the hook
-// runs git lfs first, and the pre-push hook saves its input so that both commands read it.
+// The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there becomes
+// absolute first, in the Windows spelling under Git for Windows. In a repository that uses
+// Git Large File Storage (LFS), the hook runs git lfs first, and the pre-push hook saves its input so that both
+// commands read it.
 function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { usesLfs: boolean }): string {
     const program = runner.name;
     const { missing, installCommand } = runner;
@@ -59,8 +60,7 @@ export function listHookNames(checks: PlannedCheck[]): HookName[] {
  * @param runner the command that starts gspot.
  * @param hooks the hooks to write.
  * @param hooks.names the hooks that run a configured check.
- * @param hooks.usesLfs whether the tracked files use Git LFS, which needs its four hooks.
- *
+ * @param hooks.usesLfs whether the tracked files use Git Large File Storage, which needs every hook in LFS_HOOKS.
  * @returns the hook scripts.
  */
 export function buildHookFiles(

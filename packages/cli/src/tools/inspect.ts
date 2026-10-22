@@ -19,15 +19,14 @@ import { readToolProjectPackage, findInstalledDependency } from '#cli/repository
 /**
  * Build the install command for managed tools, or the install advice for a system tool.
  *
- * @param tool the pin.
- *
+ * @param tool the tool to install.
  * @returns the next install step.
  */
 function buildInstallHelp(tool: Tool): string {
     const toolProjectPackage = findToolProjectPackage(tool);
     if (toolProjectPackage !== undefined || tool.system !== true) {
         if (toolProjectPackage !== undefined || which.sync(MISE_TOOL, { nothrow: true }) !== null)
-            return 'Run: gspot install';
+            return 'Run gspot install.';
         return `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`;
     }
     return tool.install_help ?? `Install ${tool.name}.`;
@@ -52,7 +51,7 @@ function inspectLibraryCommand(inspected: InspectedTool, command: string[]): Too
         : inspectExecutablePath({ ...inspected, tool: { ...tool, version_command: commandArguments } }, path);
 }
 
-// Read library versions from the tool project installation used by generated tool files.
+// Read library versions from the tool project installation that generated tool files use.
 function inspectLibrary(inspected: InspectedTool): ToolInspection {
     const { root, cwd, tool } = inspected;
     if (tool.system === true && tool.version_command !== undefined)
@@ -98,7 +97,7 @@ function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInsp
     };
 }
 
-// Project compilers keep their ownership; a declared tool-project package supplies the compiler when absent.
+// A system tool from the project runs first; the tool project supplies it when the project has none.
 function inspectProjectExecutable(inspected: InspectedTool): ToolInspection | undefined {
     const { root, cwd, tool, timeoutSeconds } = inspected;
     if (tool.system !== true) return undefined;
@@ -140,9 +139,8 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
 /**
  * Explain why the required tool cannot run.
  *
- * @param tool the declaration to explain.
+ * @param tool the tool to explain.
  * @param inspection the observed installation.
- *
  * @returns the install note, with the next step.
  */
 export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): string {
@@ -157,8 +155,7 @@ export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): s
  * Inspect one tool, and reuse an inspection from earlier in this run.
  *
  * @param search where to search, with the run cache.
- * @param tool the pin.
- *
+ * @param tool the tool to inspect.
  * @returns the tool path, version, and availability.
  */
 export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
@@ -185,14 +182,13 @@ export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
 /**
  * Resolve a usable executable, or a failure with the next step.
  *
- * @param tool the declaration and its pin.
+ * @param tool the tool and its pin.
  * @param inspection the resolved path, version, and install command.
- *
  * @returns the executable path, or the unavailable status and its message.
  */
 export function buildToolAvailability(tool: Tool, inspection: ToolInspection): ToolAvailability {
     if (AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined) return { path: inspection.path };
     if (inspection.state === 'error')
-        return { status: 'error', note: inspection.note ?? `${tool.name} version inspection failed.` };
+        return { status: 'error', note: inspection.note ?? `gspot could not read the version of ${tool.name}.` };
     return { status: 'missing', note: formatUnavailableNote(tool, inspection) };
 }

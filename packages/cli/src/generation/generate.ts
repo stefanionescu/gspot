@@ -145,7 +145,8 @@ function assertDistinctPaths(generated: GenerationResult): void {
         assertWritablePath(file.path);
         const key = file.path.normalize('NFC').toLowerCase();
         const previous = paths.get(key);
-        if (previous !== undefined) throw new Error(`Generated destinations collide: ${previous} and ${file.path}`);
+        if (previous !== undefined)
+            throw new Error(`Two generated files have the same path: ${previous} and ${file.path}.`);
         paths.set(key, file.path);
     }
 }
@@ -183,7 +184,8 @@ export function generate(session: Session): GenerationResult {
             names: listHookNames(session.configuredChecks),
             usesLfs: session.repository.attributes.values().some((values) => values[FILTER_ATTRIBUTE] === LFS_FILTER),
         }),
-        // Only Yarn needs the version, which an undeclared package manager reads from the program.
+        // Only Yarn needs the package manager version; reading it can start the package manager when package.json
+        // declares no version.
         ...(packageManager === undefined
             ? []
             : buildNpmProject({

@@ -56,7 +56,7 @@ export type RevisionSource =
           changed?: string[];
       };
 
-/** The flags accepted by Commander before check validates their combination. */
+/** The flags that Commander parses, before check validates their combination. */
 export type CheckFlags = {
     json?: boolean;
     only?: string[];
@@ -68,5 +68,5 @@ export type CheckFlags = {
     verbose?: boolean;
 };
 
-/** A check report or the cancellation response printed before a run can finish. */
+/** A run report, a push report, or the answer that gspot prints when a run stops early. */
 export type CheckCommandJson = RunReport | PushReport | CanceledCommandJson;

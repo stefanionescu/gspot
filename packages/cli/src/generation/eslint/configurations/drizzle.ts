@@ -4,7 +4,7 @@ import { DRIZZLE_RULES, CONFIGURATION_PLUGINS } from '#cli/config/generation/esl
 /**
  * Require safe changes in Drizzle queries.
  *
- * @param scope the ESLint inputs of the scope.
+ * @param scope the planned ESLint file of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {

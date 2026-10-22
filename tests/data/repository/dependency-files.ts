@@ -1,4 +1,4 @@
-/** Each Python dependency file form: its input and the dependencies it gives. */
+/** Each Python dependency file form: its text and the dependencies it gives. */
 export const PYTHON_DEPENDENCY_CASES = [
     {
         name: 'PEP 621 table',

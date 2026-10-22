@@ -24,7 +24,7 @@ import {
  * Read expansions of the environment names that the environment readers declare.
  *
  * @param syntaxRoot the parsed Bash source.
- * @param readerVariables the variables declared by environment readers.
+ * @param readerVariables the variables that environment readers declare.
  * @returns the environment reads and their source positions.
  */
 export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
@@ -102,7 +102,7 @@ function getImportAlias(node: Node) {
     return { name: node.childForFieldName('alias')?.text, target: node.childForFieldName('name')?.text };
 }
 
-// Parameters declare names rather than the names used by their default expressions.
+// Parameters declare their own names, not the names that their default expressions use.
 function listDeclaredNames(node: Node): string[] {
     if (node.type === 'parameters')
         return node.namedChildren.flatMap((parameter) => {
@@ -133,7 +133,7 @@ function listEnvironmentImports(node: Node): EnvironmentScope {
     return entries;
 }
 
-// Calculate import identities and lexical declarations once for each source.
+// Map each scope of a file to the names it declares, and to what each import of os names, once for each file.
 function listPythonNames(root: Node): EnvironmentNames {
     const entries: EnvironmentNames = new Map();
     const nodes = [
@@ -158,7 +158,7 @@ function listPythonNames(root: Node): EnvironmentNames {
     return entries;
 }
 
-// Resolve lexical imports before applying the environment read rule.
+// Find what a name refers to: look for its declaration in each enclosing scope, from the innermost out.
 function findEnvironmentKind(node: Node, name: string, entries: EnvironmentNames): EnvironmentKind {
     for (
         let scope: Node | null = findDeclarationScope(node);
@@ -171,7 +171,7 @@ function findEnvironmentKind(node: Node, name: string, entries: EnvironmentNames
     return undefined;
 }
 
-// Reads name an object or call target, never the text inside a string.
+// Reads name an object or the function called, never the text inside a string.
 function findReceiver(node: Node): Node | null {
     if (node.type === 'attribute') return node.childForFieldName('object');
     if (node.type === 'call') {
@@ -181,7 +181,6 @@ function findReceiver(node: Node): Node | null {
     return node;
 }
 
-// Find Python os environment objects and calls.
 function isPythonEnvironmentRead(node: Node, entries: EnvironmentNames, environment: Set<number>): boolean {
     const receiver = findReceiver(node);
     if (receiver?.type !== 'identifier') return false;

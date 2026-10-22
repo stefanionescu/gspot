@@ -40,7 +40,7 @@ function listPathIdentifiers(planned: PlannedCheck): Identifier[] {
 }
 
 /**
- * Builds the identifier of a file name: the stem, or the whole base name for a SQL migration.
+ * Builds the identifier of a file name: the name without its extension, or the whole file name for a SQL migration.
  *
  * @param path the file, relative to the repository root.
  * @param language the configuration that covers the file.

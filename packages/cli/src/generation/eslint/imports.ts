@@ -28,11 +28,10 @@ import {
 } from '#cli/config/generation/eslint/imports.ts';
 
 /**
- * Build the relative-import lint rules for each project and path style.
+ * Build the n/file-extension-in-import blocks for each project and path style.
  *
  * @param scopes the projects and their import styles.
  * @param nodeFiles your own scripts that run on Node.js.
- *
  * @returns the lint rule and TypeScript extension settings for each project.
  */
 export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): EslintBlock[] {
@@ -78,11 +77,11 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
 }
 
 /**
- * Build one relative-import boundary rule from the project folders and aliases.
- * The root and nested rules share the boundary folders and the aliases of their project.
+ * Build one relative-import boundary rule from the project folders and aliases. The root and nested rules share the
+ * boundary folders and the aliases of their project.
  *
  * @param scopes the projects and their settings.
- * @param aliases the repository-relative alias targets.
+ * @param aliases the repository-relative alias paths.
  * @returns the relative-import rule setting with its folders and aliases.
  */
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {

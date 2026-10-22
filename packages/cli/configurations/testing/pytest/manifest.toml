@@ -18,7 +18,7 @@ reason = "The test runner finds a test by this prefix."
 install_help = "Run: python -m pip install pytest"
 min_version = "7.0.0"
 name = "pytest"
-suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "if TYPE_CHECKING:  # pragma: no cover # imports for type checkers only" }
+suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "if TYPE_CHECKING:  # pragma: no cover # reason: imports for type checkers only" }
 system = true
 version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 
@@ -41,12 +41,12 @@ cwd = "scope"
 example = "pytest-cov reports `FAIL Required test coverage of 90% not reached. Total coverage: 85%`. Add a Python test for the uncovered behavior."
 exit_codes = [1]
 files = { extensions = [".py"] }
-help = "Fix the failed test, or cover the lines the report marks. Lower `coverage.lines` only with a reason."
+help = "Fix each failed test, and add tests for the code that the report marks uncovered. Lower `coverage.lines` only with a reason."
 level = "recommended"
 name = "coverage"
 output = { format = "regex", pattern = "^(?<message>(?:FAIL Required test coverage|FAILED |ERROR ).*)$" }
 runs = "scope"
 stage = "push"
-summary = "Runs pytest with coverage, and fails on a broken test or a covered share under the minimum."
+summary = "Runs pytest with coverage, and fails on a failed test or when the covered lines fall under their minimum."
 tool = ["pytest", "pytest-cov"]
-why = "Coverage shows the Python branches and lines that no test runs, before a push."
+why = "A coverage minimum keeps new code from arriving untested."

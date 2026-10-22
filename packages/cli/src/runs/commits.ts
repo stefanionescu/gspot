@@ -29,10 +29,10 @@ export async function runOverPushedCommits(
 }
 
 /**
- * Reads the command of another check in the same shipped configuration.
+ * Get the command of another check in the same shipped configuration.
  *
  * @param planned the history check.
- * @param checkId the check ID of the other check, such as `jest/test`.
+ * @param checkId the ID of the check whose command to read.
  * @returns the executable and its arguments.
  */
 export function getSiblingCommand(planned: PlannedCheck, checkId: string): string[] {

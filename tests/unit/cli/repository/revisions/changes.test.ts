@@ -73,6 +73,5 @@ test('a new branch compares with the remote default without losing unpushed comm
     ]);
     const { reference, commits } = await readChangedPaths(sandbox.path, '');
     expect(reference).toBe('refs/remotes/origin/main');
-    // The comparison returns the commit identifier of the unpublished commit after the remote default.
     expect(commits).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
 });

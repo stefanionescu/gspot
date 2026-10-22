@@ -49,14 +49,13 @@ function serializePresetRules(
 }
 
 /**
- * Serialize the lint rule and file fields that the generation baseline keeps.
+ * Print one ESLint block: its other properties, its rules against the preset it spreads, and its files.
  *
  * @param block the ESLint rule fields.
  * @param options plugin and preset expressions and the selected rule level.
  * @param options.properties plugin, parser, and settings expressions with no rule fields.
  * @param options.preset the declared ESLint export to spread.
- * @param options.level the selected ESLint rule level.
- *
+ * @param options.level the gspot level, absent in configuration blocks so that gspot rules with level none stay on.
  * @returns a JavaScript configuration block.
  */
 export function serializeBlock(
@@ -130,11 +129,10 @@ function printConfiguration(literal: string): string {
 }
 
 /**
- * Serialize the expression that reads the preset export of the manifest.
+ * Serialize the expression that reads the preset export of the configuration.
  *
  * @param importName the import name of the preset package.
  * @param source the dotted path of the export, or empty for the whole import.
- *
  * @returns the expression that reads the preset.
  */
 export function serializePresetAccess(importName: string, source: string): string {
@@ -150,11 +148,10 @@ export function serializePresetAccess(importName: string, source: string): strin
 }
 
 /**
- * Serialize the fixed imports and the plugins before the fragment imports.
+ * Serialize the fixed imports and the plugins before the imports of the configuration blocks.
  *
  * @param plugins the import names and packages to load.
- * @param configurationPlugins additional imported bindings and packages.
- *
+ * @param configurationPlugins the extra import lines.
  * @returns the imports of the generated file.
  */
 export function serializeImports(plugins: EslintPlugins, configurationPlugins: EslintPlugins): string {

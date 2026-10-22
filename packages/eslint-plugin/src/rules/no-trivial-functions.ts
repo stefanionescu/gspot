@@ -7,10 +7,10 @@ import { trivialFunctionsOptionsSchema } from '../schemas/rules/no/trivial.ts';
 import { FUNCTION_SELECTOR, INLINE_VALUE_PARENTS, TRIVIAL_FUNCTION_STATEMENTS } from '../config/syntax.ts';
 
 /**
- * Check whether a function fills a slot that takes a callback: an argument, a return value, an array element,
- * a property, an assigned member, or JSX. Such a function has no name, so the rule leaves it out.
+ * Check whether a function fills a slot that takes a callback: an argument, a return value, an array element, a
+ * property, an assigned member, or JSX. Such a function has no name, so the rule leaves it out.
  *
- * @param node the function implementation
+ * @param node the function
  * @returns whether the slot needs an inline function
  */
 function isInlineValue(node: ImplementedFunction): boolean {
@@ -47,10 +47,10 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
         type: 'suggestion',
         docs: {
             example:
-                'The function `function one() { return 1; }` reports `trivial` at the default limit of two statements. Replace its calls with the value `1` and delete the function. An anonymous function written inline as an argument has no name, so the rule leaves it out. A function that must stay, such as a method that an interface requires, gets a suppression comment with its reason.',
+                'The function `function one() { return 1; }` reports `trivial`. Replace its calls with the value `1` and delete the function. An anonymous function written inline as an argument has no name, so the rule leaves it out. A function that must stay, such as a method that an interface requires, gets a suppression comment with its reason.',
             level: 'all',
             description:
-                'Reports each named function with two statements or fewer at the default limit: function declarations, functions assigned to a name, methods, accessors, and constructors, exported or not.\n\n- The count includes nested callbacks.\n- An anonymous function written inline as a value, such as a callback argument, has no name and is not reported.',
+                'Reports each named function at or under the `trivialFunctionStatements` limit: function declarations, functions assigned to a name, methods, accessors, and constructors, exported or not.\n\n- The count includes nested callbacks.\n- An anonymous function written inline as a value, such as a callback argument, has no name and is not reported.',
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline the function at its call sites and delete it.',
         },

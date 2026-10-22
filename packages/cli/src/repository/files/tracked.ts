@@ -22,8 +22,8 @@ import {
     GIT_UNTRACKED_FILES_ARGUMENTS,
 } from '#cli/config/repository/tracked.ts';
 
-// A link to a folder, or one that leaves the repository, stays out of the inventory, so checks cannot read past it. A dangling link remains
-// listed with no size.
+// A link to a folder, or one that leaves the repository, stays out of the inventory, so checks cannot read past it. A
+// dangling link remains listed with no size.
 function readSymlinkFile(root: string, path: string): ListedFile | undefined {
     const link = { path, size: 0, executable: false, symlink: true };
     let target: string;
@@ -48,7 +48,7 @@ function readListedFile(
     if (stat === undefined) return undefined;
     if (stat.isSymbolicLink()) {
         if (INSTALLED_DEPENDENCY_FOLDERS.has(posix.basename(path))) return undefined;
-        // Inventory installed links without reading their dependency targets outside this root.
+        // Inventory installed links without reading the dependencies they point to outside this root.
         if (
             path
                 .split('/')
@@ -96,7 +96,7 @@ function walkPaths(root: string): string[] {
     return paths;
 }
 
-// Share Git listing failure classification while each caller owns its output format and non-Git behavior.
+// Run a Git listing and return its text, or throw with the Git error.
 async function listGitFiles(
     root: string,
     gitArguments: readonly string[],
@@ -105,7 +105,7 @@ async function listGitFiles(
     const listed = await runGitForBytes(root, gitArguments, { cancelSignal });
     if (listed.code === 0) {
         const text = decodeUtf8(listed.stdout);
-        if (text === undefined) throw new GspotError('git', 'Revision paths must be valid UTF-8.');
+        if (text === undefined) throw new GspotError('git', 'Git listed a path that is not valid UTF-8.');
         return text;
     }
     throw new GspotError(
@@ -139,12 +139,11 @@ export function listSubmodulePaths(entries: GitIndexEntry[]): string[] {
 }
 
 /**
- * List tracked and new files as sorted, root-relative paths.
- * Outside Git, walk files according to the ignore rules.
+ * List tracked and new files as sorted, root-relative paths. Outside Git, walk files according to the ignore rules.
  *
  * @param repositoryRoot the folder where Git runs.
  * @param index the parsed staging area entries.
- * @param options the repository state.
+ * @param options what the walk knows about the repository.
  * @param options.hasGit whether the folder belongs to a Git repository.
  * @returns the entries with size, executable bit, and symlink flag.
  */

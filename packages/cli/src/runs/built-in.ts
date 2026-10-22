@@ -4,10 +4,11 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding, CheckResult, BuiltInCheck, BuiltInCheckResult } from '#cli/types/runs/check.ts';
 
 /**
- * Build the check result, with its check ID and run time, from built-in findings.
+ * Build the check result, with its check ID and run time, from built-in findings. A finding without help gets the help
+ * of the check.
  *
  * @param planned the check that ran.
- * @param session the configured scopes.
+ * @param session the scope and check.
  * @param completion what the run returned.
  * @param completion.result the findings, and the covered files when known.
  * @param completion.started the monotonic start time.

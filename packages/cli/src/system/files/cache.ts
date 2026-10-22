@@ -3,11 +3,11 @@ import { realpathSync } from 'node:fs';
 import { type CacheKey, type ParseKey, type ReadCache, type CachedSourceFiles } from '#cli/types/system/files.ts';
 
 /**
- * Reuse one value produced by a stable key during this run.
+ * Return the value of a key for this run, and create it on the first call.
  *
  * @param reads the run cache.
- * @param key the producer whose identity and return type own the entry.
- * @returns the cached value, or the first result of the producer.
+ * @param key the key, whose function creates the value.
+ * @returns the value from the cache, or the value that the producer builds on the first read.
  */
 export function getCachedValue<Value extends object>(reads: ReadCache, key: CacheKey<Value>): Value {
     const held = reads.values.get(key);
@@ -43,7 +43,7 @@ export function getCachedMapValue<Key, Value>(
 /**
  * Create the cache of source bytes and derived values for one repository root.
  *
- * @param root the folder to canonicalize before caching source reads.
+ * @param root the repository folder; the cache keeps its real path.
  * @returns the run cache.
  */
 export function createReadCache(root: string): ReadCache {
@@ -55,7 +55,7 @@ export function createReadCache(root: string): ReadCache {
  *
  * @param sources the paths to parse and the run resources.
  * @param key the reader and its disposer.
- * @returns the parsed value for the lifetime of the input resources.
+ * @returns the parsed value for the lifetime of those resources.
  */
 export async function parseCached<Sources extends CachedSourceFiles, Value extends object>(
     sources: Sources,

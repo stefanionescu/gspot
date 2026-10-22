@@ -31,7 +31,7 @@ function readGuideTitles(store: DataStore): Map<string, string> {
 }
 
 /**
- * Assemble generated pages from one read of the CLI reference data.
+ * Assemble generated pages from one read of the CLI reference facts.
  *
  * @param guideTitles the authored guide titles keyed by slug.
  *
@@ -53,7 +53,7 @@ function buildReferencePages(guideTitles: Map<string, string>): Map<string, Refe
 }
 
 /**
- * Load the authored and generated pages into the Starlight content collection.
+ * Load the hand-written and generated pages into the Starlight content collection.
  *
  * @returns the Astro loader
  */

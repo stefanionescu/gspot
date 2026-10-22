@@ -7,8 +7,9 @@ import InlineText from '../../../../components/InlineText.astro';
 import { listPluginRules } from '../../../../reference/eslint-plugin.ts';
 import { PLUGIN_REQUIREMENTS } from '../../../../config/setup.ts';
 
-`@gspothq/eslint-plugin` adds lint rules for code that AI coding agents often write. They flag files and functions that
-only forward a call, exports that only rename a value, and imports through index files. They also flag comments mixed
+`@gspothq/eslint-plugin` holds ESLint rules for code that AI coding agents often write. They flag files that only
+forward to another module, functions of a few statements, exports that only rename a value, and imports through index
+files. They also flag comments mixed
 into import blocks and private environment variables read in client code.
 
 The [gspot CLI](https://www.npmjs.com/package/@gspothq/cli) sets this plugin up for you. Install it yourself only when
@@ -41,7 +42,7 @@ A finding looks like this:
 
 ```text
 src/orders.js
-  15:14  error  getOrderTotal only renames orderTotal. Export the source value under its own name  gspot/no-renamed-exports
+  15:14  error  getOrderTotal only renames orderTotal. Export the source value under its own name.  gspot/no-renamed-exports
 ```
 
 Turn on `gspot/require-server-only` for the files that hold server code:

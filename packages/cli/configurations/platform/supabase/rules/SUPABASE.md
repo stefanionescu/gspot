@@ -2,22 +2,18 @@
 
 Read this rule when you change Supabase migrations, storage, Edge Functions, or `config.toml`.
 
-Follow the Postgres rules too. Supabase uses the API roles `anon`, `authenticated`, and
-`service_role`.
+Read POSTGRES.md too. Supabase uses the API roles `anon`, `authenticated`, and `service_role`.
 
 ## Layout and migrations
 
 - Use the established Supabase layout for migrations, Edge Functions, storage assets, and tests.
-- A schema or contract change that affects another project updates that consumer deliberately.
 
 ## Database access
 
-- `[api].schemas` in `config.toml` lists the schemas the Data API exposes. Treat them as
-  externally reachable.
-- A table with row level security (RLS) on and no policy denies access to the API roles. Use that choice for tables
-  that clients must not read.
+- `[api].schemas` in `config.toml` lists the schemas the Data API exposes. Treat them as externally reachable.
+- A table with row-level security (RLS) on and no policy denies access to the API roles. Use that choice for tables that
+  clients must not read.
 - Roles Supabase creates for auth, cron, or storage stay scoped to the functions and schemas they need.
-- Name the Supabase roles in `TO`: `anon`, `authenticated`, or `service_role`.
 - A table can skip the foreign key to `auth.users` so its history survives account deletion.
 - Keep `[api].max_rows` conservative to bound accidental or malicious payloads.
 
@@ -32,41 +28,39 @@ Choose the Supabase connection mode for the workload.
 | Persistent server on an IPv4-only network     | Session pooler when the server cannot reach the direct endpoint       |
 | Migrations, dumps, or session-dependent tools | Direct connection; use a supported session alternative when necessary |
 
-A separate migration credential holds schema privileges. The application role holds only the privileges it needs at runtime.
-See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres).
+A separate migration credential holds schema privileges. The application role holds only the privileges it needs at
+runtime. See [connection modes](https://supabase.com/docs/guides/database/connecting-to-postgres).
 
-Set explicit connection, idle, and query timeouts. Budget connections across instances and
-workers. With Postgres.js through transaction pooling, set `prepare: false` and confirm the setting
-after a driver or pooler change.
+Set explicit connection, idle, and query timeouts. Budget connections across instances and workers. With Postgres.js
+through transaction pooling, set `prepare: false` and confirm the setting after a driver or pooler change.
 
-A direct database connection carries no Supabase identity. When an application passes identity into
-PostgreSQL, one server operation verifies the token's issuer, signature, audience, and expiry. It
-maps the identity to a fixed set of allowed roles, then opens a transaction on a restricted
-connection. Use parameterized transaction-local `set_config` for claims and fixed trusted SQL for
-the role. Every protected query uses that transaction. Commit or rollback ends its context.
+A direct database connection carries no Supabase identity. When an application passes identity into PostgreSQL, one
+server operation verifies the token's issuer, signature, audience, and expiry. It maps the identity to a fixed set of
+allowed roles, then opens a transaction on a restricted connection. Use parameterized transaction-local `set_config` for
+claims and fixed trusted SQL for the role. Every protected query uses that transaction. Commit or rollback ends its
+context.
 
-When Drizzle generates migrations that the Supabase CLI applies, keep the CLI migration format
-and one authoritative applied-history ledger. Declare provider-managed schemas and roles as
-existing. Check replay with the project migration tool. See
-[migration history](https://supabase.com/docs/guides/local-development/database-migrations) and
+When Drizzle generates migrations that the Supabase CLI applies, keep the CLI migration format and one authoritative
+applied-history ledger. Declare provider-managed schemas and roles as existing. Check replay with the project migration
+tool. See [migration history](https://supabase.com/docs/guides/local-development/database-migrations) and
 [verified claims](https://supabase.com/docs/reference/javascript/auth-getclaims).
 
 ## Storage
 
-- Define buckets in migrations and mirror them in `config.toml`. A change to `public`,
-  `file_size_limit`, or `allowed_mime_types` updates both at once.
+- Define buckets in migrations and mirror them in `config.toml`. A change to `public`, `file_size_limit`, or
+  `allowed_mime_types` updates both at once.
 - Bucket restrictions enforce file size and MIME type, not only application validation.
-- RLS policies on `storage.objects` and `storage.buckets` control access. The service controls metadata in the `storage` schema: migrations add only policies, indexes for RLS or validation, triggers,
-  and bucket configuration. Object rows change only through the Storage API.
+- RLS policies on `storage.objects` and `storage.buckets` control access. The service controls metadata in the `storage`
+  schema: migrations add only policies, indexes for RLS or validation, triggers, and bucket configuration. Object rows
+  change only through the Storage API.
 - Validate user-controlled key segments and limit their length before use.
-- Do not embed secrets, provider tokens, raw user text, or private identifiers in
-  object keys.
+- Do not embed secrets, provider tokens, raw user text, or private identifiers in object keys.
 
 ### Storage names
 
 <!-- level: all -->
 
-- Storage buckets use `lower_snake_case`.
+- Storage buckets use `snake_case`.
 - Use stable, explicit storage object keys.
 - Do not use display text as storage identity.
 
@@ -78,44 +72,41 @@ existing. Check replay with the project migration tool. See
 
 ## Edge functions
 
-- Each deployable function lives under `functions/<function-name>/` in the CLI functions root,
-  with a `[functions.<name>]` table whose `entrypoint` path starts from the folder of `config.toml`.
-  Shared code lives in `functions/_shared/`, which Supabase never deploys.
-- Name a function folder in kebab-case for its callable operation, not its technology:
-  `submit-order`, never `SubmitOrder` or `provider_handler`. The folder, the `config.toml` table, and
-  the deployed name match.
+- Each deployable function lives under `functions/<function-name>/` in the CLI functions root, with a
+  `[functions.<name>]` table whose `entrypoint` path starts from the folder of `config.toml`. Shared code lives in
+  `functions/_shared/`, which Supabase never deploys.
+- Name a function folder in kebab-case for its callable operation, not its technology: `submit-order`, never
+  `SubmitOrder` or `provider_handler`. The folder, the `config.toml` table, and the deployed name match.
 - Edge Functions run on Deno; read DENO.md too.
-- Keep `verify_jwt = true` for user-authenticated functions. Set it to `false` only when the function
-  exposes nothing but public, harmless behavior, verifies a provider webhook signature, checks a service secret, or takes
-  a Vault secret from cron.
+- Keep `verify_jwt = true` for user-authenticated functions. Set it to `false` only when the function exposes nothing
+  but public, harmless behavior, verifies a provider webhook signature, checks a service secret, or takes a Vault secret
+  from cron.
 - A publishable or secret API key differs from a user JSON Web Token (JWT). Never send that key as
-  `Authorization: Bearer <key>`. Forward the caller's `Authorization` header to the Supabase
-  client, so RLS runs as the user.
-- A service-role client serves only admin operations that cannot run as a user, on a path that
-  code and tests make explicit.
-- Keep handlers small: parsing, validation, responses, provider calls, and database operations move
-  into local modules as complexity grows. JSON responses, `OPTIONS`, and Cross-Origin Resource Sharing (CORS) go through one helper
-  in `functions/_shared/`.
-- Functions have runtime, CPU, memory, bundle-size, and log-rate limits, so long CPU-heavy work
-  runs elsewhere. Raw Supabase errors that expose credentials stay out of logs.
-- When you write tests, cover function logic at the unit level. Integration tests against a local
-  database and function server cover the client, auth, RLS, and the invocation path.
+  `Authorization: Bearer <key>`. Forward the caller's `Authorization` header to the Supabase client, so RLS runs as the
+  user.
+- A service-role client serves only admin operations that cannot run as a user. Keep it on a path that code and tests make
+  explicit.
+- Keep handlers small: parsing, validation, responses, provider calls, and database operations move into local modules
+  as complexity grows. JSON responses, `OPTIONS`, and Cross-Origin Resource Sharing (CORS) go through one helper in
+  `functions/_shared/`.
+- Functions have runtime, CPU, memory, bundle-size, and log-rate limits, so long CPU-heavy work runs elsewhere. Raw
+  Supabase errors that expose credentials stay out of logs.
+- When you write tests, cover function logic at the unit level. Integration tests against a local database and function
+  server cover the client, auth, RLS, and the invocation path.
 
 ## Configuration and secrets
 
 `config.toml` defines the desired local and remote configuration.
 
-Ask the user before changing signup, anonymous sign-in, providers, hooks, JWT expiry, or password policy.
-Also ask before weakening auth settings, row-level security, grants, or `verify_jwt`.
-Proceed when the task already authorizes the change. When the user authorizes a commit, write the reason in it.
+Ask the user before changing signup, anonymous sign-in, providers, hooks, JWT expiry, or password policy. Also ask
+before weakening auth settings, row-level security, grants, or `verify_jwt`. Proceed when the task already authorizes
+the change. When the user authorizes a commit, write the reason in it.
 
-- Service keys, Edge secrets, Vault values, database URLs, and provider API keys stay backend-only.
-  They never appear in app code, checked-in files, logs, migration comments, tests, or test data.
-- Local secrets live in ignored env files or the caller's environment.
-- `pg_cron` and `pg_net` change only through migrations and deploy scripts. Cron reads its bearer
-  tokens from `vault.decrypted_secrets` at call time, never from its SQL.
-- A change to a cron target's auth updates the Vault secret, the function's check, and the cron
-  SQL together.
+- Service keys, Edge secrets, Vault values, database URLs, and provider API keys stay backend-only. They never appear in
+  app code, checked-in files, logs, migration comments, tests, or test data.
+- `pg_cron` and `pg_net` change only through migrations and deploy scripts. Cron reads its bearer tokens from
+  `vault.decrypted_secrets` at call time, never from its SQL.
+- A change to a cron target's auth updates the Vault secret, the function's check, and the cron SQL together.
 
 ## References
 

@@ -1,5 +1,5 @@
 [configuration]
-description = "Checks the license of each installed dependency against the allowed list. An allowed-package record with a reason accepts one package."
+description = "Installed dependencies: a license on the allowed list, or an allowed-package record with a reason for one package."
 title = "Licenses"
 
 [files]

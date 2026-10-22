@@ -49,7 +49,7 @@ test('deleteFolder refuses linked and outside parents and keeps folders that are
     using files = openFiles(root);
     expect(() => {
         files.deleteFolder('linked/kept');
-    }).toThrow(new Error('A parent of linked/kept is a link or is not a directory. Choose a directory without links.'));
+    }).toThrow(new Error('A parent of linked/kept is a link or is not a folder. Choose a folder without links.'));
     expect(
         captureThrow(() => {
             files.deleteFolder('../outside/kept');
@@ -80,9 +80,11 @@ test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(
         expect(root.read('config/input')).toStrictEqual(original);
         root.write('config/input', replacement, original);
         expect(root.read('config/input')).toStrictEqual(replacement);
-        expect(() => {
-            root.write('config/input', original, original);
-        }).toThrow(new Error('Destination changed during the operation: config/input'));
+        expect(
+            captureThrow(() => {
+                root.write('config/input', original, original);
+            }),
+        ).toBe('config/input changed while gspot wrote it. Run the command again.');
         expect(
             captureThrow(() => {
                 root.deleteFile('config/input', original);

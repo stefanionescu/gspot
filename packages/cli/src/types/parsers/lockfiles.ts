@@ -1,6 +1,6 @@
 import type { LOCKFILES, DEPENDENCY_SECTIONS } from '#cli/config/parsers/lockfiles.ts';
 
-/** One declared lockfile and its applicable consumers. */
+/** One lockfile that gspot knows: its configuration, its package manager, and how gspot tool projects use it. */
 export type Lockfile = (typeof LOCKFILES)[number];
 
 /** The lockfile an npm tool project records. */

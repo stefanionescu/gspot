@@ -58,7 +58,7 @@ function validateDocComment(
     if (!positions.every((position, index) => index === 0 || position > (positions[index - 1] ?? -1)))
         return {
             rule: 'section-order',
-            message: `The doc sections of ${entry.name} go Globals, Arguments, Outputs, Returns.`,
+            message: `Order the doc sections of ${entry.name} as Globals, Arguments, Outputs, Returns.`,
         };
     return undefined;
 }

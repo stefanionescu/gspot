@@ -33,11 +33,10 @@ function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
 }
 
 /**
- * List the state of each tool project lockfile. Nothing gets resolved or written.
+ * List the state of each tool project lockfile. It resolves and writes nothing.
  *
  * @param session the repository and its package manager.
  * @param generated the tool project files that apply writes.
- *
  * @returns each lockfile with its state: missing, mismatched, or current.
  */
 export function listStaleLockfiles(
@@ -71,7 +70,7 @@ export function listStaleLockfiles(
 }
 
 /**
- * Add the npm and Python lockfiles before the generated files get written.
+ * Add the npm and Python lockfiles before install writes the generated files.
  *
  * @param install what install needs for this step.
  * @param files the generated list to add to.

@@ -1,4 +1,4 @@
-/** Project functions and storage declarations derived from their external schema. */
+/** The storage buckets of `supabase/config.toml`. */
 export type SupabaseProjectFile = {
     storage?: { buckets?: Record<string, unknown> | undefined } | undefined;
 };

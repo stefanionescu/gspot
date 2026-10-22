@@ -20,7 +20,7 @@ import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/pac
 import { classifyFile, listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { findRootScope, selectForScope, buildScopeSettings } from '#cli/settings/scope-settings.ts';
 
-// Resolve every scope: its folder, configurations, known settings, and merged settings.
+// Resolve every scope: its configurations, known settings, and merged settings.
 async function buildScopes(
     settings: Settings,
     repository: Repository,
@@ -45,7 +45,8 @@ async function buildScopes(
     );
 }
 
-// Read the file declarations, and include settings that init has not written yet.
+// Read the generated and vendored paths that configurations declare, and add gspot.toml to the files when init has not
+// written it yet.
 /**
  * Read and classify the repository from the authored settings and scopes.
  *

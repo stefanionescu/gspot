@@ -53,7 +53,7 @@ name = "ruff"
 pypi = "ruff"
 replace = ["ruff.toml", ".ruff.toml"]
 rule_url = "https://docs.astral.sh/ruff/rules/{rule}/"
-suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)(?::(?<rules>[^#]*))?", reason = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)[^#]*# ?(?<reason>\\S.*)", example = "import plugins  # noqa: F401 # the module registers its plugins on import", separator = "#", all_rules = "^$", limit_rules = "(?:^|[\\s,])(?:C901|PLR0911|PLR0912|PLR0913|PLR0915)(?=$|[\\s,])" }
+suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)(?::(?<rules>[^#]*))?", reason = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)[^#]*# ?(?<reason>\\S.*)", example = "import plugins  # noqa: F401 # reason: the module registers its plugins on import", separator = "#", all_rules = "^$", limit_rules = "(?:^|[\\s,])(?:C901|PLR0911|PLR0912|PLR0913|PLR0915)(?=$|[\\s,])" }
 version = "0.16.8"
 
 [[tool.replace_key]]
@@ -65,7 +65,7 @@ min_version = "1.20.0"
 name = "basedpyright"
 npm = "basedpyright"
 replace = ["pyrightconfig.json"]
-suppression = { marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "value = payload['key']  # type: ignore[index] # the payload is checked above" }
+suppression = { marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "value = payload['key']  # type: ignore[index] # reason: the payload is checked above" }
 version = "1.40.1"
 
 [[tool.replace_key]]
@@ -333,7 +333,7 @@ example = "`eval(user_input)` reports S307. Parse the input instead, and allow o
 exit_codes = [1]
 files = { extensions = [".py", ".pyi"] }
 fix = ["ruff", "check", "--no-cache", "--fix", "--quiet", "{files}"]
-help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore python/ruff --rule <code> --reason \"<why>\"`, and add `--paths` to limit it."
+help = "Run `gspot check --fix` for the rules that fix themselves. Turn one rule off with `gspot ignore python/ruff --rule <rule> --reason \"<why>\"`, and add `--paths` to limit it."
 level = "recommended"
 name = "ruff"
 output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
@@ -396,7 +396,7 @@ cwd = "scope"
 env = { PYTHONDONTWRITEBYTECODE = "1" }
 example = "An import of a third-party package missing from the project dependencies reports a finding. Declare the package and update the lockfile, or remove the import."
 files = { extensions = [".py"], filenames = ["pyproject.toml"] }
-help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with `gspot ignore python/deptry --rule <code> --reason \"<why>\"`."
+help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with `gspot ignore python/deptry --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "deptry"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$" }
@@ -448,7 +448,7 @@ summary = "Checks that pyproject.toml lists every dependency, with no hand-kept 
 why = "Two dependency lists drift apart, and the image installs packages the lockfile never pinned."
 
 [[check]]
-example = "A docstring that only repeats the function name reports a placeholder. Describe the behavior, inputs, and effects that the name leaves out."
+example = "A docstring that only repeats the function name reports a placeholder. Describe the behavior, the arguments, and the effects that the name leaves out."
 files = { extensions = [".py"] }
 help = "Say what the function does that its name does not, or for whom it exists."
 level = "all"

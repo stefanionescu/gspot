@@ -18,7 +18,7 @@ function removeTableItems(scopeTable: TomlTable, key: string, items: string[]): 
 }
 
 /**
- * Run the unset command and return its output.
+ * Remove your value of a setting, or remove items from a list or table setting, and write the generated files.
  *
  * @param options the flags and the settings edit choices.
  * @returns the edit result and the generated file changes.
@@ -48,8 +48,8 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
 /**
  * Register the unset command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerUnset(program: Command, onResult: CommandCompletion): void {
     program

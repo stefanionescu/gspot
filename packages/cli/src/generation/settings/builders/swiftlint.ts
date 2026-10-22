@@ -16,9 +16,9 @@ function buildSeverityLimits(count: number) {
 }
 
 /**
- * Build the SwiftLint file from the settings.
+ * Build swiftlint.yml: the SwiftLint rules with the source limits of the repository.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the SwiftLint rules with the source limits of the repository.
  */
 export function buildSwiftlintFile(planned: PlannedToolFile): string {

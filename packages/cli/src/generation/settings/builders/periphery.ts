@@ -4,9 +4,9 @@ import type { PlannedToolFile } from '#cli/types/generation/files.ts';
 import { PERIPHERY_RETAIN } from '#cli/config/generation/settings/builders/periphery.ts';
 
 /**
- * Build the Periphery file from the settings.
+ * Build periphery.yml: the Xcode project, schemes, and retained Periphery declarations as YAML.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Xcode project, schemes, and retained Periphery declarations as YAML.
  */
 export function buildPeripheryFile(planned: PlannedToolFile): string {

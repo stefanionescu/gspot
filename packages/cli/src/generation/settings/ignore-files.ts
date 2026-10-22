@@ -32,8 +32,8 @@ function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
     });
 }
 
-// Include generated files and pointers outside .gspot. Keep inherited pointers because their final text determines
-// which scopes write them.
+// List every generated file and pointer outside .gspot that a declaration can write, including inherited pointers that
+// a scope skips, because the exact set depends on the built text.
 function listGeneratedPaths(session: Session): string[] {
     const paths = listOwnedToolFiles(session).flatMap(({ toolFile, owner }) => {
         const whole =
@@ -157,7 +157,7 @@ export function formatReasonLines(reason: string, indent: string): string[] {
 }
 
 /**
- * Write ignore sections for a tool that reads them from the root.
+ * Build the ignore sections for a tool that reads them from the root.
  *
  * @param sections the ordered exclusion groups and their reasons.
  * @returns the ignore file text.
@@ -226,9 +226,9 @@ export function listPythonIgnoredGlobs(planned: PlannedToolFile, check: string):
 }
 
 /**
- * Build the Prettier ignore file with the shared section order and the written reasons.
+ * Build .prettierignore: the ignored paths in the shared section order, with the written reasons.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the ignore file text.
  */
 export function buildPrettierignoreFile(planned: PlannedToolFile): string {

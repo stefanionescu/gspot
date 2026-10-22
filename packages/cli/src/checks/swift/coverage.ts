@@ -96,7 +96,7 @@ async function measureCoverage(session: Session, planned: PlannedCheck): Promise
 /**
  * Lists the targets under their coverage limit.
  *
- * @param report what xccov printed.
+ * @param report the line coverage of each target that xccov or swift test reports.
  * @param settings the line limit and per-target limits.
  * @returns one message per short or missing target.
  */

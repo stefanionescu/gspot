@@ -63,7 +63,8 @@ function buildCheckFacts(
     };
 }
 
-// Describe use in this repository: the command and paths of a [[command_check]] record, or whether the configuration runs here.
+// Describe use in this repository: the command and paths of a [[command_check]] record, or whether the configuration
+// runs here.
 function formatRepositoryUse(
     session: Session | undefined,
     declared: CommandCheck | undefined,
@@ -101,9 +102,9 @@ function formatCheckExplanation(
         ...(check.when?.setting === undefined ? [] : [`Required setting: ${check.when.setting}`]),
         ...Object.entries(minVersions).map(([name, version]) => `Needs ${name} ${version} or newer`),
         '',
-        `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --paths "<glob>" --reason "..."`,
+        `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --paths "<glob>" --reason "<why>"`,
         ...(check.command
-            ? [`Turn one of its rules off: gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "..."`]
+            ? [`Turn one of its rules off: gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "<why>"`]
             : []),
         ...(check.run_in_copy === true ? ['Runs on a copy of the selected files in a temporary folder.'] : []),
         ...(settings.length === 0
@@ -195,8 +196,8 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
         '',
         description,
         '',
-        `Turn it off everywhere: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --reason "..."`,
-        `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --paths "<glob>" --reason "..."`,
+        `Turn it off everywhere: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --reason "<why>"`,
+        `Turn it off for some paths: gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(identifier)} --paths "<glob>" --reason "<why>"`,
         ...optionLines,
     ];
     return {

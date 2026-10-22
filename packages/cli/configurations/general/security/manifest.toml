@@ -2,7 +2,7 @@ allowed_words = ["Semgrep", "CSRF"]
 
 [configuration]
 always_selected = true
-description = "Unsafe code patterns in every file that a language configuration covers."
+description = "Code in every language a configuration claims: unsafe patterns that Semgrep finds."
 title = "Security"
 
 [files]
@@ -22,19 +22,19 @@ version_command = ["--disable-version-check", "--version"]
 command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]
 example = "`eval(userInput)` matches a rule against dynamic evaluation and reports its ID and location. Parse the input instead, and allow only known operations."
 exit_codes = [1, 3]
-help = "Change the code the way the message says. Turn one rule off for a path with `gspot ignore security/semgrep --rule <id> --paths <glob> --reason \"<why>\"`."
+help = "Change the code the way the message says. Turn one rule off for a path with `gspot ignore security/semgrep --rule <rule> --paths <glob> --reason \"<why>\"`."
 level = "recommended"
 name = "semgrep"
 output = { format = "semgrep" }
 stage = "push"
-summary = "Runs the Semgrep packs of each configuration, and the repository rules, over changed files."
+summary = "Runs the Semgrep rules that each configuration ships, and the files in `tools.semgrep.rule_files`, over changed files."
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."
 
 [[check]]
 command = ["semgrep", "scan", "--strict", "{each:--config:tools.semgrep.registry_packs}", "--error", "--metrics", "off", "--disable-version-check", "--quiet", "--json", "{files}"]
 example = "Code that matches a registry rule reports its upstream ID. Fix the code at that location, then rerun with network access."
 exit_codes = [1, 3]
-help = "Change the code the way the message says, or turn the rule off for a path with `gspot ignore security/semgrep-registry --rule <id> --reason \"<why>\"`."
+help = "Change the code the way the message says, or turn the rule off for a path with `gspot ignore security/semgrep-registry --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "semgrep-registry"
 needs = ["network"]

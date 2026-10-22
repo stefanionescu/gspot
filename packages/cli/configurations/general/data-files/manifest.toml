@@ -2,7 +2,7 @@ allowed_words = ["JSON", "TOML", "YAML"]
 
 [configuration]
 always_selected = true
-description = "Data and settings files parse, match their schema, and use one layout."
+description = "Data and settings files: each file parses, matches its schema, and uses one layout."
 title = "Data files"
 
 [files]
@@ -10,7 +10,7 @@ extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".xml"]
 
 [[tool]]
 min_version = "0.9.0"
-# No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
+# The npm build of Taplo checks no file on Windows, so mise installs the native release on every platform.
 mise = "taplo"
 name = "taplo"
 replace = ["taplo.toml", ".taplo.toml"]
@@ -29,7 +29,6 @@ requires = ["ajv"]
 version = "6.1.0"
 
 # v8r imports this optional peer when it loads ajv-draft-04. Tool projects must install it.
-
 [[tool]]
 kind = "library"
 name = "ajv"

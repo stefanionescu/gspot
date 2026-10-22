@@ -15,7 +15,7 @@ paths = ["**/project.pbxproj", "**/*.xcscheme", "**/*.xctestplan", "**/*.xcasset
 [[tool]]
 builds = ["macos"]
 crash_pattern = "couldn['’]t be opened"
-install_help = "install Xcode from the App Store"
+install_help = "Install Xcode from the App Store."
 name = "plutil"
 system = true
 

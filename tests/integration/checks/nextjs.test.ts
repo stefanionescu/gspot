@@ -24,7 +24,7 @@ import {
     REFERENCED_PROJECT_FINDING,
 } from '#tests/data/checks/nextjs.ts';
 
-// Runs the named checks alone, expects the exit code, and returns the report.
+/** Run the named checks alone, check the exit code, and return the report. */
 async function readCheckReport(repository: Sandbox, checks: string[], code: number): Promise<RunReport> {
     const result = parseCheckReport(
         await spawnGspot(repository.root, ['check', '--only', checks.join(','), '--json'], repository.environment),

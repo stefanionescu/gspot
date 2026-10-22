@@ -91,7 +91,13 @@ export const SET_REFUSALS = [
     [
         'an invalid level',
         ['set', 'level', 'everything'],
-        'The value `everything` is not valid for level. Use recommended or all.',
+        'The value everything is not valid for level. Use recommended or all.',
+    ],
+    ['an ignore', ['set', 'ignore', 'bash/shellcheck'], 'Run gspot ignore <check> --reason "<why>" to add an ignore.'],
+    [
+        'another record list',
+        ['set', 'command_check', 'lint'],
+        'Write [[command_check]] by hand in gspot.toml. Record lists have their own fields.',
     ],
 ] as const;
 
@@ -130,11 +136,11 @@ export const NO_CHANGE_COMMANDS = [
 export const UNKNOWN_SETTING_KEYS = [
     {
         key: 'tools.eslint.extra',
-        message: 'No selected configuration has the setting `tools.eslint.extra`. No setting exists under that table.',
+        message: 'No selected configuration has the setting tools.eslint.extra. No setting exists under that table.',
     },
     {
         key: 'tools.v8r.extra',
         message:
-            'No selected configuration has the setting `tools.v8r.extra`. The settings that exist under that table are `schema`.',
+            'No selected configuration has the setting tools.v8r.extra. The settings that exist under that table are `schema`.',
     },
 ] as const;

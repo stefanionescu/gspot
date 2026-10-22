@@ -60,7 +60,9 @@ export const NPM_PACK_FLAGS = ['--ignore-scripts', '--json'] as const;
 export const UPSTREAM_REGISTRY = 'https://registry.npmjs.org/';
 export const GSPOT_PACKAGE_SCOPE = '@gspothq/';
 
-/** The publish time the local registry reports for packed packages outside gspot, older than any release hold. */
+/**
+ * The publish time the local registry reports for packed packages outside gspot, older than any minimum release age.
+ */
 export const PACKED_PUBLISH_TIME = '2025-01-01T00:00:00.000Z';
 
 export const SANDBOX_PACKAGE_JSON = {
@@ -88,7 +90,7 @@ export const VALE_PACKAGE_FILES = {
 `,
 };
 
-// The authored files every package project starts from.
+/** The authored files every package project starts from. */
 export const NPM_PROJECT_FILES = {
     'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
     'source.js': 'export const greeting="hello";',
@@ -112,7 +114,7 @@ export const NPM_PROJECT_ROOT_PACKAGE = {
 
 export const YARN_VERSION_THRESHOLD = 2;
 
-/** The authored files that every Python project starts from. */
+/** The authored files every Python sandbox starts from. */
 export const PYTHON_PROJECT_FILES = {
     'pyproject.toml': `[project]
 name = "authored"
@@ -123,7 +125,7 @@ dependencies = ["authored-dependency"]
     'source.py': 'import os\n',
 } as const;
 
-// The uv variables redirected to the sandbox.
+/** The uv variables that each Python sandbox points at its own folder. */
 export const UV_PROJECT_VARIABLES = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT_ENVIRONMENT'] as const;
 
 export const PYTHON_PROJECT_IGNORES = [
@@ -140,7 +142,7 @@ export const PYTHON_INDEX_NAME = 'gspot-test';
 
 export const LFS_ATTRIBUTES = '*.bin filter=lfs diff=lfs merge=lfs -text\n';
 
-/** A file outside the scope and a committed source in the nested scope. The file selection and push tests use them. */
+/** A file outside the nested settings folder and the committed source inside it. */
 export const NESTED_SCOPE_FILES = {
     'outside.txt': 'repository context',
     'nested settings/source.txt': 'committed',

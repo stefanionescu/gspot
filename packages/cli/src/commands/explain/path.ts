@@ -17,11 +17,11 @@ function formatUncheckedKind(file: TrackedFile): string | undefined {
 }
 
 /**
- * Explain one file.
+ * Find the scope, kind, configurations, checks, and ignores of one tracked file, and say why no check reads it.
  *
  * @param session the configurations, files, and ignores of this run.
  * @param file the tracked path to explain.
- * @returns the configurations, checks, and ignores for the file.
+ * @returns the report for the file.
  */
 function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
@@ -69,12 +69,6 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     return report;
 }
 
-/**
- * Format the file report as text.
- *
- * @param report the kind, checks, and ignores of the file.
- * @returns the text for stdout.
- */
 function formatPathExplanation(report: PathExplanation): string {
     const by = report.fileKindOrigin === undefined ? '' : ` by ${report.fileKindOrigin}`;
     const checks = report.checks.map(
@@ -89,10 +83,10 @@ function formatPathExplanation(report: PathExplanation): string {
         `${report.path}  (scope ${report.scope}, ${report.fileKind}${by})`,
         '',
         ...(report.unchecked === undefined ? [] : [report.unchecked]),
-        ...(report.configurations.length === 0 ? [] : [`checked by: ${report.configurations.join(', ')}`]),
-        ...(checks.length === 0 ? [] : ['checks:', ...checks]),
-        ...(ignores.length === 0 ? [] : ['ignores:', ...ignores]),
-        ...(report.remedy === undefined ? [] : ['', `to change this: ${report.remedy}`]),
+        ...(report.configurations.length === 0 ? [] : [`Checked by: ${report.configurations.join(', ')}`]),
+        ...(checks.length === 0 ? [] : ['Checks:', ...checks]),
+        ...(ignores.length === 0 ? [] : ['Ignores:', ...ignores]),
+        ...(report.remedy === undefined ? [] : ['', `To change this: ${report.remedy}`]),
     ];
     return `${lines.join('\n')}\n`;
 }

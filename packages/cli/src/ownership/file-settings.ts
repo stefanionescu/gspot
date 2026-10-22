@@ -26,7 +26,7 @@ function openSettingsDocument(path: string, current: FileContents | undefined): 
 }
 
 /**
- * Merge the requested keys and leave every other value in place.
+ * Plan the managed keys of a shared file: merge the requested keys, and leave every other value in place.
  *
  * @param writer the locked repository handle.
  * @param path the destination.
@@ -48,13 +48,14 @@ export function planSettingsWrite(writer: Writer, path: string, keys: ManagedKey
 }
 
 /**
- * Check that a shared file holds every requested setting.
+ * Check whether a file holds every managed key with its value. It reads the file with the parser that the write plans
+ * use.
  *
- * @param output the shared file and its requested settings.
+ * @param output the file gspot writes managed keys into.
  * @param output.path where the file sits.
  * @param output.keys the keys and the values they must hold.
  * @param current the file contents on disk.
- * @returns whether the file holds every installed value.
+ * @returns whether every key holds its value.
  */
 export function hasManagedKeys(output: ManagedKeys, current: FileContents): boolean {
     const document = openSettingsDocument(output.path, current);

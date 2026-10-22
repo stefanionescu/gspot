@@ -29,7 +29,7 @@ export function listFindingRows(report: RunReport): FindingRow[] {
 }
 
 /**
- * Runs gspot in this process over a folder with color off and CI set, capturing what it writes.
+ * Run gspot in this process over a folder with color off and CI set, and capture what it writes.
  *
  * @param cwd the sandbox.
  * @param commandArguments everything after gspot.

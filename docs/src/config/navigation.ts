@@ -1,4 +1,6 @@
-/** The sidebar: one link per page, named by the page title. Reference links each index page, not every check. */
+/**
+ * The sidebar: one link per page, with the page title as its text. Reference links each index page, not every check.
+ */
 export const SIDEBAR = [
     {
         label: 'Getting started',
@@ -29,6 +31,7 @@ export const SIDEBAR = [
         label: 'Configuration',
         collapsed: false,
         items: [
+            { slug: 'configure/customize' },
             { slug: 'configure/gspot-toml' },
             { slug: 'configure/files' },
             { slug: 'configure/lint-rules' },

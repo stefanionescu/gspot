@@ -39,7 +39,7 @@ export type PlannedScope = {
 /** The settings reason that turns a check off. */
 export type SettingsSkip = { cause: 'level' | 'ignore' | 'setting'; note: string };
 
-/** A declared tool ignore source and its ordered path matcher. */
+/** The file that a check passes with --ignore-path, and a matcher for the paths it ignores. */
 export type ToolIgnore = { file: string; matches: (path: string) => boolean };
 
 export type PlannedCheck = {
@@ -58,7 +58,10 @@ export type PlannedCheck = {
 
 export type StageFilter = Stage | 'all';
 
-/** An installed project and the license settings for its report. */
+/**
+ * A dependency file that the licenses check reads, with its scope, its allowed licenses, and the skip that the settings
+ * cause.
+ */
 export type LicenseProject = {
     dependencyFile: string;
     scope: Scope;

@@ -12,7 +12,7 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CI_SETTINGS, GITHUB_PIPELINE, GITLAB_PIPELINE } from '#tests/data/generation/ci.ts';
 
-/** Creates the CI jobs of one provider and their check settings, before the shared tool install. */
+/** Create the CI jobs of one provider and their check settings, before the shared tool install. */
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     runGitStep(root, ['init', '-q']);
     const pipelinePath = provider === 'gitlab' ? '.gitlab-ci.yml' : '.github/workflows/application.yml';
@@ -77,7 +77,7 @@ process.exit(child.exitCode);
     return failure;
 }
 
-/** Runs the generated CI script with the comparison and artifact variables that the provider documents. */
+/** Run the generated CI script with the comparison and artifact variables that the provider documents. */
 async function runCiJob(
     root: string,
     generated: CiDocument,
@@ -88,7 +88,7 @@ async function runCiJob(
         'gspot' in generated
             ? generated.gspot.script
             : generated.jobs['check-linux']!.steps.flatMap((step) => (step.run === undefined ? [] : [step.run]));
-    // An absolute program prepends its folder to the executable search path. Use bare bash to keep the test curl first.
+    // bash comes from `PATH`: an absolute path puts its folder before the fake mise.
     return await runCommand(['bash', '-e', '-c', script.join('\n')], {
         cwd: root,
         env: {
@@ -116,7 +116,8 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         expect(invalid.stdout).toContain('changed.sh');
         expect(invalid.stdout).not.toContain('legacy.sh');
         await writeFile(join(sandbox.path, 'changed.sh'), 'echo corrected\n');
-        // The fix commits changed.sh alone: a commit of the tool lockfiles that the job installed makes it check every file.
+        // The fix commits changed.sh alone: a commit of the tool lockfiles that the job installed makes it check every
+        // file.
         runGitStep(sandbox.path, ['add', 'changed.sh']);
         runGitStep(sandbox.path, ['commit', '-qm', 'correct syntax']);
         const valid = await runCiJob(sandbox.path, generated, executables.path, base);

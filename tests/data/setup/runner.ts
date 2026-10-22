@@ -1,4 +1,4 @@
-// One deadline bounds each test and its child processes.
+/** One deadline bounds each test and its child processes. */
 
 export const TEST_TIMEOUT_MILLISECONDS = 900_000;
 

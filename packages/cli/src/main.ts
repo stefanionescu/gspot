@@ -103,7 +103,7 @@ function formatExitCodes(rows: readonly (readonly [codes: string, meaning: strin
 /**
  * Build the help of gspot from its commands: their groups, arguments, and summaries, then the fixed footer.
  *
- * @param program the CLI with every command.
+ * @param program the gspot program with every command.
  * @returns the help text.
  */
 function formatProgramHelp(program: Command): string {
@@ -131,7 +131,7 @@ function formatProgramHelp(program: Command): string {
 /**
  * Build the CLI with every command. Runs and the command reference both use it.
  *
- * @param onResult writes the command result.
+ * @param onResult receives the result of the command that ran.
  * @returns the Commander program.
  */
 export function buildProgram(onResult: CommandCompletion): Command {
@@ -174,7 +174,7 @@ export function buildProgram(onResult: CommandCompletion): Command {
 }
 
 /**
- * Run the CLI with the arguments.
+ * Run one gspot command, and print its result or its error.
  *
  * @param commandArguments the arguments after the program name.
  * @returns the exit code.

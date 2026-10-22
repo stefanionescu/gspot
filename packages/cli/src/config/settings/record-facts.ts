@@ -40,7 +40,7 @@ export const RECORD_FIELD_FACTS = {
     },
     'licenses.allowed_package.version': {
         description:
-            'An exact version, a semver range such as `^1.2.0`, or `*`; gspot reports a record that matches no locked package.',
+            'An exact version, a version range such as `^1.2.0`, or `*`; gspot reports a record that matches no locked package.',
     },
     'licenses.allowed_package.reason': { description: 'Why you accept its license; name the license here.' },
     'site.size_limit.paths': {
@@ -65,7 +65,7 @@ export const RECORD_FIELD_FACTS = {
         description: 'The executable and arguments to run on selected files.',
     },
     'command_check.paths': {
-        description: 'Repository-relative glob patterns selecting inputs.',
+        description: 'The files the check reads, as repository-relative globs.',
     },
     'command_check.stage': {
         description: 'The earliest stage that runs this check.',

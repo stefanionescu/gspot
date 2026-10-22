@@ -42,7 +42,7 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
     try {
         await config.load();
     } catch (error) {
-        throw new GspotError('install', 'Cannot read the registry settings. Check the package manager configuration.', {
+        throw new GspotError('install', 'Cannot read the registry settings. Check the .npmrc files.', {
             cause: error,
         });
     }
@@ -51,10 +51,10 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
         valid = config.validate();
     } catch (error) {
         if (isTable(error) && error['code'] === 'ERR_INVALID_URL')
-            throw new GspotError('install', 'Invalid registry URL in package manager configuration.');
+            throw new GspotError('install', 'A registry URL in the .npmrc files is not valid.');
         throw error;
     }
-    if (!valid) throw new GspotError('install', 'Invalid package manager configuration.');
+    if (!valid) throw new GspotError('install', 'The .npmrc settings are not valid.');
     const effective: Record<string, unknown> = {};
     for (const layer of config.list.toReversed()) Object.assign(effective, layer);
     return effective;

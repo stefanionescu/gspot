@@ -1,5 +1,13 @@
 import type { SettingFacts } from '#cli/types/settings/facts.ts';
 
+/** What both levels check. The level setting, the docs, and the agent steps show this text. */
+export const LEVEL_SUMMARY =
+    "Correctness, security, accessibility, type safety, routine formatting, and the project's own declared checks apply at both levels.";
+
+/** What level all adds. The level setting, the docs, and the agent steps show this text. */
+export const ALL_LEVEL_SUMMARY =
+    'Level `all` adds checks and rules for word choice, architecture, naming, doc comments, declaration order, duplication, API style, and complexity.';
+
 export const ROOT_SETTING_FACTS = {
     configurations: {
         default: [] as [],
@@ -19,10 +27,7 @@ export const ROOT_SETTING_FACTS = {
         default: [] as [],
     },
     level: {
-        description:
-            "Correctness, security, accessibility, type safety, routine formatting, and the project's own declared checks apply at both levels." +
-            ' ' +
-            'Level `all` adds checks and rules for word choice, architecture, naming, doc comments, declaration order, API style, and complexity. No level turns on experimental or preview lint rules.',
+        description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY} No level turns on experimental or preview lint rules.`,
         default: 'recommended',
     },
     tool_timeout_seconds: {

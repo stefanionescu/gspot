@@ -188,7 +188,7 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
 /**
  * Find tool files to replace, hooks, CI, agent files, and lint folders.
  *
- * @param reads the run cache and repository boundary.
+ * @param reads the run cache.
  * @param repository the inventory and parsed package declarations.
  * @returns what to replace, keep, or report.
  */

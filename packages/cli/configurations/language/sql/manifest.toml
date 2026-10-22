@@ -1,7 +1,7 @@
 allowed_words = ["SQL"]
 
 [configuration]
-description = "SQL files: layout and style in your dialect, and at level all, comments and file length."
+description = "SQL files: layout, capitalization, and references in the dialect of your database. Level `all` adds the join, cast, subquery, and `LIMIT` rules."
 title = "SQL"
 
 [files]
@@ -13,7 +13,7 @@ min_version = "3.0.0"
 name = "sqlfluff"
 pypi = "sqlfluff"
 replace = [".sqlfluff", ".sqlfluffignore"]
-suppression = { marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)", example = "SELECT * FROM orders -- noqa: AM04 -- the view mirrors every column" }
+suppression = { marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)", example = "SELECT * FROM orders -- noqa: AM04 -- reason: the view mirrors every column" }
 version = "4.3.0"
 
 [[tool.replace_key]]
@@ -38,7 +38,7 @@ command = ["sqlfluff", "lint", "--config", "{tool_file:sqlfluff}", "--ignore-loc
 example = "The query `select id from user_accounts;` reports CP01 for lowercase keywords. Write it as `SELECT id FROM user_accounts;`."
 exit_codes = [1]
 fix = ["sqlfluff", "fix", "--config", "{tool_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
-help = "Run `gspot check --fix`. Turn one rule off with `gspot ignore sql/sqlfluff --rule <code> --reason \"<why>\"`."
+help = "Run `gspot check --fix`. Turn one rule off with `gspot ignore sql/sqlfluff --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "sqlfluff"
 output = { format = "json", children = "violations", fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }

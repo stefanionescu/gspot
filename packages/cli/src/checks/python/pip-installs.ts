@@ -21,7 +21,7 @@ export function checkPythonPipInstalls(session: Session, planned: PlannedCheck):
             planned.files.some(({ path }) => path === joinScope(planned.scope.folder.path, file)),
         )
     )
-        throw new GspotError('skip', 'Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
+        throw new GspotError('skip', 'This check needs uv.lock, poetry.lock, or pdm.lock in this scope.');
     const files = planned.files.filter((file) => file.kind === 'source');
     const requirements = files
         .filter((file) => REQUIREMENTS_FILE.test(file.path))

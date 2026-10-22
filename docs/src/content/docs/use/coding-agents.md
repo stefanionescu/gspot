@@ -24,6 +24,12 @@ An agent that reads another file needs a pointer. For Claude Code, this `CLAUDE.
 @AGENTS.md
 ```
 
+## Add your own rules
+
+Write rules for your repository in `AGENTS.md`, outside the managed block. gspot leaves that text unchanged. To
+give agents a separate file, link it from your text and say when to read it, the way the managed block lists the rules
+of gspot.
+
 ## Leave out some rules
 
 `gspot set rules.exclude .gspot/configurations/language/javascript/rules/BUN.md` leaves out one file. A folder, such

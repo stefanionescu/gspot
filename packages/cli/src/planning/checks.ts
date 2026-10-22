@@ -113,10 +113,9 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
 }
 
 /**
- * Check whether a planned check has source input, a deleted trigger, or a commit message to read.
+ * Check whether a planned check has files, deleted trigger paths, a commit message, or pushed commits to read.
  *
  * @param check the plan to inspect.
- *
  * @returns whether the check has something to run over.
  */
 export function isActive(check: PlannedCheck): boolean {
@@ -129,11 +128,11 @@ export function isActive(check: PlannedCheck): boolean {
 }
 
 /**
- * Plan every check for the run.
+ * Plan the checks of every scope, skip each check that another check replaces, and refuse history checks when the
+ * pushed history lacks commits.
  *
  * @param session the repository to check.
  * @param options what the run narrows to.
- *
  * @returns the planned checks in scope order.
  */
 export function planChecks(session: Session, options: PlanOptions): PlannedCheck[] {
@@ -150,11 +149,10 @@ export function planChecks(session: Session, options: PlanOptions): PlannedCheck
 }
 
 /**
- * Keep authored commands, and drop shipped coverage arguments when no coverage minimum needs them.
+ * Keep an override command, and drop the shipped coverage arguments when every coverage minimum equals 0.
  *
  * @param planned the check and its scope settings.
  * @param authored the command and workspace.
- *
  * @returns the command, with coverage only when a coverage minimum needs it.
  */
 export function stripCoverageArguments(

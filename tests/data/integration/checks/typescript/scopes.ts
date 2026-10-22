@@ -15,7 +15,7 @@ export const TYPESCRIPT_SCOPES_SANDBOX = {
     level: 'all',
     files: { 'package.json': '{"private":true}\n' },
 } as const;
-// Standalone projects keep authored declarations and exclude generated, vendored, and private tool sources.
+/** Standalone projects keep authored declarations and exclude generated, vendored, and private tool sources. */
 export const STANDALONE_TYPESCRIPT_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
     'source.ts': 'export const rootValue = 1;\n',
@@ -51,7 +51,7 @@ export const STANDALONE_TYPESCRIPT_FINDINGS = {
         },
     ],
 } as const;
-// One tsconfig in a parent folder includes each scope, so no scope gets its own compiler project.
+/** One tsconfig in a parent folder includes each scope, so no scope gets its own compiler project. */
 export const ANCESTOR_TYPESCRIPT_FILES = {
     '.gitignore': 'node_modules/\n.gspot/\n',
     'source.ts': 'export const rootValue = 1;\n',

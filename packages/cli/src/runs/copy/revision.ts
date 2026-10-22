@@ -174,6 +174,7 @@ async function writeRevisionFiles(
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const collision = findCaseCollision(entries);
+    // Only a file system that ignores letter case finds the upper-case spelling of the copy path.
     const upper = copyRoot.toUpperCase();
     if (collision !== undefined && upper !== copyRoot && statSync(upper, { throwIfNoEntry: false }) !== undefined)
         throw new GspotError(
@@ -185,7 +186,7 @@ async function writeRevisionFiles(
         mkdirSync(target, { recursive: true, mode: OWNER_WRITABLE_FOLDER });
         chmodSync(target, OWNER_WRITABLE_FOLDER);
     }
-    // Write links last so no authored link can redirect another tracked write.
+    // Write links last, so that no link in the repository can redirect the write of another tracked file.
     for (const linked of [false, true]) {
         const selected = Map.groupBy(
             entries.flatMap<Exclude<CopyFile, string>['entry']>((entry) =>
@@ -223,7 +224,7 @@ async function writeRevisionFiles(
  * @param repositoryRoot the checkout with the Git objects and installed dependencies.
  * @param source the revision to copy.
  * @param cancelSignal stops the copy.
- * @returns the disposable source copy and its Git tree.
+ * @returns what action returns.
  */
 export async function copyRevision(
     repositoryRoot: string,

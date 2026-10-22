@@ -12,6 +12,7 @@ export const OTHER_BOUNDARY_FILE = { category: 'other', pattern: ['**/*'] } as c
 /** The boundary category of the tRPC server files. */
 export const TRPC_SERVER_CATEGORY = 'trpc:server';
 
+/** The final policy refuses server values even when your own module rule permits the import. */
 export const TRPC_SERVER_VALUE_POLICY = {
     from: { file: [{ isUnknown: true }, { categories: { noneOf: [TRPC_SERVER_CATEGORY] } }] },
     disallow: { to: { file: { categories: TRPC_SERVER_CATEGORY } }, dependency: { kind: 'value' } },
@@ -32,6 +33,7 @@ export const UNKNOWN_IMPORT_POLICIES = [
     { allow: { to: { file: { isUnknown: true } } } },
 ] as const;
 
+/** Classify imports and exports as value or type by their specifiers. */
 export const BOUNDARY_DEPENDENCY_SELECTORS = [
     {
         selector:
@@ -59,5 +61,5 @@ export const BOUNDARY_DEPENDENCY_SELECTORS = [
     },
 ] as const;
 
-/** Count require calls and dynamic imports too, and classify imports and exports by their specifiers. */
+/** Count require calls and dynamic imports too. */
 export const BOUNDARY_DEPENDENCY_NODES = ['require', 'dynamic-import'] as const;

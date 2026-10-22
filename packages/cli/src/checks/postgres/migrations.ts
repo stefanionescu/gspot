@@ -40,11 +40,11 @@ async function parseMigrations(session: Session, paths: Pick<Migration, 'path' |
 }
 
 /**
- * Reads and parses every tracked migration in version order.
+ * Reads and parses the forward migrations of the scope in version order, once for each set of paths.
  *
  * @param session the repository and its tools.
  * @param planned the scope whose migrations to read.
- * @returns the migrations, empty when the repository has no migrations folder.
+ * @returns the migrations and a finding for each syntax error, both empty when the scope has no migration.
  */
 export async function readMigrations(session: Session, planned: PlannedCheck): Promise<MigrationRead> {
     const paths = listMigrationPaths(planned);

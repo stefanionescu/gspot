@@ -9,7 +9,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { LINK_PAGE, LINK_TEXT_CASES, ROOT_LINK_FILES, LINK_SCOPE_TABLES } from '#tests/data/checks/docs.ts';
 
-// Checks the exit code, and the status and finding positions of the root and child scopes.
+/** Check the exit code, and the status and finding positions of the root and child scopes. */
 async function assertLinkFailures(root: string, check: string, failures: readonly LinkFailure[]): Promise<void> {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json'], {}));
     expect(checked.code, checked.stdout + checked.stderr).toBe(failures.length === 0 ? 0 : 1);
@@ -26,7 +26,7 @@ async function assertLinkFailures(root: string, check: string, failures: readonl
     );
 }
 
-// The link check must reject a missing text fragment and accept one that exists.
+/** The link check must reject a missing text fragment and accept one that exists. */
 async function assertTextLinks(root: string, check: string, target: string): Promise<void> {
     for (const { text, failures } of LINK_TEXT_CASES) {
         await writeFile(join(root, 'root.md'), `# Links\n\nRead [the page](${target}#:~:text=${text}).\n`);

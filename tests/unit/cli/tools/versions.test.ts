@@ -13,7 +13,7 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeNpmPackage, writeScriptCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
-// One release below the declared minimum, computed so the test does not copy its value.
+/** Build one release below the declared minimum version, so the test does not copy its value. */
 function buildVersionBelow(minimum: string): string {
     const parts = minimum.split('.').map(Number);
     const index = parts.findLastIndex((part) => part > 0);
@@ -75,7 +75,7 @@ test('an npm package version does not hide a failed program', async () => {
     });
     const inspection = inspectTool(buildToolSearch(sandbox.path), buildProgramPin('teller', '5.0.1', 'teller'));
     expect(inspection.state).toBe('error');
-    expect(inspection.note).toBe('teller version inspection exited 7: 5.0.1');
+    expect(inspection.note).toBe('The version command of teller exited 7: 5.0.1');
 });
 
 test('a manifest can declare the exit code of its version command without accepting other failures', async () => {
@@ -92,7 +92,7 @@ test('a manifest can declare the exit code of its version command without accept
     expect(inspection.found).toBe('3.8.1');
     const failed = inspectTool(context, { ...tool, version_exit_code: 0 });
     expect(failed.state).toBe('error');
-    expect(failed.note).toBe('version-help version inspection exited 2: version-help 3.8.1');
+    expect(failed.note).toBe('The version command of version-help exited 2: version-help 3.8.1');
 });
 
 test('a command reads each version once and the next session reads it again', async () => {

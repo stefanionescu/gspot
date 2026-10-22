@@ -62,9 +62,8 @@ function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
 /**
  * Convert format settings to Prettier options.
  *
- * @param format width, indent, and line ending, each optional.
- *
- * @returns the Prettier options for each setting in the input.
+ * @param format the format settings, each optional.
+ * @returns the Prettier options for each format setting that has a value.
  */
 function convertFormatSettings(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
@@ -79,9 +78,9 @@ function convertFormatSettings(format: Partial<FormatSettings>): Record<string, 
 }
 
 /**
- * Build the Prettier tool file that the root pointer loads.
+ * Build prettier.json, which the root pointer loads: the formatter options, plugins, and scope overrides.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the formatter options, plugins, and scope overrides.
  */
 export function buildPrettierFile(planned: PlannedToolFile): string {

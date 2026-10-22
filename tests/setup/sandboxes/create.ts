@@ -62,7 +62,7 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     if (plan.dependencies !== undefined) await pinSandboxNpm(root);
 }
 
-/** Build one isolated sandbox and run its checks in the current process. */
+/** Build one isolated sandbox whose commands run in the current process. */
 export async function createSandbox(plan: SandboxPlan): Promise<Sandbox & AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     const folder = resources.use(await testdir());

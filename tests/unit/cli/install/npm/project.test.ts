@@ -81,7 +81,7 @@ test.each([...FAILED_INSTALL_CASES])(
         expect(installationError).toMatchObject({
             name: 'GspotError',
             code: 'install',
-            message: `bun ${operation} failed (exit 1). Run: gspot apply, then gspot install.\nDownloading https://[redacted]@registry.example.com/private-check-tool\n[redacted]\n[redacted]\n${refusal} from https://[redacted]@registry.example.com/private-check-tool`,
+            message: `bun ${operation} failed (exit 1).\nDownloading https://[redacted]@registry.example.com/private-check-tool\n[redacted]\n[redacted]\n${refusal} from https://[redacted]@registry.example.com/private-check-tool`,
         });
         expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
         expect(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe(original);
@@ -102,7 +102,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
     using owner = openWriter(sandbox.path);
     using _bun = fakeFailingBun({ timedOut: true });
     expect(await captureRejection(installNpmTools(buildToolInstall(session, owner)))).toBe(
-        `The command bun install --frozen-lockfile --linker hoisted ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,
+        `The command bun install --frozen-lockfile --linker hoisted ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
     );
 });
 
@@ -144,8 +144,8 @@ test.each([false, true])('credentials in a lockfile are refused: $name', async (
     );
     expect(message).toBe(
         frozen
-            ? 'The npm lockfile includes repository registry credentials. Existing files were preserved. Remove credentials from the registry URL and run: gspot install'
-            : 'The package manager included registry credentials in its lockfile. Existing files were preserved.',
+            ? 'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.'
+            : 'The package manager wrote registry credentials into its lockfile. gspot kept the existing files.',
     );
     expect(message).not.toContain(token);
     expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
@@ -176,7 +176,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
     const message = await captureRejection(
         prepareNpmLockfile(buildToolInstall(session, owner), buildNpmToolFile(packageJson), undefined),
     );
-    expect(message).toBe('node is required by the npm tool project. Install it before it creates its lockfile.');
+    expect(message).toBe('The npm tool project needs Node.js to create its lockfile. Install Node.js.');
     expect(await isOnDisk(join(sandbox.path, '.gspot/package.json'))).toBe(false);
     await createFileTree(sandbox.path, { ['.gspot/package.json']: packageJson, '.gspot/bun.lock': lockfile });
     const cached = await prepareNpmLockfile(buildToolInstall(session, owner), buildNpmToolFile(packageJson), undefined);
@@ -195,7 +195,7 @@ test('a package manager version timeout names the install command and configured
     const context = buildToolInstall(session, owner);
     using _bun = fakeCommand('bun', () => Promise.resolve(buildProcessResult(PACKAGE_MANAGER_TIMEOUT)));
     expect(await captureRejection(assertPackageManagerVersion(context))).toBe(
-        `The command bun --version ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,
+        `The command bun --version ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
     );
     expect(context.steps).toStrictEqual([['bun', '--version']]);
 });

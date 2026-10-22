@@ -65,8 +65,7 @@ export const TRPC_FILES = {
     'app/child/private/router.ts': 'export const router = {};\n',
     'app/child/client.ts': 'import { router } from "./private/router.js";\n',
 } as const;
-// Authored import restrictions and the store convention both use the same ESLint rule.
-
+/** Authored import restrictions and the store convention both use the same ESLint rule. */
 export const ZUSTAND_FILES = {
     'package.json': '{"name":"restricted-imports","private":true,"type":"module","dependencies":{"zustand":"5.0.8"}}',
     'src/widget.js': `import { create } from "zustand";

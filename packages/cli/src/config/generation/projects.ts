@@ -1,7 +1,7 @@
 /** Fixed fields of the npm tool project that its generator and validator share. */
 export const NPM_TOOL_PROJECT = { private: true } as const;
 
-/** Fixed fields and the pinned Python version of the Python tool project that its generator and validator share. */
+/** The Python version that the Python tool project pins. */
 export const PYTHON_VERSION = '3.13.16';
 
 export const PYTHON_TOOL_PROJECT = {

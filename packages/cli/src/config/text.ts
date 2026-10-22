@@ -7,7 +7,6 @@ export const TYPO_FRACTION = 3;
 /** How many names a message lists before it counts the rest. */
 export const LIST_LIMIT = 8;
 
-/** The ASCII line-feed byte shared by binary report and object readers. */
 export const LINE_FEED = 10;
 
 export const DIGEST_ALGORITHM = 'sha256';

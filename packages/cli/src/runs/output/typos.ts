@@ -31,7 +31,7 @@ function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]
     return lines;
 }
 
-// Compute the line and character column of a typo from the byte offset that typos reports.
+// Get the line and character column of a typo from the byte offset that typos reports.
 function getTypoPosition(
     root: string,
     path: string,
@@ -41,7 +41,7 @@ function getTypoPosition(
     if (entry.line_num === undefined) return {};
     const sourceLine = readSourceLines(root, path, cache)[entry.line_num - 1];
     if (sourceLine === undefined || entry.byte_offset > sourceLine.length)
-        throw new GspotError('output', `Typos reported a position outside the source: ${path}`);
+        throw new GspotError('output', `typos reported a position outside the file: ${path}`);
     return {
         line: entry.line_num,
 

@@ -28,7 +28,7 @@ export const DETECTION_LABELS = {
     project_files: 'project files',
 } as const;
 
-/** Plain labels for JSON schema types in settings tables. */
+/** Plain labels for JSON Schema types in the settings and rule option tables. */
 export const SCHEMA_TYPE_LABELS = {
     string: 'Text',
     integer: 'Whole number',
@@ -53,11 +53,10 @@ export const CHECK_NEEDS_LABELS = {
     network: 'network access',
 } as const;
 
-/** What each level checks, and when to choose it. */
-export const LEVEL_DESCRIPTIONS = {
-    recommended:
-        'Bugs, security and accessibility problems, type errors, formatting, and misuse of declared frameworks and libraries. Choose it for an existing codebase or a first run.',
-    all: 'Also naming, wording, code structure, doc comments, declaration order, duplication, API style, and complexity. Choose it for a new repository or one that coding agents write.',
+/** When to choose each level. */
+export const LEVEL_ADVICE = {
+    recommended: 'Choose it for an existing codebase or a first run.',
+    all: 'Choose it for a new repository or one that coding agents write.',
 } as const;
 
 export const REFERENCE_PATH = '/reference/';
@@ -88,7 +87,6 @@ export const LISTED_VALUES_LIMIT = 12;
 /** The check that reads the suppression comments of every tool. */
 export const SUPPRESSIONS_CHECK = 'gspot/suppressions';
 
-/** The tables with their own settings page: the title and description of each page. */
 /** The name of the keys of a map table, such as the language under limits. */
 export const MAP_KEY_NAME = '<name>';
 export const ANGLE_BRACKETS = /[<>]/gu;

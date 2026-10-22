@@ -51,9 +51,11 @@ test.each(['replacement', 'block', 'keys'] as const)(
                 mode: normalizeFileMode({ mode: 0o640 }),
             });
             await writeFile(join(sandbox.path, 'config.toml'), 'edited = true\n');
-            expect(() => {
-                writePlans(writer, [plan]);
-            }).toThrow(new Error('Destination changed during the operation: config.toml'));
+            expect(
+                captureThrow(() => {
+                    writePlans(writer, [plan]);
+                }),
+            ).toBe('config.toml changed while gspot wrote it. Run the command again.');
             expect(writer.files.read('config.toml')).toStrictEqual({
                 bytes: Buffer.from('edited = true\n'),
                 mode: normalizeFileMode({ mode: 0o640 }),
@@ -75,9 +77,11 @@ test('a batch writes the files before an edited one and refuses the edited one',
             }),
         );
         await writeFile(join(sandbox.path, 'last.txt'), 'authored after plan');
-        expect(() => {
-            writePlans(writer, plans);
-        }).toThrow(new Error('Destination changed during the operation: last.txt'));
+        expect(
+            captureThrow(() => {
+                writePlans(writer, plans);
+            }),
+        ).toBe('last.txt changed while gspot wrote it. Run the command again.');
         expect(await readFile(join(sandbox.path, 'first.txt'), 'utf8')).toBe('replacement');
         expect(await readFile(join(sandbox.path, 'last.txt'), 'utf8')).toBe('authored after plan');
     }
@@ -101,13 +105,11 @@ test('a file gspot does not own refuses the whole batch and leaves every file as
                 next: { bytes: Buffer.from('replacement'), mode: 0o644 },
             }),
         );
-        expect(() => {
-            writePlans(writer, plans);
-        }).toThrow(
-            new Error(
-                'These files were not overwritten by gspot: authored.txt. Move them aside, then run the command again.',
-            ),
-        );
+        expect(
+            captureThrow(() => {
+                writePlans(writer, plans);
+            }),
+        ).toBe('gspot did not overwrite these files: authored.txt. Move them aside, then run the command again.');
         expect(await readFile(join(sandbox.path, '.gspot/owned.txt'), 'utf8')).toBe('installed');
         expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('keep authored');
     }
@@ -136,15 +138,17 @@ test.each(
                     writePlans(writer, [{ path: 'authored.json', before: read, status: 'changed' }]);
                 }),
             ).toBe('authored.json changed before removal. Run the command again.');
-            expect(() => {
-                writePlans(writer, [
-                    planReplacement(writer, {
-                        path: 'authored.json',
-                        next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
-                        expected: read,
-                    }),
-                ]);
-            }).toThrow(new Error('Destination changed during the operation: authored.json'));
+            expect(
+                captureThrow(() => {
+                    writePlans(writer, [
+                        planReplacement(writer, {
+                            path: 'authored.json',
+                            next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
+                            expected: read,
+                        }),
+                    ]);
+                }),
+            ).toBe('authored.json changed while gspot wrote it. Run the command again.');
             expect(writer.files.read('authored.json')).toStrictEqual(edited);
             await writeFile(path, read.bytes);
             await chmod(path, read.mode);

@@ -32,7 +32,8 @@ function compileOverride(rule: NamingOverride): CompiledOverride {
 function getNamingLimits(scopeSettings: ScopeSettings, language: string, category: string) {
     const root = getTable(scopeSettings, 'naming');
     const languageKey = SETTING_LANGUAGES.find((name) => name === language);
-    // Every category of every language, so a category that a language lacks reads as unset.
+    // The language table type lists every category of every language, so a category that this language lacks reads as
+    // undefined.
     const languageTable: ParsedNamingLanguageFields | undefined =
         languageKey === undefined ? undefined : root[languageKey];
     const categoryKey = NAMING_TABLE_CATEGORIES.find((name) => name === category);

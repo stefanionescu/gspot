@@ -98,9 +98,9 @@ async function replaceLink(copy: DependencyTreeCopy, { source, target }: Pending
  * Selects the paths that Git ignores.
  *
  * @param repositoryRoot the repository folder.
- * @param paths the candidate prerequisites.
+ * @param paths the prerequisites to test.
  * @param cancelSignal stops the Git query.
- * @returns the candidates that Git ignores.
+ * @returns the ones that Git ignores.
  */
 export async function readIgnoredPaths(
     repositoryRoot: string,
@@ -139,7 +139,7 @@ export async function copyDependencies(
         mkdirSync(dirname(target), { recursive: true });
         await copyTree(context, source, target, dependency.operation);
     }
-    // Clone parent targets before creating links into them, including trees found through another link.
+    // Clone the folders that links point into before the links, including trees found through another link.
     while (context.links.length > 0) {
         context.links = context.links.toSorted((left, right) => left.source.length - right.source.length);
         const link = context.links.shift();
@@ -149,7 +149,7 @@ export async function copyDependencies(
 }
 
 /**
- * Lists the ignored declaration files that an authored tsconfig needs.
+ * Lists the ignored declaration files that your own tsconfig needs.
  *
  * @param workingTree the checkout with installed declaration files.
  * @param entries the tracked files of the revision.

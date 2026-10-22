@@ -69,11 +69,12 @@ function mergeIgnores(ignores: TomlTable[]): TomlTable[] {
 }
 
 /**
- * Merge a written ignore into the record with the same identity, and keep scope-wide records.
+ * Add an ignore to the list, or merge its paths into the record with the same check, rule, names, reason, and until.
+ * When either record has no paths, the merged record has none. Changes ignores in place.
  *
  * @param ignores the written [[ignore]] records.
- * @param ignore the record whose paths join the match.
- * @returns the saved record, with the merged paths.
+ * @param ignore the record to add.
+ * @returns the saved record.
  */
 export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
     const { paths: writtenPaths, ...identity } = ignore;
@@ -93,7 +94,7 @@ export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable 
 }
 
 /**
- * Write the settings, and keep the written comments and the template source.
+ * Build the TOML text of the settings. Keep the written comments and the template source.
  *
  * @param previousText the gspot.toml contents before, or empty for init.
  * @param settings the written values, before defaults.

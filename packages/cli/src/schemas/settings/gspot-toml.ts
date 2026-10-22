@@ -36,7 +36,7 @@ const ignoreSchema = z
         names: z.array(z.string().min(1)).min(1).optional().describe(SETTING_FACTS['ignore.names'].description),
         paths: relativePaths.optional().describe(SETTING_FACTS['ignore.paths'].description),
         reason: z
-            .string({ error: 'needs a reason. Add `reason = "..."` to this entry.' })
+            .string({ error: 'needs a reason. Add `reason = "..."` to this record.' })
             .describe(SETTING_FACTS['ignore.reason'].description),
         until: localDateSchema.optional().meta(SETTING_FACTS['ignore.until']),
     } satisfies SchemaShape<
@@ -154,7 +154,7 @@ export const scopeSchema = z.strictObject({
     ...scopeBody,
 }) satisfies z.ZodType<NonNullable<ParsedSettings['scope']>[number], WrittenScope>;
 
-/** Top-level gspot.toml keys shown by gspot list settings and the settings reference. */
+/** Top-level gspot.toml keys that gspot list settings and the settings reference show. */
 export const rootSettingSchemas = {
     level: levelSchema.default(SETTING_FACTS['level'].default).meta(SETTING_FACTS['level']),
     tool_timeout_seconds: z
@@ -293,10 +293,10 @@ export function findSettingSchema(key: string): z.ZodType | undefined {
 }
 
 /**
- * Convert a settings schema to JSON Schema, and keep written defaults and declaration metadata.
+ * Convert a settings schema to JSON Schema, and keep written defaults and the setting facts.
  *
  * @param schema the runtime validator.
- * @returns the JSON Schema, with a description for TOML dates.
+ * @returns the JSON Schema, with TOML dates as calendar strings.
  */
 function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
     return z.toJSONSchema(schema, {

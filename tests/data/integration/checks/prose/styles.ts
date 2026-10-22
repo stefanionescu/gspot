@@ -37,7 +37,7 @@ Read pages 3 to 5.
 
 Read CLAUDE.md and AGENTS.md before RGBA colors.
 
-- \`.gspot/rules/BUN.md\`: when code runs on Bun.
+- \`.gspot/configurations/language/javascript/rules/BUN.md\`: when code runs on Bun.
 `,
         lines: [3],
     },

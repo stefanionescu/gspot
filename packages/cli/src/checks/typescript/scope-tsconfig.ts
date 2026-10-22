@@ -21,7 +21,7 @@ import {
 } from '#cli/config/checks/typescript.ts';
 
 /**
- * Builds a tsconfig that extends the authored one, or a standalone one when the scope has none.
+ * Builds a tsconfig that extends the tsconfig of the scope, or a standalone one when the scope has none.
  *
  * @param planned the scope and target path.
  * @returns the compiler settings to write as JSON.
@@ -87,7 +87,7 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
  * Selects the compiler flags that the level and configurations require.
  *
  * @param level recommended or all.
- * @param configurations the scope manifests.
+ * @param configurations the configurations of the scope.
  * @returns the flags, by name.
  */
 export function selectRequiredTsconfigOptions(level: Level, configurations: Configuration[]): Record<string, boolean> {
@@ -113,7 +113,7 @@ export function selectCheckedTsconfigOptions(level: Level, scope: Scope): Record
 }
 
 /**
- * Writes the tsconfig for a scope, extending its authored tsconfig.
+ * Writes the tsconfig for a scope, which extends the tsconfig of the scope when it has one.
  *
  * @param session the repository and read cache.
  * @param scope where tsc runs, with its settings.

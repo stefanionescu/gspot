@@ -33,7 +33,8 @@ import {
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env = buildSpawnEnvironment(options.env);
-    // The launcher of a tool must find its sibling runtime and commands before unrelated tools on the executable search path.
+    // The launcher of a tool must find its sibling runtime and commands before unrelated tools on the executable search
+    // path.
     const path = Object.keys(env).find((name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH');
     if (isAbsolute(executable) && path !== undefined)
         env[path] = [dirname(executable), env[path]].filter((value) => value !== '').join(delimiter);
@@ -60,7 +61,8 @@ function buildAsyncExecaOptions(options: AsyncSpawnOptions, executable: string) 
     };
 }
 
-// Check whether a command names a file that does not exist. Bare names resolve through the executable search path at spawn.
+// Check whether a command names a file that does not exist. Bare names resolve through the executable search path at
+// spawn.
 function isExecutableAbsent(executable: string, cwd: string): boolean {
     if (!PATH_SEPARATORS.test(executable)) return false;
     const path = resolve(cwd, executable);
@@ -72,7 +74,7 @@ function isExecutableAbsent(executable: string, cwd: string): boolean {
     );
 }
 
-// A process that never ran, or stopped by a launch or stream error, reports an execution error rather than a verdict.
+// A process that never ran, or stopped by a launch or stream error, reports a process failure, not a result.
 function isUnfinished(result: SpawnCompletion): boolean {
     if (result.exitCode === undefined) return true;
     if (result.code !== undefined) return true;
@@ -121,7 +123,7 @@ function stopProcessTree(child: ChildProcess, termination: ProcessTermination): 
             });
             const code = result.exitCode ?? FAILED_CODE;
             if (![0, TASKKILL_GONE_CODE].includes(code))
-                throw new GspotError('tool', `Cannot terminate the tool process tree: ${result.stderr}`);
+                throw new GspotError('tool', `Cannot stop the tool and its child processes: ${result.stderr}`);
         } else process.kill(-child.pid, 'SIGKILL');
     } catch (error) {
         if (!isGroupGone(error as Error, child)) termination.failure = error as Error;
@@ -129,7 +131,7 @@ function stopProcessTree(child: ChildProcess, termination: ProcessTermination): 
     child.kill('SIGKILL');
     termination.drainTimer = setTimeout(() => {
         const error = new Error(
-            `Tool output did not close within ${String(OUTPUT_CLOSE_MILLISECONDS / MILLISECONDS_PER_SECOND)} seconds after termination.`,
+            `Tool output did not close within ${String(OUTPUT_CLOSE_MILLISECONDS / MILLISECONDS_PER_SECOND)} seconds after gspot stopped the tool.`,
         );
         for (const stream of child.stdio) stream?.destroy(error);
     }, OUTPUT_CLOSE_MILLISECONDS);
@@ -140,7 +142,7 @@ function stopProcessTree(child: ChildProcess, termination: ProcessTermination): 
  *
  * @param child the spawned process.
  * @param options the cancellation and timeout controls.
- * @returns completion state and the cleanup operation.
+ * @returns how the process tree ended, and the cleanup step.
  */
 function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): ProcessTreeControl {
     const state = { timedOut: false, canceled: false };
@@ -195,7 +197,7 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
     };
 }
 
-// Capture and streamed readers share process failure classification and tree cleanup.
+// Wait for a process, build its result, and stop its process tree. spawnProcess and streamProcess both end here.
 async function completeProcess(
     child: RunningProcess,
     supervision: ProcessTreeControl,
@@ -309,7 +311,7 @@ export async function streamProcess(
 }
 
 /**
- * Run a process and wait. Git plumbing and version checks use it.
+ * Run a process and wait. Git commands and version checks use it.
  *
  * @param command executable and literal arguments.
  * @param options where and how the process runs.

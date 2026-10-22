@@ -29,9 +29,9 @@ function buildSectionPath(pattern: string, scope: string): string {
 }
 
 /**
- * Build the EditorConfig file from the settings.
+ * Build .editorconfig: the EditorConfig sections of this repository.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the EditorConfig sections of this repository.
  */
 export function buildEditorconfigFile(planned: PlannedToolFile): string {

@@ -42,7 +42,7 @@ export async function checkNextjsTsc(session: Session, planned: PlannedCheck): P
     using scratchFolder = await createCheckCopy(session, planned);
     const root = scratchFolder.path;
     const scratchSession = { ...session, root, reads: createReadCache(root) };
-    // CI stops package installs; the Next.js generator output stays in the copy.
+    // CI=1 stops `next typegen` from installing missing packages; the Next.js generator output stays in the copy.
     const generated = await runCheckTool(scratchSession, planned, NEXT_TYPEGEN_COMMAND, {
         cwd: join(root, planned.scope.folder.path),
         env: CI_ENVIRONMENT,

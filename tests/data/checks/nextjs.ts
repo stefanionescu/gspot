@@ -1,4 +1,4 @@
-// The test Next.js configuration, page, and layout.
+// Next.js projects, outputs, and samples for the Next.js tests.
 
 import { STRICT_COMPILER_OPTIONS } from '#tests/data/checks/typescript/projects.ts';
 

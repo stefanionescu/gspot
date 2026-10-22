@@ -92,9 +92,9 @@ function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths:
 }
 
 /**
- * Builds the check result from the run state.
+ * Builds the check result from what the runs collected.
  *
- * @param check the declaration that ran.
+ * @param check the check that ran.
  * @param completion what the run collected.
  * @param completion.base the initial check result.
  * @param completion.state the findings and failure flag.
@@ -110,7 +110,7 @@ export function buildCheckResult(
     const output = check.output;
     const descriptor = outputFormats[output.format];
     const isEveryFindingKept = state.failed || (check.runs !== 'history' && descriptor.namesFiles(output));
-    // Successful tools can print fileless progress; failed runs must retain that output.
+    // A tool that succeeds may print progress that names no file; when the run fails, keep that output.
     const findings = isEveryFindingKept
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
@@ -139,7 +139,7 @@ export function parseCommandFindings(planned: OutputCheck, result: SpawnResult, 
  * Records a process result and assigns its findings to their file and scope.
  *
  * @param planned the check that ran.
- * @param tool the declaration with its version pin.
+ * @param tool the tool with its version pin.
  * @param output what one run printed and parsed.
  * @param commandRun what the runs collected so far.
  */
@@ -166,8 +166,8 @@ export function addCommandLine(
 /**
  * Checks whether a run exited with an undeclared code or printed a crash pattern.
  *
- * @param check the declared exit codes.
- * @param tool the declaration with the shared crash pattern.
+ * @param check the declared exit codes and crash pattern.
+ * @param tool the tool with the shared crash pattern.
  * @param result what the process returned.
  * @returns whether the tool broke.
  */

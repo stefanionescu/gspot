@@ -5,10 +5,11 @@ export const VALE_ARGUMENTS = ['--output', 'JSON', '--no-exit'] as const;
 /** A script with no extension reads through stdin as Python, whose comments start the same way. */
 export const SCRIPT_GRAMMAR = { mode: 'stdin', extension: '.py' } as const;
 
-/** The Vale input mode, source grammar, and comment format for each file extension. */
-
-// Known source grammars parse Markdown inside comments. Module extensions without a grammar use stdin
-// with the extension of that language. Map other formats with the same comments through [formats].
+/**
+ * The Vale input mode, source grammar, and comment format for each file extension. Known source grammars parse
+ * Markdown inside comments. Module extensions without a grammar use stdin with the extension of that language. Map
+ * other formats with the same comments through [formats].
+ */
 export const PROSE_GRAMMARS = {
     '.md': { mode: 'path', extension: '.md' },
     '.mdx': { mode: 'path', extension: '.md' },

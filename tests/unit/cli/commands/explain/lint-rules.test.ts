@@ -20,7 +20,7 @@ test('explain shellcheck/SC2086 gives the rule page and the gspot ignore command
     const shellcheckText = await runGspot(sandbox.path, ['explain', 'shellcheck/SC2086']);
     expect(JSON.parse(shellcheck.stdout)).toMatchObject(SHELLCHECK_RULE_PAGE);
     expect(shellcheckText.stdout).toBe(
-        'shellcheck/SC2086  (run by bash/shellcheck)\n\nThe tool\'s page: https://www.shellcheck.net/wiki/SC2086\n\nTurn it off everywhere: gspot ignore bash/shellcheck --rule SC2086 --reason "..."\nTurn it off for some paths: gspot ignore bash/shellcheck --rule SC2086 --paths "<glob>" --reason "..."\n',
+        'shellcheck/SC2086  (run by bash/shellcheck)\n\nThe tool\'s page: https://www.shellcheck.net/wiki/SC2086\n\nTurn it off everywhere: gspot ignore bash/shellcheck --rule SC2086 --reason "<why>"\nTurn it off for some paths: gspot ignore bash/shellcheck --rule SC2086 --paths "<glob>" --reason "<why>"\n',
     );
 });
 
@@ -41,7 +41,7 @@ test('explain refuses an unknown rule prefix and names the subjects it explains'
     const refusal = await runGspot(sandbox.path, ['explain', 'unknown/no-such-rule']);
     expect(refusal.code).toBe(2);
     expect(refusal.stderr).toBe(
-        'gspot cannot explain unknown/no-such-rule. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).\n',
+        'gspot cannot explain unknown/no-such-rule. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).\n',
     );
 });
 
@@ -57,7 +57,7 @@ test('explain gives a TypeScript error the gspot ignore commands, and no rule op
     const ruleText = await runGspot(sandbox.path, ['explain', 'tsc/TS2345']);
     expect(JSON.parse(rule.stdout)).toMatchObject({ kind: 'lint-rule', tool: 'tsc', rule: 'TS2345', page: null });
     expect(ruleText.stdout).toBe(
-        'tsc/TS2345  (run by javascript/tsc)\n\nRead the tsc documentation for TS2345.\n\nTurn it off everywhere: gspot ignore javascript/tsc --rule TS2345 --reason "..."\nTurn it off for some paths: gspot ignore javascript/tsc --rule TS2345 --paths "<glob>" --reason "..."\n',
+        'tsc/TS2345  (run by javascript/tsc)\n\nRead the tsc documentation for TS2345.\n\nTurn it off everywhere: gspot ignore javascript/tsc --rule TS2345 --reason "<why>"\nTurn it off for some paths: gspot ignore javascript/tsc --rule TS2345 --paths "<glob>" --reason "<why>"\n',
     );
 });
 
@@ -78,7 +78,7 @@ test('a plugin prefix with an npm scope must match a plugin that a manifest decl
     const refusal = await runGspot(sandbox.path, ['explain', 'typescript-eslint/no-explicit-any']);
     expect(refusal.code).toBe(2);
     expect(refusal.stderr).toBe(
-        'gspot cannot explain typescript-eslint/no-explicit-any. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts). Did you mean `typescript`?\n',
+        'gspot cannot explain typescript-eslint/no-explicit-any. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts). Did you mean `typescript`?\n',
     );
     const unknownTypescriptPrefix = await runGspot(sandbox.path, [
         'explain',

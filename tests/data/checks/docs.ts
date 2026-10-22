@@ -67,7 +67,7 @@ export const DOC_FENCE_PATH_CASES = [
     { info: 'description="title=example.sh"', language: 'console', reported: true },
 ] as const;
 
-/** The same HTML target supports anchor and text-fragment checks locally and over HTTP. */
+/** The same HTML page supports anchor and text-fragment checks locally and over HTTP. */
 export const LINK_PAGE = `<!doctype html>
 <html lang="en"><head><title>Setup</title></head><body><h1 id="setup">Setup</h1><p>Current setup.</p></body></html>
 `;
@@ -88,7 +88,7 @@ export const LINK_TEXT_CASES = [
     { text: 'Current%20setup', failures: [] },
 ] as const;
 
-// Documents for both the tool checks and the built-in checks.
+/** Documents for the checks that run a command and the built-in checks. */
 export const README = `# Test
 
 A sandbox that holds documents and nothing else.

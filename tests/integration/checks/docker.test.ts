@@ -25,7 +25,7 @@ import {
     ROOT_USER_DOCKERFILE,
 } from '#tests/data/checks/docker/sandbox.ts';
 
-// Each tag gets its own payload, so a clean image never depends on the loop order.
+/** Import one payload file as an image with this tag. */
 async function importImage(root: string, tag: string, contents: string | Buffer): Promise<void> {
     await writeFile(join(root, 'payload.pem'), contents);
     const archive = runCommandBlocking(['tar', '-cf', 'payload.tar', 'payload.pem'], { cwd: root });
@@ -38,12 +38,11 @@ async function importImage(root: string, tag: string, contents: string | Buffer)
 
 test('Trivy checks each Dockerfile in its deepest scope and honors an ignore limited to a scope path', async () => {
     await using sandbox = await testdir();
-    // Trivy rule DS-0002 reports `USER root`. Use `USER node` to fix it.
-
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
     const settings = buildSandboxSettings(['docker'], {
         tables: TRIVY_SCOPE_TABLES,
     });
+    // Trivy rule DS-0002 reports `USER root`. Use `USER node` to fix it.
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
         '.gitignore': 'untracked/\n',

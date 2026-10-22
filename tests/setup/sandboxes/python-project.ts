@@ -14,7 +14,7 @@ import {
     PYTHON_PROJECT_IGNORES,
 } from '#tests/data/setup/sandboxes.ts';
 
-/** Creates a Python project with a lockfile and points the uv variables at the sandbox. */
+/** Create a Python project with a lockfile, and point the uv variables at the sandbox. */
 export async function createPythonProject(
     root: string,
     options: { indexFile: 'pyproject.toml' | 'uv.toml'; indexUrl?: string },

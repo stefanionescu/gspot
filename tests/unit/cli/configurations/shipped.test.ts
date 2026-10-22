@@ -26,7 +26,7 @@ function listCommandSettings(check: Check): string[] {
     });
 }
 
-/** A declared default must provide a usable value unless the check waits for that setting. */
+/** Check whether a setting has no default or an empty one. */
 function hasEmptyDefault(setting: Setting | undefined): boolean {
     const value = setting?.default;
     return (
@@ -38,7 +38,7 @@ function hasEmptyDefault(setting: Setting | undefined): boolean {
     );
 }
 
-/** Report missing declarations and empty settings that a check expands without waiting. */
+/** Report settings that no configuration declares, and empty settings that a check expands without waiting. */
 function listSettingMismatches(check: Check, declarations: ReadonlyMap<string, Setting>): string[] {
     const awaited = check.when?.setting;
     const mismatches = awaited !== undefined && !declarations.has(awaited) ? [`${check.id}: ${awaited}`] : [];

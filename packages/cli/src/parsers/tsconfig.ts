@@ -189,7 +189,7 @@ export function readTsconfig(
         return parsed;
     } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
-        throw new Error(`Cannot read TypeScript configuration ${path}: ${detail}`, { cause: error });
+        throw new Error(`Cannot read the tsconfig file ${path}: ${detail}`, { cause: error });
     }
 }
 

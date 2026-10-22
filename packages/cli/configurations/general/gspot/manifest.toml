@@ -2,7 +2,7 @@ allowed_words = ["gspot"]
 
 [configuration]
 always_selected = true
-description = "Checks gspot.toml, generated files, and suppression reasons."
+description = "gspot itself: path patterns in gspot.toml that match files, current generated files, no replaced tool settings, and a reason on each suppression."
 title = "gspot"
 
 [[tool]]
@@ -34,13 +34,13 @@ why = "A generated file that drifts from gspot.toml runs a tool with settings no
 
 [[check]]
 example = "An `[[ignore]]` record with `paths = [\"nowhere/**\"]` that matches no file reports `unmatched-path`. Remove the record, or correct its path and keep the reason."
-help = "Remove the record or correct its path."
+help = "Remove the pattern, or correct it so that it matches a tracked file."
 level = "recommended"
 name = "unmatched-paths"
 runs = "once"
 stage = "commit"
-summary = "Checks settings path patterns against tracked files."
-why = "An ignore or declaration that matches nothing misleads the next reader."
+summary = "Reports each path pattern in gspot.toml that matches no tracked file."
+why = "An ignore or a path setting that matches nothing misleads the next reader."
 
 [[check]]
 example = "An `eslint-disable-next-line` comment without a reason reports a finding. Fix the code and remove the comment, or append `-- reason: ...` that explains the exception."
@@ -49,5 +49,5 @@ level = "recommended"
 name = "suppressions"
 runs = "once"
 stage = "commit"
-summary = "Reports suppressions with no reason, any that lift a size or complexity limit, Semgrep or Vale directives, and ignores past their until date."
+summary = "Reports suppressions with no reason, any that lift a size or complexity limit, Semgrep or Vale suppressions, and ignores past their until date."
 why = "A suppression with no reason hides a finding nobody reviewed."

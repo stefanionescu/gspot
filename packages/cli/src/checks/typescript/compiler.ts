@@ -91,12 +91,12 @@ function buildReferenceTsconfig(
 }
 
 /**
- * Points incremental build metadata into the temporary folder.
+ * Points the incremental build information of tsc into the temporary folder, when the project builds incrementally.
  *
  * @param command the tsc arguments to extend.
  * @param options the parsed compiler flags.
- * @param folder the folder for metadata.
- * @param name the basename to look for.
+ * @param folder the folder for the build information.
+ * @param name the file name of the build information.
  */
 export function appendTsbuildinfoFlag(
     command: string[],
@@ -109,11 +109,11 @@ export function appendTsbuildinfoFlag(
 }
 
 /**
- * Replaces copy paths in the command with repository paths.
+ * Replaces the paths of the copy in the command with repository paths.
  *
  * @param result the compiler run, which may have no command.
- * @param copyRoot the temporary folder where the compiler ran.
- * @param sourceRoot the repository root.
+ * @param copyRoot the folder of the temporary copy that tsc checked.
+ * @param sourceRoot the repository folder that the finding paths point into.
  * @returns the run with repository paths.
  */
 export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourceRoot: string): CheckResult {
@@ -153,11 +153,11 @@ export function isProjectChecked(
 }
 
 /**
- * Runs tsc on a project and keeps build metadata in metadataRoot.
+ * Runs tsc on a project and keeps the build information in metadataRoot.
  *
  * @param session the repository or its copy.
  * @param planned the tsc check for one scope.
- * @param tsbuildinfoFolder the folder for build metadata.
+ * @param tsbuildinfoFolder the folder for the build information.
  * @param project the parsed tsconfig, if any.
  * @returns the check result.
  */
@@ -181,7 +181,7 @@ export async function runTsc(
             ...buildBaseResult(planned, session),
             status: 'skipped',
             cause: 'replaced',
-            note: 'An ancestor compiler check covers this project.',
+            note: 'The tsconfig of a parent folder covers this project, and gspot checks it there.',
         };
     const command: string[] = [];
     if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {

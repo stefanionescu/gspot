@@ -24,7 +24,8 @@ Run the shipped Semgrep rules and your own:
 gspot check --only security/semgrep
 ```
 
-Add your rule files with `tools.semgrep.rule_files`. To run public rule packs, list them in
+Add your rule files with `tools.semgrep.rule_files`, as paths of files in the repository; gspot refuses a path that
+names no file. To run public rule packs, list them in
 `tools.semgrep.registry_packs` and run:
 
 ```shell
@@ -32,4 +33,4 @@ gspot check --only security/semgrep-registry
 ```
 
 The rule packs need network access. To turn a lint rule off for some paths, add an ignore with a
-reason. See [Ignore a finding](/use/ignore/).
+reason. See [Ignore findings](/use/ignore/).

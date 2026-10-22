@@ -36,8 +36,8 @@ function listMissingOutputs(
         );
 }
 
-// A pattern from a setting names one file, such as the Worker types file. A copy on disk that Git does not track hides it
-// from the type checks and from this check, which compare tracked files.
+// A pattern from a setting names one file, such as the Worker types file. A copy on disk that Git does not track hides
+// it from the type checks and from this check, which compare tracked files.
 function listUntrackedOutputs(session: Session, planned: PlannedCheck, named: string[], excluded: string[]): Finding[] {
     const scope = planned.scope.folder.path;
     const tracked = new Set(session.repository.index.map(({ path }) => path));
@@ -57,7 +57,7 @@ function listUntrackedOutputs(session: Session, planned: PlannedCheck, named: st
               );
 }
 
-// Both snapshots use the same traversal and source containment boundary.
+// The before and after snapshots read the same paths, so a difference means the generator changed a file.
 function readOutputContents({
     root,
     scope,

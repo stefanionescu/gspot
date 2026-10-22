@@ -1,3 +1,4 @@
+// Checks the files of one working tree: the repository, or a copy of the staged index or of a pushed commit.
 import { openSession } from '#cli/session.ts';
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
@@ -104,7 +105,7 @@ function assertKnownChecks(session: Session, only: string[] | undefined): void {
     if (unknown !== undefined)
         throw new GspotError(
             'arguments',
-            `There is no check called \`${unknown}\`.${formatSimilarNames(unknown, [...known])}`,
+            `There is no check called ${unknown}.${formatSimilarNames(unknown, [...known])}`,
         );
 }
 
@@ -117,7 +118,7 @@ function warnAboutHooks(session: Session, revision: RevisionSource | undefined):
     });
     if (!hooks.ready)
         process.stderr.write(
-            `${getColors().yellow('[warn]')} The Git hooks are not installed in this clone. Run: gspot install\n`,
+            `${getColors().yellow('[warn]')} The Git hooks are not installed in this clone. Run gspot install.\n`,
         );
 }
 
@@ -148,9 +149,9 @@ async function readRunFilters(
 }
 
 /**
- * Run check and return what to print.
+ * Check the files of one working tree: the repository, or a copy of the staged index or of a pushed commit.
  *
- * @param treeFolder the working tree or copy to check.
+ * @param treeFolder the working tree or the copy to check.
  * @param options the parsed flags.
  * @param cancelSignal stops the run.
  * @param revision the commit or index that the copy holds, if any.

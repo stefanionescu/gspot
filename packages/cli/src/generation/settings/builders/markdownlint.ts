@@ -4,9 +4,9 @@ import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import { MARKDOWNLINT_RULES } from '#cli/config/generation/settings/builders/markdownlint.ts';
 
 /**
- * Build the markdownlint file from the settings.
+ * Build markdownlint.jsonc: the Markdown lint rules with the chosen level, indentation, and your own rule options.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Markdown lint rules with the chosen level, indentation, and your own rule options.
  */
 export function buildMarkdownlintFile(planned: PlannedToolFile): string {

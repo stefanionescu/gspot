@@ -37,7 +37,7 @@ function validateRemovedConfigurations(value: unknown, path: KeyPath): SettingsE
 }
 
 /**
- * Find missing or invalid reasons on ignores, declarations, and naming exceptions.
+ * Find missing or invalid reasons on ignores, reasoned values, naming overrides, and extra tool options.
  *
  * @param settings the normalized gspot.toml.
  * @returns the errors in plain English.

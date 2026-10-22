@@ -178,7 +178,8 @@ export const SETTING_FACTS = {
     },
     'secrets.env_examples': {
         configurations: ['secrets'],
-        description: 'The env example filenames to search for environment keys; a key may appear in any one of them.',
+        description:
+            'The example environment files to search for environment keys; a key may appear in any one of them.',
         default: ['.env.example', '.env.template', '.env.sample', '.dev.vars.example'] as [
             '.env.example',
             '.env.template',
@@ -189,7 +190,7 @@ export const SETTING_FACTS = {
     'secrets.environment_functions': {
         configurations: ['secrets'],
         description:
-            'Functions of this project that read environment variables, such as read_env. The env-examples check reads the keys they take.',
+            'Functions of this project that read environment variables, such as read_env. secrets/env-examples reads the keys they take.',
         default: [] as [],
     },
     'site.build_command': {

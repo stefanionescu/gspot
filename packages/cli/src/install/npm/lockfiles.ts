@@ -50,7 +50,8 @@ function findPackageRegistry(name: string, env: Record<string, string>): string 
     return scopeRegistry ?? env[`${NPM_SETTING_PREFIX}registry`];
 }
 
-// Check whether a Bun lockfile entry resolved the standard tarball of a valid npm version through the configured registry.
+// Check whether a Bun lockfile entry resolved the standard tarball of a valid npm version through the configured
+// registry.
 function isStandardTarball(entry: BunPackage, env: Record<string, string>): boolean {
     const [identity, address, , integrity] = entry;
     const separator = identity.lastIndexOf('@');
@@ -97,7 +98,7 @@ function stripYarnRegistryUrls(content: string, registry: string): string {
     if (!isDeepStrictEqual(yarnLockSchema.parse(parseSyml(edited)), expected))
         throw new GspotError(
             'install',
-            'Cannot preserve Yarn lockfile entries while removing local registry routing. Existing files were preserved.',
+            'gspot cannot take the local registry addresses out of the Yarn lockfile without changing its entries. gspot kept the existing files.',
         );
     return edited;
 }

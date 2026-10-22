@@ -5,7 +5,8 @@ rules:
           - pattern: "'Access-Control-Allow-Origin': '*'"
           - pattern: $HEADERS.set("Access-Control-Allow-Origin", "*")
           - pattern: $HEADERS.append("Access-Control-Allow-Origin", "*")
-      message: Cloudflare middleware must not send wildcard CORS origins.
+      message: >-
+          A wildcard CORS origin lets every site read the response. List the allowed origins.
       languages:
           - javascript
           - typescript

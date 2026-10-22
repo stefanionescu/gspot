@@ -47,7 +47,7 @@ test('a limit looser than the default needs a reason, and a tighter one does not
     expect(
         captureThrow(() => parseSettings('configurations = ["bash"]\n[limits]\nfile_lines = 1000\n', undefined)),
     ).toBe(
-        'gspot.toml: limits.file_lines: `limits.file_lines = 1000` is looser than the shipped default 300, so it needs a reason. Run: gspot set limits.file_lines 1000 --reason "..."',
+        'gspot.toml: limits.file_lines: `limits.file_lines = 1000` is looser than the shipped default 300, so it needs a reason. Run: gspot set limits.file_lines 1000 --reason "<why>"',
     );
     expect(() => parseSettings('configurations = ["bash"]\n[limits]\nfile_lines = 100\n', undefined)).not.toThrow();
 });
@@ -59,7 +59,7 @@ test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {
 test('a record without a reason is refused at its reason field', () => {
     const text = 'configurations = ["bash"]\n[[ignore]]\ncheck = "bash/shellcheck"\n';
     expect(captureThrow(() => parseSettings(text, undefined))).toBe(
-        'gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this entry.',
+        'gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this record.',
     );
     expect(() => parseSettings(text + `reason = "${REVIEWED_REASON}"\n`, undefined)).not.toThrow();
 });

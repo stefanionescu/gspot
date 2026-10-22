@@ -16,7 +16,7 @@ import { findingSchema, failureMessageSchema } from '#cli/schemas/checks/svelte.
 import { FAILURE_LINE, FINDING_LINE, SVELTE_CHECK_COMMAND, SVELTE_TSCONFIG_FLAG } from '#cli/config/checks/svelte.ts';
 
 /**
- * Parses the machine-verbose output of svelte-check.
+ * Turns each error and warning line of the svelte-check machine-verbose output into a finding.
  *
  * @param planned the scope that ran the check.
  * @param stdout what svelte-check printed.

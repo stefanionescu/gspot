@@ -5,24 +5,23 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
 ## Request handling
 
 - Return the documented HTTP status. Do not report a failed operation as a successful response.
-- Validate body, query, and route parameters before using them. Configure `ValidationPipe`
-  transformation and unknown-field handling for the declared input contract.
+- Validate body, query, and route parameters before using them. Configure `ValidationPipe` transformation and
+  unknown-field handling for the declared input contract.
 - Do not expose password hashes, tokens, or internal fields in responses.
 
 ## Providers and lifecycle
 
 - Register each provider in the module that owns it. Repeated registration can create distinct instances.
-- Request-scoped dependencies propagate request scope to their consumers. Check lifetime and
-  resource costs before choosing that scope.
+- Request-scoped dependencies propagate request scope to their consumers. Check lifetime and resource costs before
+  choosing that scope.
 - Close connections and timers through the application lifecycle, such as `OnModuleDestroy`.
 
-## Configuration and security
+## Settings and security
 
-- Fail startup when required configuration has missing or malformed values.
-- Use guards for route authorization. Enforce extra permissions inside each protected operation
-  when one request runs several, or the service has non-HTTP callers.
-- Guards run before pipes. Do not assume guard inputs have passed data transfer object (DTO) transformation or validation.
-- Set request-size limits, security headers, and rate limits for the exposed application.
+- Use guards for route authorization. Enforce extra permissions inside each protected operation when one request runs
+  several, or the service has non-HTTP callers.
+- Guards run before pipes. Do not assume guard inputs have passed data transfer object (DTO) transformation or
+  validation.
 
 ## Feature organization
 

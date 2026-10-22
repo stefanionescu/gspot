@@ -45,7 +45,8 @@ function selectScopeConfigurations(init: InitRepository, scopeFolder: ScopeFolde
             return configuration !== undefined && configuration.group !== 'general';
         })
         .map((evidence) => evidence.configuration);
-    // A language stays out of a scope only while the root keeps it: some source of the language sits outside every scope.
+    // A language stays out of a scope only while the root keeps it: some source of the language sits outside every
+    // scope.
     const atRoot = new Set(rootNames);
     return names.filter((name) => !atRoot.has(name) || init.configurations.get(name)?.group !== 'language');
 }
@@ -137,7 +138,7 @@ export function selectForInit(init: InitRepository): InitConfigurations {
 }
 
 /**
- * Read the configuration choices from the draft.
+ * Build the configuration selection that selectForScope reads, from the draft.
  *
  * @param draft the choices.
  * @returns the configuration choices for the root and each scope.

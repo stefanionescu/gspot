@@ -8,7 +8,7 @@ import { toolPackageJsonSchema } from '#cli/schemas/install/npm/tool-project.ts'
 import type { Lockfile, ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
 /**
- * Validate an npm tool project and identify its package manager and lockfile.
+ * Validate an npm tool project, and choose the lockfile of the package manager.
  *
  * @param text the generated or recorded package.json contents.
  * @param packageManagerName the name to match.

@@ -50,7 +50,7 @@ export function replaceBlock(existing: string, block: string, file: BlockFile): 
 }
 
 /**
- * Read the block in a file.
+ * Find the gspot block in the text of a file, between its markers.
  *
  * @param text the file contents.
  * @param file the file path and marker style.

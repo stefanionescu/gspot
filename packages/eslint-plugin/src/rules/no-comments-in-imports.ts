@@ -74,7 +74,8 @@ function groupImportBlocks(
     }
     return blocks;
 }
-// Adjacent prose lines form one comment so fixes preserve their attachment and order.
+// Merge adjacent own-line comments that hold no tool directive into one comment. The fix then moves them as one block,
+// and a comment of several lines can lead a declaration.
 function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
     const text = source.getText();
     const blocks: TSESTree.Comment[] = [];
@@ -122,7 +123,8 @@ function getStatementOffset(node: TSESTree.Node): number {
     return decorator !== undefined && decorator.range[0] < node.range[0] ? decorator.range[0] : node.range[0];
 }
 
-// A leading comment may sit one blank line and some tool directives above its declaration.
+// A leading comment may sit up to LEADING_COMMENT_LINE_BREAKS line breaks and some tool directives above its
+// declaration.
 function isLeading(
     source: TSESLint.SourceCode,
     comment: TSESTree.Comment,

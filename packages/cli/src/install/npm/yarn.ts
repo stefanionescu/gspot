@@ -61,12 +61,12 @@ function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]
 }
 
 /**
- * Write the scratch .yarnrc.yml with connection settings replaced by environment references, and add those variables to env.
+ * Write the .yarnrc-install.yml of the temporary project with environment references in place of its connection
+ * settings, and add those variables to env.
  *
  * @param install what install needs for this step.
  * @param runFolder the folder where the isolated project runs.
  * @param env variables for the install; the settings go here too.
- *
  * @returns the credential values the lockfile must not contain.
  */
 export async function writeYarnSettings(
@@ -95,10 +95,7 @@ export async function writeYarnSettings(
     Object.assign(settings, buildEnvironmentSettings(env, secrets));
     const listed = await runInstallStep(install, YARN_CONFIG_LIST_ARGUMENTS, { cwd: root, env });
     if (listed.code !== 0)
-        throw new GspotError(
-            'install',
-            'Cannot read Yarn connection settings. Check the repository Yarn configuration.',
-        );
+        throw new GspotError('install', 'Cannot read the Yarn connection settings. Check .yarnrc.yml.');
     const entries = listed.stdout
         .split('\n')
         .filter((line) => line.trim() !== '')

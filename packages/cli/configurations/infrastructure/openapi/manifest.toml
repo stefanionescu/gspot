@@ -1,5 +1,5 @@
 [configuration]
-description = "A committed OpenAPI document that passes its lint rules and matches what its generator writes."
+description = "OpenAPI documents: the committed document passes its lint rules and matches what its generator writes."
 title = "OpenAPI"
 
 [detect]
@@ -11,7 +11,6 @@ npm = "@stoplight/spectral-cli"
 version = "6.15.0"
 
 # Spectral's Ajv plugins must use the same ajv package as Spectral, so the tool project installs one shared ajv.
-
 [[tool]]
 name = "ajv"
 

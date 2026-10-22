@@ -1,4 +1,4 @@
-// Parses Git index, tree, and blob output.
+// Parses .gitattributes text and the index, tree, and blob output of Git.
 import { posix } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -94,7 +94,7 @@ function decodeQuotedPattern(pattern: string): string | undefined {
 }
 
 /**
- * Read attribute declarations in their file order. Decode quoted paths and skip macro definitions.
+ * Read the attribute lines in their file order, and keep quoted paths.
  *
  * @param text the gitattributes source.
  * @param folder the repository-relative place of the .gitattributes file.
@@ -121,10 +121,10 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
 }
 
 /**
- * Apply declarations over inherited attributes, clearing unspecified entries with the ! prefix.
+ * Apply attribute tokens over inherited attributes, clearing unspecified entries with the ! prefix.
  *
  * @param tokens the attribute tokens from one matching pattern.
- * @param previous the attributes inherited from earlier declarations.
+ * @param previous the attributes inherited from earlier lines.
  * @returns the new attributes. The inherited table stays unchanged.
  */
 export function mergeAttributes(tokens: string[], previous: Record<string, string>): Record<string, string> {
@@ -181,7 +181,7 @@ export function parseIndexEntries(text: string): GitIndexEntry[] {
  */
 export function parseTreeEntries(output: Uint8Array): GitEntry[] {
     const text = decodeUtf8(output);
-    if (text === undefined) throw new GspotError('git', 'Revision paths must be valid UTF-8.');
+    if (text === undefined) throw new GspotError('git', 'Git listed a path that is not valid UTF-8.');
     return text
         .split('\0')
         .filter(Boolean)

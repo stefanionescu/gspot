@@ -12,9 +12,9 @@ import {
 } from '#cli/config/generation/settings/builders/basedpyright.ts';
 
 /**
- * Build the Basedpyright file from the settings.
+ * Build basedpyright.json: the Python environment and source paths used by Basedpyright.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Python environment and source paths used by Basedpyright.
  */
 export function buildBasedpyrightFile(planned: PlannedToolFile): string {

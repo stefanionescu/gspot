@@ -17,7 +17,7 @@ import { getTool, getToolName } from '#cli/configurations/declared-tools.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**
- * Keep compiler state in a temporary folder until the test ends.
+ * Keep the compiler cache in a temporary folder until the test ends.
  *
  * @returns a stack that removes the folder and the spy.
  */

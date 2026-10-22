@@ -2,8 +2,8 @@ import { PYTHON_VERSION } from '#cli/config/generation/projects.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/repository/tracked.ts';
 
 /**
- * Arguments shared by uv execution and its installation preview. Every call names the Python of the tool project,
- * which wins over a UV_PYTHON variable and a .python-version file of the repository.
+ * Each uv command names the Python of the tool project, which wins over a UV_PYTHON variable and a .python-version file
+ * of the repository.
  */
 export const UV_LOCKFILE_ARGUMENTS = ['lock', '--python', PYTHON_VERSION] as const;
 
@@ -37,4 +37,4 @@ export const UV_SETTINGS_FILE = 'uv.toml';
 export const PINNED_PACKAGE_NAME = /^[^=]+/u;
 
 export const UV_LOCKFILE_CREDENTIAL_MESSAGE =
-    'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install';
+    'The uv lockfile holds the index credentials of the repository. gspot kept the existing files. Remove the credentials from the index URL.';

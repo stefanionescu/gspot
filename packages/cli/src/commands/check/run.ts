@@ -23,7 +23,7 @@ import type { Finding, CheckCode, CheckResult, CheckRunOptions } from '#cli/type
 /**
  * Checks whether an ignore record covers a finding.
  *
- * @param record one `[[ignore]]` entry of gspot.toml.
+ * @param record one `[[ignore]]` record of gspot.toml.
  * @param finding what a check reported.
  * @returns whether the ignore covers this finding.
  */
@@ -49,7 +49,7 @@ async function refreshAfterFixes(session: Session): Promise<void> {
     session.inspections.clear();
 }
 
-// The result of a check that cannot run: canceled or without Docker.
+// The result of a check that cannot run: the run stopped, the plan skips it, or the host lacks Docker.
 function findUnrunnableResult(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
@@ -113,7 +113,8 @@ function finishResult(run: Run, result: CheckResult): void {
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
     const limiter = pLimit(availableParallelism());
     let completed = 0;
-    // runPlannedCheck catches check errors; these rejections cover ignore matching and onProgress callbacks before resource disposal.
+    // Wait for every check before rethrowing an error of finishResult or onProgress, so the resources stay open until
+    // all checks stop.
     const settled = await Promise.allSettled(
         checks.map((planned) =>
             limiter(async () => {
@@ -146,10 +147,10 @@ async function planAfterFixes(session: Session, options: RunOptions): Promise<Pl
 }
 
 /**
- * Runs the checks and returns the report.
+ * Plan and run the checks, after the fixers when --fix asks, then drop ignored findings and build the run report.
  *
  * @param opened the repository and its tools.
- * @param options stage, skips, and fix flags.
+ * @param options the stage, the file selection, and the fix flags.
  * @returns the report, the plan, and the fix report when --fix ran.
  */
 export async function runChecks(opened: Session, options: RunOptions): Promise<RunResult> {

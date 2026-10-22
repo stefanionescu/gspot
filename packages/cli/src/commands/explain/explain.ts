@@ -31,7 +31,7 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
         ) ?? []),
     ];
     const similar = formatSimilarNames(subject, [...new Set(knownSubjects)]);
-    return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-var), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
+    return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
 }
 
 // A check ID wins. A tracked path wins over a lint rule with the same first folder.
@@ -60,7 +60,7 @@ function explainNamed(session: Session | undefined, subject: string): Explanatio
 }
 
 /**
- * Run the explain command and return its output.
+ * Explain a subject, and read the settings of the repository when it has gspot.toml.
  *
  * @param cwd the folder where the command starts.
  * @param subject the check, rule, configuration, setting, or path to explain.
@@ -102,8 +102,8 @@ function explain(session: Session | undefined, subject: string): Explanation {
 /**
  * Register the explain command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerExplain(program: Command, onResult: CommandCompletion): void {
     program

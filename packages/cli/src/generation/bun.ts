@@ -1,4 +1,4 @@
-// Writes the Bun security scanner that gspot.toml names into bunfig.toml.
+// Builds the bunfig.toml edits that set the Bun security scanner that gspot.toml names.
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scope-settings.ts';

@@ -32,7 +32,7 @@ function addDefault(knownSettings: KnownSettings, configuration: Configuration, 
     if (!isList && previous !== undefined && isScalarConflict(previous, configuration, setting)) {
         knownSettings.errors.push({
             key: setting.name,
-            message: `The configurations \`${previous.configuration}\` and \`${configuration.name}\` set \`${setting.name}\` to different values. Set it yourself in gspot.toml to decide.`,
+            message: `The configurations ${previous.configuration} and ${configuration.name} set ${setting.name} to different values. Set it yourself in gspot.toml to decide.`,
         });
         return;
     }
@@ -43,7 +43,7 @@ function addDefault(knownSettings: KnownSettings, configuration: Configuration, 
 }
 
 // Add the settings of one configuration and their defaults, then its [defaults] for settings that other configurations
-// declare. Those apply only while the selection includes that configuration.
+// declare. Those apply only while the repository selects that configuration.
 function addConfigurationSettings(knownSettings: KnownSettings, configuration: Configuration, level: Level): void {
     const isAll = level === 'all';
     const settings = listSettings(configuration.name).map((declared) =>
@@ -69,7 +69,7 @@ function addConfigurationSettings(knownSettings: KnownSettings, configuration: C
         addDefault(knownSettings, configuration, { ...setting, default: value });
 }
 
-// The command value kind comes from the same input schema that accepts it.
+// Map a JSON Schema type to the setting type that gspot list settings shows.
 function convertSchemaType(type: z.core.JSONSchema.JSONSchema['type']): Setting['type'] {
     if (type === 'array') return 'list';
     if (type === 'object') return 'table';
@@ -115,12 +115,12 @@ const TOOL_SETTINGS: Map<string, Setting[]> = new Map(
 );
 
 /**
- * Build the known settings in selection order. Framework, platform, library, and database configurations override
- * single-value defaults.
+ * Build the known settings in the order of the selected configurations. Framework, platform, library, and database
+ * configurations override single-value defaults.
  *
  * @param configurations the manifests of the selection, in order.
  * @param level picks the recommended or all defaults.
- * @returns the declarations, their defaults, and the conflicts found on the way.
+ * @returns the settings, their defaults, and the conflicts found on the way.
  */
 export function buildKnownSettings(configurations: Configuration[], level: Level): KnownSettings {
     const roots = ROOT_SETTINGS;
@@ -147,9 +147,9 @@ export function buildKnownSettings(configurations: Configuration[], level: Level
 }
 
 /**
- * Read the declarations and defaults from their field schemas.
+ * List the settings that one configuration declares, with their defaults, from the facts of the settings schemas.
  *
- * @param configuration the name whose fields to read.
+ * @param configuration the configuration name.
  * @returns the settings of this configuration.
  */
 export function listSettings(configuration: string): Setting[] {

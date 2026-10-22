@@ -5,7 +5,8 @@ import { clientEnvOptionsSchema } from '../schemas/rules/no/client-env.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ENVIRONMENT_HOSTS, ENVIRONMENT_PROPERTY, ALLOWED_ENVIRONMENT_NAMES } from '../config/environment.ts';
 
-// Undeclared hosts have no local binding; direct member reads and destructuring use the same property test.
+// ReferenceTracker skips hosts that the config does not declare as globals, so this reads their env member and
+// destructuring directly.
 function listDirectEnvironmentReads(identifier: TSESTree.Identifier): TSESTree.Node[] {
     const hosts: readonly string[] = ENVIRONMENT_HOSTS;
     if (!hosts.includes(identifier.name)) return [];
@@ -40,7 +41,8 @@ function listGlobalEnvironmentReads(scope: TSESLint.Scope.Scope): TSESTree.Node[
 }
 
 /**
- * List the variable names read from an environment object. An empty list means the whole object or a dynamic key.
+ * List the names read from an environment object, with null for a computed key or a rest element. An empty list means
+ * that the code reads the whole object.
  *
  * @param node the environment access
  * @returns the names read directly or through destructuring

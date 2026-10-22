@@ -9,5 +9,5 @@ export type RuffToolFile = {
 /** Knip entries for the root and each detected package workspace. */
 export type KnipToolFile = { ignore: string[]; workspaces: Record<string, { entry: string[] }> };
 
-/** Stylelint rule settings read by shared framework defaults. */
+/** The rules and overrides of a generated Stylelint tool file. */
 export type StylelintToolFile = Required<Pick<Config, 'rules'>> & Pick<Config, 'overrides'>;

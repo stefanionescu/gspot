@@ -2,7 +2,7 @@ import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import type { Group, Configuration } from '#cli/types/configurations.ts';
 import type { FileKind, TrackedFile } from '#cli/types/repository/inventory.ts';
 
-/** What detection reads once from the tree of a scope, for every manifest to look at. */
+/** What detection reads once from the tree of a scope, for every configuration to look at. */
 export type ScopeContents = {
     files: TrackedFile[];
     extensionCounts: Map<string, number>;
@@ -33,7 +33,7 @@ export type FileMatch = {
 /** Repository evidence with an optional count for extension matches. */
 export type DetectionEvidence = { evidence: string; count?: number };
 
-/** Configuration selection and scope values for repository file coverage. */
+/** The selected configurations and scope values for repository file coverage. */
 export type CoveredFilesOptions = {
     configurations: Configuration[];
     scopePath: string;

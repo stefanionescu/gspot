@@ -111,7 +111,7 @@ function splitSection(
 }
 
 /**
- * Write the ordered tables, with the kept comments around TOML values.
+ * Build the TOML text of the ordered tables, with the kept comments around TOML values.
  *
  * @param table the ordered written values.
  * @param indent the whitespace for one level.
@@ -289,7 +289,6 @@ export function listKeptComments(syntax: TomlSyntax, destination: TomlTable, wri
  * Identify nonempty arrays of parsed tables for section layout.
  *
  * @param value the parsed input.
- *
  * @returns whether every array item holds a plain table.
  */
 function isRecordArray(value: unknown): value is Record<string, unknown>[] {

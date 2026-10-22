@@ -9,9 +9,9 @@ import {
 } from '#cli/config/generation/settings/builders/yamllint.ts';
 
 /**
- * Build the yamllint file from the settings.
+ * Build yamllint.yml: the YAML lint rules with the configured indentation and disabled checks.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the YAML lint rules with the configured indentation and disabled checks.
  */
 export function buildYamllintFile(planned: PlannedToolFile): string {

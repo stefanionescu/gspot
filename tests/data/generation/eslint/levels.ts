@@ -15,6 +15,17 @@ export const known = (value) => value ?? { known: true };
 export const LEVEL_RULE_OPTIONS =
     '[limits.javascript]\ntrivial_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n';
 
+/** Options for a rule of level all, a loaded rule that no configuration runs, and a rule of no loaded plugin. */
+export const UNAPPLIED_RULE_OPTIONS =
+    '[tools.eslint.rules]\n"n/no-process-exit" = []\n"id-length" = []\n"acme/foo" = []\n';
+
+/** The refusal of each unapplied rule option, in the order of the options. */
+export const UNAPPLIED_RULE_REFUSALS = [
+    'n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level recommended.',
+    'gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
+    'acme/foo belongs to no plugin that gspot loads. For a rule of your own, add a [[tools.eslint.plugins]] record.',
+] as const;
+
 /** Typed promise statements distinguish accepted void expressions from an unhandled promise. */
 export const CONFIGURATION_RULE_OPTIONS = {
     tables: '[tools.eslint.rules]\n"@typescript-eslint/no-floating-promises" = [{ ignoreVoid = true }]\n',

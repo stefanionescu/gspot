@@ -54,5 +54,5 @@ test('tsconfig reads share one read cache per run and keep folders apart', async
     expect(readTsconfig(next.root, path, next)?.options.strict).toBe(false);
     await writeFile(join(first.path, 'base.json'), '{');
     const invalid = createReadCache(first.path);
-    expect(() => readTsconfig(invalid.root, path, invalid)).toThrow('Cannot read TypeScript configuration');
+    expect(() => readTsconfig(invalid.root, path, invalid)).toThrow('Cannot read the tsconfig file');
 });

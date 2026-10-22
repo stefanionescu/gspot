@@ -84,7 +84,7 @@ export async function readStagedPaths(repositoryRoot: string, cancelSignal?: Abo
 }
 
 /**
- * Read the files and commits that changed after a ref, for the pull-request form.
+ * Read the files and commits that changed after a ref, for `gspot check --changed`.
  *
  * @param repositoryRoot the folder where Git runs.
  * @param reference the git ref to compare against.

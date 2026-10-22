@@ -19,10 +19,9 @@ function isComponentConfiguration(name: string): name is (typeof COMPONENT_CONFI
 }
 
 /**
- * Calculate the exact file sets that base blocks and every framework fragment share.
+ * Calculate the exact file sets that base blocks and the blocks of every framework share.
  *
  * @param groups the file sets to combine.
- *
  * @returns code patterns and intersections that leave out non-code files.
  */
 export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
@@ -121,8 +120,7 @@ export function splitGlobs(patterns: string[]): PathExpressions {
  * @param files the source selectors.
  * @param scope the project folder.
  * @param paths the repository-relative path patterns.
- *
- * @returns the intersections of code, project, and authored path selectors.
+ * @returns the intersections of the code, project, and your own path selectors.
  */
 export function buildScopeFiles(
     files: NonNullable<EslintBlockFields['files']>,

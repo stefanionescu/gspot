@@ -12,9 +12,9 @@ type Suppression = NonNullable<Tool['suppression']>;
 const configurations = REFERENCE_FACTS.configurations;
 
 /**
- * Name the tools a check runs; a built-in check runs none.
+ * Name the tool that a check runs; a built-in check runs none.
  *
- * @param check the declaration
+ * @param check the check whose tool to name
  * @returns the display name, or nothing for a built-in check
  */
 function formatToolNames(check: Check): string | undefined {
@@ -79,7 +79,7 @@ function formatTurnOff(check: Check, suppressions: Map<string, Suppression>): st
  * @param check the record from the manifest
  * @param configuration the parsed configuration that declares it
  * @param suppressions the suppression form of each tool
- * @returns the page data and Markdown
+ * @returns the page and its Markdown
  */
 export function buildCheckPage(
     check: Check,
@@ -111,7 +111,7 @@ export function buildCheckPage(
 /**
  * Build the check index: one table per group, each check linked to its page.
  *
- * @param checks every declaration, with the configuration that owns it
+ * @param checks every check, with the configuration that owns it
  * @param groups the title of each folder of configurations
  * @returns the index page
  */
@@ -132,9 +132,9 @@ export function buildCheckIndex(checks: ReferenceFacts['checks'], groups: Record
 }
 
 /**
- * Read the suppression form of every shipped tool that has one.
+ * List the suppression form of every shipped tool that has one.
  *
- * @param configurations every shipped manifest
+ * @param configurations every shipped configuration
  * @returns the form of each tool, by tool name
  */
 export function listSuppressions(configurations: Configuration[]): Map<string, Suppression> {

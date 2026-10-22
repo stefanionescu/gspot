@@ -111,7 +111,7 @@ export const ENVIRONMENT_CASES = [
     { source: 'const port = import.meta.env.PORT;\n', rule: 'no-restricted-syntax' },
 ] as const;
 export const ENVIRONMENT_COMPOSED = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";
-// Authored test globs add to the defaults and scope exclusions; production imports stay checked.
+/** Authored test globs add to the defaults and scope exclusions; production imports stay checked. */
 export const TEST_IMPORT_RULE_TABLES = `test_files = ["app/qa/**"]
 
 [[import_rule]]

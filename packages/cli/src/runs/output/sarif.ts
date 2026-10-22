@@ -16,7 +16,7 @@ function getArtifactLocation(artifact: SarifArtifactLocation, run: SarifRun): Sa
     return location;
 }
 
-// Source URIs must resolve inside the source folder before path exceptions can apply.
+// A finding must point inside the source folder, so [[ignore]] paths and path arguments can match it.
 function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, source: string): string {
     if (artifact.uri === undefined) return '';
     const root = pathToFileURL(`${source}${sep}`);
@@ -35,7 +35,7 @@ function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, sour
         throw new GspotError('output', 'SARIF reported a source location that is not a file.');
     const file = relative(source, fileURLToPath(uri));
     if (!isInside(file))
-        throw new GspotError('output', 'SARIF reported a source location outside its selected source copy.');
+        throw new GspotError('output', 'SARIF reported a source location outside the copy of the source.');
     return fileURLToPath(uri);
 }
 

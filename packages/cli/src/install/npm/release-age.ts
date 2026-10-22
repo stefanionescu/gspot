@@ -7,14 +7,13 @@ import { GSPOT_PACKAGES, RELEASE_AGE_FILES } from '#cli/config/install/npm.ts';
 import type { PackageManager } from '#cli/types/repository/package-manager.ts';
 
 /**
- * Add the hold to the lockfile run of the tool project. npm takes flags; Bun and pnpm read a settings file in the
- * folder they run in. Yarn gets the hold in its install settings file instead.
+ * Add the minimum release age to the lockfile run of the tool project. npm takes flags; Bun and pnpm read a settings
+ * file in the folder they run in. Yarn reads it from its install settings file instead.
  *
  * @param runFolder the temporary folder that the package manager runs in.
  * @param command the arguments to run.
  * @param packageManager npm, pnpm, Yarn, or Bun, with its version.
  * @param days how long a new release waits.
- *
  * @returns the command to run.
  */
 export function prepareReleaseAge(

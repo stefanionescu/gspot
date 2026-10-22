@@ -49,7 +49,7 @@ export const SERVICE_KEY_READERS = {
     'apps/web/client.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
 } as const;
 
-/** Secret-key reads and the safe publishable-key replacement for each source. */
+/** Ways a client file can read the Supabase secret key. */
 export const SECRET_KEY_READS = [
     'process.env.SUPABASE_SECRET_KEY',
     'settings.supabase_secret_key',

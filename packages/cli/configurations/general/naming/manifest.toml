@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Checks every identifier, file, and folder for banned words, case, length, and word count."
+description = "Identifiers, files, and folders: banned words, case, length, and word count."
 title = "Naming"
 
 [files]
@@ -21,7 +21,7 @@ help = "Rename the file or folder, or add a path rule under [[naming.override]] 
 level = "all"
 name = "paths"
 stage = "commit"
-summary = "Checks every file stem and folder name against the case rules of its language and the banned words."
+summary = "Checks every file name, without its extension, and every folder name against the case rules of its language and the banned words."
 why = "A file such as `enhanced-utils.ts` collects code with no clear place. One case rule keeps imports predictable."
 
 [[check]]
@@ -32,7 +32,7 @@ name = "allowed-names"
 runs = "once"
 stage = "commit"
 summary = "Reports allowed names that no source file uses."
-why = "An allowed name that nothing uses hides an obsolete exception."
+why = "An allowed name that nothing uses stays in gspot.toml after the code that needed it is gone."
 
 [[naming.override]]
 allowed_names = ["_default"]

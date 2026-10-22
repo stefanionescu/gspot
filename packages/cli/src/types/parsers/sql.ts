@@ -10,18 +10,18 @@ export type SqlToken = {
 /** Original UTF-16 boundaries of one client substitution. */
 export type SqlRange = { start: number; end: number };
 
-/** SQL parser input with client commands masked and substitution locations retained. */
+/** The SQL text that the parser reads, with psql commands blanked out, and where each psql variable sat. */
 export type PreparedSql = { text: string; variables: SqlRange[] };
 
-/** PostgreSQL payload fields indexed by their node kind. */
+/** The fields of each PostgreSQL parse tree node, by node kind. */
 export type SqlNodeFields = { [Entry in Node as keyof Entry]: Entry[keyof Entry] };
 
-/** A statement keeps the link between its kind and payload. */
+/** One parsed statement: its kind, its fields, and where it starts. */
 export type SqlStatement<Kind extends keyof SqlNodeFields = keyof SqlNodeFields> = {
     [Name in Kind]: { kind: Name; fields: SqlNodeFields[Name]; start: number };
 }[Kind];
 
-/** Readers for each kind keep the payload types and the context that each caller needs. */
+/** A reader for each statement kind, which gets the fields of that kind and the arguments that the caller passes. */
 export type SqlStatementVisitors<Result, Arguments extends unknown[] = []> = {
     [Kind in keyof SqlNodeFields]?: (statement: SqlStatement<Kind>, ...readerArguments: Arguments) => Result;
 };

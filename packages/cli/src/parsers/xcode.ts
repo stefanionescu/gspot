@@ -160,7 +160,7 @@ function listTargetFolders(project: XcodeProject, id: string, target: PbxElement
     });
 }
 
-// Validate project metadata without requiring source paths or a main group.
+// Validate the project objects without requiring source paths or a main group.
 function parsePbxproj(text: string): ParsedPbxproj {
     const project = pbxprojSchema.parse(parseProjectDocument(text));
     const root = project.objects[project.rootObject];

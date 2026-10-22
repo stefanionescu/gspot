@@ -67,7 +67,7 @@ function removeStaleLock(bounds: FileBounds, path: string, absolutePath: string)
 }
 
 /**
- * Release every lock claimed through this safe folder.
+ * Release every lock that this Files handle holds.
  *
  * @param bounds the root and its held locks.
  * @returns the paths of released locks for parent-folder cleanup.

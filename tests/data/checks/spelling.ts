@@ -24,8 +24,10 @@ export const SPELLING_IGNORE_CASES = [
     { patterns: ['**/nested/**/src/*'], expected: ['nested/bad.txt', 'nested/child/bad.txt', 'nested/trc/bad.txt'] },
 ] as const;
 
-// Deliberate misspellings for the spelling tests. The typos check leaves this one file out, so every test
-// file stays checked, and the check reports a real typo in a test.
+/**
+ * Deliberate misspellings for the spelling tests. The typos check leaves this one file out, so every test file stays
+ * checked, and the check reports a real typo in a test.
+ */
 export const TYPO = {
     the: 'teh',
     color: 'colour',

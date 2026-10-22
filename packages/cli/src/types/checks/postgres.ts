@@ -2,7 +2,10 @@ import type { AlterTableCmd } from '@pgsql/types';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { SqlFile, SqlStatement, SqlNodeFields } from '#cli/types/parsers/sql.ts';
 
-/** The declaration position of a fact, so a finding points at it. */
+/**
+ * Where the migrations declare something: the file, the offset, and the statement text, so that a finding can point at
+ * it.
+ */
 type Declared = { path: string; offset: number; text: string };
 
 export type StatementReader<Kind extends keyof SqlNodeFields> = (
@@ -11,7 +14,7 @@ export type StatementReader<Kind extends keyof SqlNodeFields> = (
     migration: Migration,
 ) => void;
 
-/** Only PostgreSQL alteration kinds handled by schema state have a reader. */
+/** A reader for each `ALTER TABLE` command that changes the database schema. */
 export type SchemaAlterations = Partial<
     Record<NonNullable<AlterTableCmd['subtype']>, (state: DatabaseSchema, at: Location, command: AlterTableCmd) => void>
 >;
@@ -29,11 +32,11 @@ export type Migration = {
 
 /** What the migrations say about the schema, read across every file. */
 export type Schema = {
-    /** Qualified table name to its creation position. */
+    /** Each table, by its name with its schema such as public.users, and where a migration creates it. */
     tables: Map<string, Declared>;
     secured: Set<string>;
     foreignKeys: (Declared & { table: string; column: string })[];
-    /** Qualified table name to the leading column of each index and key on it. */
+    /** Each table, by its name with its schema, and the first column of each index and key on it. */
     indexed: Map<string, Set<string>>;
 };
 
@@ -44,5 +47,5 @@ export type DatabaseSchema = Pick<Schema, 'tables' | 'secured'> & {
 
 export type Location = { migration: Migration; statement: SqlStatement; table: string };
 
-/** Parsed migrations and located source syntax failures for the invoking check. */
+/** The parsed migrations and a finding for each syntax error. */
 export type MigrationRead = { migrations: Migration[]; findings: Finding[] };

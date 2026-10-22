@@ -1,3 +1,4 @@
+// Builds knip.json: the workspaces, their entry files, and what Knip leaves out.
 import { splitIdentity } from '#cli/parsers/lockfiles.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { getTable } from '#cli/settings/scope-settings.ts';
@@ -62,8 +63,7 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): s
  *
  * @param repositoryRoot the folder whose package.json files declare the workspaces.
  * @param settings the validated gspot.toml.
- * @param scopes every project selection.
- *
+ * @param scopes every project scope.
  * @returns the workspace settings.
  */
 function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Scope[]) {
@@ -118,9 +118,9 @@ function listFileTaskPackages(planned: PlannedToolFile): string[] {
 }
 
 /**
- * Build the Knip file from the settings.
+ * Build knip.json: the workspace entry points, project selectors, and dependency exclusions.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the workspace entry points, project selectors, and dependency exclusions.
  */
 export function buildKnipFile(planned: PlannedToolFile): string {

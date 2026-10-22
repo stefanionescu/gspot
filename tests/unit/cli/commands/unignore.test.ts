@@ -45,11 +45,13 @@ test('unignore refuses a gspot.toml whose ignore has no reason and writes nothin
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
     const unmatched = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2034']);
     expect(unmatched.code, unmatched.stdout + unmatched.stderr).toBe(2);
-    expect(unmatched.stderr).toBe('gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this entry.\n');
+    expect(unmatched.stderr).toBe(
+        'gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this record.\n',
+    );
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     const matched = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
     expect(matched.code, matched.stdout + matched.stderr).toBe(2);
-    expect(matched.stderr).toBe('gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this entry.\n');
+    expect(matched.stderr).toBe('gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this record.\n');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     expect(await readFile(join(sandbox.path, 'entry.sh'), 'utf8')).toBe('echo example\n');
 });

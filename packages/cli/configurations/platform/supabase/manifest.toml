@@ -14,7 +14,6 @@ paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]
 
 [defaults]
 "postgres.client_schemas" = ["public"]
-"tools.squawk.assume_in_transaction" = true
 
 [[naming.override]]
 allowed_names = ["shared"]
@@ -59,7 +58,7 @@ name = "service-role-key"
 runs = "scope"
 stage = "commit"
 summary = "Checks that only edge functions and test files name a secret or service role key."
-why = "Secret and service role keys bypass row level security, so a client bundle that holds either exposes privileged database access."
+why = "Secret and service role keys bypass row-level security, so a client bundle that holds either exposes privileged database access."
 
 [[check]]
 example = "An Edge Function declaring `var greeting = \"hello\";` reports `no-var`. Use `const greeting = \"hello\";` instead."

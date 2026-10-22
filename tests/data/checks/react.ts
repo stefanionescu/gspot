@@ -15,7 +15,7 @@ const WEB_TSCONFIG = {
 /** The packages of a test React web repository. */
 export const WEB_PACKAGES = ['react', 'react-dom'] as const;
 
-/** A component accepted by the configured React rules. */
+/** A component that the configured React rules accept. */
 const CLEAN_COMPONENT =
     `// A test component.
 import type { ReactNode } from 'react';

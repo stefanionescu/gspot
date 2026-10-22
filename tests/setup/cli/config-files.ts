@@ -32,7 +32,7 @@ export async function readGeneratedFiles(root: string, pattern: string): Promise
 }
 
 /**
- * Creates a repository with the settings and files, and returns the content of one generated file.
+ * Create a repository with the settings and files, and return the content of one generated file.
  *
  * @param settings the gspot.toml text.
  * @param path generated file to read.

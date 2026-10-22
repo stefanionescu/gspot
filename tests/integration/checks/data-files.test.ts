@@ -18,7 +18,7 @@ import {
     UNQUOTED_UNTIL_CHANGE,
 } from '#tests/data/integration/checks/data-files.ts';
 
-// Checks the root and child scopes separately with yamllint.
+/** Check the root and child scopes separately with yamllint. */
 async function assertYamlFiles(root: string, rule?: string): Promise<void> {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'data-files/yamllint', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);

@@ -57,7 +57,7 @@ export function buildSandboxSettings(
 }
 
 /**
- * Parses settings text and returns its errors, or none when it parses.
+ * Parse settings text and return its errors, or none when it parses.
  *
  * @param text gspot.toml content to parse.
  * @param repositoryRoot folder the settings describe, for errors that depend on its files.

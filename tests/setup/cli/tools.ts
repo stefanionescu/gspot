@@ -31,11 +31,11 @@ export async function readToolProjectFiles(
 }
 
 /**
- * Build the install state for a sandbox.
+ * Build the tool install for a sandbox.
  *
  * @param session the open sandbox.
  * @param writer holds the repository lock and saves files.
- * @returns the install state.
+ * @returns the session, writer, generated files, and tools that the install steps read.
  */
 export function buildToolInstall(session: Session, writer: Writer): ToolInstall {
     return {
@@ -54,7 +54,7 @@ export function buildToolInstall(session: Session, writer: Writer): ToolInstall 
  * @param name executable to pin.
  * @param version release to pin.
  * @param npm package that ships the program.
- * @returns a tool record with that program pinned.
+ * @returns a tool with that program pinned.
  */
 export function buildProgramPin(name: string, version: string, npm?: string): Tool {
     return {
@@ -65,7 +65,7 @@ export function buildProgramPin(name: string, version: string, npm?: string): To
     };
 }
 
-/** The tool search state for tests that inspect installed tools. */
+/** What tool search reads, for tests that inspect installed tools. */
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,

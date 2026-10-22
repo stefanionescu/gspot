@@ -85,7 +85,7 @@ export const ALLOWED_PACKAGE_CASES = [
     },
 ] as const;
 
-/** JavaScript package names stay as written; Python package names get normalized in their own reports. */
+/** JavaScript package names stay as written; their own reports normalize Python package names. */
 export const EXPECTED_SCAN_FINDINGS = [
     { file: 'package.json', message: 'unknown@1.0.0 uses UNKNOWN, which is not allowed.' },
     { file: 'package.json', message: 'python.package@2.0.0 uses GPL-3.0-only, which is not allowed.' },

@@ -19,13 +19,13 @@ names, such as the hooks that a framework calls by name:
 gspot ignore structure/trivial-functions --names define_schema execute --reason "ComfyUI calls these node hooks."
 ```
 
-Add `--until YYYY-MM-DD` for an ignore that ends at 00:00 UTC on that date. After that date, the record stays in
-`gspot.toml` for review.
+Add `--until YYYY-MM-DD` for an ignore that ends at 00:00 UTC on that date. From then on, `gspot/suppressions` reports
+the ignore until you fix the findings and run `gspot unignore`, or write a later date.
 
 To ignore a dependency advisory, give its ID as the rule:
 
 ```shell
-gspot ignore dependencies/osv-scanner --rule <advisory ID> --reason "..."
+gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason "<why>"
 ```
 
 To remove the ignore:

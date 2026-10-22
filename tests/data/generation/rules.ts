@@ -9,7 +9,6 @@ export const RUNTIME_RULE_CASES = [
 
 export const RULE_CONFIGURATIONS = ['typescript', 'css', 'vitest', 'swift', 'bash', 'drizzle', 'openapi'] as const;
 
-/** A scope in app/ with the javascript configuration. */
 export const JAVASCRIPT_IN_APP_TABLES = '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n';
 export const NAMING_RULE_LEVEL_CASES = [
     { configuration: 'bash', path: 'language/bash/rules/BASH.md' },
@@ -34,7 +33,7 @@ export const RULE_CORRECTNESS_CASES = [
         path: 'language/bash/rules/BASH.md',
         instructions: [
             'End an executable script with a meaningful status.',
-            'optional cleanup check must not set the exit status by accident.',
+            'optional cleanup check set the exit status.',
         ],
     },
     {

@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Checks the files that Git tracks and their storage."
+description = "Tracked files: large files outside Git LFS, and paths that a configuration keeps out of Git."
 title = "Repository"
 
 [[check]]

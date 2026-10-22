@@ -26,7 +26,7 @@ replace = ["trivy.yaml", ".trivyignore"]
 version = "0.69.3"
 
 [[tool]]
-install_help = "install Docker Desktop or the docker engine"
+install_help = "Install Docker Desktop or Docker Engine."
 name = "docker"
 system = true
 
@@ -49,7 +49,7 @@ tool = "trivy"
 command = ["hadolint", "--no-color", "--config", "{tool_file:hadolint}", "{files}"]
 example = "`FROM node:latest` reports DL3007, because that tag moves. Pin an explicit version tag or a digest."
 files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "!**/*.dockerignore"] }
-help = "Change the instruction the way the rule says. Turn one rule off with `gspot ignore docker/hadolint --rule <id> --reason \"<why>\"`."
+help = "Change the instruction the way the rule says. Turn one rule off with `gspot ignore docker/hadolint --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "hadolint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$" }
@@ -86,7 +86,7 @@ why = "Without it, the daemon receives the whole folder, and a `COPY` of it puts
 command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{tool_file:trivy}", "--ignorefile", "{tool_file:trivyignore}", "--exit-code", "10", "--format", "sarif", "{root}"]
 example = "A Dockerfile whose final stage runs as root reports a finding. Create an unprivileged user, and switch to it with `USER` before the application starts."
 exit_codes = [10]
-help = "Change the file the way the message says. Accept one advisory with `gspot ignore docker/trivy-config --rule <id> --reason \"...\"`."
+help = "Change the file the way the message says. Accept one advisory with `gspot ignore docker/trivy-config --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "trivy-config"
 output = { format = "sarif" }
@@ -99,7 +99,7 @@ why = "A root user turns any bug in the service into full control of the contain
 
 [[check]]
 example = "An image with a vulnerable package reports the advisory. Move to an image version with the fixed package."
-help = "Move to a newer tag of the image. Accept one advisory with `gspot ignore docker/trivy-image --rule <id> --reason \"...\"`."
+help = "Move to a newer tag of the image. Accept one advisory with `gspot ignore docker/trivy-image --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "trivy-image"
 needs = ["docker"]

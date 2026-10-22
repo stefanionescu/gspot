@@ -6,7 +6,7 @@ import { getPreset, allowFocusableRegions, buildPresetRuleExpression } from '#cl
 /**
  * Apply the accessibility lint rules to the React DOM files.
  *
- * @param scope the ESLint inputs of the scope.
+ * @param scope the planned ESLint file of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 export function buildReactDomBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {

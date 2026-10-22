@@ -50,13 +50,13 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
             }),
     );
     if (projects.length > 0 && unchecked.length === 0)
-        throw new GspotError('skip', 'An ancestor compiler check covers this project.');
+        throw new GspotError('skip', 'The tsconfig of a parent folder covers this project, and gspot checks it there.');
     return unchecked.flatMap(({ path, parsed }) =>
         Object.keys(required)
             .filter((option) => parsed.options[option] !== true)
             .map((option) =>
                 buildFinding(planned, { file: path }, option, `${option} is not on in this tsconfig.`, {
-                    help: 'Enable this compiler option in the TypeScript tool file.',
+                    help: 'Turn this compiler option on in this tsconfig.',
                 }),
             ),
     );

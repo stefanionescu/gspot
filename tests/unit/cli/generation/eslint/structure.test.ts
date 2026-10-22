@@ -22,7 +22,7 @@ import {
     LEVEL_REEXPORT_CASES,
 } from '#tests/data/generation/eslint/structure.ts';
 
-// The files and rules that the generated ESLint tool file reports for the two trivial-code rules.
+/** List the files and rules that the generated ESLint tool file reports for the trivial-code rules. */
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);
     const eslint = await createEslint(root);
@@ -30,7 +30,7 @@ async function listTrivialFindings(root: string, settings: string): Promise<Pick
     return findings.map(({ file, rule }) => ({ file, rule }));
 }
 
-// The files the trivial-file rule reports, sorted.
+/** List the files that the trivial-file rule reports, sorted. */
 function listTrivialFiles(findings: Pick<LintFinding, 'file' | 'rule'>[]): string[] {
     const files = findings.filter(({ rule }) => rule === 'gspot/no-trivial-files').map(({ file }) => file);
     return [...new Set(files)].toSorted((left, right) => left.localeCompare(right));

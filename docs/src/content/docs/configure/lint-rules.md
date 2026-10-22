@@ -6,10 +6,12 @@ description: Set lint rule options in gspot.toml instead of the tool files.
 Set lint rule options in `gspot.toml`; gspot writes them into the tool file. To turn a lint rule off, use an
 [ignore](/use/ignore/) with a reason.
 
-gspot refuses options for an ESLint or Stylelint rule that the selected level does not run:
+gspot refuses options for an ESLint or Stylelint rule that the selected level does not run. The refusal names the
+case: a rule that runs only at level `all`, or a rule that gspot loads and runs at no level:
 
 ```text
-n/no-process-exit does not run at level recommended; gspot sets options only for rules it runs. Use tools.eslint.plugins for your own rules.
+n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level recommended.
+gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.
 ```
 
 None of these settings turns a lint rule on or off, and none takes a severity; the level decides which rules run.
@@ -22,6 +24,19 @@ None of these settings turns a lint rule on or off, and none takes a severity; t
 | markdownlint          | `tools.markdownlint.rules`                           | An option table for each rule ID      |
 | yamllint              | `tools.yamllint.rules`                               | The options of each rule              |
 | commitlint            | `tools.commitlint.rules`, `types`, and `scopes`      | Rule options, and the accepted values |
+
+gspot writes the options of some rules from a setting, and refuses them in these tables. Change the setting instead:
+
+| Rules                                                                                                                                                    | Setting                                                     |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `max-lines`, `max-lines-per-function`, `max-params`, `max-depth`, `max-statements`, `max-nested-callbacks`, `complexity`, `sonarjs/cognitive-complexity` | The matching key of [limits](/reference/gspot-toml/#limits) |
+| `gspot/no-trivial-functions`                                                                                                                             | `limits.trivial_function_statements`                        |
+| `gspot/no-trivial-files`, `barrel-files/avoid-barrel-files`                                                                                              | `structure.reexports`                                       |
+| `sonarjs/no-identical-functions`                                                                                                                         | `duplication.min_lines`                                     |
+| `no-restricted-imports`                                                                                                                                  | `tools.eslint.restricted_imports`                           |
+| `gspot/import-boundaries`                                                                                                                                | [Import rules](/configure/import-rules/)                    |
+| `n/file-extension-in-import`                                                                                                                             | `tools.eslint.import_extension`                             |
+| markdownlint `MD007`                                                                                                                                     | `format.indent_width`                                       |
 
 ## ESLint
 
@@ -44,7 +59,12 @@ eqeqeq = ["always", { null = "ignore" }]
 gspot set tools.eslint.rules '{ eqeqeq = ["always", { null = "ignore" }] }'
 ```
 
-This table holds options only; do not put a severity such as `"off"` in it.
+The table holds options only. gspot refuses a severity, such as `eqeqeq = "off"`:
+
+```text
+This table holds options only, without a severity; the level decides which rules run. To turn eqeqeq off, run gspot ignore javascript/eslint --rule eqeqeq --reason "<why>".
+```
+
 `gspot explain eslint/eqeqeq` links the documentation of the lint rule, which lists its options, and prints the
 commands that set its options or ignore it.
 

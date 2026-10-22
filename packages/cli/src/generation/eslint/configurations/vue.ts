@@ -6,7 +6,7 @@ import { VUE_RULES, VUE_FILES, CONFIGURATION_PLUGINS } from '#cli/config/generat
 /**
  * Apply the Vue presets, accessibility lint rules, and component parsing.
  *
- * @param scope the ESLint inputs of the scope.
+ * @param scope the planned ESLint file of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {

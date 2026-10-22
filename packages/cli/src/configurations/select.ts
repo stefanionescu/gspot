@@ -20,11 +20,11 @@ function visit(walk: RequirementWalk, configurationName: string): void {
 }
 
 /**
- * Resolve configuration names to manifests in order, and throw for unknown names.
+ * Resolve configuration names to configurations in order, and throw for unknown names.
  *
  * @param configurationNames the names to resolve.
- * @param configurations every configuration manifest.
- * @returns the manifests, requirements first, in order of first mention.
+ * @param configurations every configuration.
+ * @returns the configurations, requirements first, in order of first mention.
  */
 export function selectConfigurations(
     configurationNames: string[],
@@ -39,7 +39,7 @@ export function selectConfigurations(
 /**
  * Keep the language and framework configurations that add source files to shared checks.
  *
- * @param configurations the manifests in use.
+ * @param configurations the configurations in use.
  * @returns the configurations that own source settings.
  */
 export function filterSourceConfigurations(configurations: Configuration[]): Configuration[] {
@@ -48,10 +48,10 @@ export function filterSourceConfigurations(configurations: Configuration[]): Con
 }
 
 /**
- * List each manifest of the scopes once, in first-seen order.
+ * List each configuration of the scopes once, in first-seen order.
  *
- * @param scopes scope selections that can share configurations.
- * @returns one manifest per configuration name.
+ * @param scopes the scopes, which can share configurations.
+ * @returns each configuration once.
  */
 export function listSelectedConfigurations(scopes: Pick<Scope, 'configurations'>[]): Configuration[] {
     const seen = new Map<string, Configuration>();
@@ -64,7 +64,7 @@ export function listSelectedConfigurations(scopes: Pick<Scope, 'configurations'>
 /**
  * Check whether any scope selects a configuration.
  *
- * @param scopes the validated scope selections.
+ * @param scopes the validated scopes.
  * @param name the configuration to find.
  * @returns whether any scope includes the configuration.
  */
@@ -81,8 +81,8 @@ function formatUnknownConfiguration(name: string, known: string[]): string {
  * Find the unknown configuration names, and keep their order and location.
  *
  * @param written the requested names, with their original fields.
- * @param configurations the declared configurations.
- * @returns each unknown declaration with its error message.
+ * @param configurations the shipped configurations.
+ * @returns each unknown name with its error message.
  */
 export function listUnknownConfigurations<Written extends Pick<WrittenConfiguration, 'name'>>(
     written: readonly Written[],
@@ -101,7 +101,7 @@ export function listUnknownConfigurations<Written extends Pick<WrittenConfigurat
  * Refuse explicit edits to configurations that gspot selects itself.
  *
  * @param names the configurations that the command edits.
- * @param configurations the configuration declarations
+ * @param configurations the shipped configurations
  */
 export function assertConfigurationsEditable(names: string[], configurations: Map<string, Configuration>): void {
     const name = names.find((entry) => configurations.get(entry)?.always_selected === true);

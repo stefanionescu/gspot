@@ -1,4 +1,4 @@
-/** Each folder setting refuses these unsafe paths. */
+/** Scope paths that the settings refuse. */
 export const UNSAFE_SCOPE_PATHS = [
     '../outside',
     '/outside',

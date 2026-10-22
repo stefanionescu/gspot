@@ -29,12 +29,6 @@ Vale accepts the word too.
 ## Prose
 
 At level `recommended`, Vale checks ambiguous dates, link text, and image alt text. At level `all`, it adds the full
-style, with these limits; raising one needs a reason.
-
-| Setting                         | Default |
-| ------------------------------- | ------- |
-| `prose.max_sentence_words`      | `30`    |
-| `prose.max_list_item_words`     | `45`    |
-| `prose.max_paragraph_sentences` | `6`     |
+style and the [prose limits](/reference/gspot-toml/#prose); raising one needs a reason.
 
 The [prose configuration](/reference/configurations/prose/) lists the checks.

@@ -67,7 +67,7 @@ function listStaleBlocks(files: Files, generated: GenerationResult): StaleFile[]
     return entries;
 }
 
-// Classify merged files with no remaining managed fields as missing or changed.
+// List the shared files that went missing or lack a managed key.
 function listStaleManagedKeys(files: Files, generated: GenerationResult): StaleFile[] {
     return generated.managedKeys.flatMap((output): StaleFile[] => {
         const current = files.read(output.path);
@@ -81,7 +81,6 @@ function listStaleManagedKeys(files: Files, generated: GenerationResult): StaleF
  *
  * @param session the repository to compare.
  * @param generated the files that this run generates.
- *
  * @returns the stale files in path order.
  */
 export function listStaleFiles(
@@ -106,7 +105,6 @@ export function listStaleFiles(
  *
  * @param session the repository and its package manager.
  * @param generated the files that this run generates.
- *
  * @returns every path that this run writes or keeps.
  */
 export function listExpectedPaths(session: Pick<Session, 'packageManager'>, generated: GenerationResult): Set<string> {

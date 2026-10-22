@@ -58,8 +58,8 @@ async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
 /**
  * Register the apply command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerApply(program: Command, onResult: CommandCompletion): void {
     program

@@ -61,6 +61,9 @@ const SONAR_RULES = {
     // The secrets configuration owns secret detection.
     'sonarjs/no-hardcoded-passwords': 'off',
     'sonarjs/no-hardcoded-secrets': 'off',
+
+    // sonarjs counts only the test calls in the file, so it reports a test file whose tests come from a shared
+    // function.
     'sonarjs/no-empty-test-file': 'off',
     'sonarjs/no-collapsible-if': 'error',
 
@@ -76,14 +79,15 @@ const UNICORN_RULES = {
     // The naming check owns abbreviations and filename case; two owners give conflicting answers.
     'unicorn/prevent-abbreviations': 'off',
     'unicorn/filename-case': 'off',
-    // Platform APIs and syntax trees return null; blanket replacements create changes without fixing a defect.
+    // Platform APIs and syntax trees return null; replacing every null creates changes without fixing a defect.
     'unicorn/no-null': 'off',
     // An explicit undefined satisfies noImplicitReturns and a required parameter typed with undefined; its fixer
     // removes both.
     'unicorn/no-useless-undefined': 'off',
-    // Import path extensions do not constrain default or named imports.
+    // unicorn/import-style asks for a default import of node:path; gspot uses a default import only when a package
+    // requires one.
     'unicorn/import-style': 'off',
-    // A forwarding export contradicts declaration exports.
+    // unicorn/prefer-export-from asks for re-exports, and gspot imports each name from the module that declares it.
     'unicorn/prefer-export-from': 'off',
 
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
@@ -92,7 +96,7 @@ const UNICORN_RULES = {
 
 const SECURITY_RULES = {
     'security/detect-disable-mustache-escape': 'error',
-    // Sonar covers dynamic execution; Node covers deprecated constructors without matching local names.
+    // Sonar covers dynamic code; Node covers deprecated constructors without matching local names.
     'security/detect-eval-with-expression': 'off',
     'security/detect-new-buffer': 'off',
     // detect-non-literal-regexp flags constructors without examining their input.
@@ -188,19 +192,19 @@ export const BASE_SELECTORS = [
     },
     {
         selector: 'TSAsExpression[expression.type="TSAsExpression"]',
-        message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.',
+        message: 'Do not assert twice. Narrow the value, fix its type, or check it at run time.',
     },
     {
         selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]',
-        message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.',
+        message: 'Do not assert twice. Narrow the value, fix its type, or check it at run time.',
     },
     {
         selector: 'TSAsExpression > TSAnyKeyword',
-        message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.',
+        message: 'Do not assert to any. Give the value a real type, or check it at run time.',
     },
     {
         selector: 'TSTypeAssertion > TSAnyKeyword',
-        message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.',
+        message: 'Do not assert to any. Give the value a real type, or check it at run time.',
     },
     {
         selector: 'TSAsExpression > TSNeverKeyword',
@@ -290,10 +294,8 @@ export const SCRIPT_RULES = { 'n/no-process-exit': 'off', 'unicorn/no-process-ex
 export const TEST_RULES = {
     'jsdoc/require-jsdoc': 'off',
     'jsdoc/require-param': 'off',
-    'jsdoc/require-returns': 'off',
     'jsdoc/require-description': 'off',
     'jsdoc/require-param-description': 'off',
-    'jsdoc/require-returns-description': 'off',
     'n/no-unpublished-import': 'off',
     'n/no-unpublished-require': 'off',
 } as const;

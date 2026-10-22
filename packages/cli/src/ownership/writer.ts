@@ -1,4 +1,4 @@
-// Write each changed regular file under the writer lock.
+// Take the writer lock, and write or delete the files of a write plan.
 import { GspotError } from '#cli/system/errors.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/ownership.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
@@ -31,7 +31,7 @@ export function openWriter(repositoryRoot: string): Writer {
 }
 
 /**
- * Validate all destinations and write the changed plans under one lock.
+ * Refuse the plans when they overwrite a file that gspot did not write; otherwise write or delete each changed file.
  *
  * @param writer the locked repository handle.
  * @param plans one write or removal for each file.
@@ -41,7 +41,7 @@ export function writePlans(writer: Writer, plans: WritePlan[]): void {
     if (conflicts.length > 0)
         throw new GspotError(
             'writing',
-            `These files were not overwritten by gspot: ${conflicts.join(', ')}. Move them aside, then run the command again.`,
+            `gspot did not overwrite these files: ${conflicts.join(', ')}. Move them aside, then run the command again.`,
         );
     writeBatch(
         writer,

@@ -1,5 +1,5 @@
 [configuration]
-description = "Jest suites: test lint rules and minimum coverage."
+description = "Jest suites: test lint rules, and minimum coverage before every push."
 requires = ["javascript"]
 title = "Jest"
 
@@ -32,12 +32,12 @@ coverage_arguments = ["--coverage", "--coverageReporters", "--coverageThreshold"
 cwd = "scope"
 example = "Jest reports `coverage threshold for lines (90%) not met: 85%`. Add tests for the lines its report marks uncovered."
 exit_codes = [1]
-help = "Correct failed tests and cover the reported branches, functions, lines, and statements."
+help = "Fix each failed test, and add tests for the code that the report marks uncovered. Lower a minimum under `coverage` only with a reason."
 level = "recommended"
 name = "coverage"
 runs = "scope"
 stage = "push"
-summary = "Runs Jest and checks the four coverage minimums."
+summary = "Runs Jest with coverage, and fails on a failed test or when lines, branches, functions, or statements fall under their minimums."
 tool = "jest"
 why = "A coverage minimum keeps new code from arriving untested."
 

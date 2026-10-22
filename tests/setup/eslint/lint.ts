@@ -31,10 +31,10 @@ export async function listLintFindings(
 }
 
 /**
- * Links the test packages, runs apply, and loads the generated ESLint tool file.
+ * Link the test packages, run apply, and load the generated ESLint tool file.
  *
  * @param sandboxRoot folder with a gspot.toml.
- * @param options ESLint options that the test adds.
+ * @param options more ESLint options.
  * @returns ESLint set up with the generated tool file.
  */
 export async function createEslint(sandboxRoot: string, options?: ESLint.Options): Promise<ESLint> {
@@ -55,7 +55,7 @@ export async function createEslint(sandboxRoot: string, options?: ESLint.Options
     });
 }
 
-/** Sort findings by file, line, and rule. */
+/** Order two findings by file, line, and rule. */
 export function compareFindings(left: LintFinding, right: LintFinding): number {
     return (
         left.file.localeCompare(right.file) ||

@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Documentation links that reach their files, anchors, and sites, and documented paths and commands that exist. Level `all` requires a README in every scope and a LICENSE at the root."
+description = "Documentation: links that reach their files, anchors, and sites, and paths and commands that exist. Level `all` requires a README in every scope and a LICENSE at the root."
 title = "Docs"
 
 [files]
@@ -19,7 +19,7 @@ tool = "lychee"
 
 [[check]]
 command = ["lychee", "--config", "{tool_file:lychee}", "--root-dir", "{root}/.gspot/root-links", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
-example = "The link `[Setup](missing.md)` reports a broken target when no `missing.md` exists. Point it at the setup guide, or add that file."
+example = "The link `[Setup](missing.md)` reports a broken link when no `missing.md` exists. Point it at the setup guide, or add that file."
 help = "Point the link at the file or heading that exists, or delete it."
 level = "recommended"
 name = "lychee"
@@ -42,12 +42,12 @@ why = "External links break over time; this check reports which ones did."
 
 [[check]]
 example = "A path in the docs that points to a deleted file reports a stale reference. Update the path and any command that uses it."
-help = "Fix the path or the task name. Give an example code block a `title=` attribute."
+help = "Fix the path or the task name. To keep an example code block out of the check, give it a `title=` attribute."
 level = "recommended"
 name = "missing-paths"
 runs = "once"
 stage = "commit"
-summary = "Checks that documented paths point to tracked files, and that mise, npm, pnpm, yarn, and bun run commands name a task or script of their project."
+summary = "Checks that documented paths point to tracked files, and that each `mise run`, `npm run`, `pnpm run`, `yarn run`, and `bun run` command names a task or script of its project."
 why = "A stale path in the docs sends the reader to a deleted file."
 
 [[check]]

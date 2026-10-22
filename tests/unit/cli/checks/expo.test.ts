@@ -52,7 +52,7 @@ test('Expo Doctor reports an uninstalled Expo project instead of accepting its e
     });
 
     expect(await captureRejection(runSandboxCheck(sandbox.path, 'expo/expo-doctor'))).toBe(
-        'Expo is not installed in this scope; Expo Doctor reads an installed Expo project.',
+        'Install the project dependencies of this scope; Expo Doctor reads an installed Expo project.',
     );
 });
 

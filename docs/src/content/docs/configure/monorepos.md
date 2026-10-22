@@ -59,9 +59,4 @@ If two selected configurations give
 different defaults for the same setting, gspot names both. To pick one, set the value at the
 root or in a scope.
 
-## gspot.toml in a subfolder
-
-gspot uses the nearest `gspot.toml` in the current folder or a folder above it.
-To use the one in `api/`, run gspot from there: `cd api && gspot check`.
-
-[Scope settings](/reference/gspot-toml/#scope) lists the accepted inputs.
+[Scope settings](/reference/gspot-toml/#scope) lists the keys and the values they accept.

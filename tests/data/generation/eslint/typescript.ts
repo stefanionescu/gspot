@@ -11,7 +11,6 @@ export const TYPE_EXPORT_FILES = {
         'import { value, Shape } from "./value.js";\nexport { value };\nexport { Shape } from "./value.js";\nexport const shape: Shape = value;\n',
 } as const;
 
-/** A root TypeScript project, and a TypeScript scope under a root without TypeScript. */
 export const TYPED_RULE_PROJECTS = [
     {
         name: 'a root TypeScript project',

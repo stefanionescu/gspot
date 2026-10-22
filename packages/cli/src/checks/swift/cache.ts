@@ -117,7 +117,7 @@ export function getScopeBuildFolder(root: string, scope: string, purpose: SwiftB
  *
  * @param session the repository and its tools.
  * @param planned the scope and its Swift settings.
- * @param purpose the tool whose command uses a separate cache.
+ * @param purpose the tool whose build needs its own cache.
  * @param purpose.purpose the tool whose build needs its own cache.
  * @returns the command, build folder, and log path.
  */

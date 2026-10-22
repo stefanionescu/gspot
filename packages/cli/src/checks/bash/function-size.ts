@@ -8,7 +8,7 @@ import { getLimit } from '#cli/settings/scope-settings.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 
 /**
- * Checks each shell function against the size limits: code lines and parser counts.
+ * Checks each shell function against the size limits: code lines, branches, nesting, and assignments.
  *
  * @param session the repository and its tools.
  * @param planned the scope scripts and limits.

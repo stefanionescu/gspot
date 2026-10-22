@@ -61,10 +61,10 @@ export const DETECTION_GAP_WIDTH = 3;
 /** The shared attributes row in every initialization plan. */
 export const ATTRIBUTES_ROW = {
     path: GITATTRIBUTES_FILE,
-    note: 'managed generated-file classification and LF line endings',
+    note: 'marks the generated files and keeps LF line endings',
 } as const;
 
-/** Instructions for the CI files shown in the initialization plan. */
+/** The note of each generated CI file in the init plan. */
 export const CI_FILE_NOTES = {
     [GITHUB_WORKFLOW]: 'check workflow',
     [GITLAB_WORKFLOW]: `add include: [{ local: ${GITLAB_WORKFLOW} }] to .gitlab-ci.yml`,

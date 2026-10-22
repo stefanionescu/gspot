@@ -26,8 +26,8 @@ gspot add vitest
 gspot remove nextjs
 ```
 
-`gspot remove nextjs` writes `nextjs` into `removed_configurations`, so detection does not select it again;
-`gspot add nextjs` reverses that. gspot does not remove a configuration that another selected configuration needs. When
+`gspot remove nextjs --reason "…"` writes `nextjs` into `removed_configurations` with your reason, so `gspot doctor`
+does not suggest it again; `gspot add nextjs` reverses that. gspot does not remove a configuration that another selected configuration needs. When
 the tools change, gspot prints a reminder to run `gspot install`.
 
 gspot always selects most general configurations, such as `secrets`, `spelling`, and `security`, even when you write the
@@ -133,9 +133,11 @@ keep their checks.
 
 ## Edit the file by hand
 
-gspot.toml uses TOML 1.0. Keep each inline table on one line. The
-[JSON Schema](https://generativespotting.com/gspot.schema.json) describes every key. Editors apply it on their own once
-SchemaStore lists gspot, so `gspot.toml` needs no `#:schema` comment. See [Editors](/use/editors/).
+Records that no command writes, such as `[[scope]]`, `[[command_check]]`, `[[import_rule]]`, `[[naming.override]]`, and
+`[[tools.eslint.plugins]]`, take a hand edit. gspot checks a hand edit as it checks a command.
+
+gspot.toml uses TOML 1.0. Keep each inline table on one line. See [Editors](/use/editors/#validate-gspottoml) to
+validate it.
 
 After an edit, preview the changes, then write them and install the tools:
 

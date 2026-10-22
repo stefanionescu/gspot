@@ -1,4 +1,4 @@
-/** Paths that the tracked-file list allows, refuses, or takes only from the Git index. */
+/** Paths that `repository/local-files` reports, allows, or reads only from the Git index. */
 export const LOCAL_FILE_PATHS = {
     indexOnly: ['.env.'],
     refused: [

@@ -36,7 +36,7 @@ async function runSiteBuild(session: Session, planned: PlannedCheck, copyRoot: s
  *
  * @param session the repository and its tools.
  * @param planned the scope to build.
- * @returns the build, shared by every caller.
+ * @returns the build that every caller shares.
  */
 function getSiteBuild(session: Session, planned: PlannedCheck): Promise<SiteBuild> {
     const key = join(session.root, planned.scope.folder.path);

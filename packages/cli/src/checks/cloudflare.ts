@@ -88,7 +88,9 @@ function validateRedirects(text: string): NumberedLine[] {
         const parts = line.text.trim().split(/\s+/u);
         const [source = '', , status] = parts;
         if (parts.length < REDIRECT_PARTS.minimum || parts.length > REDIRECT_PARTS.maximum)
-            return [{ number: line.number, text: 'A redirect is a source, a destination, and an optional status.' }];
+            return [
+                { number: line.number, text: 'Write a redirect as a source, a destination, and an optional status.' },
+            ];
         if (!PATH_PREFIXES.some((prefix) => source.startsWith(prefix)))
             return [{ number: line.number, text: 'Start the redirect source with / or https://.' }];
         if (status === undefined) return [];

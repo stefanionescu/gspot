@@ -83,7 +83,7 @@ test('recommended refuses Stylelint options for a rule it does not run and for a
     });
     const session = await openSession(sandbox.path);
     expect(() => generate(session)).toThrow(
-        'number-max-precision does not run at level recommended; gspot sets options only for rules it runs.\nunknown-rule does not run at level recommended; gspot sets options only for rules it runs.',
+        'number-max-precision runs only at level all. gspot sets options only for the rules that run at level recommended.\nunknown-rule belongs to no plugin that gspot loads.',
     );
 });
 

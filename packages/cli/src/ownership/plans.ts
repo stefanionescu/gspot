@@ -30,13 +30,14 @@ function removeBlock(path: string, current: FileContents): FileContents | undefi
     if (span === undefined) return current;
     const before = text.slice(0, span.start).replace(/(\r?\n)\r?\n$/u, '$1');
     const after = text.slice(span.end);
-    // A block at the top of the file leaves the blank line that separated it from your text.
+    // When the block opened the file, drop the blank line that followed it too.
     const next = before === '' ? after.replace(/^\r?\n/u, '') : before + after;
     return next === '' ? undefined : { bytes: Buffer.from(next), mode: current.mode };
 }
 
 /**
- * Determine ownership from the gspot folder, file notice, or managed Git attributes.
+ * Check whether gspot owns the whole file: it sits in .gspot, starts with the gspot header, or matches a
+ * linguist-generated pattern in the managed block of .gitattributes.
  *
  * @param path the repository-relative file.
  * @param disk the repository reader.
@@ -61,7 +62,7 @@ function isOwned(path: string, disk: Files): boolean {
  *
  * @param session the repository files.
  * @param expected the generated destinations that remain.
- * @returns the obsolete generated paths.
+ * @returns the stray generated paths.
  */
 export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, expected: ReadonlySet<string>): string[] {
     using disk = openFiles(session.root);
@@ -96,7 +97,7 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
 }
 
 /**
- * Replace owned or reviewed bytes, and keep other authored files.
+ * Plan a replacement: refuse authored bytes that nobody reviewed.
  *
  * @param writer the locked repository handle.
  * @param request the new bytes and any reviewed file contents.
@@ -121,7 +122,7 @@ export function planReplacement(writer: Writer, request: ReplacementRequest): Wr
 }
 
 /**
- * Replace or append the marked block, and keep the text outside it.
+ * Plan the marked block, and keep the text outside it.
  *
  * @param writer the locked repository handle.
  * @param path the file.
@@ -141,7 +142,7 @@ export function planBlock(writer: Writer, path: string, body: string, style: Blo
 }
 
 /**
- * Remove an owned file or its managed block, and keep the authored text.
+ * Plan the removal of an owned file, or of its managed block.
  *
  * @param writer the locked repository handle.
  * @param path the stale generated file.

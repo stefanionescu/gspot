@@ -26,7 +26,6 @@ main:has(.landing) {
     font-family: var(--sl-font-mono);
 }
 
-/* Sections. */
 .section {
     padding-block: var(--home-section-space);
     border-top: 1px solid var(--sl-color-gray-5);
@@ -67,7 +66,7 @@ main:has(.landing) {
     white-space: nowrap;
 }
 
-/* Tools: 4 per row on phones, 8 in one row from 50rem. */
+/* Tools: four columns on phones, eight from 50rem. */
 .tools {
     padding-block: 32px 56px;
     border-top: 1px solid var(--sl-color-gray-5);
@@ -116,7 +115,7 @@ main:has(.landing) {
     }
 }
 
-/* What gspot does: six tiles, two columns from 50rem, three from 72rem. */
+/* What gspot does: one column, two from 50rem, three from 72rem. */
 .cards {
     display: grid;
     grid-template-columns: minmax(0, 1fr);

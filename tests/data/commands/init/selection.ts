@@ -1,7 +1,7 @@
 export const PYTHON_SOURCE = { 'source.py': 'VALUE = 1\n' };
 export const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
 
-/** Empty and named language lists both keep the common checks. */
+/** No configuration list, an empty list, and a named list all keep the common checks. */
 export const CONFIGURATION_CHOICES = [
     { configurations: undefined },
     { configurations: undefined, noConfigurations: true },

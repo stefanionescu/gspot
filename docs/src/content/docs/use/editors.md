@@ -29,5 +29,5 @@ lists every file gspot writes.
 
 ## Validate `gspot.toml`
 
-The [JSON Schema](https://generativespotting.com/gspot.schema.json) describes every key of `gspot.toml`. Editors
-apply it on their own once SchemaStore lists gspot.
+SchemaStore lists gspot, so an editor that reads the SchemaStore catalog validates `gspot.toml` against the
+[JSON Schema](https://generativespotting.com/gspot.schema.json) with no `#:schema` comment.

@@ -239,7 +239,7 @@ function formatScopeSection(facts: ReferenceFacts, subschema: JSONSchema.JSONSch
     return (
         `\n## ${node.type === 'array' ? '[[scope]]' : '[scope]'}\n\n` +
         (node.description === undefined ? '' : `${node.description}\n\n`) +
-        'See [Monorepos and scopes](/configure/monorepos/) for how a scope inherits settings.\n\n' +
+        'See [Monorepos](/configure/monorepos/) for how a scope inherits settings.\n\n' +
         formatSettingKeys(
             facts,
             'scope',
@@ -286,8 +286,8 @@ export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string 
 /**
  * Build the settings page: the top-level keys, then every table and record, each key under its own heading.
  *
- * @param facts settings variants and JSON Schema from the CLI
- * @returns the settings page, whose table of contents lists the tables only
+ * @param facts the CLI reference facts
+ * @returns the settings page, whose table of contents lists the tables only.
  */
 export function buildSettingsPage(facts: ReferenceFacts): ReferencePage {
     const { schema } = facts;
@@ -303,7 +303,7 @@ export function buildSettingsPage(facts: ReferenceFacts): ReferencePage {
         'Settings',
         'Every key, accepted value, and default of gspot.toml.',
         'Every key of `gspot.toml`, its accepted values, and its default. See [gspot.toml](/configure/gspot-toml/) to change them.\n\n' +
-            `The [JSON Schema](/${SCHEMA_FILE}) describes every key. Editors apply it on their own once SchemaStore lists gspot.\n` +
+            `The [JSON Schema](/${SCHEMA_FILE}) describes every key.\n` +
             formatSection(
                 'Top-level keys',
                 formatSettingKeys(

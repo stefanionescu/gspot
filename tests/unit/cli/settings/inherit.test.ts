@@ -132,12 +132,12 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
 });
 
 test("a written false overrides a configuration's true default", () => {
-    const knownSettings = buildSelectedKnownSettings(['supabase']);
-    const source = buildSandboxSettings(['supabase'], { rules: true });
+    const knownSettings = buildSelectedKnownSettings(['postgres']);
+    const source = buildSandboxSettings(['postgres'], { rules: true });
     const settings = parseSettings(source, undefined);
     expect(getSettingValue(knownSettings, settings, 'tools.squawk.assume_in_transaction')).toMatchObject({
         value: true,
-        source: 'configuration supabase',
+        source: 'configuration postgres',
     });
     const corrected = parseSettings(`${source}[tools.squawk]\nassume_in_transaction = false\n`, undefined);
     expect(getSettingValue(knownSettings, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({

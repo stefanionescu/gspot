@@ -19,7 +19,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
  *
  * @param name the executable to replace.
  * @param result function that returns the fake run.
- * @returns a spy whose disposal restores command execution.
+ * @returns a spy whose disposal restores how commands run.
  */
 export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typeof spawnProcess> {
     const runProcess = processes.spawnProcess;
@@ -46,7 +46,7 @@ export function recordNpmCommands(): Mock<typeof spawnProcess> & { installations
 /**
  * Fake the lookup and version output of these tools.
  *
- * @param tools declarations whose pinned versions the fakes print.
+ * @param tools the tools whose pinned versions the fakes print.
  * @returns the disposable mocks.
  */
 export function fakePinnedExecutables(tools: Tool[]): DisposableStack {

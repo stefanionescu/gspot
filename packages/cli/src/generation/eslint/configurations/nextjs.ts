@@ -14,7 +14,7 @@ import {
 /**
  * Apply the Next.js presets and the pages and JSX settings.
  *
- * @param scope the ESLint inputs of the scope.
+ * @param scope the planned ESLint file of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 export function buildNextjsBlocks(

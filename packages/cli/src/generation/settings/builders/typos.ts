@@ -61,9 +61,9 @@ function serializeIgnoredGlobs(grouped: IgnoreSection[]): string {
 }
 
 /**
- * Build the typos file from the settings.
+ * Build typos.toml: the spelling dictionaries and reason-grouped exclusions as TOML.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the spelling dictionaries and reason-grouped exclusions as TOML.
  */
 export function buildTyposFile(planned: PlannedToolFile): string {

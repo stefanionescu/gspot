@@ -24,9 +24,9 @@ function readSwiftVersion(reads: ReadCache, scope: string, projectPath: string):
 }
 
 /**
- * Build the SwiftFormat file from the settings.
+ * Build swiftformat: the SwiftFormat settings of the repository.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the SwiftFormat settings of the repository.
  */
 export function buildSwiftformatFile(planned: PlannedToolFile): string {

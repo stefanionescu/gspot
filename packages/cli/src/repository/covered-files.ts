@@ -27,7 +27,7 @@ function addPluginExtensions(owners: FileMatch, configurations: Configuration[])
  * Build one matcher for the extensions, filenames, tags, and paths of a files table.
  *
  * @param table the file patterns.
- * @returns the predicate for one tracked file.
+ * @returns a test of whether a tracked file matches.
  */
 export function buildFileMatcher(table: FileMatch): (file: TrackedFile) => boolean {
     const filenames = buildFilenameMatcher(table.filenames);
@@ -45,7 +45,7 @@ export function buildFileMatcher(table: FileMatch): (file: TrackedFile) => boole
  * @param table the file patterns.
  * @param files the tracked inventory.
  * @param options the scope to match in.
- * @param options.configurations the configurations that declare languages and Prettier plugins.
+ * @param options.configurations configurations that declare languages and Prettier plugins.
  * @param options.scopePath the folder to match in.
  * @param options.settings settings and repository-relative test paths for the scope.
  * @returns the matching files.
@@ -104,7 +104,7 @@ export function listCoveredFiles(
  * Select source paths by extension or whole file name.
  *
  * @param files the classified inventory.
- * @param endings the file extensions to select.
+ * @param endings the extensions or file names to select; every source file when absent.
  * @returns the matching source paths.
  */
 export function listSourcePaths(files: TrackedFile[], endings: readonly string[]): string[] {

@@ -3,10 +3,13 @@ import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 
 export type ParsedLanguage = 'python' | 'swift' | 'bash';
 
-/** A tracked folder entry. */
+/** One file or child folder of a folder. */
 export type FolderEntry = { name: string; kind: 'file' | 'folder' };
 
-/** Parsed trees and their captures used by the convention checks. */
+/**
+ * One parsed file for the convention checks: its path, language, syntax tree, and the nodes that each query name
+ * matched.
+ */
 export type ParsedSource = { path: string; language: ParsedLanguage; tree: Tree; captures: Map<string, Node[]> };
 
 export type ImportedFile = { module: string; path: string };

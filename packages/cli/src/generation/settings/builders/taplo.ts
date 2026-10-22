@@ -4,9 +4,9 @@ import { TOOL_FILE_TOML_FORMAT } from '#cli/config/generation/generate.ts';
 import { TAPLO_FORMATTING } from '#cli/config/generation/settings/builders/taplo.ts';
 
 /**
- * Build the Taplo file from the settings.
+ * Build taplo.toml: the Taplo formatting settings with automatic schema lookup disabled.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Taplo formatting settings with automatic schema lookup disabled.
  */
 export function buildTaploFile(planned: PlannedToolFile): string {

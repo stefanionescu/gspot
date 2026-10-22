@@ -38,7 +38,8 @@ export default defineConfig({
                 ),
             },
         },
-        // Compile imported CLI code down to ES2022.
+        // The CLI code that the reference pages import uses `using` declarations, which Vite must lower before Bun runs
+        // them.
         oxc: { target: 'es2022' },
         // Astro uses a compiled Node.js add-on for Markdown. Bun must find it in docs/node_modules,
         // so the package lists it as a dependency and keeps Vite from bundling it.

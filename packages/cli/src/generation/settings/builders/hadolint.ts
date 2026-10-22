@@ -8,9 +8,9 @@ import {
 } from '#cli/config/generation/settings/builders/hadolint.ts';
 
 /**
- * Build the Hadolint file from the settings.
+ * Build hadolint.yml: the Hadolint exclusions and trusted registry settings.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Hadolint exclusions and trusted registry settings.
  */
 export function buildHadolintFile(planned: PlannedToolFile): string {

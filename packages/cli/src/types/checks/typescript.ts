@@ -2,7 +2,7 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/tsconfig.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository/inventory.ts';
 
-/** Referenced compiler projects whose outputs stay inside the caller-owned copy. */
+/** The TypeScript projects that a project references, and the copy where their build output goes. */
 export type TypeScriptReferenceCopy = {
     root: string;
     copyRoot: string;
@@ -10,10 +10,12 @@ export type TypeScriptReferenceCopy = {
     projects: Map<string, TypeScriptConfiguration>;
 };
 
-/** Project inputs and required options for a TypeScript tool file. */
+/** The project files and required options for a TypeScript tool file. */
 export type PlannedTsconfig = {
     root: string;
-    /** The working installation whose type roots augment a captured source project. */
+    /**
+     * The working tree with the installed packages, whose type roots the tool file lists when the check runs on a copy.
+     */
     typeRootsFolder: string;
     reads: ReadCache;
     target: string;

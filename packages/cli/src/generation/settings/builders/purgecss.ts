@@ -8,9 +8,9 @@ import {
 } from '#cli/config/generation/settings/builders/purgecss.ts';
 
 /**
- * Build the PurgeCSS file from the settings.
+ * Build purgecss.mjs: the JavaScript token extractor and safelist used by PurgeCSS.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the JavaScript token extractor and safelist used by PurgeCSS.
  */
 export function buildPurgecssFile(planned: PlannedToolFile): string {

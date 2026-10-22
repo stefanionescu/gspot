@@ -38,9 +38,9 @@ function findProcessFailure(result: SpawnResult, name: string, timeoutSeconds: n
     if (result.timedOut)
         return {
             status: 'error',
-            note: `${name} ran longer than tool_timeout_seconds (${String(timeoutSeconds)}s) and was stopped.`,
+            note: `${name} ran longer than tool_timeout_seconds (${String(timeoutSeconds)}s), so gspot stopped it.`,
         };
-    if (result.missing) return { status: 'missing', note: `${name} could not be started: ${result.stderr.trim()}` };
+    if (result.missing) return { status: 'missing', note: `gspot could not start ${name}: ${result.stderr.trim()}` };
     if (result.errored)
         return {
             status: 'error',
@@ -70,7 +70,7 @@ export async function runToolProcess(
  *
  * @param session the repository and tool paths.
  * @param cwd the working folder.
- * @param tool the declaration with its version pin.
+ * @param tool the tool with its version pin.
  * @returns the executable path or its installation failure.
  */
 export function findTool(session: Session, cwd: string, tool: Tool): ToolAvailability {
@@ -79,12 +79,12 @@ export function findTool(session: Session, cwd: string, tool: Tool): ToolAvailab
 }
 
 /**
- * Add the folders of installed companion tools to the process `PATH`, also in a copy.
+ * Add the folders of the installed other tools of a check to the process `PATH`, also in a copy.
  *
- * @param session the repository and manifests.
- * @param names the companion tools to add.
+ * @param session the repository and its configurations.
+ * @param names the other tools to add.
  * @param env variables for the tool process.
- * @returns the environment with the companion folders on `PATH`.
+ * @returns the environment with their folders on `PATH`.
  */
 export function buildOtherToolEnvironment(
     session: Session,
@@ -118,11 +118,11 @@ export function buildOtherToolEnvironment(
 }
 
 /**
- * Runs the tool of a check with the tool time limit and failure handling.
+ * Run the tool of a check with the tool time limit and failure handling.
  *
  * @param session the repository and its tools.
  * @param planned the check and scope.
- * @param command the executable name and arguments.
+ * @param command the executable name and arguments, or a shipped program that drives the tool through its JavaScript API.
  * @param options how to start the process.
  * @returns the process output.
  */

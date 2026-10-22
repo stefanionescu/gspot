@@ -3,9 +3,9 @@ import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generatio
 import { TEST_RULE_NAMES, CONFIGURATION_PLUGINS } from '#cli/config/generation/eslint/configurations.ts';
 
 /**
- * Apply the Vitest presets to the test files.
+ * Apply the typed presets and the project files.
  *
- * @param scope the ESLint inputs of the scope.
+ * @param scope the planned ESLint file of the scope.
  * @returns the imports and ESLint blocks for this configuration.
  */
 export function buildVitestBlocks(scope: Pick<EslintScope, 'presets' | 'eslintFiles'>): ConfigurationBlocks {

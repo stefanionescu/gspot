@@ -108,7 +108,7 @@ export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
  * Selects the paths and installed dependency trees for a copy of the working tree.
  *
  * @param repositoryRoot the repository folder.
- * @param paths the authored files to copy.
+ * @param paths the tracked files to copy.
  * @param scopes the folders that hold installed dependencies.
  * @returns the paths and dependency trees to copy.
  */

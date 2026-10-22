@@ -7,7 +7,7 @@ import type { Repository } from '#cli/types/repository/inventory.ts';
 import type { ToolInspection } from '#cli/types/tools/inspection.ts';
 import { type StartRunner, type PackageManagerPin } from '#cli/types/repository/package-manager.ts';
 
-/** Settings, repository inventory, and configurations shared by planning and generation. */
+/** Settings, repository inventory, and configurations that planning and generation share. */
 export type Session = {
     /** The checks that the settings turn on, across supported systems, planned once when the session opens. */
     configuredChecks: PlannedCheck[];
@@ -18,7 +18,7 @@ export type Session = {
     inspections: Map<string, ToolInspection>;
     miseBinPaths?: string[];
     startRunner: StartRunner;
-    /** The verified working tree with the installed tools, for a copy of a revision. */
+    /** The working tree whose installed tools a copy of a revision runs. */
     installedRoot: string;
     reads: ReadCache;
     resources: DisposableStack;
@@ -28,6 +28,6 @@ export type Session = {
     settingsFile: SettingsFile;
     configurations: Map<string, Configuration>;
     repository: Repository;
-    /** The dependency files parsed from the source inventory of this session. */
+    /** Each scope with its folder, configurations, known settings, and merged settings. */
     scopes: Scope[];
 };

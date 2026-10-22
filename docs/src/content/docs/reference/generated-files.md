@@ -22,15 +22,15 @@ Change `gspot.toml`, then run `gspot apply`; gspot writes every generated file f
 | `.editorconfig` and `.prettierignore`                                                                                | Editor settings and the files the formatter skips.                                                                                                                                                            | Yes    |
 | `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`                                                              | The CI job.                                                                                                                                                                                                   | Yes    |
 | The managed blocks in `AGENTS.md`, `.gitignore`, and `.gitattributes`                                                | The part between the gspot markers. The rest of each file stays yours.                                                                                                                                        | Yes    |
-| Keys in your own files, such as `minimumReleaseAge` in `bunfig.toml`                                                 | Install options. The other keys stay yours.                                                                                                                                                                   | Yes    |
+| Keys in your own files, such as `install.security.scanner` in `bunfig.toml` and tool keys in `package.json`          | Install options. The other keys stay yours.                                                                                                                                                                   | Yes    |
 | `.gspot/node_modules/`, `.gspot/.venv/`, `.gspot/vale/`, `.gspot/state/`, `.gspot/.yarnrc-install.yml`               | Installed tools, run state, and install settings. `.gitignore` keeps them out of Git.                                                                                                                         | No     |
 
-The managed block of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Some tools have no pointer; gspot passes their tool file when it runs them, so give your editor the same path. Run `gspot install` in each new clone.
+The managed block of `AGENTS.md` lists your repository's generated files and the keys gspot sets. Run `gspot install` in each new clone.
 
 ## Do not edit generated files
 
-Do not edit a generated file. Each one has a gspot header or sits in a managed block between the gspot markers; gspot finds its
-files by these markers and the generated text.
+Do not edit a generated file. Each one sits in `.gspot/`, starts with a gspot header, or sits in a managed block between
+the gspot markers. JSON files carry no header; the managed block of `.gitattributes` marks them generated.
 
 `gspot apply` replaces those files from your settings, even files with
 local edits or merge markers. Move any change you need into `gspot.toml` before you apply.

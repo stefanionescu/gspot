@@ -41,7 +41,7 @@ for package in packages/eslint-plugin packages/cli; do
     fi
 done
 
-# The site shows the commit that was just published.
+# The site shows the commit of this release.
 mise run docs:deploy
 
 for tag in "${tags[@]}"; do

@@ -26,7 +26,7 @@ Run these commands in the root of your repository.
    [Read the plan](/start/migrate/#read-the-plan) first.
 3. `gspot install` installs the pinned tools and turns on the hooks. From then on, every commit runs the checks.
 
-gspot starts at level `recommended`. For stricter checks, run `gspot set level all`, then `gspot install` again.
+gspot starts at level `recommended`. For stricter checks from the start, run `gspot init --level all`.
 [Levels](/start/concepts/#levels) says what each level checks.
 
 ## Set up gspot with your coding agent
@@ -38,8 +38,8 @@ Paste this prompt into Claude Code, Codex, Cursor, or another coding agent that 
 The agent then:
 
 1. Adds `@gspothq/cli` with the package manager of your repository, or pins it with mise.
-2. Runs `gspot init --dry-run`, shows you the plan, and asks which [level](/start/concepts/#levels) you want. It
-   writes the plan only after you agree.
+2. Asks which [level](/start/concepts/#levels) you want, runs `gspot init --dry-run` at that level, and shows you
+   the plan. It writes the plan only after you agree.
 3. Runs `gspot install` and `gspot check`, and shows you the result.
 4. Reads `AGENTS.md` and the agent rules before it writes more code.
 

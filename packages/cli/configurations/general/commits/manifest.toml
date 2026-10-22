@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Checks commit messages for a conventional type, an optional project scope, a first line of 72 characters or fewer, and a wrapped body."
+description = "Commit messages: a conventional type, an optional project scope, a first line of 72 characters or fewer, and a wrapped body."
 title = "Commits"
 when = { git = true }
 

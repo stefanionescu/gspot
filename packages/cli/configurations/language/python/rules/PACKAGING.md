@@ -2,23 +2,13 @@
 
 Read this rule when you change Python dependencies, lockfiles, or package layout.
 
-## Package installation security
+## Lockfiles
 
-Install from the uv lockfile:
-
-```bash
-uv sync --frozen
-```
-
-Update lockfiles only
-when the task includes dependency maintenance.
+Update lockfiles only when the task includes dependency maintenance.
 
 ## Import correctness
 
 - Respect the import-linter contracts the project declares.
-- Run each entrypoint through the configured environment, the installed package, or `python -m`.
-- Make packaged imports work outside the repository root. Do not depend on an accidental
-  current-folder import path.
 
 ## Packages and architecture
 

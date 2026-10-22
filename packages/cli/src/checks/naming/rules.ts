@@ -230,7 +230,7 @@ function selectOverrides(settings: NamingSettings, identifier: Identifier): Comp
 }
 
 /**
- * Computes the limits and cases for an identifier after its path overrides.
+ * Builds the limits and cases for an identifier after its path overrides.
  *
  * @param settings what the scope allows and bans.
  * @param identifier the name to check.

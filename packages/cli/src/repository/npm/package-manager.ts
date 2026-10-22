@@ -50,12 +50,12 @@ export function assertPackageManager(pin: PackageManagerPin | undefined): Packag
  */
 function parsePackageManagerField(field: string): PackageManagerPin {
     const [name, declared, ...verbatim] = field.split('@');
-    if (verbatim.length > 0) throw new Error('Invalid packageManager declaration.');
+    if (verbatim.length > 0) throw new Error('The packageManager field of package.json is not valid.');
     const version = (declared ?? '').split(PACKAGE_MANAGER_HASH_SUFFIX, 1)[0];
     return packageManagerPinSchema.parse({ name, version });
 }
 
-// Read the package manager from repository declarations and lockfiles.
+// Read the package manager from the packageManager fields and the lockfiles.
 async function readFirstPackageManager(
     root: string,
     packageJsonPaths: string[],
@@ -73,7 +73,7 @@ async function readFirstPackageManager(
 /**
  * Check whether the package manager runs Yarn Berry, which has its own settings and install arguments.
  *
- * @param packageManager the validated name and version range.
+ * @param packageManager the validated name and exact version.
  * @returns whether the package manager uses Yarn Berry.
  */
 export function isYarnBerry(packageManager: PackageManager): boolean {
@@ -82,10 +82,10 @@ export function isYarnBerry(packageManager: PackageManager): boolean {
 }
 
 /**
- * Read the package manager declaration, before its version gets validated.
+ * Read the package manager pin of a package.json; install validates its version later.
  *
  * @param packageJson the validated package.json.
- * @returns the declaration with its raw text and field, or no declaration.
+ * @returns the packageManager field first, then the first devEngines entry, or nothing.
  */
 function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
     if (packageJson.packageManager !== undefined)
@@ -106,15 +106,15 @@ function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | 
 }
 
 /**
- * Select the repository package manager from its declaration and lockfiles.
+ * Select the repository package manager from its pin and lockfiles.
  *
- * @param repositoryRoot the folder whose package declarations and lockfiles select the manager.
+ * @param repositoryRoot the folder whose package.json files and lockfiles select the manager.
  * @param trackedPaths the source paths inventoried in the repository.
- *
  * @returns the manager name and its declared or detected version, when present.
  */
 export async function detectPackageManager(repositoryRoot: string, trackedPaths: string[]): Promise<PackageManagerPin> {
-    // The root declaration wins. Without it, the first nested package.json gives one stable package manager for the tools.
+    // The package manager of the root package.json wins. Without it, the first nested package.json gives one stable
+    // package manager for the tools.
     const packageJsonPaths = [
         PACKAGE_JSON,
         ...trackedPaths
@@ -138,12 +138,11 @@ export async function detectPackageManager(repositoryRoot: string, trackedPaths:
 /**
  * Resolve an undeclared package manager version only when generating or installing a tool project.
  *
- * @param repositoryRoot the working folder used when querying an undeclared version.
+ * @param repositoryRoot the working folder for the query of an undeclared version.
  * @param packageManager the declared or detected name and version.
  * @param timeoutSeconds the limit for the version query.
  * @param reads the run cache that owns the resolved version.
- *
- * @returns the name and version requirement used by the tool project.
+ * @returns the name and version requirement that the tool project uses.
  */
 export function readPackageManagerVersion(
     repositoryRoot: string,

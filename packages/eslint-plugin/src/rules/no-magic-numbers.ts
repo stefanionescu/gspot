@@ -48,7 +48,8 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
         },
     },
     create(context) {
-        // The rule loads only where gspot turns it on, in TypeScript scopes, which install typescript-eslint.
+        // @typescript-eslint/eslint-plugin stays an optional peer, so the rule requires it only when ESLint runs this
+        // rule.
         const upstream = requireModule(UPSTREAM_PACKAGE) as {
             rules: Record<typeof UPSTREAM_RULE, TSESLint.RuleModule<string, unknown[]>>;
         };

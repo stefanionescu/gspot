@@ -2,7 +2,7 @@ allowed_words = ["Prettier"]
 
 [configuration]
 always_selected = true
-description = "Prettier and editorconfig-checker on every file. One `[format]` block sets the indentation, line length, quotes, and line endings for every formatter."
+description = "Every file: the layout of Prettier for the file types it formats, and line endings, final newlines, and trailing whitespace from editorconfig-checker. One `[format]` block sets the indentation, line length, quotes, and line endings for every formatter."
 title = "Format"
 
 [files]

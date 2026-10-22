@@ -6,26 +6,26 @@ export const TSCONFIG_READ_ERRORS = [
     {
         name: 'an invalid property',
         tsconfig: '{"extends":"./.gspot/tsconfig.json", invalid}',
-        error: /Cannot read TypeScript configuration .*tsconfig\.json: Property assignment expected\./u,
+        error: /Cannot read the tsconfig file .*tsconfig\.json: Property assignment expected\./u,
         fixed: 'tsconfig.json',
     },
     {
         name: 'a null root',
         tsconfig: 'null',
-        error: /Cannot read TypeScript configuration .*tsconfig\.json: The root value of a 'tsconfig\.json' file must be an object\./u,
+        error: /Cannot read the tsconfig file .*tsconfig\.json: The root value of a 'tsconfig\.json' file must be an object\./u,
         fixed: 'tsconfig.json',
     },
     {
         name: 'an array root',
         tsconfig: '[]',
-        error: /Cannot read TypeScript configuration .*tsconfig\.json: The root value of a 'tsconfig\.json' file must be an object\./u,
+        error: /Cannot read the tsconfig file .*tsconfig\.json: The root value of a 'tsconfig\.json' file must be an object\./u,
         fixed: 'tsconfig.json',
     },
 
     {
         name: 'malformed JSON',
         tsconfig: '{',
-        error: /^Cannot read TypeScript configuration .*tsconfig\.json/u,
+        error: /^Cannot read the tsconfig file .*tsconfig\.json/u,
         fixed: 'tsconfig.json',
     },
     {
@@ -56,7 +56,7 @@ export const MISSING_TSCONFIG_FINDINGS = [
         rule: 'strict',
         fixable: false,
         message: 'strict is not on in this tsconfig.',
-        help: 'Enable this compiler option in the TypeScript tool file.',
+        help: 'Turn this compiler option on in this tsconfig.',
     },
 ] as const;
 

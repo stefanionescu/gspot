@@ -26,7 +26,7 @@ export async function runInstallStep(
     if (result.timedOut)
         throw new GspotError(
             'install',
-            `The command ${command.join(' ')} ran longer than tool_timeout_seconds (${String(timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>, then run: gspot install.`,
+            `The command ${command.join(' ')} ran longer than tool_timeout_seconds (${String(timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
         );
     return result;
 }

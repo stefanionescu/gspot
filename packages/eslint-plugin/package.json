@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "description": "ESLint rules for the gspot CLI.",
+    "description": "ESLint rules for code that AI coding agents often write.",
     "license": "Apache-2.0",
     "repository": {
         "type": "git",

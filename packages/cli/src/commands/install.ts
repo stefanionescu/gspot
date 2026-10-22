@@ -25,7 +25,7 @@ async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promis
     const generated = generate(session);
     // The tools install from the tool projects on disk, so those must match the settings first.
     if (listStaleFiles(session, generated).some((file) => TOOL_PROJECT_FILES.has(file.path)))
-        throw new GspotError('install', 'Run gspot apply first');
+        throw new GspotError('install', 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.');
     using writer = openWriter(root);
     const { note, steps } = await installTools(session, writer, generated);
     return {
@@ -38,8 +38,8 @@ async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promis
 /**
  * Register the install command.
  *
- * @param program the CLI that gets the command.
- * @param onResult writes the command result.
+ * @param program the gspot program that gets the command.
+ * @param onResult receives the result of the command.
  */
 export function registerInstall(program: Command, onResult: CommandCompletion): void {
     program

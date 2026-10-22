@@ -13,7 +13,7 @@ import type { OriginalFile, SampleChanges } from '#tests/types/samples.ts';
 import { rm, open, chmod, lstat, mkdir, rmdir, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
 /**
- * Resets the index entries of these paths to the last commit, which undoes what markExecutable staged on Windows.
+ * Reset the index entries of these paths to the last commit, which undoes what markExecutable staged on Windows.
  *
  * @param cwd the sandbox.
  * @param paths the repository-relative files.
@@ -161,7 +161,7 @@ export async function applyGeneratedFiles(root: string): Promise<void> {
     writeGeneratedFiles(session, generate(session), writer);
 }
 
-/** Changes that replace the default sources of a sample but keep .gitignore. */
+/** Change that replace the default sources of a sample but keep .gitignore. */
 export function buildSandboxChanges(
     originalFiles: Readonly<Record<string, string>>,
     files: Record<string, string>,

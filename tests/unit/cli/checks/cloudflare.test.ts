@@ -25,7 +25,7 @@ test.each(['', 'app'])(
             { file: path, line: 8, message: 'Use a supported Cloudflare redirect status instead of 404.' },
             { file: path, line: 9, message: 'Use a supported Cloudflare redirect status instead of 410.' },
             { file: path, line: 10, message: 'Use a supported Cloudflare redirect status instead of 302!.' },
-            { file: path, line: 11, message: 'A redirect is a source, a destination, and an optional status.' },
+            { file: path, line: 11, message: 'Write a redirect as a source, a destination, and an optional status.' },
             { file: path, line: 12, message: 'Start the redirect source with / or https://.' },
         ]);
     },

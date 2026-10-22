@@ -22,7 +22,7 @@ export const INVALID_ENTRIES = [
     { name: 'empty path', output: `100644 ${SHA1} 0\t\0` },
     {
         name: 'invalid UTF-8 path',
-        message: 'Revision paths must be valid UTF-8.',
+        message: 'Git listed a path that is not valid UTF-8.',
         output: { prefix: INVALID_PATH_PREFIX, bytes: [INVALID_UTF8_BYTE, 0] },
     },
 ] as const;

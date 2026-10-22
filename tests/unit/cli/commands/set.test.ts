@@ -101,7 +101,7 @@ test.each([...NO_CHANGE_COMMANDS])(
         await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
         const result = await runGspot(sandbox.path, commandArguments);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(result.stdout.split('\n', 1)[0]).toBe('No change: gspot.toml already has this value.');
+        expect(result.stdout.split('\n', 1)[0]).toBe('No change: gspot.toml stays the same.');
     },
 );
 
@@ -119,7 +119,7 @@ test.each([...KEPT_SETTING_CHANGES])(
         expect(stopped.code, stopped.stdout + stopped.stderr).toBe(2);
         expect(stopped.stdout).toBe('');
         expect(stopped.stderr).toBe(
-            `${change}\ngspot.toml keeps this change, and applying it stopped: These files were not overwritten by gspot: .editorconfig. Move them aside, then run the command again.\nFix that, then run gspot apply.\n`,
+            `${change}\ngspot.toml keeps this change, and applying it stopped: gspot did not overwrite these files: .editorconfig. Move them aside, then run the command again.\nFix that, then run gspot apply.\n`,
         );
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(written);
     },
@@ -306,7 +306,7 @@ test('spelling.allowed_words keeps one reason for each word through edits', asyn
     const refused = await runGspot(sandbox.path, ['set', 'spelling.allowed_words', 'Nebulix']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toBe(
-        'spelling.allowed_words keeps a reason for each entry. Add --reason "..." with why each one belongs.\n',
+        'spelling.allowed_words keeps a reason for each entry. Add --reason "<why>" with why each one belongs.\n',
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     for (const commandArguments of [

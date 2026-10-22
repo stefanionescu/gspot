@@ -9,7 +9,7 @@ createRuleTester().run<
 >('no-trivial-functions', plugin.rules['no-trivial-functions'], {
     valid: [
         'export function sort(items, compare = (a, b) => a - b) { items.sort(compare); return items; }',
-        // A consumer that takes a function value needs the function declaration.
+        // A function value in a slot that takes a function stays inline.
         'consume({ onValue: value => write(value) });',
         'handlers.onValue = value => write(value);',
         'items.map((item) => item.value);',

@@ -28,7 +28,7 @@ tool = "gixy"
 [[check]]
 command = ["gixy", "--config", "{tool_file:gixy}", "--format", "json", "{file}"]
 example = "A location for `/proxy/(.*)` with `proxy_pass http://$1` sends requests to any host and reports `ssrf`. Point `proxy_pass` at a fixed upstream instead."
-help = "Change the block the way the rule page says. Turn one rule off with `gspot ignore nginx/gixy --rule <name> --reason \"<why>\"`."
+help = "Change the block the way the rule page says. Turn one rule off with `gspot ignore nginx/gixy --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "gixy"
 output = { format = "json", fields = { file = "path", line = "line", rule = "plugin", message = "summary" } }
@@ -37,7 +37,7 @@ summary = "Checks every nginx file for mistakes that expose a server: request fo
 why = "These mistakes parse, serve traffic, and look like any other location block until somebody uses them."
 
 [[check]]
-example = "The line `invalid_directive on;` fails `nginx -t`. Remove it, or replace it with a known directive such as `listen 443 ssl;`."
+example = "The line `invalid_directive on;` fails `nginx -T`. Remove it, or replace it with a known directive such as `listen 443 ssl;`."
 files = { filenames = ["nginx.conf"] }
 help = "Fix the line nginx names. Set `tools.nginx.image` to the one your deployment runs."
 level = "recommended"
@@ -45,6 +45,6 @@ name = "syntax"
 needs = ["docker"]
 runs = "scope"
 stage = "push"
-summary = "Runs `nginx -t` on each main file inside the image, with a throwaway certificate and resolved upstream names. Records every file that nginx parsed."
+summary = "Runs `nginx -T` on each main file inside the image, with a throwaway certificate and resolved upstream names. `nginx -T` tests the configuration and prints every file it read, and gspot records each of those files."
 tool = ["docker", "openssl"]
 why = "Only nginx itself can confirm that a file parses; otherwise the first test comes at the restart in production."

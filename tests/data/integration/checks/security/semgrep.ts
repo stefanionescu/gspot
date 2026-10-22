@@ -164,7 +164,7 @@ export const REPOSITORY_RULE = `rules:
       severity: ERROR
 `;
 
-/** The Semgrep check command for the rule pack and output parser cases. */
+/** The Semgrep check command for the Semgrep rule and output parser cases. */
 export const SEMGREP_CHECK = ['check', '--only', 'security/semgrep', '--json'] as const;
 export const SEMGREP_SANDBOX = {
     configurations: [

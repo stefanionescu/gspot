@@ -123,10 +123,10 @@ export function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
 }
 
 /**
- * Build your ignore and option blocks. Code files and package metadata files stay apart.
+ * Build the settings blocks: environment, trivial-code, turned-off rule, and ignore blocks. Code files and package.json
+ * files stay apart.
  *
  * @param planned the settings blocks and the ESLint file sets.
- *
  * @returns the lint blocks with resolved file selectors.
  */
 export function buildSelectedBlocks(

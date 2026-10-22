@@ -1,5 +1,3 @@
-export const REINSTALL_HELP = 'Run: gspot apply, then gspot install';
-
 /** The longest install output that gspot shows after it removes credentials. */
 export const INSTALL_OUTPUT_LIMIT = 4000;
 

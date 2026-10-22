@@ -5,5 +5,5 @@ export type FixResult = { check: string; changed: string[] } & (
 
 export type FixReport = { results: FixResult[]; changed: string[]; broken: string[]; diffs: string[] };
 
-/** A preview fixes a copy and reports differences. */
+/** Whether --fix previews the fixes in a copy instead of writing them. */
 export type FixOptions = { isDryRun: boolean };

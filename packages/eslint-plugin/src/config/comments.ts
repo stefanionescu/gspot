@@ -22,7 +22,7 @@ export const TYPESCRIPT_DIRECTIVE = /^@?ts-(?:ignore|expect-error|nocheck|check)
 
 export const LEADING_STAR = /^\s*\*?/u;
 
-/** Maximum line gap between a declaration and its leading comment. */
+/** The most line breaks between the end of a leading comment and the start of its declaration. */
 export const LEADING_COMMENT_LINE_BREAKS = 2;
 export const BLANK = /^\s*$/u;
 

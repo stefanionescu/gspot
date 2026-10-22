@@ -98,7 +98,7 @@ ${field} = ${row.needsReason[1] ? `{ value = ${row.child}, reason = "${explanati
             expect(section).toStartWith(`${scope}\n`);
             expect(section.includes('If you set this value, give a reason:')).toBe(needsReason);
             expect(section.includes(`Reason on record: ${explanation}`)).toBe(needsReason);
-            expect(section).toContain(`Change it: gspot set ${row.key} <value>${target} [--reason "..."]`);
+            expect(section).toContain(`Change it: gspot set ${row.key} <value>${target} [--reason "<why>"]`);
         }
         const reported = await runGspot(sandbox.path, ['explain', row.key, '--json']);
         expect(reported.code, reported.stdout + reported.stderr).toBe(0);

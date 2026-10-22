@@ -160,7 +160,7 @@ test('the Vale check fails before running Vale when the Vale packages are not in
     await rm(join(sandbox.path, VALE_TOOL_FILE_PATH));
     using run = spyOn(processes, 'spawnProcess');
     expect(await captureRejection(runSandboxCheck(session.root, 'prose/vale'))).toBe(
-        'The Vale packages are not installed. Run: gspot install',
+        'The Vale packages are not installed. Run gspot install.',
     );
     expect(run).not.toHaveBeenCalled();
 });

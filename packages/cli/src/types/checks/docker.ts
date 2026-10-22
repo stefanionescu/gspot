@@ -1,16 +1,16 @@
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { TRIVY_SCHEMA_VERSION } from '#cli/config/checks/docker.ts';
 
-/** One authored service declaration: its service name and finding path. */
+/** One service of a Compose file: its name, the file that declares it, and its settings. */
 export type ComposeDeclaration = { name: string; path: string; service: ComposeService };
 
-/** One ordered Compose invocation, with the final file owned by output attribution. */
+/** The Compose files of one project: the base files in order, and the file that findings point at. */
 export type ComposeFiles = { last: TrackedFile; before: TrackedFile[] };
 
-/** Parsed service declarations and conservative ignore candidates share one project read. */
+/** The services of every Compose file, and the ignore files that each Dockerfile may use. */
 export type ComposeDocuments = { declarations: ComposeDeclaration[]; contexts: Map<string, string[]> };
 
-/** One validated service consumed by build-context and image checks. */
+/** One Compose service: its image and build settings. */
 export type ComposeService = {
     image?: string | undefined;
     build?:

@@ -97,7 +97,7 @@ test('a scope with env reads and no example env file is skipped with a note', as
             scope: 'app',
             status: 'skipped',
             findings: [],
-            note: 'No example environment file exists in app. Declare the example environment files under secrets.env_examples.',
+            note: 'No example environment file exists in app. List the example environment files in secrets.env_examples.',
         },
     ]);
 });

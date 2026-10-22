@@ -49,7 +49,7 @@ export function readCacheFolder(): string {
 }
 
 /**
- * Translate the system name from Node for planning, doctor, and tests.
+ * Translate the Node.js name of this system into the gspot name.
  *
  * @returns the gspot name, or the Node name for another system.
  */

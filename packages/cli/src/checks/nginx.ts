@@ -110,7 +110,9 @@ async function testNginxFile(
             .map((match) => match.groups?.['path'])
             .filter((path) => path !== undefined);
         if (!parsed.includes(NGINX_MAIN_TARGET))
-            throw new Error('The nginx run produced no configuration dump confirming the tested source.');
+            throw new Error(
+                'The output of nginx -T holds no configuration, so gspot cannot tell which file nginx tested.',
+            );
         return {
             findings: [],
             files: parsed.flatMap((target) => {
@@ -126,7 +128,8 @@ async function testNginxFile(
 }
 
 /**
- * Builds the Docker arguments that run nginx -t on one nginx configuration.
+ * Builds the Docker arguments that run `nginx -T` on one nginx configuration. `nginx -T` tests the configuration and
+ * prints every file it read.
  *
  * @param text the nginx configuration, with its includes.
  * @param mounts the host paths to mount.

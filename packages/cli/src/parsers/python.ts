@@ -29,7 +29,7 @@ function listFunctions(module: PythonModule): PythonFunction[] {
 /**
  * Check whether a Python string expression comes first, after any comments.
  *
- * @param node the candidate statement.
+ * @param node the statement to test.
  * @param siblings the statements in the same file or function body.
  * @returns true when the string holds a docstring.
  */
@@ -98,7 +98,7 @@ export function findDocstring(definition: Node): string | undefined {
 }
 
 /**
- * Release the trees held by parsed Python modules.
+ * Release the trees that parsed Python modules hold.
  *
  * @param parsed the modules whose readers have finished.
  */

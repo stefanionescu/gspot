@@ -28,7 +28,7 @@ import { listCompilerFiles, restoreCommandPaths, appendTsbuildinfoFlag } from '#
 /**
  * Selects the source files and type roots of a scope.
  *
- * @param session the source repository or copy.
+ * @param session the source repository or its copy.
  * @param scope the folder whose files to keep.
  * @param config the parsed jsconfig.json.
  * @returns the file names and compiler options.
@@ -62,7 +62,7 @@ function buildScopeCompilerProject(
 
 // A project with references builds them first; a project without them needs no prerequisites.
 /**
- * Finds the generated jsconfig of a scope without parsing the authored options of another scope.
+ * Finds the generated jsconfig of a scope, and parses no tsconfig or jsconfig of another scope.
  *
  * @param session the repository and settings.
  * @param planned the JavaScript check and its scope.

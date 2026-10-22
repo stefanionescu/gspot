@@ -36,7 +36,8 @@ function listSearchFolders(root: string, options: ExecutableSearch): string[] {
     ]);
 }
 
-// Check whether a candidate exists. A managed path must resolve inside the root; read other candidates from disk.
+// Check whether a possible executable path exists. A managed path must resolve inside the root; read other paths from
+// disk.
 function isExecutablePresent(files: Files, root: string, path: string): boolean {
     const local = convertToPosixPath(relative(root, path));
     if (!local.startsWith(`${DOT_GSPOT}/`)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
@@ -95,12 +96,11 @@ export function listRepositoryExecutablePaths(
 }
 
 /**
- * Read the program folders once per run.
+ * Ask mise for the program folders of the tools that the mise tool project pins.
  *
  * @param repositoryRoot the folder with the managed mise settings.
  * @param toolNames the mise tools to find.
  * @param timeoutSeconds the limit for the mise query.
- *
  * @returns the executable folders that mise installed.
  */
 export function readMiseBinPaths(repositoryRoot: string, toolNames: string[], timeoutSeconds: number): string[] {

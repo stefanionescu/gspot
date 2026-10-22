@@ -44,14 +44,14 @@ command = ["vitest", "run", "--coverage", "--coverage.reporter=text-summary", "-
 coverage_arguments = ["--coverage", "--coverage.reporter", "--coverage.thresholds.lines", "--coverage.thresholds.branches", "--coverage.thresholds.functions", "--coverage.thresholds.statements"]
 cwd = "scope"
 example = "Vitest reports `ERROR: Coverage for lines (85%) does not meet global threshold (90%)`. Add tests for the uncovered lines."
-help = "Add tests for the lines the report marks, or lower one minimum under `coverage` with a reason."
+help = "Fix each failed test, and add tests for the code that the report marks uncovered. Lower a minimum under `coverage` only with a reason."
 level = "recommended"
 name = "coverage"
 runs = "scope"
 stage = "push"
-summary = "Runs the test suite with coverage, and fails when lines, branches, functions, or statements fall under their minimums."
+summary = "Runs Vitest with coverage, and fails on a failed test or when lines, branches, functions, or statements fall under their minimums."
 tool = ["vitest", "@vitest/coverage-v8"]
-why = "A coverage minimum makes new code arrive with tests, when its behavior costs least to check."
+why = "A coverage minimum keeps new code from arriving untested."
 
 [check.files]
 extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]

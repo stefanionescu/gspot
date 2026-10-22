@@ -1,9 +1,9 @@
 import { MISE_TOOL_PROJECT_FILE } from '#cli/config/gspot-paths.ts';
 
-/** The mise file patterns accepted by v8r. */
+/** The mise file patterns that v8r accepts. */
 export const MISE_SCHEMA = {
     name: 'mise',
-    description: 'The mise configuration file',
+    description: 'The mise settings file',
     fileMatch: [
         'mise.toml',
         '.mise.toml',
@@ -14,3 +14,5 @@ export const MISE_SCHEMA = {
     ],
     location: 'https://mise.jdx.dev/schema/mise.json',
 } as const;
+
+export const V8R_NOTES = ['# The other selected tools check files without a known schema.'];

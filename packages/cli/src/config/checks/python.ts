@@ -9,7 +9,10 @@ export const INSTALL_FILE_SUFFIXES = ['.sh', '.bash', '.yml', '.yaml', '.toml', 
 
 export const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
 
-/** These checks repeat annotations in prose unless the project opts into them. */
+/**
+ * The pydoclint options that ask docstrings to repeat the type hints; gspot turns each one off unless pyproject.toml
+ * sets it.
+ */
 export const PYDOCLINT_TYPE_OPTIONS = [
     'arg-type-hints-in-docstring',
     'check-return-types',

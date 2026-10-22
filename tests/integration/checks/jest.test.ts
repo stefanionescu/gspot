@@ -21,7 +21,7 @@ function buildJestFiles(): Record<string, string> {
     return { ...JEST_PROJECT_FILES, 'package.json': JSON.stringify(packageJson) + '\n' };
 }
 
-// The coverage and load-failure tests share these root project files.
+/** Write the Jest project and its settings, which the coverage and load-failure tests share. */
 function prepareJest(root: string, testSource: string) {
     return createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['jest'], {

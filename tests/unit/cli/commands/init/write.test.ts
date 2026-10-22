@@ -107,9 +107,7 @@ test('init refuses to write package.json when one of its managed fields changed 
     );
     const refused = await runGspot(sandbox.path, ['init', '--configurations', 'css']);
     expect(refused.code).toBe(2);
-    expect(refused.stderr).toBe(
-        'gspot stopped because of an internal error: Destination changed during the operation: package.json. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
-    );
+    expect(refused.stderr).toBe('package.json changed while gspot wrote it. Run the command again.\n');
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(EDITED_STYLELINT_PACKAGE);
     const after = await stat(join(sandbox.path, 'package.json'));
     expect(after.mode & 0o777).toBe(mode & 0o777);
@@ -130,7 +128,7 @@ test('init keeps a shared file that was edited after the plan', async () => {
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
     expect(plan.retained).toContainEqual({
         path: 'setup.cfg',
-        note: expect.stringContaining('Delete the section when ready') as string,
+        note: expect.stringContaining('Delete the section; the generated tool file replaces it.') as string,
     });
     const edited = `[sqlfluff]
 exclude_rules = LT01, RF01

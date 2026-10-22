@@ -9,7 +9,7 @@ export const BUILD_OUTPUT_PATTERNS = ['dist/', 'build/', 'coverage/'] as const;
 
 export const IGNORE_SECTION_TITLES = {
     build: 'Build output',
-    git: 'Ignored by Git',
+    git: 'Files that Git ignores',
     gspot: 'Files that gspot generates',
     generators: 'Generator outputs',
     dependencies: 'Dependencies',

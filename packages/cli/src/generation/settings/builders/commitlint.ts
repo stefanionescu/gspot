@@ -4,9 +4,9 @@ import { getTable, listIgnoredRules } from '#cli/settings/scope-settings.ts';
 import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/settings/builders/commitlint.ts';
 
 /**
- * Build the commitlint file from the settings.
+ * Build commitlint.json: the Commitlint rules with the allowed types and scopes of the repository.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the Commitlint rules with the allowed types and scopes of the repository.
  */
 export function buildCommitlintFile(planned: PlannedToolFile): string {

@@ -3,7 +3,8 @@ title: Troubleshooting
 description: Fix gspot.toml errors, missing tools, failed installs, version mismatches, and slow checks.
 ---
 
-Start with `gspot doctor`. It lists missing tools, hook problems, and generated files that changed.
+Start with `gspot doctor`. It lists missing tools, hook problems, and configurations that the repository needs.
+`gspot apply --dry-run` shows the generated files that differ from `gspot.toml`.
 When you [report a problem](https://github.com/stefanionescu/gspot/issues), include the output, the check ID,
 and the command that reproduces it. Leave out credentials.
 
@@ -48,7 +49,7 @@ plan, or `--dry-run` to print it.
 ## npm exec cannot find gspot
 
 Add `@gspothq/cli` with your package manager; init does not add it.
-See [Install gspot](/start/install/). In a fresh clone, run your package manager's install, then `gspot install`.
+See [Installation](/start/install/). In a fresh clone, run your package manager's install, then `gspot install`.
 
 ## A commit stops with `npm is not installed`
 

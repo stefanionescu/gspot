@@ -7,7 +7,7 @@ export type CommandResult<Json = unknown> = { text: string; json: Json; exitCode
 /** A command failure printed as one JSON object. */
 export type CommandFailureJson = { error: string; message: string };
 
-/** Pass one command result to the CLI entry point. */
+/** Pass one command result to the entry point of gspot. */
 export type CommandCompletion = (result: CommandResult) => void;
 
 /** A command interrupted before producing a complete result. */

@@ -15,7 +15,7 @@ export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
 }
 
 /**
- * The planned fixer of the sandbox with its command replaced by a script.
+ * The planned fixer of the sandbox, with a script in place of its fix command.
  *
  * @param session the open sandbox.
  * @param script JavaScript for the fixer to run.

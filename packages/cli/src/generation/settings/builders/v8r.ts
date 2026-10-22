@@ -1,12 +1,12 @@
 import { stringify as stringifyYaml } from 'yaml';
 import { getTable } from '#cli/settings/scope-settings.ts';
 import type { PlannedToolFile } from '#cli/types/generation/files.ts';
-import { MISE_SCHEMA } from '#cli/config/generation/settings/builders/v8r.ts';
+import { V8R_NOTES, MISE_SCHEMA } from '#cli/config/generation/settings/builders/v8r.ts';
 
 /**
- * Build the v8r file from the settings.
+ * Build v8r.yml: the v8r schema catalog, including the configured file selectors.
  *
- * @param planned the tool file to build.
+ * @param planned the tool file with its scope, level, and target path.
  * @returns the v8r schema catalog, including the configured file selectors.
  */
 export function buildV8rFile(planned: PlannedToolFile): string {
@@ -15,11 +15,11 @@ export function buildV8rFile(planned: PlannedToolFile): string {
         fileMatch: paths,
         location: url,
     }));
-    return (
-        '# Files without a known schema are checked by their other selected tools.\n' +
+    return [
+        ...V8R_NOTES,
         stringifyYaml({
             ignoreErrors: true,
             customCatalog: { schemas: [MISE_SCHEMA, ...schemas] },
-        })
-    );
+        }),
+    ].join('\n');
 }

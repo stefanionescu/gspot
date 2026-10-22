@@ -138,7 +138,9 @@ test('a tool project program linked outside the repository is refused before it 
     await chmod(join(root, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
     await symlink('../../../../outside/teller', binary);
     expect(() => inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3'))).toThrow(
-        'Source link leaves the repository',
+        new Error(
+            '.gspot/node_modules/.bin/teller links to a file outside the repository. Replace the link with the file.',
+        ),
     );
     expect(await isOnDisk(join(sandbox.path, 'outside/executed'))).toBe(false);
     await unlink(binary);

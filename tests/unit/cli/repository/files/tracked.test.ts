@@ -45,7 +45,7 @@ test.each([...OUTSIDE_LINK_CASES])('the repository file list leaves out the outs
         'symlink',
     ]);
 });
-// Windows does not provide the POSIX named pipe created by mkfifo.
+// Windows does not provide the POSIX named pipe that mkfifo creates.
 test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
@@ -92,8 +92,8 @@ test('a .git file that points at a missing folder is reported, not read as a fol
     });
 
     expect(await captureRejection(readIndexEntries(sandbox.path))).toContain('Git ls-files failed');
-    expect(() => findRoot(sandbox.path)).toThrow('Git root discovery failed');
-    expect(() => isGitRepository(sandbox.path)).toThrow('Git rev-parse failed');
+    expect(() => findRoot(sandbox.path)).toThrow('Git could not find the repository root of');
+    expect(() => isGitRepository(sandbox.path)).toThrow('is a work tree (exit 128)');
 });
 test('a missing git program is reported instead of a successful walk', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
@@ -104,8 +104,12 @@ test('a missing git program is reported instead of a successful walk', async () 
     expect(await captureRejection(readIndexEntries(sandbox.path))).toMatch(
         /Git ls-files failed.*(?:not found|not recognized)/su,
     );
-    expect(() => findRoot(sandbox.path)).toThrow(/Git root discovery failed.*(?:not found|not recognized)/su);
-    expect(() => isGitRepository(sandbox.path)).toThrow(/Git rev-parse failed.*(?:not found|not recognized)/su);
+    expect(() => findRoot(sandbox.path)).toThrow(
+        /Git could not find the repository root of.*(?:not found|not recognized)/su,
+    );
+    expect(() => isGitRepository(sandbox.path)).toThrow(
+        /Git could not tell whether .* is a work tree.*(?:not found|not recognized)/su,
+    );
 });
 test('on Windows the executable bit comes from the Git index', async () => {
     await using sandbox = await testdir({ 'indexed.sh': '#!/bin/sh\n', 'local.sh': '#!/bin/sh\n' });

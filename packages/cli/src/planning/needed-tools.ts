@@ -42,9 +42,8 @@ function addPeerPackages(names: Set<string>, configurations: readonly Configurat
  * List the extra tools that the command and the configuration of a check use.
  *
  * @param scope where the check runs.
- * @param check the declaration to read.
+ * @param check the check to read.
  * @param command the arguments that run, if known.
- *
  * @returns each extra tool once.
  */
 export function listOtherTools(scope: Scope, check: Check, command?: string[]): string[] {
@@ -77,10 +76,9 @@ export function listOtherTools(scope: Scope, check: Check, command?: string[]): 
 }
 
 /**
- * Read the executable, fixer, and extra tools that a check uses.
+ * List the tool that a check runs, its fixer, its extra tools, and the packages they require.
  *
  * @param check the plan with resolved conditions, scopes, and exclusions.
- *
  * @returns the tools to install.
  */
 export function listNeededTools(check: PlannedCheck): string[] {
@@ -108,13 +106,12 @@ export function listScopeChecks(session: Session, scope: Scope): PlannedCheck[] 
 }
 
 /**
- * Select the tools that checks, fixers, and their tool files use.
- * The selection covers every supported system, so committed output does not depend on this machine.
+ * Select the tools that checks, fixers, and their tool files use. The tools cover every supported system, so committed
+ * output does not depend on this machine.
  *
  * @param session the repository and its settings.
  * @param checks the plans for every supported system.
- *
- * @returns the manifests with only the tools they need.
+ * @returns the configurations with only the tools they need.
  */
 export function selectNeededConfigurations(session: Session, checks: PlannedCheck[]): Configuration[] {
     const licenses = checks
@@ -154,14 +151,14 @@ export function selectNeededConfigurations(session: Session, checks: PlannedChec
 }
 
 /**
- * Select each project with its license settings and authored scope.
+ * List the dependency files that the licenses check reads, each with its scope, its allowed licenses, and the skip that
+ * the settings cause.
  *
  * @param files the inventory that the check reads.
  * @param scopes every scope.
  * @param settings the validated gspot.toml.
- * @param check the license declaration.
- *
- * @returns the projects that need installed license reports.
+ * @param check the licenses check.
+ * @returns one project for each dependency file whose scope sets allowed licenses.
  */
 export function listLicenseProjects(
     files: TrackedFile[],
@@ -207,11 +204,10 @@ export function listLicenseProjects(
 }
 
 /**
- * Resolve the formatter plugins once, and keep their declarations and npm entries.
+ * Map each tool that declares a Prettier plugin to its npm package name, entry, and overrides.
  *
  * @param configurations the configurations in use.
- *
- * @returns the plugins and their module paths.
+ * @returns the plugins by tool.
  */
 export function listPrettierPlugins(configurations: Iterable<Configuration>): Map<Tool, PrettierPlugin> {
     return new Map(

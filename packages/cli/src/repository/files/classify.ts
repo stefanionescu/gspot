@@ -59,7 +59,7 @@ import {
     GENERATOR_OUTPUT_BANNERS,
 } from '#cli/config/repository/inventory.ts';
 
-// Every tracked path has one kind: source, generated, vendored, binary.
+// A Git attribute wins over a configuration declaration.
 function findDeclaredKind(path: string, rules: FileKindRules): FileClassification | undefined {
     const attribute = findAttributeKind(rules.attributes.get(path));
     if (attribute !== undefined) return attribute;
@@ -95,7 +95,7 @@ function findGeneratedKind(path: string, prefix: Buffer): FileClassification | u
     return undefined;
 }
 
-// Higher-priority kinds take precedence; only a wholly managed instruction document makes remaining content generated.
+// A Markdown file that holds only a managed block counts as generated; any authored text keeps it source.
 function classifyManagedDocument(root: string, entry: ListedFile, prefix: Buffer): FileClassification {
     if (entry.symlink || !entry.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
@@ -106,14 +106,15 @@ function classifyManagedDocument(root: string, entry: ListedFile, prefix: Buffer
 }
 
 /**
- * Classify from declarations, attributes, binary content, managed paths, banners, then vendored folders.
+ * Classify a file by these sources, in order: attributes, the paths that configurations declare, binary content, license
+ * files, gspot paths, generated paths, banners, vendored folders, and managed documents.
  *
  * @param file what to classify.
  * @param file.root the repository folder.
  * @param file.entry the tracked listing item.
  * @param file.prefix the first bytes of the file.
  * @param file.isBinary whether those bytes hold binary data.
- * @param rules the generated and vendored declarations and captured Git attributes.
+ * @param rules the generated and vendored paths that configurations declare, and the captured Git attributes.
  * @returns the kind and where it came from.
  */
 function classifyKind(
@@ -124,7 +125,7 @@ function classifyKind(
     const { path } = entry;
     const declared = findDeclaredKind(path, rules);
     if (declared) return declared;
-    // Explicit text attributes override binary content and extension hints.
+    // Explicit text attributes override binary content and what the extension suggests.
     if (isBinary && rules.attributes.get(path)?.[TEXT_ATTRIBUTE] !== ATTRIBUTE_SET)
         return { kind: 'binary', origin: KIND_ORIGINS.content };
     if (isLicenseFile(path)) return { kind: 'vendored', origin: KIND_ORIGINS.license };
@@ -167,7 +168,7 @@ function tagTextFile(tags: Set<string>, firstLine: string): FileTags {
  * Resolve the pointer paths that tool files generate outside the tool project.
  *
  * @param path the scope folder.
- * @param files the tool file declarations.
+ * @param files the tool files.
  * @returns the pointer paths and declared folder patterns.
  */
 function listPointers(path: string, files: ToolFile[]): string[] {
@@ -180,10 +181,10 @@ function listPointers(path: string, files: ToolFile[]): string[] {
 }
 
 /**
- * Detect the generated gspot marker in the opening comment lines.
+ * Check whether the first lines of a file hold the gspot header.
  *
  * @param text the start of a file.
- * @returns whether the text carries the generated marker.
+ * @returns whether the text holds the gspot header.
  */
 export function hasGeneratedHeader(text: string): boolean {
     const lines = text.split('\n', HEADER_LINES_CHECKED);
@@ -193,7 +194,7 @@ export function hasGeneratedHeader(text: string): boolean {
 /**
  * Read the first executable, skipping env and its -S argument when present.
  *
- * @param firstLine the shebang candidate.
+ * @param firstLine the first line, which can hold a shebang.
  * @returns the executable basename, or undefined without an executable shebang.
  */
 function parseShebang(firstLine: string): string | undefined {
@@ -207,13 +208,13 @@ function parseShebang(firstLine: string): string | undefined {
 }
 
 /**
- * Find the kind of a tracked file and where the kind comes from.
+ * Build the inventory entry of a tracked file: its kind, where the kind comes from, and its tags.
  *
  * @param repositoryRoot the base folder for resolving tracked entries.
  * @param entry the tracked listing item.
  * @param prefix the first bytes of the file.
- * @param rules the file declarations to match.
- * @returns the kind and its origin.
+ * @param rules the generated and vendored paths to match.
+ * @returns the tracked file.
  */
 export function classifyFile(
     repositoryRoot: string,
@@ -276,8 +277,8 @@ export function listTaggedExtensions(...tags: string[]): string[] {
 /**
  * Resolve generated paths of the configurations each scope selects.
  *
- * @param selected the manifests of each written scope.
- * @returns file declarations, with the configuration that declares each.
+ * @param selected the configurations of each written scope.
+ * @returns the generated paths, with the configuration that declares each.
  */
 export function listConfigurationGeneratedPaths(selected: Map<string, Configuration[]>): GeneratedPaths[] {
     return selected

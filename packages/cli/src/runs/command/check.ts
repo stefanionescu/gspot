@@ -98,7 +98,7 @@ function findMissingToolFile(
     };
 }
 
-// Reports the repository command, not the copy command.
+// Run the command in the working tree or in a copy, and report the command as it reads in the repository.
 async function runInCopy(run: CopyRun): Promise<CheckResult> {
     const { session, planned, tool, command, toolPath, setup, base, options } = run;
     using copy =
@@ -213,7 +213,7 @@ export function prepareToolEnvironment(
  *
  * @param session the repository or its copy.
  * @param planned the check and its files.
- * @param options the overrides from the check implementation.
+ * @param options the overrides from the check code.
  * @returns the paths and environment for the tool.
  */
 export function buildCommandSetup(session: Session, planned: PlannedCheck, options: CheckRunOptions): CommandSetup {
@@ -240,7 +240,7 @@ export function buildCommandSetup(session: Session, planned: PlannedCheck, optio
 }
 
 /**
- * Computes the placeholder values from the scope and working folder.
+ * Builds the placeholder values from the scope and working folder.
  *
  * @param source the repository and settings.
  * @param planned the check and its files.
@@ -267,7 +267,7 @@ export function buildCommandSubstitutions(source: Session, planned: PlannedCheck
  * @param planned the check to run.
  * @param expansion what to run.
  * @param expansion.session the repository and its tools.
- * @param expansion.command the executable and authored arguments.
+ * @param expansion.command the executable and the arguments as declared.
  * @param expansion.setup the working paths and tool variables.
  * @param expansion.toolPath the resolved executable path.
  * @returns the working folder and command batches.
@@ -296,7 +296,7 @@ export function prepareCommand(
  *
  * @param session the repository and its tools.
  * @param planned the check to run.
- * @param options the command and temporary folder overrides.
+ * @param options the command and copy folder overrides.
  * @returns the check result.
  */
 export async function runCheckCommand(

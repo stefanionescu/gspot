@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { EslintPresets } from '#cli/types/generation/eslint.ts';
 
-/** JSON fields that a preset contributes to rule applicability and settings. */
+/** One block of a shipped ESLint preset copy: its files, ignores, base path, rules, and whether it sets a parser. */
 const eslintPresetBlockSchema = z.strictObject({
     files: z.array(z.union([z.string(), z.array(z.string())])).exactOptional(),
     ignores: z.array(z.string()).exactOptional(),

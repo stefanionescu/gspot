@@ -149,7 +149,7 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
         expect.objectContaining({
             name: 'GspotError',
             code: 'skip',
-            message: 'An ancestor compiler check covers this project.',
+            message: 'The tsconfig of a parent folder covers this project, and gspot checks it there.',
         }),
     );
     const reopened = await openSession(sandbox.path);
@@ -165,7 +165,7 @@ test('a covering ancestor tsconfig is checked once and a child-only project keep
         expect.objectContaining({
             name: 'GspotError',
             code: 'skip',
-            message: 'An ancestor compiler check covers this project.',
+            message: 'The tsconfig of a parent folder covers this project, and gspot checks it there.',
         }),
     );
 });

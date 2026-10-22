@@ -52,13 +52,14 @@ function checkForeignLockfiles(planned: PlannedCheck): Finding[] {
                 planned,
                 { file: path, line: 1 },
                 'foreign-lockfile',
-                `The repository holds lockfiles of ${String(pathsByPackageManager.size)} package managers: ${listed}. Keep one.`,
+                `This scope holds lockfiles of ${String(pathsByPackageManager.size)} package managers: ${listed}. Keep one.`,
             ),
         );
 }
 
 /**
- * Checks the registry hosts in tracked npm, pnpm, Yarn, and text Bun lockfiles.
+ * Reports lockfile downloads from other hosts or over plain HTTP, and lockfiles of a second package manager in the
+ * scope.
  *
  * @param session the repository and its tools.
  * @param planned the scope files and allowed registries.

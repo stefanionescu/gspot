@@ -45,7 +45,7 @@ export const LOCKFILE_PASSWORD_ERROR = {
     name: 'GspotError',
     code: 'install',
     message:
-        'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',
+        'The uv lockfile holds the index credentials of the repository. gspot kept the existing files. Remove the credentials from the index URL.',
 } as const;
 
 export const PYPROJECT_UV_INDEX = `[project]
