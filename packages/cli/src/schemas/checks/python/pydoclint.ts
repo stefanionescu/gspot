@@ -27,4 +27,4 @@ export const docstringStyleSchema = z.object({
                 .default({ lint: { pydocstyle: {} } }),
         } satisfies SchemaShape<DocstringConfiguration['tool']>)
         .default({ pydoclint: {}, ruff: { lint: { pydocstyle: {} } } }),
-} satisfies SchemaShape<DocstringConfiguration>) satisfies z.ZodType<DocstringConfiguration>;
+} satisfies SchemaShape<DocstringConfiguration>);

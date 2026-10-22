@@ -25,7 +25,7 @@ enabled = true
 
 [naming]
 # Words this repository does not use in names.
-banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling"]
+banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold"]
 
 [[naming.override]]
 paths = ["packages/cli/src/types/settings/**"]
@@ -167,6 +167,11 @@ reason = "Prettier and Stylelint name their configuration methods resolveConfig.
 paths = ["packages/cli/configurations/language/markdown/tool-files/markdownlint-cli2.mjs"]
 allowed_names = ["markdownlint-cli2"]
 reason = "The manifest loader reads this source by the external markdownlint-cli2 target filename."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/schemas/runs/output/sarif.ts", "packages/cli/src/runs/output/sarif.ts", "tests/unit/cli/runs/output/sarif.test.ts", "tests/unit/cli/runs/output/formats.test.ts"]
+allowed_names = ["invocations"]
+reason = "SARIF names the field of a run that records each tool run invocations."
 
 [structure]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts", "tests/setup/runner/unit-preload.ts"]

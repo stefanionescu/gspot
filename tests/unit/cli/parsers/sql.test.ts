@@ -3,7 +3,7 @@ import { getPosition } from '#cli/system/text.ts';
 import { TYPO } from '#tests/data/checks/spelling.ts';
 import { parseSqlFile } from '#cli/parsers/sql/postgres.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { QUOTED_PSQL_SOURCES } from '#tests/data/parsers/sql.ts';
+import { NESTED_COMMENT_SQL, QUOTED_PSQL_SOURCES } from '#tests/data/parsers/sql.ts';
 
 test('empty SQL has no statements', async () => {
     const result = await parseSqlFile('', createReadCache(process.cwd()));
@@ -12,16 +12,7 @@ test('empty SQL has no statements', async () => {
 });
 
 test('SQL statement positions skip nested comments and count Unicode correctly', async () => {
-    const text = [
-        '-- 前言',
-        '/* outer',
-        ' /* nested */',
-        '*/',
-        'DROP TABLE app.users;',
-        '-- Between statements.',
-        '/* next */',
-        ' SELECT 1;',
-    ].join('\n');
+    const text = NESTED_COMMENT_SQL;
     const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
     expect(parsed.error).toBeUndefined();
     expect(parsed.statements.map((statement) => statement.kind)).toStrictEqual(['DropStmt', 'SelectStmt']);

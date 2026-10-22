@@ -60,7 +60,7 @@ export async function installValePackages(install: ToolInstall): Promise<string>
     try {
         const config = join(temporary, VALE_TOOL_FILE_PATH);
         const text = readText(root, VALE_TOOL_FILE_PATH);
-        // Vale downloads into the last StylesPath, so that one stays relative to the scratch copy; the others point
+        // Vale downloads into the last StylesPath, so that one stays relative to the temporary folder; the others point
         // back to the repository.
         const last = [...text.matchAll(VALE_STYLES_PATH_PATTERN)].at(-1);
         const content = text.replaceAll(VALE_STYLES_PATH_PATTERN, (line, path: string, offset: number) =>

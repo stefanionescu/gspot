@@ -7,6 +7,6 @@ export const purgecssRequestSchema = z.strictObject({
     toolFile: z.string().min(1),
     css: z.array(z.string().min(1)),
     content: z.array(z.string().min(1)),
-} satisfies SchemaShape<PurgecssRequest>) satisfies z.ZodType<PurgecssRequest>;
+} satisfies SchemaShape<PurgecssRequest>);
 
 export const processArgumentSchema = z.string();

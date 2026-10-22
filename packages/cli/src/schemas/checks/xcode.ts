@@ -14,7 +14,7 @@ export const stringsFileSchema = z.object({
             } satisfies SchemaShape<NonNullable<XcodeStrings['strings']>[string]>),
         )
         .optional(),
-} satisfies SchemaShape<XcodeStrings>) satisfies z.ZodType<XcodeStrings>;
+} satisfies SchemaShape<XcodeStrings>);
 
 /** The image files that an asset catalog Contents.json names. */
 export const assetContentsSchema = z.object({
@@ -25,4 +25,4 @@ export const assetContentsSchema = z.object({
             >),
         )
         .optional(),
-} satisfies SchemaShape<AssetContents>) satisfies z.ZodType<AssetContents>;
+} satisfies SchemaShape<AssetContents>);

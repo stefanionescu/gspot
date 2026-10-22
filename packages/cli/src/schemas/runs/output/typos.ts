@@ -9,4 +9,4 @@ export const reportedTypoSchema = z.object({
     byte_offset: z.number().int().nonnegative(),
     typo: z.string().min(1),
     corrections: z.array(z.string()).nullable(),
-} satisfies SchemaShape<ReportedTypo>) satisfies z.ZodType<ReportedTypo>;
+} satisfies SchemaShape<ReportedTypo>);

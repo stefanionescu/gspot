@@ -18,7 +18,7 @@ const dependencyGroups = z.record(z.string(), stringList) satisfies z.ZodType<Re
 
 const groupInclude = z.object({
     'include-group': z.string(),
-} satisfies SchemaShape<PythonGroupInclude>) satisfies z.ZodType<PythonGroupInclude>;
+} satisfies SchemaShape<PythonGroupInclude>);
 
 const dependencyGroup = z.array(z.union([z.string(), groupInclude])) satisfies z.ZodType<PythonDependencyGroup>;
 
@@ -27,7 +27,7 @@ const projectTable = z.object({
     'optional-dependencies': dependencyGroups.optional(),
     scripts: stringMap.optional(),
     'requires-python': z.string().optional(),
-} satisfies SchemaShape<PythonProject>) satisfies z.ZodType<PythonProject>;
+} satisfies SchemaShape<PythonProject>);
 
 const pythonDependencyDetail = z.record(z.string(), z.unknown()) satisfies z.ZodType<Record<string, unknown>>;
 
@@ -42,25 +42,25 @@ const pythonDependencyMap = z.record(
 
 const poetryGroup = z.object({
     dependencies: pythonDependencyMap.optional(),
-} satisfies SchemaShape<PoetryGroup>) satisfies z.ZodType<PoetryGroup>;
+} satisfies SchemaShape<PoetryGroup>);
 
 const poetryToolSchema = z.object({
     dependencies: pythonDependencyMap.optional(),
     group: z.record(z.string(), poetryGroup).optional(),
-} satisfies SchemaShape<PoetrySettings>) satisfies z.ZodType<PoetrySettings>;
+} satisfies SchemaShape<PoetrySettings>);
 
 const toolSettings = z.object({
     pytest: z.unknown().optional(),
     poetry: poetryToolSchema.optional(),
-} satisfies SchemaShape<PythonToolSettings>) satisfies z.ZodType<PythonToolSettings>;
+} satisfies SchemaShape<PythonToolSettings>);
 
 export const pipfileSchema = z.object({
     packages: pythonDependencyMap.optional(),
     'dev-packages': pythonDependencyMap.optional(),
-} satisfies SchemaShape<Pipfile>) satisfies z.ZodType<Pipfile>;
+} satisfies SchemaShape<Pipfile>);
 
 export const pyprojectSchema = z.object({
     project: projectTable.optional(),
     'dependency-groups': z.record(z.string(), dependencyGroup).optional(),
     tool: toolSettings.optional(),
-} satisfies SchemaShape<Pyproject>) satisfies z.ZodType<Pyproject>;
+} satisfies SchemaShape<Pyproject>);

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Publish both npm packages from a tested main commit, deploy the docs site, tag each published package, and create the GitHub release."
-#MISE depends=["build"]
+#MISE depends=["build", "docs:build"]
 # npm asks for its publish approval only on a terminal, so the task keeps the terminal of the caller.
 #MISE raw=true
 set -euo pipefail
@@ -12,7 +12,7 @@ if [[ ${branch} != main || -n ${changes} ]]; then
     exit 1
 fi
 commit=$(git rev-parse HEAD)
-for workflow in ci.yml gspot.yml; do
+for workflow in tests.yml gspot.yml; do
     conclusion=$(gh run list --workflow "${workflow}" --commit "${commit}" --json conclusion --jq '.[0].conclusion')
     if [[ ${conclusion} != success ]]; then
         printf '%s has not passed on %s.\n' "${workflow}" "${commit}" >&2
@@ -41,8 +41,8 @@ for package in packages/eslint-plugin packages/cli; do
     fi
 done
 
-# The site shows the commit of this release.
-mise run docs:deploy
+# The site shows the commit of this release. Wrangler uses the login of `wrangler login` on this machine.
+bun --cwd docs run wrangler deploy
 
 for tag in "${tags[@]}"; do
     if ! git rev-parse -q --verify "refs/tags/${tag}" >/dev/null 2>&1; then

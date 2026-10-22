@@ -1,14 +1,12 @@
 # Run the unit, integration, and end-to-end tests on Linux, macOS, and Windows.
-name: ci
+name: tests
 on:
     push:
         branches: [main]
 permissions:
     contents: read
-# A newer push to main replaces the running tests: the release needs a green run on its own commit only.
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+    group: ${{ github.workflow }}-${{ github.run_id }}
 jobs:
     test:
         name: ${{ matrix.suite }} (${{ matrix.os }})

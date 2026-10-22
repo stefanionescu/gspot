@@ -6,7 +6,7 @@ const clonePlaceSchema = z.object({
     name: z.string().min(1),
     start: z.number().int().positive(),
     end: z.number().int().positive(),
-} satisfies SchemaShape<CloneLocation>) satisfies z.ZodType<CloneLocation>;
+} satisfies SchemaShape<CloneLocation>);
 
 export const cloneReportSchema = z.object({
     duplicates: z.array(
@@ -16,4 +16,4 @@ export const cloneReportSchema = z.object({
             secondFile: clonePlaceSchema,
         } satisfies SchemaShape<CloneReport['duplicates'][number]>),
     ),
-} satisfies SchemaShape<CloneReport>) satisfies z.ZodType<CloneReport>;
+} satisfies SchemaShape<CloneReport>);

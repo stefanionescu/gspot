@@ -39,4 +39,4 @@ export const knipReportSchema = z.strictObject({
             unresolved: z.array(knipSymbolSchema).optional(),
         } satisfies SchemaShape<KnipReport['issues'][number]>),
     ),
-} satisfies SchemaShape<KnipReport>) satisfies z.ZodType<KnipReport>;
+} satisfies SchemaShape<KnipReport>);

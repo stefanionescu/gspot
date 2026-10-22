@@ -9,7 +9,7 @@ import {
 
 const licenseSchema = z.object({
     licenses: z.union([z.string(), z.array(z.string())]).optional(),
-} satisfies SchemaShape<JavascriptPackageLicense>) satisfies z.ZodType<JavascriptPackageLicense>;
+} satisfies SchemaShape<JavascriptPackageLicense>);
 
 export const javascriptReportSchema = z.record(z.string(), licenseSchema) satisfies z.ZodType<JavascriptLicenseReport>;
 

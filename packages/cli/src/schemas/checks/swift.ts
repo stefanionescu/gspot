@@ -13,7 +13,7 @@ export const packageDescriptionSchema = z.object({
             sources: z.array(z.string()),
         } satisfies SchemaShape<SwiftPackageCoverage['targets'][number]>),
     ),
-} satisfies SchemaShape<SwiftPackageCoverage>) satisfies z.ZodType<SwiftPackageCoverage>;
+} satisfies SchemaShape<SwiftPackageCoverage>);
 
 /** The compiler's coverage export with source line counts. */
 export const swiftCoverageSchema = z.object({
@@ -32,7 +32,7 @@ export const swiftCoverageSchema = z.object({
             ),
         } satisfies SchemaShape<SwiftCoverage['data'][number]>),
     ),
-} satisfies SchemaShape<SwiftCoverage>) satisfies z.ZodType<SwiftCoverage>;
+} satisfies SchemaShape<SwiftCoverage>);
 
 export const xccovSchema = z.object({
     targets: z.array(
@@ -40,4 +40,4 @@ export const xccovSchema = z.object({
             CoverageReport['targets'][number]
         >),
     ),
-} satisfies SchemaShape<CoverageReport>) satisfies z.ZodType<CoverageReport>;
+} satisfies SchemaShape<CoverageReport>);

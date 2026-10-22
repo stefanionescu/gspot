@@ -17,7 +17,7 @@ export const VALE_SANDBOX_FILES = {
 };
 
 /** The Vale finding of a file name with a colon and a newline. */
-const VALE_ODD_PATH_FINDINGS = [
+const VALE_COLON_PATH_FINDINGS = [
     {
         check: 'prose/vale',
         file: 'docs/café:part\nname.md',
@@ -69,7 +69,7 @@ export const VALE_OUTPUT_CASES = [
                     { Line: 3, Span: [10, 15], Check: 'gspot.marketing', Message: 'Marketing word.' },
                 ],
             }) + '\r\n',
-        findings: [...VALE_ODD_PATH_FINDINGS],
+        findings: [...VALE_COLON_PATH_FINDINGS],
     },
     { name: 'empty reports', stdout: '{}', findings: [] },
 ] as const;

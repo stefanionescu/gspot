@@ -13,4 +13,4 @@ export const deptrySchema = z.object({
                 .default({ extend_exclude: [], known_first_party: [] }),
         } satisfies SchemaShape<DeptryConfiguration['tool']>)
         .default({ deptry: { extend_exclude: [], known_first_party: [] } }),
-} satisfies SchemaShape<DeptryConfiguration>) satisfies z.ZodType<DeptryConfiguration>;
+} satisfies SchemaShape<DeptryConfiguration>);

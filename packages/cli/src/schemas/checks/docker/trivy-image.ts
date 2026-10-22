@@ -30,4 +30,4 @@ export const imageReportSchema = z.object({
             } satisfies SchemaShape<NonNullable<TrivyImageReport['Results']>[number]>),
         )
         .optional(),
-} satisfies SchemaShape<TrivyImageReport>) satisfies z.ZodType<TrivyImageReport>;
+} satisfies SchemaShape<TrivyImageReport>);

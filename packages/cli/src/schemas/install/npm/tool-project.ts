@@ -13,4 +13,4 @@ export const toolPackageJsonSchema = z.strictObject({
             [NEXT_ESLINT_PLUGIN]: toolDependencyVersion.or(z.string().regex(NEXT_ESLINT_PLUGIN_MAJOR)).optional(),
         } satisfies SchemaShape<Pick<ToolPackageJson['devDependencies'], typeof NEXT_ESLINT_PLUGIN>>)
         .catchall(toolDependencyVersion),
-} satisfies SchemaShape<ToolPackageJson>) satisfies z.ZodType<ToolPackageJson>;
+} satisfies SchemaShape<ToolPackageJson>);

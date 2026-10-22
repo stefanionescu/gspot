@@ -8,7 +8,7 @@ export const supabaseProjectFileSchema = z.object({
             NonNullable<SupabaseProjectFile['storage']>
         >)
         .optional(),
-} satisfies SchemaShape<SupabaseProjectFile>) satisfies z.ZodType<SupabaseProjectFile>;
+} satisfies SchemaShape<SupabaseProjectFile>);
 
 export const denoLintReportSchema = z.object({
     diagnostics: z.array(
@@ -28,4 +28,4 @@ export const denoLintReportSchema = z.object({
             DenoLintReport['errors'][number]
         >),
     ),
-} satisfies SchemaShape<DenoLintReport>) satisfies z.ZodType<DenoLintReport>;
+} satisfies SchemaShape<DenoLintReport>);

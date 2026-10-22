@@ -35,4 +35,4 @@ export const semgrepReportSchema = z.object({
                 .optional(),
         } satisfies SchemaShape<SemgrepReport['errors'][number]>),
     ),
-} satisfies SchemaShape<SemgrepReport>) satisfies z.ZodType<SemgrepReport>;
+} satisfies SchemaShape<SemgrepReport>);

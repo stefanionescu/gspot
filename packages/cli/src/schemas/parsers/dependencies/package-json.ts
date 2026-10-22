@@ -12,16 +12,16 @@ import type {
 
 const workspacePackages = z.object({
     packages: stringList,
-} satisfies SchemaShape<PackageWorkspaces>) satisfies z.ZodType<PackageWorkspaces>;
+} satisfies SchemaShape<PackageWorkspaces>);
 
 const devEngineEntry = z.object({
     name: z.string().optional(),
     version: z.string().optional(),
-} satisfies SchemaShape<PackageManagerEngine>) satisfies z.ZodType<PackageManagerEngine>;
+} satisfies SchemaShape<PackageManagerEngine>);
 
 const devEngines = z.object({
     packageManager: z.union([devEngineEntry, z.array(devEngineEntry)]).optional(),
-} satisfies SchemaShape<PackageDevEngines>) satisfies z.ZodType<PackageDevEngines>;
+} satisfies SchemaShape<PackageDevEngines>);
 
 export const packageJsonSchema = z.looseObject({
     name: z.string().optional(),

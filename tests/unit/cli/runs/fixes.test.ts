@@ -11,7 +11,7 @@ import { planFixer, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { COPY_FAILURES, buildSourceDiff } from '#tests/data/runs/fixes.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 
-test("a fixer's {root} environment paths point into the scratch copy during a dry run", async () => {
+test("a fixer's {root} environment paths point into the copy during a dry run", async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildFixerSettings(),
         'source.txt': 'original',

@@ -12,6 +12,6 @@ export const findingSchema = z.object({
     } satisfies SchemaShape<SvelteFinding['start']>),
     message: z.string(),
     code: (z.union([z.string(), z.number()]) satisfies z.ZodType<string | number>).optional(),
-} satisfies SchemaShape<SvelteFinding>) satisfies z.ZodType<SvelteFinding>;
+} satisfies SchemaShape<SvelteFinding>);
 
 export const failureMessageSchema = z.string();

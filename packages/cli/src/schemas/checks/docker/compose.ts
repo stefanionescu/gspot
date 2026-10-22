@@ -26,4 +26,4 @@ export const composeSchema = z.object({
             } satisfies SchemaShape<NonNullable<ComposeConfiguration['services']>[string]>),
         )
         .optional(),
-} satisfies SchemaShape<ComposeConfiguration>) satisfies z.ZodType<ComposeConfiguration>;
+} satisfies SchemaShape<ComposeConfiguration>);

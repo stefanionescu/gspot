@@ -6,4 +6,4 @@ export const yarnSettingsSchema = z.record(z.string(), z.unknown()) satisfies z.
 
 export const yarnConfigEntrySchema = z.object({
     key: z.string(),
-} satisfies SchemaShape<YarnSetting>) satisfies z.ZodType<YarnSetting>;
+} satisfies SchemaShape<YarnSetting>);

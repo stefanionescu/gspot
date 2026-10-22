@@ -1,5 +1,5 @@
 /**
- * Copy and read failures name their operation after cleanup removes the scratch copy. The copy error comes from the
+ * Copy and read failures name their operation after cleanup removes the copy. The copy error comes from the
  * operating system and names the paths, so the rows hold the part that every system prints.
  */
 export const COPY_FAILURES = [

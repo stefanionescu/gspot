@@ -5,3 +5,15 @@ export const QUOTED_PSQL_SOURCES = [
     '-- :value',
     'SELECT 1::int;',
 ] as const;
+
+/** Two statements behind nested block comments and line comments that hold Unicode text. */
+export const NESTED_COMMENT_SQL = [
+    '-- 前言',
+    '/* outer',
+    ' /* nested */',
+    '*/',
+    'DROP TABLE app.users;',
+    '-- Between statements.',
+    '/* next */',
+    ' SELECT 1;',
+].join('\n');

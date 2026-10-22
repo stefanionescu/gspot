@@ -21,6 +21,6 @@ export const ciJobSchema = z.object({
         )
         .optional(),
     extends: z.unknown().optional(),
-} satisfies SchemaShape<CiJob>) satisfies z.ZodType<CiJob>;
+} satisfies SchemaShape<CiJob>);
 
 export const ciDocumentSchema = z.record(z.string(), z.unknown()) satisfies z.ZodType<Record<string, unknown>>;
