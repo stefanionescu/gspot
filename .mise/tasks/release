@@ -42,7 +42,7 @@ for package in packages/eslint-plugin packages/cli; do
 done
 
 # The site shows the commit of this release. Wrangler uses the login of `wrangler login` on this machine.
-bun --cwd docs run wrangler deploy
+bun run --cwd docs wrangler deploy
 
 for tag in "${tags[@]}"; do
     if ! git rev-parse -q --verify "refs/tags/${tag}" >/dev/null 2>&1; then
