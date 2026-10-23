@@ -7,6 +7,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { HOOKS_SETTINGS } from '#tests/config/setup/cli.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -121,7 +122,7 @@ test('a hook says how to install mise when mise is missing', async () => {
     });
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stderr).toBe(
-        'mise is not installed. Install mise, then run: mise install. Install gspot with: mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@<version>\n',
+        `mise is not installed. Install mise, then run: mise install. Install gspot with: mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@${cliPackage.version}\n`,
     );
 });
 

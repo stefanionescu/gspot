@@ -1,5 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
 import type { StartRunner } from '#cli/types/repository/npm/package-manager.ts';
@@ -21,7 +22,9 @@ import {
 // commands read it.
 function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { usesLfs: boolean }): string {
     const program = runner.name;
-    const { missing, installCommand } = runner;
+    // gspot writes the hooks of the version it pins, so the install line names that version.
+    const { missing } = runner;
+    const installCommand = runner.installCommand.replace('<version>', cliPackage.version);
     const absolutePath = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
     const lfs = usesLfs && (LFS_HOOKS as readonly string[]).includes(name);
     const replay = lfs ? PUSH_INPUT_REPLAY : '';
