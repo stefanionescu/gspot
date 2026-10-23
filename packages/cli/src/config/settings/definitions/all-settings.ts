@@ -4,6 +4,7 @@ import { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
 import { FORMAT_DEFINITIONS } from '#cli/config/settings/definitions/format.ts';
 import { NAMING_DEFINITIONS } from '#cli/config/settings/definitions/naming.ts';
 import { ROOT_SETTING_DEFINITIONS } from '#cli/config/settings/definitions/root.ts';
+import { LANGUAGE_DEFINITIONS } from '#cli/config/settings/definitions/languages.ts';
 import { TOOL_SETTING_DEFINITIONS } from '#cli/config/settings/definitions/tools.ts';
 import { RECORD_FIELD_DEFINITIONS } from '#cli/config/settings/definitions/record-fields.ts';
 
@@ -14,6 +15,7 @@ export const SETTING_DEFINITIONS = {
     ...LIMIT_DEFINITIONS,
     ...TOOL_SETTING_DEFINITIONS,
     ...RECORD_FIELD_DEFINITIONS,
+    ...LANGUAGE_DEFINITIONS,
     'repository.max_file_kilobytes': {
         configurations: ['repository'],
         description:
@@ -249,28 +251,6 @@ export const SETTING_DEFINITIONS = {
         description: 'The folder of the `<locale>.json` message files, relative to the repository root.',
     },
 
-    'javascript.script_files': {
-        configurations: ['javascript'],
-        description: 'Script files, which may print to the console and call process.exit.',
-        default: ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'] as ['scripts/**', '**/*.config.{js,mjs,cjs,ts}'],
-    },
-    'javascript.externals': {
-        configurations: ['javascript'],
-        description:
-            'Import specifiers that the runtime provides, such as ../../scripts/app.js in a host application. Globs match several.',
-        default: [] as [],
-    },
-    'python.externals': {
-        configurations: ['python'],
-        description:
-            'Modules that the host application provides at run time, such as folder_paths. A name covers its submodules.',
-        default: [] as [],
-    },
-    'python.extra_paths': {
-        configurations: ['python'],
-        description: 'Folders, relative to the scope, where basedpyright also looks for imports.',
-        default: [] as [],
-    },
     'structure.environment_readers': {
         configurations: ['structure'],
         description: 'The files that may read environment variables; other files get the values passed in.',

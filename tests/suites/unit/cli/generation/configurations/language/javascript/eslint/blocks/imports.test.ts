@@ -157,3 +157,32 @@ test('an import of a javascript.externals path gets no gspot/import-boundaries f
     const external = await createEslint(sandbox.path);
     expect(await listLintFindings(external, sandbox.path, ['web/src/a.js'], rules)).toStrictEqual([]);
 });
+
+test('javascript.import_boundaries keeps relative imports inside each folder, and --fix writes the alias', async () => {
+    const files = {
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"paths":{"@/*":["./src/*"]}},"include":["src/**/*.ts"]}',
+        'src/features/auth/session.ts': 'export const session = 1;\n',
+        'src/features/account/page.ts': '',
+    };
+    const source = 'import { session } from "../auth/session.ts";\nexport { session };\n';
+    const target = { filePath: 'src/features/account/page.ts' };
+    const fix = { fix: ({ ruleId }: { ruleId: string | null }) => ruleId === 'gspot/import-boundaries' };
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        ...files,
+    });
+    const open = await createEslint(sandbox.path, fix);
+    const [unbounded] = await open.lintText(source, target);
+    expect(unbounded?.output).toBeUndefined();
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['typescript'], {
+            level: 'all',
+            tables: '[javascript]\nimport_boundaries = ["src/features/*"]\n',
+        }),
+    );
+    const bounded = await createEslint(sandbox.path, fix);
+    const [fixed] = await bounded.lintText(source, target);
+    expect(fixed?.output).toBe('import { session } from "@/features/auth/session.ts";\nexport { session };\n');
+});

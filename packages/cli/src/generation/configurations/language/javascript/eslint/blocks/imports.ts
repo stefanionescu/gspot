@@ -94,11 +94,12 @@ export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<strin
     const scopePaths = scopes
         .map((scope) => scope.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH))
         .filter((path) => path !== '');
+    const boundaries = scopes.flatMap(({ settings }) => settings.values.javascript?.import_boundaries ?? []);
     const externals = [...new Set(scopes.flatMap(({ settings }) => settings.values.javascript?.externals ?? []))];
     return [
         'error',
         {
-            folders: [...IMPORT_BOUNDARY_FOLDERS, ...scopePaths],
+            folders: [...new Set([...IMPORT_BOUNDARY_FOLDERS, ...scopePaths, ...boundaries])],
             aliases,
             ...(externals.length === 0 ? {} : { externals }),
         },

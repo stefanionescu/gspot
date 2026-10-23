@@ -10,6 +10,10 @@ export const javascriptSchema = z
             .array(relativePath)
             .default(SETTING_DEFINITIONS['javascript.script_files'].default)
             .meta(SETTING_DEFINITIONS['javascript.script_files']),
+        import_boundaries: z
+            .array(relativePath)
+            .default(SETTING_DEFINITIONS['javascript.import_boundaries'].default)
+            .meta(SETTING_DEFINITIONS['javascript.import_boundaries']),
         externals: z
             .array(z.string().min(1))
             .default(SETTING_DEFINITIONS['javascript.externals'].default)

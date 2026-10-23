@@ -16,7 +16,7 @@ export type ConfigurationTables = {
     docs: { banned_headings: string[]; allowed_urls: string[] };
     drizzle: { client_names: string[] };
     duplication: { min_lines: number; min_tokens: number };
-    javascript: { script_files: string[]; externals: string[] };
+    javascript: { script_files: string[]; import_boundaries: string[]; externals: string[] };
     licenses: { allowed: string[]; allowed_package: AllowedPackage[] };
     openapi: { document?: string | undefined; generate_command?: string[] | undefined };
     postgres: {

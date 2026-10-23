@@ -47,6 +47,25 @@ can_import = ["sdk"]
 
 Each name must match an import rule.
 
+## Keep relative imports inside a folder
+
+In JavaScript and TypeScript, a relative import may not leave its folder: an import of a file elsewhere goes through
+the alias of `tsconfig.json` or `package.json`, and `eslint --fix` writes it. By default, the folders two levels down,
+such as `src/features/`, and each scope draw that line. To make each feature its own folder:
+
+```toml
+[javascript]
+import_boundaries = ["src/features/*"]
+```
+
+A relative import from one feature into another then reports a finding, and the fix writes the alias:
+
+```ts title="src/features/account/page.ts"
+import { session } from '../auth/session.ts'; // the fix writes '@/features/auth/session.ts'
+```
+
+The import rules still decide whether one feature may import another.
+
 ## Every code file belongs to a rule
 
 With import rules present, `structure/import-rules` reports each code file that no rule covers. These files need no
