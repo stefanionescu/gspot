@@ -82,7 +82,7 @@ const MOBILE_SOURCE_FILES = {
 export const RESPONSE_MESSAGES =
     'response.json({ message: `Item ${identifier}` });\ncustom.info(`Item ${identifier}`);\n';
 
-export const ALIAS_IMPORT = 'import value from "#owner";\n';
+export const ALIAS_IMPORT = 'import value from "#lib/owner";\n';
 
 /** The lines of the Express sample: the alias import, then the template message of a response and of a log call. */
 export const EXPRESS_SAMPLE_LINES = { aliasImport: 1, responseMessage: 2, logMessage: 3 } as const;

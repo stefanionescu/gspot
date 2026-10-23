@@ -1,6 +1,6 @@
 /** Relative imports and aliases for the import suffix and alias rules. */
 export const IMPORT_FILES = {
-    'package.json': '{"private":true,"type":"module","imports":{"#owner":"./src/owner.ts"}}\n',
+    'package.json': '{"private":true,"type":"module","imports":{"#owner":"./src/owner.ts","#lib/*":"./src/*"}}\n',
     'tsconfig.json':
         '{"compilerOptions":{"strict":true,"noEmit":true,"module":"ESNext","moduleResolution":"Bundler","baseUrl":".","paths":{"@/*":["src/*"]}},"include":["src/**/*.ts","app/src/**/*.ts"]}\n',
     'src/source.ts': 'export const source = 1;\n',
@@ -15,10 +15,11 @@ export const IMPORT_FILES = {
 export const IMPORT_CASES = [
     ['relative missing', 'import { value } from "./owner";\n', 'n/file-extension-in-import', 1],
     ['relative emitted suffix', 'import { value } from "./owner.js";\n', 'n/file-extension-in-import', 0],
-    ['hash alias missing', 'import { value } from "#owner";\n', 'no-restricted-syntax', 1],
+    ['hash alias missing', 'import { value } from "#lib/owner";\n', 'no-restricted-syntax', 1],
+    ['exact hash alias', 'import { value } from "#owner";\n', 'no-restricted-syntax', 0],
     ['at alias missing', 'import { value } from "@/owner";\n', 'no-restricted-syntax', 1],
     ['private alias suffix', 'import { value } from "@/private/owner.js";\n', 'no-restricted-syntax', 0],
-    ['alias dynamic import', 'const owner = await import("#owner");\n', 'no-restricted-syntax', 1],
+    ['alias dynamic import', 'const owner = await import("#lib/owner");\n', 'no-restricted-syntax', 1],
 ] as const;
 
 export const REEXPORT_CASES = [

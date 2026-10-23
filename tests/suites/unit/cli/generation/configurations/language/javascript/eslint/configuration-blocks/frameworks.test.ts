@@ -98,7 +98,7 @@ test.each([...LEVELS])(
                 tables: '[tools.eslint]\nimport_extension = "js"\n',
                 scopes: [{ path: 'api', configurations: ['express'] }],
             }),
-            'package.json': '{"private":true,"type":"module","imports":{"#owner":"./owner.js"}}',
+            'package.json': '{"private":true,"type":"module","imports":{"#lib/*":"./*.js"}}',
             'owner.js': 'export const value = 1;',
             'source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
             'api/source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,

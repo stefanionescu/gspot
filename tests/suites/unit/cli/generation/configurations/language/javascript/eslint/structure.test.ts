@@ -165,7 +165,7 @@ test('a JSON import attribute is accepted where your import extensions need a su
             tables: '[tools.eslint]\nimport_extension = "js"\n\n',
             scopes: [{ path: 'app', configurations: ['javascript'] }],
         }),
-        'package.json': '{"private":true,"type":"module","imports":{"#manifest":"./package.json"}}\n',
+        'package.json': '{"private":true,"type":"module","imports":{"#data/*":"./*.json"}}\n',
         'main.js': '',
         'app/main.js': '',
     });
@@ -174,12 +174,12 @@ test('a JSON import attribute is accepted where your import extensions need a su
     for (const filePath of ['main.js', 'app/main.js']) {
         const config = (await eslint.calculateConfigForFile(filePath)) as EslintConfiguration;
         expect(config.rules['n/file-extension-in-import']![0]).toBe(2);
-        await createFileTree(sandbox.path, { [filePath]: 'import manifest from "#manifest";' });
+        await createFileTree(sandbox.path, { [filePath]: 'import manifest from "#data/package";' });
         expect(await listLintFindings(eslint, sandbox.path, [filePath], ['no-restricted-syntax'])).toStrictEqual([
             { file: filePath, rule: 'no-restricted-syntax', line: 1 },
         ]);
         await createFileTree(sandbox.path, {
-            [filePath]: 'import manifest from "#manifest" with { type: "json" };',
+            [filePath]: 'import manifest from "#data/package" with { type: "json" };',
         });
         expect(await listLintFindings(eslint, sandbox.path, [filePath], ['no-restricted-syntax'])).toStrictEqual([]);
     }
