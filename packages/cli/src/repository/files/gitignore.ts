@@ -79,6 +79,6 @@ export function buildGitignoreTest(reads: ReadCache, trackedPaths: string[]): (p
     return (path) => {
         const segments = path.split('/');
         const folders = segments.slice(0, -1).map((_, index) => `${segments.slice(0, index + 1).join('/')}/`);
-        return [...folders, path, `${path}/`].some((entry) => isIgnored(entry, ignores));
+        return [...folders, path, `${path}/`].some((checkedPath) => isIgnored(checkedPath, ignores));
     };
 }

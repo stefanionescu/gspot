@@ -39,7 +39,7 @@ export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]
             file.kind === 'source' &&
             !(
                 file.path.startsWith(`${DOT_GSPOT}/`) ||
-                file.path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
+                file.path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
             ),
     )) {
         const dependencyFile = await readDependencyFile(reads, file);
@@ -80,7 +80,7 @@ export function readCachedPackageJson(reads: ReadCache, path: string): PackageJs
  * @param path the repository-relative package.json path.
  * @returns the specifiers by name, or undefined when the file does not exist.
  */
-export function readDeclaredSpecifiers(reads: ReadCache, path: string): Map<string, string> | undefined {
+export function readDependencySpecifiers(reads: ReadCache, path: string): Map<string, string> | undefined {
     const fields = readCachedPackageJson(reads, path);
     if (fields === undefined) return undefined;
     return new Map(

@@ -15,7 +15,7 @@ test('a heredoc that writes a data file is not reported', async () => {
     expect(await runSandboxCheck(sandbox.path, 'bash/inline-scripts')).toStrictEqual([]);
 });
 
-test.each([...INLINE_SCRIPT_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(bashSandbox(), entry, BASH_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...INLINE_SCRIPT_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
+    const result = await runCheckSample(bashSandbox(), sample, BASH_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

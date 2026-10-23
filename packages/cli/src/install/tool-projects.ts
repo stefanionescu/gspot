@@ -8,8 +8,8 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { planReplacement } from '#cli/apply/write/plans.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
+import { isLockfileFresh } from '#cli/install/npm/lockfiles.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { isLockfileCurrent } from '#cli/install/npm/lockfiles.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
@@ -17,7 +17,7 @@ import type { StaleLockfile } from '#cli/types/install/tool-projects.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
 import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
-import { installPythonTools, preparePythonLockfile, isPythonLockfileCurrent } from '#cli/install/python/project.ts';
+import { installPythonTools, preparePythonLockfile, isPythonLockfileFresh } from '#cli/install/python/project.ts';
 
 // Preparation may replace a lockfile in the command's generated files.
 function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
@@ -51,14 +51,14 @@ export function listStaleLockfiles(
                 const path = project.lockfilePath;
                 const recorded = files.read(path);
                 if (recorded === undefined) return [{ path, kind: 'missing' as const }];
-                const matches = isLockfileCurrent(name, recorded.bytes.toString('utf8'), project.dependencies);
+                const matches = isLockfileFresh(name, recorded.bytes.toString('utf8'), project.dependencies);
                 return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
             }
             const project = toolPyprojectSchema.parse(parseToml(toolProjectFile.content));
             const path = GSPOT_PATHS.uvLockfile;
             const recorded = files.read(path);
             if (recorded === undefined) return [{ path, kind: 'missing' as const }];
-            const matches = isPythonLockfileCurrent(project, recorded.bytes.toString('utf8'));
+            const matches = isPythonLockfileFresh(project, recorded.bytes.toString('utf8'));
             return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
         });
 }
@@ -93,7 +93,7 @@ async function prepareLockfiles(install: ToolInstall, files: GeneratedFile[]): P
  */
 export async function installSandboxTools(install: ToolInstall): Promise<string[]> {
     const { session, writer, generated, misePath: mise } = install;
-    const configurations = session.neededToolConfigurations;
+    const configurations = session.toolConfigurations;
     const notes: string[] = [];
     const uvPath = mise !== null || which.sync(UV_TOOL, { nothrow: true }) !== null ? getUvPath(session) : undefined;
     const toolProjectFiles =

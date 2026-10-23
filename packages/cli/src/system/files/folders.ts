@@ -59,11 +59,11 @@ export function listMatchingPaths(folder: string, patterns: string | string[]): 
     };
     const roots = positive.values().flatMap((pattern) => {
         const { base, glob } = picomatch.scan(pattern);
-        const parts = base.split('/').filter((part) => part !== '' && part !== '.');
+        const segments = base.split('/').filter((segment) => segment !== '' && segment !== '.');
         if (
-            parts.some(
+            segments.some(
                 (_, index) =>
-                    lstatSync(join(folder, ...parts.slice(0, index + 1)), {
+                    lstatSync(join(folder, ...segments.slice(0, index + 1)), {
                         throwIfNoEntry: false,
                     })?.isSymbolicLink() === true,
             )

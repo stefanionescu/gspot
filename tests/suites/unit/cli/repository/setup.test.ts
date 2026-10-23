@@ -30,7 +30,9 @@ test('tool discovery finds nested config files and skips root .gspot and vendore
         files: repository.files,
         dependencyFiles: [],
     });
-    expect(discovered.conflictingConfigFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
+    expect(discovered.conflictingConfigFiles.map((conflictingConfigFile) => conflictingConfigFile.path)).toStrictEqual([
+        'src/.prettierrc.json',
+    ]);
 });
 
 test.each([...CI_JOB_DOCUMENTS])('CI discovery recognizes $name', async ({ path, document, expected }) => {

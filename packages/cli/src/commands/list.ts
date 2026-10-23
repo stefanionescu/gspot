@@ -84,14 +84,14 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
     const rows = scopes.flatMap((scope) => {
         const scopePath = scope.folder.path;
         return listEffectiveSettings(scope.availableSettings, settings, scopePath)
-            .filter((entry) => scopePath === '' || entry.origin !== 'configuration')
-            .map((entry) => ({
-                key: entry.key,
-                value: entry.value,
-                source: entry.source,
-                origin: entry.origin,
-                ...stripUndefined({ originScope: entry.originScope }),
-                reason_needed: entry.setting.reason_needed,
+            .filter((effectiveSetting) => scopePath === '' || effectiveSetting.origin !== 'configuration')
+            .map((row) => ({
+                key: row.key,
+                value: row.value,
+                source: row.source,
+                origin: row.origin,
+                ...stripUndefined({ originScope: row.originScope }),
+                reason_needed: row.setting.reason_needed,
                 scope: scopePath,
             }));
     });

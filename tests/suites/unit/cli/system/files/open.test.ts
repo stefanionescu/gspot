@@ -5,7 +5,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
-import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
 import { matchFields, captureThrow } from '#tests/setup/matchers.ts';
 import { OUTSIDE_LINKS, MODE_REPLACEMENTS } from '#tests/config/system/files/open.ts';

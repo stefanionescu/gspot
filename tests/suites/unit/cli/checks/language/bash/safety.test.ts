@@ -63,7 +63,7 @@ test('a trap that removes another path is reported by script-layout as mktemp-tr
     );
 });
 
-test.each([...BASH_SAFETY_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(bashSandbox(), entry, BASH_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...BASH_SAFETY_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
+    const result = await runCheckSample(bashSandbox(), sample, BASH_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

@@ -45,7 +45,7 @@ test.each([...PYTHON_PROJECTS])(
         expect(command.code, command.stdout + command.stderr).toBe(0);
         const steps = (JSON.parse(command.stdout) as { steps: string[][] }).steps;
         const session = await openSession(sandbox.path);
-        const miseTools = listMisePins(session.neededToolConfigurations).map(({ name }) => name);
+        const miseTools = listMisePins(session.toolConfigurations).map(({ name }) => name);
         expect(
             steps.map((step) => (step[0] === 'mise' ? step : ['uv', ...step.slice(1, step.indexOf('--project'))])),
         ).toStrictEqual([
@@ -56,7 +56,7 @@ test.each([...PYTHON_PROJECTS])(
                 step.map((argument) => argument.replaceAll('{python-version}', PYTHON_VERSION)),
             ),
         ]);
-        for (const step of steps.filter((entry) => entry[0] !== 'mise')) {
+        for (const step of steps.filter((step) => step[0] !== 'mise')) {
             expect(step[step.indexOf('--project') + 1]).toBe(join(sandbox.path, DOT_GSPOT));
         }
         expect(await readFile(join(sandbox.path, 'pyproject.toml'))).toStrictEqual(rootProject);
@@ -140,12 +140,12 @@ async function createPythonIndex(work: string): Promise<AsyncDisposable & { url:
     const version = RUFF_VERSION_OUTPUT.exec(inspected.stdout.trim())?.groups?.['version'];
     if (version === undefined) throw new Error('Ruff version output is invalid.');
     const wheel = `ruff-${version}-py3-none-any.whl`;
-    const entries = await buildWheelEntries(binary, version);
+    const wheelFiles = await buildWheelFiles(binary, version);
     const archive = zipSync(
         Object.fromEntries(
-            entries.map(([name, data]) => [
+            wheelFiles.map(([name, bytes]) => [
                 name,
-                [data, name.endsWith(`/${basename(binary)}`) ? ZIP_FILE_OPTIONS.executable : ZIP_FILE_OPTIONS.regular],
+                [bytes, name.endsWith(`/${basename(binary)}`) ? ZIP_FILE_OPTIONS.executable : ZIP_FILE_OPTIONS.regular],
             ]),
         ),
     );
@@ -174,9 +174,9 @@ async function createPythonIndex(work: string): Promise<AsyncDisposable & { url:
 }
 
 /** Build the wheel metadata and executable entries, including their integrity record. */
-async function buildWheelEntries(binary: string, version: string): Promise<Array<[string, Buffer]>> {
+async function buildWheelFiles(binary: string, version: string): Promise<Array<[string, Buffer]>> {
     const metadata = `ruff-${version}.dist-info`;
-    const entries: Array<[string, Buffer]> = [
+    const files: Array<[string, Buffer]> = [
         [`ruff-${version}.data/scripts/${basename(binary)}`, Buffer.from(await readFile(binary))],
         [
             `${metadata}/METADATA`,
@@ -194,14 +194,14 @@ Tag: py3-none-any
 `),
         ],
     ];
-    const record = entries
+    const record = files
         .map(
-            ([name, data]) =>
-                `${name},sha256=${createHash('sha256').update(data).digest('base64url')},${String(data.length)}\r\n`,
+            ([name, bytes]) =>
+                `${name},sha256=${createHash('sha256').update(bytes).digest('base64url')},${String(bytes.length)}\r\n`,
         )
         .join('');
-    entries.push([`${metadata}/RECORD`, Buffer.from(`${record}${metadata}/RECORD,,\r\n`)]);
-    return entries;
+    files.push([`${metadata}/RECORD`, Buffer.from(`${record}${metadata}/RECORD,,\r\n`)]);
+    return files;
 }
 
 /** Create a local package index and a Python project, then install its tools and read the tool project files. */

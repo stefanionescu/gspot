@@ -32,8 +32,8 @@ function isInheritedValueChanged(
     }
     return !consumers.every((consumer) =>
         isDeepStrictEqual(
-            getSettingValue(consumer.known, settings, key, consumer.scope)?.value,
-            getSettingValue(consumer.known, changed, key, consumer.scope)?.value,
+            getSettingValue(consumer.available, settings, key, consumer.scope)?.value,
+            getSettingValue(consumer.available, changed, key, consumer.scope)?.value,
         ),
     );
 }
@@ -55,9 +55,9 @@ function stripTableDefaults(
     const fields = Object.entries(table).map(([name, value]) => {
         const segments = [...path, name];
         const key = segments.join('.');
-        return { name, value, segments, key, setting: findSetting(writtenTable.known, key)?.setting };
+        return { name, value, segments, key, setting: findSetting(writtenTable.available, key)?.setting };
     });
-    const declared = new Map(
+    const settingFields = new Map(
         fields
             .filter(({ setting }) => setting !== undefined)
             .flatMap(({ name, value, key, segments }) => {
@@ -81,12 +81,12 @@ function stripTableDefaults(
                 ];
             }),
     );
-    const kept = new Map([...declared, ...remaining]);
-    const entries = Object.keys(table)
+    const kept = new Map([...settingFields, ...remaining]);
+    const pairs = Object.keys(table)
         .filter((name) => kept.has(name))
         .map((name) => [name, kept.get(name)] as const);
     return Object.fromEntries(
-        entries.filter(
+        pairs.filter(
             ([name, value]) =>
                 !isTable(value) ||
                 Object.keys(value).length > 0 ||
@@ -116,7 +116,7 @@ export function stripDefaults(settings: TomlTable): TomlTable {
     const root = {
         scope: '',
         table: settings,
-        known: buildAvailableSettings(selectForScope(selected, '', configurations), level),
+        available: buildAvailableSettings(selectForScope(selected, '', configurations), level),
     };
     const tables = [
         root,
@@ -125,16 +125,16 @@ export function stripDefaults(settings: TomlTable): TomlTable {
             return {
                 scope: scopePath,
                 table,
-                known: buildAvailableSettings(selectForScope(selected, scopePath, configurations), level),
+                available: buildAvailableSettings(selectForScope(selected, scopePath, configurations), level),
             };
         }),
     ].toSorted((left, right) => compareScopeDepth(left.scope, right.scope));
     // A detected default depends on project files that the writer does not read, so a written value of a detected
     // setting always stays.
-    for (const key of DETECTED_SETTINGS) for (const table of tables) table.known.defaults.delete(key);
+    for (const key of DETECTED_SETTINGS) for (const table of tables) table.available.defaults.delete(key);
     const scopeValues = scopes.map((table) => {
         const scopePath = trimTrailingSlashes(table['path'] as string);
-        const writtenTable = tables.find((entry) => entry.scope === scopePath) as WrittenTable;
+        const writtenTable = tables.find((each) => each.scope === scopePath) as WrittenTable;
         return stripTableDefaults(writtenTable.table, writtenTable, tables, effectiveSettings);
     });
     const rootValues = stripTableDefaults(settings, root, tables, effectiveSettings);

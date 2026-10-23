@@ -10,7 +10,7 @@ import type {
     EslintRuleModule,
     StylelintSettings,
     StylelintModuleExport,
-} from '#cli/types/pinned-linters.ts';
+} from '#cli/types/linter-lists.ts';
 
 export const packageIdentitySchema = z.object({
     name: z.string(),

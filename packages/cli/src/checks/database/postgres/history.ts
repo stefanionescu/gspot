@@ -7,7 +7,7 @@ import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/code/sql/migrations.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
-import { readBlobs, listHeadEntries } from '#cli/repository/revisions/files.ts';
+import { readBlobs, listHeadFiles } from '#cli/repository/revisions/files.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/database/postgres/migrations.ts';
 import { readMigrations, readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
@@ -16,20 +16,20 @@ const COMMITTED_MIGRATIONS = { create: () => new Map<string, Promise<Map<string,
 async function readCommittedMigrations(session: Session, paths: string[]): Promise<Map<string, string>> {
     return getCachedMapValue(session.reads, COMMITTED_MIGRATIONS, JSON.stringify(paths), async () => {
         if (!session.repository.hasGit) return new Map<string, string>();
-        const committed = await listHeadEntries(session.root, session.cancelSignal);
+        const committed = await listHeadFiles(session.root, session.cancelSignal);
         const selected = new Set(paths);
-        const entries = committed.filter(
-            (entry) => selected.has(entry.path) && entry.mode !== SYMLINK_MODE && entry.mode !== GITLINK_MODE,
+        const files = committed.filter(
+            (file) => selected.has(file.path) && file.mode !== SYMLINK_MODE && file.mode !== GITLINK_MODE,
         );
         const blobs = await readBlobs(
             session.root,
-            entries.map((entry) => entry.hash),
+            files.map((file) => file.hash),
             session.cancelSignal,
         );
         return new Map(
-            entries.map((entry, index) => {
+            files.map((file, index) => {
                 const content = blobs[index] as Buffer;
-                return [entry.path, content.toString('utf8')];
+                return [file.path, content.toString('utf8')];
             }),
         );
     });

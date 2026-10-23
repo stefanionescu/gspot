@@ -10,13 +10,13 @@ import type { REASON_DESCRIPTIONS } from '#cli/config/settings/fields.ts';
  */
 export type ReasonedSettingDefinition = Required<Pick<SettingDefinition, 'description' | 'reason_needed'>>;
 
-export type ReasonNeeded = keyof typeof REASON_DESCRIPTIONS;
+export type ReasonRequirement = keyof typeof REASON_DESCRIPTIONS;
 
 /** The definition of one setting: its description, defaults, owning configurations, and the change that needs a reason. */
 export type SettingDefinition = {
     description?: string;
     configurations?: readonly string[];
-    reason_needed?: ReasonNeeded;
+    reason_needed?: ReasonRequirement;
     reason_values?: boolean;
     languages?: readonly string[];
     language_defaults?: Readonly<Record<string, unknown>>;

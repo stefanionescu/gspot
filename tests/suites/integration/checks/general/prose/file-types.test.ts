@@ -98,7 +98,7 @@ test.each([...PROSE_COMMENT_CASES])(
 
 const installedSandbox = shareProseSandbox();
 
-test.each([...PROSE_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, PROSE_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...PROSE_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, PROSE_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

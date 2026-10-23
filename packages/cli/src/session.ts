@@ -7,9 +7,9 @@ import { createReadCache } from '#cli/system/files/cache.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
+import { selectToolConfigurations } from '#cli/planning/tools.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
-import { selectNeededConfigurations } from '#cli/planning/tools.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Settings, SettingsFile } from '#cli/types/settings/file.ts';
 import { listAutomaticConfigurations } from '#cli/configurations/select.ts';
@@ -33,14 +33,16 @@ async function buildScopes(
     return await Promise.all(
         scopes.map(async (scope) => {
             const selected = selectForScope(effective, scope.path, configurations);
-            const known = buildAvailableSettings(selected, settings.level);
-            const packageManager = known.defaults.has('site.build_command') ? await readPackageManager() : undefined;
-            applyDetectedDefaults(known, {
+            const available = buildAvailableSettings(selected, settings.level);
+            const packageManager = available.defaults.has('site.build_command')
+                ? await readPackageManager()
+                : undefined;
+            applyDetectedDefaults(available, {
                 packageManagerName: packageManager?.name,
                 dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
             });
-            const view = buildScopeSettings(known, effective, selected, scope.path);
-            return { folder: scope, configurations: selected, availableSettings: known, settings: view };
+            const view = buildScopeSettings(available, effective, selected, scope.path);
+            return { folder: scope, configurations: selected, availableSettings: available, settings: view };
         }),
     );
 }
@@ -141,7 +143,7 @@ export async function openSession(
     const scopes = await buildScopes(settings, repository, configurations, readPackageManager);
     const timeoutSeconds = Number(findRootScope(scopes).settings.settings['tool_timeout_seconds']);
     const session: Session = {
-        neededToolConfigurations: [],
+        toolConfigurations: [],
         configuredChecks: [],
         resources,
         cancelSignal,
@@ -160,8 +162,8 @@ export async function openSession(
     session.configuredChecks = planChecks(session, { stage: 'any', forConfiguration: true }).filter(
         (check) => isActive(check) && check.skip === undefined,
     );
-    session.neededToolConfigurations = selectNeededConfigurations(session, session.configuredChecks);
-    if (Object.keys(listToolProjectPins(session.neededToolConfigurations).npm).length > 0)
+    session.toolConfigurations = selectToolConfigurations(session, session.configuredChecks);
+    if (Object.keys(listToolProjectPins(session.toolConfigurations).npm).length > 0)
         session.packageManager = await readPackageManager();
     return session;
 }

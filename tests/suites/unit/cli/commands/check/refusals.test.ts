@@ -122,12 +122,12 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no co
     const name = Buffer.concat([Buffer.from('bad-'), Buffer.from([0xff]), Buffer.from('.txt')]);
     const line = Buffer.concat([Buffer.from(`100644 ${hash}\t`), name, Buffer.from('\n')]);
     const command = ['git', 'update-index', '--index-info'];
-    const prepared = limitToTestDeadline(command, { cwd: sandbox.path });
+    const limited = limitToTestDeadline(command, { cwd: sandbox.path });
     const indexed = Bun.spawn(command, {
         cwd: sandbox.path,
         stdin: line,
         stderr: 'pipe',
-        timeout: Math.ceil(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
+        timeout: Math.ceil(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
     });
     expect(await indexed.exited, await new Response(indexed.stderr).text()).toBe(0);
     await using temporary = await testdir();

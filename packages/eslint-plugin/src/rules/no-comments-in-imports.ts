@@ -112,13 +112,13 @@ function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
 
 // The parser starts an exported decorated class at `export`, but its leading comment sits above the first decorator.
 function getStatementOffset(node: TSESTree.Node): number {
-    const declared =
+    const declaration =
         node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration
             ? node.declaration
             : node;
     const decorator =
-        declared?.type === AST_NODE_TYPES.ClassDeclaration && 'decorators' in declared
-            ? declared.decorators[0]
+        declaration?.type === AST_NODE_TYPES.ClassDeclaration && 'decorators' in declaration
+            ? declaration.decorators[0]
             : undefined;
     return decorator !== undefined && decorator.range[0] < node.range[0] ? decorator.range[0] : node.range[0];
 }

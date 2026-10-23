@@ -10,10 +10,10 @@ import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/
 import { deleteKey, getScopeTable, removeFromList, getWrittenValue } from '#cli/settings/edit.ts';
 
 // Remove entries from a written table, and drop the setting when no entries remain.
-function removeTableItems(scopeTable: TomlTable, key: string, items: string[]): void {
+function removeTableKeys(scopeTable: TomlTable, key: string, keys: string[]): void {
     const table = getWrittenValue(getValueAt(scopeTable, key.split('.')));
     if (!isTable(table)) return;
-    for (const item of items) Reflect.deleteProperty(table, item);
+    for (const name of keys) Reflect.deleteProperty(table, name);
     if (Object.keys(table).length === 0) deleteKey(scopeTable, key);
 }
 
@@ -24,24 +24,24 @@ function removeTableItems(scopeTable: TomlTable, key: string, items: string[]): 
  * @returns the edit result and the generated file changes.
  */
 async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
-    const { key, items } = options;
+    const { key, keys } = options;
 
     const edit = prepareSettingsEdit(options.cwd);
     const { root, input } = edit;
     const { match } = await readSetting(edit, key, options.scope);
 
-    if (items.length > 0 && !['list', 'table'].includes(match.setting.type))
+    if (keys.length > 0 && !['list', 'table'].includes(match.setting.type))
         throw new GspotError(
             'arguments',
             `${key} is not a list or a table, so it takes no items. Run gspot unset ${key}.`,
         );
     const scopeTable = getScopeTable(input.table, options.scope);
-    if (items.length === 0) deleteKey(scopeTable, key);
-    else if (match.setting.type === 'list') removeFromList(scopeTable, key, items);
-    else removeTableItems(scopeTable, key, items);
+    if (keys.length === 0) deleteKey(scopeTable, key);
+    else if (match.setting.type === 'list') removeFromList(scopeTable, key, keys);
+    else removeTableKeys(scopeTable, key, keys);
     return await applySettingsEdit(root, {
         edit: input,
-        summary: items.length === 0 ? `Removed your value for ${key}.` : `Removed ${items.join(' and ')} from ${key}.`,
+        summary: keys.length === 0 ? `Removed your value for ${key}.` : `Removed ${keys.join(' and ')} from ${key}.`,
     });
 }
 
@@ -59,12 +59,12 @@ export function registerUnset(program: Command, onResult: CommandCompletion): vo
         .summary(COMMAND_HELP.unset.summary)
         .description(COMMAND_HELP.unset.description)
         .option('--scope <path>', COMMAND_HELP.unset.options['--scope <path>'], trimTrailingSlashes)
-        .action(async (setting, items, flags) => {
+        .action(async (setting, keys, flags) => {
             onResult(
                 await runUnsetCommand({
                     cwd: process.cwd(),
                     key: setting,
-                    items,
+                    keys: keys,
                     ...stripUndefined({ scope: flags.scope }),
                 }),
             );

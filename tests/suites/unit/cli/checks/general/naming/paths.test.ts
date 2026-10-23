@@ -165,7 +165,7 @@ test('Next.js route segments are unwrapped and dot folders are skipped', () => {
         'typescript',
         containers,
     );
-    expect(names.map((entry) => `${entry.category}:${entry.name}`)).toStrictEqual([...NEXTJS_FOLDER_NAMES]);
+    expect(names.map((each) => `${each.category}:${each.name}`)).toStrictEqual([...NEXTJS_FOLDER_NAMES]);
     expect(names[2]?.folder).toBe('app/(marketing)/[slug]');
     expect(buildFileIdentifier('app/[...rest]/page.tsx', 'typescript', containers)).toMatchObject({
         name: 'page',

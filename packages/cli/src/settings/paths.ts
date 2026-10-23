@@ -10,24 +10,24 @@ function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, k
         return mapSettingPaths(branch, value, visit, keys);
     }
     if (schema instanceof z.ZodArray && Array.isArray(value))
-        return value.map((entry: unknown, index) =>
-            mapSettingPaths(schema.element as z.ZodType, entry, visit, [...keys, index]),
+        return value.map((element: unknown, index) =>
+            mapSettingPaths(schema.element as z.ZodType, element, visit, [...keys, index]),
         );
     if (!isTable(value)) return value;
     if (schema instanceof z.ZodRecord) {
         const role = (schema.keyType as z.ZodType).meta()?.path_role;
         return Object.fromEntries(
-            Object.entries(value).map(([key, entry]) => [
+            Object.entries(value).map(([key, child]) => [
                 role === undefined ? key : visit(key, [...keys, key], role),
-                mapSettingPaths(schema.valueType as z.ZodType, entry, visit, [...keys, key]),
+                mapSettingPaths(schema.valueType as z.ZodType, child, visit, [...keys, key]),
             ]),
         );
     }
     if (schema instanceof z.ZodObject)
         return Object.fromEntries(
-            Object.entries(value).map(([key, entry]) => {
+            Object.entries(value).map(([key, child]) => {
                 const field = schema.shape[key] as z.ZodType | undefined;
-                return [key, field === undefined ? entry : mapSettingPaths(field, entry, visit, [...keys, key])];
+                return [key, field === undefined ? child : mapSettingPaths(field, child, visit, [...keys, key])];
             }),
         );
     return value;

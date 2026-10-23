@@ -57,7 +57,7 @@ function listFormatOverrides(settings: Settings): FormatOverride[] {
 // Prettier loads shipped plugins by paths relative to the root pointer.
 function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
     if (plugins.length === 0) return {};
-    const shipped = plugins.map((plugin) => `./${GSPOT_PATHS.nodeModules}/${plugin.name}/${plugin.entry}`);
+    const shipped = plugins.map((plugin) => `./${GSPOT_PATHS.nodeModules}/${plugin.name}/${plugin.module}`);
     return { plugins: shipped };
 }
 

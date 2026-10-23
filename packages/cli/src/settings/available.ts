@@ -55,14 +55,14 @@ function addConfigurationSettings(
     level: Level,
 ): void {
     const isAll = level === 'all';
-    const settings = listSettings(configuration.name).map((declared) =>
-        isAll && declared.default_all !== undefined ? { ...declared, default: declared.default_all } : declared,
+    const settings = listSettings(configuration.name).map((listed) =>
+        isAll && listed.default_all !== undefined ? { ...listed, default: listed.default_all } : listed,
     );
     for (const setting of settings) {
         if (!availableSettings.settings.has(setting.name)) availableSettings.settings.set(setting.name, setting);
         addDefault(availableSettings, configuration, setting);
     }
-    for (const setting of settings.filter((entry) => entry.language_defaults !== undefined)) {
+    for (const setting of settings.filter((each) => each.language_defaults !== undefined)) {
         const [table, field] = setting.name.split('.');
         const languageDefaults = setting.language_defaults as NonNullable<Setting['language_defaults']>;
         for (const [language, value] of Object.entries(languageDefaults))
@@ -73,7 +73,7 @@ function addConfigurationSettings(
     }
     const overrides = Object.entries(configuration.defaults)
         .map(([name, value]) => ({ setting: availableSettings.settings.get(name), value }))
-        .filter((entry): entry is typeof entry & { setting: Setting } => entry.setting !== undefined);
+        .filter((override): override is typeof override & { setting: Setting } => override.setting !== undefined);
     for (const { setting, value } of overrides)
         addDefault(availableSettings, configuration, { ...setting, default: value });
 }
@@ -149,7 +149,7 @@ export function buildAvailableSettings(configurations: Configuration[], level: L
     for (const configuration of configurations) addConfigurationSettings(availableSettings, configuration, level);
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     for (const [, settings] of [...settingsByTool].filter(([tool]) => tools.has(tool))) {
-        for (const setting of settings.filter((entry) => !availableSettings.settings.has(entry.name)))
+        for (const setting of settings.filter((each) => !availableSettings.settings.has(each.name)))
             availableSettings.settings.set(setting.name, setting);
     }
     return availableSettings;

@@ -22,7 +22,7 @@ import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
-    const knownSubjects = [
+    const subjects = [
         ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks)),
         ...readConfigurations().keys(),
         ...(session?.scopes.flatMap((scope) =>
@@ -31,7 +31,7 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
             ),
         ) ?? []),
     ];
-    const similar = formatSimilarNames(subject, [...new Set(knownSubjects)]);
+    const similar = formatSimilarNames(subject, [...new Set(subjects)]);
     return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
 }
 

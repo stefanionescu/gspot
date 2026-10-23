@@ -14,7 +14,7 @@ import { detectSwiftTags } from '#cli/repository/files/swift-tags.ts';
 import type { RepositoryReadOptions } from '#cli/types/repository/read.ts';
 import { readCachedText, readCachedPrefix } from '#cli/system/files/reads.ts';
 import { SWIFT_EXTENSION, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
-import { listTrackedFiles, readIndexEntries } from '#cli/repository/files/tracked.ts';
+import { readIndexFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
 import { FILE_PREFIX_BYTES, GIT_CHECK_ATTRIBUTES_ARGUMENTS } from '#cli/config/repository/read.ts';
 import { mergeAttributes, parsePathAttributes, parseAttributePatterns } from '#cli/parsers/git.ts';
@@ -61,20 +61,22 @@ export async function readRepository(
 ): Promise<Repository> {
     const root = reads.root;
     const hasGit = isGitRepository(root);
-    const index = hasGit ? await readIndexEntries(root) : [];
-    const entries = await listTrackedFiles(root, index, { hasGit });
+    const index = hasGit ? await readIndexFiles(root) : [];
+    const listedFiles = await listTrackedFiles(root, index, { hasGit });
     using files = openFiles(root);
     const tracked: TrackedFile[] = [];
     const attributes = hasGit
         ? readAttributes(
               root,
-              entries.map((entry) => entry.path),
+              listedFiles.map((listedFile) => listedFile.path),
           )
         : new Map<string, Record<string, string>>();
-    for (const entry of entries) {
-        const prefix = entry.symlink ? Buffer.alloc(0) : readCachedPrefix(reads, entry.path, FILE_PREFIX_BYTES);
-        const file = classifyFile(root, entry, prefix, { generatedPaths, attributes });
-        if (!entry.symlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
+    for (const listedFile of listedFiles) {
+        const prefix = listedFile.symlink
+            ? Buffer.alloc(0)
+            : readCachedPrefix(reads, listedFile.path, FILE_PREFIX_BYTES);
+        const file = classifyFile(root, listedFile, prefix, { generatedPaths, attributes });
+        if (!listedFile.symlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
             const tags = await detectSwiftTags(file.path, readCachedText(reads, file.path));
             file.tags.push(...tags);
         }
@@ -85,11 +87,11 @@ export async function readRepository(
     const written: ScopeFolder[] = [
         { ...ROOT_SCOPE, configurations: [] },
         ...scopes
-            .filter((entry) => files.readStats(entry.path)?.isDirectory() === true)
+            .filter((each) => files.readStats(each.path)?.isDirectory() === true)
             .map(
-                (entry): ScopeFolder => ({
-                    path: entry.path,
-                    configurations: entry.configurations,
+                (each): ScopeFolder => ({
+                    path: each.path,
+                    configurations: each.configurations,
                     origin: SETTINGS_FILE,
                 }),
             ),
@@ -154,11 +156,11 @@ export function findRoot(start: string): string {
         throw new Error(
             `Git could not find the repository root of ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`,
         );
-    let current = folder;
-    while (statSync(join(current, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
-        const parent = dirname(current);
-        if (parent === current) return folder;
-        current = parent;
+    let walked = folder;
+    while (statSync(join(walked, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
+        const parent = dirname(walked);
+        if (parent === walked) return folder;
+        walked = parent;
     }
-    return current;
+    return walked;
 }

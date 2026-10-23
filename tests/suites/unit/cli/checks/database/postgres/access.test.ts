@@ -11,8 +11,8 @@ import {
     FROZEN_GRANTS,
     ROW_SECURITY_SQL,
     DEFINER_FUNCTION_SQL,
+    DEFINER_SEARCH_PATH_SQL,
     SECURED_ROW_SECURITY_SQL,
-    PINNED_DEFINER_FUNCTION_SQL,
 } from '#tests/config/checks/database/postgres/access.ts';
 
 test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the newer ones', async (scope) => {
@@ -74,6 +74,6 @@ test('definer-search-path reports a SECURITY DEFINER function without search_pat
                 'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.',
         }),
     ]);
-    await writeFile(join(sandbox.path, path), PINNED_DEFINER_FUNCTION_SQL);
+    await writeFile(join(sandbox.path, path), DEFINER_SEARCH_PATH_SQL);
     expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([]);
 });

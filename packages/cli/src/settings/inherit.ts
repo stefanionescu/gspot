@@ -10,7 +10,7 @@ import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
 import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming/settings.ts';
-import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
+import { CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
 
 import {
     type Setting,
@@ -44,7 +44,7 @@ function findVariantSetting(
     const [first, second] = rest;
     if (first === undefined) return undefined;
     if (second === undefined) return findLanguageSetting(availableSettings, table, language, first);
-    if (table !== 'naming' || rest.length !== CATEGORY_KEY_PARTS) return undefined;
+    if (table !== 'naming' || rest.length !== CATEGORY_KEY_SEGMENTS) return undefined;
     return findCategorySetting(availableSettings, language, first, second);
 }
 
@@ -67,16 +67,14 @@ function findCategorySetting(
 function mergeTable(
     setting: Setting,
     key: string,
-    current: EffectiveValue,
+    effective: EffectiveValue,
     table: WrittenScopeTable,
     possibleKeys: string[],
 ): EffectiveValue {
-    let result = current;
+    let result = effective;
     const written = possibleKeys
         .map((writtenKey) => ({ writtenKey, found: getWrittenSetting(table.table, writtenKey) }))
-        .filter(
-            (entry): entry is typeof entry & { found: NonNullable<typeof entry.found> } => entry.found !== undefined,
-        );
+        .filter((row): row is typeof row & { found: NonNullable<typeof row.found> } => row.found !== undefined);
     for (const { writtenKey, found } of written) {
         const owner = table.scope === undefined ? SETTINGS_FILE : `[scope ${JSON.stringify(table.scope)}]`;
         result = {
@@ -95,11 +93,11 @@ function mergeTable(
  * of tables, and single values replace.
  *
  * @param setting the setting whose schema selects the merge rule.
- * @param current the value so far.
+ * @param inherited the value so far.
  * @param found the value the next table writes.
  * @returns the merged value.
  */
-export function mergeValue(setting: Setting, current: unknown, found: unknown): unknown {
+export function mergeValue(setting: Setting, inherited: unknown, found: unknown): unknown {
     let schema = findSettingSchema(setting.name);
     if (schema !== undefined) schema = unwrapSettingSchema(schema);
     if (schema instanceof z.ZodUnion)
@@ -110,11 +108,11 @@ export function mergeValue(setting: Setting, current: unknown, found: unknown): 
         schema instanceof z.ZodArray &&
         schema !== commandSchema &&
         !(schema.element instanceof z.ZodObject) &&
-        [current, found].every((value) => Array.isArray(value))
+        [inherited, found].every((value) => Array.isArray(value))
     )
-        return [...new Set([current, found].flat())];
+        return [...new Set([inherited, found].flat())];
     if (setting.type === 'table')
-        return Object.fromEntries([current, found].filter(isTable).flatMap((table) => Object.entries(table)));
+        return Object.fromEntries([inherited, found].filter(isTable).flatMap((table) => Object.entries(table)));
     return found;
 }
 
@@ -142,7 +140,7 @@ export function listSettingsTables(settings: Settings): WrittenScopeTable[] {
  */
 export function listApplicableTables(settings: Settings, scope: string | undefined): WrittenScopeTable[] {
     return listSettingsTables(settings)
-        .filter((entry) => entry.scope === undefined || isInScope(scope ?? '', entry.scope))
+        .filter((settingsTable) => settingsTable.scope === undefined || isInScope(scope ?? '', settingsTable.scope))
         .toSorted((left, right) => compareScopeDepth(left.scope ?? '', right.scope ?? ''));
 }
 
@@ -266,9 +264,9 @@ export function getSettingValue(
         reason: undefined,
     };
     const keys = listPossibleKeys(match, key);
-    let current = start;
-    for (const table of tables) current = mergeTable(setting, key, current, table, keys);
-    const { value, source, reason, origin, originScope } = current;
+    let walked = start;
+    for (const table of tables) walked = mergeTable(setting, key, walked, table, keys);
+    const { value, source, reason, origin, originScope } = walked;
     return {
         key,
         setting,
@@ -319,10 +317,10 @@ export function listWrittenKeys(settings: SettingsTable, availableSettings: Avai
         else keys.push(key);
     }
     const format = (settings.format === undefined ? [] : Object.keys(settings.format)).map((key) => `format.${key}`);
-    const knownKeys = [...availableSettings.settings.keys()].filter(
+    const settingKeys = [...availableSettings.settings.keys()].filter(
         (key) => getWrittenSetting(settings, key) !== undefined,
     );
-    return [...new Set([...knownKeys, ...keys, ...format])];
+    return [...new Set([...settingKeys, ...keys, ...format])];
 }
 
 /**

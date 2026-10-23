@@ -66,10 +66,10 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
         ...buildScopeImportBlocks(planned),
         ...buildNodeScriptBlocks(planned),
         ...boundaryBlocks,
-    ].map(({ settings, ...data }) => {
+    ].map(({ settings, ...fields }) => {
         if (settings === undefined)
             return {
-                data,
+                fields,
                 properties: '',
             };
         // Each TypeScript project resolves against the repository root of the generated config file.
@@ -79,7 +79,7 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
                 ? `settings: ${JSON.stringify(settings)}`
                 : `settings: { ...${JSON.stringify(settings)}, 'import/resolver': { typescript: { project: [${projectPaths}] } } }`;
         return {
-            data,
+            fields,
             properties: runtime,
         };
     });
@@ -120,7 +120,7 @@ export function buildOpeningBlocks(
             eslintFiles.code,
         ),
         {
-            data: {
+            fields: {
                 files: eslintFiles.code,
                 rules: {
                     ...rules.code,
@@ -137,11 +137,11 @@ export function buildOpeningBlocks(
             preset: { expression: `gspot.configs.${isAll ? 'all' : 'recommended'}.rules`, rules: {} },
         },
         {
-            data: { files: eslintFiles.javascript, rules: JAVASCRIPT_RULES },
+            fields: { files: eslintFiles.javascript, rules: JAVASCRIPT_RULES },
         },
         ...buildProjectBlocks(planned, boundaryBlocks),
         ...buildRestrictedImportBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
-            data: block,
+            fields: block,
         })),
     ];
 }
@@ -167,7 +167,7 @@ export function buildClosingBlocks(
         const isNode = NODE_RUNTIMES.includes(runtime);
         const names = RUNTIME_GLOBALS[runtime] ?? runtime;
         return {
-            data: {
+            fields: {
                 files: eslintFiles.code.map((pattern) => [pattern, { runtime: index }]),
                 rules: {
                     ...(isNode ? rules.node : {}),
@@ -180,7 +180,7 @@ export function buildClosingBlocks(
     return [
         ...runtimes,
         ...selectorGroups.map((group): ConfigurationBlocks['blocks'][number] => ({
-            data: {
+            fields: {
                 files: buildScopeFiles(eslintFiles.code, group.scope ?? '', group.files ?? ['**/*']),
                 ignores: [
                     ...(group.ignoredScopes ?? []).map(
@@ -192,20 +192,20 @@ export function buildClosingBlocks(
             },
         })),
         ...buildConsoleBlocks(planned, rules.console).map((block): ConfigurationBlocks['blocks'][number] => ({
-            data: block,
+            fields: block,
         })),
-        { data: { files: eslintFiles.scripts, rules: SCRIPT_RULES } },
-        { data: { files: eslintFiles.tests, rules: TEST_RULES } },
+        { fields: { files: eslintFiles.scripts, rules: SCRIPT_RULES } },
+        { fields: { files: eslintFiles.tests, rules: TEST_RULES } },
         ...buildBasePresetBlocks(presets, PRESETS_AFTER_CONFIGURATIONS, eslintFiles.code),
         {
-            data: {
+            fields: {
                 files: [PACKAGE_JSON_PATTERN],
                 rules: { 'package-json/restrict-dependency-ranges': ['error', { rangeType: 'pin' }] },
             },
         },
-        { data: { files: [PACKAGE_JSON], rules: ROOT_PACKAGE_JSON_RULES } },
+        { fields: { files: [PACKAGE_JSON], rules: ROOT_PACKAGE_JSON_RULES } },
         {
-            data: {
+            fields: {
                 files: eslintFiles.javascript,
                 rules: { ...rules.javascript, ...buildBarrelRule(planned, 'javascript') },
             },
@@ -292,7 +292,7 @@ function buildBasePresetBlocks(
         const { parser: _parser, ...fields } = selected.blocks[0];
         const source = serializePresetAccess(importName, selected.source);
         return {
-            data: { ...fields, files: fields.files ?? codeFiles },
+            fields: { ...fields, files: fields.files ?? codeFiles },
             properties: `...${source}`,
             preset: { expression: `${source}.rules`, rules: fields.rules },
         };

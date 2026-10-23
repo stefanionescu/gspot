@@ -6,7 +6,7 @@ import type { FileKind } from '#cli/types/repository/files.ts';
 import { FILE_KINDS } from '#cli/config/repository/files/classify.ts';
 import { manifestToolSchema } from '#cli/schemas/configurations/tool.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
-import { declaredNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
+import { writtenNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
 import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/configurations/manifest.ts';
 
 import type {
@@ -236,7 +236,7 @@ export const manifestSchema = z
         // own.
         naming: z
             .strictObject({
-                override: z.array(declaredNamingOverrideSchema).default([]),
+                override: z.array(writtenNamingOverrideSchema).default([]),
             } satisfies SchemaShape<NonNullable<ParsedManifest['naming']>>)
             .optional(),
         // Rule files, by name, that install only when their condition holds. Every other file in the rules folder
@@ -286,5 +286,5 @@ export const manifestSchema = z
                       configFile.file,
                   ),
         })),
-        checks: check.map(({ name, ...entry }) => ({ ...entry, id: `${rest.configuration.name}/${name}` })),
+        checks: check.map(({ name, ...fields }) => ({ ...fields, id: `${rest.configuration.name}/${name}` })),
     })) satisfies z.ZodType<ParsedManifest>;

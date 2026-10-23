@@ -10,23 +10,23 @@ import type { LintFinding, SourceRuleCase, EslintConfiguration } from '#tests/ty
 
 import {
     BARREL_CASES,
-    ENTRY_SOURCE,
-    ENTRY_TABLES,
     IMPORT_CASES,
     IMPORT_FILES,
-    ENTRY_FOLDERS,
     TRIVIAL_RULES,
     REEXPORT_CASES,
     STARTER_SOURCE,
-    TRIVIAL_ENTRY_FILES,
+    ENTRYPOINT_SOURCE,
+    ENTRYPOINT_TABLES,
+    ENTRYPOINT_FOLDERS,
     LEVEL_REEXPORT_CASES,
+    TRIVIAL_ENTRYPOINT_FILES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/structure.ts';
 
 /** List the files and rules that the generated ESLint config file reports for the trivial-code rules. */
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);
     const eslint = await createEslint(root);
-    const findings = await listLintFindings(eslint, root, ENTRY_FOLDERS, TRIVIAL_RULES);
+    const findings = await listLintFindings(eslint, root, ENTRYPOINT_FOLDERS, TRIVIAL_RULES);
     return findings.map(({ file, rule }) => ({ file, rule }));
 }
 
@@ -56,16 +56,16 @@ test.each([...LEVELS])('Knip entry files still get the trivial-file rules at %s,
     await using sandbox = await testdir({
         'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
         'src/start.js': STARTER_SOURCE,
-        'src/main.js': ENTRY_SOURCE,
-        'src/task.js': ENTRY_SOURCE,
+        'src/main.js': ENTRYPOINT_SOURCE,
+        'src/task.js': ENTRYPOINT_SOURCE,
         'api/src/start.js': STARTER_SOURCE,
-        'api/src/main.js': ENTRY_SOURCE,
-        'api/src/task.js': ENTRY_SOURCE,
+        'api/src/main.js': ENTRYPOINT_SOURCE,
+        'api/src/task.js': ENTRYPOINT_SOURCE,
     });
 
-    const settings = buildSandboxSettings(['javascript'], { level, tables: ENTRY_TABLES });
+    const settings = buildSandboxSettings(['javascript'], { level, tables: ENTRYPOINT_TABLES });
     expect(listTrivialFiles(await listTrivialFindings(sandbox.path, settings))).toStrictEqual(
-        level === 'all' ? [...TRIVIAL_ENTRY_FILES] : [],
+        level === 'all' ? [...TRIVIAL_ENTRYPOINT_FILES] : [],
     );
     await writeFile(
         join(sandbox.path, 'src/main.js'),
@@ -76,7 +76,7 @@ test.each([...LEVELS])('Knip entry files still get the trivial-file rules at %s,
     const findings = await listTrivialFindings(sandbox.path, settings);
     expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);
     expect(listTrivialFiles(findings)).toStrictEqual(
-        level === 'all' ? TRIVIAL_ENTRY_FILES.filter((file) => file !== 'src/main.js') : [],
+        level === 'all' ? TRIVIAL_ENTRYPOINT_FILES.filter((file) => file !== 'src/main.js') : [],
     );
     await writeFile(
         join(sandbox.path, 'src/main.js'),

@@ -108,12 +108,12 @@ test.skipIf(!isMacos)(
 describe.skipIf(!isMacos)('Swift package samples', () => {
     const installedSandbox = shareInstalledSandbox(SWIFT_PACKAGE_SANDBOX);
 
-    for (const entry of SWIFT_PACKAGE_CASES) {
-        test.skipIf(!hasToolBuild(entry.check === 'swift/swiftlint-analyze' ? 'swiftlint' : 'periphery'))(
-            `${entry.check} reports ${entry.expected.rule} in a Swift package and passes after the fix`,
+    for (const sample of SWIFT_PACKAGE_CASES) {
+        test.skipIf(!hasToolBuild(sample.check === 'swift/swiftlint-analyze' ? 'swiftlint' : 'periphery'))(
+            `${sample.check} reports ${sample.expected.rule} in a Swift package and passes after the fix`,
             async () => {
-                const result = await runCheckSample(installedSandbox(), entry, SWIFT_PACKAGE_SANDBOX);
-                expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+                const result = await runCheckSample(installedSandbox(), sample, SWIFT_PACKAGE_SANDBOX);
+                expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
             },
         );
     }

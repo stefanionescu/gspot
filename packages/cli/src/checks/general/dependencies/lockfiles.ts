@@ -16,7 +16,7 @@ function validateUrl(url: URL, hosts: Set<string>): string | undefined {
 function checkFileHosts(session: Session, planned: PlannedCheck, path: string, hosts: Set<string>): Finding[] {
     const lines = readCachedText(session.reads, path).split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
-    const isNpm = LOCKFILES.find((entry) => entry.file === posix.basename(path))?.packageManager === 'npm';
+    const isNpm = LOCKFILES.find((lockfile) => lockfile.file === posix.basename(path))?.packageManager === 'npm';
     return lines.flatMap((text, index) =>
         (isNpm
             ? text.matchAll(NPM_DOWNLOAD).map((match) => match[1] ?? '')
@@ -34,7 +34,7 @@ function checkFileHosts(session: Session, planned: PlannedCheck, path: string, h
 function checkForeignLockfiles(planned: PlannedCheck): Finding[] {
     const pathsByPackageManager = new Map<string, string>();
     for (const file of planned.files) {
-        const lockfile = LOCKFILES.find((entry) => entry.file === posix.basename(file.path));
+        const lockfile = LOCKFILES.find((each) => each.file === posix.basename(file.path));
         const kind =
             lockfile !== undefined && 'configuration' in lockfile && lockfile.configuration === 'javascript'
                 ? lockfile.packageManager

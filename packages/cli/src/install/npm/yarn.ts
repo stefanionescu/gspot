@@ -11,7 +11,7 @@ import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { addEnvironmentReference } from '#cli/install/npm/registry.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
 import { GSPOT_PACKAGES, MINUTES_PER_DAY } from '#cli/config/install/npm/release-age.ts';
-import { yarnSettingsSchema, yarnConfigEntrySchema } from '#cli/schemas/install/npm/yarn.ts';
+import { yarnSettingsSchema, yarnConfigSettingSchema } from '#cli/schemas/install/npm/yarn.ts';
 
 import {
     YARN_SECRET_KEYS,
@@ -32,10 +32,10 @@ function convertToReference(value: unknown, key: string, env: Record<string, str
         if (YARN_SECRET_KEYS.has(key)) secrets.push(value);
         return addEnvironmentReference(env, YARN_SETTING_VARIABLE_PREFIX, value);
     }
-    if (Array.isArray(value)) return value.map((entry) => convertToReference(entry, key, env, secrets));
+    if (Array.isArray(value)) return value.map((element) => convertToReference(element, key, env, secrets));
     if (value !== null && typeof value === 'object')
         return Object.fromEntries(
-            Object.entries(value).map(([name, entry]) => [name, convertToReference(entry, name, env, secrets)]),
+            Object.entries(value).map(([name, child]) => [name, convertToReference(child, name, env, secrets)]),
         );
     return value;
 }
@@ -43,7 +43,7 @@ function convertToReference(value: unknown, key: string, env: Record<string, str
 // Read each Yarn environment setting and replace credential values with references.
 function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]): Record<string, unknown> {
     const environmentSettings = YARN_ENVIRONMENT_SETTINGS.flatMap<[string, unknown]>((source) => {
-        const entries = Object.entries(env).flatMap<[string, unknown]>(([key, value]) => {
+        const pairs = Object.entries(env).flatMap<[string, unknown]>(([key, value]) => {
             const name = source.pattern.exec(key)?.[1];
             return name === undefined
                 ? []
@@ -54,7 +54,7 @@ function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]
                       ],
                   ];
         });
-        return entries.length === 0 ? [] : [[source.setting, Object.fromEntries(entries)]];
+        return pairs.length === 0 ? [] : [[source.setting, Object.fromEntries(pairs)]];
     });
     return Object.fromEntries<unknown>(environmentSettings);
 }
@@ -95,18 +95,18 @@ export async function writeYarnSettings(
     const listed = await runInstallStep(install, YARN_CONFIG_LIST_ARGUMENTS, { cwd: root, env });
     if (listed.code !== 0)
         throw new GspotError('install', 'Cannot read the Yarn connection settings. Check .yarnrc.yml.');
-    const entries = listed.stdout
+    const connectionSettings = listed.stdout
         .split('\n')
         .filter((line) => line.trim() !== '')
-        .map((line) => parseToolReport('yarn config', line, yarnConfigEntrySchema))
-        .filter((entry) => YARN_CONNECTION_KEYS.has(entry.key));
-    for (const entry of entries) {
-        const command = [...YARN_CONFIG_GET_ARGUMENTS, entry.key, ...YARN_CONFIG_GET_FLAGS];
+        .map((line) => parseToolReport('yarn config', line, yarnConfigSettingSchema))
+        .filter((setting) => YARN_CONNECTION_KEYS.has(setting.key));
+    for (const setting of connectionSettings) {
+        const command = [...YARN_CONFIG_GET_ARGUMENTS, setting.key, ...YARN_CONFIG_GET_FLAGS];
         const read = await runInstallStep(install, command, { cwd: root, env });
-        if (read.code !== 0) throw new GspotError('install', `Cannot read Yarn setting ${entry.key}.`);
-        settings[entry.key] = convertToReference(
+        if (read.code !== 0) throw new GspotError('install', `Cannot read Yarn setting ${setting.key}.`);
+        settings[setting.key] = convertToReference(
             parseToolReport('yarn config get', read.stdout),
-            entry.key,
+            setting.key,
             env,
             secrets,
         );

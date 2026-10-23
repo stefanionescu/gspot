@@ -42,7 +42,7 @@ function isExecutablePresent(files: Files, root: string, path: string): boolean 
     const local = convertToPosixPath(relative(root, path));
     if (!local.startsWith(`${DOT_GSPOT}/`)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
-        files.readRealPath(local);
+        files.readCanonicalPath(local);
         return true;
     } catch (error) {
         if (!hasErrorCode(error, 'ENOENT')) throw error;

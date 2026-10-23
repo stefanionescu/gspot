@@ -11,7 +11,7 @@ import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { FILE_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
-import type { CommandLine, CommandPart, Substitutions } from '#cli/types/runs/command.ts';
+import type { CommandLine, Substitutions, CommandArgument } from '#cli/types/runs/command.ts';
 
 import {
     ROOT_PLACEHOLDER,
@@ -25,11 +25,11 @@ import {
     WORKSPACE_PLACEHOLDER,
     CONFIG_FILE_PLACEHOLDER,
     MESSAGE_FILE_PLACEHOLDER,
-    WHOLE_SETTING_PLACEHOLDER,
+    SETTING_ONLY_PLACEHOLDER,
 } from '#cli/config/runs/command/placeholders.ts';
 
 function assertArgumentList(value: unknown, name: string): string[] {
-    if (!Array.isArray(value) || !value.every((item) => typeof item === 'string'))
+    if (!Array.isArray(value) || !value.every((element) => typeof element === 'string'))
         throw new Error(`Command setting ${name} must contain only string arguments.`);
     return value;
 }
@@ -38,27 +38,27 @@ function assertArgumentList(value: unknown, name: string): string[] {
  * Expand {each:<flag>:<setting>}: the flag before each item of the list setting.
  *
  * @param planned the check, whose scope holds the settings.
- * @param part one argument of the manifest command.
+ * @param argument one argument of the manifest command.
  * @returns the expanded arguments, or undefined for another part kind.
  */
-function expandEachPlaceholder(planned: PlannedCheck, part: string): string[] | undefined {
-    const groups = EACH_PLACEHOLDER.exec(part)?.groups;
+function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[] | undefined {
+    const groups = EACH_PLACEHOLDER.exec(argument)?.groups;
     if (groups === undefined) return undefined;
     const name = groups['setting'] ?? '';
     const held = planned.scope.settings.settings[name];
-    const items = held ?? [];
-    return assertArgumentList(items, name).flatMap((item) => [groups['flag'] ?? '', convertToSystemPath(item)]);
+    const values = held ?? [];
+    return assertArgumentList(values, name).flatMap((value) => [groups['flag'] ?? '', convertToSystemPath(value)]);
 }
 
 /**
  * Expands {existing:<flag>:<path>}: the flag and the absolute path when the file exists, and nothing when it does not.
  *
  * @param repositoryRoot the folder that manifest paths start from.
- * @param part one argument of the manifest command.
+ * @param argument one argument of the manifest command.
  * @returns the arguments, or undefined for another part kind.
  */
-function expandExistingPlaceholder(repositoryRoot: string, part: string): string[] | undefined {
-    const groups = EXISTING_PLACEHOLDER.exec(part)?.groups;
+function expandExistingPlaceholder(repositoryRoot: string, argument: string): string[] | undefined {
+    const groups = EXISTING_PLACEHOLDER.exec(argument)?.groups;
     if (groups === undefined) return undefined;
     const path = join(repositoryRoot, groups['path'] ?? '');
     return statSync(path, { throwIfNoEntry: false }) === undefined
@@ -84,15 +84,15 @@ function selectPointerPath(session: Session, scope: string, name: string): strin
     return !generated.has(path) && generated.has(name) ? name : path;
 }
 
-function expandPlainPart(
+function expandArgument(
     session: Session,
     planned: PlannedCheck,
-    part: string,
+    argument: string,
     substitutions: Substitutions,
-): CommandPart[] {
-    if (part === FILES_PLACEHOLDER) return substitutions.files;
-    if (part === FILE_PLACEHOLDER) return [{ file: true }];
-    const workspace = WORKSPACE_PLACEHOLDER.exec(part)?.groups?.['name'];
+): CommandArgument[] {
+    if (argument === FILES_PLACEHOLDER) return substitutions.files;
+    if (argument === FILE_PLACEHOLDER) return [{ file: true }];
+    const workspace = WORKSPACE_PLACEHOLDER.exec(argument)?.groups?.['name'];
     if (workspace !== undefined) {
         if (
             substitutions.scope === '' ||
@@ -101,7 +101,7 @@ function expandPlainPart(
             return [];
         return [workspace, substitutions.scope];
     }
-    return [replacePlaceholders(session, planned, part, substitutions)];
+    return [replacePlaceholders(session, planned, argument, substitutions)];
 }
 
 /**
@@ -130,12 +130,12 @@ export function getConfigFile(session: Session, planned: PlannedCheck, name: str
  * @returns the config file paths, relative to the root.
  */
 export function listCommandConfigFiles(session: Session, planned: PlannedCheck, command: readonly string[]): string[] {
-    const parts = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
+    const words = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
     const scope = planned.scope.folder.path;
     return [
         ...new Set(
-            parts.flatMap((part) => {
-                const configured = [...part.matchAll(CONFIG_FILE_PLACEHOLDER)]
+            words.flatMap((segment) => {
+                const configured = [...segment.matchAll(CONFIG_FILE_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
                     .map((name) =>
@@ -145,11 +145,11 @@ export function listCommandConfigFiles(session: Session, planned: PlannedCheck, 
                             getConfigFiles(session).targets,
                         ),
                     );
-                const pointed = [...part.matchAll(POINTER_PLACEHOLDER)]
+                const pointed = [...segment.matchAll(POINTER_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
                     .map((name) => selectPointerPath(session, scope, name));
-                const existing = EXISTING_PLACEHOLDER.exec(part)?.groups?.['path'];
+                const existing = EXISTING_PLACEHOLDER.exec(segment)?.groups?.['path'];
                 return [...configured, ...pointed, ...(existing === undefined ? [] : [existing])];
             }),
         ),
@@ -183,17 +183,17 @@ export function listCopyFiles(session: Session, planned: PlannedCheck, command: 
  *
  * @param session the repository and settings.
  * @param planned the check and its scope.
- * @param part the value with placeholders.
+ * @param argument the value with placeholders.
  * @param substitutions the expansion values.
  * @returns the expanded value.
  */
 export function replacePlaceholders(
     session: Session,
     planned: PlannedCheck,
-    part: string,
+    argument: string,
     substitutions: Substitutions,
 ): string {
-    return part
+    return argument
         .replaceAll(LEVEL_PLACEHOLDER, (_match, recommended: string, all: string) =>
             session.settingsFile.settings.level === 'all' ? all : recommended,
         )
@@ -239,30 +239,30 @@ export function expandCommand(
     planned: PlannedCheck,
     command: string[],
     substitutions: Substitutions,
-): CommandPart[] {
-    return command.flatMap((part) => {
-        const name = WHOLE_SETTING_PLACEHOLDER.exec(part)?.groups?.['name'];
+): CommandArgument[] {
+    return command.flatMap((argument) => {
+        const name = SETTING_ONLY_PLACEHOLDER.exec(argument)?.groups?.['name'];
         if (name !== undefined) {
             const value = planned.scope.settings.settings[name];
             if (Array.isArray(value)) return assertArgumentList(value, name);
         }
 
-        const settingsPart = expandEachPlaceholder(planned, part) ?? expandExistingPlaceholder(session.root, part);
-        return settingsPart ?? expandPlainPart(session, planned, part, substitutions);
+        const expanded = expandEachPlaceholder(planned, argument) ?? expandExistingPlaceholder(session.root, argument);
+        return expanded ?? expandArgument(session, planned, argument, substitutions);
     });
 }
 
 /**
  * Replaces every file marker after variable-length arguments have expanded.
  *
- * @param parts the expanded command.
+ * @param command the expanded command.
  * @param files the paths relative to the working folder.
  * @returns one command per file, or one command when no file marker exists.
  */
-export function buildFileCommandLines(parts: CommandPart[], files: string[]): CommandLine[] {
-    const hasFile = parts.some((part) => typeof part !== 'string');
+export function buildFileCommandLines(command: CommandArgument[], files: string[]): CommandLine[] {
+    const hasFile = command.some((segment) => typeof segment !== 'string');
     return (hasFile ? files : ['']).map((file) => ({
-        commandArguments: parts.map((part) => (typeof part === 'string' ? part : file)),
+        commandArguments: command.map((argument) => (typeof argument === 'string' ? argument : file)),
         ...(hasFile ? { file } : {}),
     }));
 }

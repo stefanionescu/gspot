@@ -18,8 +18,8 @@ function serializeFileMatcher(matcher: EslintFileMatcher): string {
 }
 
 function serializeRules(rules: EslintBlockFields['rules'], level: Level | undefined): string {
-    const entries = rules === undefined ? [] : Object.entries(rules);
-    return entries
+    const pairs = rules === undefined ? [] : Object.entries(rules);
+    return pairs
         .map(([name, value]) => {
             const configured: unknown[] = Array.isArray(value) ? value : [value];
             const [severity, ...options] = configured;
@@ -40,9 +40,9 @@ function serializePresetRules(
     preset: EslintRuleExpression,
     level: Level | undefined,
 ): string {
-    const entries = rules === undefined ? [] : Object.entries(rules);
+    const pairs = rules === undefined ? [] : Object.entries(rules);
     const changed = Object.fromEntries(
-        entries.filter(([name, value]) => !isDeepStrictEqual(value, preset.rules?.[name])),
+        pairs.filter(([name, value]) => !isDeepStrictEqual(value, preset.rules?.[name])),
     );
     const additions = Object.keys(changed).length === 0 ? '' : ', ' + serializeRules(changed, level);
     return `rules: { ...${preset.expression}${additions} }`;
@@ -68,25 +68,25 @@ export function serializeBlock(
 ): string {
     const { files, rules, ...fields } = block;
     const { properties, preset, level } = options;
-    const parts = properties === undefined || properties === '' ? [] : [properties];
-    parts.push(...Object.entries(fields).map(([name, value]) => `${JSON.stringify(name)}: ${JSON.stringify(value)}`));
-    if (preset !== undefined) parts.push(serializePresetRules(rules, preset, level));
+    const members = properties === undefined || properties === '' ? [] : [properties];
+    members.push(...Object.entries(fields).map(([name, value]) => `${JSON.stringify(name)}: ${JSON.stringify(value)}`));
+    if (preset !== undefined) members.push(serializePresetRules(rules, preset, level));
     else if (rules !== undefined && Object.keys(rules).length > 0)
-        parts.push(`rules: { ${serializeRules(rules, level)} }`);
+        members.push(`rules: { ${serializeRules(rules, level)} }`);
     if (files !== undefined) {
-        const expressions = files.map((entry) => {
-            if (!Array.isArray(entry)) return serializeFileMatcher(entry);
-            const sources = entry.map((selector) => serializeFileMatcher(selector)).join(', ');
+        const expressions = files.map((file) => {
+            if (!Array.isArray(file)) return serializeFileMatcher(file);
+            const sources = file.map((selector) => serializeFileMatcher(selector)).join(', ');
             return `[${sources}]`;
         });
-        parts.push(`files: [${expressions.join(', ')}]`);
+        members.push(`files: [${expressions.join(', ')}]`);
     }
-    return printConfiguration(`{${parts.join(', ')}}`);
+    return printConfiguration(`{${members.join(', ')}}`);
 }
 
 // Rebuild objects and arrays as multiline syntax without changing their expressions.
 function formatSyntaxNode(node: ts.Node, context: ts.TransformationContext): ts.VisitResult<ts.Node> {
-    const child = ts.visitEachChild(node, (entry) => formatSyntaxNode(entry, context), context);
+    const child = ts.visitEachChild(node, (childNode) => formatSyntaxNode(childNode, context), context);
     if (ts.isObjectLiteralExpression(child)) {
         const fields = child.properties.map((property) => {
             if (ts.isPropertyAssignment(property))
@@ -142,7 +142,7 @@ export function serializePresetAccess(importName: string, source: string): strin
             ? ''
             : source
                   .split('.')
-                  .map((part) => `[${JSON.stringify(part)}]`)
+                  .map((segment) => `[${JSON.stringify(segment)}]`)
                   .join(''))
     );
 }
@@ -178,7 +178,9 @@ export function serializeImports(
     const functions = ESLINT_FUNCTIONS.filter((name) => read.has(name));
     const lines =
         functions.length === 0 ? [] : [`import { ${functions.join(', ')} } from ${JSON.stringify(functionsPath)};`];
-    for (const [importName, source] of new Map(imports.map((entry) => [JSON.stringify(entry), entry])).values())
+    for (const [importName, source] of new Map(
+        imports.map((importPair) => [JSON.stringify(importPair), importPair]),
+    ).values())
         if (
             importName
                 .replaceAll(IMPORT_NAME_PUNCTUATION, '')

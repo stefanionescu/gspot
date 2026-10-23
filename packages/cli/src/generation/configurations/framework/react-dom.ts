@@ -23,7 +23,7 @@ export function buildReactDomBlocks(scope: Pick<EslintScope, 'presets' | 'settin
     if (!settings.configurations.includes(REACT_NATIVE_CONFIGURATION)) {
         const preset = getPreset(presets, 'accessibility');
         blocks.push({
-            data: {
+            fields: {
                 files: REACT_FILES,
                 ...(preset.blocks[0].rules === undefined
                     ? {}

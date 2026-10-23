@@ -12,7 +12,7 @@ import { DIRECTIVE_TAIL, CODE_FILE_TAGS, ESLINT_DIRECTIVE } from '#cli/config/co
  */
 export function listForeignDisableComments(session: Session): { path: string; note: string }[] {
     const prefixes = new Set(
-        session.neededToolConfigurations.flatMap((configuration) =>
+        session.toolConfigurations.flatMap((configuration) =>
             configuration.tools.flatMap((tool) => (tool.rule_prefix === undefined ? [] : [tool.rule_prefix])),
         ),
     );

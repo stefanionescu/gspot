@@ -13,7 +13,7 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { miseToolsSchema } from '#cli/schemas/checks/general/package-manager-pin.ts';
 import { NPM_TOOL_PREFIX } from '#cli/config/checks/general/dependencies/package-manager-pin.ts';
 
-function readPinnedVersion(value: unknown): string | undefined {
+function readExactVersion(value: unknown): string | undefined {
     const first: unknown = Array.isArray(value) ? value[0] : value;
     if (typeof first === 'string') return first;
     const version = isTable(first) ? first['version'] : undefined;
@@ -24,7 +24,7 @@ function readMisePin(session: Session, path: string, tool: string): string | und
     const text = findCachedText(session.reads, path);
     if (text === undefined) return undefined;
     const { tools } = parseTomlFile(path, text, miseToolsSchema);
-    return readPinnedVersion(tools[tool] ?? tools[`${NPM_TOOL_PREFIX}${tool}`]);
+    return readExactVersion(tools[tool] ?? tools[`${NPM_TOOL_PREFIX}${tool}`]);
 }
 
 function findMisePin(session: Session, folder: string, tool: string): { path: string; version: string } | undefined {
@@ -37,9 +37,9 @@ function findMisePin(session: Session, folder: string, tool: string): { path: st
 }
 
 function splitPackageManager(field: string | undefined): { tool: string; version: string } | undefined {
-    const declared = field?.split('+', 1)[0] ?? '';
-    const separator = declared.lastIndexOf('@');
-    return separator <= 0 ? undefined : { tool: declared.slice(0, separator), version: declared.slice(separator + 1) };
+    const pin = field?.split('+', 1)[0] ?? '';
+    const separator = pin.lastIndexOf('@');
+    return separator <= 0 ? undefined : { tool: pin.slice(0, separator), version: pin.slice(separator + 1) };
 }
 
 /**
@@ -52,9 +52,9 @@ function splitPackageManager(field: string | undefined): { tool: string; version
 export function checkPackageManagerPin(session: Session, planned: PlannedCheck): Finding[] {
     const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
-    const declared = splitPackageManager(readCachedPackageJson(session.reads, packageJsonPath)?.packageManager);
-    if (declared === undefined) return [];
-    const { tool, version } = declared;
+    const writtenPin = splitPackageManager(readCachedPackageJson(session.reads, packageJsonPath)?.packageManager);
+    if (writtenPin === undefined) return [];
+    const { tool, version } = writtenPin;
     const pin = findMisePin(session, folder, tool);
     if (pin === undefined || pin.version === version) return [];
     return [

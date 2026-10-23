@@ -22,7 +22,7 @@ export const UV_VENV_ARGUMENTS = [
 
 export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project', '--python', PYTHON_VERSION] as const;
 
-export const PINNED_PACKAGE_NAME = /^[^=]+/u;
+export const REQUIREMENT_PACKAGE_NAME = /^[^=]+/u;
 
 /** The lockfile name of a uv project. */
 export const PROJECT_UV_LOCKFILE = 'uv.lock';

@@ -81,9 +81,9 @@ function listMatchingFiles(session: Session, cwd: string, path: string, files: s
  */
 function selectArgumentPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
     if (options.paths.length === 0) return [];
-    const knownPaths = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
+    const repositoryPaths = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
     const selected = new Set(
-        options.paths.flatMap((path) => listMatchingFiles(session, options.cwd, path, knownPaths)),
+        options.paths.flatMap((path) => listMatchingFiles(session, options.cwd, path, repositoryPaths)),
     );
     return [...selected];
 }
@@ -94,18 +94,18 @@ function selectArgumentPaths(session: Session, options: CheckOptions, changed: s
  * @param session the configurations that run here.
  * @param only the check IDs that the flag names.
  */
-function assertKnownChecks(session: Session, only: string[] | undefined): void {
-    const known = new Set([
+function assertChecksExist(session: Session, only: string[] | undefined): void {
+    const checkIds = new Set([
         ...session.scopes.flatMap((scope) =>
             scope.configurations.flatMap((configuration) => configuration.checks.map((check) => check.id)),
         ),
         ...Object.values(session.settingsFile.settings.commandChecks).map((check) => check.id),
     ]);
-    const unknown = only?.find((check) => !known.has(check));
+    const unknown = only?.find((check) => !checkIds.has(check));
     if (unknown !== undefined)
         throw new GspotError(
             'arguments',
-            `There is no check called ${unknown}.${formatSimilarNames(unknown, [...known])}`,
+            `There is no check called ${unknown}.${formatSimilarNames(unknown, [...checkIds])}`,
         );
 }
 
@@ -169,7 +169,7 @@ export async function checkTree(
         resources,
         cancelSignal,
     });
-    assertKnownChecks(session, options.only);
+    assertChecksExist(session, options.only);
     warnAboutHooks(session, revision);
     const { changed, staging, stage, paths } = await readRunFilters(session, options, cancelSignal, revision);
     const result = await runChecks(session, buildRunOptions(options, { changed, staging, stage, paths }, revision));

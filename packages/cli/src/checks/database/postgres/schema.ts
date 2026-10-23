@@ -1,7 +1,7 @@
 import type { RangeVar, Constraint } from '@pgsql/types';
 import type { SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
 import { getNodeFields, listNodeFields, visitStatement } from '#cli/parsers/code/sql/postgres.ts';
-import { PUBLIC_SCHEMA, SCHEMA_PART_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database/postgres/schema.ts';
+import { PUBLIC_SCHEMA, SCHEMA_NAME_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database/postgres/schema.ts';
 
 import type {
     Schema,
@@ -26,8 +26,8 @@ function removeTable(schema: DatabaseSchema, table: string): void {
 
 // The name Postgres gives an unnamed constraint: the table, the key columns except for a primary key, and a suffix.
 function buildConstraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
-    const declared = node.conname ?? '';
-    if (declared !== '') return declared;
+    const constraintName = node.conname ?? '';
+    if (constraintName !== '') return constraintName;
     const tableName = table.slice(table.indexOf('.') + 1);
     const suffix = CONSTRAINT_SUFFIXES[kind];
     return [tableName, ...(kind === 'CONSTR_PRIMARY' ? [] : keys), suffix].join('_');
@@ -53,8 +53,8 @@ function addConstraint(schema: DatabaseSchema, at: Location, node: Constraint, c
     const { keys, columns } =
         column === undefined
             ? {
-                  keys: listNodeFields(node.keys, 'String').map((part) => part.sval ?? ''),
-                  columns: listNodeFields(node.fk_attrs, 'String').map((part) => part.sval ?? ''),
+                  keys: listNodeFields(node.keys, 'String').map((stringNode) => stringNode.sval ?? ''),
+                  columns: listNodeFields(node.fk_attrs, 'String').map((stringNode) => stringNode.sval ?? ''),
               }
             : { keys: [column], columns: [column] };
     const isForeign = kind === 'CONSTR_FOREIGN';
@@ -75,7 +75,7 @@ const readCreateTable: StatementReader<'CreateStmt'> = (statement, schema, migra
     const inColumns = columns.flatMap((column) =>
         listNodeFields(column.constraints, 'Constraint').map((node) => ({ node, column: column.colname ?? '' })),
     );
-    for (const entry of inColumns) addConstraint(schema, at, entry.node, entry.column);
+    for (const inColumn of inColumns) addConstraint(schema, at, inColumn.node, inColumn.column);
     const inTable = listNodeFields(statement.fields.tableElts, 'Constraint');
     for (const node of inTable) addConstraint(schema, at, node);
 };
@@ -102,15 +102,15 @@ const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, schema, mi
 
 // A dropped table leaves the schema, so no check reports it.
 const readDrop: StatementReader<'DropStmt'> = (statement, schema) => {
-    for (const item of listNodeFields(statement.fields.objects, 'List')) {
-        const parts = listNodeFields(item.items, 'String').map((part) => part.sval ?? '');
+    for (const nodeField of listNodeFields(statement.fields.objects, 'List')) {
+        const names = listNodeFields(nodeField.items, 'String').map((stringNode) => stringNode.sval ?? '');
         switch (statement.fields.removeType) {
             case 'OBJECT_TABLE': {
-                removeTable(schema, `${parts.at(SCHEMA_PART_INDEX) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}`);
+                removeTable(schema, `${names.at(SCHEMA_NAME_INDEX) ?? PUBLIC_SCHEMA}.${names.at(-1) ?? ''}`);
                 break;
             }
             case 'OBJECT_INDEX': {
-                const name = `${parts.at(SCHEMA_PART_INDEX) ?? PUBLIC_SCHEMA}.${parts.at(-1) ?? ''}`;
+                const name = `${names.at(SCHEMA_NAME_INDEX) ?? PUBLIC_SCHEMA}.${names.at(-1) ?? ''}`;
                 schema.indexes = schema.indexes.filter(
                     (index) => `${index.table.slice(0, index.table.indexOf('.'))}.${index.name}` !== name,
                 );

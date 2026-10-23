@@ -30,7 +30,7 @@ export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>)
             return { ...fields, files: VUE_FILES };
         }),
         {
-            data: {
+            fields: {
                 files: VUE_FILES,
                 rules: {
                     ...(typed

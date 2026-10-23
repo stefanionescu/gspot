@@ -14,19 +14,19 @@ import { SEMGREP_PARSE_RULE, SEMGREP_PARSE_EXIT, SEMGREP_PARSE_ERRORS } from '#c
 export function parseSemgrepFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help } = output;
     const report = parseToolReport('Semgrep', stdout, semgrepReportSchema);
-    const findings: Finding[] = report.results.map((entry) => ({
+    const findings: Finding[] = report.results.map((result) => ({
         check,
         help,
-        file: entry.path,
-        line: entry.start.line,
-        column: entry.start.col,
-        rule: entry.check_id,
-        message: entry.extra.message,
+        file: result.path,
+        line: result.start.line,
+        column: result.start.col,
+        rule: result.check_id,
+        message: result.extra.message,
         fixable: false,
     }));
     for (const error of report.errors) {
         const type = typeof error.type === 'string' ? error.type : error.type[0];
-        const span = error.spans?.find((entry) => entry.file === error.path);
+        const span = error.spans?.find((each) => each.file === error.path);
         if (error.code !== SEMGREP_PARSE_EXIT || !SEMGREP_PARSE_ERRORS.has(type) || span === undefined)
             throw new GspotError('output', `Semgrep could not complete the scan: ${error.message}`);
         findings.push({

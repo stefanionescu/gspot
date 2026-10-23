@@ -18,6 +18,6 @@ export const INDENT_PLACEHOLDER = '{indent}';
 
 export const MESSAGE_FILE_PLACEHOLDER = '{message_file}';
 
-export const WHOLE_SETTING_PLACEHOLDER = /^\{setting:(?<name>[a-z\d_.-]+)\}$/u;
+export const SETTING_ONLY_PLACEHOLDER = /^\{setting:(?<name>[a-z\d_.-]+)\}$/u;
 
 export const FILES_PLACEHOLDER = '{files}';

@@ -37,7 +37,7 @@ function filterDistinctLists(lists: string[][]): string[][] {
  */
 function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
     const boundaries = filterDistinctLists(
-        selectors.flatMap((entry) => [entry.files ?? [], entry.except ?? []]).filter((paths) => paths.length > 0),
+        selectors.flatMap((each) => [each.files ?? [], each.except ?? []]).filter((paths) => paths.length > 0),
     );
     let groups: { files: string[][]; ignores: string[]; matched: string[][] }[] = [
         { files: [], ignores: [], matched: [] },
@@ -48,7 +48,7 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
                 files:
                     group.files.length === 0
                         ? paths.map((path) => [path])
-                        : group.files.flatMap((parts) => paths.map((path) => [...parts, path])),
+                        : group.files.flatMap((fileList) => paths.map((path) => [...fileList, path])),
                 ignores: group.ignores,
                 matched: [...group.matched, paths],
             },
@@ -59,13 +59,12 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
         ...(group.ignores.length === 0 ? {} : { ignores: group.ignores }),
         selectors: selectors
             .filter(
-                (entry) =>
-                    (entry.files === undefined ||
-                        group.matched.some((paths) => isDeepStrictEqual(paths, entry.files))) &&
-                    (entry.except === undefined ||
-                        !group.matched.some((paths) => isDeepStrictEqual(paths, entry.except))),
+                (each) =>
+                    (each.files === undefined || group.matched.some((paths) => isDeepStrictEqual(paths, each.files))) &&
+                    (each.except === undefined ||
+                        !group.matched.some((paths) => isDeepStrictEqual(paths, each.except))),
             )
-            .map((entry) => ({ selector: entry.selector, message: entry.message })),
+            .map((each) => ({ selector: each.selector, message: each.message })),
     }));
 }
 
@@ -81,10 +80,11 @@ function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
 }
 
 // A selector covers the files that its setting lists in the scope, or every source file when it names no setting.
-function buildSelectorPaths(scope: Scope, entry: Configuration['eslint']['selectors'][number]): SelectorPaths {
-    const listed = entry.paths_setting === undefined ? undefined : scope.settings.settings[entry.paths_setting];
-    const files = entry.paths_setting === undefined ? {} : { files: (listed as string[] | undefined) ?? [] };
-    return { selector: entry.selector, message: entry.message, ...files, except: [] };
+function buildSelectorPaths(scope: Scope, declaration: Configuration['eslint']['selectors'][number]): SelectorPaths {
+    const listed =
+        declaration.paths_setting === undefined ? undefined : scope.settings.settings[declaration.paths_setting];
+    const files = declaration.paths_setting === undefined ? {} : { files: (listed as string[] | undefined) ?? [] };
+    return { selector: declaration.selector, message: declaration.message, ...files, except: [] };
 }
 
 /**
@@ -100,15 +100,15 @@ export function buildSelectorGroups(
     level: Level,
     reexports: Settings['structure']['reexports'],
 ): SelectorGroup[] {
-    const scopePaths = scopes.map((entry) => entry.folder.path);
+    const scopePaths = scopes.map((each) => each.folder.path);
     return scopes.flatMap((scope) => {
         const prefix = scope.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
         const declarations = scope.configurations.flatMap((configuration) =>
             level === 'all' ? configuration.eslint.selectors : [],
         );
         const applied: SelectorPaths[] = [
-            ...new Map(declarations.map((entry) => [entry.selector, entry])).values(),
-        ].map((entry) => buildSelectorPaths(scope, entry));
+            ...new Map(declarations.map((declaration) => [declaration.selector, declaration])).values(),
+        ].map((declaration) => buildSelectorPaths(scope, declaration));
         if (level === 'all') {
             const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];
             applied.push(...REEXPORT_SELECTORS.map((selector) => ({ ...selector, except })));

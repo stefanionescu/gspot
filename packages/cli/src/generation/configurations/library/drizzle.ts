@@ -13,7 +13,7 @@ export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'set
     const blocks: ConfigurationBlocks['blocks'] = [];
     const rule = ['error', { drizzleObjectName: settings.settings['drizzle.client_names'] }];
     blocks.push({
-        data: {
+        fields: {
             files: eslintFiles.code,
             rules: Object.fromEntries(DRIZZLE_RULES.map((name) => [name, rule])),
         },

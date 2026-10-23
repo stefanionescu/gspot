@@ -8,8 +8,8 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('deptry skips a scope without pyproject.toml', async () => {
@@ -66,7 +66,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
 // Run python/deptry with fake uv and deptry, and return the report and the commands it ran.
 async function runFakeDeptry(root: string) {
     const session = await openSession(root);
-    using resources = fakePinnedExecutables(
+    using resources = fakeToolExecutables(
         ['uv', 'deptry'].map((name) => getTool(session.configurations.values(), name)),
     );
     const executed = resources.use(
@@ -85,7 +85,7 @@ test('deptry counts python.externals as first party beside the known_first_party
         [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'deptry')]: 'fixture',
     });
     const { commands } = await runFakeDeptry(sandbox.path);
-    const command = commands.find((entry) => entry.includes('deptry'))!;
+    const command = commands.find((command) => command.includes('deptry'))!;
     const firstParty = command.flatMap((value, index) =>
         value === '--known-first-party' ? [command[index + 1]!] : [],
     );

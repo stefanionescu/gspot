@@ -52,8 +52,8 @@ async function readSuppressionResults(root: string, paths: string[], reported: S
 }
 test('suppression detection finds Vale comments and skips documented examples', async () => {
     await using sandbox = await testdir();
-    const documents = VALE_SUPPRESSIONS.flatMap((entry, index) =>
-        ['md', 'mdx'].map((extension) => ({ ...entry, path: `guide-${String(index)}.${extension}` })),
+    const documents = VALE_SUPPRESSIONS.flatMap((suppression, index) =>
+        ['md', 'mdx'].map((extension) => ({ ...suppression, path: `guide-${String(index)}.${extension}` })),
     );
     const paths = documents.map(({ path }) => path);
     await createFileTree(sandbox.path, {

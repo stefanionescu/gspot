@@ -67,9 +67,9 @@ export function commitAll(cwd: string, message = 'init'): string {
  * @param path the repository-relative file.
  */
 export async function markExecutable(cwd: string, path: string): Promise<void> {
-    const full = join(cwd, path);
-    const attributes = await stat(full);
-    await chmod(full, attributes.mode | EXECUTABLE_BITS);
+    const absolute = join(cwd, path);
+    const attributes = await stat(absolute);
+    await chmod(absolute, attributes.mode | EXECUTABLE_BITS);
     if (!isWindows) return;
     for (const commandArguments of [
         ['add', '--', path],

@@ -3,4 +3,4 @@
 #MISE dir="{{config_root}}/packages/cli"
 set -euo pipefail
 
-bun src/configurations/pinned-linters.ts
+bun src/configurations/linter-lists.ts

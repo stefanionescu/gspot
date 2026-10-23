@@ -6,7 +6,7 @@ import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { listStrayPaths } from '#cli/apply/write/plans.ts';
-import { isSameContents } from '#cli/system/files/entries.ts';
+import { isSameContents } from '#cli/system/files/bounded.ts';
 import { hasManagedKeys } from '#cli/apply/write/managed-keys.ts';
 import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
@@ -30,20 +30,20 @@ function buildDiff(path: string, before: string, after: string, beforeName: stri
     );
 }
 
-function listOutdatedWholeFiles(files: Files, generated: GenerationResult): OutdatedFile[] {
+function listOutdatedOutputs(files: Files, generated: GenerationResult): OutdatedFile[] {
     return generated.files.flatMap((file): OutdatedFile[] => {
-        const current = files.read(file.path);
-        if (current === undefined) return [{ path: file.path, kind: 'missing' }];
+        const onDisk = files.read(file.path);
+        if (onDisk === undefined) return [{ path: file.path, kind: 'missing' }];
         const mode = file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE;
-        if (isSameContents(current, { bytes: Buffer.from(file.content), mode })) return [];
-        const disk = current.bytes.toString('utf8');
+        if (isSameContents(onDisk, { bytes: Buffer.from(file.content), mode })) return [];
+        const disk = onDisk.bytes.toString('utf8');
         return [
             {
                 path: file.path,
                 kind: 'changed',
                 diff:
                     disk === file.content
-                        ? `old mode ${current.mode.toString(MODE_RADIX)}\nnew mode ${mode.toString(MODE_RADIX)}\n`
+                        ? `old mode ${onDisk.mode.toString(MODE_RADIX)}\nnew mode ${mode.toString(MODE_RADIX)}\n`
                         : buildDiff(file.path, disk, file.content, 'on disk'),
             },
         ];
@@ -51,28 +51,28 @@ function listOutdatedWholeFiles(files: Files, generated: GenerationResult): Outd
 }
 
 function listOutdatedBlocks(files: Files, generated: GenerationResult): OutdatedFile[] {
-    const entries: OutdatedFile[] = [];
+    const outdated: OutdatedFile[] = [];
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
-        const current = findBlockBody(text, { path: block.path, style: block.style });
+        const onDisk = findBlockBody(text, { path: block.path, style: block.style });
         const wanted = block.block.trim();
-        if (current === undefined) entries.push({ path: block.path, kind: 'missing' });
-        else if (current !== wanted)
-            entries.push({
+        if (onDisk === undefined) outdated.push({ path: block.path, kind: 'missing' });
+        else if (onDisk !== wanted)
+            outdated.push({
                 path: block.path,
                 kind: 'changed',
-                diff: buildDiff(block.path, current, wanted, 'managed block on disk'),
+                diff: buildDiff(block.path, onDisk, wanted, 'managed block on disk'),
             });
     }
-    return entries;
+    return outdated;
 }
 
 // List the shared files that went missing or lack a managed key.
 function listOutdatedManagedKeys(files: Files, generated: GenerationResult): OutdatedFile[] {
     return generated.managedKeys.flatMap((output): OutdatedFile[] => {
-        const current = files.read(output.path);
-        if (current === undefined) return [{ path: output.path, kind: 'missing' }];
-        return hasManagedKeys(output, current) ? [] : [{ path: output.path, kind: 'changed' }];
+        const onDisk = files.read(output.path);
+        if (onDisk === undefined) return [{ path: output.path, kind: 'missing' }];
+        return hasManagedKeys(output, onDisk) ? [] : [{ path: output.path, kind: 'changed' }];
     });
 }
 
@@ -88,12 +88,12 @@ export function listOutdatedFiles(
     generated: GenerationResult,
 ): OutdatedFile[] {
     using files = openFiles(session.root);
-    const known = listExpectedPaths(session, generated);
+    const expected = listExpectedPaths(session, generated);
     const lockfiles = listStaleLockfiles(session, generated.files);
-    const strays = listStrayPaths(session, known).map((path): OutdatedFile => ({ path, kind: 'stray' }));
+    const strays = listStrayPaths(session, expected).map((path): OutdatedFile => ({ path, kind: 'stray' }));
     return [
         ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),
-        ...listOutdatedWholeFiles(files, generated),
+        ...listOutdatedOutputs(files, generated),
         ...listOutdatedBlocks(files, generated),
         ...listOutdatedManagedKeys(files, generated),
         ...strays,

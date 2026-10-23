@@ -93,9 +93,9 @@ test('unignore counts the changed ignores and keeps other paths and other rules'
     expect((parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore']).toStrictEqual(
         remaining,
     );
-    const whole = await runGspot(sandbox.path, commandArguments);
-    expect(whole.code, whole.stdout + whole.stderr).toBe(0);
-    expect(whole.stdout.split('\n').filter((line) => !line.startsWith('wrote '))).toStrictEqual([
+    const result = await runGspot(sandbox.path, commandArguments);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout.split('\n').filter((line) => !line.startsWith('wrote '))).toStrictEqual([
         'Removed 3 ignores for bash/shellcheck.',
         'note     The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.',
         '',

@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { listScopeChecks, listNeededTools } from '#cli/planning/tools.ts';
+import { listCheckTools, listScopeChecks } from '#cli/planning/tools.ts';
 import type { UsedNames, OwnedConfigFile, ConfigFileGeneration } from '#cli/types/generation/files.ts';
 
 /**
@@ -37,7 +37,7 @@ function isConfigFileNeeded(session: Session, file: ConfigFile, used: UsedNames)
 function listScopeConfigFiles(session: Session, scope: Scope, repositoryNames: UsedNames): OwnedConfigFile[] {
     const checks = listScopeChecks(session, scope);
     const used = {
-        tools: new Set(checks.flatMap((planned) => listNeededTools(planned))),
+        tools: new Set(checks.flatMap((planned) => listCheckTools(planned))),
         checks: new Set(checks.map((planned) => planned.check.id)),
     };
     return scope.configurations.flatMap((configuration) =>
@@ -59,7 +59,7 @@ function listScopeConfigFiles(session: Session, scope: Scope, repositoryNames: U
 export function listOwnedConfigFiles(session: Session): OwnedConfigFile[] {
     const repositoryNames = {
         tools: new Set(
-            session.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
+            session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
         ),
         checks: new Set(session.configuredChecks.map((planned) => planned.check.id)),
     };

@@ -35,37 +35,37 @@ function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]
 function getTypoPosition(
     root: string,
     path: string,
-    entry: ReportedTypo,
+    typo: ReportedTypo,
     cache: Map<string, Buffer[]>,
 ): Pick<Finding, 'line' | 'column'> {
-    if (entry.line_num === undefined) return {};
-    const sourceLine = readSourceLines(root, path, cache)[entry.line_num - 1];
-    if (sourceLine === undefined || entry.byte_offset > sourceLine.length)
+    if (typo.line_num === undefined) return {};
+    const sourceLine = readSourceLines(root, path, cache)[typo.line_num - 1];
+    if (sourceLine === undefined || typo.byte_offset > sourceLine.length)
         throw new GspotError('output', `typos reported a position outside the file: ${path}`);
     return {
-        line: entry.line_num,
+        line: typo.line_num,
 
-        column: [...sourceLine.subarray(0, entry.byte_offset).toString('utf8')].length + 1,
+        column: [...sourceLine.subarray(0, typo.byte_offset).toString('utf8')].length + 1,
     };
 }
 
 // Turn one typos entry into a finding: a filename typo when it has no line, otherwise a positioned one.
 function buildTypoFinding(
     output: ToolOutput,
-    entry: ReportedTypo,
+    typo: ReportedTypo,
     path: string,
     position: Pick<Finding, 'line' | 'column'>,
 ): Finding {
-    const corrections = entry.corrections ?? [];
+    const corrections = typo.corrections ?? [];
     const replacement = corrections.map((word) => `\`${word}\``).join(', ');
     const text =
-        corrections.length === 0 ? `\`${entry.typo}\` is not allowed` : `\`${entry.typo}\` should be ${replacement}`;
+        corrections.length === 0 ? `\`${typo.typo}\` is not allowed` : `\`${typo.typo}\` should be ${replacement}`;
     return {
         check: output.check,
         file: path,
         help: output.help,
-        message: entry.line_num === undefined ? `Filename: ${text}` : text,
-        fixable: entry.line_num !== undefined && corrections.length === 1,
+        message: typo.line_num === undefined ? `Filename: ${text}` : text,
+        fixable: typo.line_num !== undefined && corrections.length === 1,
         ...position,
     };
 }
@@ -79,18 +79,18 @@ function buildTypoFinding(
  */
 export function parseTyposFindings(output: ToolOutput): Finding[] {
     const { stdout, root, cwd } = output;
-    const entries = stdout
+    const typos = stdout
         .split('\n')
         .filter((line) => line.trim() !== '')
         .map((line) => parseToolReport('Typos', line, reportedTypoSchema));
     const linesByPath = new Map<string, Buffer[]>();
-    return entries.map((entry) => {
-        const path = resolve(cwd, entry.path);
+    return typos.map((typo) => {
+        const path = resolve(cwd, typo.path);
         return buildTypoFinding(
             output,
-            entry,
+            typo,
             path,
-            getTypoPosition(root, convertToPosixPath(relative(root, path)), entry, linesByPath),
+            getTypoPosition(root, convertToPosixPath(relative(root, path)), typo, linesByPath),
         );
     });
 }

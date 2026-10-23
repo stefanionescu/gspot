@@ -72,8 +72,10 @@ test.each([...PROJECT_PATH_IGNORES])(
             ...TSC_PUSH_OPTIONS,
             changed: [...changed],
         });
-        expect(planned.flatMap((entry) => entry.files.map((file) => file.path))).toStrictEqual([...files]);
-        expect(planned.flatMap((entry) => entry.triggerPaths)).toStrictEqual([]);
+        expect(planned.flatMap((plannedCheck) => plannedCheck.files.map((file) => file.path))).toStrictEqual([
+            ...files,
+        ]);
+        expect(planned.flatMap((plannedCheck) => plannedCheck.triggerPaths)).toStrictEqual([]);
     },
 );
 test('EditorConfig checks source files beyond the Prettier extensions and skips binary files', async () => {
@@ -131,7 +133,7 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
 
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'all', only: ['jest/coverage'] });
-    const project = planned.find((entry) => entry.scope.folder.path === 'apps/web')!;
+    const project = planned.find((each) => each.scope.folder.path === 'apps/web')!;
     expect(project.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'apps/web/fixture.bin',
         'apps/web/jest.config.json',

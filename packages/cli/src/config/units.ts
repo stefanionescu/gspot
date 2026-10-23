@@ -1,4 +1,4 @@
-export const FULL_PERCENTAGE = 100;
+export const MAX_PERCENTAGE = 100;
 
 export const MILLISECONDS_PER_SECOND = 1000;
 

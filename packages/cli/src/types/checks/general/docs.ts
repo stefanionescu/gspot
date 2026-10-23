@@ -3,7 +3,7 @@ export type TaskNames = { mise: Set<string>; scripts: Set<string>; binaries: Set
 
 /** The tracked paths and task names that documented paths and commands must match. */
 export type PathIndex = {
-    known: Set<string>;
+    paths: Set<string>;
     isIgnored: (path: string) => boolean;
     tasks: TaskNames;
 };

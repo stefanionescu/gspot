@@ -13,7 +13,7 @@ import {
     OWNER_WRITE_BIT,
     TEMPORARY_FILE_SUFFIX,
     TEMPORARY_FILE_PREFIX,
-} from '#cli/config/system/files/entries.ts';
+} from '#cli/config/system/files/bounded.ts';
 import {
     openSync,
     lstatSync,
@@ -57,10 +57,10 @@ function readRegularFile(absolutePath: string, stat: Stats, path: string): FileC
 
 // Check the same parent folders before a read or a prepared write.
 function walkParentFolders(bounds: FileBounds, path: string, statParent: (path: string) => Stats): string {
-    const parts = splitSystemPath(path);
+    const segments = splitSystemPath(path);
     let folder = bounds.root;
-    for (const part of parts.slice(0, -1)) {
-        folder = join(folder, part);
+    for (const segment of segments.slice(0, -1)) {
+        folder = join(folder, segment);
         const stat = statParent(folder);
         if (!stat.isDirectory() || stat.isSymbolicLink())
             throw new GspotError(
@@ -68,7 +68,7 @@ function walkParentFolders(bounds: FileBounds, path: string, statParent: (path: 
                 `A parent of ${path} is a link or is not a folder. Choose a folder without links.`,
             );
     }
-    return join(bounds.root, ...parts);
+    return join(bounds.root, ...segments);
 }
 
 // A synchronous replacement must finish its flush before the caller continues.
@@ -149,7 +149,7 @@ export function preparePath(bounds: FileBounds, path: string): string {
  * @param path the root-relative file.
  * @returns the file contents.
  */
-export function readEntry(bounds: FileBounds, path: string): FileContents | undefined {
+export function readBounded(bounds: FileBounds, path: string): FileContents | undefined {
     try {
         const target = buildContainedPath(bounds, path);
         return readRegularFile(target, lstatSync(target), path);
@@ -166,7 +166,7 @@ export function readEntry(bounds: FileBounds, path: string): FileContents | unde
  * @param path the root-relative file.
  * @returns the file contents.
  */
-export function readEntryKeepingLinks(bounds: FileBounds, path: string): FileContents | undefined {
+export function readBoundedKeepingLinks(bounds: FileBounds, path: string): FileContents | undefined {
     try {
         const target = buildContainedPath(bounds, path);
         const stat = lstatSync(target);
@@ -188,7 +188,7 @@ export function readEntryKeepingLinks(bounds: FileBounds, path: string): FileCon
  * @param contents the file contents to write.
  * @param expected the file contents that the caller last saw, or undefined for a new file.
  */
-export function replaceEntry(
+export function replaceBounded(
     bounds: FileBounds,
     path: string,
     contents: FileContents,
@@ -200,7 +200,7 @@ export function replaceEntry(
     try {
         writeStagedFile(temporary, contents);
         staged = true;
-        if (!isSameContents(readEntry(bounds, path), expected))
+        if (!isSameContents(readBounded(bounds, path), expected))
             throw new GspotError('filesystem', `${path} changed while gspot wrote it. Run the command again.`);
         if (isRenameBlocked(expected)) unlinkSync(target);
         renameSync(temporary, target);

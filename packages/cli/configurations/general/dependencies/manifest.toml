@@ -42,7 +42,7 @@ stage = "push"
 # The tool project lockfiles under .gspot stay out: a repository cannot upgrade a package that a gspot tool pins.
 command = ["osv-scanner", "scan", "source", "--config", "{config_file:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "--recursive", "--experimental-exclude", ".gspot", "{root}"]
 help = "Upgrade the package the finding names. When no fix exists, accept the advisory until a recheck date with `gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason \"<why>\" --until <YYYY-MM-DD>`."
-output = { format = "json", items = "results", children = "packages.vulnerabilities", fields = { file = "source.path", rule = "id", message = "package.name package.version summary" } }
+output = { format = "json", list = "results", children = "packages.vulnerabilities", fields = { file = "source.path", rule = "id", message = "package.name package.version summary" } }
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
 why = "An advisory identifies a vulnerability in a dependency version."
 

@@ -45,7 +45,7 @@ import type {
     InitScan,
     InitAnswers,
     InitOptions,
-    InitPrepared,
+    InitPlanning,
     DetectionSummary,
 } from '#cli/types/commands/init.ts';
 
@@ -62,9 +62,9 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
             'settings',
             'This repository already has a gspot.toml. Run `gspot doctor` to inspect its setup and see suggested commands.',
         );
-    const prepared = await planInit(root, options);
-    const { plan, settingsText } = prepared;
-    print(formatDetection(prepared.detection));
+    const initPlan = await planInit(root, options);
+    const { plan, settingsText } = initPlan;
+    print(formatDetection(initPlan.detection));
     print(formatInitPlan(plan));
     if (options.isDryRun) {
         print(`${DRY_RUN_NOTE}\n`);
@@ -77,7 +77,7 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
             json: { root, plan, settings: settingsText, written: false },
             exitCode: 0,
         };
-    const written = writeInitFiles(root, prepared);
+    const written = writeInitFiles(root, initPlan);
     written.push('Next: run gspot install to install the tools and turn on the Git hooks.');
     return {
         text: written.join('\n'),
@@ -134,7 +134,7 @@ export function registerInit(program: Command, onResult: CommandCompletion): voi
  * @param options the flags.
  * @returns the plan, the settings text, and the files it read.
  */
-async function planInit(root: string, options: InitOptions): Promise<InitPrepared> {
+async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
     const reads = createReadCache(root);
     const configurations = readConfigurations();
     const repository = await readRepository(reads, { generatedPaths: [], scopes: [], configurations });
@@ -146,7 +146,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const settings = parseSettings(settingsText, root);
     const session = await openSession(root, { settingsFile: { settings, text: settingsText } });
     const everySelected = listSelectedConfigurations(session.scopes);
-    const applicable = session.neededToolConfigurations;
+    const applicable = session.toolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     const detectedTools = [
         ...new Set(repositorySetup.conflictingConfigFiles.map((configFile) => configFile.tool)),
@@ -199,15 +199,15 @@ async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
 // Delete a conflicting config file only when its bytes still match the plan.
 function deleteConflictingConfigFiles(
     writer: Writer,
-    deleted: InitPrepared['deleted'],
+    deleted: InitPlanning['deleted'],
     read: ReadonlyMap<string, FileContents | undefined>,
 ): string[] {
     const kept: string[] = [];
     const plans: WritePlan[] = [];
-    for (const entry of deleted) {
-        const expected = read.get(entry.path);
-        if (expected === undefined) kept.push(entry.path);
-        else plans.push({ path: entry.path, before: expected, status: 'changed' });
+    for (const file of deleted) {
+        const expected = read.get(file.path);
+        if (expected === undefined) kept.push(file.path);
+        else plans.push({ path: file.path, before: expected, status: 'changed' });
     }
     writePlans(writer, plans);
     return kept;
@@ -217,15 +217,15 @@ function deleteConflictingConfigFiles(
  * Write the settings and generated files, and delete the conflicting config files.
  *
  * @param root the folder where init writes the accepted changes.
- * @param prepared the plan and file reads from planInit.
+ * @param initPlan the plan and file reads from planInit.
  * @returns the lines to print.
  */
-function writeInitFiles(root: string, prepared: InitPrepared): string[] {
+function writeInitFiles(root: string, initPlan: InitPlanning): string[] {
     using writer = openWriter(root);
-    const { session, generated } = prepared;
-    writeSettings(writer, prepared.settingsText, prepared.read.get(SETTINGS_FILE));
-    const applied = writeGeneratedFiles(session, generated, writer, { reviewedOriginals: prepared.read });
-    const kept = deleteConflictingConfigFiles(writer, prepared.deleted, prepared.read);
+    const { session, generated } = initPlan;
+    writeSettings(writer, initPlan.settingsText, initPlan.read.get(SETTINGS_FILE));
+    const applied = writeGeneratedFiles(session, generated, writer, { reviewedOriginals: initPlan.read });
+    const kept = deleteConflictingConfigFiles(writer, initPlan.deleted, initPlan.read);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
     const version = getColors().dim(`gspot ${cliPackage.version}`);
     return [
@@ -245,10 +245,10 @@ function writeInitFiles(root: string, prepared: InitPrepared): string[] {
  */
 function detectCiProvider(root: string, repositorySetup: RepositorySetup): InitAnswers['ci'] {
     if (readLintJobs(root, repositorySetup.ci).length > 0) return 'none';
-    let existing: InitAnswers['ci'] | undefined;
-    if (repositorySetup.ci.includes(GITLAB_CI_FILE)) existing = 'gitlab';
-    else if (repositorySetup.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) existing = 'github';
-    if (existing !== undefined) return existing;
+    let previous: InitAnswers['ci'] | undefined;
+    if (repositorySetup.ci.includes(GITLAB_CI_FILE)) previous = 'gitlab';
+    else if (repositorySetup.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) previous = 'github';
+    if (previous !== undefined) return previous;
     const remote = readGitSetting(root, ORIGIN_URL_SETTING) ?? '';
     const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
     return (

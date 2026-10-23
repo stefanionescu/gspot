@@ -71,24 +71,24 @@ export async function runCheckOnChanges(
  * Run the check on the sample and then on its fix, and return both reports.
  *
  * @param sandbox the installed sandbox and how to run gspot in it.
- * @param entry the sample and expected finding.
+ * @param sample the sample and expected finding.
  * @param plan what the sandbox holds, with the default fix.
  * @returns both process results and reports.
  */
-export async function runCheckSample(sandbox: Sandbox, entry: CheckSample, plan: SandboxPlan): Promise<SampleResult> {
-    const failed = parseCheckReport(await runCheckOnChanges(sandbox.root, entry, sandbox.environment, sandbox.run));
+export async function runCheckSample(sandbox: Sandbox, sample: CheckSample, plan: SandboxPlan): Promise<SampleResult> {
+    const failed = parseCheckReport(await runCheckOnChanges(sandbox.root, sample, sandbox.environment, sandbox.run));
     const { cleanSource } = plan;
-    const given: SampleFix =
-        entry.corrected ??
+    const sampleFix: SampleFix =
+        sample.corrected ??
         (cleanSource === undefined
             ? { files: {} }
-            : { files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, cleanSource])) });
+            : { files: Object.fromEntries(Object.keys(sample.files).map((path) => [path, cleanSource])) });
     const corrected = {
-        check: entry.check,
-        files: given.files,
-        settings: given.settings ?? entry.settings,
-        executable: entry.executable,
-        removed: given.removed,
+        check: sample.check,
+        files: sampleFix.files,
+        settings: sampleFix.settings ?? sample.settings,
+        executable: sample.executable,
+        removed: sampleFix.removed,
     };
     const passed = parseCheckReport(await runCheckOnChanges(sandbox.root, corrected, sandbox.environment, sandbox.run));
     return { failed, passed };
@@ -108,16 +108,16 @@ function listReportedChecks(report: RunReport): CheckResult[] {
 }
 
 /** Describe the one failed check result of the sample, with its findings, and its clean rerun. */
-export function expectedSummary(entry: CheckSample): SampleSummary {
+export function expectedSummary(sample: CheckSample): SampleSummary {
     return {
         failed: {
             code: 1,
             reported: [
                 matchFields<CheckResult>({
-                    check: entry.check,
+                    check: sample.check,
                     status: 'failed',
-                    findings: (entry.findings ?? [entry.expected]).map((finding) =>
-                        matchFields<Finding>({ check: entry.check, ...finding }),
+                    findings: (sample.findings ?? [sample.expected]).map((finding) =>
+                        matchFields<Finding>({ check: sample.check, ...finding }),
                     ),
                 }),
             ],

@@ -34,7 +34,7 @@ export const QUALIFIED_SQL_NAMES = [
 ] as const;
 
 /** Each SQL name with its category and line. */
-export const SQL_DECLARED_NAMES: (string | number)[][] = [
+export const SQL_SOURCE_NAMES: (string | number)[][] = [
     ['schemas', 'app', 2],
     ['tables', 'user_accounts', 4],
     ['columns', 'id', 5],

@@ -165,8 +165,8 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
         .values()
         .filter(
             ({ path }) =>
-                !rules.exclude.some((entry) =>
-                    isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(entry)),
+                !rules.exclude.some((excluded) =>
+                    isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(excluded)),
                 ),
         )
         .flatMap(({ source, path, group }) => {

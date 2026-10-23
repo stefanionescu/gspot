@@ -27,7 +27,7 @@ const count: number = 1;
 } as const;
 
 /** Each framework exposes the same security finding through its own markup syntax. */
-export const RAW_HTML_CASES = [
+export const HTML_INJECTION_CASES = [
     {
         configuration: 'react',
         path: 'src/Greeting.jsx',

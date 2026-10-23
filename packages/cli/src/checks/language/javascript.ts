@@ -18,8 +18,8 @@ import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
-import { TSC_PLAIN_OUTPUT } from '#cli/config/checks/tsc/compiler.ts';
 import type { WholeConfigFile } from '#cli/types/generation/files.ts';
+import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/tsc/compiler.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPerScopeTarget } from '#cli/generation/config-files/generate.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
@@ -133,7 +133,7 @@ export async function checkJavascriptTsc(session: Session, planned: PlannedCheck
             exclude: [],
         }),
     );
-    const command = [...JAVASCRIPT_TSC_COMMAND, generatedPath, ...TSC_PLAIN_OUTPUT];
+    const command = [...JAVASCRIPT_TSC_COMMAND, generatedPath, ...TSC_UNFORMATTED_OUTPUT];
     appendTsbuildinfoFlag(command, project.options, scratch, JSCONFIG_TSBUILDINFO);
     const result = await runCheckCommand(session, planned, {
         command,

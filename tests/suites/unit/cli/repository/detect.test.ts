@@ -63,14 +63,16 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
         configurations,
         'api',
     );
-    expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
-    expect(proposed.find((entry) => entry.configuration === 'python')?.evidence).toBe(`api/${path}`);
+    expect(proposed.find((detection) => detection.configuration === 'fastapi')?.evidence).toBe(
+        `fastapi in api/${path}`,
+    );
+    expect(proposed.find((detection) => detection.configuration === 'python')?.evidence).toBe(`api/${path}`);
     expect(
         detectConfigurations(
             { root: sandbox.path, files: repository.files, dependencyFiles },
             configurations,
             'other',
-        ).some((entry) => entry.configuration === 'fastapi'),
+        ).some((detection) => detection.configuration === 'fastapi'),
     ).toBe(false);
     await writeFile(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');
     const corrected = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
@@ -79,11 +81,11 @@ test('a FastAPI dependency proposes fastapi and python in its own scope until it
             { root: sandbox.path, files: repository.files, dependencyFiles: corrected },
             configurations,
             'api',
-        ).some((entry) => entry.configuration === 'fastapi'),
+        ).some((detection) => detection.configuration === 'fastapi'),
     ).toBe(false);
 });
 
-test.each(PRISMA_SCHEMA_CASES.flatMap((entry) => ['', 'apps/api'].map((scope) => ({ ...entry, scope }))))(
+test.each(PRISMA_SCHEMA_CASES.flatMap((row) => ['', 'apps/api'].map((scope) => ({ ...row, scope }))))(
     'a Prisma schema with $name selects postgres in "$scope" as expected, and a sibling scope keeps its own detection',
     async ({ path, source, detected, scope }) => {
         await using sandbox = await testdir();
@@ -99,14 +101,14 @@ test.each(PRISMA_SCHEMA_CASES.flatMap((entry) => ['', 'apps/api'].map((scope) =>
                 { root: sandbox.path, files: repository.files, dependencyFiles: [] },
                 configurations,
                 scope,
-            ).some((entry) => entry.configuration === 'postgres'),
+            ).some((detection) => detection.configuration === 'postgres'),
         ).toBe(detected);
         expect(
             detectConfigurations(
                 { root: sandbox.path, files: repository.files, dependencyFiles: [] },
                 configurations,
                 'other',
-            ).find((entry) => entry.configuration === 'postgres'),
+            ).find((detection) => detection.configuration === 'postgres'),
         ).toStrictEqual({ configuration: 'postgres', group: 'database', evidence: 'other/prisma/schema.prisma' });
     },
 );
@@ -120,7 +122,7 @@ test('content detection skips a file deleted after the repository read', async (
         detectConfigurations(
             { root: sandbox.path, files: repository.files, dependencyFiles: [] },
             readConfigurations(),
-        ).some((entry) => entry.configuration === 'postgres'),
+        ).some((detection) => detection.configuration === 'postgres'),
     ).toBe(false);
 });
 
@@ -168,26 +170,26 @@ test('Testing Library is detected only in the scope that declares it', async () 
     expect(detectTestingLibrary('neighbor')).toBeUndefined();
 });
 
-test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its project', async (entry) => {
+test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its project', async (row) => {
     await using sandbox = await testdir({
-        'package.json': JSON.stringify({ engines: { [entry.runtime]: '>=1' } }),
-        'api/package.json': JSON.stringify(entry.package),
-        'api/entry.js': entry.source,
-        [GSPOT_PATHS.npmProject]: JSON.stringify('toolProjectPackageJson' in entry ? entry.toolProjectPackageJson : {}),
+        'package.json': JSON.stringify({ engines: { [row.runtime]: '>=1' } }),
+        'api/package.json': JSON.stringify(row.package),
+        'api/entry.js': row.source,
+        [GSPOT_PATHS.npmProject]: JSON.stringify('toolProjectPackageJson' in row ? row.toolProjectPackageJson : {}),
     });
 
     const repository = await readTestRepository(sandbox.path);
     const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
     const configuration = buildConfiguration('runtime', {
         group: 'general',
-        tables: `[detect]\nruntimes = ["${entry.runtime}"]\n`,
+        tables: `[detect]\nruntimes = ["${row.runtime}"]\n`,
     });
     const detected = detectConfigurations(
         { root: sandbox.path, files: repository.files, dependencyFiles },
         new Map([['runtime', configuration]]),
         'api',
     );
-    expect(detected.map(({ configuration }) => configuration)).toStrictEqual(entry.detected ? ['runtime'] : []);
+    expect(detected.map(({ configuration }) => configuration)).toStrictEqual(row.detected ? ['runtime'] : []);
 });
 
 test('site is detected from a site.webmanifest or sitemap.xml in any folder', () => {

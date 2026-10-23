@@ -4,7 +4,7 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import { type ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type SelectedConfigurations } from '#cli/types/settings/inheritance.ts';
-import { selectConfigurations, assertKnownConfigurations } from '#cli/configurations/select.ts';
+import { selectConfigurations, assertConfigurationsExist } from '#cli/configurations/select.ts';
 
 import {
     type SettingsDraft,
@@ -99,7 +99,7 @@ function getConfigurationOrigin(name: string, sources: ConfigurationChoices): Co
  */
 export function selectForInit(init: InitRepository): InitConfigurations {
     const { repository, configurations, options } = init;
-    assertKnownConfigurations(options.configurations ?? [], configurations);
+    assertConfigurationsExist(options.configurations ?? [], configurations);
     const scopes = repository.scopeFolders;
     const hasScopes = scopes.length > 1;
     const detected = detectConfigurations(repository, configurations);

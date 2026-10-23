@@ -33,15 +33,15 @@ async function listPlannedConfigurations(root: string): Promise<string[]> {
     const result = await runGspot(root, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const plan = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-    return plan.plan.configurations.map((entry) => entry.configuration);
+    return plan.plan.configurations.map((each) => each.configuration);
 }
 
 test.each([...CONFIGURATION_CHOICES])(
     'init with --configurations %j keeps the always-selected configurations',
-    async (entry) => {
-        const { configurations } = entry;
+    async (row) => {
+        const { configurations } = row;
         const flags = configurations === undefined ? [] : ['--configurations', ...configurations];
-        if ('noConfigurations' in entry) flags.push('--no-configurations');
+        if ('noConfigurations' in row) flags.push('--no-configurations');
         await using sandbox = await testdir({
             'package.json': '{"name":"example","private":true,"type":"module"}\n',
             'source.js': 'export const port = 8080;\n',
@@ -160,8 +160,8 @@ test('init selects a recommended language only when the repository holds its fil
     });
 
     commitAll(sandbox.path);
-    const plain = await listPlannedConfigurations(sandbox.path);
-    expect(plain.filter((configuration) => !listAlwaysSelected().includes(configuration))).toStrictEqual([
+    const defaults = await listPlannedConfigurations(sandbox.path);
+    expect(defaults.filter((configuration) => !listAlwaysSelected().includes(configuration))).toStrictEqual([
         'css',
         'javascript',
         'licenses',

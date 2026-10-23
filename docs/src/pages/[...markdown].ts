@@ -10,9 +10,9 @@ import { entryToSimpleMarkdown } from 'starlight-llms-txt/markdown';
  */
 export const getStaticPaths = (async () => {
     const pages = await getCollection('docs');
-    return pages.flatMap((entry) => {
-        const copy = buildMarkdownCopyPath(entry.id);
-        return copy === undefined ? [] : [{ params: { markdown: copy.slice(1) }, props: { entry } }];
+    return pages.flatMap((page) => {
+        const copy = buildMarkdownCopyPath(page.id);
+        return copy === undefined ? [] : [{ params: { markdown: copy.slice(1) }, props: { docsPage: page } }];
     });
 }) satisfies GetStaticPaths;
 
@@ -22,13 +22,13 @@ export const getStaticPaths = (async () => {
  * @param context - the endpoint context with the page
  * @returns the Markdown
  */
-export const GET: APIRoute<{ entry: CollectionEntry<'docs'> }> = async (context) => {
-    const { entry } = context.props;
-    const { title, description } = entry.data;
-    const content = await entryToSimpleMarkdown(entry, context);
-    const parts =
+export const GET: APIRoute<{ docsPage: CollectionEntry<'docs'> }> = async (context) => {
+    const { docsPage } = context.props;
+    const { title, description } = docsPage.data;
+    const content = await entryToSimpleMarkdown(docsPage, context);
+    const sections =
         description === undefined || content.startsWith(description)
             ? [`# ${title}`, content]
             : [`# ${title}`, `> ${description}`, content];
-    return new Response(`${parts.join('\n\n')}\n`);
+    return new Response(`${sections.join('\n\n')}\n`);
 };

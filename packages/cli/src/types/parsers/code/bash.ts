@@ -28,7 +28,7 @@ export type TemporaryPath = { name: string; line: number; cleanupLines: number[]
 export type ScriptTemporaryPaths = {
     paths: TemporaryPath[];
     variables: Map<string, TemporaryPath>;
-    declared: Set<string>;
+    assigned: Set<string>;
 };
 
 /** The removals of a deferred trap keep their source offset and variable owner. */

@@ -18,19 +18,19 @@ function buildOptionBlocks(
     writer: BlockWriter,
 ): EslintBlockFields[] {
     return writer.ruleOptions.flatMap((options): EslintBlockFields[] => {
-        const entries = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
+        const chosenRules = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
             const chosen = options.rules[name];
             const severity: unknown = Array.isArray(value) ? value[0] : value;
             return chosen === undefined || severity === 'off' || severity === 0 ? [] : [[name, [severity, ...chosen]]];
         });
-        for (const [name] of entries) writer.applied.add(name);
-        if (entries.length === 0) return [];
+        for (const [name] of chosenRules) writer.applied.add(name);
+        if (chosenRules.length === 0) return [];
         return [
             {
                 ...block,
                 files: buildScopeFiles(block.files ?? writer.codeFiles, options.scope, options.includes),
                 ignores: [...(block.ignores ?? []), ...options.excludes],
-                rules: Object.fromEntries<unknown>(entries),
+                rules: Object.fromEntries<unknown>(chosenRules),
             },
         ];
     });
@@ -39,7 +39,7 @@ function buildOptionBlocks(
 // Preset syntax belongs to the first block; option blocks retain only their own rules.
 function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, level: BlockWriter['level']): string {
     return blocks
-        .map((entry, index) => {
+        .map((block, index) => {
             let runtimeText = '';
             let selectedPreset: EslintRuleExpression | undefined;
             let note = planned.label;
@@ -48,7 +48,7 @@ function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, 
                 selectedPreset = planned.preset;
                 if (planned.preset !== undefined) note += ': ' + planned.preset.expression;
             } else note += ': your own rule options';
-            const source = serializeBlock(entry, {
+            const source = serializeBlock(block, {
                 properties: runtimeText,
                 preset: selectedPreset,
                 level: planned.scope === undefined ? level : undefined,
@@ -71,7 +71,7 @@ function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, 
  */
 export function writeEslintBlock(writer: BlockWriter, block: PlannedEslintBlock): string {
     const { allLevelRules, level, codeFiles } = writer;
-    const { data: payload, scope } = block;
+    const { fields: payload, scope } = block;
     const rules: Record<string, unknown> = Object.fromEntries(
         (payload.rules === undefined ? [] : Object.entries(payload.rules)).map(([name, value]) => [
             name,
@@ -82,8 +82,8 @@ export function writeEslintBlock(writer: BlockWriter, block: PlannedEslintBlock)
         scope === undefined
             ? {}
             : {
-                  files: (payload.files ?? codeFiles).map((entry) => [
-                      ...(Array.isArray(entry) ? entry : [entry]),
+                  files: (payload.files ?? codeFiles).map((pattern) => [
+                      ...(Array.isArray(pattern) ? pattern : [pattern]),
                       joinScope(scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
                   ]),
                   ignores: [...(payload.ignores ?? []), ...scope.excluded],

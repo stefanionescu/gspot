@@ -93,7 +93,7 @@ export function findDocstring(definition: Node): string | undefined {
     const siblings = definition.childForFieldName('body')?.namedChildren ?? [];
     const first = siblings.find((child) => child.type !== 'comment');
     if (first === undefined || !isDocstring(first, siblings)) return undefined;
-    const content = first.namedChildren[0]?.namedChildren.find((part) => part.type === 'string_content');
+    const content = first.namedChildren[0]?.namedChildren.find((child) => child.type === 'string_content');
     return content?.text.trim() ?? '';
 }
 

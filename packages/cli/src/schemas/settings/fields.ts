@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { LocalDate } from '@decimalturn/toml-patch';
-import { FULL_PERCENTAGE } from '#cli/config/units.ts';
+import { MAX_PERCENTAGE } from '#cli/config/units.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { CASE_NAMES } from '#cli/config/configurations/naming.ts';
 import { nonemptyString } from '#cli/schemas/configurations/fields.ts';
@@ -24,8 +24,8 @@ import {
 
 export const nonemptyStrings = z.array(nonemptyString);
 
-export const wholeNumber = z.number().int().nonnegative();
-export const percentage = z.number().min(0).max(FULL_PERCENTAGE);
+export const nonnegativeInteger = z.number().int().nonnegative();
+export const percentage = z.number().min(0).max(MAX_PERCENTAGE);
 
 const formatFields = z.strictObject({
     indent_style: z
@@ -135,7 +135,7 @@ export const formatSchema = formatFields.extend({
                     TableSettings<'format'>['override'][number],
                     NonNullable<WrittenFormat['override']>[number]
                 >)
-                .refine((entry) => Object.keys(entry).length > 1, {
+                .refine((override) => Object.keys(override).length > 1, {
                     message: 'A format override needs at least one formatting option.',
                 })
                 .meta({ minProperties: FORMAT_OVERRIDE_MIN_FIELDS }),
@@ -177,7 +177,7 @@ function buildReasonedValueSchema<Output, Input>(
             value: schema.describe(definition.description),
             reason: z.string().describe(REASON_DESCRIPTIONS[definition.reason_needed]),
         })
-        .transform((entry) => entry.value) satisfies z.ZodType<Output, ReasonedValue<Input>>;
+        .transform((reasoned) => reasoned.value) satisfies z.ZodType<Output, ReasonedValue<Input>>;
 }
 
 /**

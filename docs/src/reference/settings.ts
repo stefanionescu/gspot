@@ -48,21 +48,19 @@ function formatAcceptedValue(schema: JSONSchema.JSONSchema, subschema: JSONSchem
     const node = getSchemaNode(schema, subschema);
     if (isReasonedValue(node)) return REASONED_VALUE_LABEL;
     if (node.const !== undefined)
-        return [`\`${JSON.stringify(node.const)}\``, node.description]
-            .filter((entry) => entry !== undefined)
-            .join(': ');
+        return [`\`${JSON.stringify(node.const)}\``, node.description].filter((text) => text !== undefined).join(': ');
     if (node.enum !== undefined)
         return node.enum.length > LISTED_VALUES_LIMIT
             ? `One of ${String(node.enum.length)} names`
             : node.enum.map((value) => `\`${JSON.stringify(value)}\``).join(', ');
     if (node.anyOf !== undefined) {
-        const branches = node.anyOf.map((entry) => getSchemaNode(schema, entry));
+        const branches = node.anyOf.map((option) => getSchemaNode(schema, option));
         // Values that each carry their own meaning read better as a table than as one long sentence.
         if (branches.every((branch) => branch.const !== undefined && branch.description !== undefined)) {
             const rows = branches.map((branch) => [`\`${JSON.stringify(branch.const)}\``, branch.description ?? '']);
             return `One of these values:\n\n${formatTable(['Value', 'Meaning'], rows)}\n\n`;
         }
-        return [...new Set(node.anyOf.map((entry) => formatAcceptedValue(schema, entry)))].join(' or ');
+        return [...new Set(node.anyOf.map((option) => formatAcceptedValue(schema, option)))].join(' or ');
     }
     const labels: Readonly<Record<string, string>> = SCHEMA_TYPE_LABELS;
     return [node.type ?? 'Value']
@@ -112,8 +110,8 @@ function formatLanguageDefaults(variants: CliReference['settings']): string {
     const defaults = variants.flatMap(({ setting }) =>
         setting.language_defaults === undefined ? [] : Object.entries(setting.language_defaults),
     );
-    const entries = defaults.map(([language, value]) => language + ' ' + `\`${JSON.stringify(value)}\``);
-    return entries.length === 0 ? '' : ` Language defaults: ${entries.join(', ')}.`;
+    const defaultTexts = defaults.map(([language, value]) => language + ' ' + `\`${JSON.stringify(value)}\``);
+    return defaultTexts.length === 0 ? '' : ` Language defaults: ${defaultTexts.join(', ')}.`;
 }
 
 function formatSetting(
@@ -169,7 +167,9 @@ function listVariantTables(
     const children = listSchemaProperties(schema, node);
     const names = new Set(children.filter((child) => isSettingValue(schema, child.node)).map(({ name }) => name));
     return children.filter((child) => {
-        const keys = listSchemaProperties(schema, child.node).filter((entry) => isSettingValue(schema, entry.node));
+        const keys = listSchemaProperties(schema, child.node).filter((schemaProperty) =>
+            isSettingValue(schema, schemaProperty.node),
+        );
         return !isSettingValue(schema, child.node) && keys.length > 0 && keys.every(({ name }) => names.has(name));
     });
 }

@@ -1,10 +1,10 @@
 import { z } from 'zod';
+import { GIT_MODES } from '#cli/config/parsers/git.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { GitEntry } from '#cli/types/parsers/git.ts';
-import { GIT_ENTRY_MODES } from '#cli/config/parsers/git.ts';
+import type { GitFile } from '#cli/types/parsers/git.ts';
 
-export const gitEntrySchema = z.object({
-    mode: z.enum(GIT_ENTRY_MODES),
+export const gitFileSchema = z.object({
+    mode: z.enum(GIT_MODES),
     hash: z.string(),
     path: z.string(),
-} satisfies SchemaShape<GitEntry>);
+} satisfies SchemaShape<GitFile>);

@@ -18,14 +18,8 @@ import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
-import { assertKnownConfigurations, assertConfigurationsEditable } from '#cli/configurations/select.ts';
-
-import type {
-    ApplyReport,
-    SaveSettingsOptions,
-    PreparedSettingsEdit,
-    ConfigurationsOptions,
-} from '#cli/types/apply.ts';
+import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/configurations/select.ts';
+import type { ApplyReport, SaveSettingsOptions, SettingsEditContext, ConfigurationsOptions } from '#cli/types/apply.ts';
 
 /**
  * Edit settings, check them, and write them and their generated files. Installs nothing.
@@ -76,7 +70,7 @@ export async function applySettingsEdit(
  * @param cwd the folder where the command starts.
  * @returns the settings and the gspot.toml text before the edit.
  */
-export function prepareSettingsEdit(cwd: string): PreparedSettingsEdit {
+export function prepareSettingsEdit(cwd: string): SettingsEditContext {
     const root = findRoot(cwd);
     const input = readSettingsEdit(root);
     const reads = createReadCache(root);
@@ -100,7 +94,7 @@ export function prepareConfigurationEdit(options: ConfigurationsOptions): {
 } {
     const edit = prepareSettingsEdit(options.cwd);
     const configurations = readConfigurations();
-    assertKnownConfigurations(options.configurations, configurations);
+    assertConfigurationsExist(options.configurations, configurations);
     assertConfigurationsEditable(options.configurations, configurations);
     getScopeTable(edit.input.table, options.scope);
     const scopeSettings =
@@ -118,33 +112,33 @@ export function prepareConfigurationEdit(options: ConfigurationsOptions): {
  * Look up a setting in one scope with the configurations that the session selects, including the ones that the files of
  * the repository select.
  *
- * @param prepared the settings from before the edit.
- * @param prepared.root the repository root.
- * @param prepared.input the settings text and table before the edit.
- * @param prepared.settings the parsed gspot.toml before the edit.
- * @param prepared.reads the file cache for the lookup.
+ * @param context the settings from before the edit.
+ * @param context.root the repository root.
+ * @param context.input the settings text and table before the edit.
+ * @param context.settings the parsed gspot.toml before the edit.
+ * @param context.reads the file cache for the lookup.
  * @param key the dotted setting name.
  * @param scope the folder to look in, or the root when absent.
  * @returns the declaration and defaults for that scope.
  */
 export async function readSetting(
-    prepared: PreparedSettingsEdit,
+    context: SettingsEditContext,
     key: string,
     scope: string | undefined,
-): Promise<{ known: AvailableSettings; match: SettingMatch }> {
+): Promise<{ available: AvailableSettings; match: SettingMatch }> {
     if (['configurations', 'removed_configurations'].includes(key))
         throw new GspotError('arguments', 'Use gspot add or gspot remove to change configurations.');
-    getScopeTable(prepared.input.table, scope);
-    const { settings, reads } = prepared;
-    const session = await openSession(prepared.root, { settingsFile: { settings, text: prepared.input.text }, reads });
-    const availableSettings = (session.scopes.find((entry) => entry.folder.path === (scope ?? '')) as Scope)
+    getScopeTable(context.input.table, scope);
+    const { settings, reads } = context;
+    const session = await openSession(context.root, { settingsFile: { settings, text: context.input.text }, reads });
+    const availableSettings = (session.scopes.find((each) => each.folder.path === (scope ?? '')) as Scope)
         .availableSettings;
     const match = findSetting(availableSettings, key);
     if (match === undefined) {
         const selectedScope = session.scopes.find(
-            (entry) =>
-                Object.hasOwn(settings.scopes, entry.folder.path) &&
-                findSetting(entry.availableSettings, key) !== undefined,
+            (each) =>
+                Object.hasOwn(settings.scopes, each.folder.path) &&
+                findSetting(each.availableSettings, key) !== undefined,
         )?.folder.path;
         if (selectedScope !== undefined)
             throw new GspotError(
@@ -153,5 +147,5 @@ export async function readSetting(
             );
         throw new GspotError('arguments', formatUnknownSetting(availableSettings, key));
     }
-    return { known: availableSettings, match };
+    return { available: availableSettings, match };
 }

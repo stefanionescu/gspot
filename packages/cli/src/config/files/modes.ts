@@ -11,7 +11,7 @@ export const EXECUTABLE_FILE = 0o755;
 /** The permission bits of a mode, without the file type. */
 export const PERMISSION_BITS = 0o777;
 
-export const ENTRY_FILE_MODES = {
+export const GIT_FILE_MODES = {
     '100644': OWNER_WRITABLE_FILE,
     '100755': EXECUTABLE_FILE,
     [SYMLINK_MODE]: PERMISSION_BITS,

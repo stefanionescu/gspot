@@ -6,8 +6,8 @@ import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { runInstallStep } from '#cli/install/steps.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
+import { listCheckTools } from '#cli/planning/tools.ts';
 import { readMiseBinPaths } from '#cli/tools/locate.ts';
-import { listNeededTools } from '#cli/planning/tools.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
@@ -18,7 +18,7 @@ import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from
 
 // Keep only the programs that hooks need for checks that can run on this system.
 function selectHookTools(session: Session, tools: Tool[]) {
-    const configurations = session.neededToolConfigurations;
+    const configurations = session.toolConfigurations;
     const host = { platform: getOperatingSystem(), arch: process.arch };
     const toolNames = new Set(
         session.configuredChecks
@@ -27,7 +27,7 @@ function selectHookTools(session: Session, tools: Tool[]) {
                     (planned.check.stage === 'commit' || planned.check.stage === 'push') &&
                     findSystemSkip(planned.check, planned.tool, host) === undefined,
             )
-            .flatMap((planned) => listNeededTools(planned)),
+            .flatMap((planned) => listCheckTools(planned)),
     );
     const hookTools = tools.filter(
         (tool) =>

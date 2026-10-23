@@ -17,8 +17,8 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { type NpmToolProject } from '#cli/types/install/tool-projects.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import { isLockfileFresh, stripRegistryUrls } from '#cli/install/npm/lockfiles.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
-import { isLockfileCurrent, stripRegistryUrls } from '#cli/install/npm/lockfiles.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 import { YARN_SETTINGS_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
 import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/install/npm/registry.ts';
@@ -61,7 +61,7 @@ async function createNpmLockfile(
     writeFileSync(join(runFolder, PACKAGE_JSON), toolProjectFile.content);
 
     if (yarn !== undefined) writeFileSync(join(runFolder, YARN_SETTINGS_FILE), yarn);
-    if (recorded !== undefined && isLockfileCurrent(packageManager.name, recorded, project.dependencies))
+    if (recorded !== undefined && isLockfileFresh(packageManager.name, recorded, project.dependencies))
         writeFileSync(join(runFolder, project.lockfile), recorded);
     const lockfileArguments = selectPackageManagerArguments(packageManager).lockfile;
     const days = getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days;
@@ -81,7 +81,7 @@ async function createNpmLockfile(
     );
     stripRegistryUrls(lockfilePath, packageManager, run.env);
     const lockfile = readFileSync(join(runFolder, project.lockfile), 'utf8');
-    if (!isLockfileCurrent(packageManager.name, lockfile, project.dependencies))
+    if (!isLockfileFresh(packageManager.name, lockfile, project.dependencies))
         throw new GspotError(
             'install',
             `${packageManager.name} wrote a tool lockfile that does not match the tool project. gspot kept the existing files.`,
@@ -200,7 +200,7 @@ export async function prepareNpmLockfile(
     if (
         owner.read(GSPOT_PATHS.npmProject)?.bytes.equals(Buffer.from(toolProjectFile.content)) === true &&
         recorded !== undefined &&
-        isLockfileCurrent(packageManager.name, recorded, project.dependencies)
+        isLockfileFresh(packageManager.name, recorded, project.dependencies)
     ) {
         assertCredentialFreeLockfile(
             recorded,

@@ -9,7 +9,7 @@ export const EMPTY_JSON_CASES = [
 /** A JSON format with nested children. */
 export const TWO_LEVEL_FORMAT = {
     format: 'json' as const,
-    items: 'results',
+    list: 'results',
     children: 'packages.vulnerabilities',
     fields: { file: 'source.path', rule: 'id', message: 'package.name package.version summary' },
 } as const;
@@ -37,10 +37,10 @@ export const FIX_FIELD_CASES = [
     ['false', { fix: false }, true],
 ] as const;
 
-/** A JSON format with items and children. */
+/** A JSON format with list and children. */
 export const NESTED_LIST_FORMAT = {
     format: 'json' as const,
-    items: 'files',
+    list: 'files',
     children: 'violations',
     fields: { file: 'filepath', line: 'start_line_no', rule: 'code', message: 'description' },
 } as const;

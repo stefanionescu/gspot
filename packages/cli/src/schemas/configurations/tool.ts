@@ -98,7 +98,7 @@ const toolSchema = z
             .optional(),
         prettier: z
             .strictObject({
-                entry: z.string().min(1),
+                module: z.string().min(1),
                 // The file types the plugin formats; a configuration whose files take plugins owns them while a
                 // selected configuration uses this tool.
                 extensions: z.array(z.string().regex(EXTENSION_PATTERN)).default([]),

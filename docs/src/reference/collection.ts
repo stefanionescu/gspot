@@ -65,7 +65,7 @@ export function createDocsSource(): Loader {
             for (const id of previous) context.store.delete(id);
             await docsLoader().load(context);
             const guideTitles = readGuideTitles(context.store);
-            const entries = [];
+            const pages = [];
             for (const [path, page] of buildReferencePages(guideTitles)) {
                 const id = `${REFERENCE_PATH.slice(1)}${path.slice(0, -'.md'.length)}`;
                 if (context.store.has(id)) throw new Error(`Two docs pages have the ID ${id}.`);
@@ -78,7 +78,7 @@ export function createDocsSource(): Loader {
                     },
                 });
                 const filePath = `${PAGES_FOLDER}/${id}.md`;
-                entries.push({
+                pages.push({
                     id,
                     filePath,
                     data: metadata,
@@ -88,8 +88,8 @@ export function createDocsSource(): Loader {
                     digest: context.generateDigest(JSON.stringify(page)),
                 });
             }
-            for (const entry of entries) context.store.set(entry);
-            context.meta.set(REFERENCE_IDS_KEY, JSON.stringify(entries.map((entry) => entry.id)));
+            for (const referencePage of pages) context.store.set(referencePage);
+            context.meta.set(REFERENCE_IDS_KEY, JSON.stringify(pages.map((referencePage) => referencePage.id)));
         },
     };
 }

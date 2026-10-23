@@ -12,17 +12,17 @@ import { markdownlintReportSchema } from '#cli/schemas/runs/markdownlint.ts';
  */
 export function parseMarkdownlintFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help, cwd } = output;
-    const entries = parseToolReport('Markdownlint', stdout, markdownlintReportSchema);
-    return entries.map((entry) => ({
+    const reports = parseToolReport('Markdownlint', stdout, markdownlintReportSchema);
+    return reports.map((report) => ({
         check,
-        file: resolve(cwd, entry.fileName),
-        line: entry.lineNumber,
-        ...(entry.errorRange === null ? {} : { column: entry.errorRange[0] }),
-        rule: entry.ruleNames[0],
-        message: [entry.ruleDescription, entry.errorDetail, entry.errorContext]
-            .filter((part) => part !== null)
+        file: resolve(cwd, report.fileName),
+        line: report.lineNumber,
+        ...(report.errorRange === null ? {} : { column: report.errorRange[0] }),
+        rule: report.ruleNames[0],
+        message: [report.ruleDescription, report.errorDetail, report.errorContext]
+            .filter((text) => text !== null)
             .join(': '),
         help,
-        fixable: entry.fixInfo !== null,
+        fixable: report.fixInfo !== null,
     }));
 }

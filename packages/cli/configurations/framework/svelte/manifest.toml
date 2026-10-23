@@ -45,7 +45,7 @@ npm = "prettier-plugin-svelte"
 version = "4.1.1"
 
 [tool.prettier]
-entry = "plugin.js"
+module = "plugin.js"
 extensions = [".svelte"]
 
 [[tool.prettier.overrides]]

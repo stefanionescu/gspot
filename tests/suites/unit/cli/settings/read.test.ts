@@ -36,13 +36,16 @@ test('a rules.exclude entry that matches no rule file names the near match', () 
 
 test.each([...FIRST_READ.slice(0, 1), 'general/prose'])(
     'rules.exclude refuses %s, a rule file that every agent reads first',
-    (entry) => {
+    (ruleFile) => {
         expect(
             captureThrow(() =>
-                parseSettings(stringify({ rules: { exclude: [`${GSPOT_PATHS.configurations}/${entry}`] } }), undefined),
+                parseSettings(
+                    stringify({ rules: { exclude: [`${GSPOT_PATHS.configurations}/${ruleFile}`] } }),
+                    undefined,
+                ),
             ),
         ).toBe(
-            `gspot.toml: rules.exclude.0: [rules] exclude names \`${GSPOT_PATHS.configurations}/${entry}\`, which holds a file every agent opens first (\`general/engineering/rules/WORKING.md\`, \`general/prose/rules/WRITING.md\`, \`general/engineering/rules/TALKING.md\`). Remove the entry.`,
+            `gspot.toml: rules.exclude.0: [rules] exclude names \`${GSPOT_PATHS.configurations}/${ruleFile}\`, which holds a file every agent opens first (\`general/engineering/rules/WORKING.md\`, \`general/prose/rules/WRITING.md\`, \`general/engineering/rules/TALKING.md\`). Remove the entry.`,
         );
     },
 );

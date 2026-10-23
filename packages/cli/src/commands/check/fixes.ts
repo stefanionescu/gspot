@@ -8,7 +8,7 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';
 import type { CheckRunOptions } from '#cli/types/runs/check.ts';
-import type { PreparedCommand } from '#cli/types/runs/command.ts';
+import type { CommandLaunch } from '#cli/types/runs/command.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { findTool, runToolProcess } from '#cli/runs/command/tool.ts';
 import { createCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
@@ -29,16 +29,16 @@ function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | un
 
 async function runFixCommands(
     planned: PlannedCheck,
-    prepared: PreparedCommand,
+    setup: CommandLaunch,
     cancelSignal: AbortSignal | undefined,
 ): Promise<FixResult> {
     const check = planned.check.id;
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
-    const before = readContents(prepared.root, paths);
+    const before = readContents(setup.root, paths);
     let note: string | undefined;
-    for (const command of prepared.commandLines) {
+    for (const command of setup.commandLines) {
         const { result, failure } = await runToolProcess(command.commandArguments, {
-            ...prepared,
+            ...setup,
             cancelSignal,
             timeoutSeconds: Number(planned.scope.settings.settings['tool_timeout_seconds']),
             name: planned.check.id,
@@ -46,7 +46,7 @@ async function runFixCommands(
         note = failure?.note ?? findFixFailure(planned, result);
         if (note !== undefined) break;
     }
-    const changed = listChangedPaths(before, readContents(prepared.root, paths));
+    const changed = listChangedPaths(before, readContents(setup.root, paths));
     return note === undefined
         ? { check, status: changed.length === 0 ? 'unchanged' : 'changed', changed }
         : { check, status: 'failed', changed, note };
@@ -63,11 +63,11 @@ async function runFixInCopy(
     }: { session: Session; root: string; command: string[]; toolPath: string; options: CheckRunOptions },
 ): Promise<FixResult> {
     using scratch = await copyCheckFiles(planned, { session: { ...session, root }, command, options });
-    const prepared = prepareCommandIn(scratch.path, planned, { session, command, toolPath, options });
+    const setup = prepareCommandIn(scratch.path, planned, { session, command, toolPath, options });
     using files = openFiles(root);
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const originals = new Map(paths.map((path) => [path, files.read(path)]));
-    const result = await runFixCommands(planned, prepared, session.cancelSignal);
+    const result = await runFixCommands(planned, setup, session.cancelSignal);
     using corrected = openFiles(scratch.path);
     for (const path of result.changed) {
         const original = originals.get(path);
@@ -104,11 +104,11 @@ async function runFixer(session: Session, planned: PlannedCheck, root: string): 
     if ('status' in availability) return { check, status: 'failed', changed: [], note: availability.note };
     if (planned.check.run_in_copy === true)
         return runFixInCopy(selected, { session, root, command, toolPath: availability.path, options });
-    const prepared =
+    const fixSetup =
         root === session.root
             ? prepareCommand(selected, { session, command, setup, toolPath: availability.path })
             : prepareCommandIn(root, selected, { session, command, toolPath: availability.path, options });
-    return runFixCommands(planned, prepared, session.cancelSignal);
+    return runFixCommands(planned, fixSetup, session.cancelSignal);
 }
 
 /**

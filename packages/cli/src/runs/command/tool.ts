@@ -139,7 +139,7 @@ export async function runCheckTool(
         options,
     );
     const commandArguments =
-        'tool' in command ? [process.execPath, buildAssetPath(command.entry), path] : [path, ...command.slice(1)];
+        'tool' in command ? [process.execPath, buildAssetPath(command.modulePath), path] : [path, ...command.slice(1)];
     const { result, failure } = await runToolProcess(commandArguments, {
         ...options,
         env: buildOtherToolEnvironment(session, listOtherTools(planned.scope, planned.check), env),

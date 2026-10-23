@@ -60,10 +60,10 @@ import {
     buildValeIniFile,
     buildAltTextStyle,
     buildAcronymsStyle,
-    buildListItemStyle,
     buildTitleCaseStyle,
     buildHeadingCaseStyle,
     buildPossessivesStyle,
+    buildBulletLengthStyle,
     buildAcceptedWordsFile,
     buildBannedHeadingsStyle,
     buildSentenceLengthStyle,
@@ -128,7 +128,7 @@ const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefine
     'prose/styles/gspot/banned-headings.yml': buildBannedHeadingsStyle,
     'prose/styles/gspot/sentence-length.yml': buildSentenceLengthStyle,
     'prose/styles/gspot/title-case.yml': buildTitleCaseStyle,
-    'prose/styles/gspot/item-length.yml': buildListItemStyle,
+    'prose/styles/gspot/item-length.yml': buildBulletLengthStyle,
     'prose/styles/gspot/possessives.yml': buildPossessivesStyle,
     'spelling/typos.toml': buildTyposFile,
     'python/basedpyright.json': buildBasedpyrightFile,
@@ -173,8 +173,8 @@ export function buildConfigFile(
     } else built = builder(planned);
     const { content, companions } = typeof built === 'string' ? { content: built, companions: [] } : built;
     const source = content.replaceAll(CONFIG_FILE_REFERENCE, (match: string, path: string) => {
-        const declared = join(dirname(configFile.target), path);
-        const chosen = targets.get(planned.scope.folder.path)?.get(declared);
+        const referenced = join(dirname(configFile.target), path);
+        const chosen = targets.get(planned.scope.folder.path)?.get(referenced);
         return chosen === undefined ? match : match.replace(path, relative(dirname(targetPath), chosen));
     });
     return {

@@ -10,7 +10,7 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { runSandboxCheck, openPinnedSession } from '#tests/setup/cli/checks.ts';
+import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
 import {
     SECRET_KEY_READS,
@@ -35,7 +35,7 @@ test('supabase/deno-lint runs in each scope folder on each edge function of its 
     });
 
     using resources = new DisposableStack();
-    const session = await openPinnedSession(sandbox.path, ['deno'], resources);
+    const session = await openFakeToolSession(sandbox.path, ['deno'], resources);
     using run = spyOn(processes, 'spawnProcess').mockResolvedValue(
         buildProcessResult({ stdout: '{"diagnostics":[],"errors":[]}' }),
     );
@@ -65,7 +65,7 @@ test.each([1, 2])(
         });
 
         using resources = new DisposableStack();
-        const session = await openPinnedSession(sandbox.path, ['deno'], resources);
+        const session = await openFakeToolSession(sandbox.path, ['deno'], resources);
         resources.use(
             spyOn(processes, 'spawnProcess').mockResolvedValue(
                 buildProcessResult({ code, stderr: 'The project configuration is invalid.' }),
@@ -202,7 +202,7 @@ test.each(['', 'apps/api'])(
         using _resources = session.resources;
         const failed = await runChecks(session, buildRunOptions({ only: ['supabase/storage-policies'] }));
 
-        const check = failed.report.checks.find((entry) => entry.scope === scope);
+        const check = failed.report.checks.find((check) => check.scope === scope);
         expect(check).toMatchObject({ check: 'supabase/storage-policies', scope, status: 'error', findings: [] });
         expect(check?.note).toBe(
             `The supabase/storage-policies check failed: ${posix.join(scope, 'supabase/config.toml')}: storage.buckets: Invalid input: expected record, received string. Fix the field.`,

@@ -81,7 +81,7 @@ export function listOtherTools(scope: Scope, check: Check, command?: string[]): 
  * @param check the plan with resolved conditions, scopes, and exclusions.
  * @returns the tools to install.
  */
-export function listNeededTools(check: PlannedCheck): string[] {
+export function listCheckTools(check: PlannedCheck): string[] {
     const names = new Set(
         [check.tool?.name, ...listOtherTools(check.scope, check.check), check.check.fix?.[0]].filter(
             (name) => name !== undefined,
@@ -113,9 +113,9 @@ export function listScopeChecks(session: Session, scope: Scope): PlannedCheck[] 
  * @param checks the plans for every supported system.
  * @returns the configurations with only the tools they need.
  */
-export function selectNeededConfigurations(session: Session, checks: PlannedCheck[]): Configuration[] {
+export function selectToolConfigurations(session: Session, checks: PlannedCheck[]): Configuration[] {
     const licenses = checks
-        .filter((entry) => entry.configuration?.name === LICENSES_CONFIGURATION)
+        .filter((each) => each.configuration?.name === LICENSES_CONFIGURATION)
         .flatMap((check) =>
             listLicenseProjects(check.files, session.scopes, session.settingsFile.settings, check.check),
         )
@@ -123,30 +123,30 @@ export function selectNeededConfigurations(session: Session, checks: PlannedChec
         .map((project) =>
             basename(project.dependencyFile) === PACKAGE_JSON ? LICENSE_CHECKER_COMMAND[0] : PIP_LICENSES_COMMAND[0],
         );
-    const needed = new Set([...checks.flatMap((check) => listNeededTools(check)), ...licenses]);
-    if (needed.has(PRETTIER_TOOL))
+    const toolNames = new Set([...checks.flatMap((check) => listCheckTools(check)), ...licenses]);
+    if (toolNames.has(PRETTIER_TOOL))
         for (const { name } of listPrettierPlugins(
             session.scopes.flatMap(({ configurations }) => configurations),
         ).keys())
-            needed.add(name);
+            toolNames.add(name);
     const configurations = listSelectedConfigurations(session.scopes);
     const selectedTools = new Set(
         configurations.flatMap((configuration) => configuration.tools.map(({ name }) => name)),
     );
-    addPeerPackages(needed, [...session.configurations.values()]);
-    const extras = [...needed].flatMap((name) =>
+    addPeerPackages(toolNames, [...session.configurations.values()]);
+    const unselected = [...toolNames].flatMap((name) =>
         selectedTools.has(name)
             ? []
             : [...session.configurations.values()]
                   .filter((configuration) => configuration.tools.some((tool) => tool.name === name))
                   .slice(0, 1),
     );
-    const owners = new Set([...configurations, ...extras]);
+    const owners = new Set([...configurations, ...unselected]);
     return [...owners].map((configuration) => ({
         ...configuration,
         tools: configuration.tools
             .filter(({ when: conditions }) => session.scopes.some((scope) => isToolConditionMet(scope, conditions)))
-            .filter((tool) => needed.has(tool.name)),
+            .filter((tool) => toolNames.has(tool.name)),
     }));
 }
 
@@ -166,13 +166,13 @@ export function listLicenseProjects(
     settings: Settings,
     check: Check,
 ): LicenseProject[] {
-    const entries = scopes.map((scope) => scope.folder);
+    const folders = scopes.map((scope) => scope.folder);
     return scopes.flatMap((scope) =>
         files
             .filter(
                 (file) =>
                     !file.path.startsWith(`${DOT_GSPOT}/`) &&
-                    findScopeFolder(file.path, entries).path === scope.folder.path,
+                    findScopeFolder(file.path, folders).path === scope.folder.path,
             )
             .flatMap((file) => {
                 if (
@@ -204,7 +204,7 @@ export function listLicenseProjects(
 }
 
 /**
- * Map each tool that declares a Prettier plugin to its npm package name, entry, and overrides.
+ * Map each tool that declares a Prettier plugin to its npm package name, module, and overrides.
  *
  * @param configurations the configurations in use.
  * @returns the plugins by tool.
@@ -216,7 +216,7 @@ export function listPrettierPlugins(configurations: Iterable<Configuration>): Ma
                 const name = tool.installers['npm']?.name;
                 return tool.prettier === undefined || name === undefined
                     ? []
-                    : [[tool, { name, entry: tool.prettier.entry, overrides: tool.prettier.overrides }]];
+                    : [[tool, { name, module: tool.prettier.module, overrides: tool.prettier.overrides }]];
             }),
         ),
     );

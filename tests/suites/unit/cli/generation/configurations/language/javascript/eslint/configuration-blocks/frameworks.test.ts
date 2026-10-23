@@ -19,9 +19,9 @@ import {
     ALIAS_IMPORT,
     MOBILE_FILES,
     SERVER_FILES,
-    RAW_HTML_CASES,
     COMPONENT_FILES,
     RESPONSE_MESSAGES,
+    HTML_INJECTION_CASES,
     EXPRESS_SAMPLE_LINES,
     NEXTJS_ROUTE_PROJECTS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/frameworks.ts';
@@ -54,9 +54,9 @@ test('Vue, Svelte and Astro files parse in their scopes, and a plain scope gets 
         const vue = (await eslint.calculateConfigForFile(`${prefix}Card.vue`)) as EslintConfiguration;
         expect(vue.rules['vue/no-v-html']?.[0]).toBe(2);
     }
-    const plain = (await eslint.calculateConfigForFile('plain/Card.vue')) as EslintConfiguration;
+    const outside = (await eslint.calculateConfigForFile('plain/Card.vue')) as EslintConfiguration;
     expect(
-        Object.entries(plain.rules).filter(([name, rule]) => name.startsWith('vue/') && rule[0] !== 0),
+        Object.entries(outside.rules).filter(([name, rule]) => name.startsWith('vue/') && rule[0] !== 0),
     ).toStrictEqual([]);
     const script = (await eslint.calculateConfigForFile('plain/source.js')) as EslintConfiguration;
     expect(
@@ -64,7 +64,7 @@ test('Vue, Svelte and Astro files parse in their scopes, and a plain scope gets 
     ).toStrictEqual([]);
 });
 
-test.each([...RAW_HTML_CASES])(
+test.each([...HTML_INJECTION_CASES])(
     '$configuration reports raw HTML and accepts text, and a plain JavaScript file gets no such rule',
     async (component) => {
         await using sandbox = await testdir({
@@ -217,12 +217,12 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
     });
     const path = join(repository.root, 'src/greeting.controller.ts');
     await createEslint(repository.root);
-    const plain = await runCommand([join(testModules, '.bin/eslint'), '--format', 'json', path], {
+    const unconfigured = await runCommand([join(testModules, '.bin/eslint'), '--format', 'json', path], {
         cwd: repository.root,
     });
-    const plainResults = JSON.parse(plain.stdout) as ESLint.LintResult[];
-    expect(plain.code, plain.stdout + plain.stderr).toBe(0);
-    expect(plainResults.flatMap(({ messages }) => messages)).toStrictEqual([]);
+    const unconfiguredResults = JSON.parse(unconfigured.stdout) as ESLint.LintResult[];
+    expect(unconfigured.code, unconfigured.stdout + unconfigured.stderr).toBe(0);
+    expect(unconfiguredResults.flatMap(({ messages }) => messages)).toStrictEqual([]);
     const packagePath = join(repository.root, 'package.json');
     const packageJson = JSON.parse(await readFile(packagePath, 'utf8')) as PackageJson;
     await writeFile(

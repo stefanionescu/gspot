@@ -46,9 +46,9 @@ export function findFileTarget(configuration: string, file: string): string {
  * @returns the repository path of the rule file.
  */
 export function findRuleFileTarget(configuration: string, file: string): string {
-    const declared = readConfigurations().get(configuration);
-    if (declared === undefined) throw new Error(`No configuration is called ${configuration}.`);
-    return posix.join(GSPOT_PATHS.configurations, declared.group, configuration, 'rules', file);
+    const shipped = readConfigurations().get(configuration);
+    if (shipped === undefined) throw new Error(`No configuration is called ${configuration}.`);
+    return posix.join(GSPOT_PATHS.configurations, shipped.group, configuration, 'rules', file);
 }
 
 /** Read each generated config file matched by a repository-relative glob. */
@@ -74,7 +74,7 @@ export async function generateFile(settings: string, path: string, files: Record
 
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    const file = output.files.find((entry) => entry.path === path);
+    const file = output.files.find((each) => each.path === path);
     if (file === undefined) throw new Error(`The sandbox generates no ${path}.`);
     return file.content;
 }

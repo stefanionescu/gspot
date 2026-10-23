@@ -6,7 +6,7 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/locate.ts';
-import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -52,12 +52,12 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
     expect(corrected.report.checks).toMatchObject([{ check: 'javascript/tsc', status: 'passed', findings: [] }]);
 });
 
-test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps your files', async (entry) => {
+test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps your files', async (row) => {
     const { root } = installedSandbox();
     const sourceFiles = {
         ...JAVASCRIPT_PROJECT_FILES,
-        ...entry.files,
-        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: entry.tables }),
+        ...row.files,
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: row.tables }),
     };
     await using _sourceChange = await applySandboxChanges(
         installedSandbox(),
@@ -71,21 +71,21 @@ test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps your files
     const broken = parseCheckReport(await spawnGspot(root, command));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(broken.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-        ...(entry.scope === '' ? [] : [{ scope: '', status: 'skipped' as const }]),
-        { scope: entry.scope, status: 'failed' as const },
+        ...(row.scope === '' ? [] : [{ scope: '', status: 'skipped' as const }]),
+        { scope: row.scope, status: 'failed' as const },
     ]);
     expect(broken.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
-        entry.diagnostics.map((finding) => matchFields(finding)),
+        row.diagnostics.map((finding) => matchFields(finding)),
     );
-    await writeFile(join(root, entry.sourceFile), entry.correctedSource);
+    await writeFile(join(root, row.sourceFile), row.correctedSource);
     const corrected = parseCheckReport(await spawnGspot(root, command));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks).toStrictEqual([
-        ...(entry.scope === '' ? [] : [matchFields<CheckResult>({ scope: '', status: 'skipped', findings: [] })]),
-        matchFields<CheckResult>({ scope: entry.scope, status: 'passed', findings: [] }),
+        ...(row.scope === '' ? [] : [matchFields<CheckResult>({ scope: '', status: 'skipped', findings: [] })]),
+        matchFields<CheckResult>({ scope: row.scope, status: 'passed', findings: [] }),
     ]);
-    for (const [path, original] of Object.entries({ ...JAVASCRIPT_PROJECT_FILES, ...entry.files }))
-        if (path !== entry.sourceFile) expect(await readFile(join(root, path), 'utf8')).toBe(original);
+    for (const [path, original] of Object.entries({ ...JAVASCRIPT_PROJECT_FILES, ...row.files }))
+        if (path !== row.sourceFile) expect(await readFile(join(root, path), 'utf8')).toBe(original);
 });
 
 test('javascript/tsc at level all also checks your build and dist folders', async () => {

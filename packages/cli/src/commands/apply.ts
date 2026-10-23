@@ -22,10 +22,10 @@ function formatOutdatedFiles(outdatedFiles: OutdatedFile[]): string {
         `${formatCount(outdatedFiles.length, 'generated file')} ${outdatedFiles.length === 1 ? 'needs' : 'need'} updating:`,
         '',
     ];
-    for (const entry of outdatedFiles) {
-        const differences = (entry.diff ?? '').split('\n').map((line) => `    ${line}`);
-        lines.push(`  ${entry.path}  ${entry.kind}`);
-        if ((entry.diff ?? '') !== '') lines.push(...differences);
+    for (const outdatedFile of outdatedFiles) {
+        const differences = (outdatedFile.diff ?? '').split('\n').map((line) => `    ${line}`);
+        lines.push(`  ${outdatedFile.path}  ${outdatedFile.kind}`);
+        if ((outdatedFile.diff ?? '') !== '') lines.push(...differences);
     }
     lines.push('', 'Run gspot apply to write these files.');
     return `${lines.join('\n')}\n`;

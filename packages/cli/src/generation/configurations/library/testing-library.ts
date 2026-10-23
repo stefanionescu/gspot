@@ -31,7 +31,7 @@ export function buildTestingLibraryBlocks(
             const preset = getPreset(presets, name);
             const block = preset.blocks[0];
             blocks.push({
-                data: {
+                fields: {
                     files: eslintFiles.tests,
                     ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
                 },

@@ -41,7 +41,7 @@ npm = "prettier-plugin-astro"
 version = "1.0.1"
 
 [tool.prettier]
-entry = "dist/index.js"
+module = "dist/index.js"
 extensions = [".astro"]
 
 [[tool.prettier.overrides]]

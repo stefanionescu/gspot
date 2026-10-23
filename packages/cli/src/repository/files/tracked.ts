@@ -3,14 +3,14 @@ import { isInside } from '#cli/system/paths.ts';
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { runGitForBytes } from '#cli/system/git.ts';
+import { parseIndexFiles } from '#cli/parsers/git.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { parseIndexEntries } from '#cli/parsers/git.ts';
+import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import { isIgnored } from '#cli/repository/files/gitignore.ts';
-import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
 import { readText, decodeUtf8 } from '#cli/system/files/reads.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
-import { GITLINK_MODE, EXECUTABLE_FILE, ENTRY_FILE_MODES } from '#cli/config/files/modes.ts';
+import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import type { ListedFile, PathIgnore, PendingFolder, FolderListing } from '#cli/types/repository/files.ts';
 
 import {
@@ -53,7 +53,7 @@ function readListedFile(
             path
                 .split('/')
                 .slice(0, -1)
-                .some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
+                .some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
         )
             return { path, size: stat.size, executable: false, symlink: true };
         return readSymlinkFile(root, path);
@@ -64,15 +64,15 @@ function readListedFile(
 }
 
 function readFolderListing(root: string, folder: string, inherited: PathIgnore[]): FolderListing {
-    const entries = readdirSync(join(root, folder), { withFileTypes: true });
+    const children = readdirSync(join(root, folder), { withFileTypes: true });
     const ignores = [...inherited];
-    if (entries.some((entry) => entry.name === GITIGNORE_FILE && entry.isFile())) {
+    if (children.some((child) => child.name === GITIGNORE_FILE && child.isFile())) {
         ignores.push({
             base: folder,
             matcher: ignore().add(readText(root, `${folder}${GITIGNORE_FILE}`)),
         });
     }
-    return { entries, ignores };
+    return { children: children, ignores };
 }
 
 function walkPaths(root: string): string[] {
@@ -80,17 +80,17 @@ function walkPaths(root: string): string[] {
     const pending: PendingFolder[] = [{ folder: '', ignores: [] }];
     for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
         const { folder } = next;
-        const { entries, ignores } = readFolderListing(root, folder, next.ignores);
-        const retained = entries.filter((entry) => {
-            if (entry.name === GIT_FOLDER) return false;
-            const path = `${folder}${entry.name}`;
-            const entryPath = entry.isDirectory() ? `${path}/` : path;
-            return !isIgnored(entryPath, ignores) && !STATE_FOLDER_PATTERN.test(path.normalize('NFC'));
+        const { children, ignores } = readFolderListing(root, folder, next.ignores);
+        const retained = children.filter((child) => {
+            if (child.name === GIT_FOLDER) return false;
+            const path = `${folder}${child.name}`;
+            const listedPath = child.isDirectory() ? `${path}/` : path;
+            return !isIgnored(listedPath, ignores) && !STATE_FOLDER_PATTERN.test(path.normalize('NFC'));
         });
-        for (const entry of retained) {
-            const path = `${folder}${entry.name}`;
-            if (entry.isDirectory()) pending.push({ folder: `${path}/`, ignores });
-            else if (entry.isFile() || entry.isSymbolicLink()) paths.push(path);
+        for (const child of retained) {
+            const path = `${folder}${child.name}`;
+            if (child.isDirectory()) pending.push({ folder: `${path}/`, ignores });
+            else if (child.isFile() || child.isSymbolicLink()) paths.push(path);
         }
     }
     return paths;
@@ -121,21 +121,23 @@ async function listGitFiles(
  * @param cancelSignal stops the command.
  * @returns validated entries, retaining stages of conflicted working files.
  */
-export async function readIndexEntries(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitIndexEntry[]> {
+export async function readIndexFiles(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitIndexFile[]> {
     const listed = await listGitFiles(repositoryRoot, GIT_INDEX_FILES_ARGUMENTS, cancelSignal);
-    return parseIndexEntries(listed);
+    return parseIndexFiles(listed);
 }
 
 /**
  * Find gitlinks without opening submodule folders or reading their settings.
  *
- * @param entries the shared index listing.
+ * @param indexFiles the shared index listing.
  * @returns sorted, unique submodule paths.
  */
-export function listSubmodulePaths(entries: GitIndexEntry[]): string[] {
-    return [...new Set(entries.filter((entry) => entry.mode === GITLINK_MODE).map((entry) => entry.path))].toSorted(
-        (left, right) => left.localeCompare(right),
-    );
+export function listSubmodulePaths(indexFiles: GitIndexFile[]): string[] {
+    return [
+        ...new Set(
+            indexFiles.filter((indexFile) => indexFile.mode === GITLINK_MODE).map((indexFile) => indexFile.path),
+        ),
+    ].toSorted((left, right) => left.localeCompare(right));
 }
 
 /**
@@ -149,14 +151,14 @@ export function listSubmodulePaths(entries: GitIndexEntry[]): string[] {
  */
 export async function listTrackedFiles(
     repositoryRoot: string,
-    index: GitIndexEntry[],
+    index: GitIndexFile[],
     { hasGit }: { hasGit: boolean },
 ): Promise<ListedFile[]> {
     const listed = hasGit ? await listGitFiles(repositoryRoot, GIT_UNTRACKED_FILES_ARGUMENTS) : undefined;
     const paths =
         listed === undefined
             ? walkPaths(repositoryRoot)
-            : [...index.map((entry) => entry.path), ...listed.split('\0').filter(Boolean)];
+            : [...index.map((indexFile) => indexFile.path), ...listed.split('\0').filter(Boolean)];
     const submodules = listSubmodulePaths(index);
     // Windows file systems keep no executable bit, so the same index listing supplies it.
     const executables =
@@ -164,9 +166,10 @@ export async function listTrackedFiles(
             ? new Set(
                   index
                       .filter(
-                          (entry) => entry.mode !== GITLINK_MODE && ENTRY_FILE_MODES[entry.mode] === EXECUTABLE_FILE,
+                          (indexFile) =>
+                              indexFile.mode !== GITLINK_MODE && GIT_FILE_MODES[indexFile.mode] === EXECUTABLE_FILE,
                       )
-                      .map((entry) => entry.path),
+                      .map((indexFile) => indexFile.path),
               )
             : undefined;
     return [...new Set(paths)]
@@ -177,5 +180,5 @@ export async function listTrackedFiles(
         )
         .toSorted((a, b) => a.localeCompare(b))
         .map((path) => readListedFile(repositoryRoot, path, executables))
-        .filter((entry) => entry !== undefined);
+        .filter((file) => file !== undefined);
 }

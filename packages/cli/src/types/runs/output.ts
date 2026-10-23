@@ -12,7 +12,7 @@ export type ToolOutput = OutputPaths & {
 /** The output table that configuration and command checks accept. */
 export type WrittenOutput = {
     format: 'regex' | 'grouped' | 'sarif' | 'knip' | 'semgrep' | 'typos' | 'markdownlint' | 'json' | 'lines' | 'none';
-    items?: string | undefined;
+    list?: string | undefined;
     children?: string | undefined;
     line_base?: 0 | 1 | undefined;
     fields?:

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';

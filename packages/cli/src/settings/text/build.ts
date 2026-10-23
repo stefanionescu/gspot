@@ -25,7 +25,7 @@ function sortTable(table: TomlTable): TomlTable {
 }
 
 function sortValue(value: unknown, path: string[]): unknown {
-    if (Array.isArray(value)) return value.map((entry: unknown) => sortValue(entry, path));
+    if (Array.isArray(value)) return value.map((element: unknown) => sortValue(element, path));
     if (!isTable(value)) return value;
     const fields: Readonly<Record<string, readonly string[]>> = listRecordFields();
     const recordOrder: readonly string[] | undefined = isReasonedValue(value)
@@ -53,10 +53,10 @@ function buildIgnoreSortKey(ignore: TomlTable): string[] {
 }
 
 function compareIgnores(left: TomlTable, right: TomlTable): number {
-    const rightParts = buildIgnoreSortKey(right);
-    for (const [index, part] of buildIgnoreSortKey(left).entries()) {
-        const other = rightParts[index];
-        const order = part.localeCompare(other ?? '');
+    const rightKey = buildIgnoreSortKey(right);
+    for (const [index, leftKey] of buildIgnoreSortKey(left).entries()) {
+        const other = rightKey[index];
+        const order = leftKey.localeCompare(other ?? '');
         if (order !== 0) return order;
     }
     return 0;
@@ -78,19 +78,19 @@ function mergeIgnores(ignores: TomlTable[]): TomlTable[] {
  */
 export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
     const { paths: writtenPaths, ...identity } = ignore;
-    const existing = ignores.find(({ paths: _previousPaths, ...previous }) => isDeepStrictEqual(previous, identity));
-    if (existing === undefined) {
+    const matching = ignores.find(({ paths: _previousPaths, ...previous }) => isDeepStrictEqual(previous, identity));
+    if (matching === undefined) {
         const saved = { ...ignore };
         ignores.push(saved);
         return saved;
     }
-    const previous: unknown = existing['paths'];
+    const previous: unknown = matching['paths'];
     if (Array.isArray(writtenPaths) && Array.isArray(previous)) {
         const paths: readonly unknown[] = writtenPaths;
         const previousPaths: readonly unknown[] = previous;
-        existing['paths'] = [...new Set([...previousPaths, ...paths])];
-    } else Reflect.deleteProperty(existing, 'paths');
-    return existing;
+        matching['paths'] = [...new Set([...previousPaths, ...paths])];
+    } else Reflect.deleteProperty(matching, 'paths');
+    return matching;
 }
 
 /**

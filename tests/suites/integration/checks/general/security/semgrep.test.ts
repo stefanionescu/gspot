@@ -57,8 +57,8 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     // The Next.js configuration rules run through the same Semgrep command as the other shipped Semgrep rules.
     test.each([...NEXT_CONFIG_CASES])(
         'the Next.js Semgrep rules report exactly the expected lines of next.config: $name',
-        async (entry) => {
-            await checkNextjsOptions(installedSandbox(), entry);
+        async (row) => {
+            await checkNextjsOptions(installedSandbox(), row);
         },
     );
 });

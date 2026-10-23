@@ -2,7 +2,7 @@ import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import type { FolderEntry } from '#cli/types/checks/general/structure.ts';
+import type { FolderChild } from '#cli/types/checks/general/structure.ts';
 
 /**
  * Lists the source files that the folder checks read: no Markdown.
@@ -23,25 +23,25 @@ export function listCodeFiles(planned: PlannedCheck): TrackedFile[] {
  * @param files the tracked paths.
  * @returns each folder path with its files and child folders, sorted by name.
  */
-export function buildFolderTree(files: readonly { path: string }[]): Map<string, FolderEntry[]> {
-    const tree = new Map<string, Map<string, FolderEntry['kind']>>();
-    const addEntry = (folder: string, name: string, kind: FolderEntry['kind']): void => {
-        const entries = tree.get(folder) ?? new Map<string, FolderEntry['kind']>();
-        entries.set(name, kind);
-        tree.set(folder, entries);
+export function buildFolderTree(files: readonly { path: string }[]): Map<string, FolderChild[]> {
+    const tree = new Map<string, Map<string, FolderChild['kind']>>();
+    const addChild = (folder: string, name: string, kind: FolderChild['kind']): void => {
+        const children = tree.get(folder) ?? new Map<string, FolderChild['kind']>();
+        children.set(name, kind);
+        tree.set(folder, children);
     };
     for (const file of files) {
         const segments = file.path.split('/');
         const name = segments.pop();
         if (name === undefined) continue;
         for (const [depth, segment] of segments.entries())
-            addEntry(segments.slice(0, depth).join('/'), segment, 'folder');
-        addEntry(extractParentFolder(file.path), name, 'file');
+            addChild(segments.slice(0, depth).join('/'), segment, 'folder');
+        addChild(extractParentFolder(file.path), name, 'file');
     }
     return new Map(
-        [...tree].map(([folder, entries]) => [
+        [...tree].map(([folder, children]) => [
             folder,
-            [...entries].map(([name, kind]) => ({ name, kind })).toSorted((a, b) => a.name.localeCompare(b.name)),
+            [...children].map(([name, kind]) => ({ name, kind })).toSorted((a, b) => a.name.localeCompare(b.name)),
         ]),
     );
 }

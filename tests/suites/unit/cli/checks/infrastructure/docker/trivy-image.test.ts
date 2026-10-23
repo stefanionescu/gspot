@@ -4,7 +4,7 @@ import * as processes from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { runSandboxCheck, openPinnedSession } from '#tests/setup/cli/checks.ts';
+import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 import { NGINX_COMPOSE } from '#tests/config/checks/infrastructure/docker/samples.ts';
 import { TRIVY_FINDINGS_EXIT_CODE } from '#cli/config/checks/infrastructure/docker/trivy-image.ts';
 
@@ -24,7 +24,7 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
     });
 
     using resources = new DisposableStack();
-    const session = await openPinnedSession(sandbox.path, ['trivy'], resources);
+    const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
     const nativeRun = processes.spawnProcess;
     resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
@@ -43,7 +43,7 @@ test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, asyn
         'compose.yaml': NGINX_COMPOSE,
     });
     using resources = new DisposableStack();
-    const session = await openPinnedSession(sandbox.path, ['trivy'], resources);
+    const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code, stdout, stderr })));
     expect(await captureRejection(runSandboxCheck(session.root, 'docker/trivy-image'))).toBe(message);
 });
@@ -67,7 +67,7 @@ test('Trivy scans a repeated image once and reports each advisory and secret in 
         'docker-compose.prod.yml': NGINX_COMPOSE,
     });
     using resources = new DisposableStack();
-    const session = await openPinnedSession(sandbox.path, ['trivy'], resources);
+    const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
     const scan = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
             buildProcessResult({ code: TRIVY_FINDINGS_EXIT_CODE, stdout: TRIVY_MIXED_REPORT }),

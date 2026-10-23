@@ -2,7 +2,7 @@ export const TOOL_PATHS_FILE = 'tool-paths.txt';
 
 export const GSPOT_LAUNCHER_PATH = 'bin/gspot';
 
-export const PINNED_TOOLS_FILE = 'mise.toml';
+export const TOOL_PINS_FILE = 'mise.toml';
 
 export const MISE_TRUST = ['mise', 'trust'] as const;
 

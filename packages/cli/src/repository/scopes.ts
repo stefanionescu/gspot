@@ -5,7 +5,7 @@ import { LINT_FOLDERS } from '#cli/config/repository/setup/tools.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
-import { ROOT_SCOPE, WHOLE_TREE_GLOBS } from '#cli/config/repository/scopes.ts';
+import { ROOT_SCOPE, EVERY_FILE_GLOBS } from '#cli/config/repository/scopes.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/tracked.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
@@ -54,7 +54,7 @@ export function compareScopeDepth(left: string, right: string): number {
  */
 export function isScopeCovered(paths: string[], scope: string): boolean {
     if (paths.some((path) => path.startsWith(GLOB_EXCLUDE))) return false;
-    if (WHOLE_TREE_GLOBS.some((pattern) => paths.includes(pattern))) return true;
+    if (EVERY_FILE_GLOBS.some((pattern) => paths.includes(pattern))) return true;
     if (scope === '') return false;
     const segments = scope.split('/');
     return segments.some((_, index) => {
@@ -100,7 +100,7 @@ export function findScopeFolders(
             !toolOnlyPackages.has(file.path) &&
             !(
                 file.path.startsWith(`${DOT_GSPOT}/`) ||
-                file.path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
+                file.path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
             ) &&
             !LINT_FOLDERS.some((folder) => file.path.startsWith(`${folder}/`)),
     );
@@ -128,9 +128,9 @@ export function findProjectFolder(path: string, pattern: string): string | undef
     for (let start = 0; start + wanted.length <= segments.length; start += 1) {
         const window = segments.slice(start, start + wanted.length);
         if (
-            wanted.every((part, index) => {
+            wanted.every((glob, index) => {
                 const segment = window[index];
-                return segment !== undefined && buildPathMatcher([part])(segment);
+                return segment !== undefined && buildPathMatcher([glob])(segment);
             })
         )
             return segments.slice(0, start).join('/');

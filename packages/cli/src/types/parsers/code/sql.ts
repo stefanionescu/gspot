@@ -11,7 +11,7 @@ export type SqlToken = {
 export type SqlRange = { start: number; end: number };
 
 /** The SQL text that the parser reads, with psql commands blanked out, and where each psql variable sat. */
-export type PreparedSql = { text: string; variables: SqlRange[] };
+export type BlankedSql = { text: string; variables: SqlRange[] };
 
 /** The fields of each PostgreSQL parse tree node, by node kind. */
 export type SqlNodeFields = { [Entry in Node as keyof Entry]: Entry[keyof Entry] };

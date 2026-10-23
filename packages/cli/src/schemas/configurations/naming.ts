@@ -47,7 +47,7 @@ export const namingOverrideSchema = z.strictObject({
 } satisfies SchemaShape<NamingOverride>);
 
 /** Naming exceptions shipped by a configuration or the default naming data always state their reason. */
-export const declaredNamingOverrideSchema = namingOverrideSchema.extend({
+export const writtenNamingOverrideSchema = namingOverrideSchema.extend({
     reason: z.string().min(1),
 }) satisfies z.ZodType<NamingOverride>;
 
@@ -73,5 +73,5 @@ export const namingDefaultsSchema = z.strictObject({
             ),
         } satisfies SchemaShape<NamingDefaults['languages'][string]>),
     ),
-    override: z.array(declaredNamingOverrideSchema),
+    override: z.array(writtenNamingOverrideSchema),
 } satisfies SchemaShape<NamingDefaults>);

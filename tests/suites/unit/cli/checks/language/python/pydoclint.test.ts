@@ -13,8 +13,8 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
+import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { PYPROJECT } from '#tests/config/checks/language/python/project.ts';
 
@@ -40,8 +40,8 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
     const commandArguments = run.mock.calls[0]![0];
     expect({
         style: commandArguments[commandArguments.indexOf('--style') + 1],
-        typeFlags: commandArguments.flatMap((part, index) =>
-            (TYPE_FLAG_NAMES as readonly string[]).includes(part) ? [part, commandArguments[index + 1]] : [],
+        typeFlags: commandArguments.flatMap((argument, index) =>
+            (TYPE_FLAG_NAMES as readonly string[]).includes(argument) ? [argument, commandArguments[index + 1]] : [],
         ),
     }).toStrictEqual({ style: expected, typeFlags: [...typeFlags] });
 });
@@ -64,7 +64,7 @@ async function preparePydoclintCheck(
     const session = await openSession(root, { resources });
     const [planned] = planChecks(session, { stage: 'all', only: ['python/pydoclint'] });
     if (planned === undefined) throw new Error('The Python sandbox does not plan pydoclint.');
-    resources.use(fakePinnedExecutables([getTool(session.configurations.values(), 'pydoclint')]));
+    resources.use(fakeToolExecutables([getTool(session.configurations.values(), 'pydoclint')]));
     return Object.assign(cleanup.move(), { session, planned });
 }
 test('pydoclint keeps earlier style findings when a later style batch fails', async () => {

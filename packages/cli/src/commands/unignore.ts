@@ -3,7 +3,7 @@ import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
-import { assertKnownCheck } from '#cli/configurations/manifests.ts';
+import { assertCheckExists } from '#cli/configurations/manifests.ts';
 import type { IgnoreRemoval } from '#cli/types/commands/unignore.ts';
 import { NO_CHECK_IGNORE_TEXTS } from '#cli/config/commands/unignore.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
@@ -14,18 +14,18 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
     const removed = new Set(options.paths);
     const ignores: unknown[] = Array.isArray(written['ignore']) ? written['ignore'] : [];
-    const entries = ignores.map((entry) => ({
-        entry,
+    const matches = ignores.map((ignore) => ({
+        entry: ignore,
         matching:
-            isTable(entry) &&
-            entry['check'] === options.check &&
-            (options.rule === undefined || entry['rule'] === options.rule),
+            isTable(ignore) &&
+            ignore['check'] === options.check &&
+            (options.rule === undefined || ignore['rule'] === options.rule),
     }));
     let deleted = 0;
     let changedIgnores = 0;
     let removedPaths = 0;
     let everywhere = 0;
-    const kept = entries.flatMap(({ entry, matching }) => {
+    const kept = matches.flatMap(({ entry, matching }) => {
         if (!matching) return [entry];
         const record = entry as IgnoreRecord;
         if (removed.size === 0) {
@@ -59,7 +59,7 @@ async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {
     const { root, input, settings } = prepareSettingsEdit(options.cwd);
-    if (options.check !== undefined) assertKnownCheck(options.check, settings);
+    if (options.check !== undefined) assertCheckExists(options.check, settings);
     const { kept, deleted, changedIgnores, removedPaths, everywhere } = removeIgnores(input.table, options);
     const [verb, pronoun] = everywhere === 1 ? ['covers', 'it'] : ['cover', 'them'];
     const warning =

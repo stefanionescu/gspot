@@ -23,7 +23,7 @@ export const DENO_CONFIG_FLAG = '--config';
 
 export const FILE_URL_PREFIX = 'file://';
 
-export const FUNCTION_ENTRY = /\/index\.tsx?$/u;
+export const FUNCTION_ENTRYPOINT = /\/index\.tsx?$/u;
 
 export const DENO_LINT_COMMAND = ['deno', 'lint', '--json'] as const;
 

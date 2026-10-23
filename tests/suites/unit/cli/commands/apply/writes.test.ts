@@ -153,7 +153,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     expect(plans[0]?.skip?.cause).toBe('ignore');
     expect(excluded.configuredChecks.map((check) => check.check.id)).not.toContain('format/prettier');
     expect(
-        excluded.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
+        excluded.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     ).not.toContain('prettier');
     const generated = generate(excluded);
     expect(generated.files.map((file) => file.path)).not.toContain(findFileTarget('format', 'prettier.json'));

@@ -28,8 +28,8 @@ export function parseToolPackageJson(text: string, packageManagerName: PackageMa
  */
 export function selectLockfileName(packageManager: PackageManager['name']): ToolProjectLockfileName {
     return (
-        LOCKFILES.filter((entry) => 'toolProject' in entry).find(
-            (entry) => entry.packageManager === packageManager,
+        LOCKFILES.filter((lockfile) => 'toolProject' in lockfile).find(
+            (lockfile) => lockfile.packageManager === packageManager,
         ) as Extract<Lockfile, { toolProject: true }>
     ).file;
 }

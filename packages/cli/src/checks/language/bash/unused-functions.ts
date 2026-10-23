@@ -17,13 +17,13 @@ export async function checkBashUnusedFunctions(session: Session, planned: Planne
     const referenced = new Set(scripts.flatMap((file) => file.calls.map(({ name }) => name)));
     return scripts.flatMap((file) => {
         return file.functions
-            .filter((entry) => entry.name !== MAIN_FUNCTION && !referenced.has(entry.name))
-            .map((entry) =>
+            .filter((scriptFunction) => scriptFunction.name !== MAIN_FUNCTION && !referenced.has(scriptFunction.name))
+            .map((scriptFunction) =>
                 buildFinding(
                     planned,
-                    { file: file.path, line: entry.start },
+                    { file: file.path, line: scriptFunction.start },
                     'never-called',
-                    `No script in this scope calls ${entry.name}. Delete it, or call it.`,
+                    `No script in this scope calls ${scriptFunction.name}. Delete it, or call it.`,
                 ),
             );
     });

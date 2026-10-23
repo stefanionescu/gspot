@@ -1,6 +1,6 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { listNeededTools } from '#cli/planning/tools.ts';
+import { listCheckTools } from '#cli/planning/tools.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
@@ -43,7 +43,7 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
     } = session;
     if (settings.ci?.enabled !== true) return;
     const manual = session.configuredChecks.filter((planned) => planned.check.stage === 'manual');
-    const required = new Set(manual.flatMap((planned) => listNeededTools(planned)));
+    const required = new Set(manual.flatMap((planned) => listCheckTools(planned)));
     generated.files.push(
         (settings.ci.provider === 'github' ? buildGithubWorkflow : buildGitlabWorkflow)({
             version: cliPackage.version,
@@ -61,7 +61,7 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
             operatingSystems: settings.ci.operating_systems,
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
             manualChecks: manual,
-            manualTools: listDistinctTools(session.neededToolConfigurations).filter((tool) => required.has(tool.name)),
+            manualTools: listDistinctTools(session.toolConfigurations).filter((tool) => required.has(tool.name)),
         }),
     );
 }
@@ -169,7 +169,7 @@ export function generate(session: Session): GenerationResult {
     const { installedRoot, timeoutSeconds, reads } = session;
     const { root } = repository;
     const packageManager = session.packageManager?.name;
-    const configurations = session.neededToolConfigurations;
+    const configurations = session.toolConfigurations;
     const generated: GenerationResult = {
         files: [
             { path: GSPOT_PATHS.versionPin, content: cliPackage.version + '\n' },

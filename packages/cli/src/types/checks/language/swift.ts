@@ -15,7 +15,7 @@ export type SwiftBuildOutput = { code: number; output: string; source: string };
 export type SwiftBuildPurpose = 'compile' | 'analyze' | 'coverage' | 'periphery';
 
 /** The prepared source copy and its locked root, which the caller disposes. */
-export type PreparedSwiftBuild = { files: Files; source: string };
+export type SwiftBuildSetup = { files: Files; source: string };
 
 /** The line coverage of each target. */
 export type CoverageReport = { targets: { name: string; lineCoverage: number }[] };

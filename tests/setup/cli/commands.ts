@@ -117,7 +117,7 @@ export async function spawnGspot(
 /** Run one check as a child process and return its result for the root scope. */
 export async function spawnRootCheck(root: string, check: string): Promise<CheckResult> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json']));
-    const found = result.report.checks.find((entry) => entry.scope === '');
+    const found = result.report.checks.find((each) => each.scope === '');
     if (found === undefined) throw new Error(`The report has no root result for ${check}.`);
     return found;
 }

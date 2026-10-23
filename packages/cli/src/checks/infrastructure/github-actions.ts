@@ -43,7 +43,7 @@ function replaceReference(text: string, reference: Scalar): string {
         token.type === 'block-scalar'
             ? Math.max(
                   token.offset,
-                  ...token.props.map((part) => ('source' in part ? part.offset + part.source.length : token.offset)),
+                  ...token.props.map((prop) => ('source' in prop ? prop.offset + prop.source.length : token.offset)),
               )
             : token.offset;
     const source = token.source;
@@ -63,13 +63,13 @@ function replaceReference(text: string, reference: Scalar): string {
 function prepareActionlintText(text: string): string {
     const document = parseDocument(text, { keepSourceTokens: true });
     if (document.errors.length > 0 || !isMap(document.contents)) return text;
-    let prepared = text;
+    let actionlintText = text;
     for (const value of listWorkflowReferences(document)) {
         const reference = isAlias(value) ? value.resolve(document) : value;
         if (!isScalar(reference) || typeof reference.value !== 'string' || !reference.value.startsWith('$/')) continue;
-        prepared = replaceReference(prepared, reference);
+        actionlintText = replaceReference(actionlintText, reference);
     }
-    return prepared;
+    return actionlintText;
 }
 
 /**
@@ -89,8 +89,8 @@ export async function checkGithubActionsActionlint(session: Session, planned: Pl
     );
     for (const file of actionFiles.values()) {
         const source = readCachedText(session.reads, file.path);
-        const prepared = prepareActionlintText(source);
-        if (prepared !== source) replacements.set(file.path, prepared);
+        const actionlintText = prepareActionlintText(source);
+        if (actionlintText !== source) replacements.set(file.path, actionlintText);
     }
     if (replacements.size === 0) return runCheckCommand(session, planned);
     using scratch = await createCopy({

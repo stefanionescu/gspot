@@ -35,7 +35,7 @@ export function buildCommandLines(
     const fixed = expandCommand(session, planned, command, { ...substitutions, files: [] }).with(0, toolPath);
     return splitFileArguments(
         substitutions.files,
-        fixed.filter((part) => typeof part === 'string'),
+        fixed.filter((argument) => typeof argument === 'string'),
         process.platform,
     ).flatMap((files) => {
         const commandArguments = expandCommand(session, planned, command, { ...substitutions, files }).with(
@@ -63,12 +63,12 @@ export function splitFileArguments(files: string[], fixed: string[], platform: N
     for (const file of files) {
         const size = measureArgumentSize(file, platform);
         if (size > budget) throw new Error(`${file} is too long for one command line. Shorten its path.`);
-        const current = batches.at(-1) as string[];
+        const last = batches.at(-1) as string[];
         if (used + size > budget) {
             batches.push([file]);
             used = size;
         } else {
-            current.push(file);
+            last.push(file);
             used += size;
         }
     }

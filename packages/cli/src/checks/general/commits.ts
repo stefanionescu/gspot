@@ -33,15 +33,15 @@ export async function checkCommitsCommitlintPushed(session: Session, planned: Pl
                 note: `Cannot read commit ${commit}: ${read.stderr.trim()}`,
             };
         writeFileSync(commitFile, read.stdout, { mode: PRIVATE_FILE });
-        const current = await runCheckCommand(
+        const checked = await runCheckCommand(
             session,
             { ...planned, messageFile: commitFile },
             { command: getSiblingCommand(planned, COMMITLINT_CHECK) },
         );
         count += 1;
         return {
-            ...current,
-            findings: current.findings.map((finding) => ({ ...finding, message: `${commit}: ${finding.message}` })),
+            ...checked,
+            findings: checked.findings.map((finding) => ({ ...finding, message: `${commit}: ${finding.message}` })),
         };
     });
     return result.status === 'passed' || result.status === 'failed'

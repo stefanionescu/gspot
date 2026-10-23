@@ -182,7 +182,7 @@ export type EslintImportBoundaryRule = [
 
 /** One block before the writer prints its scope and label. */
 export type PlannedEslintBlock = {
-    data: EslintBlockFields;
+    fields: EslintBlockFields;
     properties?: string;
     preset?: EslintRuleExpression;
     scope?: { path: string; excluded: string[] };

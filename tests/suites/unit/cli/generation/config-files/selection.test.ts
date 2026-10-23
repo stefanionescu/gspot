@@ -7,7 +7,7 @@ import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { join, extname, basename } from 'node:path';
 import { generate } from '#cli/generation/generate.ts';
-import { listNeededTools } from '#cli/planning/tools.ts';
+import { listCheckTools } from '#cli/planning/tools.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
@@ -82,7 +82,7 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
     expect(paths).toContain(findFileTarget('data-files', 'taplo.toml'));
     for (const path of [findFileTarget('format', 'prettier.json'), '.prettierignore'])
         expect(paths).not.toContain(path);
-    const packages = listToolProjectPins(session.neededToolConfigurations).npm;
+    const packages = listToolProjectPins(session.toolConfigurations).npm;
     const expected = listToolProjectPins([session.configurations.get('data-files')!]).npm;
     expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(
         Object.keys(expected).toSorted((first, second) => first.localeCompare(second)),
@@ -114,8 +114,8 @@ test.each([...LEVELS])("every configuration's config files parse at level %s", a
     expect(selected).toStrictEqual(new Set(configurations));
     const paths = new Set(generated.map((file) => file.path));
     const checks = session.configuredChecks;
-    const checkIds = new Set(checks.map((entry) => entry.check.id));
-    const tools = new Set(checks.flatMap((entry) => listNeededTools(entry)));
+    const checkIds = new Set(checks.map((each) => each.check.id));
+    const tools = new Set(checks.flatMap((check) => listCheckTools(check)));
     for (const { folder, configurations } of session.scopes) {
         const targets = configurations
             .flatMap((configuration) => configuration.configFiles)

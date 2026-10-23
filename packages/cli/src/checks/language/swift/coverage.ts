@@ -3,8 +3,8 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { join, resolve, relative } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
+import { MAX_PERCENTAGE } from '#cli/config/units.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { FULL_PERCENTAGE } from '#cli/config/units.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { Files } from '#cli/types/system/files.ts';
@@ -84,9 +84,9 @@ async function measureXcodeCoverage(
  */
 async function measureCoverage(session: Session, planned: PlannedCheck): Promise<CoverageReport> {
     const plan = buildPlan(session, planned, { purpose: 'coverage' });
-    const prepared = prepareBuild(session.root, planned.files, plan.folder);
-    using files = prepared.files;
-    const cwd = join(prepared.source, planned.scope.folder.path);
+    const setup = prepareBuild(session.root, planned.files, plan.folder);
+    using files = setup.files;
+    const cwd = join(setup.source, planned.scope.folder.path);
     files.deleteTree(COVERAGE_BUNDLE);
     return plan.kind === 'package'
         ? await measurePackageCoverage(session, planned, plan, files, cwd)
@@ -117,10 +117,10 @@ function listCoverageShortfalls(
     ];
     return limits.flatMap((limit) => {
         const target = report.targets.find(
-            (entry) => entry.name === limit.name || entry.name === `${limit.name}${APP_TARGET_SUFFIX}`,
+            (each) => each.name === limit.name || each.name === `${limit.name}${APP_TARGET_SUFFIX}`,
         );
         if (target === undefined) return [`The coverage report has no target named ${limit.name}.`];
-        const covered = Math.floor(target.lineCoverage * FULL_PERCENTAGE);
+        const covered = Math.floor(target.lineCoverage * MAX_PERCENTAGE);
         return covered >= limit.lines
             ? []
             : [`${limit.name} covers ${String(covered)}% of its lines, under the limit of ${String(limit.lines)}%.`];
@@ -140,7 +140,9 @@ function parseSwiftCoverage(text: string, packageText: string, folder: string): 
     const description = parseToolReport('swift package', packageText, packageDescriptionSchema);
     const root = realpathSync(folder);
     const measured = new Map(
-        report.data.flatMap((data) => data.files).map((file) => [file.filename, file.summary.lines]),
+        report.data
+            .flatMap((coverageExport) => coverageExport.files)
+            .map((file) => [file.filename, file.summary.lines]),
     );
     return {
         targets: description.targets
@@ -152,8 +154,8 @@ function parseSwiftCoverage(text: string, packageText: string, folder: string): 
                 });
                 if (lines.length === 0)
                     throw new Error(`The Swift coverage report has no source lines for target ${target.name}.`);
-                const count = lines.reduce((total, entry) => total + entry.count, 0);
-                const covered = lines.reduce((total, entry) => total + entry.covered, 0);
+                const count = lines.reduce((total, line) => total + line.count, 0);
+                const covered = lines.reduce((total, line) => total + line.covered, 0);
                 return [{ name: target.name, lineCoverage: count === 0 ? 1 : covered / count }];
             }),
     };

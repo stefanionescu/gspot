@@ -31,18 +31,18 @@ export function getConfigFiles(session: Session): ConfigFileGeneration {
 
 // Root outputs win the shared path; other equal-content groups prefer the most scopes.
 function groupToolOutputs(
-    entries: (OwnedConfigFile & { configFile: WholeConfigFile })[],
+    ownedFiles: (OwnedConfigFile & { configFile: WholeConfigFile })[],
     generated: GeneratedConfigFiles,
 ): BuiltConfigFile[][] {
-    const owners = entries[0]?.configFile.per_scope === true ? entries : entries.slice(0, 1);
-    const outputs = owners.map((entry) => ({
-        ...entry,
+    const owners = ownedFiles[0]?.configFile.per_scope === true ? ownedFiles : ownedFiles.slice(0, 1);
+    const outputs = owners.map((each) => ({
+        ...each,
         ...buildConfigFile(
             {
-                ...entry.owner,
-                configFile: entry.configFile,
-                targetPath: entry.configFile.target,
-                level: entry.owner.session.settingsFile.settings.level,
+                ...each.owner,
+                configFile: each.configFile,
+                targetPath: each.configFile.target,
+                level: each.owner.session.settingsFile.settings.level,
             },
             generated.targets,
         ),
@@ -55,16 +55,11 @@ function groupToolOutputs(
 }
 
 // Record one text group at its chosen path and map every participating scope to it.
-function addToolOutput(
-    declared: string,
-    group: BuiltConfigFile[],
-    index: number,
-    generated: GeneratedConfigFiles,
-): void {
+function addToolOutput(target: string, group: BuiltConfigFile[], index: number, generated: GeneratedConfigFiles): void {
     const [first] = group as [BuiltConfigFile, ...BuiltConfigFile[]];
-    const chosen = index === 0 ? declared : buildPerScopeTarget(first.configFile, first.owner.scope.folder.path);
+    const chosen = index === 0 ? target : buildPerScopeTarget(first.configFile, first.owner.scope.folder.path);
     const { file, companions } =
-        chosen === declared
+        chosen === target
             ? first
             : buildConfigFile(
                   {
@@ -79,18 +74,18 @@ function addToolOutput(
     for (const { owner } of group) {
         const scope = owner.scope.folder.path;
         const paths = generated.targets.get(scope) ?? new Map<string, string>();
-        paths.set(declared, chosen);
+        paths.set(target, chosen);
         generated.targets.set(scope, paths);
     }
 }
 
 // Build the config files that have their own text first, so that the pointers can name their paths.
-function buildWholeFiles(configFiles: OwnedConfigFile[], generated: GeneratedConfigFiles): void {
-    const whole = configFiles.filter(
-        (entry): entry is OwnedConfigFile & { configFile: WholeConfigFile } => entry.configFile.source !== undefined,
+function buildSourceFiles(configFiles: OwnedConfigFile[], generated: GeneratedConfigFiles): void {
+    const sourced = configFiles.filter(
+        (each): each is OwnedConfigFile & { configFile: WholeConfigFile } => each.configFile.source !== undefined,
     );
-    for (const [declared, entries] of Map.groupBy(whole, ({ configFile }) => configFile.target)) {
-        const groups = groupToolOutputs(entries, generated);
+    for (const [declared, ownedFiles] of Map.groupBy(sourced, ({ configFile }) => configFile.target)) {
+        const groups = groupToolOutputs(ownedFiles, generated);
         for (const [index, group] of groups.entries()) addToolOutput(declared, group, index, generated);
     }
 }
@@ -100,12 +95,12 @@ function listPointerOnlyPaths(configFiles: OwnedConfigFile[], selected: OwnedCon
     return new Set(
         configFiles
             .filter(
-                (entry) =>
-                    entry.owner.scope.folder.path === selected.owner.scope.folder.path &&
-                    entry.configFile.source === undefined &&
-                    entry.configFile.target === selected.configFile.target,
+                (each) =>
+                    each.owner.scope.folder.path === selected.owner.scope.folder.path &&
+                    each.configFile.source === undefined &&
+                    each.configFile.target === selected.configFile.target,
             )
-            .flatMap((entry) => listPointerPaths(entry.owner, entry.configFile)),
+            .flatMap((each) => listPointerPaths(each.owner, each.configFile)),
     );
 }
 
@@ -134,7 +129,7 @@ function isRootPointerShared(selected: OwnedConfigFile, configFiles: OwnedConfig
     if (configFile.pointer?.inherit !== true || owner.scope.folder.path === '' || target !== configFile.target)
         return false;
     return configFiles.some(
-        (entry) => entry.configFile.target === configFile.target && entry.owner.scope.folder.path === '',
+        (each) => each.configFile.target === configFile.target && each.owner.scope.folder.path === '',
     );
 }
 
@@ -147,8 +142,8 @@ function isRootPointerShared(selected: OwnedConfigFile, configFiles: OwnedConfig
 function buildConfigFiles(session: Session): ConfigFileGeneration {
     const configFiles = listOwnedConfigFiles(session);
     const state: GeneratedConfigFiles = { targets: new Map(), files: new Map() };
-    buildWholeFiles(configFiles, state);
-    for (const entry of configFiles) addPointerFiles(entry, configFiles, state);
+    buildSourceFiles(configFiles, state);
+    for (const configFile of configFiles) addPointerFiles(configFile, configFiles, state);
     return { files: [...state.files.values()], targets: state.targets };
 }
 

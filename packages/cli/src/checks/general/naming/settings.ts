@@ -79,8 +79,8 @@ function compileBannedWords(
     origin: Pick<BannedWord, 'setting' | 'group' | 'categories'>,
 ): BannedWord[] {
     return terms
-        .map((term) => ({ word: term.trim().toLowerCase(), parts: splitParts(term), ...origin }))
-        .filter((term) => term.parts.length > 0);
+        .map((term) => ({ word: term.trim().toLowerCase(), words: splitWords(term), ...origin }))
+        .filter((term) => term.words.length > 0);
 }
 
 /**
@@ -119,7 +119,7 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
     ];
     return {
         bannedWords: terms,
-        allowedPhrases: shipped.allowed_phrases.map((phrase) => splitParts(phrase)),
+        allowedPhrases: shipped.allowed_phrases.map((phrase) => splitWords(phrase)),
         reserved: new Map(
             Object.entries(shipped.reserved).map(([term, categories]) => [term.toLowerCase(), categories]),
         ),
@@ -136,12 +136,12 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
  * @param name the identifier.
  * @returns the lowercase words and digit groups.
  */
-export function splitParts(name: string): string[] {
+export function splitWords(name: string): string[] {
     return name
         .split(SEPARATORS)
         .filter((segment) => segment !== '')
         .flatMap((segment) => splitByCase(segment))
-        .flatMap((part) => (NUMERIC_WORDS.has(part.toLowerCase()) ? [part] : part.split(DIGIT_BOUNDARY)))
-        .map((part) => part.toLowerCase())
-        .filter((part) => part !== '');
+        .flatMap((word) => (NUMERIC_WORDS.has(word.toLowerCase()) ? [word] : word.split(DIGIT_BOUNDARY)))
+        .map((word) => word.toLowerCase())
+        .filter((word) => word !== '');
 }

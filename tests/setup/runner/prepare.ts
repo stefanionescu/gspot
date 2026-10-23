@@ -16,7 +16,7 @@ import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/locate.ts';
 import { runCommand, stopOnSignals } from '#tests/setup/system/processes.ts';
 import { findMisePin, listDistinctTools } from '#cli/configurations/tools.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { MISE_TRUST, TOOL_PATHS_FILE, PINNED_TOOLS_FILE, GSPOT_LAUNCHER_PATH } from '#tests/config/setup/runner.ts';
+import { MISE_TRUST, TOOL_PINS_FILE, TOOL_PATHS_FILE, GSPOT_LAUNCHER_PATH } from '#tests/config/setup/runner.ts';
 
 const controller = new AbortController();
 
@@ -38,12 +38,12 @@ await writeScriptCommand(
     GSPOT_LAUNCHER_PATH,
     `const { runProgram } = await import(${JSON.stringify(pathToFileURL(CLI_MAIN).href)}); process.exitCode = await runProgram(process.argv.slice(2));\n`,
 );
-const paths = await installPinnedTools(folder, controller.signal);
+const paths = await installTools(folder, controller.signal);
 await writeFile(join(folder, TOOL_PATHS_FILE), paths.join('\n') + '\n');
 
 /** Install the program pins once for integration and end-to-end suites. */
-async function installPinnedTools(folder: string, cancelSignal: AbortSignal): Promise<string[]> {
-    const config = join(folder, PINNED_TOOLS_FILE);
+async function installTools(folder: string, cancelSignal: AbortSignal): Promise<string[]> {
+    const config = join(folder, TOOL_PINS_FILE);
     const configurations = [...readConfigurations().values()];
     const names = listDistinctTools(configurations)
         .filter((tool) => tool.system !== true && hasToolBuild(tool.name))

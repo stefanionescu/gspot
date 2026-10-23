@@ -54,19 +54,20 @@ export function setKey(table: TomlTable, key: string, value: unknown): void {
 export function deleteKey(table: TomlTable, key: string): void {
     const { path, name } = splitKey(key);
     const tables = [table];
-    let current = table;
-    for (const part of path) {
-        const next = current[part];
+    let walked = table;
+    for (const segment of path) {
+        const next = walked[segment];
         if (!isTable(next)) return;
         tables.push(next);
-        current = next;
+        walked = next;
     }
-    Reflect.deleteProperty(current, name);
+    Reflect.deleteProperty(walked, name);
     for (let index = tables.length - 1; index > 0; index -= 1) {
         const [parent, child] = tables.slice(index - 1, index + 1);
-        const part = path[index - 1];
-        if (parent === undefined || child === undefined || part === undefined || Object.keys(child).length > 0) break;
-        Reflect.deleteProperty(parent, part);
+        const segment = path[index - 1];
+        if (parent === undefined || child === undefined || segment === undefined || Object.keys(child).length > 0)
+            break;
+        Reflect.deleteProperty(parent, segment);
     }
 }
 
@@ -75,19 +76,19 @@ export function deleteKey(table: TomlTable, key: string): void {
  *
  * @param table the table to edit.
  * @param key the dotted name of the list.
- * @param entries the items to append.
+ * @param values the items to append.
  */
-export function addToList(table: TomlTable, key: string, entries: unknown[]): void {
+export function addToList(table: TomlTable, key: string, values: unknown[]): void {
     const { path, name } = splitKey(key);
     const parent = createTable(table, path);
     if (parent === undefined) throw new Error(`${key} runs through a value that is not a table.`);
     const written = parent[name];
     const value = getWrittenValue(written);
-    const existing: unknown[] = Array.isArray(value) ? value : [];
-    const list = [...existing];
-    for (const entry of entries) {
-        const item = normalizeTables(entry);
-        if (!list.some((listed) => isDeepStrictEqual(listed, item))) list.push(item);
+    const writtenList: unknown[] = Array.isArray(value) ? value : [];
+    const list = [...writtenList];
+    for (const added of values) {
+        const normalized = normalizeTables(added);
+        if (!list.some((listed) => isDeepStrictEqual(listed, normalized))) list.push(normalized);
     }
     parent[name] = replaceWrittenValue(written, list);
 }
@@ -97,29 +98,29 @@ export function addToList(table: TomlTable, key: string, entries: unknown[]): vo
  *
  * @param table the table to edit.
  * @param key the dotted name of the list.
- * @param entries the items to remove.
+ * @param values the items to remove.
  */
-export function removeFromList(table: TomlTable, key: string, entries: unknown[]): void {
+export function removeFromList(table: TomlTable, key: string, values: unknown[]): void {
     const { path, name } = splitKey(key);
     const parent = getValueAt(table, path);
     if (!isTable(parent)) return;
     const written = parent[name];
     const value = getWrittenValue(written);
     if (!Array.isArray(value)) return;
-    const existing: unknown[] = value;
+    const writtenList: unknown[] = value;
     const gone = new Set(
-        entries.flatMap((value) =>
+        values.flatMap((value) =>
             isTable(value) && Array.isArray(value['paths'])
                 ? value['paths'].map((path) => JSON.stringify(path))
                 : [JSON.stringify(value)],
         ),
     );
-    const kept = existing.flatMap((item) => {
-        const identity = JSON.stringify(isTable(item) && 'name' in item ? item['name'] : item);
-        if (gone.has(identity) || gone.has(JSON.stringify(item))) return [];
-        if (!isTable(item) || !Array.isArray(item['paths'])) return [item];
-        const paths = item['paths'].filter((path) => !gone.has(JSON.stringify(path)));
-        return paths.length === 0 ? [] : [{ ...item, paths }];
+    const kept = writtenList.flatMap((listed) => {
+        const identity = JSON.stringify(isTable(listed) && 'name' in listed ? listed['name'] : listed);
+        if (gone.has(identity) || gone.has(JSON.stringify(listed))) return [];
+        if (!isTable(listed) || !Array.isArray(listed['paths'])) return [listed];
+        const paths = listed['paths'].filter((path) => !gone.has(JSON.stringify(path)));
+        return paths.length === 0 ? [] : [{ ...listed, paths }];
     });
     if (kept.length === 0) deleteKey(table, key);
     else parent[name] = replaceWrittenValue(written, kept);
@@ -137,10 +138,10 @@ export function getScopeTable(table: TomlTable, scope: string | undefined): Toml
     const scopes = table['scope'];
     const scopeTable: unknown = Array.isArray(scopes)
         ? scopes.find(
-              (entry) =>
-                  isTable(entry) &&
-                  typeof entry['path'] === 'string' &&
-                  trimTrailingSlashes(entry['path']) === trimTrailingSlashes(scope),
+              (each) =>
+                  isTable(each) &&
+                  typeof each['path'] === 'string' &&
+                  trimTrailingSlashes(each['path']) === trimTrailingSlashes(scope),
           )
         : undefined;
     if (!isTable(scopeTable))

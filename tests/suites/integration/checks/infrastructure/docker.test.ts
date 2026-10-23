@@ -173,11 +173,11 @@ test.skipIf(!isLinux)(
 
 const installedSandbox = shareInstalledSandbox(DOCKER_SANDBOX);
 
-test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
+test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
     const expected =
-        'message' in entry.expected
-            ? { ...entry.expected, message: expect.stringContaining(entry.expected.message) as string }
-            : entry.expected;
-    const result = await runCheckSample(installedSandbox(), { ...entry, expected }, DOCKER_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary({ ...entry, expected }));
+        'message' in sample.expected
+            ? { ...sample.expected, message: expect.stringContaining(sample.expected.message) as string }
+            : sample.expected;
+    const result = await runCheckSample(installedSandbox(), { ...sample, expected }, DOCKER_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary({ ...sample, expected }));
 });

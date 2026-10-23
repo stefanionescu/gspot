@@ -46,7 +46,7 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])(
         using output = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
             const interpreter = command.at(-1)!;
             const [scope, identity] = Object.entries(reports).find(
-                ([entry]) => interpreter === buildVenvExecutablePath(join(sandbox.path, entry, '.venv'), 'python'),
+                ([folder]) => interpreter === buildVenvExecutablePath(join(sandbox.path, folder, '.venv'), 'python'),
             )!;
             scanned.push(scope);
             const [name, version] = identity.split('@');

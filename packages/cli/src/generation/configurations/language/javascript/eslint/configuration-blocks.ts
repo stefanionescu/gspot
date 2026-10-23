@@ -42,7 +42,7 @@ function buildConfigurationBlocks(
 ): ConfigurationBlocks {
     const scopePath = scope.folder.path;
     const children = listNestedScopes(
-        planned.session.scopes.map((entry) => entry.folder.path),
+        planned.session.scopes.map((each) => each.folder.path),
         scopePath,
     );
     const testFiles = scope.settings.test_files.map((pattern) =>
@@ -70,14 +70,17 @@ function buildConfigurationBlocks(
 }
 
 // A scope can share only its immediate parent's configuration data, including when that parent has no fragment.
-function listMatchingScopes(entries: { path: string; blocks: ConfigurationBlocks }[], scopes: Scope[]): Set<string> {
+function listMatchingScopes(
+    scopeBlocks: { path: string; blocks: ConfigurationBlocks }[],
+    scopes: Scope[],
+): Set<string> {
     return new Set(
-        entries
+        scopeBlocks
             .filter(({ path, blocks }) => {
                 const parent = scopes
-                    .filter((entry) => entry.folder.path !== path && isInScope(path, entry.folder.path))
+                    .filter((scope) => scope.folder.path !== path && isInScope(path, scope.folder.path))
                     .toSorted((a, b) => compareScopeDepth(b.folder.path, a.folder.path))[0];
-                const previous = entries.find((entry) => entry.path === parent?.folder.path);
+                const previous = scopeBlocks.find((each) => each.path === parent?.folder.path);
                 return previous !== undefined && isDeepStrictEqual(blocks.blocks, previous.blocks.blocks);
             })
             .map(({ path }) => path),
@@ -95,16 +98,16 @@ function buildScopeConfigurationBlocks(
 ): { configuration: Configuration; imports: EslintPlugins; blocks: PlannedEslintBlock[] }[] {
     const result: { configuration: Configuration; imports: EslintPlugins; blocks: PlannedEslintBlock[] }[] = [];
     for (const { configuration, builder } of configurations) {
-        const entries = planned.session.scopes
-            .filter((entry) => entry.configurations.includes(configuration))
+        const scopeBlocks = planned.session.scopes
+            .filter((each) => each.configurations.includes(configuration))
             .map((scope) => ({
                 path: scope.folder.path,
                 blocks: buildConfigurationBlocks(session, configuration, builder, scope, planned),
             }));
-        const matching = listMatchingScopes(entries, planned.session.scopes);
-        for (const { path, blocks } of entries.filter((entry) => !matching.has(entry.path))) {
+        const matching = listMatchingScopes(scopeBlocks, planned.session.scopes);
+        for (const { path, blocks } of scopeBlocks.filter((each) => !matching.has(each.path))) {
             const excluded = listNestedScopes(
-                planned.session.scopes.map((entry) => entry.folder.path),
+                planned.session.scopes.map((each) => each.folder.path),
                 path,
             )
                 .filter((child) => !matching.has(child))

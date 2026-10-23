@@ -106,7 +106,7 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-test.each([...SQL_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, SQL_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...SQL_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, SQL_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

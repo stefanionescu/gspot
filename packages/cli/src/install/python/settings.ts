@@ -64,10 +64,12 @@ export function readPythonSettings(repositoryRoot: string): PythonIndexSettings 
                   .map((index) => ({ ...index, url: normalizeIndexLocation(repositoryRoot, index.url) }));
     if (selected['index'] !== undefined) selected['index'] = indexes;
     const credentials = Object.entries(selected).flatMap(([key, value]) => {
-        const entries: unknown[] = Array.isArray(value) ? value : [value];
-        const settingEntries =
-            key === 'index' ? indexes.map((index) => index.url) : entries.filter((entry) => typeof entry === 'string');
-        return settingEntries.filter((value) => HTTP_URL.test(value)).flatMap((value) => extractUrlPasswords(value));
+        const values: unknown[] = Array.isArray(value) ? value : [value];
+        const settingValues =
+            key === 'index'
+                ? indexes.map((index) => index.url)
+                : values.filter((element) => typeof element === 'string');
+        return settingValues.filter((value) => HTTP_URL.test(value)).flatMap((value) => extractUrlPasswords(value));
     });
     return { settings: selected, credentials };
 }

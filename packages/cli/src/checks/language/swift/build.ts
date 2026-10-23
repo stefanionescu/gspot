@@ -94,9 +94,9 @@ async function runSwiftBuild(
     purpose: 'compile' | 'analyze',
 ): Promise<SwiftBuildOutput> {
     return getCachedMapValue(session.reads, SWIFT_BUILD_OUTPUTS, plan.folder, async () => {
-        const prepared = prepareBuild(session.root, planned.files, plan.folder);
-        using files = prepared.files;
-        const { source } = prepared;
+        const setup = prepareBuild(session.root, planned.files, plan.folder);
+        using files = setup.files;
+        const { source } = setup;
         if (plan.kind === 'package' && purpose === 'analyze')
             files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
         const cwd = join(source, planned.scope.folder.path);
@@ -189,9 +189,9 @@ export async function checkSwiftPeriphery(session: Session, planned: PlannedChec
         ),
     );
     const commandArguments = [...PERIPHERY_COMMAND, configFile];
-    const prepared = prepareBuild(session.root, planned.files, folder);
-    using files = prepared.files;
-    const source = files.readRealPath(BUILD_SOURCE_FOLDER);
+    const setup = prepareBuild(session.root, planned.files, folder);
+    using files = setup.files;
+    const source = files.readCanonicalPath(BUILD_SOURCE_FOLDER);
     const result = await runCheckTool(session, planned, commandArguments, {
         cwd: join(source, planned.scope.folder.path),
     });

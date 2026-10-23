@@ -26,9 +26,11 @@ function buildOpenApiTables(
     const openapiSelections = scopes
         .map(({ scope, selected: configurations }) => ({
             scope,
-            openapi: configurations.find((entry) => entry.name === OPENAPI_CONFIGURATION),
+            openapi: configurations.find((configuration) => configuration.name === OPENAPI_CONFIGURATION),
         }))
-        .filter((entry): entry is typeof entry & { openapi: Configuration } => entry.openapi !== undefined);
+        .filter(
+            (selection): selection is typeof selection & { openapi: Configuration } => selection.openapi !== undefined,
+        );
     return new Map(
         openapiSelections.flatMap(({ scope, openapi }) => {
             const isDocument = buildFilenameMatcher(openapi.detect.filenames);
@@ -46,10 +48,12 @@ function buildSwiftTables(
     draft: SettingsDraft,
     repository: Repository,
 ): Map<string, TomlTable> {
-    const projectFiles = repository.files.filter((entry) => entry.path.endsWith(PBXPROJ));
+    const projectFiles = repository.files.filter((each) => each.path.endsWith(PBXPROJ));
     const swiftFiles = scopes.flatMap(({ scope, selected: configurations }) => {
-        if (!configurations.some((entry) => entry.name === SWIFT_CONFIGURATION)) return [];
-        const file = projectFiles.find((entry) => findScopeFolder(entry.path, draft.scopes).path === scope)?.path;
+        if (!configurations.some((configuration) => configuration.name === SWIFT_CONFIGURATION)) return [];
+        const file = projectFiles.find(
+            (projectFile) => findScopeFolder(projectFile.path, draft.scopes).path === scope,
+        )?.path;
         return file === undefined ? [] : [{ scope, file }];
     });
     return new Map(
@@ -72,7 +76,7 @@ function buildSettingsTable(
     configurations: Map<string, Configuration>,
 ): TomlTable {
     const selected = buildSelectedConfigurations(draft);
-    const scopes = ['', ...draft.scopes.map((entry) => entry.path)];
+    const scopes = ['', ...draft.scopes.map((each) => each.path)];
     const scopeConfigurations = scopes.map((scopePath) => ({
         scope: scopePath,
         selected: selectForScope(selected, scopePath, configurations),

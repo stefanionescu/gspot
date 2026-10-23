@@ -372,7 +372,7 @@ files = { extensions = [".py", ".pyi"] }
 help = "Fix the type, or narrow it where the value arrives. Accept a file that needs another dependency set with `gspot ignore python/basedpyright --paths <path> --reason \"<why>\"`."
 level = "recommended"
 name = "basedpyright"
-output = { format = "json", items = "generalDiagnostics", line_base = 0, fields = { file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message" } }
+output = { format = "json", list = "generalDiagnostics", line_base = 0, fields = { file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message" } }
 runs = "scope"
 stage = "push"
 summary = "Type checks the project. At level `all`, it also requires annotations."

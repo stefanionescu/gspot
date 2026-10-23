@@ -11,7 +11,7 @@ import { type StartRunner, type PackageManagerPin } from '#cli/types/repository/
 export type Session = {
     /** The checks that the settings turn on, across supported systems, planned once when the session opens. */
     configuredChecks: PlannedCheck[];
-    neededToolConfigurations: Configuration[];
+    toolConfigurations: Configuration[];
     timeoutSeconds: number;
     root: string;
     uvPath?: string;

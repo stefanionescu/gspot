@@ -13,7 +13,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { PYTHON_VERSION } from '#cli/config/install/python/project.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
-import { installPythonTools, preparePythonLockfile, isPythonLockfileCurrent } from '#cli/install/python/project.ts';
+import { installPythonTools, preparePythonLockfile, isPythonLockfileFresh } from '#cli/install/python/project.ts';
 
 import {
     UV_TOML,
@@ -113,15 +113,15 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
     }
 });
 test('the uv lockfile check ignores name spelling and requirement order and refuses invalid TOML and a range', () => {
-    expect(isPythonLockfileCurrent(pythonProject, lockfileText)).toBe(true);
-    expect(isPythonLockfileCurrent(pythonProject, 'not valid =')).toBe(false);
+    expect(isPythonLockfileFresh(pythonProject, lockfileText)).toBe(true);
+    expect(isPythonLockfileFresh(pythonProject, 'not valid =')).toBe(false);
     expect(
-        isPythonLockfileCurrent(
+        isPythonLockfileFresh(
             toolPyprojectSchema.parse(parse(projectText.replace('==1.2.3', '>=1.2.3'))),
             lockfileText,
         ),
     ).toBe(false);
 });
 test.each([...UV_LOCKFILE_MISMATCHES])('a changed %s makes the uv lockfile stale', (_name, before, after) => {
-    expect(isPythonLockfileCurrent(pythonProject, lockfileText.replace(before, after))).toBe(false);
+    expect(isPythonLockfileFresh(pythonProject, lockfileText.replace(before, after))).toBe(false);
 });

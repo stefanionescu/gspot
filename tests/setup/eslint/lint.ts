@@ -41,8 +41,8 @@ export async function createEslint(sandboxRoot: string, options?: ESLint.Options
     await linkInstalledModules(join(sandboxRoot, 'node_modules'));
     await runGspotStep({ root: sandboxRoot, environment: {}, run: runGspot }, ['apply']);
     const session = await openSession(sandboxRoot);
-    const scope = session.scopes.find((entry) =>
-        entry.configurations.some((configuration) =>
+    const scope = session.scopes.find((each) =>
+        each.configurations.some((configuration) =>
             configuration.configFiles.some((file) => extractConfigFileName(file.file) === 'eslint'),
         ),
     )?.folder.path;

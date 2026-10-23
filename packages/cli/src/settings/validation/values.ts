@@ -26,8 +26,8 @@ export function validateScopePaths(repositoryRoot: string, settings: Settings): 
     return paths.flatMap((path) => {
         const location: KeyPath = ['scope', path];
         try {
-            const entry = files.readStats(trimTrailingSlashes(path));
-            return entry === undefined || entry.isDirectory()
+            const stats = files.readStats(trimTrailingSlashes(path));
+            return stats === undefined || stats.isDirectory()
                 ? []
                 : [
                       {
@@ -96,24 +96,26 @@ export function validateRuleExcludes(exclude: string[], configurations: Map<stri
     const paths = [...configurations.values()].flatMap((configuration) =>
         listRuleFiles(configuration).map((file) => file.path),
     );
-    return exclude.flatMap((entry, index) => {
-        if (FIRST_READ.some((file) => isInScope(`${GSPOT_PATHS.configurations}/${file}`, trimTrailingSlashes(entry))))
+    return exclude.flatMap((excluded, index) => {
+        if (
+            FIRST_READ.some((file) => isInScope(`${GSPOT_PATHS.configurations}/${file}`, trimTrailingSlashes(excluded)))
+        )
             return [
                 {
                     path: ['rules', 'exclude', index],
-                    message: `[rules] exclude names ${formatCodeList([entry])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
+                    message: `[rules] exclude names ${formatCodeList([excluded])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
                 },
             ];
-        if (paths.some((path) => isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(entry))))
+        if (paths.some((path) => isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(excluded))))
             return [];
         const suggestion = formatSimilarNames(
-            entry,
+            excluded,
             paths.map((path) => `${GSPOT_PATHS.configurations}/${path}`),
         );
         return [
             {
                 path: ['rules', 'exclude', index],
-                message: `[rules] exclude names ${formatCodeList([entry])}, which matches no rule.${suggestion}`,
+                message: `[rules] exclude names ${formatCodeList([excluded])}, which matches no rule.${suggestion}`,
             },
         ];
     });

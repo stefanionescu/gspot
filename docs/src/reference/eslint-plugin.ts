@@ -7,8 +7,8 @@ import { formatList, formatTable, buildReferencePage, formatReferencePath } from
 
 function formatRuleOptions(schemas: unknown, defaults: unknown): string {
     const labels: Readonly<Record<string, string>> = SCHEMA_TYPE_LABELS;
-    const entries: unknown[] = Array.isArray(schemas) ? schemas : [schemas];
-    const rows = entries.flatMap((schema) => {
+    const schemaList: unknown[] = Array.isArray(schemas) ? schemas : [schemas];
+    const rows = schemaList.flatMap((schema) => {
         if (!isTable(schema) || !isTable(schema['properties'])) return [];
         return Object.entries(schema['properties']).map(([option, shape]) => {
             const value = isTable(defaults) ? defaults[option] : undefined;

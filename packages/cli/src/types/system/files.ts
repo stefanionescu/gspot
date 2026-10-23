@@ -10,7 +10,7 @@ export type FileBounds = {
 
 export type Files = {
     /** Return the resolved path after checking containment inside this root. */
-    readRealPath(path: string): string;
+    readCanonicalPath(path: string): string;
     /** Return the sorted entry names of a folder, or an empty list if the folder does not exist. */
     list(path: string): string[];
     /** Return the stats of an entry, or undefined if absent; refuse a symbolic link. */

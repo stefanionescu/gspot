@@ -20,17 +20,17 @@ import {
  * @returns a note on why the file exists, and the package ignores, reasons, and expiration dates.
  */
 export function buildOsvScannerFile(planned: PlannedConfigFile): string {
-    const entries = listIgnores(planned.scope.settings, 'dependencies/osv-scanner').filter(
-        (entry) => entry.rule !== undefined && entry.paths.length === 0,
+    const ignores = listIgnores(planned.scope.settings, 'dependencies/osv-scanner').filter(
+        (ignore) => ignore.rule !== undefined && ignore.paths.length === 0,
     );
-    const vulnerabilities = entries.map((entry) => ({
-        id: entry.rule,
-        ...(entry.until ? { ignoreUntil: entry.until } : {}),
-        reason: entry.reason,
+    const vulnerabilities = ignores.map((ignore) => ({
+        id: ignore.rule,
+        ...(ignore.until ? { ignoreUntil: ignore.until } : {}),
+        reason: ignore.reason,
     }));
     return [
         ...OSV_SCANNER_NOTES,
-        stringifyToml(entries.length === 0 ? {} : { IgnoredVulns: vulnerabilities }, CONFIG_FILE_TOML_FORMAT),
+        stringifyToml(ignores.length === 0 ? {} : { IgnoredVulns: vulnerabilities }, CONFIG_FILE_TOML_FORMAT),
     ].join('\n');
 }
 
@@ -43,7 +43,7 @@ export function buildOsvScannerFile(planned: PlannedConfigFile): string {
 export function buildBunScannerEdits(session: Session): ManagedKeys[] {
     return session.scopes.flatMap((scope) => {
         const scanner = getTable(scope.settings, 'dependencies').bun_scanner;
-        const usesBun = LOCKFILES.filter((entry) => entry.packageManager === 'bun').some(({ file }) =>
+        const usesBun = LOCKFILES.filter((lockfile) => lockfile.packageManager === 'bun').some(({ file }) =>
             session.repository.files.some(({ path }) => path === joinScope(scope.folder.path, file)),
         );
         if (scanner === undefined || !usesBun) return [];

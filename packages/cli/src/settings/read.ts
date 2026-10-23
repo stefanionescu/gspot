@@ -40,9 +40,9 @@ export function readSettings(repositoryRoot: string): SettingsFile {
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
     return Object.fromEntries(
-        (checks ?? []).map((entry) => {
-            const id = entry.id;
-            const { paths, outputs, ...definition } = stripUndefined(entry);
+        (checks ?? []).map((commandCheck) => {
+            const id = commandCheck.id;
+            const { paths, outputs, ...definition } = stripUndefined(commandCheck);
             return [
                 id,
                 {
@@ -52,9 +52,9 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
                         : { generator_outputs: outputs.map((path) => ({ kind: 'path' as const, path })) }),
                     id,
                     ...COMMAND_CHECK_DEFAULTS,
-                    summary: entry.summary ?? `Runs the repository's own check ${id}.`,
+                    summary: commandCheck.summary ?? `Runs the repository's own check ${id}.`,
                     why: 'This repository runs this command as one of its checks.',
-                    help: entry.help ?? 'Read the command output; this repository declares the check.',
+                    help: commandCheck.help ?? 'Read the command output; this repository declares the check.',
                     files: { ...structuredClone(COMMAND_CHECK_DEFAULTS.files), paths },
                 },
             ];
@@ -98,7 +98,7 @@ export function buildSettings(parsed: ParsedSettings, written: TomlTable): Setti
         format: stripUndefined({ ...parsed.format }),
         tools: stripUndefined({ ...parsed.tools }),
         test_files: parsed.test_files,
-        ignore: (parsed.ignore ?? []).map((entry) => stripUndefined(entry)),
+        ignore: (parsed.ignore ?? []).map((ignore) => stripUndefined(ignore)),
         commandChecks: normalizeCommandChecks(commandChecks),
 
         ...tables,

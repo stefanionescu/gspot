@@ -51,11 +51,11 @@ function buildToolProjectRows(configurations: Configuration[]): InitPlan['change
 }
 
 // Name the dependencies that the generated tool project pins. Keep your own dependency file.
-function buildPinnedDependencyRows(
+function buildToolDependencyRows(
     { repository, repositorySetup }: InitScan,
     requirements: Configuration[],
 ): InitFileRow[] {
-    const pinned = new Set(Object.keys(listToolProjectPins(requirements).npm));
+    const toolPackages = new Set(Object.keys(listToolProjectPins(requirements).npm));
     return repositorySetup.toolOnlyPackages.flatMap((path) => {
         const packageJson = readPackageJson(repository.root, path) as PackageJson;
         const names = [
@@ -68,7 +68,7 @@ function buildPinnedDependencyRows(
                 }),
             ),
         ]
-            .filter((name) => pinned.has(name))
+            .filter((name) => toolPackages.has(name))
             .toSorted((left, right) => left.localeCompare(right));
         if (names.length === 0) return [];
         const subject = names.join(', ');
@@ -181,7 +181,7 @@ export function planInitFiles(
             ...buildKeptCiRows(answers.ci, repositorySetup.ci, readLintJobs(root, repositorySetup.ci)),
             ...scan.foreignDisableComments,
         ],
-        change: [...change, ...conflicts.changed, ...buildPinnedDependencyRows(scan, requirements)],
+        change: [...change, ...conflicts.changed, ...buildToolDependencyRows(scan, requirements)],
         noLongerRuns: repositorySetup.lintFolders.map((folder) => ({
             path: `${folder}/`,
             note: 'a folder of lint scripts; check remaining references before deleting it',
@@ -212,10 +212,10 @@ export function formatInitPlan(plan: InitPlan): string {
     return `${lines.join('\n')}\n`;
 }
 
-function formatDetectionRow(label: string, items: string[]): string | undefined {
-    return items.length === 0
+function formatDetectionRow(label: string, names: string[]): string | undefined {
+    return names.length === 0
         ? undefined
-        : `${label.padEnd(DETECTION_LABEL_WIDTH)} ${items.join(' '.repeat(DETECTION_GAP_WIDTH))}`;
+        : `${label.padEnd(DETECTION_LABEL_WIDTH)} ${names.join(' '.repeat(DETECTION_GAP_WIDTH))}`;
 }
 
 function formatDetectedScopes(summary: DetectionSummary): string | undefined {
@@ -227,7 +227,7 @@ function formatDetectedScopes(summary: DetectionSummary): string | undefined {
     return formatDetectionRow('scopes', [...paths, note]);
 }
 
-function formatExistingTools(summary: DetectionSummary): (string | undefined)[] {
+function formatDetectedTools(summary: DetectionSummary): (string | undefined)[] {
     const { repositorySetup } = summary;
     const hooks = repositorySetup.hooks.map(
         (hook) => `${hook.path}/  ${hook.files.join(', ')} (${hook.kind === 'husky' ? 'husky' : 'your own'})`,
@@ -288,7 +288,7 @@ export function formatDetection(summary: DetectionSummary): string {
                 ),
             ),
         formatDetectedScopes(summary),
-        ...formatExistingTools(summary),
+        ...formatDetectedTools(summary),
     ].filter((line) => line !== undefined);
     return [
         `reading ${summary.files.length.toLocaleString('en-US')} files: tracked, and untracked but not ignored`,

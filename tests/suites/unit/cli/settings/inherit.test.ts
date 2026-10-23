@@ -157,12 +157,12 @@ test('an inherited default names the configuration that declares it', () => {
 });
 
 test('a per-language key maps to its base setting', () => {
-    const baseKnown = buildSelectedAvailableSettings(['structure', 'bash', 'naming', 'format', 'prose']);
+    const baseSettings = buildSelectedAvailableSettings(['structure', 'bash', 'naming', 'format', 'prose']);
 
-    expect(findSetting(baseKnown, 'limits.bash.function_lines')?.setting.name).toBe('limits.function_lines');
-    expect(findSetting(baseKnown, 'limits.python.file_lines')?.language).toBe('python');
-    expect(findSetting(baseKnown, 'naming.python.parameters.max_words')?.category).toBe('parameters');
-    expect(findSetting(baseKnown, 'limits.nope')).toBeUndefined();
+    expect(findSetting(baseSettings, 'limits.bash.function_lines')?.setting.name).toBe('limits.function_lines');
+    expect(findSetting(baseSettings, 'limits.python.file_lines')?.language).toBe('python');
+    expect(findSetting(baseSettings, 'naming.python.parameters.max_words')?.category).toBe('parameters');
+    expect(findSetting(baseSettings, 'limits.nope')).toBeUndefined();
 });
 
 test('limits that no check reads are refused', () => {
@@ -183,7 +183,7 @@ test('limits that no check reads are refused', () => {
 });
 
 test('a value comes from the configuration default, then the root table, then the scope table', () => {
-    const baseKnown = buildSelectedAvailableSettings(['structure', 'bash', 'naming', 'format', 'prose']);
+    const baseSettings = buildSelectedAvailableSettings(['structure', 'bash', 'naming', 'format', 'prose']);
 
     const settings = parseSettings(
         buildSandboxSettings(['bash'], {
@@ -192,9 +192,9 @@ test('a value comes from the configuration default, then the root table, then th
         }),
         undefined,
     );
-    expect(getSettingValue(baseKnown, settings, 'limits.file_lines')?.value).toBe(250);
-    expect(getSettingValue(baseKnown, settings, 'limits.file_lines', 'api')?.value).toBe(200);
-    expect(getSettingValue(baseKnown, settings, 'limits.function_lines')?.source).toBe('configuration structure');
+    expect(getSettingValue(baseSettings, settings, 'limits.file_lines')?.value).toBe(250);
+    expect(getSettingValue(baseSettings, settings, 'limits.file_lines', 'api')?.value).toBe(200);
+    expect(getSettingValue(baseSettings, settings, 'limits.function_lines')?.source).toBe('configuration structure');
 });
 
 test('list defaults add up across configurations before root and scope additions', () => {
@@ -256,9 +256,10 @@ test('a naming category takes its shipped cases as its default, so gspot.toml ma
     const defaults = parseSettings(buildSandboxSettings(['typescript']), undefined);
     expect(getSettingValue(availableSettings, defaults, key)?.value).toStrictEqual(['kebab']);
     expect(getSettingValue(availableSettings, settings, key)?.value).toStrictEqual(['kebab']);
-    expect(listEffectiveSettings(availableSettings, settings).find((entry) => entry.key === key)?.value).toStrictEqual([
-        'kebab',
-    ]);
+    expect(
+        listEffectiveSettings(availableSettings, settings).find((effectiveSetting) => effectiveSetting.key === key)
+            ?.value,
+    ).toStrictEqual(['kebab']);
     expect(buildScopeNamingSettings(text).limitsFor('typescript', 'files').caseNames).toStrictEqual(['kebab']);
 });
 

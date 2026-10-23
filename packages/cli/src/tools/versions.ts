@@ -48,7 +48,7 @@ function readPackageVersion(repositoryRoot: string, path: string, name: string |
     const folder = dirname(
         files === undefined
             ? realpathSync(path)
-            : files.readRealPath(convertToPosixPath(relative(repositoryRoot, path))),
+            : files.readCanonicalPath(convertToPosixPath(relative(repositoryRoot, path))),
     );
     // A Windows shim in node_modules/.bin has its own file, so look for its package by name
     // next to that folder.
@@ -103,8 +103,8 @@ export function classifyToolVersion(
     const version = semver.coerce(found);
     if (version === null) return 'error';
     if (isBelowMinimum(found, minimum)) return 'outdated';
-    const pinned = semver.coerce(want);
-    return pinned !== null && semver.gt(version, pinned) ? 'newer' : 'ok';
+    const pinVersion = semver.coerce(want);
+    return pinVersion !== null && semver.gt(version, pinVersion) ? 'newer' : 'ok';
 }
 
 /**

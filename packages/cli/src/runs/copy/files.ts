@@ -7,28 +7,28 @@ import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
-import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { copyDependencies } from '#cli/runs/copy/dependencies.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { type Files, type TemporaryFolder } from '#cli/types/system/files.ts';
 import { listWorkspaceDependencySources } from '#cli/repository/npm/workspaces.ts';
-import { SYMLINK_MODE, PERMISSION_BITS, ENTRY_FILE_MODES } from '#cli/config/files/modes.ts';
+import { SYMLINK_MODE, GIT_FILE_MODES, PERMISSION_BITS } from '#cli/config/files/modes.ts';
 import type { CopyFile, CopyPlan, CopyPaths, DependencyCopy } from '#cli/types/runs/copy.ts';
 import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/runs/copy/files.ts';
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
 
 // Source reads go through the confined reader, so they stay inside the repository.
 function writeCopyFile(files: Files, copyRoot: string, file: CopyFile): void {
-    const target = join(copyRoot, ...splitSystemPath(typeof file === 'string' ? file : file.entry.path));
+    const target = join(copyRoot, ...splitSystemPath(typeof file === 'string' ? file : file.indexFile.path));
     mkdirSync(dirname(target), { recursive: true });
     if (typeof file === 'string') {
-        const source = files.readRealPath(file);
+        const source = files.readCanonicalPath(file);
         copyFileSync(source, target, constants.COPYFILE_FICLONE);
         chmodSync(target, statSync(source).mode & PERMISSION_BITS);
         return;
     }
-    const mode = normalizeFileMode({ mode: ENTRY_FILE_MODES[file.entry.mode] });
-    if (file.entry.mode === SYMLINK_MODE) symlinkSync(file.bytes, target);
+    const mode = normalizeFileMode({ mode: GIT_FILE_MODES[file.indexFile.mode] });
+    if (file.indexFile.mode === SYMLINK_MODE) symlinkSync(file.bytes, target);
     else {
         writeFileSync(target, file.bytes, { flag: 'wx', mode });
         chmodSync(target, mode);
@@ -47,7 +47,7 @@ export async function writeCopyFiles(plan: CopyPlan): Promise<void> {
         if (written % FILES_BETWEEN_PAUSES === 0) await setImmediate();
         written += 1;
         plan.cancelSignal?.throwIfAborted();
-        const path = typeof file === 'string' ? file : file.entry.path;
+        const path = typeof file === 'string' ? file : file.indexFile.path;
         if (!plan.dependencies.some((dependency) => isInScope(path, dependency.path)))
             writeCopyFile(files, plan.target, file);
     }
@@ -58,13 +58,13 @@ export async function writeCopyFiles(plan: CopyPlan): Promise<void> {
  *
  * @param session the repository and its tools.
  * @param planned the check and its files.
- * @param extra more paths to copy.
+ * @param includedPaths more paths to copy.
  * @returns the new folder, deleted on dispose.
  */
 export async function createCheckCopy(
     session: Session,
     planned: PlannedCheck,
-    extra: string[] = [],
+    includedPaths: string[] = [],
 ): Promise<TemporaryFolder> {
     return createCopy({
         ...selectCopyPaths(
@@ -72,7 +72,7 @@ export async function createCheckCopy(
             [
                 ...planned.files.map((file) => file.path),
                 ...listWorkspaceDependencySources(session.reads, planned.scope.folder.path, session.repository.files),
-                ...extra,
+                ...includedPaths,
             ],
             session.repository.scopeFolders.map((scope) => scope.path),
         ),

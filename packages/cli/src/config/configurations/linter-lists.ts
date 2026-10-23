@@ -1,5 +1,5 @@
 /** The pinned linter packages that the task installs, and the name list that each one gives. */
-export const PINNED_LINTERS = {
+export const LINTER_PACKAGES = {
     eslint: {
         module: 'eslint/use-at-your-own-risk',
         nameList: { file: 'configurations/language/javascript/eslint-rule-names.json', source: 'builtinRules' },
@@ -17,7 +17,7 @@ export const PINNED_LINTERS = {
 } as const;
 
 /** The temporary folder where the task installs the pinned linters. */
-export const PINNED_LINTER_FOLDER = {
+export const LINTER_INSTALL_FOLDER = {
     manifest: 'package.json',
     install: ['bun', 'install', '--ignore-scripts'],
     sample: 'capture.css',

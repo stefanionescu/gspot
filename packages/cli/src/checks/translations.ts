@@ -16,9 +16,9 @@ import { TYPE, parse, type MessageFormatElement } from '@formatjs/icu-messagefor
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     if (value === null || typeof value !== 'object') return new Map();
-    const pairs = Object.entries(value).flatMap(([key, entry]): [string, string][] => {
+    const pairs = Object.entries(value).flatMap(([key, child]): [string, string][] => {
         const name = prefix === '' ? key : `${prefix}.${key}`;
-        return typeof entry === 'string' ? [[name, entry]] : flattenMessages(entry, name).entries().toArray();
+        return typeof child === 'string' ? [[name, child]] : flattenMessages(child, name).entries().toArray();
     });
     return new Map(pairs);
 }
@@ -41,7 +41,7 @@ function findBaseFile(path: string, messageFiles: MessageFiles): string {
     const [, ...rest] = posix.relative(folder, path).split('/');
     if (paths.has(sibling) || rest.length === 0) return sibling;
     const nested = posix.join(folder, base, ...rest);
-    const hasBaseFolder = [...paths].some((entry) => entry.startsWith(`${posix.join(folder, base)}/`));
+    const hasBaseFolder = [...paths].some((each) => each.startsWith(`${posix.join(folder, base)}/`));
     return paths.has(nested) || hasBaseFolder ? nested : sibling;
 }
 
@@ -70,7 +70,7 @@ function compareMessages(
         );
     const changed = [...messages].flatMap(([key, text]) => {
         const baseText = baseMessages.get(key);
-        const message = baseText === undefined ? undefined : compareMessageParts(text, baseText, base);
+        const message = baseText === undefined ? undefined : compareMessageArguments(text, baseText, base);
         return message === undefined
             ? []
             : [buildFinding(planned, { file: path, line: 1 }, 'message-arguments', `${key}: ${message}`)];
@@ -80,10 +80,10 @@ function compareMessages(
 
 // The parts of a message that every locale keeps: each argument with its format, each tag, and the keys of each select.
 // Plural categories differ between languages, so a plural keeps only its argument.
-function listMessageParts(elements: MessageFormatElement[]): string[] {
+function listArgumentNames(elements: MessageFormatElement[]): string[] {
     return elements.flatMap((element): string[] => {
         if (element.type === TYPE.literal || element.type === TYPE.pound) return [];
-        if (element.type === TYPE.tag) return [`<${element.value}>`, ...listMessageParts(element.children)];
+        if (element.type === TYPE.tag) return [`<${element.value}>`, ...listArgumentNames(element.children)];
         if (element.type === TYPE.select || element.type === TYPE.plural) {
             const keys =
                 element.type === TYPE.select
@@ -91,7 +91,7 @@ function listMessageParts(elements: MessageFormatElement[]): string[] {
                           .toSorted((left, right) => left.localeCompare(right))
                           .join(' ')}`
                     : ', plural';
-            const nested = Object.values(element.options).flatMap((option) => listMessageParts(option.value));
+            const nested = Object.values(element.options).flatMap((option) => listArgumentNames(option.value));
             return [`{${element.value}${keys}}`, ...nested];
         }
         const format = ARGUMENT_FORMATS[element.type];
@@ -99,21 +99,21 @@ function listMessageParts(elements: MessageFormatElement[]): string[] {
     });
 }
 
-function compareMessageParts(text: string, baseText: string, base: string): string | undefined {
-    let parts: Set<string>;
-    let baseParts: Set<string>;
+function compareMessageArguments(text: string, baseText: string, base: string): string | undefined {
+    let argumentNames: Set<string>;
+    let baseArgumentNames: Set<string>;
     try {
-        parts = new Set(listMessageParts(parse(text)));
-        baseParts = new Set(listMessageParts(parse(baseText)));
+        argumentNames = new Set(listArgumentNames(parse(text)));
+        baseArgumentNames = new Set(listArgumentNames(parse(baseText)));
     } catch {
         return undefined;
     }
-    const missing = [...baseParts].filter((part) => !parts.has(part));
-    const extra = [...parts].filter((part) => !baseParts.has(part));
-    if (missing.length === 0 && extra.length === 0) return undefined;
+    const missing = [...baseArgumentNames].filter((argumentName) => !argumentNames.has(argumentName));
+    const unexpected = [...argumentNames].filter((segment) => !baseArgumentNames.has(segment));
+    if (missing.length === 0 && unexpected.length === 0) return undefined;
     return [
         missing.length === 0 ? '' : `${base} has ${missing.join(', ')}, which this message leaves out.`,
-        extra.length === 0 ? '' : `This message has ${extra.join(', ')}, which ${base} does not have.`,
+        unexpected.length === 0 ? '' : `This message has ${unexpected.join(', ')}, which ${base} does not have.`,
     ]
         .filter(Boolean)
         .join(' ');
@@ -140,7 +140,7 @@ function readMessageFiles(
     const messagesByPath = new Map<string, Map<string, string>>();
     const findings: Finding[] = [];
     const paths = new Set([...files, ...files.map((file) => findBaseFile(file, messageFiles))]);
-    for (const path of [...paths].filter((entry) => messageFiles.paths.has(entry))) {
+    for (const path of [...paths].filter((each) => messageFiles.paths.has(each))) {
         const messages = readMessages(session, path);
         if ('error' in messages)
             findings.push(buildFinding(planned, { file: path, line: 1 }, 'syntax', messages.error));

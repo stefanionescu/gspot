@@ -8,7 +8,7 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { listOtherTools, listNeededTools } from '#cli/planning/tools.ts';
+import { listOtherTools, listCheckTools } from '#cli/planning/tools.ts';
 import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/config/planning/tools.ts';
 
 test.each([...NODE_REQUIREMENTS])(
@@ -21,14 +21,14 @@ test.each([...NODE_REQUIREMENTS])(
 
         const session = await openSession(sandbox.path);
         const names = new Set(
-            session.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
+            session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
         );
         expect(needs.filter((name) => !names.has(name))).toStrictEqual([]);
         expect(skips.filter((name) => names.has(name))).toStrictEqual([]);
     },
 );
 
-test.each(ARCHITECTURE_REQUIREMENTS.flatMap((entry) => LEVELS.map((level) => ({ ...entry, level }))))(
+test.each(ARCHITECTURE_REQUIREMENTS.flatMap((requirement) => LEVELS.map((level) => ({ ...requirement, level }))))(
     'eslint-plugin-boundaries is needed for $name only at the levels that use it: $level',
     async ({ tables, boundary, level }) => {
         await using sandbox = await testdir({
@@ -42,19 +42,19 @@ test.each(ARCHITECTURE_REQUIREMENTS.flatMap((entry) => LEVELS.map((level) => ({ 
         });
         const session = await openSession(sandbox.path);
         expect(session.scopes.map(({ folder }) => folder.path)).toStrictEqual(['', 'app']);
-        const names = session.neededToolConfigurations.flatMap((configuration) =>
+        const names = session.toolConfigurations.flatMap((configuration) =>
             configuration.tools.map((tool) => tool.name),
         );
         expect(names.includes('eslint-plugin-boundaries')).toBe(boundary[level]);
         const checks = planChecks(session, { stage: 'all', only: ['javascript/eslint'] });
         for (const check of checks) {
             expect(listOtherTools(check.scope, check.check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
-            expect(listNeededTools(check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
+            expect(listCheckTools(check).includes('eslint-plugin-boundaries')).toBe(boundary[level]);
         }
     },
 );
 
-describe.each(COVERAGE_PROVIDERS.flatMap((entry) => [0, 80].map((lines) => ({ ...entry, lines }))))(
+describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...row, lines }))))(
     '$configuration coverage at the $lines limit',
     ({ configuration, provider, file, configurations, lines }) => {
         const resources = new AsyncDisposableStack();
@@ -76,7 +76,7 @@ describe.each(COVERAGE_PROVIDERS.flatMap((entry) => [0, 80].map((lines) => ({ ..
         afterAll(() => resources.disposeAsync());
         test.each(['', 'app'])('scope %s needs the coverage provider and lists it among the other tools', (scope) => {
             const check = checks.find((planned) => planned.scope.folder.path === scope)!;
-            expect(listNeededTools(check).includes(provider)).toBe(lines !== 0);
+            expect(listCheckTools(check).includes(provider)).toBe(lines !== 0);
             expect(listOtherTools(check.scope, check.check, check.check.command)).toContain(provider);
         });
     },
@@ -101,7 +101,7 @@ test('omitting coverage keeps unrelated system libraries required by another con
             configuration.name === 'vitest'
                 ? {
                       ...configuration,
-                      checks: configuration.checks.map((entry) => (entry === planned.check ? check : entry)),
+                      checks: configuration.checks.map((each) => (each === planned.check ? check : each)),
                       tools: [...configuration.tools, { ...provider, name: 'independent-support' }],
                       eslint: { ...configuration.eslint, required_tools: ['independent-support'] },
                   }

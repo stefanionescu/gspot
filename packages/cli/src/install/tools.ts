@@ -26,7 +26,7 @@ export async function installTools(
     writer: Writer,
     generated: GenerationResult,
 ): Promise<InstallResult> {
-    const configurations = session.neededToolConfigurations;
+    const configurations = session.toolConfigurations;
     const steps: (readonly string[])[] = [];
     const notes: string[] = [];
     const tools = listDistinctTools(configurations);

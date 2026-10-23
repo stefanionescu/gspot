@@ -2,7 +2,7 @@ import { cp } from 'node:fs/promises';
 import { runGit } from '#cli/system/git.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { MODE_BITS } from '#cli/config/files/modes.ts';
-import type { GitEntry } from '#cli/types/parsers/git.ts';
+import type { GitFile } from '#cli/types/parsers/git.ts';
 import { JSCONFIG_FILE } from '#cli/config/files/names.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
@@ -153,23 +153,23 @@ export async function copyDependencies(
  * Lists the ignored declaration files that your own tsconfig needs.
  *
  * @param workingTree the checkout with installed declaration files.
- * @param entries the tracked files of the revision.
+ * @param indexFiles the tracked files of the revision.
  * @param cancelSignal stops the Git queries.
  * @returns the files to clone, and the tsconfig paths to match.
  */
 export async function readDeclarationDependencies(
     workingTree: string,
-    entries: GitEntry[],
+    indexFiles: GitFile[],
     cancelSignal?: AbortSignal,
 ): Promise<DeclarationDependencies> {
-    const tracked = new Set(entries.map(({ path }) => path));
+    const tracked = new Set(indexFiles.map(({ path }) => path));
     const reads = createReadCache(workingTree);
     let paths = new Set<string>();
     let configurationPaths = new Set<string>();
-    for (const entry of entries.filter(
+    for (const indexFile of indexFiles.filter(
         ({ path }) => basename(path) === TSCONFIG_FILE || basename(path) === JSCONFIG_FILE,
     )) {
-        const tsconfig = readTsconfig(workingTree, join(workingTree, entry.path), reads);
+        const tsconfig = readTsconfig(workingTree, join(workingTree, indexFile.path), reads);
         if (tsconfig === undefined) continue;
         const declarations = listUntrackedDeclarations(workingTree, tracked, tsconfig.fileNames);
         const ignored = await readIgnoredPaths(workingTree, declarations, cancelSignal);
@@ -177,7 +177,7 @@ export async function readDeclarationDependencies(
         const selected = listUntrackedDeclarations(
             workingTree,
             tracked,
-            listSourceFiles(workingTree, dirname(entry.path), reads, tsconfig)
+            listSourceFiles(workingTree, dirname(indexFile.path), reads, tsconfig)
                 .filter((source) => source.isDeclarationFile)
                 .map((source) => source.fileName),
         );

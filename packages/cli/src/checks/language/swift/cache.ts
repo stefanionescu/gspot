@@ -16,7 +16,7 @@ import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { MODE_BITS, PRIVATE_FOLDER } from '#cli/config/files/modes.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
-import type { SwiftBuildPlan, SwiftBuildPurpose, PreparedSwiftBuild } from '#cli/types/checks/language/swift.ts';
+import type { SwiftBuildPlan, SwiftBuildSetup, SwiftBuildPurpose } from '#cli/types/checks/language/swift.ts';
 
 import {
     BUILD_LOG,
@@ -47,7 +47,7 @@ function readBuildSources(root: string, paths: string[]): Map<string, FileConten
     for (const file of paths) {
         let mode: number;
         try {
-            mode = statSync(source.readRealPath(file)).mode & MODE_BITS;
+            mode = statSync(source.readCanonicalPath(file)).mode & MODE_BITS;
         } catch (error) {
             if (!hasErrorCode(error, 'ENOENT')) throw error;
             throw new GspotError('filesystem', `${file} is tracked but missing. Restore it or commit its deletion.`, {
@@ -62,20 +62,20 @@ function readBuildSources(root: string, paths: string[]): Map<string, FileConten
 function pruneSources(folder: string, files: Files, wantedFiles: Map<string, FileContents>): void {
     const wantedFolders = new Set(
         [...wantedFiles.keys()].flatMap((path) => {
-            const parts = path.split('/');
-            return parts.slice(0, -1).map((_part, index) => parts.slice(0, index + 1).join('/'));
+            const segments = path.split('/');
+            return segments.slice(0, -1).map((_segment, index) => segments.slice(0, index + 1).join('/'));
         }),
     );
     const empty: string[] = [];
     walkFiles(files, BUILD_SOURCE_FOLDER, (path) => {
-        const entry = lstatSync(join(folder, path));
-        if (entry.isDirectory()) {
+        const stats = lstatSync(join(folder, path));
+        if (stats.isDirectory()) {
             if (!wantedFolders.has(path)) empty.push(path);
             return true;
         }
-        if (!entry.isSymbolicLink() && wantedFiles.has(path)) return false;
-        const current = entry.isSymbolicLink() ? files.readKeepingLinks(path) : files.read(path);
-        if (current !== undefined) files.deleteFile(path, current);
+        if (!stats.isSymbolicLink() && wantedFiles.has(path)) return false;
+        const onDisk = stats.isSymbolicLink() ? files.readKeepingLinks(path) : files.read(path);
+        if (onDisk !== undefined) files.deleteFile(path, onDisk);
         return false;
     });
     for (const emptyFolder of empty.toSorted((left, right) => right.length - left.length))
@@ -179,7 +179,7 @@ export function buildPlan(
  * @param folder the cache path for the tool.
  * @returns the source path and locked root, which the caller disposes.
  */
-export function prepareBuild(root: string, files: TrackedFile[], folder: string): PreparedSwiftBuild {
+export function prepareBuild(root: string, files: TrackedFile[], folder: string): SwiftBuildSetup {
     using resources = new DisposableStack();
     const cache = resources.use(openBuildCache(folder));
     const wantedFiles = readBuildSources(
@@ -189,8 +189,8 @@ export function prepareBuild(root: string, files: TrackedFile[], folder: string)
     pruneSources(folder, cache, wantedFiles);
     cache.createFolder(BUILD_SOURCE_FOLDER, PRIVATE_FOLDER);
     for (const [path, next] of wantedFiles) {
-        const current = cache.read(path);
-        if (!isDeepStrictEqual(current, next)) cache.write(path, next, current);
+        const cached = cache.read(path);
+        if (!isDeepStrictEqual(cached, next)) cache.write(path, next, cached);
     }
     const source = join(folder, BUILD_SOURCE_FOLDER);
     resources.move();

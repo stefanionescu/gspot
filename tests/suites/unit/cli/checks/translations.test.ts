@@ -44,10 +44,10 @@ test('a missing base locale is reported and restoring it enables key comparisons
     expect(compared).toMatchObject([{ file: 'messages/de.json', rule: 'missing-key' }]);
 });
 
-test.each([...TRANSLATION_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
+test.each([...TRANSLATION_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
     await using repository = await createSandbox(TRANSLATION_SANDBOX);
-    const result = await runCheckSample(repository, entry, TRANSLATION_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+    const result = await runCheckSample(repository, sample, TRANSLATION_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });
 
 test.each([...MESSAGE_LAYOUTS])(

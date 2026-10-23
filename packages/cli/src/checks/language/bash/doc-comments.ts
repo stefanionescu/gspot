@@ -37,28 +37,31 @@ function isMeaningful(name: string, summary: string): boolean {
 }
 
 function validateDocComment(
-    entry: ScriptFunction,
+    scriptFunction: ScriptFunction,
     block: string[],
 ): Required<Pick<Finding, 'rule' | 'message'>> | undefined {
     const first = block[0];
     if (first === undefined)
         return {
             rule: 'missing-comment',
-            message: `${entry.name} has no comment above it; write "# ${entry.name}: what it does".`,
+            message: `${scriptFunction.name} has no comment above it; write "# ${scriptFunction.name}: what it does".`,
         };
-    const head = `# ${entry.name}: `;
+    const head = `# ${scriptFunction.name}: `;
     if (!first.startsWith(head) || first.length <= head.length)
         return {
             rule: 'summary-line',
-            message: `The comment above ${entry.name} does not open with "# ${entry.name}: ...".`,
+            message: `The comment above ${scriptFunction.name} does not open with "# ${scriptFunction.name}: ...".`,
         };
-    if (!isMeaningful(entry.name, first.slice(head.length)))
-        return { rule: 'vague-summary', message: `The summary of ${entry.name} says nothing beyond its name.` };
+    if (!isMeaningful(scriptFunction.name, first.slice(head.length)))
+        return {
+            rule: 'vague-summary',
+            message: `The summary of ${scriptFunction.name} says nothing beyond its name.`,
+        };
     const positions = BASH_DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
     if (!positions.every((position, index) => index === 0 || position > (positions[index - 1] ?? -1)))
         return {
             rule: 'section-order',
-            message: `Order the doc sections of ${entry.name} as Globals, Arguments, Outputs, Returns.`,
+            message: `Order the doc sections of ${scriptFunction.name} as Globals, Arguments, Outputs, Returns.`,
         };
     return undefined;
 }
@@ -73,12 +76,12 @@ function validateDocComment(
 export async function checkBashDocComments(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) => {
-        return file.functions.flatMap((entry) => {
-            if (entry.name === MAIN_FUNCTION) return [];
-            const found = validateDocComment(entry, findCommentBlock(file.lines, entry.start));
+        return file.functions.flatMap((scriptFunction) => {
+            if (scriptFunction.name === MAIN_FUNCTION) return [];
+            const found = validateDocComment(scriptFunction, findCommentBlock(file.lines, scriptFunction.start));
             return found === undefined
                 ? []
-                : [buildFinding(planned, { file: file.path, line: entry.start }, found.rule, found.message)];
+                : [buildFinding(planned, { file: file.path, line: scriptFunction.start }, found.rule, found.message)];
         });
     });
 }

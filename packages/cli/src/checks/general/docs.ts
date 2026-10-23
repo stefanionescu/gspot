@@ -60,17 +60,18 @@ function listGeneratorPaths(planned: PlannedCheck): string[] {
     return paths;
 }
 
-function listKnownPaths(session: Session, planned: PlannedCheck): Set<string> {
-    const known = includeParentFolders(session.repository.files.map((file) => file.path));
-    for (const path of includeParentFolders([...listGeneratedPaths(session.repository.files)])) known.add(path);
+function listRepositoryPaths(session: Session, planned: PlannedCheck): Set<string> {
+    const repositoryPaths = includeParentFolders(session.repository.files.map((file) => file.path));
+    for (const path of includeParentFolders([...listGeneratedPaths(session.repository.files)]))
+        repositoryPaths.add(path);
     for (const configFile of planned.scope.configurations.flatMap((configuration) => configuration.configFiles))
-        known.add(configFile.target);
-    for (const path of listGeneratorPaths(planned)) known.add(path);
+        repositoryPaths.add(configFile.target);
+    for (const path of listGeneratorPaths(planned)) repositoryPaths.add(path);
     // A check ID such as postgres/migration-order looks like a path, so count it as known.
     for (const check of session.configurations.values().flatMap((configuration) => configuration.checks))
-        known.add(check.id);
-    for (const check of Object.values(session.settingsFile.settings.commandChecks)) known.add(check.id);
-    return known;
+        repositoryPaths.add(check.id);
+    for (const check of Object.values(session.settingsFile.settings.commandChecks)) repositoryPaths.add(check.id);
+    return repositoryPaths;
 }
 
 function readMiseTasks(session: Session, file: string): string[] {
@@ -82,10 +83,10 @@ function readMiseTasks(session: Session, file: string): string[] {
 function isMissing(token: string, file: string, index: PathIndex): boolean {
     const clean = token.replace(LEADING_DOT_SLASH, '').replace(TRAILING_SLASH, '');
     const relative = posix.normalize(posix.join(posix.dirname(file), clean));
-    if (index.known.has(relative) || [relative, clean].some((path) => index.isIgnored(path))) return false;
+    if (index.paths.has(relative) || [relative, clean].some((path) => index.isIgnored(path))) return false;
     if (RELATIVE_PATH_PREFIXES.some((prefix) => token.startsWith(prefix))) return true;
     const first = clean.split('/', 1)[0] ?? '';
-    return !index.known.has(clean) && (index.known.has(first) || (!first.includes('.') && FILE_EXTENSION.test(clean)));
+    return !index.paths.has(clean) && (index.paths.has(first) || (!first.includes('.') && FILE_EXTENSION.test(clean)));
 }
 
 function checkProseLine(planned: PlannedCheck, file: string, prose: NumberedLine, index: PathIndex): Finding[] {
@@ -116,7 +117,7 @@ function checkProseLine(planned: PlannedCheck, file: string, prose: NumberedLine
 
 function readTaskNames(session: Session, scope: string): TaskNames {
     const ancestors = listEnclosingFolders(scope).flatMap((folder) =>
-        session.repository.scopeFolders.filter((entry) => entry.path === folder),
+        session.repository.scopeFolders.filter((scopeFolder) => scopeFolder.path === folder),
     );
     const files = [
         ...new Set(
@@ -211,14 +212,14 @@ export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): 
     const files = planned.files.filter(
         (file) => file.kind === 'source' && MARKDOWN_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
-    const known = listKnownPaths(session, planned);
+    const repositoryPaths = listRepositoryPaths(session, planned);
     const isIgnored = buildGitignoreTest(
         session.reads,
         session.repository.files.map((file) => file.path),
     );
     const projects = Map.groupBy(files, (file) => findScopeFolder(file.path, session.repository.scopeFolders).path);
     return [...projects].flatMap(([scope, sources]) => {
-        const index: PathIndex = { known, isIgnored, tasks: readTaskNames(session, scope) };
+        const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scope) };
         return sources.flatMap((file) => {
             const text = readCachedText(session.reads, file.path);
             return extractProseLines(text).flatMap((prose) => checkProseLine(planned, file.path, prose, index));

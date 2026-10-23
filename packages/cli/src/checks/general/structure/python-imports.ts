@@ -10,7 +10,7 @@ import {
 } from '#cli/config/checks/general/structure/python-imports.ts';
 
 function findModuleFile(folder: string, dotted: string, files: ReadonlySet<string>): string | undefined {
-    const base = posix.join(folder, ...dotted.split('.').filter((part) => part !== ''));
+    const base = posix.join(folder, ...dotted.split('.').filter((segment) => segment !== ''));
     return PYTHON_MODULE_SUFFIXES.map((suffix) => `${base}${suffix}`).find((path) => files.has(path));
 }
 
@@ -30,7 +30,9 @@ function findFirstModule(imports: { module: string; path: string | undefined }[]
 function listImportedNames(node: Node): (string | undefined)[] {
     const names = node
         .childrenForFieldName('name')
-        .map((item) => (item.type === 'aliased_import' ? (item.childForFieldName('name')?.text ?? '') : item.text));
+        .map((nameNode) =>
+            nameNode.type === 'aliased_import' ? (nameNode.childForFieldName('name')?.text ?? '') : nameNode.text,
+        );
     return names.length === 0 ? [undefined] : names;
 }
 
@@ -84,9 +86,11 @@ function listRelativeImports(node: Node, prefix: Node, file: string, search: Pyt
 export function listPythonImports(root: Node, file: string, search: PythonSearch): LocatedImport[] {
     return root.descendantsOfType([PYTHON_IMPORT_STATEMENT, PYTHON_FROM_STATEMENT]).flatMap((node) => {
         if (node.type === PYTHON_IMPORT_STATEMENT)
-            return node.childrenForFieldName('name').flatMap((item) => {
+            return node.childrenForFieldName('name').flatMap((nameNode) => {
                 const module =
-                    item.type === 'aliased_import' ? (item.childForFieldName('name')?.text ?? '') : item.text;
+                    nameNode.type === 'aliased_import'
+                        ? (nameNode.childForFieldName('name')?.text ?? '')
+                        : nameNode.text;
                 const path = search.externals.has(module.split('.', 1)[0] ?? '')
                     ? undefined
                     : findAbsoluteModule(module, search);

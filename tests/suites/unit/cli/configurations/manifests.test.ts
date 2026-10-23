@@ -129,9 +129,9 @@ test.each([
     const consumer = 'configurations/infrastructure/consumer/manifest.toml';
     const owner = 'configurations/general/owner/manifest.toml';
     const consumed = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n';
-    const declared = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
+    const manifest = CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n';
     const paths = ownerFirst ? [owner, consumer] : [consumer, owner];
-    const files = Object.fromEntries(paths.map((path) => [path, path === consumer ? consumed : declared]));
+    const files = Object.fromEntries(paths.map((path) => [path, path === consumer ? consumed : manifest]));
     const configurations = await readTestManifests(files);
     expect(configurations.get('consumer')!.tools).toStrictEqual(configurations.get('owner')!.tools);
 });

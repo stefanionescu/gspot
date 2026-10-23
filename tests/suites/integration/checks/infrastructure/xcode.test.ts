@@ -19,9 +19,9 @@ import {
 
 describe.skipIf(!isMacos)('Xcode samples', () => {
     const installedSandbox = shareInstalledSandbox(XCODE_SANDBOX);
-    test.each([...XCODE_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-        const result = await runCheckSample(installedSandbox(), entry, XCODE_SANDBOX);
-        expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+    test.each([...XCODE_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
+        const result = await runCheckSample(installedSandbox(), sample, XCODE_SANDBOX);
+        expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
     });
 });
 

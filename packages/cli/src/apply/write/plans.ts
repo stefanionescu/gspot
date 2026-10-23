@@ -4,7 +4,7 @@ import { isInside } from '#cli/system/paths.ts';
 import type { Session } from '#cli/types/session.ts';
 import { decodeUtf8Text } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
-import { isSameContents } from '#cli/system/files/entries.ts';
+import { isSameContents } from '#cli/system/files/bounded.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
@@ -21,18 +21,18 @@ import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats
  * Remove only the marked block and its separating blank line.
  *
  * @param path the block file.
- * @param current its bytes on disk.
+ * @param onDisk its bytes on disk.
  * @returns the remaining file contents, or undefined when nothing remains.
  */
-function removeBlock(path: string, current: FileContents): FileContents | undefined {
-    const text = decodeUtf8Text(path, current.bytes);
+function removeBlock(path: string, onDisk: FileContents): FileContents | undefined {
+    const text = decodeUtf8Text(path, onDisk.bytes);
     const span = findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' });
-    if (span === undefined) return current;
+    if (span === undefined) return onDisk;
     const before = text.slice(0, span.start).replace(/(\r?\n)\r?\n$/u, '$1');
     const after = text.slice(span.end);
     // When the block opened the file, drop the blank line that followed it too.
     const next = before === '' ? after.replace(/^\r?\n/u, '') : before + after;
-    return next === '' ? undefined : { bytes: Buffer.from(next), mode: current.mode };
+    return next === '' ? undefined : { bytes: Buffer.from(next), mode: onDisk.mode };
 }
 
 /**
@@ -105,19 +105,14 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
  */
 export function planReplacement(writer: Writer, request: ReplacementRequest): WritePlan {
     const { path, next, expected } = request;
-    const current = next.isLink === true ? writer.files.readKeepingLinks(path) : writer.files.read(path);
-    if (
-        current !== undefined &&
-        !isSameContents(current, next) &&
-        !isOwned(path, writer.files) &&
-        expected === undefined
-    )
-        return { path, before: current, status: 'preserved' };
+    const onDisk = next.isLink === true ? writer.files.readKeepingLinks(path) : writer.files.read(path);
+    if (onDisk !== undefined && !isSameContents(onDisk, next) && !isOwned(path, writer.files) && expected === undefined)
+        return { path, before: onDisk, status: 'preserved' };
     return {
         path,
-        before: expected ?? current,
+        before: expected ?? onDisk,
         after: next,
-        status: isSameContents(current, next) ? 'unchanged' : 'changed',
+        status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
     };
 }
 
@@ -131,14 +126,14 @@ export function planReplacement(writer: Writer, request: ReplacementRequest): Wr
  * @returns the block write plan.
  */
 export function planBlock(writer: Writer, path: string, body: string, style: BlockStyle): WritePlan {
-    const current = writer.files.read(path);
-    const text = current === undefined ? '' : decodeUtf8Text(path, current.bytes);
+    const onDisk = writer.files.read(path);
+    const text = onDisk === undefined ? '' : decodeUtf8Text(path, onDisk.bytes);
     const nextText = replaceBlock(text, body, { path, style });
     const next = {
         bytes: Buffer.from(nextText),
-        mode: current?.mode ?? OWNER_WRITABLE_FILE,
+        mode: onDisk?.mode ?? OWNER_WRITABLE_FILE,
     };
-    return { path, before: current, after: next, status: isSameContents(current, next) ? 'unchanged' : 'changed' };
+    return { path, before: onDisk, after: next, status: isSameContents(onDisk, next) ? 'unchanged' : 'changed' };
 }
 
 /**
@@ -149,14 +144,14 @@ export function planBlock(writer: Writer, path: string, body: string, style: Blo
  * @returns the old bytes, and any authored text left after the managed block goes.
  */
 export function planRemoval(writer: Writer, path: string): WritePlan {
-    const current = writer.files.readKeepingLinks(path);
-    if (current === undefined) return { path, before: current, status: 'unchanged' };
-    if (isOwned(path, writer.files)) return { path, before: current, status: 'changed' };
-    const next = removeBlock(path, current);
+    const onDisk = writer.files.readKeepingLinks(path);
+    if (onDisk === undefined) return { path, before: onDisk, status: 'unchanged' };
+    if (isOwned(path, writer.files)) return { path, before: onDisk, status: 'changed' };
+    const next = removeBlock(path, onDisk);
     return {
         path,
-        before: current,
+        before: onDisk,
         ...(next === undefined ? {} : { after: next }),
-        status: isSameContents(current, next) ? 'unchanged' : 'changed',
+        status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
     };
 }

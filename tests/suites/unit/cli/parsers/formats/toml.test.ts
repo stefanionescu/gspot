@@ -63,12 +63,12 @@ test('a TOML edit names the file when a scalar is in the way of a table', () => 
 test('TOML edits keep dates, array order and keys named like object properties', () => {
     const source = '# Release timestamp\npublished = 2026-10-06T00:00:00Z\n';
     const document = openTomlFile('tool.toml', source);
-    const entries = [Object.fromEntries([['constructor', 'first']]), { Object: 'second' }];
+    const values = [Object.fromEntries([['constructor', 'first']]), { Object: 'second' }];
     document.set(['copied'], document.getValue(['published']));
-    document.set(['metadata', 'entries'], entries);
+    document.set(['metadata', 'entries'], values);
     const text = document.getText();
     expect(text).toStartWith(source);
-    expect(Reflect.get(Bun.TOML.parse(text), 'metadata')).toStrictEqual({ entries });
+    expect(Reflect.get(Bun.TOML.parse(text), 'metadata')).toStrictEqual({ entries: values });
     expect(document.getValue(['copied'])).toBeInstanceOf(Date);
 });
 

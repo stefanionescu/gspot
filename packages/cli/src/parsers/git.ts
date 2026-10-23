@@ -3,33 +3,33 @@ import { posix } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { gitEntrySchema } from '#cli/schemas/parsers/git.ts';
+import { gitFileSchema } from '#cli/schemas/parsers/git.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
-import type { GitEntry, GitStream, GitIndexEntry, AttributePattern } from '#cli/types/parsers/git.ts';
+import type { GitFile, GitStream, GitIndexFile, AttributePattern } from '#cli/types/parsers/git.ts';
 
 import {
-    TREE_ENTRY,
+    TREE_LINE,
+    INDEX_LINE,
     BLOB_HEADER,
-    INDEX_ENTRY,
     BINARY_MACRO,
     PATH_ESCAPES,
     ATTRIBUTE_LINE,
     OCTAL_PATH_BYTE,
     ATTRIBUTE_FIELDS,
     ANY_FOLDER_PREFIX,
-    QUOTED_PATH_PARTS,
     BINARY_ATTRIBUTES,
-    UNSUPPORTED_ENTRY,
+    QUOTED_PATH_CHUNKS,
+    UNSUPPORTED_INDEX_LINE,
     IGNORED_ATTRIBUTE_LINE,
     QUOTED_ATTRIBUTE_PATTERN,
     IGNORED_ATTRIBUTE_PATTERN,
     INVALID_GIT_STREAM_MESSAGE,
 } from '#cli/config/parsers/git.ts';
 
-function parseEntry(match: RegExpExecArray | null): GitEntry {
-    const entry = gitEntrySchema.safeParse(match?.groups);
-    if (!entry.success) throw new GspotError('git', UNSUPPORTED_ENTRY);
-    return entry.data;
+function parseIndexLine(match: RegExpExecArray | null): GitFile {
+    const parsed = gitFileSchema.safeParse(match?.groups);
+    if (!parsed.success) throw new GspotError('git', UNSUPPORTED_INDEX_LINE);
+    return parsed.data;
 }
 
 // Ignore empty transport chunks. A missing required byte marks an incomplete Git response.
@@ -78,16 +78,16 @@ function parseBlobSize(header: string, hash: string): number {
 function decodeQuotedPattern(pattern: string): string | undefined {
     if (!QUOTED_ATTRIBUTE_PATTERN.test(pattern)) return undefined;
     const bytes: Buffer[] = [];
-    for (const [part] of pattern.slice(1, -1).matchAll(QUOTED_PATH_PARTS)) {
-        if (!part.startsWith('\\')) {
-            bytes.push(Buffer.from(part));
+    for (const [chunk] of pattern.slice(1, -1).matchAll(QUOTED_PATH_CHUNKS)) {
+        if (!chunk.startsWith('\\')) {
+            bytes.push(Buffer.from(chunk));
             continue;
         }
-        if (OCTAL_PATH_BYTE.test(part)) {
-            bytes.push(Buffer.from([Number.parseInt(part.slice(1), 8)]));
+        if (OCTAL_PATH_BYTE.test(chunk)) {
+            bytes.push(Buffer.from([Number.parseInt(chunk.slice(1), 8)]));
             continue;
         }
-        const decoded = PATH_ESCAPES[part.slice(1)];
+        const decoded = PATH_ESCAPES[chunk.slice(1)];
         if (decoded === undefined) return undefined;
         bytes.push(Buffer.from(decoded));
     }
@@ -107,8 +107,8 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
         if (IGNORED_ATTRIBUTE_LINE.test(trimmed)) return [];
         const match = ATTRIBUTE_LINE.exec(trimmed);
         if (match === null) return [];
-        const raw = match[1] as string;
-        const pattern = raw.startsWith('"') ? decodeQuotedPattern(raw) : raw;
+        const quoted = match[1] as string;
+        const pattern = quoted.startsWith('"') ? decodeQuotedPattern(quoted) : quoted;
         if (pattern === undefined || IGNORED_ATTRIBUTE_PATTERN.test(pattern)) return [];
         const bare = pattern.replace(LEADING_SLASH, '');
         const local = LEADING_SLASH.test(pattern) || bare.includes('/') ? bare : `${ANY_FOLDER_PREFIX}${bare}`;
@@ -163,14 +163,14 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
  * @param text the complete null-delimited listing.
  * @returns the index entries with their stages.
  */
-export function parseIndexEntries(text: string): GitIndexEntry[] {
+export function parseIndexFiles(text: string): GitIndexFile[] {
     return text
         .split('\0')
         .filter(Boolean)
         .map((line) => {
-            const match = INDEX_ENTRY.exec(line);
-            const entry = parseEntry(match);
-            return { ...entry, stage: Number(match?.groups?.['stage']) };
+            const match = INDEX_LINE.exec(line);
+            const parsed = parseIndexLine(match);
+            return { ...parsed, stage: Number(match?.groups?.['stage']) };
         });
 }
 
@@ -180,24 +180,24 @@ export function parseIndexEntries(text: string): GitIndexEntry[] {
  * @param output the complete Git listing.
  * @returns supported modes, full object IDs, and UTF-8 paths.
  */
-export function parseTreeEntries(output: Uint8Array): GitEntry[] {
+export function parseTreeFiles(output: Uint8Array): GitFile[] {
     const text = decodeUtf8(output);
     if (text === undefined) throw new GspotError('git', 'Git listed a path that is not valid UTF-8.');
     return text
         .split('\0')
         .filter(Boolean)
-        .map((line) => parseEntry(TREE_ENTRY.exec(line)));
+        .map((line) => parseIndexLine(TREE_LINE.exec(line)));
 }
 
 /**
  * Turn index entries into revision entries, and refuse conflicts.
  *
- * @param entries the validated index listing.
+ * @param indexFiles the validated index listing.
  * @returns entries from the resolved index.
  */
-export function stripIndexStages(entries: GitIndexEntry[]): GitEntry[] {
-    if (entries.some((entry) => entry.stage !== 0)) throw new GspotError('git', UNSUPPORTED_ENTRY);
-    return entries.map(({ mode, hash, path }) => ({ mode, hash, path }));
+export function stripIndexStages(indexFiles: GitIndexFile[]): GitFile[] {
+    if (indexFiles.some((indexFile) => indexFile.stage !== 0)) throw new GspotError('git', UNSUPPORTED_INDEX_LINE);
+    return indexFiles.map(({ mode, hash, path }) => ({ mode, hash, path }));
 }
 
 /**

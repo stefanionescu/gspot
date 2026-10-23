@@ -9,8 +9,8 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { readRuntimePins } from '#tests/setup/runner/run-folder.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { MISE_TRUST, PINNED_TOOLS_FILE } from '#tests/config/setup/runner.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, spawnGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
@@ -155,10 +155,10 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
 
 /** Give a hook repository the Bun and Node pins of this repository; a clone keeps its committed file. */
 async function writeRuntimePins(root: string): Promise<void> {
-    if (!(await isOnDisk(join(root, PINNED_TOOLS_FILE)))) {
+    if (!(await isOnDisk(join(root, TOOL_PINS_FILE)))) {
         const tools = await readRuntimePins();
-        await writeFile(join(root, PINNED_TOOLS_FILE), stringify({ tools }));
+        await writeFile(join(root, TOOL_PINS_FILE), stringify({ tools }));
     }
-    const trusted = await runCommand([...MISE_TRUST, PINNED_TOOLS_FILE], { cwd: root });
+    const trusted = await runCommand([...MISE_TRUST, TOOL_PINS_FILE], { cwd: root });
     if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
 }

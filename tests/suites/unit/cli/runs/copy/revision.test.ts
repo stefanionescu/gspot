@@ -10,9 +10,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { type GitHookReport, type ProcessOutput } from '#tests/types/processes.ts';
+import { readIndexFiles, listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import { listHeadFiles, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { readIndexEntries, listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { listHeadEntries, listRevisionEntries } from '#cli/repository/revisions/files.ts';
 import { chmod, mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 import { GIT_HOOK_CASES, GIT_HOOK_FIELDS, GIT_HOOK_REPORT, GIT_HOOK_SCRIPT } from '#tests/config/runs/copy/revision.ts';
 
@@ -39,10 +39,10 @@ function runGitHook(worktree: string, index: string, folder: string, report: str
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();
     const { project, commitId } = await prepareNestedRepository(sandbox.path);
-    const headEntries = await listHeadEntries(project);
-    expect(headEntries.map((entry) => entry.path)).toStrictEqual(['source.txt']);
-    const entries = await listRevisionEntries(project, { kind: 'index' });
-    expect(entries.map((entry) => entry.path)).toStrictEqual(['source.txt']);
+    const headFiles = await listHeadFiles(project);
+    expect(headFiles.map((file) => file.path)).toStrictEqual(['source.txt']);
+    const files = await listRevisionFiles(project, { kind: 'index' });
+    expect(files.map((file) => file.path)).toStrictEqual(['source.txt']);
     for (const source of [{ kind: 'index' } as const, { kind: 'commit', hash: commitId } as const]) {
         using copy = await copyRevision(project, source);
         expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe(
@@ -71,7 +71,7 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
     runGitStep(sandbox.path, ['commit', '-qm', 'Gitlink']);
     await mkdir(join(sandbox.path, 'vendor'));
     await symlink(outside.path, join(sandbox.path, path), 'dir');
-    expect(listSubmodulePaths(await readIndexEntries(sandbox.path))).toStrictEqual([path]);
+    expect(listSubmodulePaths(await readIndexFiles(sandbox.path))).toStrictEqual([path]);
     const session = await openSession(sandbox.path);
     expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
     const expected = runGitStep(sandbox.path, ['write-tree']);
@@ -81,7 +81,7 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
     expect(runGitStep(copy.root, ['write-tree'])).toBe(expected);
     expect(await readdir(join(copy.root, path))).toStrictEqual([]);
     expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe('selected source');
-    expect(listSubmodulePaths(await readIndexEntries(copy.root))).toStrictEqual([path]);
+    expect(listSubmodulePaths(await readIndexFiles(copy.root))).toStrictEqual([path]);
     expect(await readFile(join(outside.path, 'package.json'), 'utf8')).toBe('{');
     expect(await readFile(join(outside.path, 'source.txt'), 'utf8')).toBe('outside source');
 });
@@ -121,12 +121,12 @@ test.each([...GIT_HOOK_CASES])(
         } else {
             const fields = GIT_HOOK_FIELDS[part];
             expect(
-                actual.reports.map((entry: Record<string, unknown>) =>
-                    Object.fromEntries(fields.map((field) => [field, entry[field]])),
+                actual.reports.map((report: Record<string, unknown>) =>
+                    Object.fromEntries(fields.map((field) => [field, report[field]])),
                 ),
             ).toStrictEqual(
-                GIT_HOOK_REPORT.reports.map((entry) =>
-                    Object.fromEntries(fields.map((field) => [field, entry[field]])),
+                GIT_HOOK_REPORT.reports.map((report) =>
+                    Object.fromEntries(fields.map((field) => [field, report[field]])),
                 ),
             );
             if (part === 'index') {

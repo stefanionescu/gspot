@@ -38,14 +38,14 @@ test.each([...NAMING_LANGUAGES])('%s accepts its exact limits and reports the ne
         validateIdentifier({ ...declaration, name: 'z'.repeat(characters + 1) }, context).map(({ rule }) => rule),
     ).toStrictEqual(['length']);
     const separator = ['python', 'bash', 'sql'].includes(language) ? '_' : '';
-    const parts = NAME_WORDS.map((word, index) =>
+    const casedWords = NAME_WORDS.map((word, index) =>
         separator === '' && index > 0 ? word.slice(0, 1).toUpperCase() + word.slice(1) : word,
     );
-    expect(validateIdentifier({ ...declaration, name: parts.slice(0, words).join(separator) }, context)).toStrictEqual(
-        [],
-    );
     expect(
-        validateIdentifier({ ...declaration, name: parts.slice(0, words + 1).join(separator) }, context).map(
+        validateIdentifier({ ...declaration, name: casedWords.slice(0, words).join(separator) }, context),
+    ).toStrictEqual([]);
+    expect(
+        validateIdentifier({ ...declaration, name: casedWords.slice(0, words + 1).join(separator) }, context).map(
             ({ rule }) => rule,
         ),
     ).toStrictEqual(['words']);

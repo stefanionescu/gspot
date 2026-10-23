@@ -134,7 +134,7 @@ function listSwiftImports(root: Node, path: string, modules: SwiftModule[], look
     const own = new Set(modules.filter((module) => module.files.includes(path)).map(({ name }) => name));
     return root.descendantsOfType(SWIFT_IMPORT_NODE).flatMap((node) => {
         const name = getImportedModule(node);
-        const module = modules.find((entry) => entry.name === name);
+        const module = modules.find((each) => each.name === name);
         if (module === undefined || own.has(module.name)) return [];
         return [{ node, module: module.name, owners: module.files.map((file) => lookup.ownerOf(file)) }];
     });

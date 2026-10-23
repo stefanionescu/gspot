@@ -12,7 +12,7 @@ test('adds required configurations, dependencies first, in order of first mentio
         ['server', buildConfiguration('server', { requires: ['base'] })],
         ['base', buildConfiguration('base')],
     ]);
-    const ids = selectConfigurations(['app', 'client'], configurations).map((entry) => entry.name);
+    const ids = selectConfigurations(['app', 'client'], configurations).map((configuration) => configuration.name);
     expect(ids).toStrictEqual(['base', 'client', 'server', 'app']);
 });
 

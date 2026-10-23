@@ -26,7 +26,7 @@ export function buildReactBlocks(scope: Pick<EslintScope, 'presets'>): Configura
     const refresh = getPreset(presets, 'refresh');
     const blocks: ConfigurationBlocks['blocks'] = [
         {
-            data: {
+            fields: {
                 files: REACT_FILES,
                 rules: {
                     ...recommended.blocks[0].rules,

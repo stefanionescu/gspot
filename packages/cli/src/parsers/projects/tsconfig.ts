@@ -56,8 +56,8 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
     const fileName = convertToPosixPath(path);
     const source = ts.parseConfigFileTextToJson(fileName, text);
     if (source.error !== undefined) throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
-    const raw: unknown = source.config;
-    const authored = typeScriptConfigSchema.parse(raw);
+    const json: unknown = source.config;
+    const authored = typeScriptConfigSchema.parse(json);
     const tsconfigFiles = [path];
     const sourceFile: ts.TsConfigSourceFile = ts.parseJsonText(fileName, text);
     const parsed = ts.parseJsonSourceFileConfigFileContent(
@@ -105,7 +105,7 @@ function buildCompilerHost(
 ): ts.CompilerHost {
     const host = ts.createCompilerHost(options);
     const libraries = new Set([dirname(dirname(ts.getDefaultLibFilePath(options)))]);
-    const readRealPath = host.realpath?.bind(host);
+    const readCanonicalPath = host.realpath?.bind(host);
     const getSourceFile = host.getSourceFile.bind(host);
     host.getSourceFile = (path, languageVersion, _onError, createSource) =>
         getSourceFile(
@@ -118,7 +118,7 @@ function buildCompilerHost(
         );
     host.getCurrentDirectory = () => join(repositoryRoot, scope);
     host.realpath = (path) => {
-        const target = readRealPath?.(path) ?? path;
+        const target = readCanonicalPath?.(path) ?? path;
         const local = convertToPosixPath(relative(repositoryRoot, path));
         if (
             (isInside(local) && local.split('/').includes(NODE_MODULES)) ||

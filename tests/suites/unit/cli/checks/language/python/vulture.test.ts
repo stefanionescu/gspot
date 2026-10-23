@@ -8,8 +8,8 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { VULTURE_OUTPUT } from '#tests/config/checks/language/python/vulture.ts';
 
@@ -22,7 +22,7 @@ test('vulture reads every Python file of the scope and reports unused definition
         [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'vulture')]: 'fixture',
     });
     const session = await openSession(sandbox.path);
-    using resources = fakePinnedExecutables([getTool(session.configurations.values(), 'vulture')]);
+    using resources = fakeToolExecutables([getTool(session.configurations.values(), 'vulture')]);
     const output = [...VULTURE_OUTPUT].join('\n');
     const executed = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),
@@ -34,8 +34,8 @@ test('vulture reads every Python file of the scope and reports unused definition
         { file: 'app/nodes.py', line: 3, rule: 'unreachable-code', name: undefined },
     ]);
     const command = executed.mock.calls
-        .map(([entry]) => entry)
-        .find((entry) => entry.some((part) => part.endsWith('vulture')))!;
+        .map(([commandArguments]) => commandArguments)
+        .find((commandArguments) => commandArguments.some((argument) => argument.endsWith('vulture')))!;
     expect(command.slice(1).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'app/main.py',
         'app/nodes.py',

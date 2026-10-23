@@ -49,9 +49,9 @@ export function assertPackageManager(pin: PackageManagerPin | undefined): Packag
  * @returns the name and the version, without the hash.
  */
 function parsePackageManagerField(field: string): PackageManagerPin {
-    const [name, declared, ...verbatim] = field.split('@');
+    const [name, requested, ...verbatim] = field.split('@');
     if (verbatim.length > 0) throw new Error('The packageManager field of package.json is not valid.');
-    const version = (declared ?? '').split(PACKAGE_MANAGER_HASH_SUFFIX, 1)[0];
+    const version = (requested ?? '').split(PACKAGE_MANAGER_HASH_SUFFIX, 1)[0];
     return packageManagerPinSchema.parse({ name, version });
 }
 
@@ -62,8 +62,8 @@ async function readFirstPackageManager(
 ): Promise<PackageManagerField | { name: PackageManagerPin['name']; version?: undefined }> {
     for (const path of packageJsonPaths) {
         const packageJson = readPackageJson(root, path);
-        const declared = packageJson === undefined ? undefined : readPackageManagerPin(packageJson);
-        if (declared !== undefined) return declared;
+        const pin = packageJson === undefined ? undefined : readPackageManagerPin(packageJson);
+        if (pin !== undefined) return pin;
         const detected = await nypm.detectPackageManager(join(root, dirname(path)), NYPM_DETECTION_OPTIONS);
         if (detected !== undefined) return { name: packageManagerPinSchema.parse({ name: detected.name }).name };
     }
@@ -91,16 +91,16 @@ function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | 
     if (packageJson.packageManager !== undefined)
         return {
             ...parsePackageManagerField(packageJson.packageManager),
-            declared: packageJson.packageManager,
+            written: packageJson.packageManager,
             field: 'packageManager',
         };
     const engines = packageJson.devEngines?.packageManager;
-    const entry = Array.isArray(engines) ? engines[0] : engines;
-    return entry?.name === undefined
+    const engine = Array.isArray(engines) ? engines[0] : engines;
+    return engine?.name === undefined
         ? undefined
         : {
-              ...packageManagerPinSchema.parse(entry),
-              declared: entry.version ?? entry.name,
+              ...packageManagerPinSchema.parse(engine),
+              written: engine.version ?? engine.name,
               field: 'devEngines.packageManager',
           };
 }
@@ -124,11 +124,11 @@ export async function detectPackageManager(repositoryRoot: string, trackedPaths:
     ];
     const selected = await readFirstPackageManager(repositoryRoot, packageJsonPaths);
     if (selected.version !== undefined) {
-        const { name, version, declared, field } = selected;
+        const { name, version, written, field } = selected;
         if (semver.valid(version) === null)
             throw new GspotError(
                 'install',
-                `The tool project needs an exact ${name} version, such as ${name}@1.2.3; package.json declares "${declared}" in ${field}. Write an exact version there.`,
+                `The tool project needs an exact ${name} version, such as ${name}@1.2.3; package.json declares "${written}" in ${field}. Write an exact version there.`,
             );
         return { name, version };
     }

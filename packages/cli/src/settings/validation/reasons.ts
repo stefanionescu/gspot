@@ -3,7 +3,7 @@ import { isTable } from '#cli/system/tables.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { ReasonNeeded } from '#cli/types/settings/definitions.ts';
+import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
 import { REASON_WORDS_MIN } from '#cli/config/settings/validation/reasons.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 
@@ -11,7 +11,7 @@ function buildErrorsAt(path: KeyPath, text: string | undefined): SettingsError[]
     return text === undefined ? [] : [{ path, message: text }];
 }
 
-function isLimitLoosening(direction: Exclude<ReasonNeeded, 'adding'>, value: unknown, shipped: unknown): boolean {
+function isLimitLoosening(direction: Exclude<ReasonRequirement, 'adding'>, value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;
     return direction === 'raising' ? value > shipped : value < shipped;
 }
@@ -46,7 +46,7 @@ export function validateSettingReasons(settings: Settings): SettingsError[] {
     function visit(value: unknown, path: KeyPath): SettingsError[] {
         const [field, , table] = path.toReversed();
         if (table === 'tools' && field === 'rules') return [];
-        if (Array.isArray(value)) return value.flatMap((entry, index) => visit(entry, [...path, index]));
+        if (Array.isArray(value)) return value.flatMap((element, index) => visit(element, [...path, index]));
         if (!isTable(value)) return [];
         const reason = value['reason'];
         const own: SettingsError[] = [];
@@ -61,7 +61,7 @@ export function validateSettingReasons(settings: Settings): SettingsError[] {
             ...own,
             ...Object.entries(value)
                 .filter(([key]) => key !== 'reason' && !(path.length === 0 && key === 'ignore'))
-                .flatMap(([key, entry]) => visit(entry, [...path, key])),
+                .flatMap(([key, child]) => visit(child, [...path, key])),
         ];
     }
     return [
@@ -73,8 +73,8 @@ export function validateSettingReasons(settings: Settings): SettingsError[] {
                 'removed_configurations',
             ]),
         ),
-        ...settings.ignore.flatMap((entry, index) =>
-            buildErrorsAt(['ignore', index, 'reason'], validateReason(`ignore.${String(index)}`, entry.reason)),
+        ...settings.ignore.flatMap((ignore, index) =>
+            buildErrorsAt(['ignore', index, 'reason'], validateReason(`ignore.${String(index)}`, ignore.reason)),
         ),
         ...listSettingsTables(settings).flatMap(({ table, path }) => {
             const words = table.spelling?.allowed_words;
@@ -114,11 +114,13 @@ export function isLoosening(setting: Setting, value: unknown, shipped: unknown):
     if (setting.reason_needed === 'adding') {
         if (Array.isArray(value))
             return value.some(
-                (item) => !Array.isArray(shipped) || !shipped.some((entry) => isDeepStrictEqual(item, entry)),
+                (element) =>
+                    !Array.isArray(shipped) ||
+                    !shipped.some((shippedElement) => isDeepStrictEqual(element, shippedElement)),
             );
         if (isTable(value))
             return Object.entries(value).some(
-                ([key, entry]) => !isTable(shipped) || !isDeepStrictEqual(entry, shipped[key]),
+                ([key, child]) => !isTable(shipped) || !isDeepStrictEqual(child, shipped[key]),
             );
         return !isDeepStrictEqual(value, shipped);
     }

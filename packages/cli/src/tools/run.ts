@@ -14,7 +14,7 @@ import type { SpawnResult } from '#cli/types/system/processes.ts';
  * @returns the process result.
  */
 export async function runTool(command: readonly string[], options: ToolRunOptions): Promise<SpawnResult> {
-    const { timeoutSeconds, cancelSignal, ...prepared } = options;
+    const { timeoutSeconds, cancelSignal, ...spawnOptions } = options;
     if (cancelSignal?.aborted === true)
         return {
             code: 1,
@@ -26,10 +26,10 @@ export async function runTool(command: readonly string[], options: ToolRunOption
             timedOut: false,
             errored: false,
         };
-    const selected = readGitEnvironment(prepared.cwd, command, { ...TOOL_ENV, ...prepared.env });
+    const selected = readGitEnvironment(spawnOptions.cwd, command, { ...TOOL_ENV, ...spawnOptions.env });
     if ('failure' in selected) return selected.failure;
     const result = await spawnProcess(command, {
-        ...prepared,
+        ...spawnOptions,
         env: selected.env,
         timeoutSeconds,
         cancelSignal,

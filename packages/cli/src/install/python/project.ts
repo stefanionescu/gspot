@@ -28,9 +28,9 @@ import { PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/proj
 import {
     UV_VENV_ARGUMENTS,
     PROJECT_UV_LOCKFILE,
-    PINNED_PACKAGE_NAME,
     UV_INSTALL_ARGUMENTS,
     UV_LOCKFILE_ARGUMENTS,
+    REQUIREMENT_PACKAGE_NAME,
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/install/python/project.ts';
 
@@ -39,7 +39,7 @@ import {
 function readPythonLockfile(runFolder: string, credentials: string[], project: ToolPyproject): string {
     const lockfile = readFileSync(join(runFolder, PROJECT_UV_LOCKFILE), 'utf8');
     assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
-    if (!isPythonLockfileCurrent(project, lockfile))
+    if (!isPythonLockfileFresh(project, lockfile))
         throw new GspotError(
             'install',
             'The uv lockfile does not match the tool project. gspot kept the existing files.',
@@ -69,7 +69,7 @@ async function runUv(
     if (result.missing)
         throw new GspotError(
             'tool',
-            formatUnavailableNote(getTool(install.session.neededToolConfigurations, UV_TOOL), {
+            formatUnavailableNote(getTool(install.session.toolConfigurations, UV_TOOL), {
                 name: UV_TOOL,
                 state: 'missing',
             }),
@@ -83,8 +83,8 @@ async function runUv(
 }
 
 // Require pinned specifiers and normalize the requirement names before comparing them.
-function parsePinnedRequirements(entry: UvLockfile['package'][number]): string[] | undefined {
-    const requirements = entry.metadata?.['requires-dist'] ?? [];
+function parseExactRequirements(lockedPackage: UvLockfile['package'][number]): string[] | undefined {
+    const requirements = lockedPackage.metadata?.['requires-dist'] ?? [];
     const pins: string[] = [];
     for (const { name, specifier } of requirements) {
         if (specifier === undefined) return undefined;
@@ -105,10 +105,10 @@ function parsePythonToolLockfile(lockfile: string): UvLockfile | undefined {
     if (!parsed.success || parsed.data.version !== 1) return undefined;
     if (
         parsed.data.package.some(
-            (entry) =>
-                entry.version === undefined ||
-                entry.source === undefined ||
-                entry.metadata?.['requires-dist']?.some(({ specifier }) => specifier === undefined) === true,
+            (lockedPackage) =>
+                lockedPackage.version === undefined ||
+                lockedPackage.source === undefined ||
+                lockedPackage.metadata?.['requires-dist']?.some(({ specifier }) => specifier === undefined) === true,
         )
     )
         return undefined;
@@ -132,7 +132,7 @@ export async function preparePythonLockfile(
     const project = toolPyprojectSchema.parse(parse(toolProjectFile.content));
     const original = owner.read(GSPOT_PATHS.uvLockfile);
     const recorded = original?.bytes.toString('utf8');
-    if (isPythonLockfileCurrent(project, recorded)) {
+    if (isPythonLockfileFresh(project, recorded)) {
         const { credentials } = readPythonSettings(root);
         assertCredentialFreeLockfile(recorded, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
         return { path: GSPOT_PATHS.uvLockfile, content: recorded, kind: 'lock', read: original };
@@ -193,20 +193,22 @@ export async function installPythonTools(install: ToolInstall, executable: strin
  * @param lockfile the recorded uv.lock contents.
  * @returns whether the two files describe the same requirements.
  */
-export function isPythonLockfileCurrent(project: ToolPyproject, lockfile: string | undefined): lockfile is string {
+export function isPythonLockfileFresh(project: ToolPyproject, lockfile: string | undefined): lockfile is string {
     if (lockfile === undefined) return false;
     const projectTable = project.project;
     const recorded = parsePythonToolLockfile(lockfile);
     if (recorded === undefined) return false;
-    const projectEntry = recorded.package.find(
-        (entry) => entry.name === projectTable.name && entry.source?.virtual === '.',
+    const projectPackage = recorded.package.find(
+        (lockedPackage) => lockedPackage.name === projectTable.name && lockedPackage.source?.virtual === '.',
     );
-    if (projectEntry === undefined || recorded['requires-python'] !== projectTable['requires-python']) return false;
-    const pins = parsePinnedRequirements(projectEntry);
+    if (projectPackage === undefined || recorded['requires-python'] !== projectTable['requires-python']) return false;
+    const pins = parseExactRequirements(projectPackage);
     if (pins === undefined) return false;
     const expected = projectTable.dependencies
         .map((value) =>
-            value.replace(PINNED_PACKAGE_NAME, (name) => name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')),
+            value.replace(REQUIREMENT_PACKAGE_NAME, (name) =>
+                name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-'),
+            ),
         )
         .toSorted((left, right) => left.localeCompare(right));
     return isDeepStrictEqual(

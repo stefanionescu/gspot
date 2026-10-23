@@ -40,11 +40,13 @@ import {
  */
 function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): string[] {
     const authored = listApplicableTables(settings, scope).flatMap(({ table }) => {
-        const entries = table.tools?.['knip']?.[KNIP_ENTRY_SETTING];
-        return Array.isArray(entries) ? entries.filter((entry): entry is string => typeof entry === 'string') : [];
+        const patterns = table.tools?.['knip']?.[KNIP_ENTRY_SETTING];
+        return Array.isArray(patterns)
+            ? patterns.filter((pattern): pattern is string => typeof pattern === 'string')
+            : [];
     });
-    const declared = scopes
-        .filter((entry) => isInScope(scope, entry.folder.path))
+    const nearest = scopes
+        .filter((each) => isInScope(scope, each.folder.path))
         .toSorted((left, right) => compareScopeDepth(right.folder.path, left.folder.path))
         .slice(0, 1)
         .flatMap(({ configurations, settings: scopeSettings }) => [
@@ -54,7 +56,7 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): s
             ).map((pattern) => joinScopeSelector(pattern, scope)),
             ...scopeSettings.test_files,
         ]);
-    return [...new Set([...authored, ...declared])].flatMap((pattern) => {
+    return [...new Set([...authored, ...nearest])].flatMap((pattern) => {
         const sign = pattern.startsWith('!') ? '!' : '';
         const source = sign === '' ? pattern : pattern.slice(1);
         if (scope === '' || source.startsWith('**/')) return [pattern];
@@ -77,7 +79,7 @@ function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Sco
     const paths = [...new Set(['', ...listWorkspaceFolders(repositoryRoot)])];
     return Object.fromEntries(
         paths.map((path) => {
-            const workspace = selected.find((entry) => entry.folder.path === path);
+            const workspace = selected.find((each) => each.folder.path === path);
             const ignored =
                 workspace === undefined ? undefined : getTable(workspace.settings, 'tools.knip').ignore_dependencies;
             return [
@@ -112,12 +114,12 @@ function listRunPackages(text: string): string[] {
 function listFileTaskPackages(planned: PlannedConfigFile): string[] {
     const { files, dependencyFiles } = planned.session.repository;
     const isFileTask = buildPathMatcher([...MISE_FILE_TASK_GLOBS]);
-    const declared = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
+    const dependencyNames = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
     const names = files
         .filter((file) => file.kind === 'source' && isFileTask(file.path))
         .flatMap((file) => listRunPackages(readCachedText(planned.session.reads, file.path)));
     return [...new Set(names)]
-        .filter((name) => declared.has(name))
+        .filter((name) => dependencyNames.has(name))
         .toSorted((left, right) => left.localeCompare(right));
 }
 
@@ -129,7 +131,7 @@ function listFileTaskPackages(planned: PlannedConfigFile): string[] {
  */
 export function buildKnipFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
-    const { scopes, neededToolConfigurations: configurations } = planned.session;
+    const { scopes, toolConfigurations: configurations } = planned.session;
     const { settingsFile, root, startRunner } = planned.session;
     const options = getTable(scope.settings, 'tools.knip');
     const scanner = getTable(scope.settings, 'dependencies').bun_scanner;

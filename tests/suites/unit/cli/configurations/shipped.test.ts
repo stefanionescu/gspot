@@ -17,10 +17,10 @@ import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/langu
 
 /** Find settings expanded by normal and repeated command placeholders. */
 function listCommandSettings(check: Check): string[] {
-    return [...(check.command ?? []), ...(check.fix ?? [])].flatMap((part) => {
-        const repeated = EACH_PLACEHOLDER.exec(part)?.groups?.['setting'];
+    return [...(check.command ?? []), ...(check.fix ?? [])].flatMap((argument) => {
+        const repeated = EACH_PLACEHOLDER.exec(argument)?.groups?.['setting'];
         return repeated === undefined
-            ? [...part.matchAll(SETTING_PLACEHOLDER)].map((match) => match.groups?.['name'] ?? '')
+            ? [...argument.matchAll(SETTING_PLACEHOLDER)].map((match) => match.groups?.['name'] ?? '')
             : [repeated];
     });
 }

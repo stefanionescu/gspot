@@ -7,7 +7,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { MISE_SCHEMA, SETTINGS_SCHEMA } from '#cli/config/generation/configurations/general/data-files/v8r.ts';
-import { MAPPED_SCHEMAS, MAPPED_SCHEMA_ENTRIES } from '#tests/config/generation/configurations/general/data-files.ts';
+import { MAPPED_SCHEMAS, MAPPED_SCHEMA_RECORDS } from '#tests/config/generation/configurations/general/data-files.ts';
 
 test.each([true, false])(
     'the v8r catalog maps mise, gspot.toml, and the custom schemas (custom schemas: %p)',
@@ -25,7 +25,7 @@ test.each([true, false])(
         // v8r checks gspot.toml against the schema of the gspot version that wrote it, never the newest one.
         expect(parse(v8rFile.content)).toStrictEqual({
             ignoreErrors: true,
-            customCatalog: { schemas: [MISE_SCHEMA, SETTINGS_SCHEMA, ...(hasSchemas ? MAPPED_SCHEMA_ENTRIES : [])] },
+            customCatalog: { schemas: [MISE_SCHEMA, SETTINGS_SCHEMA, ...(hasSchemas ? MAPPED_SCHEMA_RECORDS : [])] },
         });
     },
 );

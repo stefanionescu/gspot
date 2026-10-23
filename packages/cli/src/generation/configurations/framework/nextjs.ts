@@ -12,7 +12,7 @@ import {
 import {
     NEXT_RULES,
     REFRESH_RULE,
-    NEXT_EXTRA_HOCS,
+    NEXT_ERROR_HOCS,
     NEXT_SERVER_FILES,
     NEXT_PAGES_FOLDERS,
 } from '#cli/config/generation/configurations/framework/nextjs.ts';
@@ -34,7 +34,7 @@ export function buildNextjsBlocks(
     const hasPages = sourceFiles.some((path) => NEXT_PAGES_FOLDERS.some((folder) => path.startsWith(prefix + folder)));
     blocks.push(
         {
-            data: {
+            fields: {
                 files: REACT_FILES,
                 rules: {
                     ...recommended.blocks[0].rules,
@@ -43,7 +43,7 @@ export function buildNextjsBlocks(
                         : 'off',
                     ...refresh.blocks[0].rules,
                     [REFRESH_RULE]: addRuleOptions(refresh.blocks[0].rules?.[REFRESH_RULE], {
-                        extraHOCs: [...NEXT_EXTRA_HOCS],
+                        extraHOCs: [...NEXT_ERROR_HOCS],
                     }),
                     '@next/next/no-async-client-component': NEXT_RULES['@next/next/no-async-client-component'],
                 },
@@ -55,7 +55,7 @@ export function buildNextjsBlocks(
             ]),
         },
         {
-            data: {
+            fields: {
                 files: NEXT_SERVER_FILES.flatMap((place) => eslintFiles.code.map((pattern) => [place, pattern])),
                 rules: { 'gspot/require-server-only': NEXT_RULES['gspot/require-server-only'] },
             },

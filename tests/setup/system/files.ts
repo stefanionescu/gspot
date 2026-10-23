@@ -9,16 +9,16 @@ import { open, lstat, access, readdir, readlink } from 'node:fs/promises';
  * @returns each path and its mode and contents.
  */
 export async function readTree(repositoryRoot: string): Promise<Record<string, string>> {
-    const entries = await readdir(repositoryRoot, { recursive: true });
+    const paths = await readdir(repositoryRoot, { recursive: true });
     return Object.fromEntries(
         await Promise.all(
-            entries.map(async (path) => {
-                const full = join(repositoryRoot, path);
-                const attributes = await lstat(full);
+            paths.map(async (path) => {
+                const absolute = join(repositoryRoot, path);
+                const attributes = await lstat(absolute);
                 let bytes = 'directory';
-                if (attributes.isSymbolicLink()) bytes = `symlink:${await readlink(full)}`;
+                if (attributes.isSymbolicLink()) bytes = `symlink:${await readlink(absolute)}`;
                 else if (attributes.isFile()) {
-                    await using file = await open(full, 'r');
+                    await using file = await open(absolute, 'r');
                     const content = await file.readFile();
                     const fileAttributes = await file.stat();
                     return [path, `${String(fileAttributes.mode)}:file:${content.toString('base64')}`] as const;

@@ -39,7 +39,7 @@ test('with bash selected, structure covers the Bash script and not README.md', (
         scopePath: '',
         settings: { test_files: [], settings: {} },
     });
-    expect(owned.map((entry) => entry.path)).toStrictEqual(['a.sh']);
+    expect(owned.map((file) => file.path)).toStrictEqual(['a.sh']);
 });
 
 test.each([...PRETTIER_PLUGIN_CASES])(
@@ -57,7 +57,7 @@ test.each([...PRETTIER_PLUGIN_CASES])(
                 configurations: selectConfigurations([...configurationNames], configurations),
                 scopePath: '',
                 settings: { test_files: [], settings: {} },
-            }).map((entry) => entry.path),
+            }).map((coveredFile) => coveredFile.path),
         ).toStrictEqual([...expected]);
     },
 );

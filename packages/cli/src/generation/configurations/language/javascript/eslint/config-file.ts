@@ -113,7 +113,7 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
         ...Object.values(configurationImports),
     ];
     const configurationFiles = buildConfigurationFiles(planned, configurationBlocks, imports, blockWriter);
-    const entries = [
+    const blockTexts = [
         ['// Files that ESLint skips.', ...serializeBlock({ ignores: ignoredGlobs }).split('\n')]
             .map((line) => ESLINT_INDENT + line)
             .join('\n'),
@@ -126,10 +126,10 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
             ...[
                 ...buildSelectedBlocks(eslintFile),
                 ...buildLocalPluginBlocks(session.scopes, eslintFile.eslintFiles.code),
-            ].map((data) => ({ data })),
+            ].map((fields) => ({ fields })),
         ].map((block) => writeEslintBlock(blockWriter, { ...block, label: ESLINT_BASE_LABEL })),
     ];
-    const body = `export default [\n${entries.join(',\n')},\n];\n`;
+    const body = `export default [\n${blockTexts.join(',\n')},\n];\n`;
     const declarations = body.includes(RUNTIME_DECLARATIONS)
         ? `const ${RUNTIME_DECLARATIONS} = ${JSON.stringify(runtimes, null, JSON_INDENT)};\n`
         : '';
@@ -149,7 +149,9 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
 
 // The rule names of every pinned preset, which name the plugins that the presets bring.
 function listPresetRules(presets: Map<string, EslintPresets>): string[] {
-    const blocks = [...presets.values()].flatMap((entry) => Object.values(entry).flatMap((preset) => preset.blocks));
+    const blocks = [...presets.values()].flatMap((presetGroup) =>
+        Object.values(presetGroup).flatMap((preset) => preset.blocks),
+    );
     return blocks.flatMap((block) => (block.rules === undefined ? [] : Object.keys(block.rules)));
 }
 

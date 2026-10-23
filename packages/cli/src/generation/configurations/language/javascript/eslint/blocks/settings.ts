@@ -111,7 +111,7 @@ export function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
     return scopes.flatMap((scope) => {
         const scopePath = scope.folder.path;
         const excluded = listNestedScopeGlobs(
-            scopes.map((entry) => entry.folder.path),
+            scopes.map((each) => each.folder.path),
             scopePath,
         ).map((path) => `!${path}`);
         return scope.configurations
@@ -136,17 +136,17 @@ export function buildSelectedBlocks(
 ): EslintBlockFields[] {
     const result: EslintBlockFields[] = [];
     for (const { scope, includes, excludes, rules } of planned.settingsBlocks) {
-        const entries = Object.entries(rules);
+        const rulePairs = Object.entries(rules);
         for (const block of [
             {
                 files: buildScopeFiles(planned.eslintFiles.code, scope, includes),
                 ignores: excludes,
-                rules: Object.fromEntries(entries.filter(([name]) => !name.startsWith('package-json/'))),
+                rules: Object.fromEntries(rulePairs.filter(([name]) => !name.startsWith('package-json/'))),
             },
             {
                 files: buildScopeFiles([PACKAGE_JSON_PATTERN], scope, includes),
                 ignores: excludes,
-                rules: Object.fromEntries(entries.filter(([name]) => name.startsWith('package-json/'))),
+                rules: Object.fromEntries(rulePairs.filter(([name]) => name.startsWith('package-json/'))),
             },
         ]) {
             if (Object.keys(block.rules).length === 0) continue;

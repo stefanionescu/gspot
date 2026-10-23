@@ -6,7 +6,7 @@ import type { SqlFile, SqlStatement, SqlNodeFields } from '#cli/types/parsers/co
  * Where the migrations declare something: the file, the offset, and the statement text, so that a finding can point at
  * it.
  */
-type Declared = { path: string; offset: number; text: string };
+type SourceStatement = { path: string; offset: number; text: string };
 
 export type StatementReader<Kind extends keyof SqlNodeFields> = (
     statement: SqlStatement<Kind>,
@@ -33,9 +33,9 @@ export type Migration = {
 /** What the migrations say about the schema, read across every file. */
 export type Schema = {
     /** Each table, by its name with its schema such as public.users, and where a migration creates it. */
-    tables: Map<string, Declared>;
+    tables: Map<string, SourceStatement>;
     secured: Set<string>;
-    foreignKeys: (Declared & { table: string; column: string })[];
+    foreignKeys: (SourceStatement & { table: string; column: string })[];
     /** Each table, by its name with its schema, and the first column of each index and key on it. */
     indexed: Map<string, Set<string>>;
 };

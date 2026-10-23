@@ -38,7 +38,7 @@ export function readHostPackage(path: string): PackageJson | undefined {
 export function readToolProjectPackage(files: Files, repositoryRoot: string, path: string): PackageJson | undefined {
     let target: string;
     try {
-        target = files.readRealPath(convertToPosixPath(relative(repositoryRoot, path)));
+        target = files.readCanonicalPath(convertToPosixPath(relative(repositoryRoot, path)));
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
         throw error;

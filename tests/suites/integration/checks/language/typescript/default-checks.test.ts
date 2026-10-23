@@ -12,7 +12,7 @@ import {
 const installedSandbox = shareInstalledSandbox(TYPESCRIPT_SANDBOX);
 
 beforeAll(() => appendSandboxSettings(installedSandbox(), ARCHITECTURE_SETTINGS));
-test.each([...TYPESCRIPT_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, TYPESCRIPT_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...TYPESCRIPT_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, TYPESCRIPT_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

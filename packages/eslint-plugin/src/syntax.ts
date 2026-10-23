@@ -23,7 +23,7 @@ function listChildNodes(
 ): TSESTree.Node[] {
     return (visitorKeys[node.type] ?? []).flatMap((key) => {
         const child: unknown = node[key as keyof TSESTree.Node];
-        if (Array.isArray(child)) return child.filter((item: unknown) => item !== null) as TSESTree.Node[];
+        if (Array.isArray(child)) return child.filter((nested: unknown) => nested !== null) as TSESTree.Node[];
         return child !== null && typeof child === 'object' ? [child as TSESTree.Node] : [];
     });
 }

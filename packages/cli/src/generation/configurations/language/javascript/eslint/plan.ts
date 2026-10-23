@@ -48,7 +48,7 @@ const PRESET_ASSET_PATHS = new Set(listAssets(CONFIGURATIONS_FOLDER));
  */
 function listConfigFileConfigurations(scopes: Scope[], scope: Scope, configFile: ConfigFile): Configuration[] {
     if (configFile.per_scope) return scope.configurations;
-    const every = [scope, ...scopes].flatMap((entry) => entry.configurations);
+    const every = [scope, ...scopes].flatMap((each) => each.configurations);
     return new Map(every.map((configuration) => [configuration.name, configuration])).values().toArray();
 }
 
@@ -71,14 +71,14 @@ function readEslintPresets(session: PlannedConfigFile['session']): Map<string, E
 // The blocks that gspot.toml writes: runtime environments, trivial-code limits, rules turned off, and ignored rules.
 function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session } = planned;
-    const ignored = session.settingsFile.settings.ignore.flatMap((entry): EslintRuleBlock[] =>
-        entry.rule === undefined || entry.check !== ESLINT_CHECK
+    const ignored = session.settingsFile.settings.ignore.flatMap((ignore): EslintRuleBlock[] =>
+        ignore.rule === undefined || ignore.check !== ESLINT_CHECK
             ? []
             : [
                   {
                       scope: '',
-                      ...splitGlobs(entry.paths === undefined || entry.paths.length === 0 ? ['**/*'] : entry.paths),
-                      rules: { [entry.rule]: 'off' },
+                      ...splitGlobs(ignore.paths === undefined || ignore.paths.length === 0 ? ['**/*'] : ignore.paths),
+                      rules: { [ignore.rule]: 'off' },
                   },
               ],
     );
@@ -114,13 +114,13 @@ export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslin
     const eslintFiles = buildFilePatterns({
         components: configurations,
         nodeFiles,
-        scopes: scopes.map((entry) => ({
-            scope: entry.folder.path,
-            tests: entry.settings.test_files,
+        scopes: scopes.map((each) => ({
+            scope: each.folder.path,
+            tests: each.settings.test_files,
             scripts: [
-                ...(entry.settings.values.javascript?.script_files ?? []),
+                ...(each.settings.values.javascript?.script_files ?? []),
                 joinScope(
-                    entry.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
+                    each.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
                     MISE_SCRIPT_PATH,
                 ),
             ],

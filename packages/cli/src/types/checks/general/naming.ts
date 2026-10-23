@@ -5,7 +5,7 @@ import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { NamingCase, NamedCategory } from '#cli/types/settings/naming.ts';
 
 /** A banned word split into parts, with where it came from. */
-export type BannedWord = { word: string; parts: string[]; setting: string; group?: string; categories?: string[] };
+export type BannedWord = { word: string; words: string[]; setting: string; group?: string; categories?: string[] };
 
 /** The naming settings and the test-file status. */
 export type FileNaming = { check: Check; settings: NamingSettings; isTestFile: boolean };
@@ -97,7 +97,7 @@ export type Identifier = {
     name: string;
     /** For a folder name: the folder path, so a path rule can match it. */
     folder?: string;
-    extraCases?: NamingCase[];
+    addedCases?: NamingCase[];
 };
 
 /** One name a statement declares, with its naming category. */

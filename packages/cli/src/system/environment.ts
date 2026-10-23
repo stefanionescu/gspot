@@ -12,9 +12,9 @@ import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS } from '#cli/config/system/environ
  */
 export function buildSpawnEnvironment(overrides?: Record<string, string | undefined>): Record<string, string> {
     const variables = new Map<string, [string, string]>();
-    const entries = Object.entries(process.env);
-    if (overrides !== undefined) entries.push(...Object.entries(overrides));
-    for (const [key, value] of entries) {
+    const pairs = Object.entries(process.env);
+    if (overrides !== undefined) pairs.push(...Object.entries(overrides));
+    for (const [key, value] of pairs) {
         // Windows matches environment names in any case.
         const name = process.platform === 'win32' ? key.toUpperCase() : key;
         if (value === undefined) variables.delete(name);

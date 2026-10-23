@@ -13,9 +13,9 @@ import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
  */
 export function readVersionPin(repositoryRoot: string): string | undefined {
     using files = openFiles(repositoryRoot);
-    const current = files.read(GSPOT_PATHS.versionPin);
-    if (current === undefined) return undefined;
-    const line = current.bytes.toString('utf8').trim();
+    const onDisk = files.read(GSPOT_PATHS.versionPin);
+    if (onDisk === undefined) return undefined;
+    const line = onDisk.bytes.toString('utf8').trim();
     return line === '' ? undefined : line;
 }
 
@@ -25,14 +25,14 @@ export function readVersionPin(repositoryRoot: string): string | undefined {
  * @param repositoryRoot the folder with the pin and the start command.
  */
 export async function assertVersionPin(repositoryRoot: string): Promise<void> {
-    const pinned = readVersionPin(repositoryRoot);
-    if (pinned !== undefined && pinned !== cliPackage.version) {
+    const versionPin = readVersionPin(repositoryRoot);
+    if (versionPin !== undefined && versionPin !== cliPackage.version) {
         const runner = await selectStartRunner(repositoryRoot);
-        const command = runner.installCommand.replace('<version>', pinned);
+        const command = runner.installCommand.replace('<version>', versionPin);
         throw new GspotError(
             'pin',
             [
-                `This repository pins gspot ${pinned}, and you are running gspot ${cliPackage.version}.`,
+                `This repository pins gspot ${versionPin}, and you are running gspot ${cliPackage.version}.`,
                 `Install the pinned version: ${command}`,
                 'To upgrade the repository pin to this version: gspot apply',
             ].join('\n'),

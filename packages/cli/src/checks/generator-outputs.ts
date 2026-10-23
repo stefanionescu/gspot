@@ -26,12 +26,12 @@ function listMissingOutputs(
 ): Finding[] {
     return outputs
         .filter((target) => findCachedText(session.reads, target.path) === undefined)
-        .map((entry) =>
+        .map((output) =>
             buildFinding(
                 planned,
-                { file: entry.path, line: 1 },
+                { file: output.path, line: 1 },
                 'missing',
-                `The file ${entry.path} does not exist; run ${commandText} and commit what it writes.`,
+                `The file ${output.path} does not exist; run ${commandText} and commit what it writes.`,
             ),
         );
 }
@@ -77,7 +77,7 @@ function readOutputContents({
             joinScope(scope, path),
             readBytes(cwd, path),
         ]),
-        ...targets.map((entry): [string, Buffer] => [entry.path, readBytes(root, entry.path)]),
+        ...targets.map((target): [string, Buffer] => [target.path, readBytes(root, target.path)]),
     ]);
 }
 
@@ -88,14 +88,14 @@ function stripScopePrefix(path: string, scope: string): string {
     return scope !== '' && scopePath.startsWith(`${scope}/`) ? `${prefix}${scopePath.slice(scope.length + 1)}` : path;
 }
 
-function listDeclaredOutputs(
+function listGeneratorOutputs(
     session: Session,
     planned: PlannedCheck,
     values: Substitutions,
-): { declared: GeneratorOutput[]; named: string[] } {
+): { listed: GeneratorOutput[]; named: string[] } {
     const named: string[] = [];
-    const declared = (planned.check.generator_outputs ?? []).flatMap((entry): GeneratorOutput[] => {
-        const { kind, path: original } = entry;
+    const generatorOutputs = (planned.check.generator_outputs ?? []).flatMap((output): GeneratorOutput[] => {
+        const { kind, path: original } = output;
         const isNamed = kind === 'pattern' && original.includes('{setting:');
         const replaced = replacePlaceholders(session, planned, original, values);
         const path = isNamed ? stripScopePrefix(replaced, planned.scope.folder.path) : replaced;
@@ -103,7 +103,7 @@ function listDeclaredOutputs(
         if (isNamed) named.push(path);
         return [{ kind, path }];
     });
-    return { declared, named };
+    return { listed: generatorOutputs, named };
 }
 
 function listGeneratorSources(session: Session, planned: PlannedCheck): GeneratorRun | undefined {
@@ -112,16 +112,16 @@ function listGeneratorSources(session: Session, planned: PlannedCheck): Generato
     const command = expandCommand(session, planned, declaration, values);
     if (command.length === 0) return undefined;
 
-    const { declared, named } = listDeclaredOutputs(session, planned, values);
-    if (declared.length === 0) return undefined;
-    const targets = declared.filter((entry) => entry.kind !== 'pattern');
-    const patterns = declared.filter((entry) => entry.kind === 'pattern').map((entry) => entry.path);
+    const { listed, named } = listGeneratorOutputs(session, planned, values);
+    if (listed.length === 0) return undefined;
+    const targets = listed.filter((output) => output.kind !== 'pattern');
+    const patterns = listed.filter((output) => output.kind === 'pattern').map((output) => output.path);
     const isMatched = buildPathMatcher(patterns);
     const selected = planned.files
         .map((file) => posix.relative(planned.scope.folder.path, file.path))
         .filter((path) => isMatched(path));
 
-    const commandText = command.filter((part) => typeof part === 'string').join(' ');
+    const commandText = command.filter((argument) => typeof argument === 'string').join(' ');
     return { values, commandText, declaration, patterns, named, targets, selected };
 }
 
@@ -145,7 +145,7 @@ export async function checkGeneratorOutputs(session: Session, planned: PlannedCh
     using folder = await createCheckCopy(
         session,
         planned,
-        targets.map((entry) => entry.path),
+        targets.map((target) => target.path),
     );
     const cwd = join(folder.path, planned.scope.folder.path);
     const outputFiles = { root: folder.path, scope: planned.scope.folder.path, patterns, targets, excluded };
@@ -162,7 +162,7 @@ export async function checkGeneratorOutputs(session: Session, planned: PlannedCh
         stdout = result.stdout;
     }
     const after = readOutputContents(outputFiles);
-    const stdoutPaths = new Set(targets.filter((entry) => entry.kind === 'stdout').map((entry) => entry.path));
+    const stdoutPaths = new Set(targets.filter((target) => target.kind === 'stdout').map((target) => target.path));
     for (const path of stdoutPaths) after.set(path, Buffer.from(stdout.trim()));
     return [...new Set([...before.keys(), ...after.keys()])]
         .filter((path) => {

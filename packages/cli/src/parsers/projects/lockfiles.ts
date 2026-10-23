@@ -29,10 +29,10 @@ import {
 } from '#cli/config/parsers/projects/lockfiles.ts';
 
 function parseNpmPackages(path: string, text: string): string[] {
-    return Object.entries(parseJsonFile(path, text, npmLockSchema).packages).flatMap(([folder, entry]) => {
+    return Object.entries(parseJsonFile(path, text, npmLockSchema).packages).flatMap(([folder, lockedPackage]) => {
         const index = folder.lastIndexOf(NPM_PACKAGE_FOLDER);
-        if (index === -1 || entry.version === undefined) return [];
-        return [`${folder.slice(index + NPM_PACKAGE_FOLDER.length)}@${entry.version}`];
+        if (index === -1 || lockedPackage.version === undefined) return [];
+        return [`${folder.slice(index + NPM_PACKAGE_FOLDER.length)}@${lockedPackage.version}`];
     });
 }
 
@@ -45,8 +45,8 @@ function parsePnpmPackages(path: string, text: string): string[] {
 }
 
 function parseYarnPackages(_path: string, text: string): string[] {
-    return Object.entries(yarnLockSchema.parse(parseSyml(text))).flatMap(([descriptors, entry]) => {
-        const version = yarnPackageSchema.safeParse(entry);
+    return Object.entries(yarnLockSchema.parse(parseSyml(text))).flatMap(([descriptors, yarnPackage]) => {
+        const version = yarnPackageSchema.safeParse(yarnPackage);
         const name = splitIdentity(descriptors.split(',', 1)[0]?.trim() ?? '')?.[0];
         return version.success && version.data.version !== undefined && name !== undefined
             ? [`${name}@${version.data.version}`]
@@ -72,8 +72,8 @@ const PACKAGE_PARSERS: Readonly<
 };
 
 // The specifier of each dependency in one workspace entry. pnpm records { specifier, version } for each.
-function listSpecifiers(entry: unknown): Map<string, string> {
-    const parsed = dependencySectionsSchema.safeParse(entry);
+function listSpecifiers(workspace: unknown): Map<string, string> {
+    const parsed = dependencySectionsSchema.safeParse(workspace);
     if (!parsed.success) return new Map();
     return new Map(
         DEPENDENCY_SECTIONS.flatMap((section) => {
@@ -147,9 +147,9 @@ export function parseLockedSpecifiers(
     path: string,
 ): Map<string, Map<string, string>> {
     return new Map(
-        SPECIFIER_PARSERS[lockfile](path, text).map(([key, entry]) => [
+        SPECIFIER_PARSERS[lockfile](path, text).map(([key, workspace]) => [
             key === PNPM_ROOT_IMPORTER ? '' : key,
-            listSpecifiers(entry),
+            listSpecifiers(workspace),
         ]),
     );
 }

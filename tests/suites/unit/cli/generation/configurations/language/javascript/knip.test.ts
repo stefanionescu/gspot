@@ -18,12 +18,12 @@ import { HOST_MODULE } from '#tests/config/generation/configurations/language/ja
 
 import {
     KNIP_ARGUMENTS,
-    KNIP_ENTRY_TABLES,
     KNIP_UNUSED_FILES,
     KNIP_POINTER_FILES,
     KNIP_POINTER_TABLES,
     KNIP_WORKSPACE_FILES,
     KNIP_COMPONENT_FILES,
+    KNIP_ENTRYPOINT_TABLES,
     KNIP_DEPENDENCY_PACKAGE,
 } from '#tests/config/generation/configurations/language/javascript/knip.ts';
 
@@ -33,7 +33,7 @@ const check = readConfigurations()
 
 test('Knip finds unused framework component files and uses the entry points of each scope', async () => {
     await using sandbox = await testdir();
-    const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: KNIP_ENTRY_TABLES });
+    const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: KNIP_ENTRYPOINT_TABLES });
     const configuration = await generateFile(settings, findFileTarget('javascript', 'knip.json'), KNIP_COMPONENT_FILES);
     await createFileTree(sandbox.path, {
         ...KNIP_COMPONENT_FILES,
@@ -152,11 +152,11 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
         ({ path }) => path === findFileTarget('javascript', 'knip.json'),
     )!.content;
     const { workspaces } = JSON.parse(content) as KnipConfigFile;
-    const entries = Object.fromEntries(Object.entries(workspaces).map(([name, { entry }]) => [name, entry]));
+    const globsByWorkspace = Object.fromEntries(Object.entries(workspaces).map(([name, { entry }]) => [name, entry]));
     // app/deep sets test_files to nothing, so it keeps only the entries that every workspace shares.
-    const shared = entries['app/deep']!;
+    const shared = globsByWorkspace['app/deep']!;
     expect(shared).toContain('**/*.test.*');
-    expect(entries).toStrictEqual({
+    expect(globsByWorkspace).toStrictEqual({
         '.': [...shared, 'specifications/**'],
         app: [...shared, 'verification/**'],
         'app/deep': shared,
@@ -173,16 +173,18 @@ test('Knip workspaces come from package workspaces, your entries and the configu
     const knip = JSON.parse(
         await generateFile(settings, findFileTarget('javascript', 'knip.json'), files),
     ) as KnipConfigFile;
-    const entries = Object.fromEntries(Object.entries(knip.workspaces).map(([name, { entry }]) => [name, entry]));
+    const globsByWorkspace = Object.fromEntries(
+        Object.entries(knip.workspaces).map(([name, { entry }]) => [name, entry]),
+    );
     // A package outside every scope takes the root configurations; scopes without packages stay out.
-    const shared = entries['web']!;
+    const shared = globsByWorkspace['web']!;
     expect(shared.slice(0, 2)).toStrictEqual(['src/main.{ts,js}', 'src/index.{ts,js}']);
-    expect(entries).toStrictEqual({ '.': ['cli.js', ...shared], api: ['serve.js', ...shared], web: shared });
-    const withoutEntries = JSON.parse(
+    expect(globsByWorkspace).toStrictEqual({ '.': ['cli.js', ...shared], api: ['serve.js', ...shared], web: shared });
+    const withoutEntrypoints = JSON.parse(
         await generateFile(buildSandboxSettings(['javascript']), findFileTarget('javascript', 'knip.json'), files),
     ) as KnipConfigFile;
     expect(
-        Object.fromEntries(Object.entries(withoutEntries.workspaces).map(([name, { entry }]) => [name, entry])),
+        Object.fromEntries(Object.entries(withoutEntrypoints.workspaces).map(([name, { entry }]) => [name, entry])),
     ).toStrictEqual({ '.': shared, api: shared, web: shared });
 });
 

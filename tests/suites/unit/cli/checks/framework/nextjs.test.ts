@@ -16,8 +16,8 @@ import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { TSC_PLAIN_OUTPUT, TSC_BUILD_COMMAND } from '#cli/config/checks/tsc/compiler.ts';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { TSC_BUILD_COMMAND, TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/tsc/compiler.ts';
 
 import {
     NEXT_LAUNCHER,
@@ -111,7 +111,7 @@ test.each([...OUTPUT_PRESERVATION_CASES])(
         const session = await prepareNextjsBuild(sandbox.path, scope);
 
         const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-            (entry) => entry.scope.folder.path === scope,
+            (check) => check.scope.folder.path === scope,
         )!;
         const untracked = join(sandbox.path, join(scope, '.next/local-cache.bin'));
         const config = join(sandbox.path, join(scope, 'tsconfig.json'));
@@ -153,8 +153,8 @@ test.each([...OUTPUT_PRESERVATION_CASES])(
         expect(await Promise.all(folders.map((cwd) => isOnDisk(cwd)))).toStrictEqual(folders.map(() => false));
         await using currentFile = await open(config, 'r');
         expect(await currentFile.readFile()).toStrictEqual(original);
-        const current = await currentFile.stat();
-        expect(current.mode).toBe(mode);
+        const afterStats = await currentFile.stat();
+        expect(afterStats.mode).toBe(mode);
         expect(await readFile(untracked)).toStrictEqual(Buffer.from(NEXT_CACHE_BYTES));
         expect(await readFile(join(sandbox.path, join(scope, 'next-env.d.ts')), 'utf8')).toBe(AUTHORED_NEXT_ENV);
         expect(await readFile(join(sandbox.path, join(scope, '.next/types/routes.d.ts')), 'utf8')).toBe(
@@ -204,7 +204,7 @@ test.each(['', 'apps/web'])(
         );
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
-            (entry) => entry.scope.folder.path === scope,
+            (check) => check.scope.folder.path === scope,
         )!;
         using read = fakeNextjsCommands(async (command, options) => {
             if (command[1] === 'typegen')
@@ -220,7 +220,7 @@ test.each(['', 'apps/web'])(
         expect(commands[1]?.slice(1)).toStrictEqual([
             ...TSC_BUILD_COMMAND.slice(1),
             join(copy, 'tsconfig.json'),
-            ...TSC_PLAIN_OUTPUT,
+            ...TSC_UNFORMATTED_OUTPUT,
         ]);
         expect(await isOnDisk(copy)).toBe(false);
         expect(await readFile(join(sandbox.path, scope, 'tsconfig.json'), 'utf8')).toBe(authored);

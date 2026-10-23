@@ -45,12 +45,12 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
         throw new Error(`Trivy could not scan ${image}: ${detail}`);
     }
     const report = parseToolReport('Trivy', result.stdout, imageReportSchema);
-    const findings = (report.Results ?? []).flatMap((entry) => [
-        ...(entry.Vulnerabilities ?? []).map((vulnerability) => ({
+    const findings = (report.Results ?? []).flatMap((target) => [
+        ...(target.Vulnerabilities ?? []).map((vulnerability) => ({
             rule: vulnerability.VulnerabilityID,
             message: `${image}: ${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
         })),
-        ...(entry.Secrets ?? []).map((secret) => ({
+        ...(target.Secrets ?? []).map((secret) => ({
             rule: 'secret',
             message: `${image}: ${secret.RuleID}: ${secret.Title}`,
         })),

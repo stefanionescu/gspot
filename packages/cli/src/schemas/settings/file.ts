@@ -37,17 +37,17 @@ const ignoreSchema = z
         NonNullable<ParsedSettings['ignore']>[number],
         NonNullable<WrittenSettings['ignore']>[number]
     >)
-    .superRefine((entry, context) => {
-        if (entry.names !== undefined && !NAMED_FINDING_CHECKS.has(entry.check ?? ''))
+    .superRefine((ignore, context) => {
+        if (ignore.names !== undefined && !NAMED_FINDING_CHECKS.has(ignore.check ?? ''))
             context.addIssue({
                 code: 'custom',
                 path: ['names'],
                 message: `names applies only to ${new Intl.ListFormat('en', { type: 'conjunction' }).format(NAMED_FINDING_CHECKS)}, whose findings name a definition.`,
             });
-        if (entry.check !== undefined) return;
-        if (entry.paths === undefined || entry.paths.length === 0)
+        if (ignore.check !== undefined) return;
+        if (ignore.paths === undefined || ignore.paths.length === 0)
             context.addIssue({ code: 'custom', path: ['paths'], message: 'An ignore without check needs paths.' });
-        if (entry.rule !== undefined)
+        if (ignore.rule !== undefined)
             context.addIssue({
                 code: 'custom',
                 path: ['rule'],
@@ -189,14 +189,14 @@ export const settingsSchema = z
             {
                 key: 'scope',
                 field: 'path',
-                names: (written.scope ?? []).map((entry) =>
-                    trimTrailingSlashes(entry.path).normalize('NFC').toLowerCase(),
+                names: (written.scope ?? []).map((scope) =>
+                    trimTrailingSlashes(scope.path).normalize('NFC').toLowerCase(),
                 ),
             },
             {
                 key: 'command_check',
                 field: 'id',
-                names: (written.command_check ?? []).map((entry) => entry.id),
+                names: (written.command_check ?? []).map((commandCheck) => commandCheck.id),
             },
         ];
         for (const { key, field, names } of records) {
@@ -253,17 +253,17 @@ export function listRecordFields(): Record<string, string[]> {
 export function findSettingSchema(key: string): z.ZodType | undefined {
     const direct = Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).find(([name]) => name === key);
     if (direct !== undefined) return direct[1];
-    const parts = key.split('.');
-    const table = parts.shift();
+    const segments = key.split('.');
+    const table = segments.shift();
     let schema: z.ZodType | undefined;
     if (table === 'tools') {
-        const tool = parts.shift();
+        const tool = segments.shift();
         schema = Object.entries(publicToolsSchema.shape).find(([name]) => name === tool)?.[1];
     } else schema = Object.entries(configurationTableSchemas).find(([name]) => name === table)?.[1];
-    for (const part of parts) {
+    for (const segment of segments) {
         if (schema !== undefined) schema = unwrapSettingSchema(schema);
         if (!(schema instanceof z.ZodObject)) return undefined;
-        schema = schema.shape[part] as z.ZodType | undefined;
+        schema = schema.shape[segment] as z.ZodType | undefined;
     }
     return schema;
 }

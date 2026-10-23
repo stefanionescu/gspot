@@ -65,7 +65,7 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
             .map((line) => line.slice(0, line.indexOf('(')))
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['malformed.js', 'missing.js', 'undefined.js']);
-    for (const { file } of JSDOC_FINDINGS.filter((entry) => entry.file.endsWith('.js')))
+    for (const { file } of JSDOC_FINDINGS.filter((finding) => finding.file.endsWith('.js')))
         await writeFile(join(sandbox.path, file), CORRECTED_JSDOC);
     expect(await listLintFindings(eslint, sandbox.path, files, JSDOC_RULES)).toStrictEqual([]);
     const compiled = await runCommand(TSC_ARGUMENTS, { cwd: sandbox.path });

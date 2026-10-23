@@ -15,7 +15,7 @@ const installedSandbox = shareInstalledSandbox({
     },
 });
 
-test.each([...NESTJS_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, NESTJS_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...NESTJS_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, NESTJS_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

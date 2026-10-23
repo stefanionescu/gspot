@@ -10,14 +10,14 @@ import type { Finding, CheckResult, CheckRunOptions } from '#cli/types/runs/chec
 export type ToolProcessResult = { result: SpawnResult; failure: ProcessFailure | undefined };
 
 /** The public API of a tool that a shipped, supervised program runs. */
-export type CheckToolProgram = { tool: string; entry: string };
+export type CheckToolProgram = { tool: string; modulePath: string };
 
 /** The working folder, environment, and standard input of a tool that a built-in check runs. */
-export type CheckToolOptions = Pick<PreparedCommand, 'cwd'> &
-    Partial<Pick<PreparedCommand, 'env'>> &
+export type CheckToolOptions = Pick<CommandLaunch, 'cwd'> &
+    Partial<Pick<CommandLaunch, 'env'>> &
     Pick<SpawnOptions, 'stdin'>;
 
-export type CommandPart = string | { file: true };
+export type CommandArgument = string | { file: true };
 
 export type Substitutions = {
     files: string[];
@@ -46,7 +46,7 @@ export type CommandSetup = {
  * A check command ready to run: its folders, its arguments, the runs that it splits into to fit the system argument
  * limit, and its environment.
  */
-export type PreparedCommand = {
+export type CommandLaunch = {
     root: string;
     cwd: string;
     commandArguments: string[];

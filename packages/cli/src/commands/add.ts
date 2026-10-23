@@ -28,7 +28,7 @@ function restoreConfigurations(table: TomlTable, removed: string[], configuratio
  */
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input, scopeSettings, selected } = prepareConfigurationEdit(options);
-    const current = scopeSettings.configurations;
+    const scopeConfigurations = scopeSettings.configurations;
     const removed = scopeSettings.removed_configurations;
     if (options.configurations.every((name) => selected.includes(name))) {
         return {
@@ -38,7 +38,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
         };
     }
     const scopeTable = getScopeTable(input.table, options.scope);
-    const list = [...current];
+    const list = [...scopeConfigurations];
     for (const name of options.configurations) if (!selected.includes(name) && !list.includes(name)) list.push(name);
     scopeTable['configurations'] = list;
     restoreConfigurations(scopeTable, removed, options.configurations);

@@ -31,7 +31,7 @@ export const outputSchema = z
                     .literal('markdownlint')
                     .meta({ description: 'Read markdownlint result objects and their rule and source locations.' }),
                 z.literal('json').meta({
-                    description: 'Read JSON findings using items, children, and fields to select report entries.',
+                    description: 'Read JSON findings using list, children, and fields to select report entries.',
                 }),
                 z
                     .literal('lines')
@@ -41,7 +41,7 @@ export const outputSchema = z
             .describe(
                 'How gspot reads the output: json, regex, grouped, lines, none, or the format of a named tool.',
             ) satisfies z.ZodType<WrittenOutput['format']>,
-        items: z.string().describe('For json: the path to the list of findings.').optional(),
+        list: z.string().describe('For json: the path to the list of findings.').optional(),
         children: z.string().describe('For json: the field of each item that holds its findings.').optional(),
         line_base: (
             z

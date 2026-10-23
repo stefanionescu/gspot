@@ -1,6 +1,6 @@
 import { distance } from 'fastest-levenshtein';
 import type { TextPosition } from '#cli/types/text.ts';
-import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, PLAIN_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system/text.ts';
+import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, UNQUOTED_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system/text.ts';
 
 /**
  * Skip a quoted span before looking for comment openers outside it.
@@ -22,14 +22,14 @@ export function findQuotedEnd(line: string, start: number): number {
  * Select up to SUGGESTION_LIMIT names close enough to look like a typo, closest first.
  *
  * @param name the text as typed.
- * @param knownNames the names that exist.
+ * @param options the names that exist.
  * @returns the closest names.
  */
-export function selectSimilarNames(name: string, knownNames: string[]): string[] {
+export function selectSimilarNames(name: string, options: string[]): string[] {
     const lower = name.toLowerCase();
     const limit = Math.max(TYPO_MIN, Math.floor(name.length / TYPO_FRACTION));
-    return knownNames
-        .map((knownName) => ({ knownName, score: distance(lower, knownName.toLowerCase()) }))
+    return options
+        .map((option) => ({ knownName: option, score: distance(lower, option.toLowerCase()) }))
         .filter(
             ({ knownName, score }) =>
                 score <= limit || knownName.toLowerCase().includes(lower) || lower.includes(knownName.toLowerCase()),
@@ -42,26 +42,25 @@ export function selectSimilarNames(name: string, knownNames: string[]): string[]
 /**
  * Format names as code spans with commas, and count the rest past the limit.
  *
- * @param items the names.
- *
+ * @param names the names to list.
  * @returns the list text.
  */
-export function formatCodeList(items: readonly string[]): string {
-    const shown = items.slice(0, LIST_LIMIT);
-    const rest = items.length - shown.length;
+export function formatCodeList(names: readonly string[]): string {
+    const shown = names.slice(0, LIST_LIMIT);
+    const rest = names.length - shown.length;
     const more = rest > 0 ? ` and ${String(rest)} more` : '';
-    return shown.map((item) => `\`${item}\``).join(', ') + more;
+    return shown.map((name) => `\`${name}\``).join(', ') + more;
 }
 
 /**
  * Format the close names of an unknown name, or an empty string when none match.
  *
  * @param name the unknown name.
- * @param knownNames the declared names.
+ * @param options the declared names.
  * @returns the Did-you-mean clause.
  */
-export function formatSimilarNames(name: string, knownNames: string[]): string {
-    const near = selectSimilarNames(name, knownNames);
+export function formatSimilarNames(name: string, options: string[]): string {
+    const near = selectSimilarNames(name, options);
     return near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
 }
 
@@ -73,7 +72,7 @@ export function formatSimilarNames(name: string, knownNames: string[]): string {
  * @returns the argument with any required shell quoting.
  */
 export function quoteArgument(argument: string): string {
-    if (PLAIN_ARGUMENT.test(argument)) return argument;
+    if (UNQUOTED_ARGUMENT.test(argument)) return argument;
     return `'${argument.replaceAll("'", "'\"'\"'")}'`;
 }
 

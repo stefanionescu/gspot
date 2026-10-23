@@ -5,8 +5,8 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { readDeclaredSpecifiers } from '#cli/repository/dependencies.ts';
 import { parseLockedSpecifiers } from '#cli/parsers/projects/lockfiles.ts';
+import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { IMPORTER_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { LOCKFILE_UPDATE_COMMANDS } from '#cli/config/checks/general/dependencies/stale-lockfile.ts';
@@ -22,8 +22,12 @@ function findImporterLockfile(session: Session, folder: string) {
     return undefined;
 }
 
-function compareSpecifiers(declared: Map<string, string>, locked: Map<string, string>, lockfilePath: string): string[] {
-    const changed = [...declared].flatMap(([name, specifier]) => {
+function compareSpecifiers(
+    specifiers: Map<string, string>,
+    locked: Map<string, string>,
+    lockfilePath: string,
+): string[] {
+    const changed = [...specifiers].flatMap(([name, specifier]) => {
         const recorded = locked.get(name);
         if (recorded === specifier) return [];
         return [
@@ -33,7 +37,7 @@ function compareSpecifiers(declared: Map<string, string>, locked: Map<string, st
         ];
     });
     const removed = [...locked.keys()]
-        .filter((name) => !declared.has(name))
+        .filter((name) => !specifiers.has(name))
         .map((name) => `${lockfilePath} records ${name}, which package.json no longer declares.`);
     return [...changed, ...removed];
 }
@@ -48,15 +52,15 @@ function compareSpecifiers(declared: Map<string, string>, locked: Map<string, st
 export function checkDependenciesStaleLockfile(session: Session, planned: PlannedCheck): Finding[] {
     const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
-    const declared = readDeclaredSpecifiers(session.reads, packageJsonPath);
+    const specifiers = readDependencySpecifiers(session.reads, packageJsonPath);
     const found = findImporterLockfile(session, folder);
-    if (declared === undefined || found === undefined) return [];
+    if (specifiers === undefined || found === undefined) return [];
     const locked = parseLockedSpecifiers(found.lockfile, found.text, posix.join(found.base, found.lockfile)).get(
         posix.relative(found.base, folder),
     );
     if (locked === undefined) return [];
     const command = LOCKFILE_UPDATE_COMMANDS[found.lockfile];
-    return compareSpecifiers(declared, locked, found.path).map((message) =>
+    return compareSpecifiers(specifiers, locked, found.path).map((message) =>
         buildFinding(
             planned,
             { file: packageJsonPath, line: 1 },

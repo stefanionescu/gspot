@@ -25,9 +25,9 @@ function formatUncheckedKind(file: TrackedFile): string | undefined {
 function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
     const folder = findScopeFolder(path, session.repository.scopeFolders);
-    const scope = session.scopes.find((entry) => entry.folder.path === folder.path) as Scope;
+    const scope = session.scopes.find((each) => each.folder.path === folder.path) as Scope;
     const checks = session.configuredChecks.filter((check) =>
-        listCheckedFiles(session.scopes, check).some((entry) => entry.path === file.path),
+        listCheckedFiles(session.scopes, check).some((checkedFile) => checkedFile.path === file.path),
     );
     // A configuration applies to the file when one of its checks reads it, so the two lists agree.
     const covering = new Set(
@@ -46,12 +46,13 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
         })),
         ignores: session.settingsFile.settings.ignore
             .filter(
-                (entry) => entry.paths === undefined || entry.paths.length === 0 || buildPathMatcher(entry.paths)(path),
+                (ignore) =>
+                    ignore.paths === undefined || ignore.paths.length === 0 || buildPathMatcher(ignore.paths)(path),
             )
-            .map((entry) => ({
-                ...(entry.check === undefined ? {} : { check: entry.check }),
-                ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-                reason: entry.reason,
+            .map((ignore) => ({
+                ...(ignore.check === undefined ? {} : { check: ignore.check }),
+                ...(ignore.rule === undefined ? {} : { rule: ignore.rule }),
+                reason: ignore.reason,
             })),
         fileKindOrigin: file.kindOrigin,
     };
@@ -70,10 +71,10 @@ function formatPathExplanation(report: PathExplanation): string {
     const checks = report.checks.map(
         (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
     );
-    const ignores = report.ignores.map((entry) => {
-        const rule = entry.rule === undefined ? '' : ` ${entry.rule}`;
-        const reason = entry.reason === undefined ? '' : `  ${entry.reason}`;
-        return `  ${entry.check ?? 'every check'}${rule}${reason}`;
+    const ignores = report.ignores.map((ignore) => {
+        const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
+        const reason = ignore.reason === undefined ? '' : `  ${ignore.reason}`;
+        return `  ${ignore.check ?? 'every check'}${rule}${reason}`;
     });
     const lines = [
         `${report.path}  (scope ${report.scope}, ${report.fileKind}${by})`,
@@ -98,7 +99,7 @@ function formatPathExplanation(report: PathExplanation): string {
 export function explainPath(session: Session | undefined, subject: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const path = subject.startsWith('./') ? subject.slice('./'.length) : subject;
-    const file = session.repository.files.find((entry) => entry.path === path);
+    const file = session.repository.files.find((each) => each.path === path);
     if (file === undefined) {
         if (subject.startsWith('./')) throw new GspotError('arguments', `${path} is not a file in this repository.`);
         return undefined;

@@ -25,20 +25,20 @@ function findOnlyToolName(tools: unknown): string | undefined {
 // Add a config file for each file in the config-files folder that no [[config_file]] record names.
 function readConfigFiles(configurationFolder: string, configFiles: unknown, tools: unknown): unknown {
     if (configFiles !== undefined && !Array.isArray(configFiles)) return configFiles;
-    const entries: unknown[] = configFiles === undefined ? [] : configFiles;
+    const records: unknown[] = configFiles === undefined ? [] : configFiles;
     // A record names its file by target, or by source when gspot transpiles it.
-    const declaredTargets = new Set(
-        entries.flatMap((entry) => (isTable(entry) ? [entry['target'], entry['source']] : [])),
+    const recordTargets = new Set(
+        records.flatMap((record) => (isTable(record) ? [record['target'], record['source']] : [])),
     );
     const folder = `${configurationFolder}/${SHIPPED_CONFIG_FILES_FOLDER}/`;
     const copied = listAssets(folder)
         .map((path) => ({ target: posix.relative(folder, path) }))
-        .filter(({ target }) => !declaredTargets.has(target));
+        .filter(({ target }) => !recordTargets.has(target));
     const tool = findOnlyToolName(tools);
-    return [...entries, ...copied].map((entry) =>
-        tool === undefined || !isTable(entry) || entry['tool'] !== undefined || entry['check'] !== undefined
-            ? entry
-            : { ...entry, tool },
+    return [...records, ...copied].map((record) =>
+        tool === undefined || !isTable(record) || record['tool'] !== undefined || record['check'] !== undefined
+            ? record
+            : { ...record, tool },
     );
 }
 
@@ -49,7 +49,7 @@ function readConfigFiles(configurationFolder: string, configFiles: unknown, tool
  * @returns the configurations by name, with each tool in full.
  */
 function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
-    const entries = listDeclaredTools(manifests);
+    const toolsByName = listManifestTools(manifests);
     return new Map(
         manifests.map(({ configuration, tools, ...fields }) => [
             configuration.name,
@@ -58,10 +58,10 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
                 ...configuration,
                 tools: tools.map((tool) => {
                     if (typeof tool !== 'string') return tool;
-                    const declared = entries.get(tool);
-                    if (declared === undefined)
+                    const found = toolsByName.get(tool);
+                    if (found === undefined)
                         throw buildManifestError(configuration.name, [`tool ${tool} has no declaration.`]);
-                    return declared;
+                    return found;
                 }),
             },
         ]),
@@ -187,10 +187,10 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
  * @param manifests the parsed configurations.
  * @returns the tools by name.
  */
-function listDeclaredTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
+function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
     const tools = new Map<string, Tool>();
     for (const manifest of manifests)
-        for (const tool of manifest.tools.filter((entry) => typeof entry !== 'string')) {
+        for (const tool of manifest.tools.filter((each) => typeof each !== 'string')) {
             const previous = tools.get(tool.name);
             if (previous !== undefined)
                 throw buildManifestError(manifest.configuration.name, [`tool ${tool.name} is already declared.`]);
@@ -205,8 +205,8 @@ function listDeclaredTools(manifests: Iterable<ParsedManifest>): Map<string, Too
  * @param name the requested check ID.
  * @param settings the command checks of gspot.toml.
  */
-export function assertKnownCheck(name: string, settings: Pick<Settings, 'commandChecks'>): void {
-    const known = listCheckIds(Object.values(settings.commandChecks));
-    if (!known.includes(name))
-        throw new GspotError('arguments', `There is no check called ${name}.${formatSimilarNames(name, known)}`);
+export function assertCheckExists(name: string, settings: Pick<Settings, 'commandChecks'>): void {
+    const checkIds = listCheckIds(Object.values(settings.commandChecks));
+    if (!checkIds.includes(name))
+        throw new GspotError('arguments', `There is no check called ${name}.${formatSimilarNames(name, checkIds)}`);
 }

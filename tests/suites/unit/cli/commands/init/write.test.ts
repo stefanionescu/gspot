@@ -33,7 +33,7 @@ test.each([
 
     const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'bash', '--json']);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.delete.map((entry) => entry.path)).toContain('.shellcheckrc');
+    expect(plan.delete.map((file) => file.path)).toContain('.shellcheckrc');
     await using _terminal = await simulateInteractiveTerminal();
     mockResources.use(
         spyOn(clack, 'confirm').mockImplementation(async () => {

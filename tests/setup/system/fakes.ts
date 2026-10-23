@@ -49,7 +49,7 @@ export function recordNpmCommands(): Mock<typeof spawnProcess> & { installations
  * @param tools the tools whose pinned versions the fakes print.
  * @returns the disposable mocks.
  */
-export function fakePinnedExecutables(tools: Tool[]): DisposableStack {
+export function fakeToolExecutables(tools: Tool[]): DisposableStack {
     const resources = new DisposableStack();
     const runBlocking = processes.spawnProcessBlocking;
     resources.use(

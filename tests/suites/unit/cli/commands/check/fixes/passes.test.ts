@@ -22,17 +22,17 @@ import {
 
 test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
-    async (entry) => {
+    async (row) => {
         await using sandbox = await testdir();
         const check = readConfigurations()
-            .get(entry.configuration)!
-            .checks.find((check) => check.id === `${entry.configuration}/${entry.tool}`)!;
+            .get(row.configuration)!
+            .checks.find((check) => check.id === `${row.configuration}/${row.tool}`)!;
         const executable = join(
-            dirname(await Bun.resolve(`${entry.tool}/package.json`, import.meta.dir)),
+            dirname(await Bun.resolve(`${row.tool}/package.json`, import.meta.dir)),
             'bin',
-            entry.executable,
+            row.executable,
         );
-        const command = [process.execPath, executable, '--config', entry.config];
+        const command = [process.execPath, executable, '--config', row.config];
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([], {
                 rules: true,
@@ -40,33 +40,33 @@ test.each([...FIX_LINTER_CASES])(
                     command_check: [
                         {
                             id: 'project/native',
-                            command: [...command, ...entry.formatter, '{files}'],
+                            command: [...command, ...row.formatter, '{files}'],
                             fix: [...command, '--fix', '{files}'],
                             exit_codes: check.exit_codes!,
                             output: check.output,
-                            paths: [entry.path],
+                            paths: [row.path],
                             stage: 'commit',
                         },
                     ],
                 }),
             }),
-            [entry.config]: entry.nativeConfiguration,
-            [entry.path]: entry.sample,
+            [row.config]: row.nativeConfiguration,
+            [row.path]: row.sample,
         });
-        const source = await readFile(join(sandbox.path, entry.path), 'utf8');
-        await writeFile(join(sandbox.path, entry.config), entry.invalidConfiguration);
+        const source = await readFile(join(sandbox.path, row.path), 'utf8');
+        await writeFile(join(sandbox.path, row.config), row.invalidConfiguration);
         const invalid = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/native'] }));
         expect(invalid.report.exitCode).toBe(2);
         expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
-        expect(await readFile(join(sandbox.path, entry.path), 'utf8')).toBe(source);
-        await writeFile(join(sandbox.path, entry.config), entry.nativeConfiguration);
+        expect(await readFile(join(sandbox.path, row.path), 'utf8')).toBe(source);
+        await writeFile(join(sandbox.path, row.config), row.nativeConfiguration);
         const session = await openSession(sandbox.path);
         const options: RunOptions = buildRunOptions({ fix: true, only: ['project/native'] });
         const failed = await runChecks(session, options);
         expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
-        expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [entry.path] }]);
-        expect(await readFile(join(sandbox.path, entry.path), 'utf8')).toBe(entry.partial);
-        await writeFile(join(sandbox.path, entry.path), entry.corrected);
+        expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [row.path] }]);
+        expect(await readFile(join(sandbox.path, row.path), 'utf8')).toBe(row.partial);
+        await writeFile(join(sandbox.path, row.path), row.corrected);
         const corrected = await runChecks(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode, JSON.stringify(corrected)).toBe(0);
     },
@@ -148,7 +148,7 @@ test('a later pass formats what a fix after the formatter wrote', async () => {
 });
 
 test('a fixer that fails midway leaves the later fixers to run in order and keep their edits', async () => {
-    const entries = ['first', 'second', 'third'].map((name, index) => {
+    const checks = ['first', 'second', 'third'].map((name, index) => {
         const script = String.raw`const fs = require('node:fs'); fs.appendFileSync('order.log', '${name}\n'); fs.writeFileSync('${name}.txt', 'fixed\n'); process.exitCode = ${index === 0 ? '3' : '0'};`;
         return {
             id: `sandbox/${name}`,
@@ -159,7 +159,7 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
         };
     });
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: entries }) }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: checks }) }),
         'first.txt': 'original\n',
         'second.txt': 'original\n',
         'third.txt': 'original\n',

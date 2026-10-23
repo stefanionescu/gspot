@@ -7,20 +7,22 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
-import type { Check, KnownCheck } from '#cli/types/configurations.ts';
+import type { Check, ScopeCheck } from '#cli/types/configurations.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/planning.ts';
 import { isRootOnlyCheck, listChildScopes, selectCheckFiles, stripToolIgnoredFiles } from '#cli/planning/files.ts';
 
-function listKnownChecks(session: Session, scope: Scope): KnownCheck[] {
+function listScopeChecks(session: Session, scope: Scope): ScopeCheck[] {
     const isRoot = scope.folder.path === '';
-    const entries = scope.configurations.flatMap((configuration) =>
+    const configuredChecks = scope.configurations.flatMap((configuration) =>
         configuration.checks
             .map((check) => ({ check, configuration }))
-            .filter((entry) => isRoot || !isRootOnlyCheck(configuration, entry.check)),
+            .filter((configured) => isRoot || !isRootOnlyCheck(configuration, configured.check)),
     );
-    if (!isRoot) return entries;
-    const own = Object.values(session.settingsFile.settings.commandChecks).map((entry) => ({ check: entry }));
-    return [...entries, ...own];
+    if (!isRoot) return configuredChecks;
+    const own = Object.values(session.settingsFile.settings.commandChecks).map((commandCheck) => ({
+        check: commandCheck,
+    }));
+    return [...configuredChecks, ...own];
 }
 
 function isWanted(check: Check, options: PlanOptions): boolean {
@@ -32,9 +34,9 @@ function isWanted(check: Check, options: PlanOptions): boolean {
     return options.stage === check.stage;
 }
 
-function planCheck(planned: PlannedScope, known: KnownCheck): PlannedCheck {
+function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck {
     const { session, scope, options } = planned;
-    const { check, configuration } = known;
+    const { check, configuration } = scopeCheck;
     const isRootCheck = check.runs === 'once' || check.runs === 'history';
     const rootScope = findRootScope(session.scopes);
     const name = getToolName(check);
@@ -42,7 +44,7 @@ function planCheck(planned: PlannedScope, known: KnownCheck): PlannedCheck {
     const plannedCheck: PlannedCheck = {
         scope: isRootCheck ? rootScope : scope,
         check,
-        ...selectCheckFiles(planned, known),
+        ...selectCheckFiles(planned, scopeCheck),
         ...stripUndefined({
             configuration,
             tool,
@@ -81,15 +83,15 @@ function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
 
 function planScope(planned: PlannedScope, plannedRepositoryChecks: Set<string>): PlannedCheck[] {
     const checks: PlannedCheck[] = [];
-    const entries = listKnownChecks(planned.session, planned.scope).filter((entry) =>
-        isWanted(entry.check, planned.options),
+    const wanted = listScopeChecks(planned.session, planned.scope).filter((configured) =>
+        isWanted(configured.check, planned.options),
     );
-    for (const entry of entries) {
-        const isRootCheck = entry.check.runs === 'once' || entry.check.runs === 'history';
-        if (isRootCheck && plannedRepositoryChecks.has(entry.check.id)) continue;
-        const check = planCheck(planned, entry);
+    for (const configured of wanted) {
+        const isRootCheck = configured.check.runs === 'once' || configured.check.runs === 'history';
+        if (isRootCheck && plannedRepositoryChecks.has(configured.check.id)) continue;
+        const check = planCheck(planned, configured);
         if (check.skip?.cause === 'level') continue;
-        if (isRootCheck) plannedRepositoryChecks.add(entry.check.id);
+        if (isRootCheck) plannedRepositoryChecks.add(configured.check.id);
         checks.push(check);
     }
     return checks;
@@ -161,9 +163,9 @@ export function stripCoverageArguments(
 ): string[] | undefined {
     const command = authored.command ?? planned.check.command;
     if (command === undefined || authored.command !== undefined || planned.configuration === undefined) return command;
-    const declaredArguments = planned.check.coverage_arguments ?? [];
-    if (!hasCoverageArguments(command, declaredArguments) || !isCoverageOff(planned.scope)) return command;
-    return command.filter((part) => !hasCoverageArguments([part], declaredArguments));
+    const coverageArguments = planned.check.coverage_arguments ?? [];
+    if (!hasCoverageArguments(command, coverageArguments) || !isCoverageOff(planned.scope)) return command;
+    return command.filter((argument) => !hasCoverageArguments([argument], coverageArguments));
 }
 
 /**
@@ -181,17 +183,17 @@ export function isCoverageOff(scope: Scope): boolean {
  * Check whether a command uses one of the declared coverage arguments.
  *
  * @param command the program and arguments.
- * @param declaredArguments the coverage flags of the check.
+ * @param coverageArguments the coverage flags of the check.
  * @returns whether the command requests coverage output.
  */
 export function hasCoverageArguments(
     command: readonly string[] | undefined,
-    declaredArguments: readonly string[] | undefined,
+    coverageArguments: readonly string[] | undefined,
 ): boolean {
     return (
         command?.some(
-            (part) =>
-                declaredArguments?.some((argument) => part === argument || part.startsWith(`${argument}=`)) === true,
+            (word) =>
+                coverageArguments?.some((argument) => word === argument || word.startsWith(`${argument}=`)) === true,
         ) === true
     );
 }

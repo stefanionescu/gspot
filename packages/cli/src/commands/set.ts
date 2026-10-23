@@ -37,7 +37,7 @@ function parseValueArgument(text: string): unknown {
 }
 
 function parseSettingValue(values: string[], setting: Setting): ParsedSettingValue {
-    const parsed = values.map((item) => parseValueArgument(item));
+    const parsed = values.map((text) => parseValueArgument(text));
     const scalar = parsed.length === 1 ? parsed[0] : parsed;
     const validation = findSettingSchema(setting.name)?.safeParse(scalar);
     if (validation?.success === false) {
@@ -52,33 +52,33 @@ function parseSettingValue(values: string[], setting: Setting): ParsedSettingVal
     return { type: 'scalar', value: scalar };
 }
 
-function parseReasonEntries(options: SetOptions): ParsedSettingValue {
+function parseReasonTable(options: SetOptions): ParsedSettingValue {
     const { reason } = options;
     if (reason === undefined)
         throw new GspotError(
             'arguments',
             `${options.key} keeps a reason for each entry. Add --reason "<why>" with why each one belongs.`,
         );
-    return { type: 'scalar', value: Object.fromEntries(options.values.map((item) => [item, reason])) };
+    return { type: 'scalar', value: Object.fromEntries(options.values.map((value) => [value, reason])) };
 }
 
 function editSetting(table: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
     const scopeTable = getScopeTable(table, options.scope);
     if (change.type === 'list') addToList(scopeTable, options.key, change.value);
     else if (setting.type === 'table' && isTable(change.value)) {
-        const current = getValueAt(scopeTable, options.key.split('.'));
-        const existing = getWrittenValue(current);
-        setKey(scopeTable, options.key, { ...(isTable(existing) ? existing : {}), ...change.value });
+        const written = getValueAt(scopeTable, options.key.split('.'));
+        const writtenValue = getWrittenValue(written);
+        setKey(scopeTable, options.key, { ...(isTable(writtenValue) ? writtenValue : {}), ...change.value });
     } else setKey(scopeTable, options.key, change.value);
     if (options.reason !== undefined && setting.reason_values !== true) {
-        const current = getValueAt(scopeTable, options.key.split('.'));
-        const value = getWrittenValue(current);
+        const written = getValueAt(scopeTable, options.key.split('.'));
+        const value = getWrittenValue(written);
         setKey(scopeTable, options.key, { value, reason: options.reason });
     }
 }
 
 // gspot keeps reasons for values that loosen a check, so set refuses a reason on any other value before it writes.
-function assertReasonNeeded({
+function assertReasonPresent({
     options,
     setting,
     change,
@@ -107,13 +107,13 @@ function formatSettingChange(
     // A list value may hold a command, so each item keeps its quotes.
     const description =
         change.type === 'list'
-            ? `Added ${change.value.map((item) => JSON.stringify(item)).join(', ')} to ${displayKey}.`
+            ? `Added ${change.value.map((value) => JSON.stringify(value)).join(', ')} to ${displayKey}.`
             : `Set ${displayKey} to ${JSON.stringify(change.value)}.`;
     return `${description}${reason}${was}`;
 }
 
 // A list change that drops the reason keeps the old reason only when the new reason covers every item.
-function assertCompleteReason({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
+function assertReasonCoversList({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
     if (
         change.type === 'list' &&
         options.reason === undefined &&
@@ -142,14 +142,14 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
         );
     const edit = prepareSettingsEdit(options.cwd);
     const { root, input, settings } = edit;
-    const { known: availableSettings, match } = await readSetting(edit, options.key, options.scope);
+    const { available: availableSettings, match } = await readSetting(edit, options.key, options.scope);
     const setting = match.setting;
     const change =
-        setting.reason_values === true ? parseReasonEntries(options) : parseSettingValue(options.values, setting);
+        setting.reason_values === true ? parseReasonTable(options) : parseSettingValue(options.values, setting);
     const previous = getSettingValue(availableSettings, settings, options.key, options.scope);
     const shippedDefault = findSettingDefault(availableSettings, settings, match, options.scope)?.value;
-    assertCompleteReason({ options, setting, change, previous, shippedDefault });
-    assertReasonNeeded({ options, setting, change, shippedDefault });
+    assertReasonCoversList({ options, setting, change, previous, shippedDefault });
+    assertReasonPresent({ options, setting, change, shippedDefault });
     const summary = formatSettingChange(change, {
         setting,
         options,
@@ -184,12 +184,12 @@ export function registerSet(program: Command, onResult: CommandCompletion): void
             if (error.code !== 'commander.unknownOption') throw error;
             throw new CommanderError(error.exitCode, error.code, `${error.message}. ${DASH_VALUE_HELP}`);
         })
-        .action(async (setting, items, flags) => {
+        .action(async (setting, values, flags) => {
             onResult(
                 await runSetCommand({
                     cwd: process.cwd(),
                     key: setting,
-                    values: items,
+                    values: values,
                     ...stripUndefined({ reason: flags.reason, scope: flags.scope }),
                 }),
             );

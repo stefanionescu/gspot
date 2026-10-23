@@ -17,12 +17,12 @@ import { COUNT_LIMITS } from '#cli/config/checks/language/bash/function-size.ts'
 export async function checkBashFunctionSize(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>
-        file.functions.flatMap((entry) => {
+        file.functions.flatMap((scriptFunction) => {
             const counts = {
-                function_lines: listCodeLines(file.code.slice(entry.start - 1, entry.end)).length,
-                function_branches: entry.branches,
-                block_nesting: entry.nesting,
-                function_assignments: entry.assignments,
+                function_lines: listCodeLines(file.code.slice(scriptFunction.start - 1, scriptFunction.end)).length,
+                function_branches: scriptFunction.branches,
+                block_nesting: scriptFunction.nesting,
+                function_assignments: scriptFunction.assignments,
             };
             return COUNT_LIMITS.flatMap(({ limit, rule, noun }) => {
                 const maximum = getLimit(planned.scope.settings, limit, 'bash');
@@ -32,9 +32,9 @@ export async function checkBashFunctionSize(session: Session, planned: PlannedCh
                     : [
                           buildFinding(
                               planned,
-                              { file: file.path, line: entry.start },
+                              { file: file.path, line: scriptFunction.start },
                               rule,
-                              `${entry.name} has ${String(count)} ${noun}, over the limit of ${String(maximum)}.`,
+                              `${scriptFunction.name} has ${String(count)} ${noun}, over the limit of ${String(maximum)}.`,
                           ),
                       ];
             });

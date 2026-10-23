@@ -143,7 +143,7 @@ test('explain shows the default of a path setting joined with the scope, as gspo
     const { scopes } = JSON.parse(explained.stdout) as {
         scopes: { scope: string; default: unknown; current: unknown; source: string }[];
     };
-    expect(scopes.filter((entry) => entry.scope === 'web')).toStrictEqual([
+    expect(scopes.filter((each) => each.scope === 'web')).toStrictEqual([
         { scope: 'web', default: 'web/dist', current: 'web/dist', source: 'configuration site' },
     ]);
 });

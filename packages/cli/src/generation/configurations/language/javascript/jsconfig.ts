@@ -40,8 +40,8 @@ function buildExtendedExclude(
         }))
         .find(({ exclude }) => Array.isArray(exclude));
     const inherited = Array.isArray(declaring?.exclude)
-        ? declaring.exclude.map((entry) =>
-              convertToPosixPath(relative(generatedFolder, join(dirname(declaring.file), String(entry)))),
+        ? declaring.exclude.map((excluded) =>
+              convertToPosixPath(relative(generatedFolder, join(dirname(declaring.file), String(excluded)))),
           )
         : [];
     return [...paths.ignoredGlobs.map((path) => `${paths.prefix}${path}`), ...inherited];
@@ -71,7 +71,7 @@ export function buildJsconfigFile(planned: PlannedConfigFile): string {
     const { targetPath: target } = planned;
     const { files } = planned.session.repository;
     const scope = planned.scope.folder.path;
-    const scopes = planned.session.scopes.map((entry) => entry.folder);
+    const scopes = planned.session.scopes.map((each) => each.folder);
     const importStyle = getTable(planned.scope.settings, 'tools.eslint').import_extension;
     const ignoredGlobs = convertToGlobs(
         buildIgnoreSections(planned.session).filter((section) => planned.level !== 'all' || section.key !== 'build'),

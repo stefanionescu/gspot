@@ -6,21 +6,21 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { generateFile, findFileTarget } from '#tests/setup/cli/config-files.ts';
 
 test('Ruff selects the pytest and FastAPI families only when selected, and adds no per-file ignores', async () => {
-    const plain = parse(
+    const defaults = parse(
         await generateFile(buildSandboxSettings(['python']), findFileTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
-    expect(plain.lint.select.filter((code) => /^(?:AIR|DJ|FAST|NPY|PT)/u.test(code))).toStrictEqual([]);
-    expect(plain.lint['per-file-ignores']).toBeUndefined();
-    expect(plain.lint.pylint['max-statements']).toBe(30);
+    expect(defaults.lint.select.filter((code) => /^(?:AIR|DJ|FAST|NPY|PT)/u.test(code))).toStrictEqual([]);
+    expect(defaults.lint['per-file-ignores']).toBeUndefined();
+    expect(defaults.lint.pylint['max-statements']).toBe(30);
     const tested = parse(
         await generateFile(buildSandboxSettings(['python', 'pytest']), findFileTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
     // At level recommended, pytest adds its recommended Ruff rules and nothing else.
-    expect(tested.lint.select.filter((code) => !plain.lint.select.includes(code))).toStrictEqual(
+    expect(tested.lint.select.filter((code) => !defaults.lint.select.includes(code))).toStrictEqual(
         readConfigurations().get('pytest')!.ruff.recommended,
     );
     expect(tested.lint['per-file-ignores']).toBeUndefined();

@@ -18,8 +18,8 @@ export const userEnvironment: Record<string, string | undefined> = {
     NODE_OPTIONS: undefined,
     PATH: (readEnvironmentVariable('PATH') ?? '')
         .split(delimiter)
-        .filter((entry) => {
-            const path = relative(repositoryRoot, resolve(entry));
+        .filter((folder) => {
+            const path = relative(repositoryRoot, resolve(folder));
             return path.startsWith(`..${sep}`) || path === '..' || isAbsolute(path);
         })
         .join(delimiter),

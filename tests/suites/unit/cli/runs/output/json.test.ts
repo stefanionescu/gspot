@@ -47,13 +47,13 @@ test('a nested list reads the file from the item and the rest from the child', (
 
 test.each([...FIX_FIELD_CASES])(
     'a JSON finding is fixable only when the check has a fix command: %s fix field',
-    (name, extra, expected) => {
+    (name, fields, expected) => {
         const output = {
             format: 'json' as const,
             children: 'messages',
             fields: { file: 'filePath', message: 'message', fixable: 'fix' },
         };
-        const stdout = JSON.stringify([{ filePath: '/repo/a.js', messages: [{ message: name, ...extra }] }]);
+        const stdout = JSON.stringify([{ filePath: '/repo/a.js', messages: [{ message: name, ...fields }] }]);
         const check = {
             runs: 'files' as const,
             id: 'javascript/eslint',
@@ -95,7 +95,7 @@ test('lists nested two levels down read the file from the top and join several m
 });
 
 test.each([...EMPTY_JSON_CASES])('an invalid JSON report is refused: %s', (stdout, message) => {
-    expect(() => parseJsonReport('x/y', { format: 'json', items: 'items' }, stdout)).toThrow(new Error(message));
+    expect(() => parseJsonReport('x/y', { format: 'json', list: 'items' }, stdout)).toThrow(new Error(message));
 });
 
 test('an empty JSON report has no findings', () => {

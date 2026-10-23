@@ -145,10 +145,10 @@ test('a broken package.json stops the next session and a fixed one changes the s
         message: 'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',
     });
     await writeFile(join(sandbox.path, 'package.json'), ROOT_PACKAGE_WITHOUT_DEPENDENCIES);
-    const current = await openSession(sandbox.path);
+    const reopened = await openSession(sandbox.path);
     expect(
-        current.scopes.map((scope) =>
-            listProjectDependencyNames(current.repository.dependencyFiles, scope.folder.path),
+        reopened.scopes.map((scope) =>
+            listProjectDependencyNames(reopened.repository.dependencyFiles, scope.folder.path),
         ),
     ).toStrictEqual([[], ['vue']]);
 });

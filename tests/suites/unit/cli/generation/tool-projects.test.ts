@@ -23,10 +23,10 @@ import {
 
 test.each([...STYLESHEET_CASES])(
     '$name installs postcss-html only when Stylelint reads Vue or Svelte styles',
-    async (entry) => {
+    async (row) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(entry.configurations),
-            ...entry.files,
+            'gspot.toml': buildSandboxSettings(row.configurations),
+            ...row.files,
         });
 
         const session = await openSession(sandbox.path);
@@ -36,7 +36,7 @@ test.each([...STYLESHEET_CASES])(
                 parseToolPackageJson(packageJsonFile.content, assertPackageManager(session.packageManager).name)
                     .dependencies,
             ).includes('postcss-html'),
-        ).toBe(entry.needsHtmlParser);
+        ).toBe(row.needsHtmlParser);
     },
 );
 

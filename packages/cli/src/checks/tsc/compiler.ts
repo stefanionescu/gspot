@@ -19,13 +19,13 @@ import { writeScopeTsconfig, selectCheckedTsconfigOptions } from '#cli/checks/ts
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
 
 import {
-    TSC_PLAIN_OUTPUT,
     TSBUILDINFO_FLAG,
     TSC_BUILD_COMMAND,
     TSC_PROJECT_COMMAND,
     TSCONFIG_COPY_FOLDER,
     TSCONFIG_TSBUILDINFO,
     TSC_REFERENCE_BUNDLE,
+    TSC_UNFORMATTED_OUTPUT,
     TSC_CONFIG_INPUT_PATHS,
     TSC_PATHS_BASE_REQUIRED,
     TSC_COMPILER_INPUT_PATHS,
@@ -120,7 +120,7 @@ export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourc
     if (result.command === undefined) return result;
     return {
         ...result,
-        command: result.command.map((part) => part.replaceAll(copyRoot, () => sourceRoot)),
+        command: result.command.map((argument) => argument.replaceAll(copyRoot, () => sourceRoot)),
     };
 }
 
@@ -192,7 +192,7 @@ export async function runTsc(
         command.push(...TSC_PROJECT_COMMAND, generatedPath);
         appendTsbuildinfoFlag(command, project?.config.options, tsbuildinfoFolder, TSCONFIG_TSBUILDINFO);
     }
-    command.push(...TSC_PLAIN_OUTPUT);
+    command.push(...TSC_UNFORMATTED_OUTPUT);
     return runCheckCommand(session, planned, { command, copyRoot: session.root });
 }
 

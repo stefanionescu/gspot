@@ -118,10 +118,8 @@ async function buildRevision(search: PushSearch, line: PushLine, hash: string): 
 // Share a check only for matching commits, comparison bases, and changed paths.
 function addRevision(pushed: PushedRevisions, revision: PushRevision): void {
     const duplicate = pushed.revisions.find(
-        (entry) =>
-            entry.hash === revision.hash &&
-            entry.base === revision.base &&
-            isDeepStrictEqual(entry.paths, revision.paths),
+        (each) =>
+            each.hash === revision.hash && each.base === revision.base && isDeepStrictEqual(each.paths, revision.paths),
     );
     if (duplicate === undefined) {
         pushed.revisions.push(revision);

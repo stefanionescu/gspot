@@ -105,13 +105,13 @@ export function readGitEnvironment(
         return { env: explicit };
     const origin = process.cwd();
     if (inheritedGit === undefined) {
-        const declared = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_LOCAL_VARIABLES_ARGUMENTS], {
+        const listed = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_LOCAL_VARIABLES_ARGUMENTS], {
             cwd: origin,
             env: {},
         });
-        if (declared.code !== 0) return { failure: declared };
+        if (listed.code !== 0) return { failure: listed };
         // The installed Git version lists its own local variable names.
-        const localVariables = declared.stdout
+        const localVariables = listed.stdout
             .replace(TRAILING_NEWLINE, '')
             .split('\n')
             .filter((name) => !GIT_COMMAND_CONFIGURATION.has(name));
@@ -120,7 +120,7 @@ export function readGitEnvironment(
     const { localVariables } = inheritedGit;
     if (!localVariables.some((name) => readEnvironmentVariable(name) !== undefined)) return { env: explicit };
     const isolated = Object.fromEntries(localVariables.map((name) => [name, undefined]));
-    if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((part, index) => commandArguments[index] === part))
+    if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((word, index) => commandArguments[index] === word))
         return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
         Object.entries(explicit).filter(
@@ -170,8 +170,8 @@ export async function runGit(
     const selected = readGitEnvironment(workingFolder, [GIT_EXECUTABLE, ...commandArguments], { ...options.env });
     if ('failure' in selected) return selected.failure;
     const command = [GIT_EXECUTABLE, ...commandArguments];
-    const prepared = { ...options, env: selected.env, cwd: workingFolder };
-    return spawnProcess(command, prepared);
+    const spawnOptions = { ...options, env: selected.env, cwd: workingFolder };
+    return spawnProcess(command, spawnOptions);
 }
 
 /**

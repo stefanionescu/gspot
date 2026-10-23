@@ -208,7 +208,7 @@ export const JAVASCRIPT_PARAMETER_NAMES = [
 ] as const;
 
 /** The Bash functions and variables in source order. */
-export const BASH_DECLARED_NAMES = [
+export const BASH_SOURCE_NAMES = [
     'variables:ROOT',
     'variables:count',
     'functions:build_all',
@@ -216,7 +216,7 @@ export const BASH_DECLARED_NAMES = [
 ] as const;
 
 /** JavaScript lines that bind names from require, await import, and a call. */
-export const DECLARED_IMPORT_LINES = [
+export const IMPORT_NAME_LINES = [
     "const { existsSync } = require('node:fs');",
     "const { default: lazyWidget } = await import('./widget.js');",
     'const loadedRecord = await loadRecord();',

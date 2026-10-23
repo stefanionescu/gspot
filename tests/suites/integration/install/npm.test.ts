@@ -105,9 +105,9 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
             join(root, projectPath),
             JSON.stringify({ ...JSON.parse(rootPackage), packageManager: `${packageManager}@99.0.0` }),
         );
-        const pinned = await spawnGspot(root, ['apply', '--json']);
-        expect(pinned.code, pinned.stdout + pinned.stderr).toBe(0);
-        const pinnedPackageJson = await readFile(join(root, GSPOT_PATHS.npmProject));
+        const reapplied = await spawnGspot(root, ['apply', '--json']);
+        expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
+        const appliedPackageJson = await readFile(join(root, GSPOT_PATHS.npmProject));
         const refused = await spawnGspot(root, ['install', '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         // pnpm installs the pinned version itself to answer --version, so its message carries the pnpm error.
@@ -117,7 +117,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
             '. Install that package manager version first.\nTool installation is incomplete. Run gspot install.',
         );
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
-        expect(await readFile(join(root, GSPOT_PATHS.npmProject))).toStrictEqual(pinnedPackageJson);
+        expect(await readFile(join(root, GSPOT_PATHS.npmProject))).toStrictEqual(appliedPackageJson);
         await writeFile(join(root, projectPath), rootPackage);
         const applied = await spawnGspot(root, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);

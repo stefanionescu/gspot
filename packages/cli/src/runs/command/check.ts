@@ -28,7 +28,7 @@ import type {
     CommandGroup,
     CommandSetup,
     Substitutions,
-    PreparedCommand,
+    CommandLaunch,
 } from '#cli/types/runs/command.ts';
 import {
     expandCommand,
@@ -43,17 +43,17 @@ async function runCommands(
     {
         cancelSignal,
         tool,
-        prepared,
+        launch,
         base,
-    }: { cancelSignal: AbortSignal | undefined; tool: Tool; prepared: PreparedCommand; base: CheckResult },
+    }: { cancelSignal: AbortSignal | undefined; tool: Tool; launch: CommandLaunch; base: CheckResult },
 ): Promise<CheckResult> {
     const { check } = planned;
-    const { cwd, commandArguments } = prepared;
-    const state: CommandRun = { root: prepared.root, cwd, findings: [], failed: false };
+    const { cwd, commandArguments } = launch;
+    const state: CommandRun = { root: launch.root, cwd, findings: [], failed: false };
     const started = performance.now();
-    for (const commandLine of prepared.commandLines) {
+    for (const commandLine of launch.commandLines) {
         const { result, failure } = await runToolProcess(commandLine.commandArguments, {
-            ...prepared,
+            ...launch,
             cancelSignal,
             timeoutSeconds: Number(planned.scope.settings.settings['tool_timeout_seconds']),
             name: tool.name,
@@ -106,19 +106,19 @@ async function runInCopy(run: CopyRun): Promise<CheckResult> {
             ? await copyCheckFiles(planned, { session, command, options })
             : undefined;
     const folder = options.copyRoot ?? copy?.path;
-    const prepared =
+    const commandSetup =
         folder === undefined
             ? prepareCommand(planned, { session, command, setup, toolPath })
             : prepareCommandIn(folder, planned, { session, command, toolPath, options });
-    prepared.env = buildOtherToolEnvironment(
+    commandSetup.env = buildOtherToolEnvironment(
         session,
         listOtherTools(planned.scope, planned.check, command),
-        prepared.env,
+        commandSetup.env,
     );
-    const result = await runCommands(planned, { cancelSignal: session.cancelSignal, tool, prepared, base });
+    const result = await runCommands(planned, { cancelSignal: session.cancelSignal, tool, launch: commandSetup, base });
     if (folder === undefined) return result;
     const reported = expandCommand(session, planned, command, setup.substitutions).with(0, toolPath);
-    return { ...result, command: reported.filter((part) => typeof part === 'string') };
+    return { ...result, command: reported.filter((argument) => typeof argument === 'string') };
 }
 
 function findMissingOtherTool(
@@ -178,7 +178,7 @@ export function prepareCommandIn(
         toolPath,
         options,
     }: { session: Session; command: string[]; toolPath: string; options: CheckRunOptions },
-): PreparedCommand {
+): CommandLaunch {
     const selected = { ...session, root: folder };
     return prepareCommand(planned, {
         session: selected,
@@ -275,7 +275,7 @@ export function buildCommandSubstitutions(source: Session, planned: PlannedCheck
 export function prepareCommand(
     planned: PlannedCheck,
     expansion: { session: Session; command: string[]; setup: CommandSetup; toolPath: string },
-): PreparedCommand {
+): CommandLaunch {
     const { session, command, setup, toolPath } = expansion;
     const { root, cwd, files, substitutions, env } = setup;
     const commandArguments = expandCommand(session, planned, command, substitutions).with(0, toolPath);
@@ -285,7 +285,7 @@ export function prepareCommand(
     return {
         root,
         cwd,
-        commandArguments: commandArguments.filter((part) => typeof part === 'string'),
+        commandArguments: commandArguments.filter((argument) => typeof argument === 'string'),
         commandLines,
         env,
     };

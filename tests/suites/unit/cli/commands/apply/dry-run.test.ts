@@ -39,7 +39,7 @@ test.skipIf(isWindows)(
         const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         const { outdated } = JSON.parse(preview.stdout) as DryRunJson;
-        expect(outdated.find((entry) => entry.path === '.editorconfig')).toStrictEqual({
+        expect(outdated.find((file) => file.path === '.editorconfig')).toStrictEqual({
             path: '.editorconfig',
             kind: 'changed',
             diff: 'old mode 600\nnew mode 644\n',
@@ -101,7 +101,7 @@ test('apply --dry-run shows a hand edit of the ESLint config file as a diff with
     expect(changed?.diff).toContain(`-${authored.trim()}`);
     const repeated = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect((JSON.parse(repeated.stdout) as DryRunJson).outdated.find((entry) => entry.path === path)).toStrictEqual(
+    expect((JSON.parse(repeated.stdout) as DryRunJson).outdated.find((file) => file.path === path)).toStrictEqual(
         changed,
     );
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
@@ -114,7 +114,7 @@ test('turning rules off lists the same rule files as stray in apply --dry-run as
     await createFileTree(sandbox.path, { 'gspot.toml': settings });
     expect(await runGspot(sandbox.path, ['apply'])).toHaveProperty('code', 0);
     const initial = await openSession(sandbox.path);
-    const owned = initial.repository.files.filter((entry) => entry.path.includes('/rules/'));
+    const owned = initial.repository.files.filter((file) => file.path.includes('/rules/'));
     expect(owned.length).toBeGreaterThan(0);
     await writeFile(join(sandbox.path, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
@@ -238,20 +238,20 @@ test('apply --dry-run reports a changed file, a stray, a conflict, and an edited
     const shellcheckrc = findConfigFilePath(session, 'shellcheckrc');
     const markdownlint = findConfigFilePath(session, 'markdownlint');
     const edit = async (path: string, text: (current: string) => string): Promise<void> => {
-        const full = join(sandbox.path, path);
-        await chmod(full, 0o644);
-        await writeFile(full, text(await readFile(full, 'utf8')));
+        const absolute = join(sandbox.path, path);
+        await chmod(absolute, 0o644);
+        await writeFile(absolute, text(await readFile(absolute, 'utf8')));
     };
-    await edit(shellcheckrc, (current) => `${current}# Edited.\n`);
+    await edit(shellcheckrc, (text) => `${text}# Edited.\n`);
     await edit(
         GSPOT_PATHS.npmProject,
-        (current) => `<<<<<<< ours
-${current}=======
+        (text) => `<<<<<<< ours
+${text}=======
 >>>>>>> theirs
 `,
     );
-    await edit('AGENTS.md', (current) =>
-        current.replace('<!-- <<< gspot managed <<< -->', 'Edited inside.\n<!-- <<< gspot managed <<< -->'),
+    await edit('AGENTS.md', (text) =>
+        text.replace('<!-- <<< gspot managed <<< -->', 'Edited inside.\n<!-- <<< gspot managed <<< -->'),
     );
     await unlink(join(sandbox.path, 'README.md'));
     await writeFile(join(sandbox.path, 'settings.json'), '{}\n');

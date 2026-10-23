@@ -20,7 +20,7 @@ import {
     SCOPE_LIMIT_VALUES,
     SITE_BUILD_COMMANDS,
     PROJECT_SCOPE_CASES,
-    IGNORE_EXPIRY_ENTRIES,
+    IGNORE_EXPIRY_CASES,
     NESTED_SCOPE_SETTINGS,
     OPENAPI_SCOPE_SETTINGS,
     POSTGRES_SCOPE_SETTINGS,
@@ -60,7 +60,7 @@ test.each(
             ...Object.fromEntries(Object.entries(files).map(([path, text]) => [join(scope, path), text])),
         });
         const session = await openSession(sandbox.path);
-        const selected = session.scopes.find((entry) => entry.folder.path === scope)!;
+        const selected = session.scopes.find((each) => each.folder.path === scope)!;
         expect(getTable(selected.settings, 'site').build_command).toStrictEqual([installer, 'run', 'build']);
 
         const table = parseToml(settings) as TomlTable;
@@ -69,14 +69,14 @@ test.each(
         await writeFile(join(sandbox.path, 'gspot.toml'), written);
         const manual = await openSession(sandbox.path);
         expect(
-            getTable(manual.scopes.find((entry) => entry.folder.path === scope)!.settings, 'site').build_command,
+            getTable(manual.scopes.find((each) => each.folder.path === scope)!.settings, 'site').build_command,
         ).toStrictEqual([...commandArguments]);
         const canonical = buildSettingsText(written, parseToml(written) as TomlTable);
         expect(buildSettingsText(canonical, parseToml(canonical) as TomlTable)).toBe(canonical);
         await writeFile(join(sandbox.path, 'gspot.toml'), canonical);
         const reopened = await openSession(sandbox.path);
         expect(
-            getTable(reopened.scopes.find((entry) => entry.folder.path === scope)!.settings, 'site').build_command,
+            getTable(reopened.scopes.find((each) => each.folder.path === scope)!.settings, 'site').build_command,
         ).toStrictEqual([...commandArguments]);
     },
 );
@@ -112,7 +112,7 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
     });
 
     const session = await openSession(sandbox.path);
-    const scope = session.scopes.find((entry) => entry.folder.path === 'api')!;
+    const scope = session.scopes.find((scope) => scope.folder.path === 'api')!;
     expect(getLimit(scope.settings, 'file_lines', 'python')).toBe(100);
 });
 
@@ -120,7 +120,7 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
     setSystemTime(new Date('2030-05-20T23:59:59.000Z'));
     try {
         const settings = parseSettings(
-            buildSettingsText('', { configurations: [], ignore: IGNORE_EXPIRY_ENTRIES }),
+            buildSettingsText('', { configurations: [], ignore: IGNORE_EXPIRY_CASES }),
             undefined,
         );
         const rootSettings = buildRootScopeSettings(settings);
@@ -133,10 +133,10 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
             settings: rootSettings,
         };
         expect(listIgnores(rootSettings, 'dependencies/osv-scanner')).toStrictEqual([
-            { ...IGNORE_EXPIRY_ENTRIES[3], paths: [] },
-            { ...IGNORE_EXPIRY_ENTRIES[1], paths: [] },
-            { ...IGNORE_EXPIRY_ENTRIES[0], paths: [] },
-            { ...IGNORE_EXPIRY_ENTRIES[2], paths: [] },
+            { ...IGNORE_EXPIRY_CASES[3], paths: [] },
+            { ...IGNORE_EXPIRY_CASES[1], paths: [] },
+            { ...IGNORE_EXPIRY_CASES[0], paths: [] },
+            { ...IGNORE_EXPIRY_CASES[2], paths: [] },
         ]);
         expect(listIgnoredRules(scope, 'dependencies/osv-scanner')).toStrictEqual([
             'future',
@@ -145,10 +145,10 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
             'today',
         ]);
         expect(settings.ignore).toStrictEqual([
-            IGNORE_EXPIRY_ENTRIES[3],
-            IGNORE_EXPIRY_ENTRIES[1],
-            IGNORE_EXPIRY_ENTRIES[0],
-            IGNORE_EXPIRY_ENTRIES[2],
+            IGNORE_EXPIRY_CASES[3],
+            IGNORE_EXPIRY_CASES[1],
+            IGNORE_EXPIRY_CASES[0],
+            IGNORE_EXPIRY_CASES[2],
         ]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
         const next = buildRootScopeSettings(settings);
@@ -207,11 +207,11 @@ test.each(PROJECT_SCOPE_CASES)('scope $scope selects $name: $selected', (scope, 
             configurations: [...PROJECT_CHOICES.configurations],
             removed_configurations: [...PROJECT_CHOICES.removed_configurations],
             scopes: Object.fromEntries(
-                PROJECT_CHOICES.scope.map((entry) => [
-                    entry.path,
+                PROJECT_CHOICES.scope.map((choice) => [
+                    choice.path,
                     {
-                        configurations: [...entry.configurations],
-                        removed_configurations: [...entry.removed_configurations],
+                        configurations: [...choice.configurations],
+                        removed_configurations: [...choice.removed_configurations],
                     },
                 ]),
             ),

@@ -36,11 +36,11 @@ function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
 // a scope skips, because the exact set depends on the built text.
 function listGeneratedPaths(session: Session): string[] {
     const paths = listOwnedConfigFiles(session).flatMap(({ configFile, owner }) => {
-        const whole =
+        const sourceTargets =
             configFile.source === undefined || configFile.target.startsWith(`${DOT_GSPOT}/`)
                 ? []
                 : [configFile.per_scope ? joinScope(owner.scope.folder.path, configFile.target) : configFile.target];
-        return [...whole, ...listPointerPaths(owner, configFile)];
+        return [...sourceTargets, ...listPointerPaths(owner, configFile)];
     });
     return [...new Set(paths)].map((path) => `/${path}`);
 }
@@ -105,8 +105,8 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
         },
         { key: 'environment', title: IGNORE_SECTION_TITLES.environment, patterns: [...LOCAL_ENVIRONMENT_PATTERNS] },
         ...session.settingsFile.settings.ignore
-            .filter((entry) => entry.check === undefined)
-            .map((entry): IgnoreSection => ({ key: 'settings', title: entry.reason, patterns: entry.paths ?? [] })),
+            .filter((ignore) => ignore.check === undefined)
+            .map((ignore): IgnoreSection => ({ key: 'settings', title: ignore.reason, patterns: ignore.paths ?? [] })),
     ];
 }
 
@@ -119,7 +119,7 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
  */
 export function listCheckIgnoreSections(scopeSettings: ScopeSettings, check: string): IgnoreSection[] {
     return listIgnores(scopeSettings, check)
-        .filter((entry) => entry.rule === undefined && entry.names === undefined)
+        .filter((ignore) => ignore.rule === undefined && ignore.names === undefined)
         .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths }));
 }
 
@@ -220,8 +220,8 @@ export function listPythonIgnoredGlobs(planned: PlannedConfigFile, check: string
     return [
         ...ignoredGlobs,
         ...listIgnores(planned.scope.settings, check)
-            .filter((entry) => entry.rule === undefined && entry.names === undefined)
-            .flatMap((entry) => entry.paths),
+            .filter((ignore) => ignore.rule === undefined && ignore.names === undefined)
+            .flatMap((ignore) => ignore.paths),
     ].map((path) => `${base}/${path}`);
 }
 

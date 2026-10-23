@@ -198,7 +198,7 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
 }
 
 // Wait for a process, build its result, and stop its process tree. spawnProcess and streamProcess both end here.
-async function completeProcess(
+async function finishProcess(
     child: RunningProcess,
     supervision: ProcessTreeControl,
     started: number,
@@ -282,7 +282,7 @@ export async function spawnProcess(command: readonly string[], options: AsyncSpa
     const [executable, commandArguments] = split;
     const child = execa(executable, commandArguments, buildAsyncExecaOptions(options, executable));
     const supervision = watchProcess(child, options);
-    return completeProcess(child, supervision, started, child);
+    return finishProcess(child, supervision, started, child);
 }
 
 /**
@@ -307,7 +307,7 @@ export async function streamProcess(
         buffer: { stdout: false },
     });
     const supervision = watchProcess(child, options);
-    return completeProcess(child, supervision, started, readProcessOutput(child, options, readStdout));
+    return finishProcess(child, supervision, started, readProcessOutput(child, options, readStdout));
 }
 
 /**

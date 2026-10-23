@@ -62,12 +62,12 @@ async function listAbsentParents(cwd: string, paths: readonly string[]): Promise
 }
 async function restoreFiles(cwd: string, originals: Map<string, OriginalFile | undefined>): Promise<void> {
     for (const [path, original] of originals) {
-        const full = join(cwd, path);
-        await rm(full, { force: true });
-        if (original?.kind === 'symlink') await symlink(original.target, full);
+        const absolute = join(cwd, path);
+        await rm(absolute, { force: true });
+        if (original?.kind === 'symlink') await symlink(original.target, absolute);
         else if (original?.kind === 'file') {
-            await writeFile(full, original.bytes);
-            await chmod(full, original.mode);
+            await writeFile(absolute, original.bytes);
+            await chmod(absolute, original.mode);
         }
     }
 }
@@ -86,11 +86,11 @@ async function writeChanges(cwd: string, changes: SampleChanges, settings: strin
     const { removed = [], executable = [] } = changes;
     for (const path of removed) await rm(join(cwd, path));
     for (const [path, text] of Object.entries(changes.files)) {
-        const full = join(cwd, path);
-        await mkdir(dirname(full), { recursive: true });
-        const original = await readOriginalFile(full);
-        if (original?.kind === 'symlink') await unlink(full);
-        await writeFile(full, text);
+        const absolute = join(cwd, path);
+        await mkdir(dirname(absolute), { recursive: true });
+        const original = await readOriginalFile(absolute);
+        if (original?.kind === 'symlink') await unlink(absolute);
+        await writeFile(absolute, text);
     }
     for (const path of executable) await markExecutable(cwd, path);
     await writeFile(join(cwd, 'gspot.toml'), settings);
@@ -112,8 +112,8 @@ export async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): P
         runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z']).stdout.split('\0').filter(Boolean),
     );
     const settingsPath = join(cwd, 'gspot.toml');
-    const current = await readFile(settingsPath, 'utf8');
-    const base = changes.files['gspot.toml'] ?? current;
+    const original = await readFile(settingsPath, 'utf8');
+    const base = changes.files['gspot.toml'] ?? original;
     const settings = [base, changes.settings].filter((text) => text !== undefined).join('\n');
     const gone = changes.removed ?? [];
     const executables = changes.executable ?? [];

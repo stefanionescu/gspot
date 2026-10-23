@@ -4,21 +4,21 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 
 import {
     parseGitBlobs,
-    parseTreeEntries,
+    parseTreeFiles,
+    parseIndexFiles,
     stripIndexStages,
-    parseIndexEntries,
     parseAttributePatterns,
 } from '#cli/parsers/git.ts';
 import {
     SHA1,
     SHA256,
-    ENTRY_PATH,
+    INDEX_PATH,
     BINARY_BLOB,
     BLOB_FAILURE,
-    ENTRY_FAILURE,
     INVALID_BLOBS,
     ATTRIBUTE_LINES,
-    INVALID_ENTRIES,
+    INDEX_LINE_FAILURE,
+    INVALID_INDEX_LINES,
 } from '#tests/config/parsers/git.ts';
 
 test.each([...ATTRIBUTE_LINES])(
@@ -30,30 +30,30 @@ test.each([...ATTRIBUTE_LINES])(
 
 test('tree entries keep full object IDs, modes and unquoted paths', () => {
     const output =
-        `100644 blob ${SHA1}\t${ENTRY_PATH}\0` +
+        `100644 blob ${SHA1}\t${INDEX_PATH}\0` +
         `100755 blob ${SHA256}\texecutable\0` +
         `120000 blob ${SHA1}\tlink\0` +
         `160000 commit ${SHA256}\tsubmodule\0`;
-    expect(parseTreeEntries(Buffer.from(output))).toStrictEqual([
-        { mode: '100644', hash: SHA1, path: ENTRY_PATH },
+    expect(parseTreeFiles(Buffer.from(output))).toStrictEqual([
+        { mode: '100644', hash: SHA1, path: INDEX_PATH },
         { mode: '100755', hash: SHA256, path: 'executable' },
         { mode: '120000', hash: SHA1, path: 'link' },
         { mode: '160000', hash: SHA256, path: 'submodule' },
     ]);
-    expect(parseTreeEntries(Buffer.alloc(0))).toStrictEqual([]);
+    expect(parseTreeFiles(Buffer.alloc(0))).toStrictEqual([]);
 });
 
-test.each([...INVALID_ENTRIES])('a Git $listing listing is refused: $name', (entry) => {
-    const { name, output } = entry;
-    const message = 'message' in entry ? entry.message : ENTRY_FAILURE;
+test.each([...INVALID_INDEX_LINES])('a Git $listing listing is refused: $name', (row) => {
+    const { name, output } = row;
+    const message = 'message' in row ? row.message : INDEX_LINE_FAILURE;
     const bytes =
         typeof output === 'string'
             ? Buffer.from(output)
             : Buffer.concat([Buffer.from(output.prefix), Buffer.from(output.bytes)]);
     if (name === 'unmerged index stage') {
-        expect(() => stripIndexStages(parseIndexEntries(bytes.toString('utf8')))).toThrow(message);
+        expect(() => stripIndexStages(parseIndexFiles(bytes.toString('utf8')))).toThrow(message);
     } else {
-        if (typeof output === 'string') expect(() => parseIndexEntries(output)).toThrow(message);
+        if (typeof output === 'string') expect(() => parseIndexFiles(output)).toThrow(message);
         const tab = bytes.indexOf(9);
         const space = bytes.indexOf(32);
         const tree = Buffer.concat([
@@ -62,7 +62,7 @@ test.each([...INVALID_ENTRIES])('a Git $listing listing is refused: $name', (ent
             bytes.subarray(space + 1, tab - 2),
             bytes.subarray(tab),
         ]);
-        expect(() => parseTreeEntries(tree)).toThrow(message);
+        expect(() => parseTreeFiles(tree)).toThrow(message);
     }
 });
 
@@ -90,8 +90,8 @@ test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output }) =>
 });
 
 test.each([0, 1])('index entries keep stage %i and the full object ID', (stage) => {
-    expect(parseIndexEntries(`100755 ${SHA256} ${String(stage)}\t${ENTRY_PATH}\0`)).toStrictEqual([
-        { mode: '100755', hash: SHA256, path: ENTRY_PATH, stage },
+    expect(parseIndexFiles(`100755 ${SHA256} ${String(stage)}\t${INDEX_PATH}\0`)).toStrictEqual([
+        { mode: '100755', hash: SHA256, path: INDEX_PATH, stage },
     ]);
 });
 

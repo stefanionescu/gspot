@@ -31,7 +31,7 @@ test('Prettier reports and fixes a Svelte component through the Svelte plugin', 
     expect(await readFile(path, 'utf8')).toBe(CLEAN_SVELTE);
 });
 
-test.each([...SVELTE_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, SVELTE_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...SVELTE_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, SVELTE_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

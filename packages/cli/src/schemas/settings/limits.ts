@@ -2,15 +2,15 @@ import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
 import type { LimitSchemas } from '#cli/types/settings/definitions.ts';
 import { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
-import { wholeNumber, allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 import { type WrittenLimits, type TableSettings } from '#cli/types/settings/file.ts';
+import { nonnegativeInteger, allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 import { type LimitLanguage, type LanguageLimitField } from '#cli/types/settings/values.ts';
 
 const limitFields = Object.fromEntries(
     Object.entries(LIMIT_DEFINITIONS).map(([key, definition]) => [
         key.slice('limits.'.length),
         allowReasonedValue(
-            key === 'limits.trivial_function_statements' ? z.number().int().positive() : wholeNumber,
+            key === 'limits.trivial_function_statements' ? z.number().int().positive() : nonnegativeInteger,
             definition,
         ),
     ]),

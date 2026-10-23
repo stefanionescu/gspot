@@ -171,7 +171,7 @@ export function buildBannedHeadingsStyle(planned: PlannedConfigFile): string {
  * @param planned the config file with its scope, level, and target path.
  * @returns the Vale list-item length rule.
  */
-export function buildListItemStyle(planned: PlannedConfigFile): string {
+export function buildBulletLengthStyle(planned: PlannedConfigFile): string {
     const max = getTable(planned.scope.settings, 'prose').max_list_item_words;
     return stringify({
         ...LENGTH_STYLES.item,

@@ -48,7 +48,7 @@ export const SETTING_RULE_OPTIONS = [
     },
 ] as const;
 
-export const REMOVED_EXTRA_TOOLS = [
+export const REMOVED_TABLE_TOOLS = [
     'eslint',
     'knip',
     'prettier',

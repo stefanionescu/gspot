@@ -66,7 +66,7 @@ function addDeclarator(found: FileIdentifiers, declarator: Node): void {
     const start = found.out.length;
     addPattern(found, declarator.childForFieldName('name'), 'variables');
     if (isComponentFactory(declarator))
-        for (const identifier of found.out.slice(start)) identifier.extraCases = ['pascal'];
+        for (const identifier of found.out.slice(start)) identifier.addedCases = ['pascal'];
 }
 
 function addNamed(found: FileIdentifiers, root: Node): void {

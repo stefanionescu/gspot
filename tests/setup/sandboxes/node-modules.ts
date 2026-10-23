@@ -19,14 +19,14 @@ export const testModules = join(import.meta.dir, '../../node_modules');
  * @returns package names in filesystem order.
  */
 async function listPackageNames(store: string): Promise<string[]> {
-    const entries = await readdir(store);
+    const listed = await readdir(store);
     const names = await Promise.all(
-        entries
-            .filter((entry) => !entry.startsWith('.'))
-            .map(async (entry) => {
-                if (!entry.startsWith('@')) return [entry];
-                const children = await readdir(join(store, entry));
-                return children.map((child) => join(entry, child));
+        listed
+            .filter((stored) => !stored.startsWith('.'))
+            .map(async (name) => {
+                if (!name.startsWith('@')) return [name];
+                const children = await readdir(join(store, name));
+                return children.map((child) => join(name, child));
             }),
     );
     return names.flat();
@@ -71,14 +71,14 @@ export async function linkPackages(modulesFolder: string, names: readonly string
         ),
     );
     const found = new Map<string, string>();
-    for (let entry = pending.pop(); entry !== undefined; entry = pending.pop()) {
-        const [name, path] = entry;
+    for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
+        const [name, path] = next;
         if (found.has(name) || !(await isOnDisk(path))) continue;
-        const real = await realpath(path);
-        found.set(name, real);
-        const packageJson = JSON.parse(await readFile(join(real, 'package.json'), 'utf8')) as PackageJson;
+        const canonical = await realpath(path);
+        found.set(name, canonical);
+        const packageJson = JSON.parse(await readFile(join(canonical, 'package.json'), 'utf8')) as PackageJson;
         // The store keeps each dependency of a package beside it, in the same node_modules folder.
-        const folder = join(real, ...name.split('/').map(() => '..'));
+        const folder = join(canonical, ...name.split('/').map(() => '..'));
         const dependencies = {
             ...packageJson.dependencies,
             ...packageJson.optionalDependencies,

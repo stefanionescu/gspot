@@ -114,7 +114,7 @@ test('live output arrives before the process ends while capture keeps the output
     const ready = Promise.withResolvers<undefined>();
     const release = join(sandbox.path, 'release');
     const child = `console.log('ready'); console.error('diagnostic'); while (!(await Bun.file(${JSON.stringify(release)}).exists())) await Bun.sleep(10); process.exitCode = 7;`;
-    let completed = false;
+    let finished = false;
     const running = captureProcess('text', [process.execPath, '-e', child], {
         cwd: sandbox.path,
         onStdout: (chunk) => {
@@ -125,7 +125,7 @@ test('live output arrives before the process ends while capture keeps the output
             stderr.push(chunk);
         },
     }).then((result) => {
-        completed = true;
+        finished = true;
         return result;
     });
     try {
@@ -135,7 +135,7 @@ test('live output arrives before the process ends while capture keeps the output
                 throw new Error('No live output.');
             }),
         ]);
-        expect(completed).toBe(false);
+        expect(finished).toBe(false);
         expect(stdout.join('')).toBe('ready\n');
     } finally {
         await writeFile(release, 'continue');

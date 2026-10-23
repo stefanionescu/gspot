@@ -9,7 +9,7 @@ import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { LocalDate, stringify } from '@decimalturn/toml-patch';
 import { GLOB_BRACKETS } from '#cli/config/commands/ignore.ts';
 import { type IgnoreOptions } from '#cli/types/commands/ignore.ts';
-import { assertKnownCheck } from '#cli/configurations/manifests.ts';
+import { assertCheckExists } from '#cli/configurations/manifests.ts';
 import { calendarDateSchema } from '#cli/schemas/settings/fields.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
@@ -19,7 +19,7 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 
 function assertIgnoreOptions(options: IgnoreOptions, settings: Settings): void {
     if (options.check !== undefined) {
-        assertKnownCheck(options.check, settings);
+        assertCheckExists(options.check, settings);
         return;
     }
     if (options.paths === undefined)
@@ -36,16 +36,17 @@ function assertIgnoreOptions(options: IgnoreOptions, settings: Settings): void {
 
 // A path through a route group or a dynamic segment holds parentheses or brackets that read as glob syntax. Escape the
 // existing part of each path, so the pattern matches that folder.
-function escapeExistingPaths(root: string, paths: string[] | undefined): string[] | undefined {
+function escapeLiteralPaths(root: string, paths: string[] | undefined): string[] | undefined {
     return paths?.map((path) => {
-        const parts = path.split('/');
-        for (let index = parts.length; index > 0; index -= 1) {
-            const prefix = parts.slice(0, index).join('/');
+        const segments = path.split('/');
+        for (let index = segments.length; index > 0; index -= 1) {
+            const prefix = segments.slice(0, index).join('/');
             if (!GLOB_BRACKETS.test(prefix)) return path;
             if (statSync(join(root, prefix), { throwIfNoEntry: false }) !== undefined)
-                return [prefix.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), ...parts.slice(index)].join(
-                    '/',
-                );
+                return [
+                    prefix.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
+                    ...segments.slice(index),
+                ].join('/');
         }
         return path;
     });
@@ -60,7 +61,7 @@ function escapeExistingPaths(root: string, paths: string[] | undefined): string[
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const { root, input, settings } = prepareSettingsEdit(options.cwd);
     assertIgnoreOptions(options, settings);
-    const paths = escapeExistingPaths(root, options.paths);
+    const paths = escapeLiteralPaths(root, options.paths);
     const target = options.check ?? 'every check';
     const message = validateReason(`gspot ignore ${options.check ?? ''}`.trimEnd(), options.reason);
     if (message !== undefined) throw new GspotError('settings', message);

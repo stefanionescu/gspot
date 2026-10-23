@@ -51,7 +51,7 @@ export async function checkPythonDeptry(session: Session, planned: PlannedCheck)
                     const child = posix
                         .relative(planned.scope.folder.path, path)
                         .split('/')
-                        .map((part) => RegExp.escape(part))
+                        .map((segment) => RegExp.escape(segment))
                         .join(String.raw`[/\\]`);
                     return String.raw`^${child}([/\\]|$)`;
                 }),

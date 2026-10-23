@@ -136,11 +136,11 @@ export function buildVenvExecutablePath(folder: string, name: string): string {
  * @returns the enclosing folders, nearest first, with an empty string for the root.
  */
 export function listEnclosingFolders(folder: string): string[] {
-    let current = folder === '.' ? '' : folder;
-    const folders = [current];
-    while (current !== '') {
-        current = extractParentFolder(current);
-        folders.push(current);
+    let walked = folder === '.' ? '' : folder;
+    const folders = [walked];
+    while (walked !== '') {
+        walked = extractParentFolder(walked);
+        folders.push(walked);
     }
     return folders;
 }

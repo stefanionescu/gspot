@@ -36,7 +36,7 @@ describe.each([...SUPPRESSION_SYNTAX_CASES])(
         });
         test.each([...sources])('$comment is a suppression: $active', ({ active, path }) => {
             expect(
-                comments.filter((entry) => entry.file === path).map(({ line, rule }) => ({ line, rule })),
+                comments.filter((comment) => comment.file === path).map(({ line, rule }) => ({ line, rule })),
             ).toStrictEqual(active ? [{ line: 1, rule: `${form}-no-reason` }] : []);
         });
     },

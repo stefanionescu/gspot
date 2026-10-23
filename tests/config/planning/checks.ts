@@ -37,7 +37,7 @@ export const STRIPPED_COVERAGE_COMMANDS: Record<string, string[]> = {
 };
 
 /** Ignores of a whole scope and the scopes where the replaced check still runs. */
-export const WHOLE_SCOPE_IGNORE_CASES = [
+export const SCOPE_WIDE_IGNORE_CASES = [
     { paths: ['api/**'], ignored: true },
     { paths: ['api'], ignored: true },
     { paths: ['api/**', '!api/app/**'], ignored: false },

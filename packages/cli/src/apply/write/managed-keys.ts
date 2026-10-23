@@ -13,11 +13,11 @@ import { TOML_EXTENSION, EMPTY_JSON_TEXT, JSON_SETTINGS_EXTENSIONS } from '#cli/
  * Open a shared settings file after checking its encoding.
  *
  * @param path the file, which also picks the format.
- * @param current the existing file, or undefined when generation creates it.
+ * @param onDisk the existing file, or undefined when generation creates it.
  * @returns the editable document.
  */
-function openSettingsDocument(path: string, current: FileContents | undefined): EditableFile {
-    const text = current === undefined ? undefined : decodeUtf8Text(path, current.bytes);
+function openSettingsDocument(path: string, onDisk: FileContents | undefined): EditableFile {
+    const text = onDisk === undefined ? undefined : decodeUtf8Text(path, onDisk.bytes);
     const source = text ?? '';
     if (path.endsWith(TOML_EXTENSION)) return openTomlFile(path, source);
     if (JSON_SETTINGS_EXTENSIONS.some((extension) => path.endsWith(extension)))
@@ -34,15 +34,15 @@ function openSettingsDocument(path: string, current: FileContents | undefined): 
  * @returns the key write plan.
  */
 export function planSettingsWrite(writer: Writer, path: string, keys: ManagedKeys['keys']): WritePlan {
-    const current = writer.files.read(path);
-    const document = openSettingsDocument(path, current);
-    const before = current === undefined ? '' : document.getText();
+    const onDisk = writer.files.read(path);
+    const document = openSettingsDocument(path, onDisk);
+    const before = onDisk === undefined ? '' : document.getText();
     for (const field of keys) document.set(field.key, field.value);
     const text = document.getText();
     return {
         path,
-        before: current,
-        after: { bytes: Buffer.from(text), mode: current?.mode ?? OWNER_WRITABLE_FILE },
+        before: onDisk,
+        after: { bytes: Buffer.from(text), mode: onDisk?.mode ?? OWNER_WRITABLE_FILE },
         status: text === before ? 'unchanged' : 'changed',
     };
 }
@@ -54,10 +54,10 @@ export function planSettingsWrite(writer: Writer, path: string, keys: ManagedKey
  * @param output the file gspot writes managed keys into.
  * @param output.path where the file sits.
  * @param output.keys the keys and the values they must hold.
- * @param current the file contents on disk.
+ * @param onDisk the file contents on disk.
  * @returns whether every key holds its value.
  */
-export function hasManagedKeys(output: ManagedKeys, current: FileContents): boolean {
-    const document = openSettingsDocument(output.path, current);
+export function hasManagedKeys(output: ManagedKeys, onDisk: FileContents): boolean {
+    const document = openSettingsDocument(output.path, onDisk);
     return output.keys.every((field) => isDeepStrictEqual(document.getValue(field.key), normalizeTables(field.value)));
 }

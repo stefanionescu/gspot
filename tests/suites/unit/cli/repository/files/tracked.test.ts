@@ -8,11 +8,11 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { listRevisionEntries } from '#cli/repository/revisions/files.ts';
+import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { rm, chmod, unlink, symlink, writeFile } from 'node:fs/promises';
+import { readIndexFiles, listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { isWindows, simulateOperatingSystem } from '#tests/setup/system/platform.ts';
-import { listTrackedFiles, readIndexEntries } from '#cli/repository/files/tracked.ts';
 import { OUTSIDE_LINK_CASES, ROOT_DISCOVERY_CASES } from '#tests/config/repository/files/tracked.ts';
 
 test.each([...ROOT_DISCOVERY_CASES])(
@@ -51,8 +51,8 @@ test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => 
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
     expect(runCommandBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
-    const entries = await listTrackedFiles(sandbox.path, [], { hasGit: false });
-    expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
+    const files = await listTrackedFiles(sandbox.path, [], { hasGit: false });
+    expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
 });
 test('deleted tracked files are left out of the file list', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
@@ -60,7 +60,7 @@ test('deleted tracked files are left out of the file list', async () => {
     runGitStep(sandbox.path, ['init']);
     runGitStep(sandbox.path, ['add', 'source.ts']);
     await rm(join(sandbox.path, 'source.ts'));
-    expect(await listTrackedFiles(sandbox.path, await readIndexEntries(sandbox.path), { hasGit: true })).toStrictEqual(
+    expect(await listTrackedFiles(sandbox.path, await readIndexFiles(sandbox.path), { hasGit: true })).toStrictEqual(
         [],
     );
 });
@@ -81,10 +81,10 @@ test('a broken Git index is reported instead of a folder walk', async () => {
     runGitStep(cwd, ['init']);
     expect(isGitRepository(cwd)).toBe(true);
     runGitStep(cwd, ['add', 'source.ts']);
-    const entries = await listTrackedFiles(cwd, await readIndexEntries(cwd), { hasGit: true });
-    expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
+    const files = await listTrackedFiles(cwd, await readIndexFiles(cwd), { hasGit: true });
+    expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
     await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
-    expect(await captureRejection(readIndexEntries(cwd))).toStartWith('Git ls-files failed');
+    expect(await captureRejection(readIndexFiles(cwd))).toStartWith('Git ls-files failed');
 });
 test('a .git file that points at a missing folder is reported, not read as a folder without Git', async () => {
     await using sandbox = await testdir({
@@ -92,7 +92,7 @@ test('a .git file that points at a missing folder is reported, not read as a fol
         'source.ts': 'export {};\n',
     });
 
-    expect(await captureRejection(readIndexEntries(sandbox.path))).toStartWith('Git ls-files failed');
+    expect(await captureRejection(readIndexFiles(sandbox.path))).toStartWith('Git ls-files failed');
     expect(() => findRoot(sandbox.path)).toThrow('Git could not find the repository root of');
     expect(() => isGitRepository(sandbox.path)).toThrow('is a work tree (exit 128)');
 });
@@ -102,7 +102,7 @@ test('a missing git program is reported instead of a successful walk', async () 
     await using empty = await testdir();
     using resources = new DisposableStack();
     resources.use(overrideEnvironment({ PATH: empty.path }));
-    expect(await captureRejection(readIndexEntries(sandbox.path))).toMatch(
+    expect(await captureRejection(readIndexFiles(sandbox.path))).toMatch(
         /Git ls-files failed.*(?:not found|not recognized)/su,
     );
     expect(() => findRoot(sandbox.path)).toThrow(
@@ -125,8 +125,8 @@ test('on Windows the executable bit comes from the Git index', async () => {
     await chmod(join(sandbox.path, 'local.sh'), 0o700);
     using resources = new DisposableStack();
     resources.use(simulateOperatingSystem('win32'));
-    const entries = await listTrackedFiles(sandbox.path, await readIndexEntries(sandbox.path), { hasGit: true });
-    expect(entries.map(({ path, executable }) => ({ path, executable }))).toStrictEqual([
+    const files = await listTrackedFiles(sandbox.path, await readIndexFiles(sandbox.path), { hasGit: true });
+    expect(files.map(({ path, executable }) => ({ path, executable }))).toStrictEqual([
         { path: 'indexed.sh', executable: true },
         { path: 'local.sh', executable: false },
     ]);
@@ -141,7 +141,7 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
         stdin: [1, 2, 3].map((stage) => `100644 ${hash} ${String(stage)}\tsource.txt\n`).join(''),
     });
     expect(update.code, update.stderr).toBe(0);
-    const index = await readIndexEntries(sandbox.path);
+    const index = await readIndexFiles(sandbox.path);
     expect(index.map(({ path, stage }) => ({ path, stage }))).toStrictEqual([
         { path: 'source.txt', stage: 1 },
         { path: 'source.txt', stage: 2 },
@@ -150,7 +150,7 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
     expect(await listTrackedFiles(sandbox.path, index, { hasGit: true })).toStrictEqual([
         { path: 'source.txt', size: Buffer.byteLength('working content\n'), executable: false, symlink: false },
     ]);
-    expect(await captureRejection(listRevisionEntries(sandbox.path, { kind: 'index' }))).toContain(
+    expect(await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }))).toContain(
         'Resolve index conflicts',
     );
 });
@@ -161,8 +161,8 @@ test('the index keeps deleted tracked paths and encoded names and leaves out unt
     runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '--', path]);
     await rm(join(sandbox.path, path));
-    const entries = await readIndexEntries(sandbox.path);
-    expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
+    const files = await readIndexFiles(sandbox.path);
+    expect(files.map((file) => file.path)).toStrictEqual([path]);
 });
 // Windows file names cannot hold a newline.
 test.each(
@@ -194,8 +194,8 @@ test.each(
         await symlink('source.ts', join(root, 'linked.ts'));
         await symlink('../../outside', join(root, 'blocked/external'), 'dir');
         await symlink(folder, join(root, 'linked-directory'), 'dir');
-        const entries = await listTrackedFiles(root, [], { hasGit: false });
-        expect(entries.map((entry) => entry.path)).toStrictEqual(
+        const files = await listTrackedFiles(root, [], { hasGit: false });
+        expect(files.map((file) => file.path)).toStrictEqual(
             [
                 '.gitignore',
                 `${folder}/.gitignore`,
@@ -206,7 +206,7 @@ test.each(
                 'source.ts',
             ].toSorted((left, right) => left.localeCompare(right)),
         );
-        expect(entries.find(({ path }) => path === 'linked.ts')).toStrictEqual({
+        expect(files.find(({ path }) => path === 'linked.ts')).toStrictEqual({
             path: 'linked.ts',
             size: Buffer.byteLength('source'),
             executable: false,
@@ -214,6 +214,6 @@ test.each(
         });
         await symlink('../outside/private.ts', join(root, 'external.ts'));
         const linked = await listTrackedFiles(root, [], { hasGit: false });
-        expect(linked.map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
+        expect(linked.map((file) => file.path)).toStrictEqual(files.map((file) => file.path));
     },
 );

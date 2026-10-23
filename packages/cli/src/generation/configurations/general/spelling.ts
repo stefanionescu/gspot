@@ -21,7 +21,7 @@ import {
 // Convert each shared ignore section once, and keep the first reason for a repeated path.
 function buildTyposSections(planned: PlannedConfigFile): IgnoreSection[] {
     const excludedLockfiles = TYPOS_IGNORED_GLOBS.filter(
-        (path) => path === '*.lock' || LOCKFILES.some((entry) => entry.file === posix.basename(path)),
+        (path) => path === '*.lock' || LOCKFILES.some((lockfile) => lockfile.file === posix.basename(path)),
     );
     const excludedFormats = TYPOS_IGNORED_GLOBS.filter((path) => !excludedLockfiles.includes(path));
     const sections = [

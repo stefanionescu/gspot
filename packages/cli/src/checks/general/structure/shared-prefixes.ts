@@ -18,12 +18,12 @@ import {
 
 // NestJS names files <name>.<kind>.ts, so these do not count as a shared prefix. Its kind suffixes apply to .ts and .js
 // files, never to .tsx or .jsx.
-function hasDeclaredKindSuffix(name: string, kinds: Set<string>): boolean {
+function hasKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);
     if (extension.endsWith('x') || !listTaggedExtensions('javascript', 'typescript').includes(extension)) return false;
-    const parts = extractBaseName(name).replace(SPEC_SUFFIX, '').split('.');
-    const kind = parts.at(-1);
-    return parts.length > 1 && kind !== undefined && kinds.has(kind);
+    const segments = extractBaseName(name).replace(SPEC_SUFFIX, '').split('.');
+    const kind = segments.at(-1);
+    return segments.length > 1 && kind !== undefined && kinds.has(kind);
 }
 
 /**
@@ -57,7 +57,7 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
         const folder = extractParentFolder(file.path);
         return (
             !HOOK_FOLDERS.some((hook) => isInScope(folder, joinScope(planned.scope.folder.path, hook))) &&
-            !folder.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
+            !folder.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
         );
     });
     return files.flatMap((file) => {
@@ -66,30 +66,28 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
         const prefix = extractPrefix(stem);
         const key = JSON.stringify([folder, prefix]);
         if (prefix === '' || prefixes.has(prefix) || INDEX_BASE_NAMES.has(stem) || seen.has(key)) return [];
-        const peers = (tree.get(folder) ?? []).filter((entry) => {
-            if (entry.kind === 'folder')
+        const peers = (tree.get(folder) ?? []).filter((child) => {
+            if (child.kind === 'folder')
                 return (
-                    !entry.name.startsWith('.') &&
-                    !INSTALLED_DEPENDENCY_FOLDERS.has(entry.name) &&
-                    extractPrefix(entry.name) === prefix
+                    !child.name.startsWith('.') &&
+                    !INSTALLED_DEPENDENCY_FOLDERS.has(child.name) &&
+                    extractPrefix(child.name) === prefix
                 );
-            if (hasDeclaredKindSuffix(entry.name, kinds)) return false;
-            const peerStem = extractBaseName(entry.name);
+            if (hasKindSuffix(child.name, kinds)) return false;
+            const peerStem = extractBaseName(child.name);
             return !INDEX_BASE_NAMES.has(peerStem) && extractPrefix(peerStem) === prefix;
         });
         // A file and its companions, such as button.tsx, button.module.css, and button.test.tsx, count as one name.
         if (
             new Set(
-                peers.map((entry) =>
-                    entry.kind === 'folder'
-                        ? `${entry.name}/`
-                        : extractBaseName(entry.name).replace(COMPANION_SUFFIX, ''),
+                peers.map((peer) =>
+                    peer.kind === 'folder' ? `${peer.name}/` : extractBaseName(peer.name).replace(COMPANION_SUFFIX, ''),
                 ),
             ).size < limit
         )
             return [];
         seen.add(key);
-        const names = peers.map((entry) => (entry.kind === 'folder' ? `${entry.name}/` : entry.name)).join(', ');
+        const names = peers.map((peer) => (peer.kind === 'folder' ? `${peer.name}/` : peer.name)).join(', ');
         return [
             buildFinding(
                 planned,

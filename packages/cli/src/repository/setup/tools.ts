@@ -63,13 +63,13 @@ function isLintCommand(command: string): boolean {
 function listFolder(root: string, folder: string): string[] {
     const path = join(root, folder);
     if (statSync(path, { throwIfNoEntry: false }) === undefined) return [];
-    const realRoot = realpathSync(root);
+    const canonicalRoot = realpathSync(root);
     const target = realpathSync(path);
-    if (!isInside(relative(realRoot, target))) return [];
+    if (!isInside(relative(canonicalRoot, target))) return [];
     if (!statSync(target).isDirectory()) return [];
     return readdirSync(target)
         .toSorted((left, right) => left.localeCompare(right))
-        .filter((entry) => !entry.startsWith('.') || entry === KEPT_DOT_FILE);
+        .filter((name) => !name.startsWith('.') || name === KEPT_DOT_FILE);
 }
 
 // List the hook scripts in a folder: its files, without the folders that a hook manager keeps there.
@@ -121,7 +121,7 @@ function listLintCommands(path: string, document: unknown): string[] {
 
 // Read the folder that core.hooksPath names. Husky points it at its stubs in .husky/_, or at .husky in Husky 8, and
 // keeps the hooks of the user in .husky, which the Husky entry lists.
-function readHooksPathEntry(root: string, hooksPath: string): RepositorySetup['hooks'] {
+function readHooksPathSetup(root: string, hooksPath: string): RepositorySetup['hooks'] {
     if (hooksPath === '') return [];
     const location = readHooksFolder(root);
     return [{ kind: 'hooksPath', path: hooksPath, files: listHookFiles(dirname(location), basename(location)) }];
@@ -157,7 +157,7 @@ export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
     );
     const lefthook = present.find((name) => name !== PRE_COMMIT_FILE);
     return [
-        ...readHooksPathEntry(repositoryRoot, foreignHooksPath),
+        ...readHooksPathSetup(repositoryRoot, foreignHooksPath),
         ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(repositoryRoot, folder, foreignHooksPath)).filter(
             (hook) => hook !== undefined,
         ),
@@ -210,9 +210,14 @@ export function readRepositorySetup(
     return {
         conflictingConfigFiles: [
             ...new Map(
-                conflictingConfigFiles.map((entry) => [
-                    JSON.stringify([entry.tool, entry.path, entry.table, entry.key]),
-                    entry,
+                conflictingConfigFiles.map((conflictingConfigFile) => [
+                    JSON.stringify([
+                        conflictingConfigFile.tool,
+                        conflictingConfigFile.path,
+                        conflictingConfigFile.table,
+                        conflictingConfigFile.key,
+                    ]),
+                    conflictingConfigFile,
                 ]),
             ).values(),
         ],
@@ -230,7 +235,7 @@ export function readRepositorySetup(
         ruleFolders: RULE_FOLDERS.filter(
             (name) =>
                 lstatSync(join(repositoryRoot, name), { throwIfNoEntry: false })?.isSymbolicLink() === true ||
-                listFolder(repositoryRoot, name).some((entry) => entry.endsWith(MARKDOWN_EXTENSION)),
+                listFolder(repositoryRoot, name).some((child) => child.endsWith(MARKDOWN_EXTENSION)),
         ),
         lintFolders: LINT_FOLDERS.filter((name) => listFolder(repositoryRoot, name).length > 0),
         toolOnlyPackages,

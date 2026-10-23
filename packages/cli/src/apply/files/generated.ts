@@ -10,7 +10,7 @@ import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts
 import { GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { type Writer, type WritePlan, type ApplyReport } from '#cli/types/apply.ts';
 import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/apply/write/plans.ts';
-import { MANAGED_KEYS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply/files/generated.ts';
+import { MANAGED_KEYS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE } from '#cli/config/apply/files/generated.ts';
 
 /**
  * Say that the generated files need no change.
@@ -56,7 +56,7 @@ function addInstallationNote(session: Session, generated: GenerationResult, repo
             (file.kind === 'lock' || file.path === GSPOT_PATHS.npmProject || file.path === GSPOT_PATHS.pythonProject),
     );
     const hasDrift = listStaleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
-    if (dependenciesChanged || hasDrift) report.notes.push(INSTALL_NEEDED_NOTE);
+    if (dependenciesChanged || hasDrift) report.notes.push(INSTALL_FIRST_NOTE);
 }
 
 function buildReplacementPlans(

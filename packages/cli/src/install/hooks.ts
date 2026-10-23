@@ -35,7 +35,7 @@ function readForeignHooks(root: string, own: string): RepositorySetup['hooks'] {
     )
         return found;
     const scripts = readdirSync(folder, { withFileTypes: true }).filter(
-        (entry) => entry.isFile() && !entry.name.endsWith(SAMPLE_HOOK_SUFFIX) && !isLfsHookScript(folder, entry.name),
+        (child) => child.isFile() && !child.name.endsWith(SAMPLE_HOOK_SUFFIX) && !isLfsHookScript(folder, child.name),
     );
     return scripts.length === 0
         ? found
@@ -44,7 +44,7 @@ function readForeignHooks(root: string, own: string): RepositorySetup['hooks'] {
               {
                   kind: 'hooksPath',
                   path: convertToPosixPath(relative(root, folder)),
-                  files: scripts.map((entry) => entry.name),
+                  files: scripts.map((script) => script.name),
               },
           ];
 }

@@ -114,7 +114,10 @@ test.each([...TRIVIAL_FILES])('$name gets the findings $expected', async ({ lang
     expect(findings.map(({ rule }) => rule)).toStrictEqual([...expected]);
 });
 
-test.each([...BASH_TRIVIAL_FUNCTION_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(bashSandbox(), entry, BASH_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
-});
+test.each([...BASH_TRIVIAL_FUNCTION_CASES])(
+    '$check reports $expected.rule and passes after the fix',
+    async (sample) => {
+        const result = await runCheckSample(bashSandbox(), sample, BASH_SANDBOX);
+        expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
+    },
+);

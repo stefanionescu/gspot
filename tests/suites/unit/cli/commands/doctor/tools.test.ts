@@ -15,7 +15,7 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { ZERO_COVERAGE_TABLES } from '#tests/config/commands/doctor/tools.ts';
-import { fakeExecutableLookup, fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
+import { fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configurations/tools.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
@@ -50,7 +50,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
             'source.js': 'export const value = 1;\n',
         });
         const session = await openSession(sandbox.path);
-        const tools = listDistinctTools(session.neededToolConfigurations);
+        const tools = listDistinctTools(session.toolConfigurations);
         await createFileTree(
             sandbox.path,
             Object.fromEntries(
@@ -71,7 +71,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
             ),
         );
         using resources = new DisposableStack();
-        resources.use(fakePinnedExecutables(tools));
+        resources.use(fakeToolExecutables(tools));
         const result = await runGspot(sandbox.path, ['doctor', '--json']);
         const report = JSON.parse(result.stdout) as DoctorReport;
         expect(report.tools.find((tool) => tool.name === pin.name)).toMatchObject({ state, found: version });
@@ -98,7 +98,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     });
 
     const session = await openSession(sandbox.path);
-    const tools = listDistinctTools(session.neededToolConfigurations);
+    const tools = listDistinctTools(session.toolConfigurations);
     using _which = fakeExecutableLookup(join(sandbox.path, 'tool-bin', 'pytest'));
     const nativeVersion = processes.spawnProcessBlocking;
     let present = false;

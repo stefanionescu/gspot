@@ -16,10 +16,10 @@ import { fakeNpmPackage, writeScriptCommand, fakeExecutableLookup } from '#tests
 
 /** Build one release below the declared minimum version, so the test does not copy its value. */
 function buildVersionBelow(minimum: string): string {
-    const parts = minimum.split('.').map(Number);
-    const index = parts.findLastIndex((part) => part > 0);
-    parts[index]! -= 1;
-    return parts.join('.');
+    const segments = minimum.split('.').map(Number);
+    const index = segments.findLastIndex((number) => number > 0);
+    segments[index]! -= 1;
+    return segments.join('.');
 }
 
 test('an npm tool is the version its package holds, whatever it prints', async () => {

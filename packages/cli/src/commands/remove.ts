@@ -40,10 +40,10 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
             exitCode: 0,
         };
     }
-    const current = scopeSettings.configurations;
+    const scopeConfigurations = scopeSettings.configurations;
     const scopeTable = getScopeTable(input.table, options.scope);
     const removed = options.configurations.filter((name) => selected.includes(name));
-    scopeTable['configurations'] = current.filter((name) => !removed.includes(name));
+    scopeTable['configurations'] = scopeConfigurations.filter((name) => !removed.includes(name));
     const previous = scopeTable['removed_configurations'];
     if (isTable(previous) && previous['reason'] !== options.reason)
         throw new GspotError(
@@ -76,13 +76,13 @@ function findRequirementChain(
     configurations: Map<string, Configuration>,
 ): string[] | undefined {
     const seen = new Set<string>();
-    function findChain(current: string): string[] | undefined {
-        if (current === required) return [current];
-        if (seen.has(current)) return undefined;
-        seen.add(current);
-        for (const required of configurations.get(current)?.requires ?? []) {
+    function findChain(start: string): string[] | undefined {
+        if (start === required) return [start];
+        if (seen.has(start)) return undefined;
+        seen.add(start);
+        for (const required of configurations.get(start)?.requires ?? []) {
             const rest = findChain(required);
-            if (rest !== undefined) return [current, ...rest];
+            if (rest !== undefined) return [start, ...rest];
         }
         return undefined;
     }

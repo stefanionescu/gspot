@@ -69,8 +69,8 @@ createRuleTester().run<
         'export type Alias = Owner;',
         'export type Alias<T> = Owner<T>;',
         { code: 'export * from "./owner";', filename: '/repo/src/index.ts' },
-    ].map((entry) => ({
-        ...(typeof entry === 'string' ? { code: entry } : entry),
+    ].map((row) => ({
+        ...(typeof row === 'string' ? { code: row } : row),
         errors: [{ messageId: 'trivial' as const }],
     })),
 });

@@ -40,7 +40,7 @@ async function readParsedSources(
 ): Promise<ParsedSource[]> {
     const sources: ParsedSource[] = [];
     try {
-        for (const file of planned.files.filter((entry) => entry.kind === 'source')) {
+        for (const file of planned.files.filter((each) => each.kind === 'source')) {
             const language = detectLanguage(file);
             if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
             const tree = await parseSource(language, readCachedText(session.reads, file.path), session);

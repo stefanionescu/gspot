@@ -4,7 +4,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { validateIdentifiers } from '#cli/checks/general/naming/rules.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
-import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/declared-names.ts';
+import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 
 /**
  * Checks the names that source files declare.

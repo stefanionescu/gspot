@@ -16,7 +16,7 @@ export function buildPluginRuleBlocks(scope: EslintScope, configuration: string)
         imports: declaration.imports,
         blocks: [
             {
-                data: {
+                fields: {
                     files,
                     ...(declaration.ignores === undefined
                         ? {}

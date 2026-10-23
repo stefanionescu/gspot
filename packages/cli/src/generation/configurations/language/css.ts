@@ -94,7 +94,7 @@ function buildCssModulesOverrides(
 
 // gspot sets options only for the Stylelint rules that run at the level. The refusal names its case: a rule of level
 // all, a Stylelint rule that runs at no level, or a rule that Stylelint does not have.
-function assertStylelintRulesRun(rules: string[], activeRules: Set<string>, knownRules: string[]): void {
+function assertStylelintRulesRun(rules: string[], activeRules: Set<string>, ruleNames: string[]): void {
     const refused = rules.filter((rule) => !activeRules.has(rule));
     if (refused.length === 0) return;
     throw new GspotError(
@@ -103,7 +103,7 @@ function assertStylelintRulesRun(rules: string[], activeRules: Set<string>, know
             .map((rule) => {
                 if (STYLELINT_RECOMMENDED_OFF.has(rule))
                     return `${rule} runs only at level all. gspot sets options only for the rules that run at level recommended.`;
-                return knownRules.includes(rule)
+                return ruleNames.includes(rule)
                     ? `gspot runs ${rule} at no level, so it takes no options.`
                     : `${rule} belongs to no plugin that gspot loads.`;
             })

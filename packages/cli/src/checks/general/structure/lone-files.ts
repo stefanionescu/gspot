@@ -27,12 +27,15 @@ export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck
     );
     const checked = new Set(files.map((file) => extractParentFolder(file.path)));
     return [...checked]
-        .filter((folder) => folder !== '' && !folder.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part)))
+        .filter(
+            (folder) =>
+                folder !== '' && !folder.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment)),
+        )
         .flatMap((folder) => {
-            const entries = tree.get(folder) ?? [];
-            if (entries.some((entry) => entry.kind === 'folder')) return [];
-            const siblings = entries.filter(
-                (entry) => !DECLARATION_EXTENSIONS.some((extension) => entry.name.endsWith(extension)),
+            const children = tree.get(folder) ?? [];
+            if (children.some((child) => child.kind === 'folder')) return [];
+            const siblings = children.filter(
+                (child) => !DECLARATION_EXTENSIONS.some((extension) => child.name.endsWith(extension)),
             );
             const [only] = siblings;
             if (

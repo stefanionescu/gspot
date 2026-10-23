@@ -28,7 +28,7 @@ export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
             file,
             language: languages.find(({ matches }) => matches(file))?.configuration.name,
         }))
-        .filter((entry): entry is NamedFile => entry.language !== undefined);
+        .filter((named): named is NamedFile => named.language !== undefined);
 }
 
 /**

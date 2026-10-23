@@ -15,9 +15,9 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { eslintPresetSchema } from '#cli/schemas/configurations/eslint-presets.ts';
 import type { EslintPreset, EslintPresets } from '#cli/types/generation/eslint.ts';
-import type { PackageIdentity, InstalledPackage } from '#cli/types/pinned-linters.ts';
+import type { PackageIdentity, InstalledPackage } from '#cli/types/linter-lists.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
-import { PINNED_LINTERS, PRESET_BLOCK_KEYS, PINNED_LINTER_FOLDER } from '#cli/config/configurations/pinned-linters.ts';
+import { LINTER_PACKAGES, PRESET_BLOCK_KEYS, LINTER_INSTALL_FOLDER } from '#cli/config/configurations/linter-lists.ts';
 
 import {
     globalsModuleSchema,
@@ -28,7 +28,7 @@ import {
     stylelintModuleSchema,
     eslintRuleModuleSchema,
     stylelintSettingsSchema,
-} from '#cli/schemas/configurations/pinned-linters.ts';
+} from '#cli/schemas/configurations/linter-lists.ts';
 
 /**
  * Find the identity of the package owning a resolved module and require its declared pin.
@@ -45,25 +45,25 @@ function findInstalledPackage(
     moduleName: string,
     version: string,
 ): InstalledPackage {
-    const entry = createRequire(join(folder, PINNED_LINTER_FOLDER.manifest)).resolve(moduleName);
-    const document = readInstalledIdentity(entry, packageName);
+    const modulePath = createRequire(join(folder, LINTER_INSTALL_FOLDER.manifest)).resolve(moduleName);
+    const document = readInstalledIdentity(modulePath, packageName);
     if (document.version !== version)
         throw new Error(`${packageName} installed at ${document.version}; its configuration pins ${version}.`);
-    return { ...document, entry };
+    return { ...document, modulePath: modulePath };
 }
 
 /**
  * Find the package identity above one public module entry.
  *
- * @param entry the resolved module path.
+ * @param modulePath the resolved module path.
  * @param packageName the expected owning package.
  * @returns the package document's name and version.
  */
-function readInstalledIdentity(entry: string, packageName: string): PackageIdentity {
-    for (let path = dirname(entry); path !== dirname(path); path = dirname(path)) {
+function readInstalledIdentity(modulePath: string, packageName: string): PackageIdentity {
+    for (let path = dirname(modulePath); path !== dirname(path); path = dirname(path)) {
         let text: string;
         try {
-            text = readFileSync(join(path, PINNED_LINTER_FOLDER.manifest), 'utf8');
+            text = readFileSync(join(path, LINTER_INSTALL_FOLDER.manifest), 'utf8');
         } catch (error) {
             if (!hasErrorCode(error, 'ENOENT')) throw error;
             continue;
@@ -71,7 +71,7 @@ function readInstalledIdentity(entry: string, packageName: string): PackageIdent
         const document = packageIdentitySchema.parse(JSON.parse(text));
         if (document.name === packageName) return document;
     }
-    throw new Error(`No installed package named ${packageName} owns ${entry}.`);
+    throw new Error(`No installed package named ${packageName} owns ${modulePath}.`);
 }
 
 /**
@@ -117,16 +117,16 @@ async function installPackages(
     dependencies: Record<string, string>,
 ): Promise<Map<string, InstalledPackage>> {
     writeFileSync(
-        join(folder, PINNED_LINTER_FOLDER.manifest),
+        join(folder, LINTER_INSTALL_FOLDER.manifest),
         JSON.stringify({ private: true, type: 'module', dependencies }),
     );
-    const install = await spawnProcess(PINNED_LINTER_FOLDER.install, { cwd: folder });
+    const install = await spawnProcess(LINTER_INSTALL_FOLDER.install, { cwd: folder });
     if (install.code !== 0)
         throw new Error(`Bun install failed, so the linter data stays as it was. ${install.stderr}`);
     return new Map(
         Object.entries(dependencies).map(([name, version]) => [
             name,
-            findInstalledPackage(folder, name, name === 'eslint' ? PINNED_LINTERS.eslint.module : name, version),
+            findInstalledPackage(folder, name, name === 'eslint' ? LINTER_PACKAGES.eslint.module : name, version),
         ]),
     );
 }
@@ -150,7 +150,7 @@ async function preparePackages(folder: string, names: Set<string>): Promise<Map<
             }),
     );
     const installed = await installPackages(folder, dependencies);
-    const testsFile = fileURLToPath(new URL(PINNED_LINTER_FOLDER.testsManifest, import.meta.url));
+    const testsFile = fileURLToPath(new URL(LINTER_INSTALL_FOLDER.testsManifest, import.meta.url));
     const tests = testsManifestSchema.parse(JSON.parse(readFileSync(testsFile, 'utf8')));
     const peers = Object.fromEntries(
         [...installed.values()].flatMap(({ peerDependencies }) =>
@@ -185,44 +185,44 @@ function getInstalledPackage(installed: Map<string, InstalledPackage>, name: str
  */
 async function captureNames(installed: Map<string, InstalledPackage>, folder: string): Promise<Map<string, unknown>> {
     const eslint = getInstalledPackage(installed, 'eslint');
-    const builtins = eslintRuleModuleSchema.parse(await import(pathToFileURL(eslint.entry).href));
-    const globals = getInstalledPackage(installed, PINNED_LINTERS.globals.module);
-    const globalsExports = globalsModuleSchema.parse(await import(pathToFileURL(globals.entry).href));
-    const standard = getInstalledPackage(installed, PINNED_LINTERS.standard.module);
-    const stylelint = getInstalledPackage(installed, PINNED_LINTERS.stylelint.module);
-    const stylelintExports = stylelintModuleSchema.parse(await import(pathToFileURL(stylelint.entry).href));
-    const sample = join(folder, PINNED_LINTER_FOLDER.sample);
+    const builtins = eslintRuleModuleSchema.parse(await import(pathToFileURL(eslint.modulePath).href));
+    const globals = getInstalledPackage(installed, LINTER_PACKAGES.globals.module);
+    const globalsExports = globalsModuleSchema.parse(await import(pathToFileURL(globals.modulePath).href));
+    const standard = getInstalledPackage(installed, LINTER_PACKAGES.standard.module);
+    const stylelint = getInstalledPackage(installed, LINTER_PACKAGES.stylelint.module);
+    const stylelintExports = stylelintModuleSchema.parse(await import(pathToFileURL(stylelint.modulePath).href));
+    const sample = join(folder, LINTER_INSTALL_FOLDER.sample);
     writeFileSync(sample, '');
     const style = stylelintSettingsSchema.parse(
         await stylelintExports.default.resolveConfig(sample, {
-            config: { extends: standard.entry },
+            config: { extends: standard.modulePath },
         }),
     );
     return new Map([
         [
-            PINNED_LINTERS.eslint.nameList.file,
+            LINTER_PACKAGES.eslint.nameList.file,
             nameListSchema.parse({
                 package: eslint.name,
                 version: eslint.version,
-                source: PINNED_LINTERS.eslint.nameList.source,
+                source: LINTER_PACKAGES.eslint.nameList.source,
                 names: [...builtins.builtinRules.keys()].toSorted((first, second) => first.localeCompare(second)),
             }),
         ],
         [
-            PINNED_LINTERS.globals.nameList.file,
+            LINTER_PACKAGES.globals.nameList.file,
             nameListSchema.parse({
                 package: globals.name,
                 version: globals.version,
-                source: PINNED_LINTERS.globals.nameList.source,
+                source: LINTER_PACKAGES.globals.nameList.source,
                 names: Object.keys(globalsExports.default).toSorted((first, second) => first.localeCompare(second)),
             }),
         ],
         [
-            PINNED_LINTERS.stylelint.nameList.file,
+            LINTER_PACKAGES.stylelint.nameList.file,
             nameListSchema.parse({
                 package: standard.name,
                 version: standard.version,
-                source: PINNED_LINTERS.stylelint.nameList.source,
+                source: LINTER_PACKAGES.stylelint.nameList.source,
                 names: Object.keys(style.rules).toSorted((first, second) => first.localeCompare(second)),
             }),
         ],
@@ -232,7 +232,7 @@ async function captureNames(installed: Map<string, InstalledPackage>, folder: st
 /**
  * Rewrite the copied exports after every import and schema check has succeeded.
  */
-async function copyPinnedLinterData(): Promise<void> {
+async function copyLinterLists(): Promise<void> {
     const recipes = listAssets('configurations/')
         .filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`))
         .map((path) => {
@@ -245,28 +245,28 @@ async function copyPinnedLinterData(): Promise<void> {
         });
     const names = new Set([
         'eslint',
-        PINNED_LINTERS.globals.module,
-        PINNED_LINTERS.standard.module,
-        PINNED_LINTERS.stylelint.module,
-        PINNED_LINTERS.prettier.module,
+        LINTER_PACKAGES.globals.module,
+        LINTER_PACKAGES.standard.module,
+        LINTER_PACKAGES.stylelint.module,
+        LINTER_PACKAGES.prettier.module,
         ...recipes.flatMap(({ presets }) => Object.values(presets).map((preset) => preset.package)),
     ]);
     using folder = createTemporaryFolder();
     const installed = await preparePackages(folder.path, names);
-    const prepared = await captureNames(installed, folder.path);
+    const capturedNames = await captureNames(installed, folder.path);
     for (const { path, presets } of recipes) {
         const captured = [];
         for (const [name, preset] of Object.entries(presets)) {
             const owner = getInstalledPackage(installed, preset.package);
-            const module = packageModuleSchema.parse(await import(pathToFileURL(owner.entry).href));
+            const module = packageModuleSchema.parse(await import(pathToFileURL(owner.modulePath).href));
             captured.push([name, capturePreset(owner, preset.source, module.default)]);
         }
-        prepared.set(path, Object.fromEntries(captured));
+        capturedNames.set(path, Object.fromEntries(captured));
     }
-    const prettier = getInstalledPackage(installed, PINNED_LINTERS.prettier.module);
-    const formatter = prettierModuleSchema.parse(await import(pathToFileURL(prettier.entry).href));
+    const prettier = getInstalledPackage(installed, LINTER_PACKAGES.prettier.module);
+    const formatter = prettierModuleSchema.parse(await import(pathToFileURL(prettier.modulePath).href));
     const formatted = await Promise.all(
-        [...prepared].map(
+        [...capturedNames].map(
             async ([path, value]) =>
                 [
                     path,
@@ -279,7 +279,7 @@ async function copyPinnedLinterData(): Promise<void> {
         ),
     );
     for (const [path, text] of formatted) writeFileSync(buildAssetPath(path), text);
-    process.stdout.write(`Refreshed ${String(prepared.size)} linter data files.\n`);
+    process.stdout.write(`Refreshed ${String(capturedNames.size)} linter data files.\n`);
 }
 
-await copyPinnedLinterData();
+await copyLinterLists();

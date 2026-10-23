@@ -6,7 +6,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { type ToolPackageJson } from '#cli/types/install/npm.ts';
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -95,7 +95,7 @@ test.each(['setup.cfg', 'tox.ini'])('init leaves a shared %s in place and names 
     const initialized = await runGspot(sandbox.path, buildInitArguments(['sql'], { json: true }));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(readSettings(sandbox.path).settings.ignore).toStrictEqual([]);
-    expect((JSON.parse(initialized.stdout) as InitJson).plan.delete.map((entry) => entry.path)).not.toContain(path);
+    expect((JSON.parse(initialized.stdout) as InitJson).plan.delete.map((file) => file.path)).not.toContain(path);
     const plan = (JSON.parse(initialized.stdout) as InitJson).plan;
     expect(plan.retained).toStrictEqual([{ path, note: buildRetainedNote('sqlfluff') }]);
     await assertRetainedFile(sandbox.path, path, SHARED_SETUP_CONFIG);

@@ -9,7 +9,7 @@ const installedSandbox = shareInstalledSandbox({
     dependencies: Object.fromEntries(WEB_PACKAGES.map((name) => [name, testsPackage.devDependencies[name]])),
 });
 
-test.each([...REACT_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, REACT_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...REACT_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, REACT_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

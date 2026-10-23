@@ -23,20 +23,20 @@ export function getCachedValue<Value extends object>(reads: ReadCache, key: Cach
  *
  * @param reads the run cache.
  * @param key the map producer.
- * @param entry the key of the calculation.
+ * @param id the key of the calculation.
  * @param create the calculation.
  * @returns the cached value, or its first calculated value.
  */
 export function getCachedMapValue<Key, Value>(
     reads: ReadCache,
     key: CacheKey<Map<Key, Value>>,
-    entry: Key,
+    id: Key,
     create: () => Value,
 ): Value {
     const values = getCachedValue(reads, key);
-    if (values.has(entry)) return values.get(entry) as Value;
+    if (values.has(id)) return values.get(id) as Value;
     const value = create();
-    values.set(entry, value);
+    values.set(id, value);
     return value;
 }
 
@@ -62,22 +62,22 @@ export async function parseCached<Sources extends CachedSourceFiles, Value exten
     key: ParseKey<Sources, Value>,
 ): Promise<Value> {
     // This key decides both the result type of the reader and its entries for each path list.
-    const entries =
+    const promises =
         (sources.reads.values.get(key) as Map<string, Promise<Value>> | undefined) ?? new Map<string, Promise<Value>>();
-    sources.reads.values.set(key, entries);
+    sources.reads.values.set(key, promises);
     const paths = JSON.stringify(sources.files.map((file) => file.path));
-    let pending = entries.get(paths);
+    let pending = promises.get(paths);
     if (pending === undefined) {
         pending = key.read(sources);
-        entries.set(paths, pending);
+        promises.set(paths, pending);
         try {
             const value = await pending;
             sources.resources.defer(() => {
-                entries.delete(paths);
+                promises.delete(paths);
                 key.dispose(value);
             });
         } catch (error) {
-            entries.delete(paths);
+            promises.delete(paths);
             throw error;
         }
     }

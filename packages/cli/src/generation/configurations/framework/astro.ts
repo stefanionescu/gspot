@@ -39,7 +39,7 @@ export function buildAstroBlocks(
         })),
     );
     blocks.push({
-        data: { files: ASTRO_FILES, rules: ASTRO_RULES },
+        fields: { files: ASTRO_FILES, rules: ASTRO_RULES },
         properties: 'languageOptions: { parserOptions: { tsconfigRootDir: root } }',
     });
     if (settings.configurations.includes(TYPESCRIPT_CONFIGURATION)) {
@@ -48,12 +48,12 @@ export function buildAstroBlocks(
         const source = serializePresetAccess('tseslint', preset.source);
         blocks.push(
             {
-                data: { files: ASTRO_FILES, rules: ASTRO_TYPED_RULES },
+                fields: { files: ASTRO_FILES, rules: ASTRO_TYPED_RULES },
                 properties:
                     "processor: 'astro/client-side-ts', languageOptions: { parserOptions: { parser: tseslint.parser, projectService: false, project: true } }",
             },
             {
-                data: { files: ASTRO_SCRIPT_FILES, ...untyped },
+                fields: { files: ASTRO_SCRIPT_FILES, ...untyped },
                 properties: `...${source}`,
                 preset: buildPresetRuleExpression([['tseslint', preset]]),
             },

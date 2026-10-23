@@ -24,9 +24,9 @@ const installedSandbox = shareInstalledSandbox({
     },
 });
 
-test.each([...PYTEST_CASES])('$check reports the required coverage and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, PYTEST_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...PYTEST_CASES])('$check reports the required coverage and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, PYTEST_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });
 
 test.each([...COVERAGE_LIMIT_CASES])(

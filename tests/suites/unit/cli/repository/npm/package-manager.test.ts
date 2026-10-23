@@ -85,8 +85,8 @@ test('install runs the real bun version check when package.json declares bun@0.0
     using boundary = spyOn(processes, 'spawnProcess').mockImplementation((commandArguments, options) => {
         if (commandArguments[0] === 'bun' && commandArguments[1] !== '--version')
             throw new Error('Unexpected native package operation before version refusal.');
-        const prepared = limitToTestDeadline(commandArguments, options);
-        observed = run(commandArguments, prepared.options);
+        const limited = limitToTestDeadline(commandArguments, options);
+        observed = run(commandArguments, limited.options);
         return observed;
     });
     const failure = await runGspot(sandbox.path, ['install']);

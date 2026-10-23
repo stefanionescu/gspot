@@ -42,7 +42,7 @@ test.each([...SEMGREP_REFUSED_REPORTS])('a Semgrep report with %s is an error', 
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\n' });
     const check = readConfigurations()
         .get('security')!
-        .checks.find((entry) => entry.id === 'security/semgrep')!;
+        .checks.find((check) => check.id === 'security/semgrep')!;
     const paths = { cwd: sandbox.path, root: sandbox.path };
     expect(parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), paths).note).toBe(note);
     expect(

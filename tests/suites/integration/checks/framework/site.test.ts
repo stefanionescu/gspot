@@ -23,9 +23,9 @@ import {
 
 const installedSandbox = shareInstalledSandbox(SITE_SANDBOX);
 
-test.each([...SITE_CASES])('$check reports its finding and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, SITE_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...SITE_CASES])('$check reports its finding and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, SITE_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });
 
 test.each([...OUTPUT_CASES])(

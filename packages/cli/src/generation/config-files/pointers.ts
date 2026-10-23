@@ -10,7 +10,7 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { listScopeChecks, listNeededTools } from '#cli/planning/tools.ts';
+import { listCheckTools, listScopeChecks } from '#cli/planning/tools.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
@@ -97,7 +97,7 @@ export function listPointerPaths(owner: ConfigFileOwner, configFile: ConfigFile)
     if (pointer.folders === undefined)
         return [configFile.per_scope ? joinScope(scopePath, pointer.path) : pointer.path];
     const children = listNestedScopes(
-        scopes.map((entry) => entry.folder.path),
+        scopes.map((each) => each.folder.path),
         scopePath,
     );
     const matches = buildPathMatcher(pointer.folders);
@@ -167,7 +167,7 @@ export function buildPointerFieldEdits(
     const paths = new Set(generated.map(({ path }) => path));
     const scopePaths = scopes.map(({ folder }) => folder.path);
     const tools = scopes.flatMap((scope) => {
-        const required = new Set(listScopeChecks(session, scope).flatMap((check) => listNeededTools(check)));
+        const required = new Set(listScopeChecks(session, scope).flatMap((check) => listCheckTools(check)));
         return scope.configurations.flatMap((configuration) =>
             configuration.tools.map((tool) => ({ scope, configuration, tool, consumed: required.has(tool.name) })),
         );

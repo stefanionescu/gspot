@@ -4,10 +4,10 @@ import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files/names.ts';
 
 // Check whether one segment of a portable path means something different on a supported system.
-function isUnsafeSegment(part: string): boolean {
-    if (RESERVED_SEGMENTS.has(part)) return true;
-    if (UNSAFE_CHARACTERS.test(part) || UNSAFE_PATH_END.test(part)) return true;
-    return DEVICE_NAME.test(part);
+function isUnsafeSegment(segment: string): boolean {
+    if (RESERVED_SEGMENTS.has(segment)) return true;
+    if (UNSAFE_CHARACTERS.test(segment) || UNSAFE_PATH_END.test(segment)) return true;
+    return DEVICE_NAME.test(segment);
 }
 
 /**
@@ -17,13 +17,13 @@ function isUnsafeSegment(part: string): boolean {
  * @returns the segments of the path.
  */
 function splitPortablePath(path: string): string[] {
-    const parts = path.split('/');
-    if (parts.some((part) => isUnsafeSegment(part)))
+    const segments = path.split('/');
+    if (segments.some((segment) => isUnsafeSegment(segment)))
         throw new GspotError(
             'filesystem',
             `${JSON.stringify(path)} is not a safe repository-relative path. Choose a path inside the repository.`,
         );
-    return parts;
+    return segments;
 }
 
 /**
@@ -34,13 +34,13 @@ function splitPortablePath(path: string): string[] {
  */
 export function splitSystemPath(path: string): string[] {
     if (process.platform === 'win32') return splitPortablePath(path);
-    const parts = path.split('/');
-    if (parts.some((part) => RESERVED_SEGMENTS.has(part) || part.includes('\0')))
+    const segments = path.split('/');
+    if (segments.some((segment) => RESERVED_SEGMENTS.has(segment) || segment.includes('\0')))
         throw new GspotError(
             'filesystem',
             `${JSON.stringify(path)} is not a safe repository-relative path. Choose a path inside the repository.`,
         );
-    return parts;
+    return segments;
 }
 
 /**

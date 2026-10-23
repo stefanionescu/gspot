@@ -94,7 +94,7 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
 // Windows has no Zsh; Linux and macOS run the check.
 test.skipIf(isWindows).each([...SYNTAX_CASES])(
     '$check accepts clean files and reports a syntax error in $path',
-    async (entry) => {
+    async (row) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
             ...SYNTAX_FILES,
@@ -102,25 +102,25 @@ test.skipIf(isWindows).each([...SYNTAX_CASES])(
 
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const clean = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json']));
+        const clean = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', row.check, '--json']));
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-        expect(clean.report.checks).toMatchObject([{ status: 'passed', fileCount: entry.files.length, findings: [] }]);
-        const path = join(sandbox.path, entry.path);
+        expect(clean.report.checks).toMatchObject([{ status: 'passed', fileCount: row.files.length, findings: [] }]);
+        const path = join(sandbox.path, row.path);
         const original = await readFile(path);
         try {
-            await writeFile(path, entry.broken);
-            const broken = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json']));
+            await writeFile(path, row.broken);
+            const broken = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', row.check, '--json']));
             expect(broken.code, broken.stdout + broken.stderr).toBe(1);
             // The shell writes the message, and its wording differs between shell versions.
             expect(broken.report.checks).toMatchObject([
                 {
-                    check: entry.check,
+                    check: row.check,
                     status: 'failed',
                     findings: [
                         {
-                            file: entry.path,
-                            line: entry.line,
-                            message: expect.stringContaining(entry.message) as string,
+                            file: row.path,
+                            line: row.line,
+                            message: expect.stringContaining(row.message) as string,
                         },
                     ],
                 },

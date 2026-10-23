@@ -20,7 +20,7 @@ export function encodeValue(
     indent: string,
 ): string {
     if (isTomlKind(node, 'InlineArray')) {
-        const items = node.items.map(({ item }, index) => {
+        const texts = node.items.map(({ item }, index) => {
             const keys = [...path, index];
             const notes = [...comments.values()]
                 .filter(({ path: note }) => path.toReversed()[1] === 'rules' && keys.every((key, i) => note[i] === key))
@@ -38,16 +38,16 @@ export function encodeValue(
                 ),
             );
         });
-        return items.some((item) => item.includes('\n'))
-            ? `[\n${items
-                  .map((item) =>
-                      `${item},`
+        return texts.some((element) => element.includes('\n'))
+            ? `[\n${texts
+                  .map((element) =>
+                      `${element},`
                           .split('\n')
                           .map((line) => `${indent}${line}`)
                           .join('\n'),
                   )
                   .join('\n')}\n]`
-            : `[${items.join(', ')}]`;
+            : `[${texts.join(', ')}]`;
     }
     if (isTomlKind(node, 'InlineTable'))
         return `{ ${node.items.map(({ item }) => text.slice(getTomlRange(item.key)[0], getTomlRange(item.value)[0]) + encodeValue(item.value, text, [...path, ...item.key.value], comments, indent)).join(', ')} }`;

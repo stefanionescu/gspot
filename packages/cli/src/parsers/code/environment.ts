@@ -103,7 +103,7 @@ function getImportAlias(node: Node) {
 }
 
 // Parameters declare their own names, not the names that their default expressions use.
-function listDeclaredNames(node: Node): string[] {
+function listBoundNames(node: Node): string[] {
     if (node.type === 'parameters')
         return node.namedChildren.flatMap((parameter) => {
             const name =
@@ -122,20 +122,20 @@ function listDeclaredNames(node: Node): string[] {
 
 // Only os imports supply environment objects or getters.
 function listEnvironmentImports(node: Node): EnvironmentScope {
-    const entries: EnvironmentScope = new Map();
+    const imported: EnvironmentScope = new Map();
     let members: Record<string, EnvironmentKind> = {};
     if (node.type === 'import_statement') members = { [OS_MODULE]: OS_MODULE };
     else if (node.childForFieldName('module_name')?.text === OS_MODULE) members = OS_ENVIRONMENT_MEMBERS;
-    for (const item of node.childrenForFieldName('name')) {
-        const { name, target } = getImportAlias(item);
-        if (name !== undefined && target !== undefined) entries.set(name, members[target]);
+    for (const nameNode of node.childrenForFieldName('name')) {
+        const { name, target } = getImportAlias(nameNode);
+        if (name !== undefined && target !== undefined) imported.set(name, members[target]);
     }
-    return entries;
+    return imported;
 }
 
 // Map each scope of a file to the names it declares, and to what each import of os names, once for each file.
 function listPythonNames(root: Node): EnvironmentNames {
-    const entries: EnvironmentNames = new Map();
+    const scopeNames: EnvironmentNames = new Map();
     const nodes = [
         ...root.descendantsOfType([...PYTHON_IMPORT_NODES]),
         ...root.descendantsOfType([
@@ -148,24 +148,24 @@ function listPythonNames(root: Node): EnvironmentNames {
     ];
     for (const node of nodes) {
         const scope = findDeclarationScope(node).id;
-        const names = entries.get(scope) ?? new Map<string, EnvironmentKind>();
-        const declared = PYTHON_IMPORT_NODES.has(node.type)
+        const names = scopeNames.get(scope) ?? new Map<string, EnvironmentKind>();
+        const bound = PYTHON_IMPORT_NODES.has(node.type)
             ? listEnvironmentImports(node)
-            : new Map<string, EnvironmentKind>(listDeclaredNames(node).map((name) => [name, undefined]));
-        for (const [name, kind] of declared) names.set(name, kind);
-        entries.set(scope, names);
+            : new Map<string, EnvironmentKind>(listBoundNames(node).map((name) => [name, undefined]));
+        for (const [name, kind] of bound) names.set(name, kind);
+        scopeNames.set(scope, names);
     }
-    return entries;
+    return scopeNames;
 }
 
 // Find what a name refers to: look for its declaration in each enclosing scope, from the innermost out.
-function findEnvironmentKind(node: Node, name: string, entries: EnvironmentNames): EnvironmentKind {
+function findEnvironmentKind(node: Node, name: string, scopeNames: EnvironmentNames): EnvironmentKind {
     for (
         let scope: Node | null = findDeclarationScope(node);
         scope !== null;
         scope = scope.parent === null ? null : findDeclarationScope(scope)
     ) {
-        const names = entries.get(scope.id);
+        const names = scopeNames.get(scope.id);
         if (names?.has(name) === true) return names.get(name);
     }
     return undefined;
@@ -181,10 +181,10 @@ function findReceiver(node: Node): Node | null {
     return node;
 }
 
-function isPythonEnvironmentRead(node: Node, entries: EnvironmentNames, environment: Set<number>): boolean {
+function isPythonEnvironmentRead(node: Node, names: EnvironmentNames, environment: Set<number>): boolean {
     const receiver = findReceiver(node);
     if (receiver?.type !== 'identifier') return false;
-    const kind = findEnvironmentKind(node, receiver.text, entries);
+    const kind = findEnvironmentKind(node, receiver.text, names);
     if (kind === OS_MODULE) return environment.has(node.id);
     if (kind === 'getenv') return node.type === 'call';
     return kind === 'environ';
@@ -193,13 +193,13 @@ function isPythonEnvironmentRead(node: Node, entries: EnvironmentNames, environm
 function isEnvironmentRead(
     node: Node,
     environmentFunctions: readonly string[],
-    entries: EnvironmentNames,
+    names: EnvironmentNames,
     environment: Set<number>,
 ): boolean {
     if (node.type === 'call' && environmentFunctions.includes(node.childForFieldName('function')?.text ?? ''))
         return true;
     if (node.type === 'identifier' && node.parent?.type !== 'subscript') return false;
-    return isPythonEnvironmentRead(node, entries, environment);
+    return isPythonEnvironmentRead(node, names, environment);
 }
 
 function expandEnvironmentExpression(node: Node): Node {
@@ -228,7 +228,7 @@ export function listPythonEnvironmentReads(
     syntaxRoot: Node,
     environmentFunctions: readonly string[],
 ): EnvironmentRead[] {
-    const entries = listPythonNames(syntaxRoot);
+    const pythonNames = listPythonNames(syntaxRoot);
     const nodes = syntaxRoot.descendantsOfType(['attribute', 'call', 'identifier']);
     const environment = new Set(
         nodes
@@ -241,7 +241,7 @@ export function listPythonEnvironmentReads(
             .map((node) => node.id),
     );
     return nodes.flatMap((node) => {
-        if (!isEnvironmentRead(node, environmentFunctions, entries, environment)) return [];
+        if (!isEnvironmentRead(node, environmentFunctions, pythonNames, environment)) return [];
         const literal = findEnvironmentKeyNode(node);
         const key =
             literal?.type === 'string'

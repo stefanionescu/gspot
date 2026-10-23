@@ -1,5 +1,5 @@
 /** The catalog entry of the custom schema. */
-export const MAPPED_SCHEMA_ENTRIES = [
+export const MAPPED_SCHEMA_RECORDS = [
     {
         name: 'https://example.com/schema.json',
         fileMatch: ['custom.json'],

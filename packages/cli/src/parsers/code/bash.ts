@@ -93,7 +93,7 @@ function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['f
                         (write) =>
                             findFunctionNode(write)?.id === node.id &&
                             !ignored.some(
-                                (part) => part.startIndex <= write.startIndex && part.endIndex >= write.endIndex,
+                                (range) => range.startIndex <= write.startIndex && range.endIndex >= write.endIndex,
                             ),
                     ).length,
             },
@@ -176,7 +176,7 @@ function buildScriptTemporaryPaths(root: Node): ScriptTemporaryPaths {
         if (isUnique) targets.set(key, path);
         return [path];
     });
-    return { paths, variables: targets, declared: new Set([...counts.keys(), ...locals]) };
+    return { paths, variables: targets, assigned: new Set([...counts.keys(), ...locals]) };
 }
 
 // A cleanup argument must contain only the temporary variable.
@@ -193,7 +193,7 @@ function findTemporaryPath(
     if (name === undefined) return undefined;
     if (![`$${name}`, `\${${name}}`].includes(reference.text)) return undefined;
     const key = JSON.stringify([owner, name]);
-    const target = temporaryPaths.declared.has(key) ? key : JSON.stringify([undefined, name]);
+    const target = temporaryPaths.assigned.has(key) ? key : JSON.stringify([undefined, name]);
     return temporaryPaths.variables.get(target);
 }
 
@@ -262,8 +262,8 @@ async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCac
     }
     const safe = [...lines].filter(([, paths]) => !paths.includes(undefined));
     for (const [line, paths] of safe) {
-        const known = paths.filter((path): path is TemporaryPath => path !== undefined);
-        for (const path of known) path.cleanupLines.push(line);
+        const temporaryPaths = paths.filter((path): path is TemporaryPath => path !== undefined);
+        for (const path of temporaryPaths) path.cleanupLines.push(line);
     }
     return registry.paths;
 }

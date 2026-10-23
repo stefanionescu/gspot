@@ -91,15 +91,15 @@ function formatSummary(report: RunReport): string {
     const passed = report.checks.filter((check) => check.status === 'passed').length;
     const skipped = report.checks.filter((check) => check.status === 'skipped').length;
     const findings = failed.reduce((count, check) => count + check.findings.length, 0);
-    const parts = [];
+    const sentences = [];
     if (failed.length > 0)
-        parts.push(`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`);
+        sentences.push(`Failed: ${formatCount(failed.length, 'check')} with ${formatCount(findings, 'finding')}.`);
     if (missing + errors > 0)
-        parts.push(
+        sentences.push(
             `Could not run: ${formatCount(missing + errors, 'check')}${missing > 0 ? ' (a tool is missing; run gspot install)' : ''}.`,
         );
-    parts.push(`Passed: ${formatCount(passed, 'check')}.`, `Skipped: ${formatCount(skipped, 'check')}.`);
-    const text = parts.join(' ');
+    sentences.push(`Passed: ${formatCount(passed, 'check')}.`, `Skipped: ${formatCount(skipped, 'check')}.`);
+    const text = sentences.join(' ');
     return report.exitCode === 0 ? text : getColors().red(text);
 }
 
@@ -170,7 +170,7 @@ export function printProgress(progress: CheckProgress): void {
     if (!process.stderr.isTTY) return;
     const subject = formatCheckedContent(progress.comparison);
     process.stderr.write(
-        `${PROGRESS_CLEAR}Checking ${subject}: ${String(progress.completed)} of ${String(progress.total)} checks done`,
+        `${PROGRESS_CLEAR}Checking ${subject}: ${String(progress.finished)} of ${String(progress.total)} checks done`,
     );
 }
 

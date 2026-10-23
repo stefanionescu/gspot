@@ -42,23 +42,23 @@ export function formatSettingsIssue(issue: z.core.$ZodIssue): string[] {
         );
     if (issue.code === 'invalid_key')
         return issue.issues.flatMap((child) => formatSettingsIssue({ ...child, path: [...issue.path, ...child.path] }));
-    const segments = issue.path.filter((part): part is KeyPath[number] => typeof part !== 'symbol');
+    const segments = issue.path.filter((segment): segment is KeyPath[number] => typeof segment !== 'symbol');
     if (issue.code !== 'unrecognized_keys') return formatZodIssue(issue).map((line) => `${SETTINGS_FILE}: ${line}`);
     return issue.keys.map((key) => `${SETTINGS_FILE}: ${formatUnknownKey(segments, key)}`);
 }
 
 // Step from a table or record list to the schema of one key or record.
-function selectChildSchema(schema: z.ZodType | undefined, part: KeyPath[number]): z.ZodType | undefined {
+function selectChildSchema(schema: z.ZodType | undefined, segment: KeyPath[number]): z.ZodType | undefined {
     const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    if (table instanceof z.ZodArray && typeof part === 'number') return table.element as z.ZodType;
-    return table instanceof z.ZodObject ? (table.shape[String(part)] as z.ZodType | undefined) : undefined;
+    if (table instanceof z.ZodArray && typeof segment === 'number') return table.element as z.ZodType;
+    return table instanceof z.ZodObject ? (table.shape[String(segment)] as z.ZodType | undefined) : undefined;
 }
 
 // Suggest the keys of the same table that look like an unknown key. The path starts at the root, or at a scope.
 function formatSimilarKeys(segments: KeyPath, key: string): string {
     const [record, , ...scopeFields] = segments;
     let schema: z.ZodType | undefined = record === 'scope' ? scopeSchema : settingsSchema;
-    for (const part of record === 'scope' ? scopeFields : segments) schema = selectChildSchema(schema, part);
+    for (const segment of record === 'scope' ? scopeFields : segments) schema = selectChildSchema(schema, segment);
     const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
     return table instanceof z.ZodObject ? formatSimilarNames(key, Object.keys(table.shape)) : '';
 }
@@ -86,7 +86,7 @@ function formatKeyPlace(segments: KeyPath): string {
 // Each error names gspot.toml, then its key path when it has one.
 function throwErrors(errors: SettingsError[]): never {
     const lines = errors.map((error) =>
-        [SETTINGS_FILE, error.path.map(String).join('.'), error.message].filter((part) => part !== '').join(': '),
+        [SETTINGS_FILE, error.path.map(String).join('.'), error.message].filter((text) => text !== '').join(': '),
     );
     throw new GspotError('settings', lines.join('\n'));
 }
@@ -109,17 +109,17 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
     if (unknown.length > 0) throwErrors(unknown);
     const bundledChecks = listCheckIds([]);
     const checks = listCheckIds(Object.values(settings.commandChecks));
-    const knownBySelection = new Map<string, AvailableSettings>();
+    const availableBySelection = new Map<string, AvailableSettings>();
     const scopes = new Map(
         ['', ...Object.keys(settings.scopes)].map((scope) => {
             const selected = selectForScope(settings, scope, configurations);
             const key = JSON.stringify(selected.map((configuration) => configuration.name));
-            let known = knownBySelection.get(key);
-            if (known === undefined) {
-                known = buildAvailableSettings(selected, settings.level);
-                knownBySelection.set(key, known);
+            let available = availableBySelection.get(key);
+            if (available === undefined) {
+                available = buildAvailableSettings(selected, settings.level);
+                availableBySelection.set(key, available);
             }
-            return [scope, known];
+            return [scope, available];
         }),
     );
     const rootKeys = scopes.get('') as AvailableSettings;
@@ -128,23 +128,23 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
     const errors: SettingsError[] = [
         ...validateSettingReasons(settings),
         ...validateSettingRules(settings),
-        ...Object.values(settings.commandChecks).flatMap((entry, index) =>
-            bundledChecks.includes(entry.id)
+        ...Object.values(settings.commandChecks).flatMap((commandCheck, index) =>
+            bundledChecks.includes(commandCheck.id)
                 ? [
                       {
                           path: ['command_check', index, 'id'],
-                          message: `The command check ${entry.id} has the same ID as a configuration check. Give it another ID.`,
+                          message: `The command check ${commandCheck.id} has the same ID as a configuration check. Give it another ID.`,
                       },
                   ]
                 : [],
         ),
-        ...settings.ignore.flatMap((entry, index) =>
-            entry.check === undefined || checks.includes(entry.check)
+        ...settings.ignore.flatMap((ignore, index) =>
+            ignore.check === undefined || checks.includes(ignore.check)
                 ? []
                 : [
                       {
                           path: ['ignore', index, 'check'],
-                          message: `There is no check called ${entry.check}.${formatSimilarNames(entry.check, checks)}`,
+                          message: `There is no check called ${ignore.check}.${formatSimilarNames(ignore.check, checks)}`,
                       },
                   ],
         ),

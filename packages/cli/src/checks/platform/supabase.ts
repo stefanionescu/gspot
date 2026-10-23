@@ -26,12 +26,12 @@ import { denoLintReportSchema, supabaseProjectFileSchema } from '#cli/schemas/ch
 import {
     DENO_LOCATION,
     SHARED_PREFIX,
-    FUNCTION_ENTRY,
     FILE_URL_PREFIX,
     DENO_CONFIG_FLAG,
     DENO_CONFIG_FILES,
     DENO_LINT_COMMAND,
     DENO_CHECK_COMMAND,
+    FUNCTION_ENTRYPOINT,
     SERVICE_ROLE_KEY_TAGS,
     SUPABASE_PROJECT_FILE,
     SERVICE_ROLE_KEY_NAMES,
@@ -57,7 +57,7 @@ function walkSqlTree(value: unknown, visit: (key: string, child: unknown) => voi
 
 function buildDenoJsonArguments(root: string, folder: string): string[] {
     const path = DENO_CONFIG_FILES.map((name) => join(root, folder, name)).find(
-        (entry) => statSync(entry, { throwIfNoEntry: false }) !== undefined,
+        (configPath) => statSync(configPath, { throwIfNoEntry: false }) !== undefined,
     );
     return path === undefined ? [] : [DENO_CONFIG_FLAG, path];
 }
@@ -104,21 +104,21 @@ function readSupabaseProjectFile(session: Session, planned: PlannedCheck): Supab
  * @param planned the scope files and settings.
  * @returns the entry file paths, repository-relative.
  */
-function listFunctionEntries(planned: PlannedCheck): string[] {
+function listFunctionEntrypoints(planned: PlannedCheck): string[] {
     const base = getTable(planned.scope.settings, 'supabase').functions_folder;
-    const entries = new Map<string, string>();
+    const entrypoints = new Map<string, string>();
     for (const { path } of planned.files) {
         const folder = posix.dirname(path);
         if (
             !path.startsWith(base + '/') ||
-            !FUNCTION_ENTRY.test(path) ||
+            !FUNCTION_ENTRYPOINT.test(path) ||
             folder.split('/').length !== base.split('/').length + 1 ||
             posix.basename(folder).startsWith(SHARED_PREFIX)
         )
             continue;
-        if (!entries.has(folder)) entries.set(folder, path);
+        if (!entrypoints.has(folder)) entrypoints.set(folder, path);
     }
-    return [...entries.values()];
+    return [...entrypoints.values()];
 }
 
 // Both Deno commands end with their target; the config file flags belong before that target.
@@ -187,8 +187,8 @@ export async function checkSupabaseStoragePolicies(session: Session, planned: Pl
  */
 export async function checkSupabaseDenoLint(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const findings: Finding[] = [];
-    for (const entry of listFunctionEntries(planned)) {
-        const folder = posix.dirname(entry);
+    for (const entrypoint of listFunctionEntrypoints(planned)) {
+        const folder = posix.dirname(entrypoint);
         const result = await runDenoCommand(
             session,
             planned,
@@ -201,20 +201,20 @@ export async function checkSupabaseDenoLint(session: Session, planned: PlannedCh
                 formatOutputTail(result, `deno lint stopped with exit ${String(result.code)} and no report.`),
             );
         const report = parseToolReport('deno lint', result.stdout, denoLintReportSchema);
-        const broken = report.errors.map((entry) =>
+        const broken = report.errors.map((error) =>
             buildFinding(
                 planned,
-                { file: normalizeDenoPath(session.root, entry.file_path), line: 1 },
+                { file: normalizeDenoPath(session.root, error.file_path), line: 1 },
                 'syntax',
-                entry.message,
+                error.message,
             ),
         );
-        const found = report.diagnostics.map((entry) =>
+        const found = report.diagnostics.map((reported) =>
             buildFinding(
                 planned,
-                { file: normalizeDenoPath(session.root, entry.filename), line: entry.range.start.line },
-                entry.code,
-                entry.message,
+                { file: normalizeDenoPath(session.root, reported.filename), line: reported.range.start.line },
+                reported.code,
+                reported.message,
             ),
         );
         findings.push(...assertToolFindings(result, [...broken, ...found], 'deno lint'));
@@ -231,12 +231,12 @@ export async function checkSupabaseDenoLint(session: Session, planned: PlannedCh
  */
 export async function checkSupabaseDenoCheck(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const findings: Finding[] = [];
-    for (const entry of listFunctionEntries(planned)) {
-        const folder = posix.dirname(entry);
+    for (const entrypoint of listFunctionEntrypoints(planned)) {
+        const folder = posix.dirname(entrypoint);
         const result = await runDenoCommand(
             session,
             planned,
-            [...DENO_CHECK_COMMAND, join(session.root, entry)],
+            [...DENO_CHECK_COMMAND, join(session.root, entrypoint)],
             folder,
         );
         if (result.code !== 0) findings.push(parseDenoCheckError(session, planned, folder, result.stderr));

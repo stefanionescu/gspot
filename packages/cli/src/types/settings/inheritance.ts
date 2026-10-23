@@ -2,8 +2,8 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { PATH_ROLES } from '#cli/config/settings/available.ts';
-import type { ReasonNeeded } from '#cli/types/settings/definitions.ts';
 import type { SETTING_TYPES } from '#cli/config/settings/inheritance.ts';
+import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
 import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/file.ts';
 
 /** Configuration choices declared at the root and in project scopes. */
@@ -20,7 +20,7 @@ export type Setting = {
     default?: unknown;
     default_all?: unknown;
     language_defaults?: Record<string, unknown>;
-    reason_needed?: ReasonNeeded;
+    reason_needed?: ReasonRequirement;
     reason_values?: boolean;
     description: string;
     languages?: string[];

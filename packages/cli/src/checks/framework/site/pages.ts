@@ -175,7 +175,7 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
     const result = await runCheckTool(
         session,
         planned,
-        { tool: PURGECSS, entry: PURGECSS_PROCESS },
+        { tool: PURGECSS, modulePath: PURGECSS_PROCESS },
         { cwd: build.folder, stdin: JSON.stringify({ configFile, css: sheets, content: PURGECSS_CONTENT }) },
     );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);

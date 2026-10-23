@@ -8,7 +8,7 @@ import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { FileNames } from '#cli/types/checks/general/naming.ts';
-import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/declared-names.ts';
+import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';
 
 /**
@@ -18,7 +18,7 @@ import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general
  * @param planned the files and scopes to read.
  * @returns the names of each file.
  */
-async function readDeclaredNames(session: Session, planned: PlannedCheck): Promise<FileNames[]> {
+async function readSourceNames(session: Session, planned: PlannedCheck): Promise<FileNames[]> {
     const files: FileNames[] = [];
     const containers = readNamingDefaults().path_containers;
     for (const scope of session.scopes) {
@@ -65,11 +65,11 @@ async function readDeclaredNames(session: Session, planned: PlannedCheck): Promi
  * @returns the findings.
  */
 export async function checkNamingAllowedNames(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const files = await readDeclaredNames(session, { ...planned, files: session.repository.files });
+    const files = await readSourceNames(session, { ...planned, files: session.repository.files });
     const folders = files.flatMap((file) => file.folders).filter((identifier) => identifier.category === 'folders');
     return session.settingsFile.settings.naming.override.flatMap((override, index) => {
         const matches = buildPathMatcher(override.paths);
-        const declared = new Set(
+        const sourceNames = new Set(
             files
                 .filter((file) => matches(file.path))
                 .flatMap((file) => {
@@ -81,10 +81,10 @@ export async function checkNamingAllowedNames(session: Session, planned: Planned
         );
         if (override.categories === undefined || override.categories.includes('folders')) {
             for (const identifier of folders.filter((identifier) => matches(identifier.folder ?? identifier.file)))
-                declared.add(identifier.name);
+                sourceNames.add(identifier.name);
         }
         return (override.allowed_names ?? [])
-            .filter((name) => !declared.has(name))
+            .filter((name) => !sourceNames.has(name))
             .map((name) =>
                 buildFinding(
                     planned,

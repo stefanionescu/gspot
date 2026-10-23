@@ -26,7 +26,7 @@ export function buildNestjsBlocks(
     const noSwagger = getPreset(presets, 'noSwagger');
     const blocks: ConfigurationBlocks['blocks'] = [
         {
-            data: {
+            fields: {
                 files: eslintFiles.typed,
                 rules: NESTJS_RULES,
             },
@@ -40,7 +40,7 @@ export function buildNestjsBlocks(
     );
     const sources = selected.map((preset) => `...${serializePresetAccess('nestjsTyped', preset.source)}`).join(', ');
     blocks.push({
-        data: {
+        fields: {
             files: eslintFiles.typescript,
             rules: {
                 ...rules,

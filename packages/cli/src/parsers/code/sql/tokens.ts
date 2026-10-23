@@ -1,5 +1,5 @@
 // Tokenize SQL and mask psql syntax without changing source positions.
-import type { SqlRange, SqlToken, PreparedSql } from '#cli/types/parsers/code/sql.ts';
+import type { SqlRange, SqlToken, BlankedSql } from '#cli/types/parsers/code/sql.ts';
 import { WORD_CHARACTER, IDENTIFIER_START, DOLLAR_TAG_BLOCKER } from '#cli/config/parsers/code/sql/tokens.ts';
 
 // Find the index of the first stop character at or after from, or the text length.
@@ -154,7 +154,7 @@ export function* listSqlTokens(text: string): Generator<SqlToken> {
  * @param text the SQL source with client commands and substitutions.
  * @returns parser text and substitution ranges in original UTF-16 coordinates.
  */
-export function replacePsqlSyntax(text: string): PreparedSql {
+export function replacePsqlSyntax(text: string): BlankedSql {
     const variables: SqlRange[] = [];
     const pieces: string[] = [];
     let offset = 0;

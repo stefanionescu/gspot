@@ -44,7 +44,7 @@ export function buildToolInstall(session: Session, writer: Writer): ToolInstall 
         session,
         writer,
         generated: generate(session),
-        tools: listDistinctTools(session.neededToolConfigurations),
+        tools: listDistinctTools(session.toolConfigurations),
         misePath: null,
         steps: [],
     };

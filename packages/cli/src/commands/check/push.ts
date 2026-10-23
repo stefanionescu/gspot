@@ -85,6 +85,6 @@ export async function checkPush(
         text.push(
             `Push checks canceled. Branches and tags not checked: ${report.canceled.pendingRefs.join(', ') || 'none; see canceled checks above'}.\n`,
         );
-    const skipped = selected.skipped.map((entry) => `${entry.ref}: ${entry.reason}; no source check applies.\n`);
+    const skipped = selected.skipped.map((skip) => `${skip.ref}: ${skip.reason}; no source check applies.\n`);
     return { text: [...text, ...skipped].join(''), json: report, exitCode: report.exitCode };
 }

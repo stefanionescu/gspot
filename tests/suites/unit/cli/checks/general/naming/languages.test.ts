@@ -4,7 +4,7 @@ import { extractSqlIdentifiers } from '#cli/checks/general/naming/languages/sql.
 
 import {
     SQL_DECLARATIONS,
-    SQL_DECLARED_NAMES,
+    SQL_SOURCE_NAMES,
     QUALIFIED_SQL_NAMES,
     QUALIFIED_FUNCTION_DECLARATION,
 } from '#tests/config/checks/general/naming/languages.ts';
@@ -15,7 +15,9 @@ test('every SQL name comes with its category and line', async () => {
         SQL_DECLARATIONS,
         createReadCache(process.cwd()),
     );
-    expect(found.map((entry) => [entry.category, entry.name, entry.line])).toStrictEqual([...SQL_DECLARED_NAMES]);
+    expect(found.map((identifier) => [identifier.category, identifier.name, identifier.line])).toStrictEqual([
+        ...SQL_SOURCE_NAMES,
+    ]);
     expect(found[1]?.label).toBe('sql table');
 });
 test('psql variables are not names, and quoted names keep their positions', async () => {

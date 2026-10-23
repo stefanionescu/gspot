@@ -8,23 +8,23 @@ import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 
 // Describe one scope: the default, the value and where it comes from, and how to change it.
-function formatSettingScope(key: string, setting: Setting, entry: SettingScope): string[] {
-    const { scope, shipped, effective } = entry;
+function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
+    const { scope, shipped, effective } = scopeSetting;
     const { value, source } = effective ?? { value: undefined, source: 'unset' };
     return [
         '',
         `Scope: ${scope === '' ? ROOT_SCOPE_LABEL : scope}`,
         `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
         `Current value: ${JSON.stringify(value)} (from ${source})`,
-        ...formatChangeLines(key, setting, entry),
+        ...formatChangeLines(key, setting, scopeSetting),
     ];
 }
 
 // How to change the value of one scope: records by hand for a record list, or gspot set and unset.
-function formatChangeLines(key: string, setting: Setting, entry: SettingScope): string[] {
+function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     if (Object.hasOwn(listRecordFields(), key))
         return [`Change it: write [[${key}]] records by hand in gspot.toml, then run gspot apply.`];
-    const { scope, shipped, effective } = entry;
+    const { scope, shipped, effective } = scopeSetting;
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
     const value = effective?.value;
     return [
@@ -72,7 +72,7 @@ export function explainSetting(session: Session | undefined, key: string): Expla
         ...(first.setting.reason_needed === undefined
             ? []
             : ['', `Reason: ${first.setting.reason_needed} needs a reason`]),
-        ...scopes.flatMap((entry) => formatSettingScope(key, first.setting, entry)),
+        ...scopes.flatMap((each) => formatSettingScope(key, first.setting, each)),
     ];
     return {
         kind: 'setting',

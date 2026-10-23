@@ -19,17 +19,17 @@ function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
     const { root, repository, configurations, settingsFile } = session;
     const { dependencyFiles } = repository;
     const settings = settingsFile.settings;
-    return detectConfigurations(repository, configurations).flatMap((entry) => {
-        if (settings.removed_configurations.includes(entry.configuration)) return [];
+    return detectConfigurations(repository, configurations).flatMap((detection) => {
+        if (settings.removed_configurations.includes(detection.configuration)) return [];
         const removedScopes = Object.entries(settings.scopes)
-            .filter(([, table]) => table.removed_configurations.includes(entry.configuration))
+            .filter(([, table]) => table.removed_configurations.includes(detection.configuration))
             .map(([path]) => path);
-        if (removedScopes.length === 0) return [entry];
+        if (removedScopes.length === 0) return [detection];
         const files = repository.files.filter((file) => !removedScopes.some((path) => isInScope(file.path, path)));
         const paths = new Set(files.map((file) => file.path));
         return detectConfigurations(
             { root, files, dependencyFiles: dependencyFiles.filter((file) => paths.has(file.path)) },
-            new Map([...configurations].filter(([name]) => name === entry.configuration)),
+            new Map([...configurations].filter(([name]) => name === detection.configuration)),
         );
     });
 }
@@ -48,7 +48,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
         .filter(({ configurations: names }) => names.length > 0)
         .flatMap(({ path, configurations: names }) => {
             const evidence = path === '' ? detected : detectConfigurations(repository, configurations, path);
-            const found = new Set(evidence.map((entry) => entry.configuration));
+            const found = new Set(evidence.map((detection) => detection.configuration));
             const scopeArgument = path === '' ? '' : ` --scope ${quoteArgument(path)}`;
             return names.flatMap((name) => {
                 const configuration = configurations.get(name);
@@ -79,7 +79,7 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
                 });
     return {
         detected: detected
-            .filter((entry) => entry.group !== 'general' && !selected.has(entry.configuration))
+            .filter((detection) => detection.group !== 'general' && !selected.has(detection.configuration))
             .map(({ configuration, evidence }) => ({ configuration, evidence, command: `gspot add ${configuration}` })),
         suggested: rows.values().toArray(),
         undetected,
@@ -159,7 +159,7 @@ function listUnownedConfigFiles(
  * @returns the suggested changes.
  */
 export function listSuggestions(session: Session): Suggestions {
-    const configurations = session.neededToolConfigurations;
+    const configurations = session.toolConfigurations;
     const repositorySetup = readRepositorySetup(session.reads, session.repository);
     const generated = generate(session);
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));

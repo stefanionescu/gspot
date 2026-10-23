@@ -13,7 +13,7 @@ import {
     DOCKERIGNORE,
     EDGE_SLASHES,
     IGNORE_PATTERN_FORMS,
-    DOCKERIGNORE_ENTRIES,
+    DOCKERIGNORE_PATTERNS,
 } from '#cli/config/checks/infrastructure/docker/dockerignore.ts';
 
 /**
@@ -37,9 +37,9 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Find
         })
         .flatMap(({ path: dockerfile }): Finding[] => {
             const folder = findScopeFolder(dockerfile, session.repository.scopeFolders);
-            const scope = session.scopes.find((entry) => entry.folder.path === folder.path) as Scope;
+            const scope = session.scopes.find((each) => each.folder.path === folder.path) as Scope;
             const required = [
-                ...DOCKERIGNORE_ENTRIES,
+                ...DOCKERIGNORE_PATTERNS,
                 ...scope.configurations.flatMap((configuration) => configuration.ignored_paths),
             ];
             const paths = [
@@ -52,7 +52,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Find
             const ignore = paths
                 .values()
                 .map((path) => ({ path, text: findCachedText(session.reads, path) }))
-                .find((entry): entry is typeof entry & { text: string } => entry.text !== undefined);
+                .find((file): file is typeof file & { text: string } => file.text !== undefined);
             if (ignore === undefined)
                 return [
                     buildFinding(
@@ -63,8 +63,8 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Find
                     ),
                 ];
             const lines = new Set(ignore.text.split('\n').map((line) => line.trim().replaceAll(EDGE_SLASHES, '')));
-            const missing = required.filter((entry) =>
-                IGNORE_PATTERN_FORMS.every(([prefix, suffix]) => !lines.has(`${prefix}${entry}${suffix}`)),
+            const missing = required.filter((pattern) =>
+                IGNORE_PATTERN_FORMS.every(([prefix, suffix]) => !lines.has(`${prefix}${pattern}${suffix}`)),
             );
             return missing.length === 0
                 ? []

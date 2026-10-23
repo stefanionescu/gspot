@@ -225,13 +225,13 @@ const {runProgram} = await import(${JSON.stringify(CLI_MAIN)});
 process.exitCode = await runProgram(process.argv.slice(2));
 `;
         const command = [process.execPath, '-e', program];
-        const prepared = limitToTestDeadline(command, { cwd: root });
+        const limited = limitToTestDeadline(command, { cwd: root });
         const child = Bun.spawn(command, {
             cwd: root,
             stdin: 'pipe',
             stdout: 'pipe',
             stderr: 'pipe',
-            timeout: Math.ceil(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
+            timeout: Math.ceil(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
         });
         await using capture = captureChild(child);
         const { output, errors } = capture;

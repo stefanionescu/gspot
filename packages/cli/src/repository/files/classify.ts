@@ -61,10 +61,10 @@ import {
 } from '#cli/config/repository/files/classify.ts';
 
 // A Git attribute wins over a configuration declaration.
-function findDeclaredKind(path: string, rules: FileKindRules): FileClassification | undefined {
+function findConfiguredKind(path: string, rules: FileKindRules): FileClassification | undefined {
     const attribute = findAttributeKind(rules.attributes.get(path));
     if (attribute !== undefined) return attribute;
-    const generated = rules.generatedPaths.find((entry) => buildPathMatcher(entry.paths)(path));
+    const generated = rules.generatedPaths.find((generatedPath) => buildPathMatcher(generatedPath.paths)(path));
     return generated === undefined ? undefined : { kind: generated.kind, origin: generated.configuration };
 }
 
@@ -97,11 +97,11 @@ function findGeneratedKind(path: string, prefix: Buffer): FileClassification | u
 }
 
 // A Markdown file that holds only a managed block counts as generated; any authored text keeps it source.
-function classifyManagedDocument(root: string, entry: ListedFile, prefix: Buffer): FileClassification {
-    if (entry.symlink || !entry.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
+function classifyManagedDocument(root: string, file: ListedFile, prefix: Buffer): FileClassification {
+    if (file.symlink || !file.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
-    const text = readText(root, entry.path);
-    const authored = stripBlock(text, { path: entry.path, style: 'markdown' });
+    const text = readText(root, file.path);
+    const authored = stripBlock(text, { path: file.path, style: 'markdown' });
     if (authored === text || authored.trim() !== '') return SOURCE_KIND;
     return { kind: 'generated', origin: KIND_ORIGINS.gspot };
 }
@@ -112,20 +112,20 @@ function classifyManagedDocument(root: string, entry: ListedFile, prefix: Buffer
  *
  * @param file what to classify.
  * @param file.root the repository folder.
- * @param file.entry the tracked listing item.
+ * @param file.listed the file as Git or the folder walk lists it.
  * @param file.prefix the first bytes of the file.
  * @param file.isBinary whether those bytes hold binary data.
  * @param rules the generated and vendored paths that configurations declare, and the captured Git attributes.
  * @returns the kind and where it came from.
  */
 function classifyKind(
-    file: { root: string; entry: ListedFile; prefix: Buffer; isBinary: boolean },
+    file: { root: string; listed: ListedFile; prefix: Buffer; isBinary: boolean },
     rules: FileKindRules,
 ): FileClassification {
-    const { root, entry, isBinary, prefix } = file;
-    const { path } = entry;
-    const declared = findDeclaredKind(path, rules);
-    if (declared) return declared;
+    const { root, listed, isBinary, prefix } = file;
+    const { path } = listed;
+    const configured = findConfiguredKind(path, rules);
+    if (configured) return configured;
     // Explicit text attributes override binary content and what the extension suggests.
     if (isBinary && rules.attributes.get(path)?.[TEXT_ATTRIBUTE] !== ATTRIBUTE_SET)
         return { kind: 'binary', origin: KIND_ORIGINS.content };
@@ -139,7 +139,7 @@ function classifyKind(
             .some((segment) => VENDORED_FOLDERS.has(segment))
     )
         return { kind: 'vendored', origin: KIND_ORIGINS.directory };
-    return classifyManagedDocument(root, entry, prefix);
+    return classifyManagedDocument(root, listed, prefix);
 }
 
 function listShebangTags(firstLine: string): string[] {
@@ -212,45 +212,45 @@ function parseShebang(firstLine: string): string | undefined {
  * Build the inventory entry of a tracked file: its kind, where the kind comes from, and its tags.
  *
  * @param repositoryRoot the base folder for resolving tracked entries.
- * @param entry the tracked listing item.
+ * @param file the tracked listing item.
  * @param prefix the first bytes of the file.
  * @param rules the generated and vendored paths to match.
  * @returns the tracked file.
  */
 export function classifyFile(
     repositoryRoot: string,
-    entry: ListedFile,
+    file: ListedFile,
     prefix: Buffer,
     rules: FileKindRules,
 ): TrackedFile {
-    const tagged = tagFile(entry, prefix);
-    const kind = classifyKind({ root: repositoryRoot, entry, prefix, isBinary: tagged.isBinary }, rules);
+    const tagged = tagFile(file, prefix);
+    const kind = classifyKind({ root: repositoryRoot, listed: file, prefix, isBinary: tagged.isBinary }, rules);
     return {
-        path: entry.path,
+        path: file.path,
         kind: kind.kind,
         kindOrigin: kind.origin,
         tags: tagged.tags,
-        executable: entry.executable,
-        size: entry.size,
+        executable: file.executable,
+        size: file.size,
     };
 }
 
 /**
  * Tag one file. A binary file keeps its path tags and gets no content tags.
  *
- * @param entry the tracked listing item.
+ * @param file the tracked listing item.
  * @param prefix the captured first bytes.
  * @returns the path and content tags, and whether the file contains binary bytes.
  */
-function tagFile(entry: ListedFile, prefix: Buffer): FileTags {
-    const extension = extractExtension(entry.path);
-    const base = posix.basename(entry.path);
+function tagFile(file: ListedFile, prefix: Buffer): FileTags {
+    const extension = extractExtension(file.path);
+    const base = posix.basename(file.path);
     const flags: [boolean, string][] = [
-        [entry.symlink, 'symlink'],
-        [LOCKFILES.some((entry) => entry.file === base), 'lockfile'],
+        [file.symlink, 'symlink'],
+        [LOCKFILES.some((lockfile) => lockfile.file === base), 'lockfile'],
         [base.startsWith(DOCKERFILE_NAME) || extension === DOCKERFILE_EXTENSION, 'dockerfile'],
         [base.startsWith(DOTENV_PREFIX), 'dotenv'],
-        [entry.executable, 'executable'],
+        [file.executable, 'executable'],
     ];
     const tags = new Set<string>([
         ...(EXTENSION_TAGS[extension] ?? []),

@@ -54,29 +54,29 @@ async function answerRegistryRequest(
     const url = new URL(request.url);
     const pathname = decodeURIComponent(url.pathname.slice(1));
     const name = pathname.split('/-/', 1).join('');
-    const entry = registry.packages.get(name);
-    if (entry === undefined)
+    const packed = registry.packages.get(name);
+    if (packed === undefined)
         return name.startsWith(GSPOT_PACKAGE_SCOPE)
             ? Response.json({ error: 'Package not found' }, { status: 404 })
             : Response.redirect(new URL(url.pathname, UPSTREAM_REGISTRY));
-    const tarball = `${name}/-/${name.slice(name.lastIndexOf('/') + 1)}-${entry.version}.tgz`;
+    const tarball = `${name}/-/${name.slice(name.lastIndexOf('/') + 1)}-${packed.version}.tgz`;
     if (pathname.includes('/-/'))
         return pathname === tarball
-            ? new Response(await readFile(entry.filename))
+            ? new Response(await readFile(packed.filename))
             : Response.json({ error: 'Package not found' }, { status: 404 });
-    return Response.json(buildPackageDocument(entry, `${url.origin}/${tarball}`));
+    return Response.json(buildPackageDocument(packed, `${url.origin}/${tarball}`));
 }
 
 // The registry document of one packed package. The registry dates a gspot package now, as on release day, so the
 // release hold must let it through.
-function buildPackageDocument(entry: PackedPackage, tarball: string): Record<string, unknown> {
-    const { filename: _filename, integrity, ...packageFields } = entry;
-    const publishedAt = entry.name.startsWith(GSPOT_PACKAGE_SCOPE) ? new Date().toISOString() : PACKED_PUBLISH_TIME;
+function buildPackageDocument(packed: PackedPackage, tarball: string): Record<string, unknown> {
+    const { filename: _filename, integrity, ...packageFields } = packed;
+    const publishedAt = packed.name.startsWith(GSPOT_PACKAGE_SCOPE) ? new Date().toISOString() : PACKED_PUBLISH_TIME;
     return {
-        name: entry.name,
-        'dist-tags': { latest: entry.version },
-        time: { [entry.version]: publishedAt },
-        versions: { [entry.version]: { ...packageFields, dist: { tarball, integrity } } },
+        name: packed.name,
+        'dist-tags': { latest: packed.version },
+        time: { [packed.version]: publishedAt },
+        versions: { [packed.version]: { ...packageFields, dist: { tarball, integrity } } },
     };
 }
 
@@ -91,8 +91,8 @@ export async function createNpmRegistry(
 
     const packages = new Map<string, PackedPackage>();
     for (const file of files)
-        for (const entry of JSON.parse(await readFile(file, 'utf8')) as PackedPackage[])
-            packages.set(entry.name, entry);
+        for (const packed of JSON.parse(await readFile(file, 'utf8')) as PackedPackage[])
+            packages.set(packed.name, packed);
     let requests = 0;
     const server = Bun.serve({
         hostname: REGISTRY_HOST,

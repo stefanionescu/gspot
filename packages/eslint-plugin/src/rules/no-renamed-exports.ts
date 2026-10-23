@@ -3,10 +3,10 @@ import { createRule } from '../schemas/rules/options.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isRenamedValue(node: TSESTree.Expression | null): boolean {
-    const current = unwrap(node);
-    if (!current) return false;
-    if (current.type === AST_NODE_TYPES.Identifier) return true;
-    return current.type === AST_NODE_TYPES.MemberExpression && isRenamedValue(current.object);
+    const unwrapped = unwrap(node);
+    if (!unwrapped) return false;
+    if (unwrapped.type === AST_NODE_TYPES.Identifier) return true;
+    return unwrapped.type === AST_NODE_TYPES.MemberExpression && isRenamedValue(unwrapped.object);
 }
 
 export const noRenamedExports = createRule<[], 'renamed'>({

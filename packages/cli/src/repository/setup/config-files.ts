@@ -77,11 +77,11 @@ function parseSharedFile(text: string, extension: string, path: string): unknown
 function hasToolSection(text: string, path: string, selector: Pick<ConflictingConfigFile, 'key' | 'table'>): boolean {
     const extension = extname(path);
     if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) return hasIniSection(text, selector.table);
-    const parts = selector.key === undefined ? (selector.table as string).split('.') : [selector.key];
+    const segments = selector.key === undefined ? (selector.table as string).split('.') : [selector.key];
     let value = parseSharedFile(text, extension, path);
-    for (const part of parts) {
-        if (!isTable(value) || !Object.hasOwn(value, part)) return false;
-        value = value[part];
+    for (const segment of segments) {
+        if (!isTable(value) || !Object.hasOwn(value, segment)) return false;
+        value = value[segment];
     }
     return true;
 }

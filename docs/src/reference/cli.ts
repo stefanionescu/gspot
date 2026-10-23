@@ -24,11 +24,8 @@ function groupSettingVariants(configurations: CliReference['configurations']): S
     ];
     for (const { setting, owner } of ownedSettings) {
         const variants = settings.get(setting.name) ?? [];
-        const variant = variants.find((entry) =>
-            isDeepStrictEqual(
-                [entry.setting.default, entry.setting.default_all],
-                [setting.default, setting.default_all],
-            ),
+        const variant = variants.find((each) =>
+            isDeepStrictEqual([each.setting.default, each.setting.default_all], [setting.default, setting.default_all]),
         );
         if (variant === undefined) variants.push({ setting, owners: [owner] });
         else if (!variant.owners.includes(owner)) variant.owners.push(owner);

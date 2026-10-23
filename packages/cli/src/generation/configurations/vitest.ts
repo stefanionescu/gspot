@@ -20,7 +20,7 @@ export function buildVitestBlocks(scope: Pick<EslintScope, 'presets' | 'eslintFi
     const blocks: ConfigurationBlocks['blocks'] = [];
     const preset = getPreset(presets, 'recommended');
     blocks.push({
-        data: {
+        fields: {
             files: eslintFiles.tests,
             rules: {
                 ...preset.blocks[0].rules,

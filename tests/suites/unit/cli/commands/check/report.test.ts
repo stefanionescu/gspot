@@ -115,16 +115,16 @@ test('findings that share a help print it once, after the last of them', () => {
 
 test('colors change the report only by escape codes', () => {
     setOutputOptions({ json: false, color: false });
-    const plain = formatRunReport(FAILED_CHECK_REPORT, { verbose: false });
+    const concise = formatRunReport(FAILED_CHECK_REPORT, { verbose: false });
     try {
         setOutputOptions({ json: false, color: true });
         const colored = formatRunReport(FAILED_CHECK_REPORT, { verbose: false });
-        expect(colored).not.toBe(plain);
-        expect(stripVTControlCharacters(colored)).toBe(plain);
+        expect(colored).not.toBe(concise);
+        expect(stripVTControlCharacters(colored)).toBe(concise);
     } finally {
         setOutputOptions({ json: false, color: false });
     }
-    expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).toBe(plain);
+    expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).toBe(concise);
 });
 
 test.each([...CHECK_REPORT_COMPARISONS])('the report names $content comparisons', ({ content, header }) => {
@@ -176,8 +176,7 @@ test('terminal progress rewrites one status line and log output stays empty', ()
             lines.push(String(chunk));
             return true;
         };
-        for (let index = 0; index < 5; index++)
-            printProgress({ completed: index + 1, total: 5, comparison: undefined });
+        for (let index = 0; index < 5; index++) printProgress({ finished: index + 1, total: 5, comparison: undefined });
         if (process.stderr.isTTY) process.stderr.write(PROGRESS_CLEAR);
     }
     expect(terminal).toStrictEqual([

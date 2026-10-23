@@ -3,9 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/files/modes.ts';
 import type { FileBounds, FileContents } from '#cli/types/system/files.ts';
-import { TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files/entries.ts';
+import { TEMPORARY_FILE_SUFFIX } from '#cli/config/system/files/bounded.ts';
 import { linkSync, mkdirSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
-import { readEntry, preparePath, buildContainedPath } from '#cli/system/files/entries.ts';
+import { readBounded, preparePath, buildContainedPath } from '#cli/system/files/bounded.ts';
 import { LOCK_RECOVERY_SUFFIX, LOCK_TOKEN_SEPARATOR } from '#cli/config/system/files/lock.ts';
 
 // Creates the lock file with the token, or returns false when another holder already owns the file.
@@ -24,8 +24,8 @@ function writeLockFile(absolutePath: string, token: string): boolean {
 }
 
 // Refuse a lock unless its holder has exited.
-function assertAbandonedLock(current: FileContents, path: string): void {
-    const pid = Number(current.bytes.toString('utf8').split(LOCK_TOKEN_SEPARATOR, 1)[0]);
+function assertAbandonedLock(lockContents: FileContents, path: string): void {
+    const pid = Number(lockContents.bytes.toString('utf8').split(LOCK_TOKEN_SEPARATOR, 1)[0]);
     if (!Number.isSafeInteger(pid) || pid <= 0)
         throw new GspotError(
             'filesystem',
@@ -57,7 +57,7 @@ function removeStaleLock(bounds: FileBounds, path: string, absolutePath: string)
         );
     }
     try {
-        const stale = readEntry(bounds, path);
+        const stale = readBounded(bounds, path);
         if (stale !== undefined) {
             assertAbandonedLock(stale, path);
             unlinkSync(absolutePath);
@@ -76,7 +76,7 @@ function removeStaleLock(bounds: FileBounds, path: string, absolutePath: string)
 export function releaseLocks(bounds: FileBounds): string[] {
     const released: string[] = [];
     for (const [path, holder] of bounds.locks) {
-        if (readEntry(bounds, path)?.bytes.toString('utf8') !== holder) continue;
+        if (readBounded(bounds, path)?.bytes.toString('utf8') !== holder) continue;
         unlinkSync(buildContainedPath(bounds, path));
         released.push(path);
     }
@@ -94,9 +94,9 @@ export function createLock(bounds: FileBounds, path: string): void {
     const target = preparePath(bounds, path);
     const token = `${String(process.pid)}${LOCK_TOKEN_SEPARATOR}${randomUUID()}`;
     while (!writeLockFile(target, token)) {
-        const current = readEntry(bounds, path);
-        if (current === undefined) continue;
-        assertAbandonedLock(current, path);
+        const lockContents = readBounded(bounds, path);
+        if (lockContents === undefined) continue;
+        assertAbandonedLock(lockContents, path);
         removeStaleLock(bounds, path, target);
     }
     bounds.locks.set(path, token);

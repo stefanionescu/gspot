@@ -88,7 +88,7 @@ export const SITE_BUILD_COMMANDS = [
     ['npm', 'run', 'build'],
 ] as const;
 
-export const IGNORE_EXPIRY_ENTRIES = [
+export const IGNORE_EXPIRY_CASES = [
     { check: 'dependencies/osv-scanner', rule: 'permanent', reason: 'Reviewed upstream.' },
     {
         check: 'dependencies/osv-scanner',

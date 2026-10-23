@@ -12,12 +12,12 @@ const CARRIAGE_RETURN_BYTE = 13;
 
 export const BINARY_BLOB = [0, LINE_FEED_BYTE, INVALID_UTF8_BYTE, CARRIAGE_RETURN_BYTE, 0] as const;
 
-export const ENTRY_PATH = 'folder/a\n"é.sql';
+export const INDEX_PATH = 'folder/a\n"é.sql';
 
-export const ENTRY_FAILURE =
+export const INDEX_LINE_FAILURE =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
 
-export const INVALID_ENTRIES = [
+export const INVALID_INDEX_LINES = [
     { name: 'unmerged index stage', output: `100644 ${SHA1} 1\tsource.ts\0` },
     { name: 'unsupported mode', output: `100600 ${SHA1} 0\tsource.ts\0` },
     { name: 'short object ID', output: '100644 aaaa 0\tsource.ts\0' },

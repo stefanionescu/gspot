@@ -116,15 +116,17 @@ export function checkXcodeXcstrings(session: Session, planned: PlannedCheck): Fi
                 return [buildFinding(planned, at, 'syntax', error.message)];
             throw error;
         }
-        const entries = (xcstrings.strings === undefined ? [] : Object.entries(xcstrings.strings)).filter(
-            ([, entry]) => entry.shouldTranslate !== false,
+        const strings = (xcstrings.strings === undefined ? [] : Object.entries(xcstrings.strings)).filter(
+            ([, localized]) => localized.shouldTranslate !== false,
         );
         const locales = new Set(
-            entries.flatMap(([, entry]) => (entry.localizations === undefined ? [] : Object.keys(entry.localizations))),
+            strings.flatMap(([, localized]) =>
+                localized.localizations === undefined ? [] : Object.keys(localized.localizations),
+            ),
         );
         locales.delete(xcstrings.sourceLanguage ?? DEFAULT_SOURCE_LANGUAGE);
-        return entries.flatMap(([key, entry]) => {
-            const missing = [...locales].filter((locale) => entry.localizations?.[locale] === undefined);
+        return strings.flatMap(([key, localized]) => {
+            const missing = [...locales].filter((locale) => localized.localizations?.[locale] === undefined);
             if (missing.length === 0) return [];
             return [
                 buildFinding(

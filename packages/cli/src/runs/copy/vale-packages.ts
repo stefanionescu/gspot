@@ -6,9 +6,9 @@ import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 
 // Refuses a copy whose Vale configuration differs from the one the installed packages came from.
 function assertValeMatches(installed: Files, destination: Files, config: string): void {
-    const current = installed.read(config);
+    const onDisk = installed.read(config);
     const selected = destination.read(config);
-    if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
+    if (onDisk === undefined || selected === undefined || !onDisk.bytes.equals(selected.bytes))
         throw new GspotError(
             'copy',
             'The installed Vale packages do not match the Vale settings of this revision. Check this commit in its own clone after running gspot apply and gspot install there.',

@@ -48,7 +48,7 @@ function listIncludedFiles(planned: PlannedCheck, text: string, base: string): P
         if (name !== 'include' || value === undefined || value.includes(NGINX_VARIABLE_MARK)) continue;
         const target = posix.resolve(NGINX_FOLDER, value);
         const isIncluded = picomatch(posix.normalize(posix.join(base, posix.relative(NGINX_FOLDER, target))));
-        for (const file of planned.files.filter((entry) => isIncluded(entry.path)))
+        for (const file of planned.files.filter((each) => isIncluded(each.path)))
             included.push({ path: file.path, target: posix.resolve(NGINX_FOLDER, posix.relative(base, file.path)) });
     }
     return included;
@@ -59,13 +59,13 @@ function copyNginxFiles(session: Session, planned: PlannedCheck, path: string, w
     const copies = new Map<string, Mount>();
     const pending = [{ path, target: NGINX_MAIN_TARGET }];
     const base = posix.dirname(path);
-    for (const entry of pending) {
-        if (copies.has(entry.target)) continue;
+    for (const pendingFile of pending) {
+        if (copies.has(pendingFile.target)) continue;
         const source = join(folder, `${String(copies.size)}.conf`);
-        const bytes = readCachedBytes(session.reads, entry.path);
+        const bytes = readCachedBytes(session.reads, pendingFile.path);
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
-        copies.set(entry.target, { ...entry, source, text });
+        copies.set(pendingFile.target, { ...pendingFile, source, text });
         pending.push(...listIncludedFiles(planned, text, base));
     }
     return copies;
@@ -100,7 +100,7 @@ async function testNginxFile(
         key: join(work, NGINX_KEY_FILE),
     };
     const commandArguments = buildNginxTestArguments(
-        [...copies.values()].map((entry) => entry.text).join('\n'),
+        [...copies.values()].map((copy) => copy.text).join('\n'),
         mounts,
         image,
     );

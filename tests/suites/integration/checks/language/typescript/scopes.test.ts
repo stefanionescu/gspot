@@ -78,7 +78,7 @@ test('typescript/tsc runs a covering parent tsconfig once for nested scopes', as
     for (const check of ['typescript/tsconfig', 'typescript/tsc'])
         expect(
             original.report.checks
-                .filter((entry) => entry.check === check)
+                .filter((each) => each.check === check)
                 .map(({ scope, status }) => ({ scope, status })),
         ).toStrictEqual([
             { scope: '', status: 'passed' },

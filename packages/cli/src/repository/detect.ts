@@ -71,7 +71,7 @@ function findContentEvidence(
 ): DetectionEvidence | undefined {
     for (const [path, pattern] of Object.entries(detect.content)) {
         const target = joinScope(contents.scope, path);
-        const file = contents.files.find((entry) => entry.path === target);
+        const file = contents.files.find((each) => each.path === target);
         if (file === undefined) continue;
         const text = findText(root, file.path);
         if (text !== undefined && new RegExp(pattern, 'u').test(text)) return { evidence: file.path };
@@ -96,7 +96,7 @@ function findConfigurationEvidence(
 
 function findFilenameEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     const matches = buildFilenameMatcher(detect.filenames);
-    const file = contents.files.find((entry) => matches(entry.path));
+    const file = contents.files.find((each) => matches(each.path));
     return file === undefined ? undefined : { evidence: file.path };
 }
 
@@ -137,12 +137,12 @@ function findRuntimeEvidence(detect: Configuration['detect'], contents: ScopeCon
 function findPathEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     if (detect.paths.length === 0) return undefined;
     const matcher = buildPathMatcher(detect.paths);
-    const file = contents.files.find((entry) => matcher(entry.path));
+    const file = contents.files.find((each) => matcher(each.path));
     return file === undefined ? undefined : { evidence: file.path };
 }
 
 function findTagEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
-    const file = contents.files.find((entry) => detect.tags.some((tag) => entry.tags.includes(tag)));
+    const file = contents.files.find((each) => detect.tags.some((tag) => each.tags.includes(tag)));
     return file === undefined ? undefined : { evidence: file.path };
 }
 

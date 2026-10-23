@@ -7,8 +7,8 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
 import { runCheckCode } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { NGINX_COMPOSE } from '#tests/config/checks/infrastructure/docker/samples.ts';
 import { DOCKER_VERSION, COMPOSE_PAIRING_CASES } from '#tests/config/checks/infrastructure/docker/compose.ts';
@@ -24,7 +24,7 @@ test.each([...COMPOSE_PAIRING_CASES])(
         const session = await openSession(sandbox.path);
         using resources = new DisposableStack();
         resources.use(
-            fakePinnedExecutables([{ ...getTool(session.configurations.values(), 'docker'), version: DOCKER_VERSION }]),
+            fakeToolExecutables([{ ...getTool(session.configurations.values(), 'docker'), version: DOCKER_VERSION }]),
         );
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));
         const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;

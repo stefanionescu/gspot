@@ -21,11 +21,11 @@ import {
 } from '#cli/types/settings/file.ts';
 import {
     percentage,
-    wholeNumber,
     formatSchema,
     relativePath,
     nonemptyStrings,
     destinationPath,
+    nonnegativeInteger,
     allowReasonedValue,
 } from '#cli/schemas/settings/fields.ts';
 
@@ -76,7 +76,7 @@ export const configurationTableSchemas = {
     dependencies: z
         .strictObject({
             min_release_age_days: allowReasonedValue(
-                wholeNumber,
+                nonnegativeInteger,
                 SETTING_DEFINITIONS['dependencies.min_release_age_days'],
             ),
             allowed_registries: allowReasonedValue(
@@ -171,7 +171,9 @@ export const configurationTableSchemas = {
                             .array(destinationPath)
                             .min(1)
                             .describe(SETTING_DEFINITIONS['site.size_limit.paths'].description),
-                        kilobytes: wholeNumber.describe(SETTING_DEFINITIONS['site.size_limit.kilobytes'].description),
+                        kilobytes: nonnegativeInteger.describe(
+                            SETTING_DEFINITIONS['site.size_limit.kilobytes'].description,
+                        ),
                     } satisfies SchemaShape<TableSettings<'site'>['size_limit'][number]>),
                 )
                 .default(SETTING_DEFINITIONS['site.size_limit'].default)
@@ -223,15 +225,21 @@ export const configurationTableSchemas = {
         .optional(),
     repository: z
         .strictObject({
-            max_file_kilobytes: allowReasonedValue(wholeNumber, SETTING_DEFINITIONS['repository.max_file_kilobytes']),
+            max_file_kilobytes: allowReasonedValue(
+                nonnegativeInteger,
+                SETTING_DEFINITIONS['repository.max_file_kilobytes'],
+            ),
         } satisfies SchemaShape<TableSettings<'repository'>, NonNullable<WrittenSettings['repository']>>)
         .optional(),
     prose: z
         .strictObject({
-            max_sentence_words: allowReasonedValue(wholeNumber, SETTING_DEFINITIONS['prose.max_sentence_words']),
-            max_list_item_words: allowReasonedValue(wholeNumber, SETTING_DEFINITIONS['prose.max_list_item_words']),
+            max_sentence_words: allowReasonedValue(nonnegativeInteger, SETTING_DEFINITIONS['prose.max_sentence_words']),
+            max_list_item_words: allowReasonedValue(
+                nonnegativeInteger,
+                SETTING_DEFINITIONS['prose.max_list_item_words'],
+            ),
             max_paragraph_sentences: allowReasonedValue(
-                wholeNumber,
+                nonnegativeInteger,
                 SETTING_DEFINITIONS['prose.max_paragraph_sentences'],
             ),
         } satisfies SchemaShape<TableSettings<'prose'>, NonNullable<WrittenSettings['prose']>>)

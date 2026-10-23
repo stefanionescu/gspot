@@ -131,15 +131,12 @@ function selectRoute(file: TrackedFile): ProseRoute | undefined {
  */
 function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
     const routes = files.map((file) => selectRoute(file)).filter((route) => route !== undefined);
-    const pathRoutes = routes.filter((entry) => entry.mode === 'path');
+    const pathRoutes = routes.filter((each) => each.mode === 'path');
     // Map.groupBy creates a group only when its first route exists.
     const byExtension = [...Map.groupBy(pathRoutes, (route) => route.extension).values()].map(
         (group) => group as ProseRouteGroup,
     );
-    return [
-        ...byExtension,
-        ...routes.filter((entry) => entry.mode === 'stdin').map((route): ProseRouteGroup => [route]),
-    ];
+    return [...byExtension, ...routes.filter((each) => each.mode === 'stdin').map((route): ProseRouteGroup => [route])];
 }
 
 /**

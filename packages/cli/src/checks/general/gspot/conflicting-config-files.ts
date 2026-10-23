@@ -15,7 +15,7 @@ import { listConflictingConfigFiles } from '#cli/repository/setup/config-files.t
  */
 export function checkConflictingConfigFiles(session: Session, planned: PlannedCheck): Finding[] {
     const tools = new Set(
-        session.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
+        session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     );
     const generated = listGeneratedPaths(session.repository.files);
     return listConflictingConfigFiles(session.root, session.repository.files, session.configurations.values())

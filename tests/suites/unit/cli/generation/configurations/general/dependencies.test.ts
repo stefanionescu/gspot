@@ -38,7 +38,7 @@ test('the Bun scanner key keeps your own bunfig.toml fields when management stop
         'bunfig.toml': original,
     });
     const session = await openSession(sandbox.path);
-    const generated = generate(session).managedKeys.find((entry) => entry.path === 'bunfig.toml')!;
+    const generated = generate(session).managedKeys.find((managedKey) => managedKey.path === 'bunfig.toml')!;
     using writer = openWriter(sandbox.path);
     writePlans(writer, [planSettingsWrite(writer, generated.path, generated.keys)]);
     const installed = await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8');

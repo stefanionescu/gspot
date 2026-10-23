@@ -58,8 +58,8 @@ test('generated Gradle and Maven launchers are classified generated and never se
         ).map(({ configuration }) => configuration),
     ).not.toContain('bash');
     await writeFile(join(sandbox.path, '.gitattributes'), 'mvnw linguist-vendored\n');
-    const declared = await readTestRepository(sandbox.path);
-    expect(declared.files.find(({ path }) => path === 'mvnw')).toMatchObject({
+    const repository = await readTestRepository(sandbox.path);
+    expect(repository.files.find(({ path }) => path === 'mvnw')).toMatchObject({
         kind: 'vendored',
         kindOrigin: '.gitattributes',
     });
@@ -101,16 +101,16 @@ test('.gitattributes wins, then the files configurations declare, then banners, 
     const declarations = [
         { paths: ['src/a.ts', 'generated/declared.ts'], configuration: 'example', kind: 'generated' as const },
     ];
-    const declared = await readRepository(createReadCache(sandbox.path), {
+    const configuredRepository = await readRepository(createReadCache(sandbox.path), {
         generatedPaths: declarations,
         scopes: [],
         configurations: readConfigurations(),
     });
-    expect(declared.files.find((file) => file.path === 'src/a.ts')).toMatchObject({
+    expect(configuredRepository.files.find((file) => file.path === 'src/a.ts')).toMatchObject({
         kind: 'generated',
         kindOrigin: 'example',
     });
-    expect(declared.files.find((file) => file.path === 'generated/declared.ts')).toMatchObject({
+    expect(configuredRepository.files.find((file) => file.path === 'generated/declared.ts')).toMatchObject({
         kind: 'vendored',
         kindOrigin: '.gitattributes',
     });

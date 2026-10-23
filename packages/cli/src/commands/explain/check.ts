@@ -11,7 +11,7 @@ import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
 import type { CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
 import { getTool, getToolName, extractRulePrefix } from '#cli/configurations/tools.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
-import { type Tool, type Check, type KnownCheck, type Configuration } from '#cli/types/configurations.ts';
+import { type Tool, type Check, type ScopeCheck, type Configuration } from '#cli/types/configurations.ts';
 
 function findRulePlugin(prefix: string, configurations: Map<string, Configuration>): Tool | undefined {
     return configurations
@@ -34,7 +34,7 @@ function findRulePage(tool: string, rule: string, configurations: Map<string, Co
 // List the settings that change the check, and the rules and crash pattern of its configuration.
 function buildCheckFacts(
     check: Check,
-    configuration: KnownCheck['configuration'],
+    configuration: ScopeCheck['configuration'],
     configurations: Map<string, Configuration>,
     installedRules: ReadonlySet<string>,
 ): CheckFacts {
@@ -67,14 +67,14 @@ function buildCheckFacts(
 // runs here.
 function formatRepositoryUse(
     session: Session | undefined,
-    declared: CommandCheck | undefined,
-    configuration: KnownCheck['configuration'],
+    commandCheck: CommandCheck | undefined,
+    configuration: ScopeCheck['configuration'],
 ): string[] {
     const lines: string[] = [];
-    if (declared !== undefined)
+    if (commandCheck !== undefined)
         lines.push(
-            `Command: ${declared.command.map((part) => quoteArgument(part)).join(' ')}`,
-            `Paths: ${declared.files.paths.join(', ')}`,
+            `Command: ${commandCheck.command.map((argument) => quoteArgument(argument)).join(' ')}`,
+            `Paths: ${commandCheck.files.paths.join(', ')}`,
         );
     if (session && configuration !== undefined)
         lines.push(
@@ -87,8 +87,8 @@ function formatRepositoryUse(
 
 function formatCheckExplanation(
     session: Session | undefined,
-    found: KnownCheck,
-    declared: CommandCheck | undefined,
+    found: ScopeCheck,
+    commandCheck: CommandCheck | undefined,
     facts: CheckFacts,
 ): string {
     const { check, configuration } = found;
@@ -111,7 +111,7 @@ function formatCheckExplanation(
             ? []
             : [`Settings that change it: ${settings.join(', ')} (gspot set <setting> <value>)`]),
         ...(rules.length === 0 ? [] : [`Rules that state it: ${rules.join(', ')}`]),
-        ...formatRepositoryUse(session, declared, configuration),
+        ...formatRepositoryUse(session, commandCheck, configuration),
     ];
     return `${lines.join('\n')}\n`;
 }
@@ -125,10 +125,10 @@ function formatCheckExplanation(
  */
 export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
     const configurations = readConfigurations();
-    const declared = session?.settingsFile.settings.commandChecks[checkId];
-    const found: KnownCheck | undefined =
+    const commandCheck = session?.settingsFile.settings.commandChecks[checkId];
+    const found: ScopeCheck | undefined =
         listChecksById(configurations.values()).get(checkId) ??
-        (declared === undefined ? undefined : { check: declared, configuration: undefined });
+        (commandCheck === undefined ? undefined : { check: commandCheck, configuration: undefined });
     if (found === undefined) return undefined;
     const { check, configuration } = found;
     const facts = buildCheckFacts(
@@ -140,7 +140,7 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
     return {
         kind: 'check',
         subject: checkId,
-        text: formatCheckExplanation(session, found, declared, facts),
+        text: formatCheckExplanation(session, found, commandCheck, facts),
         data: {
             check: checkId,
             ...(configuration === undefined
@@ -185,10 +185,10 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
     const { check, configuration } = found;
     const page = findRulePage(ruleTool, identifier, configurations);
     const key = quoteArgument(`tools.${ruleTool}.rules`);
-    const entries = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
+    const ruleExample = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
     const optionLines = listSettings(configuration.name)
         .filter((setting) => setting.name === `tools.${ruleTool}.rules`)
-        .map(() => `Change its options: gspot set ${key} ${entries}`);
+        .map(() => `Change its options: gspot set ${key} ${ruleExample}`);
     let description = `Read the ${ruleTool} documentation for ${identifier}.`;
     if (page !== undefined) description = `The tool's page: ${page}`;
     const lines = [

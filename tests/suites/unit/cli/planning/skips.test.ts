@@ -58,7 +58,7 @@ test.each([...NEXT_INTL_PROJECTS])(
         });
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, { stage: 'push', only: ['translations/messages'] });
-        const check = planned.find((entry) => entry.scope.folder.path === scope)!;
+        const check = planned.find((each) => each.scope.folder.path === scope)!;
         expect(check.skip).toStrictEqual(
             selected ? undefined : { cause: 'condition', note: 'Needs a project dependency: next-intl.' },
         );

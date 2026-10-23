@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { PbxElement } from '#cli/types/parsers/projects/xcode.ts';
 
-const itemSchema = z.object({
+const pbxRecordSchema = z.object({
     isa: z.string(),
     buildSettings: z
         .object({
@@ -33,5 +33,5 @@ const itemSchema = z.object({
 
 export const pbxprojSchema = z.object({
     rootObject: z.string(),
-    objects: z.record(z.string(), itemSchema),
+    objects: z.record(z.string(), pbxRecordSchema),
 } satisfies SchemaShape<{ rootObject: string; objects: Record<string, PbxElement> }>);

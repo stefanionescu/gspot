@@ -93,8 +93,8 @@ function findFunctionName(statement: SqlStatement<'CreateFunctionStmt'>, source:
         start += pattern.exec(source.slice(start))?.[0].length ?? 0;
     start += source.slice(start).length - source.slice(start).trimStart().length;
     const qualified = SQL_QUALIFIED_NAME.exec(source.slice(start))?.[0] ?? '';
-    const lastPart = [...qualified.matchAll(SQL_NAME_TOKEN)].at(-1);
-    return { start, qualified, offset: start + (lastPart?.index ?? 0) };
+    const lastToken = [...qualified.matchAll(SQL_NAME_TOKEN)].at(-1);
+    return { start, qualified, offset: start + (lastToken?.index ?? 0) };
 }
 
 function listFunctionNames(statement: SqlStatement<'CreateFunctionStmt'>, source: string): SqlNamed[] {
@@ -104,7 +104,7 @@ function listFunctionNames(statement: SqlStatement<'CreateFunctionStmt'>, source
             category: 'functions',
             name:
                 listNodeFields(statement.fields.funcname, 'String')
-                    .map((part) => part.sval ?? '')
+                    .map((stringNode) => stringNode.sval ?? '')
                     .at(-1) ?? '',
             offset,
         },
@@ -136,11 +136,11 @@ function findNamedToken(source: string, name: string, offset: number): number {
     return token === undefined ? -1 : offset + token.index;
 }
 
-function findIdentifierOffset(entry: SqlNamed, parsed: SqlFile, source: string, offset: number): number {
-    if (entry.offset !== undefined) return entry.offset;
-    if (entry.location === undefined || entry.location < 0) return findNamedToken(source, entry.name, offset);
-    let found = Buffer.from(parsed.source).subarray(0, entry.location).toString('utf8').length;
-    if (entry.category === 'tables') {
+function findIdentifierOffset(named: SqlNamed, parsed: SqlFile, source: string, offset: number): number {
+    if (named.offset !== undefined) return named.offset;
+    if (named.location === undefined || named.location < 0) return findNamedToken(source, named.name, offset);
+    let found = Buffer.from(parsed.source).subarray(0, named.location).toString('utf8').length;
+    if (named.category === 'tables') {
         const qualified = SQL_QUALIFIED_NAME.exec(source.slice(found))?.[0] ?? '';
         const last = [...qualified.matchAll(SQL_NAME_TOKEN)].at(-1);
         if (last !== undefined) found += last.index;
@@ -169,12 +169,13 @@ function extractStatementIdentifiers({
     for (const pattern of [SQL_CREATE_PREFIX, SQL_CREATE_MODIFIER, SQL_CREATE_KIND])
         offset += pattern.exec(lexicalSource.slice(offset))?.[0].length ?? 0;
     return named
-        .filter((entry) => entry.name !== '')
+        .filter((sqlName) => sqlName.name !== '')
 
-        .flatMap((entry): Identifier[] => {
-            const found = findIdentifierOffset(entry, parsed, lexicalSource, offset);
+        .flatMap((sqlName): Identifier[] => {
+            const found = findIdentifierOffset(sqlName, parsed, lexicalSource, offset);
             if (found !== -1)
-                offset = found + (SQL_QUALIFIED_NAME.exec(lexicalSource.slice(found))?.[0].length ?? entry.name.length);
+                offset =
+                    found + (SQL_QUALIFIED_NAME.exec(lexicalSource.slice(found))?.[0].length ?? sqlName.name.length);
             if (parsed.variables.some(({ start, end }) => found >= start && found < end)) return [];
             const identifierStart = found === -1 ? statement.start : found;
             const quoteWidth = source[identifierStart] === '"' ? 1 : 0;
@@ -183,8 +184,8 @@ function extractStatementIdentifiers({
                     { file, language: 'sql' },
                     {
                         ...getPosition(source, identifierStart + quoteWidth),
-                        category: entry.category,
-                        name: entry.name,
+                        category: sqlName.category,
+                        name: sqlName.name,
                     },
                 ),
             ];

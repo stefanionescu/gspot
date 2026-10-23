@@ -53,7 +53,7 @@ function formatTools(tools: ToolInspection[]): string[] {
     const width = Math.max(...tools.map((tool) => formatToolVersion(tool).length)) + VERSION_GAP;
     return tools.map((tool) => {
         const isBroken = !isToolAvailable(tool);
-        const tail = isBroken ? [tool.note, tool.help].filter((part) => part !== undefined).join(' ') : tool.path;
+        const tail = isBroken ? [tool.note, tool.help].filter((text) => text !== undefined).join(' ') : tool.path;
         const label = getColors()[TOOL_STATE_COLORS[tool.state]](tool.state.padEnd(COLUMN_WIDTHS.label));
         return `  ${label} ${formatToolVersion(tool).padEnd(width)} ${tail}`.trimEnd();
     });
@@ -61,15 +61,15 @@ function formatTools(tools: ToolInspection[]): string[] {
 
 function formatSuggestions(suggestions: Suggestions): string[] {
     const sections = SUGGESTION_SECTIONS.map(({ key, title }) => {
-        const entries = suggestions[key].map((entry) => ({
-            name: 'configuration' in entry ? entry.configuration : entry.path,
-            detail: 'evidence' in entry ? entry.evidence : entry.note,
-            command: entry.command,
+        const cells = suggestions[key].map((suggestion) => ({
+            name: 'configuration' in suggestion ? suggestion.configuration : suggestion.path,
+            detail: 'evidence' in suggestion ? suggestion.evidence : suggestion.note,
+            command: suggestion.command,
         }));
         // Each column takes the width of its longest entry, so a long scope path keeps the rows aligned.
-        const nameWidth = Math.max(COLUMN_WIDTHS.name, ...entries.map(({ name }) => name.length));
-        const detailWidth = Math.max(COLUMN_WIDTHS.note, ...entries.map(({ detail }) => detail.length));
-        const rows = entries.map(({ name, detail, command }) =>
+        const nameWidth = Math.max(COLUMN_WIDTHS.name, ...cells.map(({ name }) => name.length));
+        const detailWidth = Math.max(COLUMN_WIDTHS.note, ...cells.map(({ detail }) => detail.length));
+        const rows = cells.map(({ name, detail, command }) =>
             command === undefined
                 ? `  ${name.padEnd(nameWidth)} ${detail}`
                 : `  ${name.padEnd(nameWidth)} ${detail.padEnd(detailWidth)} ${command}`,
@@ -90,21 +90,21 @@ function formatGspotVersion(report: DoctorReport): string {
  * Inspect the tools, the Git hooks, the version pin, and the setup suggestions.
  *
  * @param session the tools and scopes to inspect.
- * @param pinned the version that `.gspot/version` pins, if any.
+ * @param versionPin the version that `.gspot/version` pins, if any.
  * @returns the report. Its exit code becomes EXIT_FINDINGS when a tool or the Git hooks need changes.
  */
-function buildDoctorReport(session: Session, pinned: string | undefined): DoctorReport {
+function buildDoctorReport(session: Session, versionPin: string | undefined): DoctorReport {
     const platform = getOperatingSystem();
     // Leave out each tool with no build for this system; its checks skip here.
     const inspections = new Map<string, ToolInspection>();
-    const pins = listDistinctTools(session.neededToolConfigurations).filter(
+    const pins = listDistinctTools(session.toolConfigurations).filter(
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
     );
     for (const { folder, configurations } of session.scopes) {
-        const declared = new Set(
+        const toolNames = new Set(
             configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),
         );
-        for (const tool of pins.filter((pin) => declared.has(pin.name))) {
+        for (const tool of pins.filter((pin) => toolNames.has(pin.name))) {
             const inspection = inspectTool(
                 { ...session, cwd: join(session.root, folder.path), miseBinPaths: getMiseBinPaths(session) },
                 tool,
@@ -126,7 +126,7 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
         ruleFiles: selectRuleFiles(session).length,
         version: {
             running: cliPackage.version,
-            ...(pinned === undefined ? {} : { pinned }),
+            ...(versionPin === undefined ? {} : { pinned: versionPin }),
         },
         exitCode: isBroken ? EXIT_FINDINGS : 0,
     };

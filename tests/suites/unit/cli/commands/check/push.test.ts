@@ -120,20 +120,20 @@ test('an annotated tag of a commit is checked while blob tags, blobs, and delete
     const tag = runGitStep(sandbox.path, ['rev-parse', 'reviewed-tag']);
     const blob = runGitStep(sandbox.path, ['hash-object', '-w', 'changed.sh']);
     runGitStep(sandbox.path, ['tag', '-a', '-m', 'data tag', 'data', blob]);
-    const data = runGitStep(sandbox.path, ['rev-parse', 'refs/tags/data']);
+    const tagged = runGitStep(sandbox.path, ['rev-parse', 'refs/tags/data']);
     const selected = await runGspot(
         sandbox.path,
         PUSH_CHECK_COMMAND,
         {},
         {
-            stdin: `refs/tags/reviewed-tag ${tag} refs/tags/reviewed-tag ${base}\nrefs/tags/data ${data} refs/tags/data ${'e'.repeat(base.length)}\nrefs/tags/blob ${blob} refs/tags/blob ${zero}\n(delete) ${zero} refs/heads/removed ${'f'.repeat(base.length)}\n`,
+            stdin: `refs/tags/reviewed-tag ${tag} refs/tags/reviewed-tag ${base}\nrefs/tags/data ${tagged} refs/tags/data ${'e'.repeat(base.length)}\nrefs/tags/blob ${blob} refs/tags/blob ${zero}\n(delete) ${zero} refs/heads/removed ${'f'.repeat(base.length)}\n`,
         },
     );
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const report = JSON.parse(selected.stdout) as PushReport;
     expect(report.revisions.map(({ hash }) => hash)).toStrictEqual([reviewed]);
     expect(report.skipped).toStrictEqual([
-        { ref: 'refs/tags/data', hash: data, reason: 'non-commit object' },
+        { ref: 'refs/tags/data', hash: tagged, reason: 'non-commit object' },
         { ref: 'refs/tags/blob', hash: blob, reason: 'non-commit object' },
         { ref: 'refs/heads/removed', hash: zero, reason: 'deleted ref' },
     ]);
@@ -213,8 +213,8 @@ test('pre-push runs one Git object batch for several pushed refs', async () => {
         new Set(pushed.revisions[0]!.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))),
     ).toStrictEqual(new Set(['changed.sh']));
     expect(pushed.revisions[1]!.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
-    const entries = await readFile(trace, 'utf8');
-    const batches = entries
+    const traceText = await readFile(trace, 'utf8');
+    const batches = traceText
         .split('\n')
         .filter(
             (line) => line.includes('"event":"start"') && line.includes('"--batch-check=%(objectname) %(objecttype)"'),

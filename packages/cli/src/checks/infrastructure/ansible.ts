@@ -26,7 +26,7 @@ async function lintProject(
             children.every((child) => !isInScope(path, child)) &&
             !(
                 path.startsWith(`${DOT_GSPOT}/`) ||
-                path.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part))
+                path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
             ) &&
             !path.endsWith(ANSIBLE_CONFIG_EXTENSION),
     );
@@ -35,7 +35,7 @@ async function lintProject(
     const selected = { ...planned, files };
     const substitutions = buildCommandSubstitutions(session, selected, cwd);
     const commandArguments = expandCommand(session, selected, planned.check.command as string[], substitutions).filter(
-        (part) => typeof part === 'string',
+        (argument) => typeof argument === 'string',
     );
     const result = await runCheckTool(session, planned, [...commandArguments, ...substitutions.files], { cwd });
     const found = result.stdout.split('\n').flatMap((line): Finding[] => {

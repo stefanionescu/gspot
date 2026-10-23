@@ -8,7 +8,7 @@ import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { validateIdentifiers } from '#cli/checks/general/naming/rules.ts';
 import { REST_SEGMENT } from '#cli/config/checks/general/naming/paths.ts';
 import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
-import { listNamedFiles } from '#cli/checks/general/naming/declared-names.ts';
+import { listNamedFiles } from '#cli/checks/general/naming/source-names.ts';
 import type { Identifier, PathContainer } from '#cli/types/checks/general/naming.ts';
 import { createIdentifier } from '#cli/checks/general/naming/languages/identifier.ts';
 
@@ -16,7 +16,9 @@ function parseSegmentName(
     segment: string,
     containers: PathContainer[],
 ): Pick<Identifier, 'name' | 'category'> | undefined {
-    const bracket = containers.find((entry) => segment.startsWith(entry.open) && segment.endsWith(entry.close));
+    const bracket = containers.find(
+        (container) => segment.startsWith(container.open) && segment.endsWith(container.close),
+    );
     if (bracket === undefined) return undefined;
     const inner = segment.slice(bracket.open.length, segment.length - bracket.close.length);
     return { name: inner.replace(REST_SEGMENT, ''), category: bracket.category };

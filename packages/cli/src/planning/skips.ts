@@ -15,8 +15,8 @@ function findDependencySkip(
     dependencyFiles: Repository['dependencyFiles'],
 ): Skip | undefined {
     if (dependencies === undefined) return undefined;
-    const declared = listProjectDependencyNames(dependencyFiles, scopePath);
-    return dependencies.some((name) => declared.includes(name))
+    const dependencyNames = listProjectDependencyNames(dependencyFiles, scopePath);
+    return dependencies.some((name) => dependencyNames.includes(name))
         ? undefined
         : { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
 }
@@ -54,10 +54,10 @@ function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | 
 // Find the [[ignore]] of the check with no rule that has no paths or covers the whole scope: it turns the check off.
 function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
     const ignored = listIgnores(scope.settings, check.id).find(
-        (entry) =>
-            entry.rule === undefined &&
-            entry.names === undefined &&
-            (entry.paths.length === 0 || isScopeCovered(entry.paths, scope.folder.path)),
+        (ignore) =>
+            ignore.rule === undefined &&
+            ignore.names === undefined &&
+            (ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.folder.path)),
     );
     if (ignored === undefined) return undefined;
     return { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };

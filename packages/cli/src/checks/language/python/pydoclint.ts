@@ -38,11 +38,11 @@ async function detectDocstringStyle(session: Session, path: string): Promise<Pyt
 async function groupByDocstringStyle(
     session: Session,
     files: TrackedFile[],
-    declared: PythonDocstringStyle | undefined,
+    configured: PythonDocstringStyle | undefined,
 ) {
     const groups = new Map<PythonDocstringStyle | undefined, TrackedFile[]>();
     for (const file of files) {
-        const style = declared ?? (await detectDocstringStyle(session, file.path));
+        const style = configured ?? (await detectDocstringStyle(session, file.path));
         const group = groups.get(style) ?? [];
         group.push(file);
         groups.set(style, group);

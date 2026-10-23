@@ -4,7 +4,7 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { NamingCase } from '#cli/types/settings/naming.ts';
-import { splitParts } from '#cli/checks/general/naming/settings.ts';
+import { splitWords } from '#cli/checks/general/naming/settings.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { NUMERIC_WORDS, CATEGORY_PARENTS } from '#cli/config/checks/general/naming/settings.ts';
 
@@ -62,9 +62,9 @@ function isWordForm(word: string, term: string): boolean {
     });
 }
 
-function hasTerm(parts: string[], termParts: string[]): boolean {
-    for (let start = 0; start + termParts.length <= parts.length; start += 1) {
-        if (termParts.every((part, index) => isWordForm(parts[start + index] as string, part))) return true;
+function hasTerm(words: string[], termWords: string[]): boolean {
+    for (let start = 0; start + termWords.length <= words.length; start += 1) {
+        if (termWords.every((termWord, index) => isWordForm(words[start + index] as string, termWord))) return true;
     }
     return false;
 }
@@ -97,11 +97,11 @@ function checkCase(checked: CheckedIdentifier, name: string, limits: CategoryLim
           );
 }
 
-function checkDigits(checked: CheckedIdentifier, parts: string[], overrides: CompiledOverride[]) {
+function checkDigits(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
     const { settings } = checked;
     if (
         settings.isDigitsAllowed ||
-        !parts.some((part) => DIGIT.test(part) && !NUMERIC_WORDS.has(part)) ||
+        !words.some((segment) => DIGIT.test(segment) && !NUMERIC_WORDS.has(segment)) ||
         overrides.some((override) => override.isDigitsAllowed)
     )
         return undefined;
@@ -131,14 +131,14 @@ function checkWordCount(checked: CheckedIdentifier, words: string[], limits: Cat
 function checkRepeatedWords(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
     const { settings } = checked;
     if (settings.isRepeatAllowed || overrides.some((override) => override.isRepeatAllowed)) return undefined;
-    const repeated = findRepeatedPart(words);
+    const repeated = findRepeatedWord(words);
     return repeated === undefined
         ? undefined
         : buildFinding(checked, checked.place, 'duplicate-words', `${checked.prefix}"${repeated}" repeats.`);
 }
 
-function removeAllowedPhrases(parts: string[], phrases: string[][]): string[] {
-    let words = parts;
+function removeAllowedPhrases(sourceWords: string[], phrases: string[][]): string[] {
+    let words = sourceWords;
     for (const phrase of phrases) {
         const remaining: string[] = [];
         for (let index = 0; index < words.length; ) {
@@ -161,17 +161,17 @@ function removeAllowedPhrases(parts: string[], phrases: string[][]): string[] {
     return words;
 }
 
-function checkBannedWords(checked: CheckedIdentifier, parts: string[]): Finding[] {
+function checkBannedWords(checked: CheckedIdentifier, nameWords: string[]): Finding[] {
     const { settings } = checked;
     const findings: Finding[] = [];
     const terms = checked.isTestFile
         ? settings.bannedWords.filter((term) => term.group !== TEST_TERM_GROUP)
         : settings.bannedWords;
-    const words = removeAllowedPhrases(parts, settings.allowedPhrases);
+    const words = removeAllowedPhrases(nameWords, settings.allowedPhrases);
     const banned = terms.find(
         (term) =>
             (term.categories === undefined || term.categories.includes(checked.identifier.category)) &&
-            hasTerm(words, term.parts),
+            hasTerm(words, term.words),
     );
     if (banned !== undefined)
         findings.push(
@@ -183,7 +183,7 @@ function checkBannedWords(checked: CheckedIdentifier, parts: string[]): Finding[
             ),
         );
     for (const [term, allowedFor] of settings.reserved) {
-        if (!parts.includes(term) || allowedFor.includes(checked.identifier.category)) continue;
+        if (!nameWords.includes(term) || allowedFor.includes(checked.identifier.category)) continue;
         findings.push(
             buildFinding(
                 checked,
@@ -199,14 +199,14 @@ function checkBannedWords(checked: CheckedIdentifier, parts: string[]): Finding[
 /**
  * Finds the first part that appears twice.
  *
- * @param parts ordered words and digit groups from one declared name.
+ * @param words ordered words and digit groups from one declared name.
  * @returns the repeated part, or undefined.
  */
-function findRepeatedPart(parts: string[]): string | undefined {
+function findRepeatedWord(words: string[]): string | undefined {
     const seen = new Set<string>();
-    for (const part of parts) {
-        if (seen.has(part)) return part;
-        seen.add(part);
+    for (const segment of words) {
+        if (seen.has(segment)) return segment;
+        seen.add(segment);
     }
     return undefined;
 }
@@ -254,7 +254,7 @@ function buildIdentifierLimits(
 
 function listCaseNames(base: CategoryLimits, identifier: Identifier, overrides: CompiledOverride[]): NamingCase[] {
     const caseOverride = overrides.findLast((override) => override.cases !== undefined);
-    return [...(caseOverride?.cases ?? base.caseNames), ...(identifier.extraCases ?? [])];
+    return [...(caseOverride?.cases ?? base.caseNames), ...(identifier.addedCases ?? [])];
 }
 
 /**
@@ -283,15 +283,15 @@ export function validateIdentifier(identifier: Identifier, naming: FileNaming): 
         return [];
     const limits = buildIdentifierLimits(settings, identifier, overrides);
     const name = stripPrefixes(identifier.name, overrides);
-    const parts = splitParts(name);
-    const words = splitParts(name.split('.', 1)[0] ?? name).filter((part) => !DIGITS_ONLY.test(part));
+    const nameWords = splitWords(name);
+    const words = splitWords(name.split('.', 1)[0] ?? name).filter((segment) => !DIGITS_ONLY.test(segment));
     const findings = [
         checkCase(context, name, limits),
-        checkDigits(context, parts, overrides),
+        checkDigits(context, nameWords, overrides),
         checkLength(context, name, limits),
         checkWordCount(context, words, limits),
         checkRepeatedWords(context, words, overrides),
-        ...checkBannedWords(context, parts),
+        ...checkBannedWords(context, nameWords),
     ];
     return findings.filter((finding) => finding !== undefined);
 }

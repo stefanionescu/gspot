@@ -89,18 +89,18 @@ function validateWrittenKey(
 function listUnsettledConflicts(
     availableSettings: AvailableSettings,
     settings: Settings,
-    scopeKnown: Map<string, AvailableSettings>,
+    scopeAvailable: Map<string, AvailableSettings>,
 ): SettingsError[] {
     const errors: SettingsError[] = [];
-    const knownByScope = [
+    const availableByScope = [
         { selected: availableSettings, scope: undefined, path: ['configurations'] as KeyPath },
-        ...[...scopeKnown].map(([scope, selected], index) => ({
+        ...[...scopeAvailable].map(([scope, selected], index) => ({
             selected,
             scope,
             path: ['scope', index, 'configurations'] as KeyPath,
         })),
     ];
-    for (const { selected, scope, path } of knownByScope) {
+    for (const { selected, scope, path } of availableByScope) {
         const tables = listApplicableTables(settings, scope);
         for (const { key, message: text } of selected.errors)
             if (!tables.some(({ table }) => getWrittenSetting(table, key) !== undefined))
@@ -128,7 +128,7 @@ export function formatUnknownSetting(availableSettings: AvailableSettings, key: 
         .filter((name) => (prefix === '' ? !name.includes('.') : name.startsWith(`${prefix}.`)))
         .map((name) => (prefix === '' ? name : name.slice(prefix.length + 1)));
     const near = selectSimilarNames(prefix === '' ? key : key.slice(prefix.length + 1), keys);
-    const rest = keys.filter((item) => !near.includes(item));
+    const rest = keys.filter((each) => !near.includes(each));
     const suggestions = [...near, ...rest];
     const place = prefix === '' ? 'at the top level' : 'under that table';
     return `No selected configuration has the setting ${key}. ${
@@ -143,22 +143,22 @@ export function formatUnknownSetting(availableSettings: AvailableSettings, key: 
  *
  * @param availableSettings the settings and defaults of the selected configurations.
  * @param settings the parsed gspot.toml.
- * @param scopeKnown the settings of each scope by path, which its own table uses.
+ * @param scopeAvailable the settings of each scope by path, which its own table uses.
  * @param everyConfiguration the settings saved for configurations whose repository evidence disappeared.
  * @returns the errors in plain English, empty when the settings pass validation.
  */
 export function validateKeys(
     availableSettings: AvailableSettings,
     settings: Settings,
-    scopeKnown: Map<string, AvailableSettings>,
+    scopeAvailable: Map<string, AvailableSettings>,
     everyConfiguration: AvailableSettings,
 ): SettingsError[] {
-    const errors = listUnsettledConflicts(availableSettings, settings, scopeKnown);
+    const errors = listUnsettledConflicts(availableSettings, settings, scopeAvailable);
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
-    const later = [availableSettings, ...scopeKnown.values(), everyConfiguration].toReversed();
+    const later = [availableSettings, ...scopeAvailable.values(), everyConfiguration].toReversed();
     const everywhere: AvailableSettings = {
-        settings: new Map(later.flatMap((entry) => entry.settings.entries().toArray())),
-        defaults: new Map(later.flatMap((entry) => entry.defaults.entries().toArray())),
+        settings: new Map(later.flatMap((scopeSettings) => scopeSettings.settings.entries().toArray())),
+        defaults: new Map(later.flatMap((scopeSettings) => scopeSettings.defaults.entries().toArray())),
         errors: availableSettings.errors,
     };
     const coverageLines = getSettingValue(everywhere, settings, 'coverage.lines')?.value;
@@ -174,15 +174,15 @@ export function validateKeys(
         }));
     errors.push(...targetErrors);
     for (const { table, scope, path } of listSettingsTables(settings)) {
-        const active = scope === undefined ? everywhere : (scopeKnown.get(scope) as AvailableSettings);
-        const selectedKnown: AvailableSettings = {
+        const active = scope === undefined ? everywhere : (scopeAvailable.get(scope) as AvailableSettings);
+        const selectedAvailable: AvailableSettings = {
             settings: new Map([...everywhere.settings, ...active.settings]),
             defaults: new Map([...everywhere.defaults, ...active.defaults]),
             errors: active.errors,
         };
         const found = [
-            ...listWrittenKeys(table, selectedKnown).flatMap((key) =>
-                validateWrittenKey(selectedKnown, settings, table, scope, key),
+            ...listWrittenKeys(table, selectedAvailable).flatMap((key) =>
+                validateWrittenKey(selectedAvailable, settings, table, scope, key),
             ),
         ];
         errors.push(...found.map((error) => ({ ...error, path: [...path, ...error.path] })));

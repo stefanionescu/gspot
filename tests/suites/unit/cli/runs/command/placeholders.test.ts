@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
-import { type CommandPart } from '#cli/types/runs/command.ts';
+import { type CommandArgument } from '#cli/types/runs/command.ts';
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -98,9 +98,9 @@ test.each([...WORKSPACE_SCOPE_CASES])(
 test.each([0, 1, 2])(
     'a {file} placeholder at position %s is replaced without dropping neighboring arguments',
     (slot) => {
-        const parts: CommandPart[] = ['before', 'after'];
-        parts.splice(slot, 0, { file: true });
-        const commands = buildFileCommandLines(parts, ['one.txt', 'café folder/two.txt']);
+        const command: CommandArgument[] = ['before', 'after'];
+        command.splice(slot, 0, { file: true });
+        const commands = buildFileCommandLines(command, ['one.txt', 'café folder/two.txt']);
         for (const [index, file] of ['one.txt', 'café folder/two.txt'].entries()) {
             const expected = ['before', 'after'];
             expected.splice(slot, 0, file);
@@ -157,15 +157,15 @@ test('per-file commands keep expanded flags and the arguments after the file', a
     const planned = planChecks(session, { stage: 'all', only: ['sandbox/arguments'] })[0]!;
     planned.tool = { name: 'echo', installers: {}, kind: 'program' };
     planned.check.env = { TOOL_RELEASE: 'v3.4.0' };
-    const prepared = prepareCommand(planned, {
+    const setup = prepareCommand(planned, {
         session,
         command: planned.check.command!,
         setup: buildCommandSetup(session, planned, {}),
         toolPath: process.execPath,
     });
-    const result = await spawnProcess(prepared.commandLines[0]!.commandArguments, {
-        cwd: prepared.cwd,
-        env: prepared.env,
+    const result = await spawnProcess(setup.commandLines[0]!.commandArguments, {
+        cwd: setup.cwd,
+        env: setup.env,
     });
     expect(result.code, result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toStrictEqual([

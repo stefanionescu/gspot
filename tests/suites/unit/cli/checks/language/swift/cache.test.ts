@@ -10,8 +10,8 @@ import { captureThrow } from '#tests/setup/matchers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
+import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
@@ -33,11 +33,11 @@ test.each(['default', 'platform=macOS'])(
     'Xcode build plans keep destination %s for every build purpose',
     async (destination) => {
         await using sandbox = await testdir();
-        const declared = destination === 'default' ? '' : `xcode_destination = ${JSON.stringify(destination)}\n`;
+        const destinationLine = destination === 'default' ? '' : `xcode_destination = ${JSON.stringify(destination)}\n`;
         await createFileTree(sandbox.path, {
             'Package.swift': SWIFT_PACKAGE,
             'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
-                tables: `[swift]\nxcode_project = "App.xcodeproj"\nxcode_scheme = "App"\n${declared}`,
+                tables: `[swift]\nxcode_project = "App.xcodeproj"\nxcode_scheme = "App"\n${destinationLine}`,
             }),
         });
         const session = await openSession(sandbox.path);
@@ -82,7 +82,7 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         expect(() => buildPlan(session, input, { purpose })).toThrow(
             new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.'),
         );
-        using _executables = fakePinnedExecutables(
+        using _executables = fakeToolExecutables(
             [...session.configurations.values()].flatMap((configuration) => configuration.tools),
         );
         const executed = await runChecks(session, buildRunOptions({ only: [check] }));
@@ -202,8 +202,8 @@ test('Swift build side effects stay in the source copy and do not reach later ru
     for (const [, options] of run.mock.calls) expect(options.cwd).not.toBe(sandbox.path);
     await using originalFile = await open(original, 'r');
     expect(await originalFile.readFile('utf8')).toBe('let value = 1\n');
-    const current = await originalFile.stat();
-    expect(current.mode).toBe(mode);
+    const afterStats = await originalFile.stat();
+    expect(afterStats.mode).toBe(mode);
     expect(await isOnDisk(join(sandbox.path, 'Package.resolved'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, 'Generated'))).toBe(false);
 });

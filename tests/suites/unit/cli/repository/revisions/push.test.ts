@@ -80,8 +80,8 @@ test('a shallow clone reports incomplete history and skips commits the remote al
     const advertised = await selectPush(checkout, protocol);
     expect(advertised.revisions[0]).toMatchObject({ commits: [], paths: [], historyComplete: true });
     runGitStep(checkout, ['fetch', '--unshallow']);
-    const complete = await selectPush(checkout, protocol, 'unseen');
-    expect(complete.revisions[0]).toMatchObject({ commits: [reviewed, base], historyComplete: true });
+    const unseen = await selectPush(checkout, protocol, 'unseen');
+    expect(unseen.revisions[0]).toMatchObject({ commits: [reviewed, base], historyComplete: true });
     expect(runGitStep(source, ['branch', '--show-current'])).toBe(branch);
 });
 test('a gspot.toml below the Git root keeps paths relative to its folder for updated and new branches', async () => {

@@ -26,5 +26,5 @@ export const DEFINER_FUNCTION_SQL =
     'CREATE FUNCTION grant_access() RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;\n';
 
 /** The same function with an explicit, empty search_path. */
-export const PINNED_DEFINER_FUNCTION_SQL =
+export const DEFINER_SEARCH_PATH_SQL =
     "CREATE FUNCTION grant_access() RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = '' AS $$ SELECT 1 $$;\n";

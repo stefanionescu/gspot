@@ -7,13 +7,13 @@ import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts'
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
 import {
-    readEntry,
+    readBounded,
     preparePath,
-    replaceEntry,
+    replaceBounded,
     isSameContents,
     buildContainedPath,
-    readEntryKeepingLinks,
-} from '#cli/system/files/entries.ts';
+    readBoundedKeepingLinks,
+} from '#cli/system/files/bounded.ts';
 
 /**
  * Open a reader and writer confined to one root, with paths checked for this system.
@@ -33,7 +33,7 @@ export function openFiles(root: string): Files {
                 throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
             if (stat !== undefined) rmSync(buildContainedPath(state, path), { recursive: true, force: true });
         },
-        readRealPath: (path) => readContainedPath(state.root, path),
+        readCanonicalPath: (path) => readContainedPath(state.root, path),
         list(path) {
             try {
                 const target = path === '' ? state.root : buildContainedPath(state, path);
@@ -55,11 +55,11 @@ export function openFiles(root: string): Files {
                 throw error;
             }
         },
-        read: (path) => readEntry(state, path),
-        readKeepingLinks: (path) => readEntryKeepingLinks(state, path),
-        write: replaceEntry.bind(undefined, state),
+        read: (path) => readBounded(state, path),
+        readKeepingLinks: (path) => readBoundedKeepingLinks(state, path),
+        write: replaceBounded.bind(undefined, state),
         deleteFile(path, expected) {
-            if (!isSameContents(readEntryKeepingLinks(state, path), expected))
+            if (!isSameContents(readBoundedKeepingLinks(state, path), expected))
                 throw new GspotError('filesystem', `${path} changed before removal. Run the command again.`);
             unlinkSync(buildContainedPath(state, path));
         },

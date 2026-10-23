@@ -64,10 +64,10 @@ function buildTimeoutError(
  * @returns the captured subprocess result.
  */
 export async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
-    const prepared = limitToTestDeadline(command, options);
-    const result = await spawnProcess(command, prepared.options);
+    const limited = limitToTestDeadline(command, options);
+    const result = await spawnProcess(command, limited.options);
     if (result.timedOut)
-        throw buildTimeoutError(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND, prepared.context, result);
+        throw buildTimeoutError(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND, limited.context, result);
     return result;
 }
 
@@ -79,10 +79,10 @@ export async function runCommand(command: readonly string[], options: AsyncSpawn
  * @returns captured output and process status.
  */
 export function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
-    const prepared = limitToTestDeadline(command, options);
-    const result = spawnProcessBlocking(command, prepared.options);
+    const limited = limitToTestDeadline(command, options);
+    const result = spawnProcessBlocking(command, limited.options);
     if (result.timedOut)
-        throw buildTimeoutError(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND, prepared.context, result);
+        throw buildTimeoutError(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND, limited.context, result);
     return result;
 }
 
@@ -133,14 +133,14 @@ export function startCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
 ): CapturedChild & { child: CapturedProcess & Pick<Bun.Subprocess, 'pid'> } {
-    const prepared = limitToTestDeadline(command, options);
+    const limited = limitToTestDeadline(command, options);
     const child = Bun.spawn([...command], {
-        cwd: prepared.options.cwd,
-        ...(prepared.options.env === undefined ? {} : { env: prepared.options.env }),
-        ...(prepared.options.stdin === undefined ? {} : { stdin: Buffer.from(prepared.options.stdin) }),
+        cwd: limited.options.cwd,
+        ...(limited.options.env === undefined ? {} : { env: limited.options.env }),
+        ...(limited.options.stdin === undefined ? {} : { stdin: Buffer.from(limited.options.stdin) }),
         stdout: 'pipe',
         stderr: 'pipe',
-        timeout: Math.ceil(prepared.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
+        timeout: Math.ceil(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
         killSignal: 'SIGKILL',
     });
     return { child, ...captureChild(child) };

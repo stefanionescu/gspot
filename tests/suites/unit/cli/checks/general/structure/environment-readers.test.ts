@@ -98,8 +98,8 @@ test('each scope uses its own environment readers', async () => {
     ]);
 });
 
-test.each([...BASH_ENV_READ_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
+test.each([...BASH_ENV_READ_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
     await using sandbox = await createSandbox(BASH_SANDBOX);
-    const result = await runCheckSample(sandbox, entry, BASH_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+    const result = await runCheckSample(sandbox, sample, BASH_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

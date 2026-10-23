@@ -10,10 +10,10 @@ import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitio
 export function buildLevelRows(): { level: string; description: string; count: number; tools: string }[] {
     const { checks } = CLI_REFERENCE;
     const recommended = checks.filter(({ check }) => check.level === 'recommended');
-    const listToolNames = (entries: typeof checks) =>
-        new Set(entries.flatMap(({ check }) => (check.tool === undefined ? [] : [check.tool])));
+    const listToolNames = (levelChecks: typeof checks) =>
+        new Set(levelChecks.flatMap(({ check }) => (check.tool === undefined ? [] : [check.tool])));
     const usual = listToolNames(recommended);
-    const extra = [...listToolNames(checks)]
+    const allLevelTools = [...listToolNames(checks)]
         .filter((tool) => !usual.has(tool))
         .toSorted((first, second) => first.localeCompare(second));
     return [
@@ -27,7 +27,7 @@ export function buildLevelRows(): { level: string; description: string; count: n
             level: 'all',
             description: `${ALL_LEVEL_SUMMARY} ${LEVEL_ADVICE.all}`,
             count: checks.length,
-            tools: extra.join(', '),
+            tools: allLevelTools.join(', '),
         },
     ];
 }

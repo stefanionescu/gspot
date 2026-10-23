@@ -9,7 +9,7 @@ import type { Defined } from '#cli/types/shapes.ts';
  * @returns the same object without its undefined entries.
  */
 export function stripUndefined<T extends object>(value: T): Defined<T> {
-    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Defined<T>;
+    return Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Defined<T>;
 }
 
 /**
@@ -30,12 +30,12 @@ export function isTable(value: unknown): value is Record<string, unknown> {
  * @returns the value, or undefined when any key along the path has no value.
  */
 export function getValueAt(value: unknown, keys: readonly (string | number)[]): unknown {
-    let current = value;
+    let node = value;
     for (const key of keys) {
-        if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key)) return undefined;
-        current = (current as Record<string, unknown>)[key];
+        if (node === null || typeof node !== 'object' || !Object.hasOwn(node, key)) return undefined;
+        node = (node as Record<string, unknown>)[key];
     }
-    return current;
+    return node;
 }
 
 /**
@@ -46,10 +46,10 @@ export function getValueAt(value: unknown, keys: readonly (string | number)[]): 
  * @returns the same values with null object prototypes.
  */
 export function normalizeTables(value: unknown): unknown {
-    if (Array.isArray(value)) return value.map((entry) => normalizeTables(entry));
+    if (Array.isArray(value)) return value.map((element) => normalizeTables(element));
     if (!isTable(value)) return value;
     const table = Object.fromEntries<unknown>(
-        Object.entries(value).map(([key, entry]) => [key, normalizeTables(entry)]),
+        Object.entries(value).map(([key, child]) => [key, normalizeTables(child)]),
     );
     Object.setPrototypeOf(table, null);
     return table;
@@ -58,23 +58,23 @@ export function normalizeTables(value: unknown): unknown {
 /**
  * Create the missing tables along a dotted path.
  *
- * @param raw the parsed document.
+ * @param root the parsed document.
  * @param path the table names from the root down.
  * @returns the table at the end of the path, or undefined when the path runs through a value other than a table.
  */
 export function createTable(
-    raw: Record<string, unknown>,
+    root: Record<string, unknown>,
     path: readonly string[],
 ): Record<string, unknown> | undefined {
-    let current = raw;
-    for (const part of path) {
-        let next = current[part];
+    let node = root;
+    for (const segment of path) {
+        let next = node[segment];
         if (next === undefined) {
             next = {};
-            current[part] = next;
+            node[segment] = next;
         }
         if (!isTable(next)) return undefined;
-        current = next;
+        node = next;
     }
-    return current;
+    return node;
 }

@@ -7,4 +7,4 @@ export const SIMILAR_NAME_LIMIT = 3;
 /** How many names a message lists before it counts the rest. */
 export const LIST_LIMIT = 8;
 
-export const PLAIN_ARGUMENT = /^[\w@:./-]+$/u;
+export const UNQUOTED_ARGUMENT = /^[\w@:./-]+$/u;

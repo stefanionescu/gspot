@@ -20,7 +20,7 @@ test('an environment reader that only its scope declares may run top-level comma
     expect(await runSandboxCheck(sandbox.path, 'bash/script-layout', { scope: 'tools' })).toStrictEqual([]);
 });
 
-test.each([...SCRIPT_LAYOUT_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(bashSandbox(), entry, BASH_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...SCRIPT_LAYOUT_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
+    const result = await runCheckSample(bashSandbox(), sample, BASH_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

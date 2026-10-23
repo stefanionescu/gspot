@@ -75,10 +75,10 @@ test('dependencies/lockfiles reports Git download hosts until they are allowed, 
 
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
-test.each([...LOCKFILE_HOST_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
+test.each([...LOCKFILE_HOST_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
     await using sandbox = await createSandbox(DEPENDENCIES_SANDBOX);
-    const result = await runCheckSample(sandbox, entry, DEPENDENCIES_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+    const result = await runCheckSample(sandbox, sample, DEPENDENCIES_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });
 test('an allowed registry host in a scope applies only to that scope', async () => {
     const lockfile = JSON.stringify(HOST_LOCKFILE, null, 2);

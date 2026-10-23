@@ -4,7 +4,7 @@ import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 export type ParsedLanguage = 'python' | 'swift' | 'bash';
 
 /** One file or child folder of a folder. */
-export type FolderEntry = { name: string; kind: 'file' | 'folder' };
+export type FolderChild = { name: string; kind: 'file' | 'folder' };
 
 /**
  * One parsed file for the convention checks: its path, language, syntax tree, and the nodes that each query name

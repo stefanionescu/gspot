@@ -64,7 +64,7 @@ function listPythonRequirements(parsed: Pyproject): DependencyMap {
         ).flat(),
         ...(parsed['dependency-groups'] === undefined ? [] : Object.values(parsed['dependency-groups']))
             .flat()
-            .filter((entry) => typeof entry === 'string'),
+            .filter((value) => typeof value === 'string'),
     ];
     return Object.fromEntries(
         groups.map((spec) => {
@@ -142,7 +142,7 @@ async function parseSwiftPackage(path: string, text: string): Promise<Dependency
     const source = text
         .split('\n')
         .map((line, index) => {
-            const comment = comments.find((entry) => entry.line === index + 1 && entry.text.startsWith('//'));
+            const comment = comments.find((each) => each.line === index + 1 && each.text.startsWith('//'));
             return comment === undefined ? line : line.slice(0, line.lastIndexOf(comment.text));
         })
         .join('\n');

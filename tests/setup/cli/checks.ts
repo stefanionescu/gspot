@@ -8,9 +8,9 @@ import { runCheckCode } from '#cli/commands/check/run.ts';
 import * as environment from '#cli/system/environment.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
+import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { SWIFT_PACKAGE } from '#tests/config/checks/language/swift/build.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
@@ -43,13 +43,13 @@ export function planSandboxCheck(
     options: { scope?: string; paths?: string[] } = {},
 ): PlannedCheck {
     const path = options.scope ?? '';
-    const scope = session.scopes.find((entry) => entry.folder.path === path);
+    const scope = session.scopes.find((each) => each.folder.path === path);
     if (scope === undefined) throw new Error(`The sandbox has no scope at ${path || 'the root'}.`);
-    const entry = scope.configurations
+    const selected = scope.configurations
         .flatMap((configuration) => configuration.checks.map((check) => ({ configuration, check })))
         .find(({ check }) => check.id === checkId);
-    if (entry === undefined) throw new Error(`The sandbox selects no check called ${checkId}.`);
-    const { configuration, check } = entry;
+    if (selected === undefined) throw new Error(`The sandbox selects no check called ${checkId}.`);
+    const { configuration, check } = selected;
     const paths = options.paths;
     const files = session.repository.files.filter(
         (file) =>
@@ -83,7 +83,7 @@ export async function prepareSwiftCheck(
     await using resources = new AsyncDisposableStack();
     resources.use(spyOn(environment, 'getOperatingSystem').mockReturnValue('macos'));
     resources.use(
-        fakePinnedExecutables([...readConfigurations().values()].flatMap((configuration) => configuration.tools)),
+        fakeToolExecutables([...readConfigurations().values()].flatMap((configuration) => configuration.tools)),
     );
     resources.use(await redirectCacheFolder());
     await createFileTree(sandbox.path, {
@@ -109,13 +109,13 @@ export async function runSandboxCheck(
 }
 
 /** Open a session with fake pinned versions of these tools. */
-export async function openPinnedSession(
+export async function openFakeToolSession(
     root: string,
     toolNames: string[],
     resources: Pick<DisposableStack, 'use'>,
 ): Promise<Session> {
     const session = await openSession(root);
-    resources.use(fakePinnedExecutables(toolNames.map((name) => getTool(session.configurations.values(), name))));
+    resources.use(fakeToolExecutables(toolNames.map((name) => getTool(session.configurations.values(), name))));
     return session;
 }
 

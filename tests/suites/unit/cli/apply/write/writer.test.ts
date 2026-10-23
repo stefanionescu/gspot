@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { captureThrow } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
 import { planSettingsWrite } from '#cli/apply/write/managed-keys.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';

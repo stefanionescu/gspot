@@ -1,4 +1,4 @@
-import type { GitEntry } from '#cli/types/parsers/git.ts';
+import type { GitFile } from '#cli/types/parsers/git.ts';
 import type { GITLINK_MODE } from '#cli/config/files/modes.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
 
@@ -19,7 +19,7 @@ export type DependencyCopy = { path: string; operation: 'clone' | 'link' };
 /** A source path, Git blob, or gitlink folder in a copy. */
 export type CopyFile =
     | string
-    | { entry: Omit<GitEntry, 'mode'> & { mode: Exclude<GitEntry['mode'], typeof GITLINK_MODE> }; bytes: Buffer };
+    | { indexFile: Omit<GitFile, 'mode'> & { mode: Exclude<GitFile['mode'], typeof GITLINK_MODE> }; bytes: Buffer };
 
 export type CopyPlan = {
     root: string;

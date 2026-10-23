@@ -44,10 +44,10 @@ export function buildRuffFile(planned: PlannedConfigFile): string {
     const scope = planned.scope.folder.path;
     const off = listIgnoredRules(planned.scope, 'python/ruff');
     const perFile = listIgnores(planned.scope.settings, 'python/ruff').filter(
-        (entry) => entry.rule !== undefined && entry.paths.length > 0,
+        (each) => each.rule !== undefined && each.paths.length > 0,
     );
     const byPath = new Map<string, string[]>();
-    const pathRules = perFile.flatMap((entry) => entry.paths.map((path) => ({ path, rule: entry.rule as string })));
+    const pathRules = perFile.flatMap((ignore) => ignore.paths.map((path) => ({ path, rule: ignore.rule as string })));
     for (const { path, rule } of pathRules) {
         const target = `${pythonScopePath}/${relative(scope, path)}`;
         byPath.set(target, [...(byPath.get(target) ?? []), rule]);

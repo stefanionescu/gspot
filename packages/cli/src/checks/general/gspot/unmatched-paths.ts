@@ -29,11 +29,12 @@ export function checkGspotUnmatchedPaths(session: Session, planned: PlannedCheck
             const matches = buildPathMatcher([pattern.replace(NEGATED_PATTERN, '')]);
             if (role === 'source' && !repositoryPaths.some((repositoryPath) => matches(repositoryPath))) {
                 const names = keys
-                    .filter((part): part is string => typeof part === 'string')
-                    .filter((part, index, fields) => part !== 'paths' || index !== fields.length - 1);
+                    .filter((field): field is string => typeof field === 'string')
+                    .filter((field, index, fields) => field !== 'paths' || index !== fields.length - 1);
                 const key = [...path, ...names].join('.');
                 const written = getValueAt(table.written, names);
-                const where = Array.isArray(written) && written.some((entry) => isTable(entry)) ? `[[${key}]]` : key;
+                const where =
+                    Array.isArray(written) && written.some((element) => isTable(element)) ? `[[${key}]]` : key;
                 findings.push(
                     buildFinding(
                         planned,

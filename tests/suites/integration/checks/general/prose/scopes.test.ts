@@ -111,10 +111,10 @@ test.each([...LEVELS])(
         // Each sample reports its own gspot rule at its first line unless it lists its findings, and the Microsoft and
         // Red Hat packages report none.
         let line = 1;
-        const expected = PACKAGE_STYLE_CASES.flatMap((entry) => {
-            const findings = 'findings' in entry ? entry.findings : [[0, entry.rule] as const];
+        const expected = PACKAGE_STYLE_CASES.flatMap((row) => {
+            const findings = 'findings' in row ? row.findings : [[0, row.rule] as const];
             const rows = findings.map(([offset, rule]) => ({ file: path, line: line + offset, rule }));
-            line += entry.sample.split('\n').length + 1;
+            line += row.sample.split('\n').length + 1;
             return rows;
         });
         expect(listFindingRows(checked.report)).toStrictEqual(level === 'all' ? expected : []);

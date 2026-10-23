@@ -41,14 +41,14 @@ function findMissingEnvironmentKeys(
     planned: PlannedCheck,
     path: string,
     reads: EnvironmentRead[],
-    known: Set<string>,
+    exampleKeys: Set<string>,
 ): Finding[] {
     const findings: Finding[] = [];
     const seen = new Set<string>();
     for (const { key, line } of reads.toSorted(
         (left, right) => left.line - right.line || (left.key ?? '').localeCompare(right.key ?? ''),
     )) {
-        if (key === undefined || known.has(key) || seen.has(key)) continue;
+        if (key === undefined || exampleKeys.has(key) || seen.has(key)) continue;
         seen.add(key);
         findings.push(
             buildFinding(
@@ -99,7 +99,7 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
             'skip',
             `No example environment file exists in ${planned.scope.folder.path === '' ? 'the repository root' : planned.scope.folder.path}. List the example environment files in secrets.env_examples.`,
         );
-    const known = new Set(
+    const exampleKeys = new Set(
         examples.flatMap((file) => {
             const lines = readCachedText(session.reads, file.path).split('\n');
             return lines.flatMap((line) => {
@@ -115,7 +115,7 @@ export async function checkSecretsEnvExamples(session: Session, planned: Planned
     const findings: Finding[] = [];
     for (const file of sourceFiles) {
         const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
-        findings.push(...findMissingEnvironmentKeys(planned, file.path, reads, known));
+        findings.push(...findMissingEnvironmentKeys(planned, file.path, reads, exampleKeys));
     }
     return findings;
 }

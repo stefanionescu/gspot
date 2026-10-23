@@ -52,13 +52,15 @@ function findTomlTable(
  */
 function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>): string {
     const patched = patch(original.document.toTomlString, values, PATCH_FORMAT);
-    const current = parseTomlSyntax(patched, values);
-    const unmatched = new Set(listAnchoredComments(current));
-    const retained = new Set(current.pathNodes.map(({ kind, path }) => JSON.stringify([kind, ...path])));
+    const reparsed = parseTomlSyntax(patched, values);
+    const unmatched = new Set(listAnchoredComments(reparsed));
+    const retained = new Set(reparsed.pathNodes.map(({ kind, path }) => JSON.stringify([kind, ...path])));
     const comments: TomlComments = new Map();
     const changed = listAnchoredComments(original)
         .map((source) => {
-            const found = [...unmatched].find((entry) => entry.comment.raw === source.comment.raw);
+            const found = [...unmatched].find(
+                (unmatchedComment) => unmatchedComment.comment.raw === source.comment.raw,
+            );
             if (found !== undefined) unmatched.delete(found);
             return { source, found };
         })
@@ -67,9 +69,9 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
         const owner =
             authored ??
             original.pathNodes.find(
-                (entry) =>
-                    getTomlRange(entry.node)[0] > getTomlRange(comment)[1] &&
-                    retained.has(JSON.stringify([entry.kind, ...entry.path])),
+                (pathNode) =>
+                    getTomlRange(pathNode.node)[0] > getTomlRange(comment)[1] &&
+                    retained.has(JSON.stringify([pathNode.kind, ...pathNode.path])),
             );
         if (owner === undefined) return [];
         const key = JSON.stringify([owner.kind, ...owner.path]);
@@ -84,7 +86,7 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
         const [start, end] = getTomlRange(found.comment);
         return [{ start, end: end + Number(patched[end] === '\n'), text: '' }];
     });
-    for (const entry of current.pathNodes) {
+    for (const entry of reparsed.pathNodes) {
         const text = insertTomlComments(comments, entry.kind, entry.path, '');
         if (text === '') continue;
         const start = getTomlRange(entry.node)[0];

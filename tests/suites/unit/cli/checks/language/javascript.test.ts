@@ -28,6 +28,6 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
         stage: 'push',
         only: ['javascript/tsc'],
         staged: ['gspot.toml'],
-    }).find((entry) => entry.scope.folder.path === 'site')!;
+    }).find((check) => check.scope.folder.path === 'site')!;
     expect(await runCheckCode(reopened, site, findCheckCode(site.check))).toMatchObject(EMPTY_PROJECT_RESULT);
 });

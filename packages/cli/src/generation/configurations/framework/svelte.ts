@@ -23,7 +23,7 @@ export function buildSvelteBlocks(scope: Pick<EslintScope, 'presets' | 'settings
     const blocks: ConfigurationBlocks['blocks'] = [];
     const typed = settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
     blocks.push(...buildArrayPresetBlocks(recommended, 'sveltePlugin', convertPresetWarnings), {
-        data: {
+        fields: {
             files: SVELTE_FILES,
             rules: SVELTE_RULES,
         },

@@ -168,9 +168,9 @@ test.each(['gspot.toml', findFileTarget('docs', 'lychee.toml')])(
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, { stage: 'commit', staged: [path], only: ['docs/lychee'] });
         expect(
-            planned.map((entry) => ({
-                scope: entry.scope.folder.path,
-                files: entry.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
+            planned.map((plannedCheck) => ({
+                scope: plannedCheck.scope.folder.path,
+                files: plannedCheck.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
             })),
         ).toStrictEqual([
             { scope: '', files: ['README.md'] },
@@ -200,12 +200,12 @@ test('dependencies/osv-scanner runs only when a declared trigger file changes', 
     });
     const session = await openSession(sandbox.path);
     const options = { stage: 'push' as const, only: ['dependencies/osv-scanner'] };
-    const [whole] = planChecks(session, options);
+    const [scopeCheck] = planChecks(session, options);
     for (const prefix of ['', 'app/']) {
         for (const filename of LOCKFILE_TRIGGER_NAMES) {
             const [triggered] = planChecks(session, { ...options, staged: [prefix + filename] });
             expect(isActive(triggered!), prefix + filename).toBe(true);
-            expect(triggered!.files).toStrictEqual(whole!.files);
+            expect(triggered!.files).toStrictEqual(scopeCheck!.files);
         }
         const [unrelated] = planChecks(session, { ...options, staged: [prefix + 'source.txt'] });
         expect(isActive(unrelated!)).toBe(false);

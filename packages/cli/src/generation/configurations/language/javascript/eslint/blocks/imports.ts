@@ -41,16 +41,16 @@ import {
  * @returns the lint rule and TypeScript extension settings for each project.
  */
 export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): EslintBlock[] {
-    const changed = scopes.filter((entry) => {
-        const parent = findParentScope(scopes, entry.folder.path);
+    const changed = scopes.filter((scope) => {
+        const parent = findParentScope(scopes, scope.folder.path);
         return (
-            entry.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension !==
+            scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension !==
             parent?.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension
         );
     });
-    return changed.flatMap((entry) => {
-        const path = entry.folder.path;
-        const styles = entry.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
+    return changed.flatMap((scope) => {
+        const path = scope.folder.path;
+        const styles = scope.settings.values[ESLINT_SETTINGS_TABLE]?.import_extension;
         return styles === undefined
             ? []
             : [
@@ -92,7 +92,7 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
  */
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
     const scopePaths = scopes
-        .map((entry) => entry.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH))
+        .map((scope) => scope.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH))
         .filter((path) => path !== '');
     const externals = [...new Set(scopes.flatMap(({ settings }) => settings.values.javascript?.externals ?? []))];
     return [
@@ -117,9 +117,9 @@ export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session
         nodeFiles,
     } = planned;
     return scopes
-        .filter((entry) => entry.folder.path !== '')
-        .map((entry) => {
-            const path = entry.folder.path;
+        .filter((scope) => scope.folder.path !== '')
+        .map((scope) => {
+            const path = scope.folder.path;
             const aliases = readScopeAliases(root, path, reads);
             return {
                 files: [
@@ -148,9 +148,9 @@ export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session'
         session: { root, scopes },
         nodeFiles,
     } = planned;
-    const paths = scopes.map((entry) => entry.folder.path);
-    return scopes.map((entry) => {
-        const path = entry.folder.path;
+    const paths = scopes.map((scope) => scope.folder.path);
+    return scopes.map((scope) => {
+        const path = scope.folder.path;
         return {
             files: [
                 ...NODE_SCRIPT_PATTERNS.map((pattern) =>

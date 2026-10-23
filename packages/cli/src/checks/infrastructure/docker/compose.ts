@@ -55,12 +55,12 @@ function listBuildContexts(declarations: ComposeDeclaration[], folder: string): 
         .flatMap((service) => {
             const builds = service.flatMap(({ service: { build } }) => (build === undefined ? [] : [build]));
             if (builds.length === 0) return [];
-            const declaredContexts = builds.flatMap(({ context }) =>
+            const buildContexts = builds.flatMap(({ context }) =>
                 context === undefined ? [] : [posix.join(folder, context)],
             );
-            const contexts = declaredContexts.length === 0 ? [folder] : declaredContexts;
-            const declaredNames = builds.flatMap(({ dockerfile }) => (dockerfile === undefined ? [] : [dockerfile]));
-            const names = declaredNames.length === 0 ? [DOCKERFILE_NAME] : declaredNames;
+            const contexts = buildContexts.length === 0 ? [folder] : buildContexts;
+            const dockerfileNames = builds.flatMap(({ dockerfile }) => (dockerfile === undefined ? [] : [dockerfile]));
+            const names = dockerfileNames.length === 0 ? [DOCKERFILE_NAME] : dockerfileNames;
             const ignores = contexts.map((context) => posix.join(context, DOCKERIGNORE));
             return contexts.flatMap((context) =>
                 names.map((name): [string, string[]] => [posix.join(context, name), ignores]),
@@ -81,8 +81,8 @@ export function readComposeDocuments(session: Session, planned: PlannedCheck): C
     for (const group of groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK))) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
             const document = parseYamlFile(path, readCachedText(session.reads, path), composeSchema);
-            const entries = document.services === undefined ? [] : Object.entries(document.services);
-            return entries.map(([name, service]) => ({ name, path, service }));
+            const servicePairs = document.services === undefined ? [] : Object.entries(document.services);
+            return servicePairs.map(([name, service]) => ({ name, path, service }));
         });
         documents.declarations.push(...declarations);
         const folder = posix.dirname(group.last.path);
@@ -107,16 +107,16 @@ export async function checkDockerCompose(session: Session, planned: PlannedCheck
         session,
         planned,
         groups.map(({ last, before }) => {
-            const command = (planned.check.command as string[]).flatMap((part) =>
-                part === FILE_PLACEHOLDER
+            const command = (planned.check.command as string[]).flatMap((argument) =>
+                argument === FILE_PLACEHOLDER
                     ? [
                           ...before.flatMap(({ path }) => [
                               posix.relative(planned.scope.folder.path, path),
                               COMPOSE_FILE_FLAG,
                           ]),
-                          part,
+                          argument,
                       ]
-                    : [part],
+                    : [argument],
             );
             return { files: [last], command };
         }),

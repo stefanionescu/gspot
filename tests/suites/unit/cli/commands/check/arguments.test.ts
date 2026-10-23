@@ -10,11 +10,11 @@ import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/sett
 
 test('file and folder arguments narrow the files each check gets', async () => {
     await using sandbox = await testdir();
-    const entries = ['one', 'two', 'three'].map((name) =>
+    const checks = ['one', 'two', 'three'].map((name) =>
         buildReportingCheck({ id: `sandbox/${name}`, paths: ['src/**', 'docs/**'], stage: 'commit' }),
     );
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: entries }) }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: checks }) }),
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
         'docs/guide.md': '# Guide\n',
@@ -39,11 +39,11 @@ test('file and folder arguments narrow the files each check gets', async () => {
 
 test('--only repeats and leaves the paths after it as paths', async () => {
     await using sandbox = await testdir();
-    const entries = ['one', 'two', 'three'].map((name) =>
+    const checks = ['one', 'two', 'three'].map((name) =>
         buildReportingCheck({ id: `sandbox/${name}`, paths: ['src/**'], stage: 'commit' }),
     );
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: entries }) }),
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: checks }) }),
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
     });
@@ -93,8 +93,8 @@ test('path arguments keep the findings of a project-wide check in the named file
     );
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
     expect(narrowed.report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual(['here', 'fileless']);
-    const whole = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/project', '--json']));
-    expect(whole.report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual([
+    const project = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/project', '--json']));
+    expect(project.report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual([
         'here',
         'elsewhere',
         'fileless',
@@ -141,8 +141,8 @@ test('a manual check runs only when --only names it', async () => {
         'source.txt': 'input',
     });
 
-    const plain = parseCheckReport(await runGspot(sandbox.path, ['check', '--json']));
-    expect(plain.report.checks.map((check) => check.check)).not.toContain('sandbox/manual');
+    const unscoped = parseCheckReport(await runGspot(sandbox.path, ['check', '--json']));
+    expect(unscoped.report.checks.map((check) => check.check)).not.toContain('sandbox/manual');
     const named = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/manual', '--json']));
     expect(named.code, named.stdout + named.stderr).toBe(0);
     expect(named.report.checks.map((check) => [check.check, check.status])).toStrictEqual([

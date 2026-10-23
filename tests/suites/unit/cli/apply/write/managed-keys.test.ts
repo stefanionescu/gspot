@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { planRemoval } from '#cli/apply/write/plans.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
-import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { matchFields, captureThrow } from '#tests/setup/matchers.ts';

@@ -26,10 +26,10 @@ export function buildTypescriptBlocks(
                 files: parser ? eslintFiles.typescript : eslintFiles.typed,
             })),
             {
-                data: { files: eslintFiles.typed, rules: TYPESCRIPT_RULES },
+                fields: { files: eslintFiles.typed, rules: TYPESCRIPT_RULES },
                 properties: `plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: [${projects.map((project) => 'join(root, ' + JSON.stringify(project) + ')').join(', ')}] })] }`,
             },
-            { data: { files: eslintFiles.tests, rules: TYPESCRIPT_TEST_RULES } },
+            { fields: { files: eslintFiles.tests, rules: TYPESCRIPT_TEST_RULES } },
         ],
     };
 }

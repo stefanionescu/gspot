@@ -1,4 +1,4 @@
-export type InstalledPackage = PackageIdentity & { entry: string };
+export type InstalledPackage = PackageIdentity & { modulePath: string };
 export type PackageIdentity = { name: string; version: string; peerDependencies: Record<string, string> };
 export type StylelintModule = {
     resolveConfig: (file: string, options: { config: { extends: string } }) => Promise<unknown>;

@@ -24,7 +24,7 @@ export type SaveSettingsOptions = { edit: SettingsEdit; summary: string };
 export type ConfigurationsOptions = { cwd: string; configurations: string[]; scope?: string };
 
 /** The settings read once before a command edits their table. */
-export type PreparedSettingsEdit = { root: string; input: SettingsEdit; settings: Settings; reads: ReadCache };
+export type SettingsEditContext = { root: string; input: SettingsEdit; settings: Settings; reads: ReadCache };
 
 /** One locked repository writer. */
 export type Writer = { files: Files; [Symbol.dispose](): void };

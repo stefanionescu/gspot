@@ -1,17 +1,17 @@
 import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { type Identifier } from '#cli/types/checks/general/naming.ts';
-import { parseIdentifiers } from '#cli/checks/general/naming/declared-names.ts';
+import { parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 
 import {
     DECLARATION_CASES,
+    BASH_SOURCE_NAMES,
+    IMPORT_NAME_LINES,
     SETTINGS_FILE_CASES,
     NAME_POSITION_CASES,
-    BASH_DECLARED_NAMES,
-    DECLARED_IMPORT_LINES,
     DECLARATION_ORDER_CASES,
     JAVASCRIPT_PARAMETER_NAMES,
-} from '#tests/config/checks/general/naming/declared-names.ts';
+} from '#tests/config/checks/general/naming/source-names.ts';
 
 /** Parse one source and dispose its parser resources. */
 async function listIdentifiers(file: string, source: string, language: string): Promise<Identifier[]> {
@@ -32,19 +32,19 @@ test.each([...DECLARATION_CASES])(
             Object.fromEntries(
                 Object.keys(byCategory).map((category) => [
                     category,
-                    found.filter((entry) => entry.category === category).map((entry) => entry.name),
+                    found.filter((identifier) => identifier.category === category).map((identifier) => identifier.name),
                 ]),
             ),
         ).toStrictEqual(
             Object.fromEntries(Object.entries(byCategory).map(([category, names]) => [category, [...names]])),
         );
-        for (const name of absent) expect(found.map((entry) => entry.name)).not.toContain(name);
+        for (const name of absent) expect(found.map((identifier) => identifier.name)).not.toContain(name);
     },
 );
 test('a name bound by require or await import is skipped, and other bindings are kept', async () => {
-    const source = [...DECLARED_IMPORT_LINES].join('\n');
+    const source = [...IMPORT_NAME_LINES].join('\n');
     const found = await listIdentifiers('src/bind.ts', source, 'typescript');
-    expect(found.map((entry) => entry.name)).toStrictEqual(['loadedRecord', 'eagerTotal']);
+    expect(found.map((identifier) => identifier.name)).toStrictEqual(['loadedRecord', 'eagerTotal']);
 });
 test('Bash functions and variables are collected in source order', async () => {
     const found = await listIdentifiers(
@@ -52,7 +52,9 @@ test('Bash functions and variables are collected in source order', async () => {
         'readonly ROOT=1\nlocal count\nbuild_all() {\n  TARGET=x\n}\n',
         'bash',
     );
-    expect(found.map((entry) => `${entry.category}:${entry.name}`)).toStrictEqual([...BASH_DECLARED_NAMES]);
+    expect(found.map((identifier) => `${identifier.category}:${identifier.name}`)).toStrictEqual([
+        ...BASH_SOURCE_NAMES,
+    ]);
 });
 test.each([...DECLARATION_ORDER_CASES])(
     '$language declarations arrive in document order, including names on the same line',

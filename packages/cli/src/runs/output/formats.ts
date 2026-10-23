@@ -22,7 +22,7 @@ import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cl
  * @param path the file or folder.
  * @returns the resolved path with POSIX separators, or undefined when nothing exists at the path.
  */
-function readRealPath(path: string): string | undefined {
+function readCanonicalPath(path: string): string | undefined {
     try {
         // The call gives Windows paths one drive letter case and their long folder names.
         return convertToPosixPath(realpathSync.native(path));
@@ -36,10 +36,10 @@ function stripRoot(root: string, file: string): string {
     const prefix = `${root}/`;
     if (file.startsWith(prefix)) return file.slice(prefix.length);
     if (!isAbsolute(file)) return file;
-    const realRoot = readRealPath(root);
-    const realFile = readRealPath(file);
-    if (realRoot === undefined || realFile === undefined) return file;
-    return realFile.startsWith(`${realRoot}/`) ? realFile.slice(realRoot.length + 1) : file;
+    const canonicalRoot = readCanonicalPath(root);
+    const canonicalFile = readCanonicalPath(file);
+    if (canonicalRoot === undefined || canonicalFile === undefined) return file;
+    return canonicalFile.startsWith(`${canonicalRoot}/`) ? canonicalFile.slice(canonicalRoot.length + 1) : file;
 }
 
 /**
@@ -50,7 +50,7 @@ function stripRoot(root: string, file: string): string {
  * @returns the root and its resolved form in POSIX and in system separators.
  */
 function listRootPrefixes(root: string): string[] {
-    const roots = [root, readRealPath(root) ?? root];
+    const roots = [root, readCanonicalPath(root) ?? root];
     const prefixes = new Set(roots.flatMap((form) => [`${form}/`, `${form.replaceAll('/', sep)}${sep}`]));
     return [...prefixes].toSorted((first, second) => second.length - first.length);
 }

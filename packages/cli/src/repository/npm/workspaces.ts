@@ -99,7 +99,7 @@ export function listWorkspaceDependencySources(reads: ReadCache, scope: string, 
     visited.delete(projectRoot);
     const selected = files
         .filter((file) => {
-            const owner = ordered.find((entry) => isInScope(file.path, entry));
+            const owner = ordered.find((workspace) => isInScope(file.path, workspace));
             return owner !== undefined && visited.has(owner);
         })
         .map((file) => file.path);

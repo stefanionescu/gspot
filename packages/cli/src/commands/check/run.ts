@@ -113,7 +113,7 @@ function finishResult(run: Run, result: CheckResult): void {
 
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
     const limiter = pLimit(availableParallelism());
-    let completed = 0;
+    let finished = 0;
     // Wait for every check before rethrowing an error of finishResult or onProgress, so the resources stay open until
     // all checks stop.
     const settled = await Promise.allSettled(
@@ -122,7 +122,7 @@ async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckR
                 const result = await runPlannedCheck(run, planned);
                 finishResult(run, result);
                 run.options.onProgress?.({
-                    completed: ++completed,
+                    finished: ++finished,
                     total: checks.length,
                     comparison: run.options.comparison,
                 });

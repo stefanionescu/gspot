@@ -20,11 +20,11 @@ const installedSandbox = shareInstalledSandbox(HTML_SANDBOX);
 
 test.each([...AUTOPLAY_CHECKS])(
     '$check reports audio and video autoplay and accepts user-controlled playback',
-    async (entry) => {
+    async (row) => {
         const { root } = installedSandbox();
         const skippedChecks =
-            entry.scope === ''
-                ? [{ check: entry.check, scope: 'app', status: 'skipped' as const, fileCount: 0, findings: [] }]
+            row.scope === ''
+                ? [{ check: row.check, scope: 'app', status: 'skipped' as const, fileCount: 0, findings: [] }]
                 : [];
         const sourceFiles = {
             'gspot.toml': buildSandboxSettings(['html'], { level: 'all', tables: AUTOPLAY_SCOPE_TABLES }),
@@ -38,26 +38,26 @@ test.each([...AUTOPLAY_CHECKS])(
         );
 
         const settings = await readFile(join(root, 'gspot.toml'), 'utf8');
-        const checked = parseCheckReport(await spawnGspot(root, entry.arguments));
+        const checked = parseCheckReport(await spawnGspot(root, row.arguments));
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         expect(checked.report.checks).toMatchObject([
             {
-                check: entry.check,
-                scope: entry.scope,
+                check: row.check,
+                scope: row.scope,
                 status: 'failed',
-                findings: entry.findings.map((finding) => matchFields(finding)),
+                findings: row.findings.map((finding) => matchFields(finding)),
             },
             ...skippedChecks,
         ]);
-        await writeFile(join(root, entry.source), CONTROLLED_PLAYBACK_PAGE);
-        const corrected = parseCheckReport(await spawnGspot(root, entry.arguments));
+        await writeFile(join(root, row.source), CONTROLLED_PLAYBACK_PAGE);
+        const corrected = parseCheckReport(await spawnGspot(root, row.arguments));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toMatchObject([
-            { check: entry.check, scope: entry.scope, status: 'passed', findings: [] },
+            { check: row.check, scope: row.scope, status: 'passed', findings: [] },
             ...skippedChecks,
         ]);
         expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(settings);
-        expect(await readFile(join(root, entry.preserved), 'utf8')).toBe(AUTOPLAY_PAGE);
+        expect(await readFile(join(root, row.preserved), 'utf8')).toBe(AUTOPLAY_PAGE);
         expect(await readFile(join(root, 'app/build.mjs'), 'utf8')).toBe(COPY_PAGE_BUILD);
     },
 );

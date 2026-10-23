@@ -53,4 +53,4 @@ export type RunReport = {
 export type PlanAfterFixes = { planned: PlannedCheck[]; fixes: FixReport | undefined };
 
 /** The finished check count and the comparison, for terminal progress. */
-export type CheckProgress = { completed: number; total: number; comparison: RunReport['comparison'] };
+export type CheckProgress = { finished: number; total: number; comparison: RunReport['comparison'] };

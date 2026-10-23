@@ -5,8 +5,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields, matchElements } from '#tests/setup/matchers.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -39,9 +39,9 @@ async function assertYamlFiles(root: string, rule?: string): Promise<void> {
 
 const installedSandbox = shareInstalledSandbox(FILES_SANDBOX);
 
-test.each([...FILES_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, FILES_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...FILES_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, FILES_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });
 
 test('v8r validates a staged JSON file with a non-ASCII path against its schema', async () => {
@@ -159,7 +159,7 @@ test('v8r checks gspot.toml against the schema in .gspot, which accepts an unquo
     const accepted = await checkSettings();
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(accepted.report.checks).toMatchObject([
-        { check: 'data-files/v8r', status: 'passed', command: matchItems([SETTINGS_FILE]) },
+        { check: 'data-files/v8r', status: 'passed', command: matchElements([SETTINGS_FILE]) },
     ]);
     // A schema that rejects every document shows that v8r read this file. Disposal applies the generated schema again.
     await writeFile(join(root, GSPOT_PATHS.settingsSchema), REJECTING_SCHEMA);

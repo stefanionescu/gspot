@@ -35,7 +35,7 @@ export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
         const scopePath = scope.folder.path;
         const escaped = scopePath.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
         const children = listNestedScopeGlobs(
-            scopes.map((entry) => entry.folder.path),
+            scopes.map((each) => each.folder.path),
             scopePath,
         ).map((path) => `!${path}`);
         blocks.push(

@@ -8,8 +8,8 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { NGINX_MOUNT_CASES, NGINX_UPSTREAM_CONF } from '#tests/config/checks/infrastructure/nginx.ts';
 
@@ -18,7 +18,7 @@ test.each([...NGINX_MOUNT_CASES])(
     async ({ source, hosts, certificates }) => {
         await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['nginx']), 'nginx.conf': source });
         const session = await openSession(sandbox.path);
-        using _pins = fakePinnedExecutables([
+        using _pins = fakeToolExecutables([
             getTool(session.configurations.values(), 'openssl'),
             getTool(session.configurations.values(), 'docker'),
         ]);
@@ -53,7 +53,7 @@ test.each(['stdout', 'stderr'])(
 
         using resources = new DisposableStack();
         resources.use(
-            fakePinnedExecutables([
+            fakeToolExecutables([
                 getTool(session.configurations.values(), 'openssl'),
                 getTool(session.configurations.values(), 'docker'),
             ]),

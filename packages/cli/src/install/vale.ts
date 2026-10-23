@@ -49,14 +49,14 @@ export async function installValePackages(install: ToolInstall): Promise<string>
     const { root } = session;
     const level = session.settingsFile.settings.level;
     if (level === 'recommended') return '';
-    const tool = getTool(session.neededToolConfigurations, VALE_TOOL);
+    const tool = getTool(session.toolConfigurations, VALE_TOOL);
     const available = buildToolAvailability(
         tool,
         inspectTool({ ...session, miseBinPaths: getMiseBinPaths(session) }, tool),
     );
     if ('status' in available) throw new GspotError('tool', available.note);
     using files = openFiles(root);
-    const temporary = mkdtempSync(join(files.readRealPath(DOT_GSPOT), VALE_INSTALL_PREFIX));
+    const temporary = mkdtempSync(join(files.readCanonicalPath(DOT_GSPOT), VALE_INSTALL_PREFIX));
     try {
         const config = join(temporary, GSPOT_PATHS.valeConfigFile);
         const text = readText(root, GSPOT_PATHS.valeConfigFile);

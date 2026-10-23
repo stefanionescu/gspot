@@ -12,13 +12,13 @@ import {
     RUNTIME_OVERRIDE_SETTINGS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/runtimes.ts';
 
-test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($runtime)', async (entry) => {
+test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($runtime)', async (row) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
             rules: true,
             tables: stringify({
-                tools: { eslint: { override: [{ paths: ['application/**'], runtime: entry.runtime }] } },
+                tools: { eslint: { override: [{ paths: ['application/**'], runtime: row.runtime }] } },
             }),
         }),
         'application/source.js': 'process.exit(0);\nBuffer.from("value");\n',
@@ -28,8 +28,8 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
     const eslint = await createEslint(sandbox.path);
     const computed = (await eslint.calculateConfigForFile('application/source.js')) as EslintConfiguration;
     const globals = Object.keys(computed.languageOptions.globals);
-    expect(entry.globals.filter((name) => !globals.includes(name))).toStrictEqual([]);
-    expect(entry.absent.filter((name) => globals.includes(name))).toStrictEqual([]);
+    expect(row.globals.filter((name) => !globals.includes(name))).toStrictEqual([]);
+    expect(row.absent.filter((name) => globals.includes(name))).toStrictEqual([]);
     expect(Object.keys(computed.rules).filter((name) => name.startsWith('n/'))).toStrictEqual([
         'n/file-extension-in-import',
     ]);
@@ -124,17 +124,17 @@ test('a later [[tools.eslint.override]] runtime replaces an earlier one', async 
 
 test.each([...FRAMEWORK_RUNTIME_CASES])(
     'framework presets keep no globals of another runtime ($configuration)',
-    async (entry) => {
+    async (row) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings([entry.configuration], {
+            'gspot.toml': buildSandboxSettings([row.configuration], {
                 rules: true,
                 tables: stringify({ tools: { eslint: { override: [{ paths: ['src/**'], runtime: 'worker' }] } } }),
             }),
-            [entry.path]: entry.source,
+            [row.path]: row.source,
         });
 
         const eslint = await createEslint(sandbox.path);
-        const [result] = await eslint.lintFiles([entry.path]);
+        const [result] = await eslint.lintFiles([row.path]);
         expect(
             result!.messages.filter(({ ruleId }) => ruleId === 'no-undef').map(({ message }) => message),
         ).toStrictEqual(["'window' is not defined.", "'process' is not defined."]);

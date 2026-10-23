@@ -15,7 +15,7 @@ import {
     CAN_IMPORT_RULES,
     UNTIL_DATE_CASES,
     UNSAFE_SCOPE_PATHS,
-    REMOVED_EXTRA_TOOLS,
+    REMOVED_TABLE_TOOLS,
     ORDERED_IMPORT_RULES,
     REFUSED_RULE_OPTIONS,
     SETTING_RULE_OPTIONS,
@@ -150,7 +150,7 @@ test.each(['constructor', 'toString', 'prototype'])(
     },
 );
 
-test.each([...REMOVED_EXTRA_TOOLS])('tools.%s rejects the removed raw extra table', (tool) => {
+test.each([...REMOVED_TABLE_TOOLS])('tools.%s rejects the removed raw extra table', (tool) => {
     expect(
         settingsSchema.safeParse({
             tools: {

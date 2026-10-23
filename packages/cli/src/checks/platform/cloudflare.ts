@@ -11,8 +11,8 @@ import {
     HEADERS_FILE,
     DETACH_PREFIX,
     PATH_PREFIXES,
-    REDIRECT_PARTS,
     REDIRECTS_FILE,
+    REDIRECT_FIELDS,
     FRAME_ANCESTORS,
     HTTP_HEADER_LINE,
     REQUIRED_HEADERS,
@@ -83,19 +83,19 @@ function listMissingHeaders(blocks: HeaderBlock[]): string[] {
  * @returns the errors, each with its line.
  */
 function validateRedirects(text: string): NumberedLine[] {
-    const entries = splitContentLines(text);
-    return entries.flatMap((line) => {
-        const parts = line.text.trim().split(/\s+/u);
-        const [source = '', , status] = parts;
-        if (parts.length < REDIRECT_PARTS.minimum || parts.length > REDIRECT_PARTS.maximum)
+    const contentLines = splitContentLines(text);
+    return contentLines.flatMap((line) => {
+        const segments = line.text.trim().split(/\s+/u);
+        const [source = '', , status] = segments;
+        if (segments.length < REDIRECT_FIELDS.minimum || segments.length > REDIRECT_FIELDS.maximum)
             return [
                 { number: line.number, text: 'Write a redirect as a source, a destination, and an optional status.' },
             ];
         if (!PATH_PREFIXES.some((prefix) => source.startsWith(prefix)))
             return [{ number: line.number, text: 'Start the redirect source with / or https://.' }];
         if (status === undefined) return [];
-        const isKnown = REDIRECT_STATUS_CODES.has(status);
-        return isKnown
+        const isRedirectStatus = REDIRECT_STATUS_CODES.has(status);
+        return isRedirectStatus
             ? []
             : [{ number: line.number, text: `Use a supported Cloudflare redirect status instead of ${status}.` }];
     });
@@ -110,8 +110,8 @@ function validateRedirects(text: string): NumberedLine[] {
  */
 export function checkCloudflareRedirects(session: Session, planned: PlannedCheck): Finding[] {
     return listSourcePaths(planned.files, [REDIRECTS_FILE]).flatMap((path) =>
-        validateRedirects(readCachedText(session.reads, path)).map((entry) =>
-            buildFinding(planned, { file: path, line: entry.number }, 'syntax', entry.text),
+        validateRedirects(readCachedText(session.reads, path)).map((invalidLine) =>
+            buildFinding(planned, { file: path, line: invalidLine.number }, 'syntax', invalidLine.text),
         ),
     );
 }
@@ -127,7 +127,7 @@ export function checkCloudflareHeaders(session: Session, planned: PlannedCheck):
     return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
         const { blocks, errors } = parseHeadersFile(readCachedText(session.reads, path));
         return [
-            ...errors.map((entry) => buildFinding(planned, { file: path, line: entry.number }, 'syntax', entry.text)),
+            ...errors.map((error) => buildFinding(planned, { file: path, line: error.number }, 'syntax', error.text)),
             ...listMissingHeaders(blocks).map((name) =>
                 buildFinding(
                     planned,

@@ -5,7 +5,7 @@ import { runCheckSample, expectedSummary, shareBashSandbox, buildSampleSummary }
 
 const bashSandbox = shareBashSandbox();
 
-test.each([...DOC_COMMENT_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(bashSandbox(), entry, BASH_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...DOC_COMMENT_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
+    const result = await runCheckSample(bashSandbox(), sample, BASH_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

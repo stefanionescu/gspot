@@ -1,15 +1,15 @@
 // Reads committed Git entries and blob contents.
 import { GspotError } from '#cli/system/errors.ts';
-import type { GitEntry } from '#cli/types/parsers/git.ts';
+import type { GitFile } from '#cli/types/parsers/git.ts';
+import { readIndexFiles } from '#cli/repository/files/tracked.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
-import { readIndexEntries } from '#cli/repository/files/tracked.ts';
 import { runGit, runGitStream, runGitForBytes } from '#cli/system/git.ts';
-import { parseGitBlobs, parseTreeEntries, stripIndexStages } from '#cli/parsers/git.ts';
+import { parseGitBlobs, parseTreeFiles, stripIndexStages } from '#cli/parsers/git.ts';
 
 import {
     GIT_HEAD_ARGUMENTS,
     GIT_BLOBS_ARGUMENTS,
-    GIT_TREE_ENTRIES_ARGUMENTS,
+    GIT_LS_TREE_ARGUMENTS,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
 } from '#cli/config/repository/revisions/files.ts';
 
@@ -21,19 +21,19 @@ import {
  * @param cancelSignal stops the command.
  * @returns validated entries.
  */
-export async function listRevisionEntries(
+export async function listRevisionFiles(
     repositoryRoot: string,
     source: Revision,
     cancelSignal?: AbortSignal,
-): Promise<GitEntry[]> {
-    if (source.kind === 'index') return stripIndexStages(await readIndexEntries(repositoryRoot, cancelSignal));
-    const read = await runGitForBytes(repositoryRoot, [...GIT_TREE_ENTRIES_ARGUMENTS, source.hash], { cancelSignal });
+): Promise<GitFile[]> {
+    if (source.kind === 'index') return stripIndexStages(await readIndexFiles(repositoryRoot, cancelSignal));
+    const read = await runGitForBytes(repositoryRoot, [...GIT_LS_TREE_ARGUMENTS, source.hash], { cancelSignal });
     if (read.code !== 0)
         throw new GspotError(
             'git',
             `Git could not read the entries of this revision: ${read.stderr.trim()}. Resolve Git errors before checking again.`,
         );
-    return parseTreeEntries(read.stdout);
+    return parseTreeFiles(read.stdout);
 }
 
 /**
@@ -84,8 +84,8 @@ export async function readBlobs(
     await visitGitBlobs(
         repositoryRoot,
         requested,
-        async (entries) => {
-            for await (const [hash, bytes] of entries) blobs.set(hash, bytes);
+        async (stream) => {
+            for await (const [hash, bytes] of stream) blobs.set(hash, bytes);
         },
         cancelSignal,
     );
@@ -117,7 +117,7 @@ export async function readHead(repositoryRoot: string, cancelSignal?: AbortSigna
  * @param cancelSignal stops the command.
  * @returns current commit entries, or an empty list for an unborn branch.
  */
-export async function listHeadEntries(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
+export async function listHeadFiles(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitFile[]> {
     const head = await readHead(repositoryRoot, cancelSignal);
-    return head === undefined ? [] : listRevisionEntries(repositoryRoot, { kind: 'commit', hash: head }, cancelSignal);
+    return head === undefined ? [] : listRevisionFiles(repositoryRoot, { kind: 'commit', hash: head }, cancelSignal);
 }

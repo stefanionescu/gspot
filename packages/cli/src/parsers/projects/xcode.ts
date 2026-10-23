@@ -50,15 +50,15 @@ function parseProjectArray(tokens: ProjectTokens): unknown[] {
 }
 
 function parseProjectDictionary(tokens: ProjectTokens): Record<string, unknown> {
-    const entries: [string, unknown][] = [];
+    const pairs: [string, unknown][] = [];
     while (tokens.tokens[tokens.index] !== '}') {
         const key = parseProjectString(tokens.tokens[tokens.index++]);
         expectProjectToken(tokens, '=');
-        entries.push([key, parseProjectValue(tokens)]);
+        pairs.push([key, parseProjectValue(tokens)]);
         expectProjectToken(tokens, ';');
     }
     expectProjectToken(tokens, '}');
-    return Object.fromEntries(entries);
+    return Object.fromEntries(pairs);
 }
 
 function parseProjectValue(tokens: ProjectTokens): unknown {
@@ -96,8 +96,8 @@ function getElement(project: Pick<XcodeProject, 'objects'>, id: string): PbxElem
 // Find the parent group of each object. Refuse an object that two groups claim.
 function buildParentGroups(elements: Record<string, PbxElement>): Map<string, string> {
     const parents = new Map<string, string>();
-    for (const [id, entry] of Object.entries(elements))
-        for (const child of entry.children ?? []) {
+    for (const [id, element] of Object.entries(elements))
+        for (const child of element.children ?? []) {
             if (parents.has(child))
                 throw new Error(`The Xcode project gives an object multiple parent groups: ${child}.`);
             parents.set(child, id);
@@ -125,9 +125,9 @@ function findTreeBase(project: XcodeProject, id: string, tree: string): string {
 function findElementPath(project: XcodeProject, id: string): string {
     if (project.visiting.has(id)) throw new Error('The Xcode project contains a group cycle.');
     project.visiting.add(id);
-    const entry = getElement(project, id);
-    const base = findTreeBase(project, id, entry.sourceTree ?? '<group>');
-    const path = entry.path ?? '';
+    const element = getElement(project, id);
+    const base = findTreeBase(project, id, element.sourceTree ?? '<group>');
+    const path = element.path ?? '';
     if (SETTING_REFERENCE.test(path)) throw new Error(`Cannot find Xcode source path ${path} without build settings.`);
     project.visiting.delete(id);
     return posix.normalize(posix.isAbsolute(path) ? path : posix.join(base, path));
@@ -213,9 +213,9 @@ export function parseProjectSources(text: string, path: string): ProjectSources 
  */
 export function parseBuildSettings(text: string): ProjectBuildSettings {
     const project = parsePbxproj(text);
-    const settings = Object.values(project.objects).flatMap((entry) => entry.buildSettings ?? []);
+    const settings = Object.values(project.objects).flatMap((pbxRecord) => pbxRecord.buildSettings ?? []);
     return {
-        sdkRoot: settings.find((entry) => entry.SDKROOT !== undefined)?.SDKROOT,
-        swiftVersion: settings.find((entry) => entry.SWIFT_VERSION !== undefined)?.SWIFT_VERSION,
+        sdkRoot: settings.find((setting) => setting.SDKROOT !== undefined)?.SDKROOT,
+        swiftVersion: settings.find((each) => each.SWIFT_VERSION !== undefined)?.SWIFT_VERSION,
     };
 }

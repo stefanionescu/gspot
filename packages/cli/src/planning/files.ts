@@ -12,7 +12,7 @@ import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning/files.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import type { Check, KnownCheck, Configuration } from '#cli/types/configurations.ts';
+import type { Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
 import type { ToolIgnore, PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 
 // Read the ignore syntax from your own ignore file of the check, or from the generated one.
@@ -35,8 +35,8 @@ function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['r
 }
 
 // List the files of a project-wide check: the scope tree, when the check files match anything in it.
-function listProjectCheckFiles(planned: PlannedScope, known: KnownCheck, scopePath: string): TrackedFile[] {
-    const { check, configuration } = known;
+function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
+    const { check, configuration } = scopeCheck;
     const { scope } = planned;
     const owners = check.files ?? (configuration?.group === 'language' ? configuration.files : undefined);
     const scopeFiles = listScopeFiles(planned, scopePath, check.runs);
@@ -50,16 +50,17 @@ function listProjectCheckFiles(planned: PlannedScope, known: KnownCheck, scopePa
                   scopePath,
                   settings: scope.settings,
               });
-    if (filterNarrowedFiles(planned, known, stripIgnoredFiles(matches, check, scope).files).length === 0) return [];
+    if (filterNarrowedFiles(planned, scopeCheck, stripIgnoredFiles(matches, check, scope).files).length === 0)
+        return [];
     return check.runs === 'scope' ? scopeFiles : scopeFiles.filter((file) => file.kind !== 'binary');
 }
 
 // A per-file check reads the files that its owners cover. A project check reads every file of the scope once one of its
 // files matches.
-function listCheckFiles(planned: PlannedScope, known: KnownCheck, scopePath: string): TrackedFile[] {
+function listCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
     const { session, scope } = planned;
-    const { check, configuration } = known;
-    if (check.runs !== 'files') return listProjectCheckFiles(planned, known, scopePath);
+    const { check, configuration } = scopeCheck;
+    if (check.runs !== 'files') return listProjectCheckFiles(planned, scopeCheck, scopePath);
     if (!configuration) {
         const isMatch = buildPathMatcher(check.files?.paths ?? []);
         return session.repository.files.filter((file) => isMatch(file.path));
@@ -74,8 +75,8 @@ function listCheckFiles(planned: PlannedScope, known: KnownCheck, scopePath: str
 // Drop the paths that an [[ignore]] of the check names, for tracked files and deleted trigger paths alike, and skip the
 // check when none remain.
 function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pick<PlannedCheck, 'files' | 'skip'> {
-    const paths = listIgnores(scope.settings, check.id).flatMap((entry) =>
-        entry.rule === undefined && entry.names === undefined ? entry.paths : [],
+    const paths = listIgnores(scope.settings, check.id).flatMap((ignore) =>
+        ignore.rule === undefined && ignore.names === undefined ? ignore.paths : [],
     );
     const isIgnored = buildPathMatcher(paths);
     const selected = files.filter((file) => !isIgnored(file.path));
@@ -89,7 +90,7 @@ function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pi
 
 // Keep the narrowed paths. A project check keeps every file when the selection touches one of its files, and every
 // check keeps every file when gspot.toml or .gspot changed.
-function filterNarrowedFiles(planned: PlannedScope, known: KnownCheck, files: TrackedFile[]): TrackedFile[] {
+function filterNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: TrackedFile[]): TrackedFile[] {
     const { narrowedPaths } = planned;
     if (!narrowedPaths) return files;
     const isTouched =
@@ -97,12 +98,12 @@ function filterNarrowedFiles(planned: PlannedScope, known: KnownCheck, files: Tr
     if (isTouched) return files;
     const inNarrowed = files.filter((file) => narrowedPaths.has(file.path));
     if (inNarrowed.length === 0) return [];
-    return known.check.runs === 'files' ? inNarrowed : files;
+    return scopeCheck.check.runs === 'files' ? inNarrowed : files;
 }
 
 // List the paths deleted from the tree that still trigger a project check.
-function listDeletedTriggers(planned: PlannedScope, known: KnownCheck, scopePath: string): string[] {
-    const { check, configuration } = known;
+function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): string[] {
+    const { check, configuration } = scopeCheck;
     if (check.runs === 'files' || planned.narrowedPaths === undefined) return [];
     const { session, children, scope } = planned;
     const readable = new Set(session.repository.files.map((file) => file.path));
@@ -116,9 +117,9 @@ function listDeletedTriggers(planned: PlannedScope, known: KnownCheck, scopePath
     const owners = check.files ?? configuration?.files;
     if (owners === undefined) return paths;
     const missing = paths.map((path): TrackedFile => {
-        const raw = { path, size: 0, executable: false, symlink: false };
+        const listedFile = { path, size: 0, executable: false, symlink: false };
         const prefix = Buffer.alloc(0);
-        return classifyFile(session.root, raw, prefix, {
+        return classifyFile(session.root, listedFile, prefix, {
             generatedPaths: [],
             attributes: session.repository.attributes,
         });
@@ -180,9 +181,7 @@ export function stripToolIgnoredFiles(session: Session, check: PlannedCheck): Pl
  */
 export function listChildScopes(scopes: Scope[], scope: Scope): string[] {
     const own = scope.folder.path;
-    return scopes
-        .map((entry) => entry.folder.path)
-        .filter((path) => path !== '' && path !== own && isInScope(path, own));
+    return scopes.map((each) => each.folder.path).filter((path) => path !== '' && path !== own && isInScope(path, own));
 }
 
 /**
@@ -200,7 +199,7 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
         (config) =>
             config.per_scope &&
             (config.check.includes(check.id) ||
-                command.some((part) => part.includes(`{config_file:${extractConfigFileName(config.file)}}`))),
+                command.some((argument) => argument.includes(`{config_file:${extractConfigFileName(config.file)}}`))),
     );
 }
 
@@ -208,27 +207,27 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
  * Select the files and deleted trigger paths of a planned check.
  *
  * @param planned the scope to plan.
- * @param known the check and its manifest.
+ * @param scopeCheck the check and its manifest.
  *
  * @returns the files and the trigger paths.
  */
 export function selectCheckFiles(
     planned: PlannedScope,
-    known: KnownCheck,
+    scopeCheck: ScopeCheck,
 ): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'> {
     const { scope, children } = planned;
-    const { check, configuration } = known;
+    const { check, configuration } = scopeCheck;
     const isRootCheck = check.runs === 'once' || check.runs === 'history';
     const scopePath = isRootCheck ? '' : scope.folder.path;
-    const triggerPaths = listDeletedTriggers(planned, known, scopePath);
+    const triggerPaths = listDeletedTriggers(planned, scopeCheck, scopePath);
     const keepsChildScopes = check.runs !== 'files' || isRootOnlyCheck(configuration, check);
     let files =
         triggerPaths.length === 0
-            ? listCheckFiles(planned, known, scopePath)
+            ? listCheckFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
     if (!keepsChildScopes) files = files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     if (check.runs === 'files')
-        return { ...stripIgnoredFiles(filterNarrowedFiles(planned, known, files), check, scope), triggerPaths };
+        return { ...stripIgnoredFiles(filterNarrowedFiles(planned, scopeCheck, files), check, scope), triggerPaths };
     const selected = stripIgnoredFiles(files, check, scope);
     return { ...selected, triggerPaths };
 }

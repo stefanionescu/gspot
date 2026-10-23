@@ -201,7 +201,7 @@ export function findMissingBuild(tool: Tool, host: Host): string | undefined {
     if (named.includes(platform) || named.includes(`${platform}-${arch}`)) return undefined;
     const label = OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform;
     // A pin that names the system with another architecture lacks only this architecture.
-    return named.some((entry) => entry.startsWith(`${platform}-`)) ? `${arch} ${label}` : label;
+    return named.some((systemName) => systemName.startsWith(`${platform}-`)) ? `${arch} ${label}` : label;
 }
 
 /**

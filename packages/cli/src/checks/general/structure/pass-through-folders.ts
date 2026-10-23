@@ -25,12 +25,12 @@ export function checkPassThroughFolders(session: Session, planned: PlannedCheck)
     const folders = new Set(code.flatMap((file) => listEnclosingFolders(extractParentFolder(file.path))));
     return [...folders]
         .filter((folder) => folder !== scope && (scope === '' || folder.startsWith(`${scope}/`)))
-        .filter((folder) => !folder.split('/').some((part) => INSTALLED_DEPENDENCY_FOLDERS.has(part)))
+        .filter((folder) => !folder.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment)))
         .toSorted((left, right) => left.localeCompare(right))
         .flatMap((folder) => {
-            const entries = tree.get(folder) ?? [];
-            const [only] = entries;
-            if (entries.length !== 1 || only?.kind !== 'folder') return [];
+            const children = tree.get(folder) ?? [];
+            const [only] = children;
+            if (children.length !== 1 || only?.kind !== 'folder') return [];
             return [
                 buildFinding(
                     planned,

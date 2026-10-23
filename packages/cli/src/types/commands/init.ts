@@ -51,7 +51,7 @@ export type InitAnswers = {
 };
 
 /** Everything init works out before it asks to continue. */
-export type InitPrepared = {
+export type InitPlanning = {
     detection: DetectionSummary;
     session: Session;
     generated: GenerationResult;

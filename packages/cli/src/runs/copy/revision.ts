@@ -5,7 +5,7 @@ import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { writeCopyFiles } from '#cli/runs/copy/files.ts';
 import { runGit, readGitText } from '#cli/system/git.ts';
-import type { GitEntry } from '#cli/types/parsers/git.ts';
+import type { GitFile } from '#cli/types/parsers/git.ts';
 import { splitSystemPath } from '#cli/system/files/names.ts';
 import { DEPENDENCY_FILES } from '#cli/config/runs/copy/files.ts';
 import { copyValePackages } from '#cli/runs/copy/vale-packages.ts';
@@ -18,8 +18,8 @@ import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/system/git.ts';
+import { visitGitBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import type { CopyFile, RevisionCopy, DependencyCopy } from '#cli/types/runs/copy.ts';
-import { visitGitBlobs, listRevisionEntries } from '#cli/repository/revisions/files.ts';
 import { PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
 import { copyDependencies, readIgnoredPaths, readDeclarationDependencies } from '#cli/runs/copy/dependencies.ts';
 
@@ -63,19 +63,19 @@ function assertDependencyReady(copyRoot: string, folder: string): void {
 async function assertDependencyFilesUnchanged(
     root: string,
     installed: Files,
-    entries: GitEntry[],
+    indexFiles: GitFile[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const mismatch = new GspotError(
         'copy',
         'Installed dependencies do not match the dependency files and lockfiles of the revision or its compiler configurations. Check this commit in its own clone after installing its project dependencies and running gspot install there.',
     );
-    if (entries.some((entry) => statSync(join(root, entry.path), { throwIfNoEntry: false }) === undefined))
+    if (indexFiles.some((indexFile) => statSync(join(root, indexFile.path), { throwIfNoEntry: false }) === undefined))
         throw mismatch;
     // The confined read refuses a dependency file link that leaves the repository, before Git follows it.
-    for (const entry of entries) installed.readRealPath(entry.path);
+    for (const indexFile of indexFiles) installed.readCanonicalPath(indexFile.path);
     const hashed = await runGit(root, GIT_HASH_ARGUMENTS, {
-        stdin: entries.map((entry) => `${entry.path}\n`).join(''),
+        stdin: indexFiles.map((indexFile) => `${indexFile.path}\n`).join(''),
         cancelSignal,
     });
     if (hashed.code !== 0)
@@ -84,7 +84,7 @@ async function assertDependencyFilesUnchanged(
             `Git cannot hash the working-tree dependency files: ${hashed.stderr.trim()}. Repair the repository before checking this revision.`,
         );
     const hashes = hashed.stdout.trim().split('\n');
-    if (entries.some((entry, index) => hashes[index] !== entry.hash)) throw mismatch;
+    if (indexFiles.some((indexFile, index) => hashes[index] !== indexFile.hash)) throw mismatch;
 }
 
 /**
@@ -92,23 +92,23 @@ async function assertDependencyFilesUnchanged(
  *
  * @param repositoryRoot the working tree with installed dependencies.
  * @param copyRoot the private copy.
- * @param entries the tracked files of the revision.
+ * @param indexFiles the tracked files of the revision.
  * @param cancelSignal stops the copy.
  * @returns the dependencies to clone or link.
  */
 async function selectRevisionDependencies(
     repositoryRoot: string,
     copyRoot: string,
-    entries: GitEntry[],
+    indexFiles: GitFile[],
     cancelSignal?: AbortSignal,
 ): Promise<DependencyCopy[]> {
     using installed = openFiles(repositoryRoot);
-    const dependencyEntries = entries.filter((entry) => {
-        const name = basename(entry.path);
-        const lockfile = LOCKFILES.find((entry) => entry.file === posix.basename(name));
+    const dependencyFiles = indexFiles.filter((indexFile) => {
+        const name = basename(indexFile.path);
+        const lockfile = LOCKFILES.find((each) => each.file === posix.basename(name));
         return DEPENDENCY_FILES.has(name) || name === PACKAGE_SWIFT || (lockfile !== undefined && 'copied' in lockfile);
     });
-    const projects = dependencyEntries.map(({ path }) => path).filter((path) => DEPENDENCY_FILES.has(basename(path)));
+    const projects = dependencyFiles.map(({ path }) => path).filter((path) => DEPENDENCY_FILES.has(basename(path)));
     const folders = listDependencyFolders(installed, projects);
     const environments = projects
         .filter(
@@ -117,7 +117,7 @@ async function selectRevisionDependencies(
                 installed.readStats(posix.join(dirname(path), PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true,
         )
         .map((path) => dirname(path));
-    const declarations = await readDeclarationDependencies(repositoryRoot, entries, cancelSignal);
+    const declarations = await readDeclarationDependencies(repositoryRoot, indexFiles, cancelSignal);
     const artifacts = await readIgnoredPaths(
         repositoryRoot,
         listPackageFiles(
@@ -126,7 +126,7 @@ async function selectRevisionDependencies(
         ),
         cancelSignal,
     );
-    const tracked = new Set(entries.map(({ path }) => path));
+    const tracked = new Set(indexFiles.map(({ path }) => path));
     const untrackedArtifacts = artifacts.filter((path) => !tracked.has(path));
     if (folders.length + environments.length + declarations.copies.length + untrackedArtifacts.length === 0) return [];
     for (const folder of folders) assertDependencyReady(copyRoot, folder);
@@ -135,8 +135,8 @@ async function selectRevisionDependencies(
         installed,
         [
             ...new Set([
-                ...dependencyEntries,
-                ...entries.filter(({ path }) => declarations.configurationPaths.has(path)),
+                ...dependencyFiles,
+                ...indexFiles.filter(({ path }) => declarations.configurationPaths.has(path)),
             ]),
         ],
         cancelSignal,
@@ -157,9 +157,9 @@ async function selectRevisionDependencies(
 }
 
 // Two tracked paths that differ only by letter case, or undefined when every path folds to its own spelling.
-function findCaseCollision(entries: GitEntry[]): [string, string] | undefined {
+function findCaseCollision(indexFiles: GitFile[]): [string, string] | undefined {
     const seen = new Map<string, string>();
-    for (const { path } of entries) {
+    for (const { path } of indexFiles) {
         const earlier = seen.get(path.toLowerCase());
         if (earlier !== undefined) return [earlier, path];
         seen.set(path.toLowerCase(), path);
@@ -170,10 +170,10 @@ function findCaseCollision(entries: GitEntry[]): [string, string] | undefined {
 async function writeRevisionFiles(
     root: string,
     copyRoot: string,
-    entries: GitEntry[],
+    indexFiles: GitFile[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const collision = findCaseCollision(entries);
+    const collision = findCaseCollision(indexFiles);
     // Only a file system that ignores letter case finds the upper-case spelling of the copy path.
     const upper = copyRoot.toUpperCase();
     if (collision !== undefined && upper !== copyRoot && statSync(upper, { throwIfNoEntry: false }) !== undefined)
@@ -181,20 +181,20 @@ async function writeRevisionFiles(
             'copy',
             `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
         );
-    for (const entry of entries.filter((file) => file.mode === GITLINK_MODE)) {
-        const target = join(copyRoot, ...splitSystemPath(entry.path));
+    for (const indexFile of indexFiles.filter((file) => file.mode === GITLINK_MODE)) {
+        const target = join(copyRoot, ...splitSystemPath(indexFile.path));
         mkdirSync(target, { recursive: true, mode: OWNER_WRITABLE_FOLDER });
         chmodSync(target, OWNER_WRITABLE_FOLDER);
     }
     // Write links last, so that no link in the repository can redirect the write of another tracked file.
     for (const linked of [false, true]) {
         const selected = Map.groupBy(
-            entries.flatMap<Exclude<CopyFile, string>['entry']>((entry) =>
-                entry.mode === GITLINK_MODE || (entry.mode === SYMLINK_MODE) !== linked
+            indexFiles.flatMap<Exclude<CopyFile, string>['indexFile']>((indexFile) =>
+                indexFile.mode === GITLINK_MODE || (indexFile.mode === SYMLINK_MODE) !== linked
                     ? []
-                    : [{ ...entry, mode: entry.mode }],
+                    : [{ ...indexFile, mode: indexFile.mode }],
             ),
-            (entry) => entry.hash,
+            (indexFile) => indexFile.hash,
         );
         await visitGitBlobs(
             copyRoot,
@@ -202,7 +202,7 @@ async function writeRevisionFiles(
             async (blobs) => {
                 async function* listBlobFiles(): AsyncGenerator<CopyFile> {
                     for await (const [hash, bytes] of blobs) {
-                        for (const entry of selected.get(hash) ?? []) yield { entry, bytes };
+                        for (const indexFile of selected.get(hash) ?? []) yield { indexFile: indexFile, bytes };
                     }
                 }
                 await writeCopyFiles({
@@ -234,8 +234,8 @@ export async function copyRevision(
     const toplevelLine = await readGitText(repositoryRoot, GIT_TOP_LEVEL_ARGUMENTS, { cancelSignal });
     const toplevel = toplevelLine.replace(TRAILING_NEWLINE, '');
     const folder = relative(realpathSync(toplevel), realpathSync(repositoryRoot));
-    const entries = await listRevisionEntries(toplevel, source, cancelSignal);
-    const index = entries.map((entry) => `${entry.mode} ${entry.hash} 0\t${entry.path}\0`).join('');
+    const indexFiles = await listRevisionFiles(toplevel, source, cancelSignal);
+    const index = indexFiles.map((indexFile) => `${indexFile.mode} ${indexFile.hash} 0\t${indexFile.path}\0`).join('');
     const copy = createTemporaryFolder();
     try {
         await readGitText(toplevel, [...GIT_SHARED_CLONE_ARGUMENTS, toplevel, copy.path], {
@@ -248,13 +248,13 @@ export async function copyRevision(
         await readGitText(copy.path, GIT_UPDATE_INDEX_ARGUMENTS, { cancelSignal, stdin: index });
         const treeLine = await readGitText(copy.path, GIT_WRITE_TREE_ARGUMENTS, { cancelSignal });
         const tree = treeLine.replace(TRAILING_NEWLINE, '');
-        await writeRevisionFiles(toplevel, copy.path, entries, cancelSignal);
+        await writeRevisionFiles(toplevel, copy.path, indexFiles, cancelSignal);
         copyValePackages(
             toplevel,
             copy.path,
-            entries.map((entry) => entry.path),
+            indexFiles.map((indexFile) => indexFile.path),
         );
-        const dependencies = await selectRevisionDependencies(toplevel, copy.path, entries, cancelSignal);
+        const dependencies = await selectRevisionDependencies(toplevel, copy.path, indexFiles, cancelSignal);
         await copyDependencies({ root: toplevel, target: copy.path, dependencies, cancelSignal });
         await setImmediate();
         cancelSignal?.throwIfAborted();

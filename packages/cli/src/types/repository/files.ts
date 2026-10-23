@@ -1,6 +1,6 @@
 import type { Ignore } from 'ignore';
 import type { Dirent } from 'node:fs';
-import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
+import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import type { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { FILE_KINDS } from '#cli/config/repository/files/classify.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
@@ -22,7 +22,7 @@ export type Repository = {
     root: string;
     attributes: Map<string, Record<string, string>>;
     hasGit: boolean;
-    index: GitIndexEntry[];
+    index: GitIndexFile[];
     files: TrackedFile[];
     dependencyFiles: DependencyFile[];
     scopeFolders: ScopeFolder[];
@@ -44,7 +44,7 @@ export type ScopeFolder = {
 };
 
 /** Folder entries and the ignore rules they inherit or author. */
-export type FolderListing = { entries: Dirent[]; ignores: PathIgnore[] };
+export type FolderListing = { children: Dirent[]; ignores: PathIgnore[] };
 
 /** A folder waiting for a read, with its inherited ignore rules. */
 export type PendingFolder = { folder: string; ignores: PathIgnore[] };

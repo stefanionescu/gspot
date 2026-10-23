@@ -40,14 +40,14 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
     const getField = (name: string): string | undefined => {
         const joined = getFieldValues(name)
             .map(
-                (entries) =>
-                    entries
+                (values) =>
+                    values
                         .map((value) =>
                             typeof value === 'string' || typeof value === 'number' ? String(value) : undefined,
                         )
                         .find((value) => value !== undefined) ?? '',
             )
-            .filter((part) => part !== '')
+            .filter((text) => text !== '')
             .join(' ');
         return joined === '' ? undefined : joined;
     };
@@ -60,7 +60,7 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
         file,
         message,
         help,
-        fixable: getFieldValues('fixable').some((entries) => entries.some((value) => value !== undefined)),
+        fixable: getFieldValues('fixable').some((values) => values.some((value) => value !== undefined)),
     };
     setPosition(finding, format.line_base ?? 1, getField('line'), getField('column'));
     const rule = getField('rule');
@@ -69,7 +69,7 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
 }
 
 /**
- * Read JSON findings from the dotted `items` path. Each `children` key goes one list deeper. A leaf without a field
+ * Read JSON findings from the dotted `list` path. Each `children` key goes one list deeper. A leaf without a field
  * takes it from its parent nodes.
  *
  * @param output the tool output to read.
@@ -81,7 +81,7 @@ export function parseJsonFindings(output: ToolOutput): Finding[] {
     if (start === -1) throw new GspotError('output', 'JSON returned no structured findings.');
     const parsed = parseToolReport('JSON', stdout.slice(start));
     const keys = format.children === undefined ? [] : format.children.split('.');
-    return listAt(parsed, format.items).flatMap((item) =>
-        listChains([item], keys).map((chain) => buildJsonFinding(output, chain)),
+    return listAt(parsed, format.list).flatMap((element) =>
+        listChains([element], keys).map((chain) => buildJsonFinding(output, chain)),
     );
 }

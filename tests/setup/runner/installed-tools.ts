@@ -44,13 +44,13 @@ try {
         }),
     );
     const paths = await readFile(join(folder, TOOL_PATHS_FILE), 'utf8');
-    const pinnedToolsPath = paths.trim().split(/\r?\n/u);
+    const toolPinsPaths = paths.trim().split(/\r?\n/u);
     const commandFolder = dirname(join(folder, GSPOT_LAUNCHER_PATH));
     resources.use(
         overrideEnvironment({
             PATH: [
                 commandFolder,
-                ...pinnedToolsPath,
+                ...toolPinsPaths,
                 join(testModules, '.bin'),
                 join(workspaceModules, '.bin'),
                 readEnvironmentVariable('PATH') ?? '',

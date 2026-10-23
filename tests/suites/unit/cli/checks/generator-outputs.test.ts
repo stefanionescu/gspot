@@ -18,7 +18,7 @@ import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { writeScriptCommand, fakeExecutableLookup, fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
+import { writeScriptCommand, fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 import {
     GENERATOR_CASES,
@@ -58,7 +58,7 @@ async function mockWrangler(root: string): Promise<DisposableStack> {
     await mkdir(dirname(path), { recursive: true });
     await writeFile(path, '');
     await chmod(path, EXECUTABLE_FILE);
-    return fakePinnedExecutables([pin]);
+    return fakeToolExecutables([pin]);
 }
 
 // Fake wrangler types so that it writes this source in its working folder.
@@ -79,11 +79,11 @@ async function prepareSupabaseCheck(
     using resources = new DisposableStack();
 
     const prefix = scope === '' ? '' : `${scope}/`;
-    const declared = schemas === undefined ? '' : `schemas = ${JSON.stringify(schemas)}\n`;
+    const schemasLine = schemas === undefined ? '' : `schemas = ${JSON.stringify(schemas)}\n`;
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['supabase'], {
             scopes: scope === '' ? [] : [{ path: scope, configurations: ['supabase'] }],
-            tables: `[${scope === '' ? '' : 'scope.'}supabase]\ntypes_file = "${prefix}database.ts"\n${declared}`,
+            tables: `[${scope === '' ? '' : 'scope.'}supabase]\ntypes_file = "${prefix}database.ts"\n${schemasLine}`,
         }),
         [`${prefix}supabase/config.toml`]: SUPABASE_PROJECT_FILE_SOURCE,
     });

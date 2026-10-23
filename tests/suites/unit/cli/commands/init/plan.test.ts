@@ -60,7 +60,7 @@ test('init leaves an unsupported CI pipeline in place and names it in the plan',
     const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--no-configurations', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-    expect(plan.retained.map((entry) => entry.path)).toStrictEqual(['bitbucket-pipelines.yml']);
+    expect(plan.retained.map((file) => file.path)).toStrictEqual(['bitbucket-pipelines.yml']);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -157,7 +157,7 @@ test.each([...GIT_PLAN_CASES])('init in $name plans only the Git changes that ap
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stderr).toBe('');
     const report = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
-    expect(report.plan.change.map((entry) => entry.path)).toStrictEqual([...changes]);
+    expect(report.plan.change.map((file) => file.path)).toStrictEqual([...changes]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const initialized = await runGspot(sandbox.path, commandArguments);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);

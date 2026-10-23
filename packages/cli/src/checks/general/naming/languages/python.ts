@@ -59,7 +59,7 @@ function addFunctions(found: FileIdentifiers, root: Node): void {
     }
 }
 
-function classifyDeclaredName(node: Node, name: string): NamedCategory {
+function classifyName(node: Node, name: string): NamedCategory {
     const holder = getHolderType(node.parent ?? node);
     if (holder === 'class_definition') return 'attributes';
     return holder === 'module' && PYTHON_CONSTANT.test(name) ? 'constants' : 'variables';
@@ -93,7 +93,7 @@ function isTypeAlias(node: Node): boolean {
 function addAssignment(found: FileIdentifiers, node: Node): void {
     const left = node.childForFieldName('left');
     if (left?.type !== 'identifier') return;
-    addIdentifier(found, left, isTypeAlias(node) ? 'type_aliases' : classifyDeclaredName(node, left.text));
+    addIdentifier(found, left, isTypeAlias(node) ? 'type_aliases' : classifyName(node, left.text));
 }
 
 function addAssignments(found: FileIdentifiers, root: Node): void {

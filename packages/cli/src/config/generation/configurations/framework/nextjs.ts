@@ -9,6 +9,6 @@ export const NEXT_RULES = {
 export const REFRESH_RULE = 'react-refresh/only-export-components';
 
 /** Next.js higher-order components that react-refresh does not know: catchError from next/error, in Next.js 16.2. */
-export const NEXT_EXTRA_HOCS = ['catchError'] as const;
+export const NEXT_ERROR_HOCS = ['catchError'] as const;
 
 export const NEXT_SERVER_FILES = ['**/server/**', '**/*.server.*'] as const;

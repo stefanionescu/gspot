@@ -47,7 +47,7 @@ export const LEVEL_REEXPORT_CASES = [
     ['all', 'index-only'],
 ] as const;
 
-export const ENTRY_TABLES = `[tools.knip]
+export const ENTRYPOINT_TABLES = `[tools.knip]
 entry = ["src/main.js"]
 
 [[scope]]
@@ -57,13 +57,13 @@ configurations = ["javascript"]
 tools.knip.entry = ["api/src/main.js"]
 `;
 
-export const ENTRY_SOURCE = "export { start } from './start.js';\n";
+export const ENTRYPOINT_SOURCE = "export { start } from './start.js';\n";
 
 export const STARTER_SOURCE =
     'export function start() { const target = document.querySelector("#app"); if (!target) throw new Error("Missing application target"); target.textContent = "Started"; }\n';
 
-export const TRIVIAL_ENTRY_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/task.js'] as const;
+export const TRIVIAL_ENTRYPOINT_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/task.js'] as const;
 
-export const ENTRY_FOLDERS = ['src', 'api/src'] as const;
+export const ENTRYPOINT_FOLDERS = ['src', 'api/src'] as const;
 
 export const TRIVIAL_RULES = ['gspot/no-trivial-files', 'gspot/no-trivial-functions'] as const;

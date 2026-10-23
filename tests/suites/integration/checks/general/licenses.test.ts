@@ -37,8 +37,8 @@ test('licenses/allowed accepts an allowed license choice and reports a disallowe
     });
     commitAll(root);
     for (const command of [buildInitArguments(['licenses']), ['set', 'licenses.allowed', '["MIT","Apache-2.0"]']]) {
-        const prepared = await spawnGspot(root, command);
-        expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+        const applied = await spawnGspot(root, command);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     }
     await installGeneratedTools(root);
     const baseline = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));

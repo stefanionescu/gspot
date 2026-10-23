@@ -157,9 +157,9 @@ export type Configuration = Omit<ParsedManifest, 'tools' | 'configuration'> &
     ParsedManifest['configuration'] & { tools: Tool[] };
 
 /** A shipped check and the configuration that declares it. */
-export type KnownCheck = { check: Check; configuration?: Configuration | undefined };
+export type ScopeCheck = { check: Check; configuration?: Configuration | undefined };
 
-export type ConfigurationCheck = KnownCheck & { configuration: Configuration };
+export type ConfigurationCheck = ScopeCheck & { configuration: Configuration };
 
 /** A configuration name and the key path where gspot.toml names it. */
 export type WrittenConfiguration = { name: string; path: KeyPath };
@@ -222,7 +222,7 @@ export type Tool = {
         example?: string | undefined;
     };
     prettier?: {
-        entry: string;
+        module: string;
         extensions: string[];
         overrides: { files: string; options: Record<string, unknown> }[];
     };

@@ -105,9 +105,9 @@ test('a pre-push check in a shallow clone passes project/bash-syntax and refuses
         'Pushed history is incomplete for commits/commitlint-pushed. Run git fetch --unshallow and retry.',
     );
     runGitStep(checkout, ['fetch', '--unshallow']);
-    const completed = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
-    expect(completed.code, completed.stdout + completed.stderr).toBe(0);
-    const report = JSON.parse(completed.stdout) as PushReport;
+    const pushed = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
+    expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
+    const report = JSON.parse(pushed.stdout) as PushReport;
     expect({
         historyComplete: report.revisions[0]?.historyComplete,
         checks: report.revisions[0]?.report.checks.map(({ status }) => ({ status })),
@@ -183,7 +183,7 @@ test.each([...PARTIAL_FIX_CASES])(
 
 test('typos marks a finding that its fixer cannot fix as not fixable', async () => {
     const { configuration, check, path, tables, sample } = PARTIAL_FIX_CASES.find(
-        (entry) => entry.check === 'spelling/typos',
+        (each) => each.check === 'spelling/typos',
     )!;
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([configuration], { level: 'all', tables }),

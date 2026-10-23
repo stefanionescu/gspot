@@ -22,9 +22,9 @@ export async function checkPythonPlaceholderDocstrings(session: Session, planned
     return functions.flatMap((definition) => {
         const text = findDocstring(definition.node);
         if (text === undefined) return [];
-        const plain = text.toLowerCase().replaceAll(NON_WORD_RUN, ' ').trim();
-        const isName = plain === definition.name.toLowerCase().replaceAll('_', ' ').trim();
-        if (plain !== '' && !isName && !PLACEHOLDERS.has(plain)) return [];
+        const normalized = text.toLowerCase().replaceAll(NON_WORD_RUN, ' ').trim();
+        const isName = normalized === definition.name.toLowerCase().replaceAll('_', ' ').trim();
+        if (normalized !== '' && !isName && !PLACEHOLDERS.has(normalized)) return [];
         return [
             buildFinding(
                 planned,

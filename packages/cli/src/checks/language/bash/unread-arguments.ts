@@ -13,7 +13,7 @@ import { readScripts } from '#cli/checks/language/bash/scripts.ts';
  */
 export async function checkBashUnreadArguments(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scripts = await readScripts(session, planned);
-    const names = new Set(scripts.flatMap((file) => file.functions.map((entry) => entry.name)));
+    const names = new Set(scripts.flatMap((file) => file.functions.map((scriptFunction) => scriptFunction.name)));
     const widest = new Map<string, number>();
     for (const file of scripts)
         for (const call of file.calls) {
@@ -21,9 +21,9 @@ export async function checkBashUnreadArguments(session: Session, planned: Planne
                 widest.set(call.name, Math.max(widest.get(call.name) ?? 0, call.count));
         }
     return scripts.flatMap((file) =>
-        file.functions.flatMap((entry) => {
-            const width = widest.get(entry.name) ?? 0;
-            const highest = entry.highestRead;
+        file.functions.flatMap((scriptFunction) => {
+            const width = widest.get(scriptFunction.name) ?? 0;
+            const highest = scriptFunction.highestRead;
             if (width <= highest) return [];
             const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));
             const read = highest === 0 ? 'reads no positional parameter' : `reads none past $${String(highest)}`;
@@ -32,9 +32,9 @@ export async function checkBashUnreadArguments(session: Session, planned: Planne
             return [
                 buildFinding(
                     planned,
-                    { file: file.path, line: entry.start },
+                    { file: file.path, line: scriptFunction.start },
                     'unread-arguments',
-                    `${entry.name} is called with up to ${String(width)} ${width === 1 ? 'argument' : 'arguments'} but ${read}: ${positions} never read.`,
+                    `${scriptFunction.name} is called with up to ${String(width)} ${width === 1 ? 'argument' : 'arguments'} but ${read}: ${positions} never read.`,
                 ),
             ];
         }),

@@ -41,11 +41,11 @@ async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
     return {
         staged: [
             staged.code,
-            staged.report.checks.map((entry) => [entry.status, entry.findings.map((finding) => finding.message)]),
+            staged.report.checks.map((check) => [check.status, check.findings.map((finding) => finding.message)]),
         ],
         pushed: [
             pushed.code,
-            pushReport.revisions.map((revision) => revision.report.checks.map((entry) => entry.status)),
+            pushReport.revisions.map((revision) => revision.report.checks.map((result) => result.status)),
         ],
     };
 }

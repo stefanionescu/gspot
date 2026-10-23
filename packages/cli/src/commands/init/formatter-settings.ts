@@ -52,14 +52,14 @@ function buildFormatOverrides(
     options: PrettierOptions | null,
     scope: { root: string; quotes: string | undefined; hasPython: boolean },
 ): TomlTable[] {
-    const prettier = (options?.overrides ?? []).map((entry) =>
+    const prettier = (options?.overrides ?? []).map((override) =>
         stripUndefined({
-            paths: (Array.isArray(entry.files) ? entry.files : [entry.files]).map((glob) =>
+            paths: (Array.isArray(override.files) ? override.files : [override.files]).map((glob) =>
                 glob.includes('/') ? glob : `**/${glob}`,
             ),
-            indent_width: entry.options.tabWidth,
-            print_width: entry.options.printWidth,
-            quotes: convertQuotes(entry.options.singleQuote),
+            indent_width: override.options.tabWidth,
+            print_width: override.options.printWidth,
+            quotes: convertQuotes(override.options.singleQuote),
         }),
     );
     // Python files get their own quotes when Ruff reads quotes that differ from the rest.
@@ -68,7 +68,7 @@ function buildFormatOverrides(
         python === undefined || python === (scope.quotes ?? DEFAULT_QUOTES.ruff)
             ? []
             : [{ paths: [...PYTHON_FILES], quotes: python }];
-    return [...prettier, ...pythonOverride].filter((entry) => Object.keys(entry).length > 1);
+    return [...prettier, ...pythonOverride].filter((override) => Object.keys(override).length > 1);
 }
 
 // Resolve tab indentation and numeric widths from the selected EditorConfig fields.
@@ -131,7 +131,7 @@ function readFormatOptions(
     const packageOptions = packageJson === undefined ? undefined : parseJsonFile(file, packageJson)['prettier'];
     const prettierFile = prettierFiles
         .map((path) => ({ path, text: findText(root, path) }))
-        .find((entry): entry is { path: string; text: string } => entry.text !== undefined);
+        .find((read): read is { path: string; text: string } => read.text !== undefined);
     const usesPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
     if (usesPrettier) {
@@ -153,14 +153,14 @@ function readScopeFormat(
 ): TomlTable {
     const { draft, repository, configurations } = init;
     const selected = selectForScope(buildSelectedConfigurations(draft), scope, configurations);
-    const format = selected.find((entry) => entry.name === FORMAT_CONFIGURATION);
+    const format = selected.find((configuration) => configuration.name === FORMAT_CONFIGURATION);
     if (format === undefined) return {};
     const options = readFormatOptions(
         posix.join(repository.root, scope, PACKAGE_JSON),
         Object.fromEntries(
             repository.dependencyFiles
-                .filter((entry) => findScopeFolder(entry.path, draft.scopes).path === scope)
-                .flatMap((entry) => Object.entries(entry.dependencies)),
+                .filter((dependencyFile) => findScopeFolder(dependencyFile.path, draft.scopes).path === scope)
+                .flatMap((dependencyFile) => Object.entries(dependencyFile.dependencies)),
         ),
         getTool([format], 'prettier').replace as string[],
     );

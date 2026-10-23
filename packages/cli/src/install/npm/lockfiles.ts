@@ -28,16 +28,16 @@ import {
 } from '#cli/config/install/npm/lockfiles.ts';
 
 // Check whether a parsed Yarn lockfile resolves each requested descriptor to its pinned version.
-function isYarnLockfileCurrent(
-    entries: Record<string, { version?: string | undefined }>,
+function isYarnLockfileFresh(
+    yarnPackages: Record<string, { version?: string | undefined }>,
     dependencies: DependencyMap,
 ): boolean {
     return Object.entries(dependencies).every(([dependency, version]) =>
-        Object.entries(entries).some(([descriptors, entry]) => {
+        Object.entries(yarnPackages).some(([descriptors, yarnPackage]) => {
             const requested = new Set(descriptors.split(YARN_DESCRIPTOR_SEPARATOR));
             return (
                 (requested.has(`${dependency}@${version}`) || requested.has(`${dependency}@npm:${version}`)) &&
-                entry.version === version
+                yarnPackage.version === version
             );
         }),
     );
@@ -52,8 +52,8 @@ function findPackageRegistry(name: string, env: Record<string, string>): string 
 
 // Check whether a Bun lockfile entry resolved the standard tarball of a valid npm version through the configured
 // registry.
-function isStandardTarball(entry: BunPackage, env: Record<string, string>): boolean {
-    const [identity, address, , integrity] = entry;
+function isStandardTarball(bunPackage: BunPackage, env: Record<string, string>): boolean {
+    const [identity, address, , integrity] = bunPackage;
     const separator = identity.lastIndexOf('@');
     const name = identity.slice(0, separator);
     const version = identity.slice(separator + 1);
@@ -83,17 +83,18 @@ function stripRegistryPrefix(address: string, base: URL): string | undefined {
  * @returns the lockfile text with registry-relative references.
  */
 function stripYarnRegistryUrls(content: string, registry: string): string {
-    const entries = yarnLockSchema.parse(parseSyml(content));
+    const yarnPackages = yarnLockSchema.parse(parseSyml(content));
     const expected = Object.fromEntries(
-        Object.entries(entries).map(([key, entry]) => [key, yarnPackageSchema.parse(entry)]),
+        Object.entries(yarnPackages).map(([key, yarnPackage]) => [key, yarnPackageSchema.parse(yarnPackage)]),
     );
     const base = new URL(registry.endsWith('/') ? registry : `${registry}/`);
     let edited = content;
-    for (const entry of Object.values(expected)) {
-        const relative = entry.resolved === undefined ? undefined : stripRegistryPrefix(entry.resolved, base);
+    for (const yarnPackage of Object.values(expected)) {
+        const relative =
+            yarnPackage.resolved === undefined ? undefined : stripRegistryPrefix(yarnPackage.resolved, base);
         if (relative === undefined) continue;
-        edited = edited.replaceAll(JSON.stringify(entry.resolved), JSON.stringify(relative));
-        entry.resolved = relative;
+        edited = edited.replaceAll(JSON.stringify(yarnPackage.resolved), JSON.stringify(relative));
+        yarnPackage.resolved = relative;
     }
     if (!isDeepStrictEqual(yarnLockSchema.parse(parseSyml(edited)), expected))
         throw new GspotError(
@@ -114,8 +115,8 @@ function stripYarnRegistryUrls(content: string, registry: string): string {
 function stripBunRegistryUrls(content: string, env: Record<string, string>): string {
     const parsed = parseJsonFile('bun.lock', content, bunLockSchema);
     let edited = content;
-    for (const [key, entry] of Object.entries(parsed.packages)) {
-        const npm = bunPackageSchema.safeParse(entry);
+    for (const [key, bunPackage] of Object.entries(parsed.packages)) {
+        const npm = bunPackageSchema.safeParse(bunPackage);
         if (!npm.success || !isStandardTarball(npm.data, env)) continue;
         edited = applyEdits(edited, modify(edited, ['packages', key, 1], '', {}));
     }
@@ -125,10 +126,10 @@ function stripBunRegistryUrls(content: string, env: Record<string, string>): str
 // Validate the tool project's development pins over the shared loose lockfile shape.
 function parseDevelopmentDependencies(
     name: Exclude<PackageManager['name'], 'yarn'>,
-    entry: unknown,
+    workspace: unknown,
 ): DependencyMap | undefined {
-    if (!isTable(entry)) return undefined;
-    const dependencies = entry['devDependencies'];
+    if (!isTable(workspace)) return undefined;
+    const dependencies = workspace['devDependencies'];
     if (dependencies === undefined) return {};
     if (!isTable(dependencies)) return undefined;
     const pins: DependencyMap = {};
@@ -141,7 +142,7 @@ function parseDevelopmentDependencies(
 }
 
 // Select the workspace entries after validating the package manager's lockfile shape.
-function parseWorkspaceEntries(
+function parseWorkspaces(
     name: Exclude<PackageManager['name'], 'yarn'>,
     content: string,
 ): Record<string, unknown> | undefined {
@@ -151,19 +152,19 @@ function parseWorkspaceEntries(
         name === 'pnpm'
             ? parseYamlFile<Record<string, unknown>>(path, content, schema)
             : parseJsonFile<Record<string, unknown>>(path, content, schema);
-    const entries = document[LOCKFILE_WORKSPACE_KEYS[name]];
-    return isTable(entries) ? entries : undefined;
+    const workspaces = document[LOCKFILE_WORKSPACE_KEYS[name]];
+    return isTable(workspaces) ? workspaces : undefined;
 }
 
 // Require valid package entries before checking Yarn's requested descriptors.
-function parseYarnEntries(content: string): Record<string, YarnPackage> | undefined {
+function parseYarnPackages(content: string): Record<string, YarnPackage> | undefined {
     const parsed = yarnLockSchema.safeParse(parseSyml(content));
     if (!parsed.success) return undefined;
-    const entries = Object.entries(parsed.data).map(
-        ([key, entry]) => [key, yarnPackageSchema.safeParse(entry)] as const,
+    const yarnPackages = Object.entries(parsed.data).map(
+        ([key, result]) => [key, yarnPackageSchema.safeParse(result)] as const,
     );
-    if (entries.some(([, entry]) => !entry.success)) return undefined;
-    return Object.fromEntries(entries.flatMap(([key, entry]) => (entry.success ? [[key, entry.data]] : [])));
+    if (yarnPackages.some(([, result]) => !result.success)) return undefined;
+    return Object.fromEntries(yarnPackages.flatMap(([key, result]) => (result.success ? [[key, result.data]] : [])));
 }
 
 /**
@@ -178,11 +179,11 @@ function parseRootDependencies(
     name: Exclude<PackageManager['name'], 'yarn'>,
     content: string,
 ): DependencyMap | undefined {
-    const entries = parseWorkspaceEntries(name, content);
-    if (entries === undefined) return undefined;
+    const workspaces = parseWorkspaces(name, content);
+    if (workspaces === undefined) return undefined;
     let root: DependencyMap = {};
-    for (const [key, entry] of Object.entries(entries)) {
-        const dependencies = parseDevelopmentDependencies(name, entry);
+    for (const [key, workspace] of Object.entries(workspaces)) {
+        const dependencies = parseDevelopmentDependencies(name, workspace);
         if (dependencies === undefined) return undefined;
         if (key === (name === 'pnpm' ? PNPM_ROOT_IMPORTER : '')) root = dependencies;
     }
@@ -209,11 +210,11 @@ function isInvalidLockfile(error: unknown): boolean {
  *
  * @returns true when the lockfile matches.
  */
-export function isLockfileCurrent(name: PackageManager['name'], content: string, dependencies: DependencyMap): boolean {
+export function isLockfileFresh(name: PackageManager['name'], content: string, dependencies: DependencyMap): boolean {
     try {
         if (name === 'yarn') {
-            const entries = parseYarnEntries(content);
-            return entries !== undefined && isYarnLockfileCurrent(entries, dependencies);
+            const yarnPackages = parseYarnPackages(content);
+            return yarnPackages !== undefined && isYarnLockfileFresh(yarnPackages, dependencies);
         }
         const parsed = parseRootDependencies(name, content);
         return parsed !== undefined && isDeepStrictEqual(parsed, dependencies);

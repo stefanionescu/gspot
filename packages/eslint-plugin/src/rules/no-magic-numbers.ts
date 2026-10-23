@@ -20,9 +20,9 @@ function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
 // A number in the initializer of a module-level const, such as an array of sizes or a product of time units, already
 // has a name. A number inside a function of that initializer still counts.
 function isConstantValue(node: TSESTree.Node): boolean {
-    for (let current: TSESTree.Node = node; current.type !== AST_NODE_TYPES.Program; current = current.parent) {
-        if (FUNCTION_TYPES.has(current.type)) return false;
-        if (current.type === AST_NODE_TYPES.VariableDeclarator) return isModuleConstant(current.parent);
+    for (let ancestor: TSESTree.Node = node; ancestor.type !== AST_NODE_TYPES.Program; ancestor = ancestor.parent) {
+        if (FUNCTION_TYPES.has(ancestor.type)) return false;
+        if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return isModuleConstant(ancestor.parent);
     }
     return false;
 }

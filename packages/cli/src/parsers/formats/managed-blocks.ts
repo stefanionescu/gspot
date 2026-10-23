@@ -34,19 +34,19 @@ export function findBlockSpan(text: string, file: BlockFile): BlockSpan | undefi
 /**
  * Replace a complete block or append it, and keep the text around it.
  *
- * @param existing the file text.
+ * @param text the file text.
  * @param block the body to install.
  * @param file the file path and marker style.
  * @returns the file text with the block in place.
  */
-export function replaceBlock(existing: string, block: string, file: BlockFile): string {
+export function replaceBlock(text: string, block: string, file: BlockFile): string {
     const { start, end, gap } = MARKERS[file.style];
     const body = `${start}${gap}${block.trim()}${gap}${end}\n`;
-    const span = findBlockSpan(existing, file);
-    if (span !== undefined) return existing.slice(0, span.start) + body + existing.slice(span.end);
-    if (existing === '') return body;
-    const separator = existing.endsWith('\n') ? '\n' : '\n\n';
-    return existing + separator + body;
+    const span = findBlockSpan(text, file);
+    if (span !== undefined) return text.slice(0, span.start) + body + text.slice(span.end);
+    if (text === '') return body;
+    const separator = text.endsWith('\n') ? '\n' : '\n\n';
+    return text + separator + body;
 }
 
 /**

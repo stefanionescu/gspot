@@ -18,13 +18,13 @@ import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
  */
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
     const { configurations, folder, settings } = planned.scope;
-    const declared = configurations.flatMap((configuration) =>
+    const ruleFiles = configurations.flatMap((configuration) =>
         configuration.configFiles
             .filter((file) => file.tool.includes(SEMGREP_TOOL) && file.target.endsWith('.yml'))
             .filter((file) => file.level !== 'all' || session.settingsFile.settings.level === 'all')
             .map((file) => getConfigFileTarget(folder.path, file, getConfigFiles(session).targets)),
     );
-    return [...new Set([...declared, ...getTable(settings, 'tools.semgrep').rule_files])];
+    return [...new Set([...ruleFiles, ...getTable(settings, 'tools.semgrep').rule_files])];
 }
 
 /**

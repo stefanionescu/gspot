@@ -21,8 +21,8 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
     const paths = new Set([
         ...local,
         ...session.repository.index
-            .filter((entry) => entry.stage === 0 && REGULAR_FILE_MODES.has(entry.mode))
-            .map((entry) => entry.path),
+            .filter((indexFile) => indexFile.stage === 0 && REGULAR_FILE_MODES.has(indexFile.mode))
+            .map((indexFile) => indexFile.path),
     ]);
     const texts = paths
         .values()

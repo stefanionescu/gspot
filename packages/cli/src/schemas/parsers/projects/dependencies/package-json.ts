@@ -14,13 +14,13 @@ const workspacePackages = z.object({
     packages: stringList,
 } satisfies SchemaShape<PackageWorkspaces>);
 
-const devEngineEntry = z.object({
+const devEngineSchema = z.object({
     name: z.string().optional(),
     version: z.string().optional(),
 } satisfies SchemaShape<PackageManagerEngine>);
 
 const devEngines = z.object({
-    packageManager: z.union([devEngineEntry, z.array(devEngineEntry)]).optional(),
+    packageManager: z.union([devEngineSchema, z.array(devEngineSchema)]).optional(),
 } satisfies SchemaShape<PackageDevEngines>);
 
 export const packageJsonSchema = z.looseObject({

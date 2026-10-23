@@ -5,7 +5,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
@@ -190,7 +190,7 @@ test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep 
     );
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const { report } = result;
-    expect(report.checks.map((entry) => [entry.check, entry.status, entry.fileCount])).toStrictEqual([
+    expect(report.checks.map((each) => [each.check, each.status, each.fileCount])).toStrictEqual([
         ['sandbox/report', 'failed', 2],
     ]);
     expect(

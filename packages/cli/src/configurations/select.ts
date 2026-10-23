@@ -11,8 +11,8 @@ function visit(walk: RequirementWalk, configurationName: string): void {
     walk.seen.add(configurationName);
     const configuration = walk.configurations.get(configurationName);
     if (!configuration) {
-        const known = walk.configurations.keys().toArray();
-        walk.errors.push(formatUnknownConfiguration(configurationName, known));
+        const names = walk.configurations.keys().toArray();
+        walk.errors.push(formatUnknownConfiguration(configurationName, names));
         return;
     }
     for (const required of configuration.requires) visit(walk, required);
@@ -73,8 +73,8 @@ export function isConfigurationSelected(scopes: Pick<Scope, 'configurations'>[],
 }
 
 // Name an unknown configuration, and say where to find the available ones.
-function formatUnknownConfiguration(name: string, known: string[]): string {
-    return `There is no configuration called \`${name}\`.${formatSimilarNames(name, known)} Run \`gspot list configurations\` to see the available configurations.`;
+function formatUnknownConfiguration(name: string, available: string[]): string {
+    return `There is no configuration called \`${name}\`.${formatSimilarNames(name, available)} Run \`gspot list configurations\` to see the available configurations.`;
 }
 
 /**
@@ -88,12 +88,12 @@ export function listUnknownConfigurations<Written extends Pick<WrittenConfigurat
     written: readonly Written[],
     configurations: ReadonlyMap<string, Configuration>,
 ): (Written & { message: string })[] {
-    const known = [...configurations.keys()];
+    const available = [...configurations.keys()];
     return written
         .filter(({ name }) => !configurations.has(name))
-        .map((entry) => ({
-            ...entry,
-            message: formatUnknownConfiguration(entry.name, known),
+        .map((missing) => ({
+            ...missing,
+            message: formatUnknownConfiguration(missing.name, available),
         }));
 }
 
@@ -104,7 +104,7 @@ export function listUnknownConfigurations<Written extends Pick<WrittenConfigurat
  * @param configurations the shipped configurations
  */
 export function assertConfigurationsEditable(names: string[], configurations: Map<string, Configuration>): void {
-    const name = names.find((entry) => configurations.get(entry)?.always_selected === true);
+    const name = names.find((each) => configurations.get(each)?.always_selected === true);
     if (name !== undefined)
         throw new GspotError(
             'arguments',
@@ -149,7 +149,7 @@ export function listAutomaticConfigurations(
  * @param names the requested configuration names.
  * @param configurations every available configuration.
  */
-export function assertKnownConfigurations(names: string[], configurations: Map<string, Configuration>): void {
+export function assertConfigurationsExist(names: string[], configurations: Map<string, Configuration>): void {
     const unknown = listUnknownConfigurations(
         names.map((name) => ({ name })),
         configurations,

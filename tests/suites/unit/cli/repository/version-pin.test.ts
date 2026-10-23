@@ -34,8 +34,8 @@ test('a different saved version permits checks and blocks fixes until apply upda
         'gspot.toml': buildSandboxSettings(['bash']),
         'script.sh': CLEAN_BASH_SCRIPT,
     });
-    const prepared = await runGspot(sandbox.path, ['apply', '--json']);
-    expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+    const firstApply = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(firstApply.code, firstApply.stdout + firstApply.stderr).toBe(0);
     await writeFile(join(sandbox.path, GSPOT_PATHS.versionPin), '9.9.9\n');
     const check = await runGspot(sandbox.path, ['check', '--only', 'bash/safety', '--json']);
     expect(check.code, check.stdout + check.stderr).toBe(0);

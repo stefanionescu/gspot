@@ -110,19 +110,19 @@ test('the generated vale.ini at level recommended reports link text such as here
 
 test.each([...STYLE_CASES])(
     'Vale $rule reports the expected lines of $path and leaves its code notation alone',
-    async (entry) => {
+    async (row) => {
         const { root } = installedSandbox();
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
             check: '',
             files: {
                 'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-                [entry.path]: entry.source,
+                [row.path]: row.source,
             },
         });
         const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
         expect(
             result.report.checks[0]!.findings.map(({ file, line, rule, message }) => ({ file, line, rule, message })),
-        ).toStrictEqual(entry.findings.map((finding) => ({ file: entry.path, ...finding })));
+        ).toStrictEqual(row.findings.map((finding) => ({ file: row.path, ...finding })));
     },
 );
 

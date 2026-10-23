@@ -121,10 +121,10 @@ export function formatReproduceCommand(checkId: string, scope: string, options: 
         const remote = push.remote === undefined ? '' : ` -- ${quoteArgument(push.remote)}`;
         return `printf '%s' ${quoteArgument(push.stdin)} | gspot check --hook pre-push --only ${quoteArgument(checkId)}${remote}`;
     }
-    const parts = ['gspot check'];
-    if (scope !== '' && messageFile === undefined) parts.push(quoteArgument(scope));
-    parts.push('--only', quoteArgument(checkId));
-    if (messageFile !== undefined) parts.push('--hook', 'commit-msg', '--', quoteArgument(messageFile));
-    if (staged) parts.push('--staged');
-    return parts.join(' ');
+    const words = ['gspot check'];
+    if (scope !== '' && messageFile === undefined) words.push(quoteArgument(scope));
+    words.push('--only', quoteArgument(checkId));
+    if (messageFile !== undefined) words.push('--hook', 'commit-msg', '--', quoteArgument(messageFile));
+    if (staged) words.push('--staged');
+    return words.join(' ');
 }

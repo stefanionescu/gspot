@@ -22,9 +22,9 @@ import {
 async function readIgnoreRecords(
     root: string,
 ): Promise<Array<Omit<IgnoreRecord, 'until'> & { until: string | undefined }>> {
-    return parseSettings(await readFile(join(root, 'gspot.toml'), 'utf8'), undefined).ignore.map((entry) => ({
-        ...entry,
-        until: entry.until?.toISOString(),
+    return parseSettings(await readFile(join(root, 'gspot.toml'), 'utf8'), undefined).ignore.map((ignore) => ({
+        ...ignore,
+        until: ignore.until?.toISOString(),
     }));
 }
 

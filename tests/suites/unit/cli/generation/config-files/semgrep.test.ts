@@ -17,16 +17,16 @@ test('a language choice brings its security rules without selecting security', a
     });
 
     const target = findFileTarget('bash', 'semgrep.yml');
-    const plainSession = await openSession(sandbox.path);
-    const plainOutput = generate(plainSession);
+    const defaultSession = await openSession(sandbox.path);
+    const defaultOutput = generate(defaultSession);
     expect(
-        parseDocument(plainOutput.files.find((file) => file.path === target)!.content).getIn(['rules', 0, 'id']),
+        parseDocument(defaultOutput.files.find((file) => file.path === target)!.content).getIn(['rules', 0, 'id']),
     ).toBe('gspot.bash.curl-pipe-shell');
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['bash', 'security']));
     const securitySession = await openSession(sandbox.path);
     const securityOutput = generate(securitySession);
     const generated = securityOutput.files.find((file) => file.path === target);
-    expect(generated?.content).toBe(plainOutput.files.find((file) => file.path === target)?.content);
+    expect(generated?.content).toBe(defaultOutput.files.find((file) => file.path === target)?.content);
     expect(generated?.content).not.toContain('gspot.javascript.no-eval');
 });
 

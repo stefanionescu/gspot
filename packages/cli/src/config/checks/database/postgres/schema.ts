@@ -7,4 +7,4 @@ export const CONSTRAINT_SUFFIXES: Readonly<Record<string, string>> = {
 } as const;
 
 /** The position of the schema in a qualified name, directly before the relation name. */
-export const SCHEMA_PART_INDEX = -2;
+export const SCHEMA_NAME_INDEX = -2;

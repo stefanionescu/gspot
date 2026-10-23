@@ -78,8 +78,8 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
     expect(corrected.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 2, findings: [] });
     // A second correction pass reruns the fixer over the files the first pass changed.
     for (const log of ['checked.txt', 'fixed.txt']) {
-        const entries = await readFile(join(sandbox.path, log), 'utf8');
-        for (const line of entries.trim().split('\n'))
+        const logText = await readFile(join(sandbox.path, log), 'utf8');
+        for (const line of logText.trim().split('\n'))
             expect((JSON.parse(line) as string[]).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
                 'inputs/regular.txt',
                 'inputs/skip-keep.txt',
@@ -138,7 +138,7 @@ test('a path ignore covers its own paths, not the scopes below or beside it', as
 
 test('a check with malformed JSON reports an error, and the other checks keep their results', async () => {
     const reporter = [process.execPath, '-e', 'console.log("source.txt"); process.exitCode = 1;'];
-    const entries = ['broken', 'kept'].map((name) => ({
+    const checks = ['broken', 'kept'].map((name) => ({
         id: `sandbox/${name}`,
         command: reporter,
         paths: ['source.txt'],
@@ -146,7 +146,7 @@ test('a check with malformed JSON reports an error, and the other checks keep th
         output: { format: name === 'broken' ? 'json' : 'lines' },
     }));
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: entries }) }),
+        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: checks }) }),
         'source.txt': 'input\n',
     });
 
@@ -198,15 +198,15 @@ test('progress is reported as soon as each check ends, with ignores applied to t
         }),
     });
 
-    const completed: number[] = [];
+    const finished: number[] = [];
     const ready = Promise.withResolvers<undefined>();
     const running = runChecks(
         await openSession(sandbox.path),
         buildRunOptions({
             only: ['project/fast', 'project/waiting'],
             onProgress: (progress) => {
-                completed.push(progress.completed);
-                if (progress.completed === 1) ready.resolve(undefined);
+                finished.push(progress.finished);
+                if (progress.finished === 1) ready.resolve(undefined);
             },
         }),
     );
@@ -215,8 +215,8 @@ test('progress is reported as soon as each check ends, with ignores applied to t
         Promise.race([ready.promise, running]).then(() => writeFile(join(sandbox.path, 'completed'), 'ready')),
     ]);
     expect(result.report.exitCode).toBe(0);
-    expect(completed).toStrictEqual([1, 2]);
-    expect(result.report.checks.map((entry) => entry.check)).toStrictEqual(['project/fast', 'project/waiting']);
+    expect(finished).toStrictEqual([1, 2]);
+    expect(result.report.checks.map((each) => each.check)).toStrictEqual(['project/fast', 'project/waiting']);
     expect(result.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
     expect(result.report.ignores).toStrictEqual([
         { check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' },

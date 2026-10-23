@@ -55,7 +55,7 @@ export function selectForScope(
         ...Object.entries(selected.scopes)
             .filter(([ancestor]) => isInScope(scope, ancestor))
             .toSorted(([left], [right]) => compareScopeDepth(left, right))
-            .map(([, entry]) => entry),
+            .map(([, scopeTable]) => scopeTable),
     ];
     for (const table of tables) {
         for (const removed of table.removed_configurations) choices.delete(removed);
@@ -113,12 +113,16 @@ export function buildScopeSettings(
     configurations: Configuration[],
     scope: string,
 ): ScopeSettings {
-    const { settings: entries, values, test_files: testFiles } = buildScopeValues(availableSettings, settings, scope);
-    const ignores = settings.ignore.map((entry) => ({ ...entry, paths: entry.paths ?? [] }));
+    const {
+        settings: settingRows,
+        values,
+        test_files: testFiles,
+    } = buildScopeValues(availableSettings, settings, scope);
+    const ignores = settings.ignore.map((ignore) => ({ ...ignore, paths: ignore.paths ?? [] }));
     return {
         configurations: configurations.map((configuration) => configuration.name),
         test_files: testFiles,
-        settings: entries,
+        settings: settingRows,
         values,
         ignores,
     };
@@ -154,7 +158,7 @@ export function getLimit(scopeSettings: ScopeSettings, key: string, language?: s
         getValueAt(scopeSettings.values.limits, [key]);
     if (typeof value !== 'number')
         throw new Error(
-            `The selected scope has no ${[language, key].filter((part) => part !== undefined).join('.')} limit.`,
+            `The selected scope has no ${[language, key].filter((name) => name !== undefined).join('.')} limit.`,
         );
     return value;
 }
@@ -167,7 +171,7 @@ export function getLimit(scopeSettings: ScopeSettings, key: string, language?: s
  * @returns the matching ignores with normalized paths.
  */
 export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeSettings['ignores'] {
-    return scopeSettings.ignores.filter((entry) => entry.check === check || entry.check === undefined);
+    return scopeSettings.ignores.filter((ignore) => ignore.check === check || ignore.check === undefined);
 }
 
 /**
@@ -179,9 +183,9 @@ export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeS
  */
 export function listIgnoredRules(scope: Scope, check: string): string[] {
     return scope.settings.ignores
-        .filter((entry) => entry.check === check)
-        .filter((entry) => entry.paths.length === 0 || isScopeCovered(entry.paths, scope.folder.path))
-        .map((entry) => entry.rule)
+        .filter((ignore) => ignore.check === check)
+        .filter((ignore) => ignore.paths.length === 0 || isScopeCovered(ignore.paths, scope.folder.path))
+        .map((ignore) => ignore.rule)
         .filter((rule) => rule !== undefined);
 }
 
@@ -195,16 +199,16 @@ export function listIgnoredRules(scope: Scope, check: string): string[] {
  */
 function buildScopeValues(availableSettings: AvailableSettings, settings: Settings, scope: string): ScopeValues {
     const listed = listEffectiveSettings(availableSettings, settings, scope);
-    const entries = Object.fromEntries(listed.map((row) => [row.key, row.value]));
+    const valuesByKey = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
     fillTableValues(namespaces, listed);
     const variants = listNamingVariants(availableSettings, settings, scope);
     fillTableValues(namespaces, variants);
     fillTableValues(namespaces, listLimitVariants(availableSettings, settings, scope));
     return {
-        settings: entries,
+        settings: valuesByKey,
         values: tableValuesSchema.parse(namespaces),
-        test_files: rootSettingSchemas.test_files.unwrap().parse(entries['test_files']),
+        test_files: rootSettingSchemas.test_files.unwrap().parse(valuesByKey['test_files']),
     };
 }
 
@@ -215,7 +219,7 @@ function buildScopeValues(availableSettings: AvailableSettings, settings: Settin
  * @param rows the values already resolved.
  */
 function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting[]): void {
-    const entries = rows
+    const valueRows = rows
         .filter(
             (row) =>
                 Object.hasOwn(tableValuesSchema.in.shape, getSettingTable(row.key)) &&
@@ -227,11 +231,11 @@ function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting
             const path = segments.slice(name.split('.').length);
             return { row, name, path: path.slice(0, -1), field: path.slice(-1).join('') };
         });
-    for (const { row, name } of entries.filter(({ row }) => row.value === undefined)) {
+    for (const { row, name } of valueRows.filter(({ row }) => row.value === undefined)) {
         if (createTable(tables, [name]) === undefined)
             throw new Error(`The setting ${row.key} runs through a non-table value.`);
     }
-    for (const { row, name, path, field } of entries.filter(({ row }) => row.value !== undefined)) {
+    for (const { row, name, path, field } of valueRows.filter(({ row }) => row.value !== undefined)) {
         const table = createTable(tables, [name, ...path]);
         if (table === undefined) throw new Error(`The setting ${row.key} runs through a non-table value.`);
         table[field] = row.reason === undefined ? row.value : { value: row.value, reason: row.reason };

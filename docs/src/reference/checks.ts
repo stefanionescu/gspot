@@ -2,8 +2,8 @@ import type { Tool } from '#cli/types/configurations.ts';
 import { CLI_REFERENCE, type readCliReference } from './cli.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
+import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import type { GuideCheck, CliReference, ReferencePage } from '../types/reference.ts';
-import { WHOLE_SETTING_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import { CHECK_RUN_LABELS, CHECK_NEEDS_LABELS, SUPPRESSIONS_CHECK } from '../config/reference.ts';
 import { formatList, formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 
@@ -21,7 +21,7 @@ function formatToolNames(check: Check): string | undefined {
     const program = getToolName(check);
     if (program === undefined) return undefined;
     // A command taken from a setting names the setting, not the placeholder.
-    const setting = WHOLE_SETTING_PLACEHOLDER.exec(program)?.groups?.['name'];
+    const setting = SETTING_ONLY_PLACEHOLDER.exec(program)?.groups?.['name'];
     const tool = setting === undefined ? program : `the command in \`${setting}\``;
     return check.other_tools === undefined ? tool : `${tool}, with ${formatList(check.other_tools)}`;
 }
@@ -124,8 +124,8 @@ export function buildCheckIndex(checks: CliReference['checks'], groups: Record<s
             '`gspot explain <check>` shows its state in your repository.\n' +
             Object.entries(groups)
                 .map(([group, title]) => {
-                    const entries = checks.filter(({ configuration }) => configuration.group === group);
-                    return formatSection(title, formatCheckTable(entries.map(({ check }) => check)));
+                    const groupChecks = checks.filter(({ configuration }) => configuration.group === group);
+                    return formatSection(title, formatCheckTable(groupChecks.map(({ check }) => check)));
                 })
                 .join(''),
     );

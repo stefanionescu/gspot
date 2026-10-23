@@ -63,7 +63,7 @@ test("your Stylelint rule options reach each scope's file", async () => {
             config,
             configBasedir: testModules,
         });
-        const warnings = result.results.flatMap((entry) => entry.warnings);
+        const warnings = result.results.flatMap((result) => result.warnings);
         expect(
             warnings.filter(({ rule }) => rule === 'color-hex-length').map(({ severity }) => severity),
         ).toStrictEqual(['error']);
@@ -105,8 +105,8 @@ test('a scope with CSS Modules files accepts composes, :global, and @value in th
             .filter((rule) => rules.has(rule));
     }
     expect(await lintRules(`${sandbox.path}/button.module.css`)).toStrictEqual([]);
-    const plain = await lintRules(`${sandbox.path}/plain.css`);
-    expect(plain.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+    const defaultFindings = await lintRules(`${sandbox.path}/plain.css`);
+    expect(defaultFindings.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'at-rule-no-unknown',
         'property-no-unknown',
         'selector-pseudo-class-no-unknown',

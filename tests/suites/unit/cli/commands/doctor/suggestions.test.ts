@@ -122,9 +122,9 @@ test('doctor detects installed test frameworks and suggests no other runner', as
         'package.json': JSON.stringify({ name: 'service', private: true, dependencies }),
         'src/server.ts': 'export const port = 3000;\n',
     });
-    const currentResult = await runGspot(sandbox.path, ['doctor', '--json']);
-    const current = JSON.parse(currentResult.stdout) as DoctorReport;
-    expect({ suggested: current.suggestions.suggested, detected: current.suggestions.detected }).toStrictEqual({
+    const afterResult = await runGspot(sandbox.path, ['doctor', '--json']);
+    const after = JSON.parse(afterResult.stdout) as DoctorReport;
+    expect({ suggested: after.suggestions.suggested, detected: after.suggestions.detected }).toStrictEqual({
         suggested: [],
         detected: [{ configuration: 'jest', evidence: 'jest in package.json', command: 'gspot add jest' }],
     });

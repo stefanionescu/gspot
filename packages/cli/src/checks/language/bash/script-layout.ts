@@ -35,7 +35,7 @@ function checkStrictMode(code: NumberedLine[]): LayoutIssue[] {
 function checkMainFunction(file: ScriptFile, code: NumberedLine[]): LayoutIssue[] {
     if (file.functions.length === 0) return [];
     const issues: LayoutIssue[] = [];
-    if (file.functions.filter((entry) => entry.name === MAIN_FUNCTION).length !== 1)
+    if (file.functions.filter((scriptFunction) => scriptFunction.name === MAIN_FUNCTION).length !== 1)
         issues.push({ line: 1, rule: 'main-function', text: 'An executable defines exactly one main function.' });
     const last = code.at(-1);
     if (last?.text !== MAIN_CALL)
@@ -52,7 +52,7 @@ function checkMainFunction(file: ScriptFile, code: NumberedLine[]): LayoutIssue[
  */
 function findFunctionAtLine(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
     return functions
-        .filter((entry) => entry.start <= line && line <= entry.end)
+        .filter((scriptFunction) => scriptFunction.start <= line && line <= scriptFunction.end)
         .toSorted((left, right) => left.end - left.start - (right.end - right.start))[0];
 }
 
@@ -109,7 +109,7 @@ function checkLibraryScript(
             },
         ];
     const issues: LayoutIssue[] = [];
-    if (file.functions.some((entry) => entry.name === MAIN_FUNCTION))
+    if (file.functions.some((scriptFunction) => scriptFunction.name === MAIN_FUNCTION))
         issues.push({ line: 1, rule: 'library-main', text: 'A sourced library defines no main.' });
     return [...issues, ...code.flatMap((line) => checkLibraryLine(line, file, { isEnvironmentReader }))];
 }

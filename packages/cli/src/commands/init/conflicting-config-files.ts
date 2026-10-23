@@ -5,12 +5,12 @@ import type { ConflictingConfigFiles } from '#cli/types/commands/init.ts';
 import type { RepositorySetup, ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 // Record what init does with one file: a shared file stays for you, and init deletes an owned one.
-function addConflictingConfigFile(entry: ConflictingConfigFile, conflicts: ConflictingConfigFiles): void {
-    const { tool, path, shared } = entry;
+function addConflictingConfigFile(file: ConflictingConfigFile, conflicts: ConflictingConfigFiles): void {
+    const { tool, path, shared } = file;
     if (shared)
         conflicts.retained.push({
             path,
-            note: `${entry.table ?? entry.key ?? entry.tool} settings stay here, and the generated ${tool} config file takes over. Delete the section; the generated config file replaces it.`,
+            note: `${file.table ?? file.key ?? file.tool} settings stay here, and the generated ${tool} config file takes over. Delete the section; the generated config file replaces it.`,
         });
     else conflicts.deleted.push({ path, note: `replaced by the generated ${tool} config file` });
 }
@@ -33,7 +33,7 @@ export function readConflictingConfigFiles(
     const conflicts: ConflictingConfigFiles = { read: new Map(), deleted: [], retained: [], changed: [] };
     const owned = repositorySetup.conflictingConfigFiles.filter(({ tool }) => tools.has(tool));
     using files = openFiles(root);
-    for (const path of new Set(owned.filter((entry) => !entry.shared).map((entry) => entry.path))) {
+    for (const path of new Set(owned.filter((file) => !file.shared).map((file) => file.path))) {
         conflicts.read.set(path, files.read(path));
     }
     for (const output of fileEdits) {
@@ -43,9 +43,9 @@ export function readConflictingConfigFiles(
             note: `managed ${output.keys.map((field) => field.key.join('.')).join(', ')} fields; other content stays`,
         });
     }
-    for (const entry of owned) {
-        if (entry.shared && isEditedInPlace(entry, fileEdits)) continue;
-        addConflictingConfigFile(entry, conflicts);
+    for (const file of owned) {
+        if (file.shared && isEditedInPlace(file, fileEdits)) continue;
+        addConflictingConfigFile(file, conflicts);
     }
     return conflicts;
 }

@@ -127,9 +127,9 @@ function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] 
     const { settings, text } = session.settingsFile;
     const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
     const expired = new Map(
-        settings.ignore.flatMap((entry, index) => {
-            const date = entry.until?.toISOString();
-            return date === undefined || today < date ? [] : [[index, { entry, date }] as const];
+        settings.ignore.flatMap((ignore, index) => {
+            const date = ignore.until?.toISOString();
+            return date === undefined || today < date ? [] : [[index, { record: ignore, date }] as const];
         }),
     );
     if (expired.size === 0) return [];
@@ -143,7 +143,7 @@ function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] 
                 planned,
                 { file: SETTINGS_FILE, line },
                 'expired-ignore',
-                `This ignore of ${ignore.entry.check ?? 'every check'} ended on ${ignore.date}.`,
+                `This ignore of ${ignore.record.check ?? 'every check'} ended on ${ignore.date}.`,
                 { help: EXPIRED_IGNORE_HELP },
             ),
         ];

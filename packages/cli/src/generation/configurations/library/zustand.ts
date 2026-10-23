@@ -14,7 +14,7 @@ export function buildZustandBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'set
     const { eslintFiles, settings } = scope;
     const blocks: ConfigurationBlocks['blocks'] = [
         {
-            data: {
+            fields: {
                 files: eslintFiles.code,
                 ignores: (settings.settings['zustand.store_files'] as string[] | undefined) ?? [],
                 rules: {

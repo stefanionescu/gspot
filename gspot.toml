@@ -25,7 +25,7 @@ enabled = true
 
 [naming]
 # Words this repository does not use in names.
-banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold"]
+banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "probe", "fixture", "shell", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "cfg", "obsolete", "release hold", "entry", "entries", "item", "items", "part", "parts", "data", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "raw", "full", "real", "additional", "given"]
 
 [[naming.override]]
 paths = ["packages/cli/src/types/settings/**"]
@@ -159,7 +159,7 @@ allowed_names = ["objects", "fileSystemSynchronizedGroups"]
 reason = "Xcode project files name these keys objects and fileSystemSynchronizedGroups."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/pinned-linters.ts"]
+paths = ["packages/cli/src/types/linter-lists.ts"]
 allowed_names = ["resolveConfig"]
 reason = "Prettier and Stylelint name their configuration methods resolveConfig."
 
@@ -182,6 +182,76 @@ reason = "These types and functions handle config files, the files that gspot wr
 paths = ["packages/cli/src/types/generation/eslint-functions.ts"]
 allowed_names = ["getDocumentFragment"]
 reason = "vue-eslint-parser names this parser service getDocumentFragment."
+
+[[naming.override]]
+paths = ["docs/src/route-data.ts", "docs/src/types/reference.ts"]
+allowed_names = ["route-data", "data"]
+reason = "Starlight requires route-data.ts, and Astro content entries keep their fields in data."
+
+[[naming.override]]
+paths = ["packages/cli/src/config/checks/language/swift/cache.ts"]
+allowed_names = ["DERIVED_DATA_FLAG", "DERIVED_DATA_FOLDER"]
+reason = "Xcode names its build folder DerivedData and its flag -derivedDataPath."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/checks/language/swift.ts"]
+allowed_names = ["data"]
+reason = "llvm-cov export reports keep their coverage under data."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/runs/tool-reports.ts"]
+allowed_names = ["extra"]
+reason = "Semgrep reports keep the details of each result under extra."
+
+[[naming.override]]
+paths = ["packages/cli/src/generation/configurations/language/python/basedpyright.ts", "packages/cli/src/types/settings/tables.ts", "tests/suites/unit/cli/generation/configurations/language/python/basedpyright.test.ts"]
+allowed_names = ["extraPaths", "extra_paths"]
+reason = "basedpyright names its import search setting extraPaths, and python.extra_paths passes it on."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/parsers/formats/toml.ts", "packages/cli/src/types/parsers/projects/tsconfig.ts"]
+allowed_names = ["raw"]
+reason = "toml-patch and the TypeScript compiler API name the source text raw."
+
+[[naming.override]]
+paths = ["packages/cli/src/config/generation/configurations/language/javascript/knip.ts", "packages/cli/src/generation/configurations/language/javascript/knip.ts", "packages/cli/src/types/settings/tools.ts", "tests/types/config-files.ts"]
+allowed_names = ["KNIP_JAVASCRIPT_ENTRY_FILES", "KNIP_ENTRY_SETTING", "selectEntryFiles", "entry"]
+reason = "knip names its start files entry, and tools.knip.entry passes them on."
+
+[[naming.override]]
+paths = ["packages/cli/src/config/runs/command/placeholders.ts", "packages/cli/src/runs/command/placeholders.ts"]
+allowed_names = ["EXISTING_PLACEHOLDER", "expandExistingPlaceholder", "existing"]
+reason = "These name the {existing:<flag>:<path>} placeholder of [[command_check]]."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/commands/check.ts", "packages/cli/src/types/planning.ts", "packages/cli/src/types/repository/revisions.ts", "packages/cli/src/commands/check/tree.ts"]
+allowed_names = ["historyComplete"]
+reason = "gspot check --json names this field historyComplete."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/commands/doctor.ts"]
+allowed_names = ["pinned"]
+reason = "gspot doctor --json names this field pinned."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/commands/explain.ts", "tests/suites/unit/cli/commands/explain/settings.test.ts"]
+allowed_names = ["data", "current"]
+reason = "gspot explain --json names these fields data and current."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/commands/list.ts", "packages/cli/src/types/settings/definitions.ts", "packages/cli/src/types/settings/inheritance.ts"]
+allowed_names = ["reason_needed"]
+reason = "gspot list settings --json and the shipped setting definitions name this field reason_needed."
+
+[[naming.override]]
+paths = ["packages/cli/src/types/settings/file.ts", "packages/cli/src/types/settings/tables.ts"]
+allowed_names = ["max_list_item_words"]
+reason = "gspot.toml names this setting prose.max_list_item_words."
+
+[[naming.override]]
+paths = ["packages/cli/configurations/general/data-files/**", "packages/cli/src/config/generation/configurations/general/data-files/**", "packages/cli/src/generation/configurations/general/data-files/**", "tests/config/generation/configurations/general/data-files.ts", "tests/config/integration/checks/general/data-files.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/suites/unit/cli/generation/configurations/general/data-files.test.ts", "tests/config/integration/checks/general/security/sensitive-data.ts", "tests/suites/integration/checks/general/security/sensitive-data.test.ts"]
+allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-data.test"]
+reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
 
 [structure]
 environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts", "tests/setup/runner/offline.ts"]
@@ -233,7 +303,7 @@ schema-location = [{ folders = ["packages/cli/src/schemas", "packages/eslint-plu
 no-promise-matchers = []
 
 [tools.knip]
-entry = ["tests/setup/runner/offline.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/installed-tools.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/pinned-linters.ts"]
+entry = ["tests/setup/runner/offline.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/installed-tools.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-lists.ts"]
 
 [[scope]]
 path = "docs"

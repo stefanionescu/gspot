@@ -23,12 +23,12 @@ test('a fix run rereads the repository and keeps the package scopes it found', a
     const session = await openSession(sandbox.path);
     expect(session.repository.scopeFolders.map(({ path }) => path)).toContain('app');
     const options = buildRunOptions({ only: ['docs/missing-paths'] });
-    const plain = await runChecks(session, options);
+    const unchanged = await runChecks(session, options);
     const fixed = await runChecks(await openSession(session.root), { ...options, fix: true });
-    expect(plain.report.exitCode).toBe(0);
+    expect(unchanged.report.exitCode).toBe(0);
     expect(fixed.report.exitCode, JSON.stringify(fixed.report.checks)).toBe(0);
     expect(fixed.report.checks.map(({ scope, status, findings }) => ({ scope, status, findings }))).toStrictEqual(
-        plain.report.checks.map(({ scope, status, findings }) => ({ scope, status, findings })),
+        unchanged.report.checks.map(({ scope, status, findings }) => ({ scope, status, findings })),
     );
 });
 

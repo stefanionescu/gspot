@@ -5,7 +5,7 @@ import { OPENAPI_CASES, OPENAPI_SANDBOX } from '#tests/config/integration/checks
 
 const installedSandbox = shareInstalledSandbox(OPENAPI_SANDBOX);
 
-test.each([...OPENAPI_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, OPENAPI_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...OPENAPI_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, OPENAPI_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

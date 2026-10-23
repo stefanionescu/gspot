@@ -42,7 +42,7 @@ function addFunctions(found: FileIdentifiers, root: Node): void {
     }
 }
 
-function classifyDeclaredName(node: Node): NamedCategory {
+function classifyName(node: Node): NamedCategory {
     const parent = node.parent?.type ?? '';
     if (SWIFT_MEMBER_PARENTS.has(parent)) return 'properties';
     const isConstant = node.namedChildren.some(
@@ -53,7 +53,7 @@ function classifyDeclaredName(node: Node): NamedCategory {
 
 function addNames(found: FileIdentifiers, root: Node): void {
     for (const node of root.descendantsOfType('property_declaration')) {
-        const category = classifyDeclaredName(node);
+        const category = classifyName(node);
         for (const pattern of node.childrenForFieldName('name')) {
             const bound = pattern.childForFieldName('bound_identifier');
             if (bound) addIdentifier(found, bound, category, bound.text.replaceAll(SWIFT_NAME_QUOTE, ''));
@@ -62,8 +62,8 @@ function addNames(found: FileIdentifiers, root: Node): void {
 }
 
 function addCases(found: FileIdentifiers, root: Node): void {
-    for (const entry of root.descendantsOfType('enum_entry'))
-        for (const name of entry.childrenForFieldName('name'))
+    for (const enumCase of root.descendantsOfType('enum_entry'))
+        for (const name of enumCase.childrenForFieldName('name'))
             if (name.type === 'simple_identifier')
                 addIdentifier(found, name, 'enum_cases', name.text.replaceAll(SWIFT_NAME_QUOTE, ''));
 }

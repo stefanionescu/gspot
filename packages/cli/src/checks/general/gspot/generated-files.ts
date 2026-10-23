@@ -14,9 +14,15 @@ import { GENERATED_FILE_FINDINGS } from '#cli/config/checks/general/gspot/genera
  * @returns one finding per file that differs.
  */
 export function checkGspotGeneratedFiles(session: Session, planned: PlannedCheck): Finding[] {
-    return listOutdatedFiles(session, generate(session)).map((entry) =>
-        buildFinding(planned, { file: entry.path }, entry.kind, GENERATED_FILE_FINDINGS[entry.kind].message, {
-            help: GENERATED_FILE_FINDINGS[entry.kind].help,
-        }),
+    return listOutdatedFiles(session, generate(session)).map((outdatedFile) =>
+        buildFinding(
+            planned,
+            { file: outdatedFile.path },
+            outdatedFile.kind,
+            GENERATED_FILE_FINDINGS[outdatedFile.kind].message,
+            {
+                help: GENERATED_FILE_FINDINGS[outdatedFile.kind].help,
+            },
+        ),
     );
 }

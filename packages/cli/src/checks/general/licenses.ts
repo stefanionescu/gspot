@@ -18,7 +18,7 @@ import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { PYTHON_EXECUTABLE } from '#cli/config/tools/python.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { readDeclaredSpecifiers } from '#cli/repository/dependencies.ts';
+import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import type { PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
@@ -92,26 +92,26 @@ async function scanJavascriptLicenses(
         start,
         javascriptReportSchema,
     );
-    return Object.entries(report).map(([name, entry]) => ({
+    return Object.entries(report).map(([name, packageReport]) => ({
         name,
-        license: Array.isArray(entry.licenses)
-            ? entry.licenses.join(LICENSE_CHOICE)
-            : (entry.licenses ?? UNKNOWN_LICENSE),
+        license: Array.isArray(packageReport.licenses)
+            ? packageReport.licenses.join(LICENSE_CHOICE)
+            : (packageReport.licenses ?? UNKNOWN_LICENSE),
     }));
 }
 
 // A package states its license as an expression, as free text, or as trove classifiers; take the first that names
 // license IDs. Several classifiers mean a choice of licenses.
-function selectPythonLicense(entry: PythonLicenseReport): string {
-    const expression = [entry['License-Expression'], entry['License-Metadata']].find(
+function selectPythonLicense(report: PythonLicenseReport): string {
+    const expression = [report['License-Expression'], report['License-Metadata']].find(
         (field) => field !== undefined && field !== UNKNOWN_LICENSE && isSpdxExpression(field),
     );
     if (expression !== undefined) return expression;
-    const mapped = (entry['License-Classifier'] ?? UNKNOWN_LICENSE)
+    const mapped = (report['License-Classifier'] ?? UNKNOWN_LICENSE)
         .split(CLASSIFIER_SEPARATOR)
         .map((classifier) => TROVE_LICENSES[classifier]);
     if (mapped.every((license) => license !== undefined)) return mapped.join(LICENSE_CHOICE);
-    return entry['License-Metadata'] ?? entry['License-Classifier'] ?? UNKNOWN_LICENSE;
+    return report['License-Metadata'] ?? report['License-Classifier'] ?? UNKNOWN_LICENSE;
 }
 
 // Run outside the project so project-owned scanner settings cannot hide installed dependencies.
@@ -126,22 +126,22 @@ async function scanPythonLicenses(session: Session, planned: PlannedCheck, start
         scratch.path,
         pythonReportSchema,
     );
-    return report.map((entry) => ({
-        name: normalizeIdentity(`${entry.Name}@${entry.Version}`),
-        license: selectPythonLicense(entry),
+    return report.map((packageReport) => ({
+        name: normalizeIdentity(`${packageReport.Name}@${packageReport.Version}`),
+        license: selectPythonLicense(packageReport),
     }));
 }
 
 function hasProjectDependencies(session: Session, dependencyFile: string): boolean {
     if (basename(dependencyFile) !== PACKAGE_JSON) return true;
-    return (readDeclaredSpecifiers(session.reads, dependencyFile)?.size ?? 0) > 0;
+    return (readDependencySpecifiers(session.reads, dependencyFile)?.size ?? 0) > 0;
 }
 
 function normalizeIdentity(identity: string): string {
-    const parts = splitIdentity(identity);
-    return parts === undefined
+    const split = splitIdentity(identity);
+    return split === undefined
         ? identity
-        : `${parts[0].toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${parts[1]}`;
+        : `${split[0].toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${split[1]}`;
 }
 
 // The scan keeps the packages that the lockfile holds, so a package left behind in node_modules or a host
@@ -195,17 +195,17 @@ async function scanLicenses(session: Session, planned: PlannedCheck) {
 }
 
 function matchesRecord(record: AllowedPackage, identity: string, ecosystem: ProjectLicenses['ecosystem']): boolean {
-    const parts = splitIdentity(identity);
+    const split = splitIdentity(identity);
     const wanted = splitIdentity(
         ecosystem === 'python'
             ? normalizeIdentity(`${record.name}@${record.version}`)
             : `${record.name}@${record.version}`,
     );
-    if (parts === undefined || wanted === undefined) return false;
-    if (!buildPathMatcher([wanted[0]])(parts[0])) return false;
-    if ([ANY_VERSION, parts[1]].includes(record.version)) return true;
-    return semver.valid(parts[1]) !== null && semver.validRange(record.version) !== null
-        ? semver.satisfies(parts[1], record.version, { includePrerelease: true })
+    if (split === undefined || wanted === undefined) return false;
+    if (!buildPathMatcher([wanted[0]])(split[0])) return false;
+    if ([ANY_VERSION, split[1]].includes(record.version)) return true;
+    return semver.valid(split[1]) !== null && semver.validRange(record.version) !== null
+        ? semver.satisfies(split[1], record.version, { includePrerelease: true })
         : false;
 }
 

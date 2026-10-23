@@ -5,9 +5,9 @@ import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setu
 
 test.each([...BUILT_PAGE_CASES])(
     '$check reports its finding in the built site and passes after the fix',
-    async (entry) => {
+    async (sample) => {
         await using repository = await createSandbox(SITE_SANDBOX);
-        const result = await runCheckSample(repository, entry, SITE_SANDBOX);
-        expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+        const result = await runCheckSample(repository, sample, SITE_SANDBOX);
+        expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
     },
 );

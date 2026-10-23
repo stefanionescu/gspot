@@ -9,7 +9,7 @@ const installedSandbox = shareInstalledSandbox({
     dependencies: { vue: testsPackage.devDependencies.vue },
 });
 
-test.each([...VUE_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const result = await runCheckSample(installedSandbox(), entry, VUE_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
+test.each([...VUE_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
+    const result = await runCheckSample(installedSandbox(), sample, VUE_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
 });

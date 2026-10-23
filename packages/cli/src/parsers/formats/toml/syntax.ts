@@ -103,7 +103,7 @@ export function parseTomlSyntax(source: string, parsed: Record<string, unknown>)
     const document = parseDocument(source);
     const comments: TomlSyntax['comments'] = [];
     const positions = { value: parsed, counts: new Map<string, number>(), active: new Map<string, number>() };
-    const entries = document.cst.flatMap((node): TomlSyntax['pathNodes'] => {
+    const pathNodes = document.cst.flatMap((node): TomlSyntax['pathNodes'] => {
         if (isTomlKind(node, 'Comment')) {
             comments.push(node);
             return [];
@@ -130,7 +130,7 @@ export function parseTomlSyntax(source: string, parsed: Record<string, unknown>)
     return {
         document,
         value: parsed,
-        pathNodes: entries,
+        pathNodes: pathNodes,
         comments: comments.toSorted((left, right) => getTomlRange(left)[0] - getTomlRange(right)[0]),
     };
 }
@@ -193,10 +193,10 @@ export function getTomlRange(node: SourceRange): readonly [number, number] {
  * Add a source comment to its retained TOML entry.
  *
  * @param comments the collected comment blocks.
- * @param entry what to add, and where.
+ * @param commentPlacement what to add, and where.
  */
-export function addTomlComment(comments: TomlComments, entry: TomlCommentPlacement): void {
-    const { kind, path, comment, placement } = entry;
+export function addTomlComment(comments: TomlComments, commentPlacement: TomlCommentPlacement): void {
+    const { kind, path, comment, placement } = commentPlacement;
     if (path === undefined) return;
     const id = JSON.stringify([kind, ...path]);
     const block = comments.get(id) ?? { path, owned: [], free: [] };

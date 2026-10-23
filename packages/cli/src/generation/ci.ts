@@ -5,8 +5,8 @@ import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
+import { listCheckTools } from '#cli/planning/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
-import { listNeededTools } from '#cli/planning/tools.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
@@ -44,7 +44,7 @@ import {
 } from '#cli/config/generation/ci.ts';
 
 // Build an action pinned to a commit, with the version that the pin stands for as its comment.
-function buildPinnedAction({ name, sha, version }: ActionPin): Scalar {
+function buildActionPin({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);
     node.comment = ` ${version}`;
     return node;
@@ -77,7 +77,7 @@ function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSys
     const checks = pipeline.manualChecks.filter(
         (planned) => findSystemSkip(planned.check, planned.tool, { platform, arch }) === undefined,
     );
-    const required = new Set(checks.flatMap((check) => listNeededTools(check)));
+    const required = new Set(checks.flatMap((check) => listCheckTools(check)));
     const tools = pipeline.manualTools.flatMap((tool) => {
         const pin = findMisePin(tool);
         return pin !== undefined && required.has(tool.name) && findMissingBuild(tool, { platform, arch }) === undefined
@@ -106,10 +106,10 @@ function buildJob(
         ...(check.condition === undefined ? {} : { if: check.condition }),
         defaults: { run: { shell: 'bash' } },
         steps: [
-            { name: CI_STEP_NAMES.checkout, uses: buildPinnedAction(CI_PINS.actions.checkout), with: CHECKOUT_OPTIONS },
+            { name: CI_STEP_NAMES.checkout, uses: buildActionPin(CI_PINS.actions.checkout), with: CHECKOUT_OPTIONS },
             {
                 name: CI_STEP_NAMES.cache,
-                uses: buildPinnedAction(CI_PINS.actions.cache),
+                uses: buildActionPin(CI_PINS.actions.cache),
                 with: {
                     key: `gspot-\${{ runner.os }}-\${{ runner.arch }}-\${{ hashFiles(${cacheFiles}) }}`,
                     path: `${CACHED_PATHS.join('\n')}\n`,
@@ -117,7 +117,7 @@ function buildJob(
             },
             {
                 name: CI_STEP_NAMES.mise,
-                uses: buildPinnedAction(CI_PINS.actions.mise),
+                uses: buildActionPin(CI_PINS.actions.mise),
                 with: { version: CI_PINS.mise.version, cache: false },
             },
             ...(pipeline.setupCommand === undefined
@@ -271,7 +271,7 @@ function buildFrozenInstall(session: Session, lockfile: string): readonly string
         if (version === undefined) throw new Error('The uv tool in the shipped manifests has no pinned version.');
         return ['mise', 'exec', `${UV_TOOL}@${version}`, '--', ...(FROZEN_INSTALLS[lockfile] ?? [])];
     }
-    const declared =
+    const pin =
         session.packageManager === undefined
             ? undefined
             : readPackageManagerVersion(
@@ -280,7 +280,7 @@ function buildFrozenInstall(session: Session, lockfile: string): readonly string
                   session.timeoutSeconds,
                   session.reads,
               );
-    if (lockfile === 'yarn.lock' && declared !== undefined && isYarnBerry(declared)) return [...YARN_BERRY_INSTALL];
+    if (lockfile === 'yarn.lock' && pin !== undefined && isYarnBerry(pin)) return [...YARN_BERRY_INSTALL];
     return FROZEN_INSTALLS[lockfile];
 }
 

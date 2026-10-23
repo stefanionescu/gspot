@@ -97,7 +97,7 @@ test('a dependency link that points at nothing refuses the copy', async () => {
 
 test.each([false, true])(
     "a check's copy holds its files and dependencies, plus an extra file when asked: %s",
-    async (extra) => {
+    async (includedPaths) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript']),
             'selected.js': 'export const selected = 1;',
@@ -108,14 +108,14 @@ test.each([false, true])(
 
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'javascript/tsc', { paths: ['selected.js'] });
-        using copy = await createCheckCopy(session, input, extra ? ['document.json'] : []);
+        using copy = await createCheckCopy(session, input, includedPaths ? ['document.json'] : []);
         expect(await readFile(join(copy.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
         expect(await readFile(join(copy.path, 'node_modules/tool/value.js'), 'utf8')).toBe(
             'export const dependency = 4;',
         );
         expect(await isOnDisk(join(copy.path, 'unselected.js'))).toBe(false);
-        expect(await isOnDisk(join(copy.path, 'document.json'))).toBe(extra);
-        if (extra) expect(await readFile(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
+        expect(await isOnDisk(join(copy.path, 'document.json'))).toBe(includedPaths);
+        if (includedPaths) expect(await readFile(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
         await writeFile(join(copy.path, 'selected.js'), 'changed in private copy');
         expect(await readFile(join(sandbox.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
     },

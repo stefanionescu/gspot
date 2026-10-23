@@ -18,7 +18,7 @@ import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/chec
 import {
     TSC_REPLACEMENTS,
     CONFIGURED_CHECK_CASES,
-    WHOLE_SCOPE_IGNORE_CASES,
+    SCOPE_WIDE_IGNORE_CASES,
     STRIPPED_COVERAGE_COMMANDS,
 } from '#tests/config/planning/checks.ts';
 
@@ -64,7 +64,7 @@ test('a project check with no matching files is skipped even when its scope hold
     ]);
 });
 
-test.each([...WHOLE_SCOPE_IGNORE_CASES])(
+test.each([...SCOPE_WIDE_IGNORE_CASES])(
     'an ignore of a whole scope keeps the replaced check running there and nowhere else: $paths',
     async ({ paths, ignored }) => {
         await using sandbox = await testdir({
@@ -189,7 +189,7 @@ test.each([...CONFIGURED_CHECK_CASES])(
     async ({ files, check, selected }) => {
         await using sandbox = await testdir(files);
         const session = await openSession(sandbox.path);
-        expect(session.configuredChecks.some((entry) => entry.check.id === check)).toBe(selected);
+        expect(session.configuredChecks.some((configuredCheck) => configuredCheck.check.id === check)).toBe(selected);
     },
 );
 test.each([...TSC_REPLACEMENTS])(
@@ -202,9 +202,7 @@ test.each([...TSC_REPLACEMENTS])(
         });
         const session = await openSession(sandbox.path);
         const options = { stage: 'all' as const, only: ['typescript/tsc', check] };
-        expect(
-            planChecks(session, options).find(({ check: entry }) => entry.id === 'typescript/tsc')?.skip,
-        ).toStrictEqual({
+        expect(planChecks(session, options).find(({ check }) => check.id === 'typescript/tsc')?.skip).toStrictEqual({
             cause: 'replaced',
             note: `${check} runs it here`,
         });
@@ -215,12 +213,10 @@ test.each([...TSC_REPLACEMENTS])(
             }),
         );
         const ignored = await openSession(sandbox.path);
-        expect(
-            planChecks(ignored, options).find(({ check: entry }) => entry.id === 'typescript/tsc')?.skip,
-        ).toBeUndefined();
+        expect(planChecks(ignored, options).find(({ check }) => check.id === 'typescript/tsc')?.skip).toBeUndefined();
         expect(
             planChecks(session, { ...options, only: ['typescript/tsc'] }).find(
-                ({ check: entry }) => entry.id === 'typescript/tsc',
+                ({ check }) => check.id === 'typescript/tsc',
             )?.skip,
         ).toBeUndefined();
     },
@@ -235,8 +231,8 @@ test('a nested Next.js check replaces TypeScript only in its own scope', async (
     });
     const session = await openSession(sandbox.path);
     const configured = session.configuredChecks
-        .filter((entry) => ['typescript/tsc', 'nextjs/tsc'].includes(entry.check.id))
-        .map((entry) => [entry.scope.folder.path, entry.check.id]);
+        .filter((configuredCheck) => ['typescript/tsc', 'nextjs/tsc'].includes(configuredCheck.check.id))
+        .map((configuredCheck) => [configuredCheck.scope.folder.path, configuredCheck.check.id]);
     expect(configured).toStrictEqual([
         ['', 'typescript/tsc'],
         ['app', 'nextjs/tsc'],
@@ -257,6 +253,8 @@ test('the jest, vitest, and pytest coverage checks drop exactly their coverage a
         only: ['jest/coverage', 'vitest/coverage', 'pytest/coverage'],
     });
     expect(
-        Object.fromEntries(planned.map((entry) => [entry.check.id, stripCoverageArguments(entry, {})])),
+        Object.fromEntries(
+            planned.map((plannedCheck) => [plannedCheck.check.id, stripCoverageArguments(plannedCheck, {})]),
+        ),
     ).toStrictEqual(STRIPPED_COVERAGE_COMMANDS);
 });
