@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Structure rules that no standard linter ships: `[[import_rule]]` for Python and Swift imports and for files outside every rule, and at level `all`, lone files, shared name prefixes, file and folder clashes, long files, trivial functions, Swift `do` blocks without `catch`, and environment reads outside the environment readers."
+description = "Structure rules that no standard linter ships: `[[import_rule]]` for Python and Swift imports and for files outside every rule, and at level `all`, lone files, pass-through folders, shared name prefixes, file and folder clashes, long files, trivial functions, Swift `do` blocks without `catch`, and environment reads outside the environment readers."
 title = "Structure"
 
 [files]
@@ -26,6 +26,16 @@ runs = "scope"
 stage = "commit"
 summary = "Finds a folder that holds one code file and nothing else."
 why = "A folder with one file adds a level to every import path and groups nothing."
+
+[[check]]
+example = "At level `all`, a `src/models/` whose only entry is `src/models/user/` reports `pass-through-folder`. Move `user/` up to `src/user/`, and update its imports."
+help = "Move the inner folder up one level, or use `gspot ignore structure/pass-through-folders` with paths and a reason when a tool or a framework fixes the layout."
+level = "all"
+name = "pass-through-folders"
+runs = "scope"
+stage = "commit"
+summary = "Finds a folder whose only entry is one folder."
+why = "A folder that only holds one folder adds a level to every path and groups nothing."
 
 [[check]]
 example = "Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` share a repeated prefix. Move them into `asset/` with names `card.ts`, `list.ts`, and `row.ts`, then update imports."

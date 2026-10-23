@@ -55,6 +55,7 @@ import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/gener
 import { checkGithubActionsActionlint } from '#cli/checks/infrastructure/github-actions.ts';
 import { checkForeignKeyIndexes } from '#cli/checks/database/postgres/foreign-key-indexes.ts';
 import { checkFileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
+import { checkPassThroughFolders } from '#cli/checks/general/structure/pass-through-folders.ts';
 import { checkStructureSharedPrefixes } from '#cli/checks/general/structure/shared-prefixes.ts';
 import { checkPackageManagerPin } from '#cli/checks/general/dependencies/package-manager-pin.ts';
 import { checkDependenciesStaleLockfile } from '#cli/checks/general/dependencies/stale-lockfile.ts';
@@ -171,6 +172,7 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'structure/import-rules': { check: checkStructureImportRules },
     'structure/bare-blocks': { check: checkStructureBareBlocks },
     'structure/lone-files': { check: checkStructureLoneFiles },
+    'structure/pass-through-folders': { check: checkPassThroughFolders },
     'structure/long-files': { check: checkStructureLongFiles },
     'structure/shared-prefixes': { check: checkStructureSharedPrefixes },
     'structure/trivial-functions': { check: checkStructureTrivialFunctions },
