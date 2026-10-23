@@ -3,6 +3,7 @@ import type { Session } from '#cli/types/session.ts';
 import { type CacheKey } from '#cli/types/system/files.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
+import type { Repository } from '#cli/types/repository/files.ts';
 import { buildConfigFile } from '#cli/generation/config-files/build.ts';
 import { CONFIG_FILE_SCOPES_FOLDER } from '#cli/config/generation/config-files/generate.ts';
 import { listPointerPaths, buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
@@ -16,7 +17,7 @@ import type {
     GeneratedConfigFiles,
 } from '#cli/types/generation/files.ts';
 
-const configFilesKey: CacheKey<Map<Session, ConfigFileGeneration>> = { create: () => new Map() };
+const configFilesKey: CacheKey<Map<Repository, ConfigFileGeneration>> = { create: () => new Map() };
 
 /**
  * Reuse generated settings only while the session keeps the same repository read cache.
@@ -25,7 +26,11 @@ const configFilesKey: CacheKey<Map<Session, ConfigFileGeneration>> = { create: (
  * @returns the generated settings and scope destinations.
  */
 export function getConfigFiles(session: Session): ConfigFileGeneration {
-    return getCachedMapValue(session.reads, configFilesKey, session, () => buildConfigFiles(session));
+    const repositorySession =
+        session.root === session.repository.root ? session : { ...session, root: session.repository.root };
+    return getCachedMapValue(session.reads, configFilesKey, session.repository, () =>
+        buildConfigFiles(repositorySession),
+    );
 }
 
 function groupToolOutputs(

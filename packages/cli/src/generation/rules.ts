@@ -61,8 +61,8 @@ function groupIndexLines(files: RuleFile[]): [string, string[]][] {
         const list = rows.get(label) ?? [];
         const scopes = file.scopes.map((path) => `\`${path}/\``).join(', ');
         const scope = file.scopes.includes('') ? '' : ` in ${scopes}`;
-        const opening = (file.content.split('\n') as [string, string, string, ...string[]])[2];
-        const sentence = opening.replace(RULE_OPENING_PREFIX, '');
+        const opening = (file.content.split(BLANK_LINE) as [string, string, ...string[]])[1];
+        const sentence = opening.replaceAll('\n', ' ').replace(RULE_OPENING_PREFIX, '');
         list.push(`\`${file.target}\`${scope}: ${sentence}`);
         rows.set(label, list);
     }

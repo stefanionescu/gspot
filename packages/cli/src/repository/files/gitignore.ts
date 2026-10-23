@@ -1,10 +1,10 @@
 import ignore from 'ignore';
 import { posix } from 'node:path';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { extractParentFolder } from '#cli/system/paths.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import type { PathIgnore } from '#cli/types/repository/files.ts';
+import { isInside, extractParentFolder } from '#cli/system/paths.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import { GITIGNORE_COMMENT, GITIGNORE_NEGATION } from '#cli/config/repository/files/gitignore.ts';
 
@@ -76,6 +76,7 @@ export function buildGitignoreTest(reads: ReadCache, trackedPaths: string[]): (p
             };
         });
     return (path) => {
+        if (!isInside(path)) return false;
         const segments = path.split('/');
         const folders = segments.slice(0, -1).map((_, index) => `${segments.slice(0, index + 1).join('/')}/`);
         return [...folders, path, `${path}/`].some((checkedPath) => isIgnored(checkedPath, ignores));

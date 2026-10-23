@@ -80,3 +80,24 @@ test.each(
         expect(block).toContain(`## Commands\n\nThe rules write \`gspot\` for \`${command}\`.\n\n`);
     },
 );
+
+test('the AGENTS.md index keeps a rule opening that wraps onto a second line', () => {
+    const block = buildAgentsBlock({
+        files: [
+            {
+                path: 'language/bash/rules/SAFETY.md',
+                target: '.gspot/configurations/language/bash/rules/SAFETY.md',
+                content:
+                    '# Bash Safety\n\nRead this rule when a shell script deletes files, or parses JSON or\nYAML.\n\n## Calling\n',
+                scopes: [''],
+                group: 'language',
+            },
+        ],
+        generatedPaths: [],
+        managedKeys: [],
+        hasOwnTitle: false,
+        hasChecks: true,
+        startCommand: 'gspot',
+    });
+    expect(block).toContain('/SAFETY.md`: when a shell script deletes files, or parses JSON or YAML.\n');
+});

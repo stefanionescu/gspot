@@ -97,6 +97,7 @@ export const ACRONYMS = [
     'URL',
     // eslint-disable-next-line unicorn/text-encoding-identifier-case -- reason: ASCII spells the acronym that the prose vocabulary accepts.
     'ASCII',
+    'ASD',
     'BSD',
     'CPU',
     'CRLF',
