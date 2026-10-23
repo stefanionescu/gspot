@@ -4,6 +4,7 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { type Level } from '#cli/types/configurations.ts';
 import { REPORT_SCRIPT } from '#tests/config/setup/cli.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
+import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
@@ -53,7 +54,7 @@ export function buildSandboxSettings(
         .join('');
     const tables = options.tables ?? '';
     const rules = options.rules === true || tables.includes('[rules]') ? '' : '\n[rules]\nenabled = false\n';
-    return `${chosen}configurations = [${selected}]\n${scopes}${tables}${ignored}${rules}`;
+    return `${SCHEMA_DIRECTIVE}\n${chosen}configurations = [${selected}]\n${scopes}${tables}${ignored}${rules}`;
 }
 
 /**

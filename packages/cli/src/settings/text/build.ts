@@ -1,6 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { stripDefaults } from '#cli/settings/text/defaults.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
@@ -9,6 +8,7 @@ import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';
 import { encodeSettings, listKeptComments } from '#cli/settings/text/layout.ts';
 import { settingsSchema, listRecordFields } from '#cli/schemas/settings/file.ts';
 import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/text/build.ts';
+import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 
 function sortTable(table: TomlTable): TomlTable {
     const order = [
@@ -94,21 +94,23 @@ export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable 
 }
 
 /**
- * Build the TOML text of the settings. Keep the written comments and the template source.
+ * Build the TOML text of the settings. Keep the written comments and the template source, and start with the schema
+ * directive, which replaces any directive on the first line before.
  *
  * @param previousText the gspot.toml contents before, or empty for init.
  * @param settings the written values, before defaults.
  * @returns the TOML 1.0 text.
  */
 export function buildSettingsText(previousText: string, settings: TomlTable): string {
+    const authored = previousText.replace(SCHEMA_DIRECTIVE_LINE, '');
     const ordered = sortTable(settings);
     let target = stripDefaults(ordered);
     if (target['ignore'] !== undefined)
         target['ignore'] = mergeIgnores(settingsSchema.shape.ignore.unwrap().parse(target['ignore']));
     const format = tableValuesSchema.in.shape.format.parse(target['format']);
     const indent = format.indent_style === 'tab' ? '\t' : ' '.repeat(format.indent_width);
-    const syntax = parseTomlSyntax(previousText, parseTomlText(previousText, SETTINGS_FILE));
+    const syntax = parseTomlSyntax(authored, parseTomlText(authored, SETTINGS_FILE));
     const comments = listKeptComments(syntax, target, settings);
     target = sortTable(target);
-    return encodeSettings(target, indent, comments);
+    return `${SCHEMA_DIRECTIVE}\n${encodeSettings(target, indent, comments)}`;
 }

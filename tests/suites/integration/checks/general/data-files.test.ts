@@ -1,8 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGit } from '#tests/setup/system/git.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
-import { buildJsonSchema } from '#cli/settings/json-schema.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -14,6 +16,7 @@ import {
     FILES_CASES,
     FILES_SANDBOX,
     YAML_SCOPE_FILES,
+    REJECTING_SCHEMA,
     YAML_SCOPE_SAMPLE,
     YAML_SCOPE_TABLES,
     UNQUOTED_UNTIL_CHANGE,
@@ -58,18 +61,18 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
         await applySandboxChanges(installedSandbox(), {
             check: 'data-files/v8r',
             files: { 'settings/café.json': '', '.v8rrc.yml': '' },
-            settings: `
-[[tools.v8r.schema]]
-paths = ["settings/café.json"]
-url = "${server.url.toString()}schema.json"
-`,
+            settings: stringify({
+                tools: {
+                    v8r: { schema: [{ paths: ['settings/café.json'], url: `${server.url.toString()}schema.json` }] },
+                },
+            }),
         }),
     );
     // An authored .v8rrc.yml must not replace the generated config file.
     await writeFile(join(root, '.v8rrc.yml'), 'invalid: [\n');
     const path = join(root, 'settings/café.json');
     await writeFile(path, JSON.stringify({ count: 'invalid' }));
-    expect(runGit(root, ['add', '-A']).code).toBe(0);
+    runGitStep(root, ['add', '-A']);
     const command = ['check', '--only', 'data-files/v8r', '--staged', '--json'];
     const invalid = parseCheckReport(await spawnGspot(root, command, environment));
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
@@ -77,16 +80,11 @@ url = "${server.url.toString()}schema.json"
         {
             check: 'data-files/v8r',
             status: 'failed',
-            findings: [
-                matchFields({
-                    file: 'settings/café.json',
-                    message: '/count must be integer',
-                }),
-            ],
+            findings: [matchFields({ file: 'settings/café.json', message: '/count must be integer' })],
         },
     ]);
     await writeFile(path, JSON.stringify({ count: 1 }));
-    expect(runGit(root, ['add', 'settings/café.json']).code).toBe(0);
+    runGitStep(root, ['add', 'settings/café.json']);
     const valid = parseCheckReport(await spawnGspot(root, command, environment));
     expect(valid.code, valid.stdout + valid.stderr).toBe(0);
     expect(valid.report.checks).toMatchObject([{ check: 'data-files/v8r', status: 'passed', findings: [] }]);
@@ -95,7 +93,6 @@ url = "${server.url.toString()}schema.json"
 test('Taplo never downloads a schema named in a #:schema comment', async () => {
     const { root, environment } = installedSandbox();
     await using resources = new AsyncDisposableStack();
-
     let requests = 0;
     const server = Bun.serve({
         hostname: '127.0.0.1',
@@ -152,34 +149,23 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
     await assertYamlFiles(root);
 });
 
-test('v8r accepts a gspot.toml with an unquoted until date', async () => {
+test('v8r checks gspot.toml against the schema in .gspot, which accepts an unquoted until date', async () => {
     const { root, environment } = installedSandbox();
-    await using state = new AsyncDisposableStack();
-    // v8r reads the schema that this checkout builds, not the schema of the published site.
-    let schemaRequests = 0;
-    const server = Bun.serve({
-        hostname: '127.0.0.1',
-        port: 0,
-        fetch: () => {
-            schemaRequests += 1;
-            return Response.json(buildJsonSchema());
-        },
-    });
-    state.defer(async () => {
-        await server.stop(true);
-    });
-    state.use(
-        await applySandboxChanges(installedSandbox(), {
-            ...UNQUOTED_UNTIL_CHANGE,
-            settings: `${UNQUOTED_UNTIL_CHANGE.settings}[[tools.v8r.schema]]\npaths = ["gspot.toml"]\nurl = "${server.url.toString()}gspot.schema.json"\n`,
-        }),
-    );
-    const checked = parseCheckReport(
-        await spawnGspot(root, ['check', 'gspot.toml', '--only', 'data-files/v8r', '--json'], environment),
-    );
-    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(checked.report.checks).toMatchObject([
-        { check: 'data-files/v8r', status: 'passed', command: matchItems(['gspot.toml']) },
+    await using _change = await applySandboxChanges(installedSandbox(), UNQUOTED_UNTIL_CHANGE);
+    const checkSettings = async () =>
+        parseCheckReport(
+            await spawnGspot(root, ['check', SETTINGS_FILE, '--only', 'data-files/v8r', '--json'], environment),
+        );
+    const accepted = await checkSettings();
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+    expect(accepted.report.checks).toMatchObject([
+        { check: 'data-files/v8r', status: 'passed', command: matchItems([SETTINGS_FILE]) },
     ]);
-    expect(schemaRequests).toBeGreaterThan(0);
+    // A schema that rejects every document shows that v8r read this file. Disposal applies the generated schema again.
+    await writeFile(join(root, GSPOT_PATHS.settingsSchema), REJECTING_SCHEMA);
+    const rejected = await checkSettings();
+    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
+    expect(rejected.report.checks).toMatchObject([
+        { check: 'data-files/v8r', status: 'failed', findings: [matchFields({ file: SETTINGS_FILE })] },
+    ]);
 });

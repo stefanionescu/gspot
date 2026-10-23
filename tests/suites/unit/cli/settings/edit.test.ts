@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { getValueAt } from '#cli/system/tables.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
+import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
 import { localDateSchema } from '#cli/schemas/settings/fields.ts';
 import { DATED_IGNORE, SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/edit.ts';
 
@@ -19,13 +20,14 @@ import {
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    await writeFile(path, '# Authored selection.\nconfigurations = ["security",]\n');
+    await writeFile(path, `${SCHEMA_DIRECTIVE}\n# Authored selection.\nconfigurations = ["security",]\n`);
     const entry = SEMGREP_IGNORE;
     const edit = readSettingsEdit(sandbox.path);
     setKey(edit.table, 'ignore', [entry]);
     const proposed = buildEditedSettings(sandbox.path, edit);
     expect(proposed.text).toBe(
-        '# Authored selection.\nconfigurations = ["security"]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["fixture.js"]\nreason = "The sandbox owns its temporary files."\n',
+        `${SCHEMA_DIRECTIVE}\n` +
+            '# Authored selection.\nconfigurations = ["security"]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["fixture.js"]\nreason = "The sandbox owns its temporary files."\n',
     );
     expect(proposed.settings.ignore).toStrictEqual([entry]);
     await writeFile(path, proposed.text);

@@ -1,9 +1,11 @@
+import { JSON_INDENT } from '#cli/config/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listNeededTools } from '#cli/planning/tools.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { stripBlock } from '#cli/parsers/managed-blocks.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import { parseAttributePatterns } from '#cli/parsers/git.ts';
+import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import type { RuleFile } from '#cli/types/generation/rules.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
@@ -169,7 +171,10 @@ export function generate(session: Session): GenerationResult {
     const packageManager = session.packageManager?.name;
     const configurations = session.neededToolConfigurations;
     const generated: GenerationResult = {
-        files: [{ path: GSPOT_PATHS.versionPin, content: cliPackage.version + '\n' }],
+        files: [
+            { path: GSPOT_PATHS.versionPin, content: cliPackage.version + '\n' },
+            { path: GSPOT_PATHS.settingsSchema, content: `${JSON.stringify(buildJsonSchema(), null, JSON_INDENT)}\n` },
+        ],
         blocks: [],
         managedKeys: [],
     };

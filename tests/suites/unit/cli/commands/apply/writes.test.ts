@@ -12,17 +12,20 @@ import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { planReplacement } from '#cli/ownership/plans.ts';
 import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { findFileTarget, findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply/writes.ts';
+import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 
 function writeStrayFile(root: string): void {
     using writer = openWriter(root);
 
     writePlans(writer, [
         planReplacement(writer, {
-            path: '.gspot/obsolete/old.txt',
+            path: `${DOT_GSPOT}/obsolete/old.txt`,
             next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
         }),
     ]);
@@ -34,14 +37,14 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     });
 
     writeStrayFile(sandbox.path);
-    expect(runGit(sandbox.path, ['init', '-q']).code).toBe(0);
+    runGitStep(sandbox.path, ['init', '-q']);
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/obsolete/old.txt'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/obsolete'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/obsolete/old.txt`))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/obsolete`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
     const written = (JSON.parse(applied.stdout) as ApplyReport).written;
-    const rulePath = '.gspot/configurations/general/engineering/rules/WORKING.md';
+    const rulePath = findRuleFileTarget('engineering', 'WORKING.md');
     expect(written).toContain(rulePath);
     const bytes = await readFile(join(sandbox.path, rulePath), 'utf8');
     const attributes = await stat(join(sandbox.path, rulePath));
@@ -65,10 +68,10 @@ test('apply removes a stray directory link without following it', async () => {
 
     const root = join(sandbox.path, 'project');
     writeStrayFile(root);
-    await rm(join(root, '.gspot/obsolete'), { recursive: true });
-    await symlink('../../outside', join(root, '.gspot/obsolete'));
+    await rm(join(root, `${DOT_GSPOT}/obsolete`), { recursive: true });
+    await symlink('../../outside', join(root, `${DOT_GSPOT}/obsolete`));
     expect(await runGspot(root, ['apply'])).toHaveProperty('code', 0);
-    expect(await isOnDisk(join(root, '.gspot/obsolete'))).toBe(false);
+    expect(await isOnDisk(join(root, `${DOT_GSPOT}/obsolete`))).toBe(false);
     expect(await readFile(join(sandbox.path, 'outside/old.txt'), 'utf8')).toBe('outside bytes\n');
 });
 
@@ -85,7 +88,7 @@ test('a fresh Git clone keeps the committed generated files byte for byte and mo
     const cloned = runGit(original.path, ['clone', '--quiet', '--no-local', original.path, clone.path]);
     expect(cloned.code, cloned.stderr).toBe(0);
     using files = openFiles(clone.path);
-    const config = '.gspot/configurations/language/bash/shellcheckrc';
+    const config = findFileTarget('bash', 'shellcheckrc');
     const initial = files.read(config)!;
     const applied = await runGspot(clone.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -110,15 +113,15 @@ test('apply rewrites an edited generated file, deletes unknown files in .gspot, 
     const settingsPath = join(sandbox.path, 'gspot.toml');
     const settings = await readFile(settingsPath, 'utf8');
     await writeFile(join(sandbox.path, 'added.py'), 'print("example")\n');
-    const generated = join(sandbox.path, '.gspot/configurations/language/bash/shellcheckrc');
+    const generated = join(sandbox.path, findFileTarget('bash', 'shellcheckrc'));
     const edited = `${await readFile(generated, 'utf8')}# Authored after installation.\n`;
     await chmod(generated, 0o644);
     await writeFile(generated, edited);
-    await writeFile(join(sandbox.path, '.gspot/authored.txt'), 'Preserve this file.\n');
+    await writeFile(join(sandbox.path, `${DOT_GSPOT}/authored.txt`), 'Preserve this file.\n');
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await readFile(generated, 'utf8')).not.toContain('# Authored after installation.');
-    expect(await isOnDisk(join(sandbox.path, '.gspot/authored.txt'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/authored.txt`))).toBe(false);
     expect(await readFile(settingsPath, 'utf8')).toBe(settings);
 });
 test('removing rules from a fresh clone removes the managed AGENTS.md block', async () => {
@@ -143,7 +146,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     using writer = openWriter(initial.root);
     writeGeneratedFiles(initial, generate(initial), writer);
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/format/prettier.json'))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, findFileTarget('format', 'prettier.json')))).toBe(true);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     const excluded = await openSession(sandbox.path);
     const plans = planChecks(excluded, { stage: 'commit', only: ['format/prettier'] });
@@ -153,9 +156,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
         excluded.neededToolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     ).not.toContain('prettier');
     const generated = generate(excluded);
-    expect(generated.files.map((file) => file.path)).not.toContain(
-        '.gspot/configurations/general/format/prettier.json',
-    );
+    expect(generated.files.map((file) => file.path)).not.toContain(findFileTarget('format', 'prettier.json'));
     const removed = writeGeneratedFiles(excluded, generated, writer);
     expect(removed.removed).toContain('.prettierignore');
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(false);
@@ -170,12 +171,12 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
 test('a failed version pin write in apply leaves the old version', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([]),
-        '.gspot/version': '0.0.1\n',
+        [GSPOT_PATHS.versionPin]: '0.0.1\n',
     });
 
     const rename = fs.renameSync;
     using _failed = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(sandbox.path, '.gspot/version')) throw new Error('Pin write denied');
+        if (String(target) === join(sandbox.path, GSPOT_PATHS.versionPin)) throw new Error('Pin write denied');
         rename(source, target);
     });
 
@@ -184,5 +185,18 @@ test('a failed version pin write in apply leaves the old version', async () => {
     expect(refused.stderr).toBe(
         'gspot stopped because of an internal error: Pin write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
     );
-    expect(await readFile(join(sandbox.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.versionPin), 'utf8')).toBe('0.0.1\n');
+});
+test('apply puts the schema directive first in a gspot.toml without one, then leaves the file alone', async () => {
+    const settings = buildSandboxSettings([]).replace(SCHEMA_DIRECTIVE_LINE, '');
+    await using sandbox = await testdir({ [SETTINGS_FILE]: settings });
+
+    const applied = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    expect((JSON.parse(applied.stdout) as ApplyReport).updated).toStrictEqual([SETTINGS_FILE]);
+    expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(`${SCHEMA_DIRECTIVE}\n${settings}`);
+    const repeated = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
+    expect((JSON.parse(repeated.stdout) as ApplyReport).updated).toStrictEqual([]);
+    expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(`${SCHEMA_DIRECTIVE}\n${settings}`);
 });

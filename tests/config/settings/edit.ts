@@ -14,7 +14,8 @@ export const SCOPE_SETTING_WRITES = [
     ['an inline table', 'limits = { file_lines = 100 }'],
 ] as const;
 
-export const DATED_IGNORE = `configurations = ["bash"]
+export const DATED_IGNORE = `#:schema ./.gspot/gspot.schema.json
+configurations = ["bash"]
 # Keep the authored expiry.
 [[ignore]]
 check = "bash/shellcheck"
@@ -22,4 +23,4 @@ reason = "The launcher intentionally retains word splitting."
 until = 2099-05-20
 `;
 
-export const INITIAL_SETTINGS = 'configurations = ["bash", "naming", "format"]\n';
+export const INITIAL_SETTINGS = '#:schema ./.gspot/gspot.schema.json\nconfigurations = ["bash", "naming", "format"]\n';

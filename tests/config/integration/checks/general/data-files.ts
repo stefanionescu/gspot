@@ -25,13 +25,9 @@ export const FILES_CASES = [
     },
     {
         check: 'data-files/xmllint',
-        files: { 'settings/feed.xml': '<feed><entry></feed>\n' },
-        expected: {
-            file: 'settings/feed.xml',
-            line: 1,
-            message: 'parser error : Opening and ending tag mismatch: entry line 1 and feed',
-        },
-        corrected: { files: { 'settings/feed.xml': '<feed><entry /></feed>\n' } },
+        files: { 'settings/feed.xml': '<feed>&missing;</feed>\n' },
+        expected: { file: 'settings/feed.xml', line: 1, message: "parser error : Entity 'missing' not defined" },
+        corrected: { files: { 'settings/feed.xml': '<feed>&amp;</feed>\n' } },
     },
 ] as const;
 
@@ -77,3 +73,6 @@ export const UNQUOTED_UNTIL_CHANGE = {
     files: {},
     settings: '\n[[ignore]]\ncheck = "data-files/yamllint"\nreason = "The sample holds no YAML."\nuntil = 2099-01-01\n',
 } as const;
+
+/** A JSON Schema that rejects every document. */
+export const REJECTING_SCHEMA = '{ "not": {} }\n';

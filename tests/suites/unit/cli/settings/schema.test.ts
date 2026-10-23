@@ -144,9 +144,9 @@ test('options for import boundaries direct the reader to import_rule records', (
 test.each(['constructor', 'toString', 'prototype'])(
     'a rule named %s is not mistaken for a setting-owned rule',
     (rule) => {
-        expect(() =>
-            parseSettings(`configurations = ["javascript"]\n[tools.eslint.rules]\n"${rule}" = [{}]\n`, undefined),
-        ).not.toThrow();
+        expect(
+            validateSettingsText(`configurations = ["javascript"]\n[tools.eslint.rules]\n"${rule}" = [{}]\n`),
+        ).toStrictEqual([]);
     },
 );
 

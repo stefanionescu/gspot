@@ -1,3 +1,4 @@
+import { SCHEMA_FILE } from '#cli/config/settings/json-schema.ts';
 import { YARN_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
 import { PROJECT_UV_LOCKFILE } from '#cli/config/install/python/project.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
@@ -14,6 +15,8 @@ export const GSPOT_PATHS = {
     /** The locks and temporary run files, never committed. */
     state: `${DOT_GSPOT}/state`,
     versionPin: `${DOT_GSPOT}/version`,
+    /** The JSON Schema of gspot.toml for this gspot version. Editors and v8r read it. */
+    settingsSchema: `${DOT_GSPOT}/${SCHEMA_FILE}`,
     miseProject: `${DOT_GSPOT}/mise.toml`,
     npmProject: `${DOT_GSPOT}/package.json`,
     nodeModules: `${DOT_GSPOT}/${NODE_MODULES}`,

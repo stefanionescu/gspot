@@ -5,6 +5,7 @@ import { parseTomlText } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { LAYOUT_CASES } from '#tests/config/settings/text/layout.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -23,11 +24,11 @@ test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CAS
         const { source, expected } = row;
         const target = 'target' in row ? row.target : source;
         const output = buildSettingsText(source, parseTomlText(target, 'target.toml'));
-        expect(output).toBe(expected);
-        expect(buildSettingsText(output, parseTomlText(output, 'gspot.toml'))).toBe(expected);
+        expect(output).toBe(`${SCHEMA_DIRECTIVE}\n${expected}`);
+        expect(buildSettingsText(output, parseTomlText(output, 'gspot.toml'))).toBe(output);
     },
 );
-test('setting level keeps the opening init comment on the first line', async () => {
+test('setting level keeps the schema directive first and the opening init comment after it', async () => {
     await using sandbox = await testdir();
     const reads = createReadCache(sandbox.path);
     const configurations = readConfigurations();
@@ -41,7 +42,9 @@ test('setting level keeps the opening init comment on the first line', async () 
     const edit = readSettingsEdit(sandbox.path);
     setKey(edit.table, 'level', 'all');
     const result = buildEditedSettings(sandbox.path, edit);
-    expect(result.text.split('\n', 1)[0]).toBe(PREFACE_BODY.split('\n', 1)[0]);
+    const [directive, opening] = result.text.split('\n', 2);
+    expect(directive).toBe(SCHEMA_DIRECTIVE);
+    expect(opening).toBe(PREFACE_BODY.split('\n', 1)[0]);
     expect(result.settings.level).toBe('all');
 });
 test.each([

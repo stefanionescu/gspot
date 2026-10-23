@@ -6,11 +6,13 @@ import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type InitJson } from '#cli/types/commands/init.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { type ToolPackageJson } from '#cli/types/install/npm.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
@@ -26,6 +28,7 @@ import {
     PLATFORM_PROJECT_FILES,
 } from '#tests/config/commands/init/selection.ts';
 
+// List the configurations that init plans, without writing.
 async function listPlannedConfigurations(root: string): Promise<string[]> {
     const result = await runGspot(root, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -74,17 +77,26 @@ test('init leaves javascript out of a root package.json with only tool dependenc
     const json = await runGspot(sandbox.path, [...commandArguments, '--yes', '--json']);
     expect(json.code, json.stdout + json.stderr).toBe(0);
     const output = JSON.parse(json.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
-    expect(output.plan.configurations.map(({ configuration }) => configuration)).toContain('javascript');
+    expect(
+        output.plan.configurations
+            .map(({ configuration }) => configuration)
+            .filter((configuration) => !listAlwaysSelected().includes(configuration)),
+    ).toStrictEqual(['licenses', 'javascript']);
     expect(Object.keys(parseSettings(output.settings, sandbox.path).scopes)).toStrictEqual(['app']);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const written = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const session = await openSession(sandbox.path);
     expect(session.repository.scopeFolders.map(({ path }) => path)).toStrictEqual(['', 'app']);
-    expect(session.scopes.find(({ folder }) => folder.path === '')!.settings.configurations).not.toContain(
-        'javascript',
-    );
-    expect(session.scopes.find(({ folder }) => folder.path === 'app')!.settings.configurations).toContain('javascript');
+    expect(
+        session.scopes.map(({ folder, settings }) => [
+            folder.path,
+            settings.configurations.filter((configuration) => !listAlwaysSelected().includes(configuration)),
+        ]),
+    ).toStrictEqual([
+        ['', ['licenses']],
+        ['app', ['licenses', 'javascript']],
+    ]);
 });
 
 test('the JavaScript tools and the ESLint config file appear only after gspot add javascript for a new Node script, at both levels', async () => {
@@ -96,12 +108,12 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         const selected = await runGspot(sandbox.path, ['set', 'level', level]);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const dependencies = Object.keys(
-            (JSON.parse(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')) as ToolPackageJson)
+            (JSON.parse(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')) as ToolPackageJson)
                 .devDependencies,
         );
         for (const name of ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'])
             expect(dependencies).not.toContain(name);
-        expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/javascript/eslint.mjs'))).toBe(false);
+        expect(await isOnDisk(join(sandbox.path, findFileTarget('javascript', 'eslint.mjs')))).toBe(false);
     }
     await writeFile(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
     const discovered = await runGspot(sandbox.path, ['add', 'javascript']);
@@ -112,11 +124,11 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         const selected = await openSession(sandbox.path);
         expect(selected.scopes.flatMap(({ settings }) => settings.configurations)).toContain('javascript');
         const dependencies = Object.keys(
-            (JSON.parse(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')) as ToolPackageJson)
+            (JSON.parse(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')) as ToolPackageJson)
                 .devDependencies,
         );
         expect(dependencies).toContain('eslint');
-        expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/javascript/eslint.mjs'))).toBe(true);
+        expect(await isOnDisk(join(sandbox.path, findFileTarget('javascript', 'eslint.mjs')))).toBe(true);
     }
 });
 
@@ -149,16 +161,22 @@ test('init selects a recommended language only when the repository holds its fil
 
     commitAll(sandbox.path);
     const plain = await listPlannedConfigurations(sandbox.path);
-    expect(plain).toContain('vue');
-    expect(plain).toContain('javascript');
-    expect(plain).toContain('format');
-    expect(plain).not.toContain('typescript');
-    expect(plain).toContain('css');
+    expect(plain.filter((configuration) => !listAlwaysSelected().includes(configuration))).toStrictEqual([
+        'css',
+        'javascript',
+        'licenses',
+        'vue',
+    ]);
     await createFileTree(sandbox.path, STYLE_SOURCE_FILES);
     commitAll(sandbox.path);
     const typed = await listPlannedConfigurations(sandbox.path);
-    expect(typed).toContain('typescript');
-    expect(typed).toContain('css');
+    expect(typed.filter((configuration) => !listAlwaysSelected().includes(configuration))).toStrictEqual([
+        'css',
+        'javascript',
+        'licenses',
+        'typescript',
+        'vue',
+    ]);
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });
 
@@ -171,7 +189,7 @@ test('init proposes a scope for a Swift package, not for a lint-only package, an
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings' | 'plan'>>;
     const proposed = settingsSchema.parse(parse(output.settings) as TomlTable);
     expect(proposed.scope!.map(({ path }) => path)).toStrictEqual(['ios']);
-    expect(proposed.scope!.find(({ path }) => path === 'ios')?.configurations).toContain('swift');
+    expect(proposed.scope!.find(({ path }) => path === 'ios')?.configurations).toStrictEqual(['swift']);
     expect(output.plan.noLongerRuns).toStrictEqual([]);
     expect(output.plan.change).toContainEqual({
         path: 'tools/lint/package.json',

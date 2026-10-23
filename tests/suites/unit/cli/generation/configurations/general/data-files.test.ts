@@ -3,42 +3,29 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { matchItems } from '#tests/setup/matchers.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { MISE_SCHEMA, SETTINGS_SCHEMA } from '#cli/config/generation/configurations/general/data-files/v8r.ts';
 import { MAPPED_SCHEMAS, MAPPED_SCHEMA_ENTRIES } from '#tests/config/generation/configurations/general/data-files.ts';
 
 test.each([true, false])(
-    'the v8r catalog lists the shipped schemas and your custom schemas ($name)',
+    'the v8r catalog maps mise, gspot.toml, and the custom schemas (custom schemas: %p)',
     async (hasSchemas) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['data-files'], {
                 level: 'all',
-                rules: true,
-                tables: stringify({
-                    tools: {
-                        v8r: {
-                            schema: hasSchemas ? [...MAPPED_SCHEMAS] : [],
-                        },
-                    },
-                }),
+                tables: stringify({ tools: { v8r: { schema: hasSchemas ? [...MAPPED_SCHEMAS] : [] } } }),
             }),
             'custom.json': '{}\n',
         });
 
-        const output = generate(await openSession(sandbox.path));
-        const text = output.files.find(
-            (file) => file.path === '.gspot/configurations/general/data-files/v8r.yml',
-        )!.content;
-        const parsed: unknown = parse(text);
-        if (hasSchemas)
-            expect(parsed).toMatchObject({
-                customCatalog: {
-                    schemas: matchItems([...MAPPED_SCHEMA_ENTRIES]),
-                },
-            });
-        expect(text).toContain('name: mise');
-        expect(text).not.toContain('name: gspot');
-        expect(output.files.some((file) => file.path.endsWith('/gspot-toml.schema.json'))).toBe(false);
+        const session = await openSession(sandbox.path);
+        const v8rFile = generate(session).files.find((file) => file.path === findConfigFilePath(session, 'v8r'))!;
+        // v8r checks gspot.toml against the schema of the gspot version that wrote it, never the newest one.
+        expect(parse(v8rFile.content)).toStrictEqual({
+            ignoreErrors: true,
+            customCatalog: { schemas: [MISE_SCHEMA, SETTINGS_SCHEMA, ...(hasSchemas ? MAPPED_SCHEMA_ENTRIES : [])] },
+        });
     },
 );

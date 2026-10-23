@@ -1,11 +1,13 @@
 // Generates the config files of a sandbox and finds the one of a tool.
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { join, posix } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import type { Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
@@ -19,6 +21,34 @@ export function findConfigFilePath(session: Session, tool: string, scopePath = '
     if (declaration === undefined)
         throw new Error(`The sandbox generates no ${tool} file for ${scopePath || 'the root'}.`);
     return getConfigFileTarget(scopePath, declaration, getConfigFiles(session).targets);
+}
+
+/**
+ * Find where gspot writes a config file that a configuration ships, as its manifest declares it.
+ *
+ * @param configuration the configuration name, such as `javascript`.
+ * @param file the config file name in the manifest, such as `knip.json`.
+ * @returns the repository path of the root config file.
+ */
+export function findFileTarget(configuration: string, file: string): string {
+    const target = readConfigurations()
+        .get(configuration)
+        ?.configFiles.find((configFile) => configFile.file === file)?.target;
+    if (target === undefined) throw new Error(`The ${configuration} configuration ships no ${file}.`);
+    return target;
+}
+
+/**
+ * Find where gspot writes a rule file for coding agents.
+ *
+ * @param configuration the configuration name, such as `engineering`.
+ * @param file the rule file name, such as `WORKING.md`.
+ * @returns the repository path of the rule file.
+ */
+export function findRuleFileTarget(configuration: string, file: string): string {
+    const declared = readConfigurations().get(configuration);
+    if (declared === undefined) throw new Error(`No configuration is called ${configuration}.`);
+    return posix.join(GSPOT_PATHS.configurations, declared.group, configuration, 'rules', file);
 }
 
 /** Read each generated config file matched by a repository-relative glob. */

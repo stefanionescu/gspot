@@ -1,13 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
+import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import { runGit, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 
 test.each(['absent', 'authored', 'managed'])(
@@ -37,7 +41,7 @@ test.each(['absent', 'authored', 'managed'])(
             join(sandbox.path, '.gitattributes'),
             `${source === 'authored' ? '* text=auto eol=lf\n' : ''}${attributes.block}\n`,
         );
-        const outside = generated.files.map(({ path }) => path).filter((path) => !path.startsWith('.gspot/'));
+        const outside = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
         expect(outside).toContain('web app/.stylelintrc.json');
         const read = runGitStep(sandbox.path, ['check-attr', 'eol', '--', ...outside, 'nested/.editorconfig']);
         expect(read.split('\n')).toStrictEqual([
@@ -55,7 +59,7 @@ test('generated attributes keep LF through an autocrlf checkout', async () => {
     runGitStep(sandbox.path, ['init', '-q']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const path = '.gspot/configurations/general/engineering/rules/WORKING.md';
+    const path = findRuleFileTarget('engineering', 'WORKING.md');
     const bytes = await readFile(join(sandbox.path, path));
     runGitStep(sandbox.path, ['add', '--', '.gitattributes', path]);
     await rm(join(sandbox.path, path));
@@ -80,7 +84,15 @@ test.each([true, false])('apply writes the .gitignore block only once Git exists
     await applyGeneratedFiles(sandbox.path);
     const installed = await readFile(path, 'utf8');
     expect(installed.startsWith(original)).toBe(authored);
-    expect(installed).toContain('.gspot/state/');
+    expect(installed).toContain(`${GSPOT_PATHS.state}/`);
     await applyGeneratedFiles(sandbox.path);
     expect(await readFile(path, 'utf8')).toBe(installed);
+});
+test('generate writes the JSON Schema of gspot.toml for this gspot version', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+
+    const schema = generate(await openSession(sandbox.path)).files.find(
+        ({ path }) => path === GSPOT_PATHS.settingsSchema,
+    );
+    expect(schema?.content).toBe(`${JSON.stringify(buildJsonSchema(), null, JSON_INDENT)}\n`);
 });
