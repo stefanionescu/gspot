@@ -16,16 +16,16 @@ test('each configuration with ESLint blocks gets its own ESLint config file, and
 
     const files = generate(await openSession(sandbox.path)).files.filter((file) => file.path.endsWith('/eslint.mjs'));
     expect(files.map((file) => file.path)).toStrictEqual([
-        findFileTarget('javascript', 'eslint.mjs'),
+        findFileTarget('javascript', 'eslint/eslint.mjs'),
         `${GSPOT_PATHS.configurations}/language/typescript/eslint.mjs`,
         `${GSPOT_PATHS.configurations}/library/zod/eslint.mjs`,
     ]);
     const [main, typescript] = files.map((file) => file.content);
-    expect(main).toContain('import typescriptBlocks from "../typescript/eslint.mjs";');
-    expect(main).toContain('import zodBlocks from "../../library/zod/eslint.mjs";');
+    expect(main).toContain('import typescriptBlocks from "../../typescript/eslint.mjs";');
+    expect(main).toContain('import zodBlocks from "../../../library/zod/eslint.mjs";');
     expect(main).toContain('    ...typescriptBlocks,\n    ...zodBlocks,\n');
     expect(main).not.toContain('from "typescript-eslint"');
-    expect(typescript).toContain('from "../javascript/eslint-functions.mjs";');
+    expect(typescript).toContain('from "../javascript/eslint/functions.mjs";');
     expect(typescript).toContain('import tseslint from "typescript-eslint";');
     expect(typescript).toContain('export default [\n    // typescript');
 });

@@ -84,7 +84,7 @@ test('the init plan deletes the conflicting config files and lists the lint fold
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     for (const carried of ['udid', 'SC2086', 'MD013']) expect(settings).not.toContain(carried);
     expect(await readFile(join(sandbox.path, 'eslint.config.mjs'), 'utf8')).toContain(
-        `export { default } from "./${findFileTarget('javascript', 'eslint.mjs')}";\n`,
+        `export { default } from "./${findFileTarget('javascript', 'eslint/eslint.mjs')}";\n`,
     );
     expect(await isOnDisk(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
 });

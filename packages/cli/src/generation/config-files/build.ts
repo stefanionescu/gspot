@@ -140,7 +140,7 @@ const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefine
     'swift/swiftlint.yml': buildSwiftlintFile,
     'javascript/knip.json': buildKnipFile,
     'sql/sqlfluff.cfg': buildSqlfluffFile,
-    'javascript/eslint.mjs': buildEslintFile,
+    'javascript/eslint/eslint.mjs': buildEslintFile,
     'javascript/jsconfig.json': buildJsconfigFile,
     'format/prettier.json': buildPrettierFile,
 };

@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import type { Host } from '#cli/types/planning.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
@@ -31,11 +32,12 @@ function findMiseInstaller(tool: Tool): InstallerPin | undefined {
  * Get the name that a config-file placeholder uses for a config file.
  *
  * @param file the path that the manifest names.
- * @returns the path without its extensions.
+ * @returns the file name without its folder and extensions.
  */
 export function extractConfigFileName(file: string): string {
-    const dot = file.indexOf('.');
-    return dot === -1 ? file : file.slice(0, dot);
+    const name = posix.basename(file);
+    const dot = name.indexOf('.');
+    return dot === -1 ? name : name.slice(0, dot);
 }
 
 /**

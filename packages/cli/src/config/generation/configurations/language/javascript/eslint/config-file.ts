@@ -1,7 +1,7 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 
 /** The shipped module beside the main ESLint config file that holds the functions every ESLint config file calls. */
-export const ESLINT_FUNCTIONS_FILE = 'eslint-functions.mjs';
+export const ESLINT_FUNCTIONS_FILE = 'functions.mjs';
 
 /** The globals package, which the runtime blocks read. */
 export const GLOBALS_IMPORT = ['globals', 'globals'] as const;
