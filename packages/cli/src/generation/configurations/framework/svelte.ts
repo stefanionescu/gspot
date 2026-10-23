@@ -15,7 +15,7 @@ import {
 } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 /**
- * Apply the Astro presets and the Astro component parser.
+ * Apply the Svelte presets and the Svelte component parser.
  *
  * @param scope the planned ESLint file of the scope.
  * @returns the imports and ESLint blocks for this configuration.

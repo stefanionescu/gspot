@@ -9,7 +9,7 @@ import {
 } from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 
 /**
- * Apply the Jest lint rules with the test files and globals of the scope.
+ * Restrict the Zustand store creators to the store files, so a store lives in a factory that a provider owns.
  *
  * @param scope the planned ESLint file of the scope.
  * @returns the imports and ESLint blocks for this configuration.
