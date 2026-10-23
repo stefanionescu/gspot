@@ -1,9 +1,9 @@
 import { writePlans } from '#cli/apply/writer.ts';
 import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { listExpectedPaths } from '#cli/apply/stale-files.ts';
 import { planSettingsWrite } from '#cli/apply/managed-keys.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
+import { listExpectedPaths } from '#cli/apply/outdated-files.ts';
 import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';

@@ -1,4 +1,4 @@
-import type { StaleFile } from '#cli/types/apply.ts';
+import type { OutdatedFile } from '#cli/types/apply.ts';
 
 export type ApplyOptions = {
     cwd: string;
@@ -8,5 +8,5 @@ export type ApplyOptions = {
 export type DryRunJson = {
     dryRun: true;
     pin: { from: string | undefined; to: string };
-    stale: StaleFile[];
+    stale: OutdatedFile[];
 };

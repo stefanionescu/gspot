@@ -2,27 +2,27 @@ import { openSession } from '#cli/session.ts';
 import { openWriter } from '#cli/apply/writer.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { findRoot } from '#cli/repository/read.ts';
-import { type StaleFile } from '#cli/types/apply.ts';
 import { type Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { type OutdatedFile } from '#cli/types/apply.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { listStaleFiles } from '#cli/apply/stale-files.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
+import { listOutdatedFiles } from '#cli/apply/outdated-files.ts';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/apply.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/apply/generated-files.ts';
 
-function formatStaleFiles(staleFiles: StaleFile[]): string {
+function formatOutdatedFiles(outdatedFiles: OutdatedFile[]): string {
     const lines = [
-        `${formatCount(staleFiles.length, 'generated file')} ${staleFiles.length === 1 ? 'needs' : 'need'} updating:`,
+        `${formatCount(outdatedFiles.length, 'generated file')} ${outdatedFiles.length === 1 ? 'needs' : 'need'} updating:`,
         '',
     ];
-    for (const entry of staleFiles) {
+    for (const entry of outdatedFiles) {
         const differences = (entry.diff ?? '').split('\n').map((line) => `    ${line}`);
         lines.push(`  ${entry.path}  ${entry.kind}`);
         if ((entry.diff ?? '') !== '') lines.push(...differences);
@@ -33,11 +33,11 @@ function formatStaleFiles(staleFiles: StaleFile[]): string {
 
 function buildDryRunResult(session: Session): CommandResult {
     const generated = generate(session);
-    const staleFiles = listStaleFiles(session, generated);
+    const outdatedFiles = listOutdatedFiles(session, generated);
     const summary =
-        staleFiles.length === 0 ? `${formatUpToDate(generated.files.length)}\n` : formatStaleFiles(staleFiles);
+        outdatedFiles.length === 0 ? `${formatUpToDate(generated.files.length)}\n` : formatOutdatedFiles(outdatedFiles);
     const pin = { from: readVersionPin(session.root), to: cliPackage.version };
-    const json: DryRunJson = { dryRun: true, pin, stale: staleFiles };
+    const json: DryRunJson = { dryRun: true, pin, stale: outdatedFiles };
     const version = pin.from === pin.to ? '' : `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n`;
     return { text: `${version}${summary}${DRY_RUN_NOTE}\n`, json, exitCode: 0 };
 }

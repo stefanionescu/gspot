@@ -1,7 +1,7 @@
 import { createTwoFilesPatch } from 'diff';
-import type { StaleFile } from '#cli/types/apply.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import type { OutdatedFile } from '#cli/types/apply.ts';
 import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -13,8 +13,8 @@ import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
-import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/stale-files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/outdated-files.ts';
 
 function buildDiff(path: string, before: string, after: string, beforeName: string): string {
     return createTwoFilesPatch(
@@ -30,8 +30,8 @@ function buildDiff(path: string, before: string, after: string, beforeName: stri
     );
 }
 
-function listStaleWholeFiles(files: Files, generated: GenerationResult): StaleFile[] {
-    return generated.files.flatMap((file): StaleFile[] => {
+function listOutdatedWholeFiles(files: Files, generated: GenerationResult): OutdatedFile[] {
+    return generated.files.flatMap((file): OutdatedFile[] => {
         const current = files.read(file.path);
         if (current === undefined) return [{ path: file.path, kind: 'missing' }];
         const mode = file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE;
@@ -50,8 +50,8 @@ function listStaleWholeFiles(files: Files, generated: GenerationResult): StaleFi
     });
 }
 
-function listStaleBlocks(files: Files, generated: GenerationResult): StaleFile[] {
-    const entries: StaleFile[] = [];
+function listOutdatedBlocks(files: Files, generated: GenerationResult): OutdatedFile[] {
+    const entries: OutdatedFile[] = [];
     for (const block of generated.blocks) {
         const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
         const current = findBlockBody(text, { path: block.path, style: block.style });
@@ -68,8 +68,8 @@ function listStaleBlocks(files: Files, generated: GenerationResult): StaleFile[]
 }
 
 // List the shared files that went missing or lack a managed key.
-function listStaleManagedKeys(files: Files, generated: GenerationResult): StaleFile[] {
-    return generated.managedKeys.flatMap((output): StaleFile[] => {
+function listOutdatedManagedKeys(files: Files, generated: GenerationResult): OutdatedFile[] {
+    return generated.managedKeys.flatMap((output): OutdatedFile[] => {
         const current = files.read(output.path);
         if (current === undefined) return [{ path: output.path, kind: 'missing' }];
         return hasManagedKeys(output, current) ? [] : [{ path: output.path, kind: 'changed' }];
@@ -81,21 +81,21 @@ function listStaleManagedKeys(files: Files, generated: GenerationResult): StaleF
  *
  * @param session the repository to compare.
  * @param generated the files that this run generates.
- * @returns the stale files in path order.
+ * @returns the outdated files in path order.
  */
-export function listStaleFiles(
+export function listOutdatedFiles(
     session: Pick<Session, 'root' | 'packageManager' | 'repository'>,
     generated: GenerationResult,
-): StaleFile[] {
+): OutdatedFile[] {
     using files = openFiles(session.root);
     const known = listExpectedPaths(session, generated);
     const lockfiles = listStaleLockfiles(session, generated.files);
-    const strays = listStrayPaths(session, known).map((path): StaleFile => ({ path, kind: 'stray' }));
+    const strays = listStrayPaths(session, known).map((path): OutdatedFile => ({ path, kind: 'stray' }));
     return [
         ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),
-        ...listStaleWholeFiles(files, generated),
-        ...listStaleBlocks(files, generated),
-        ...listStaleManagedKeys(files, generated),
+        ...listOutdatedWholeFiles(files, generated),
+        ...listOutdatedBlocks(files, generated),
+        ...listOutdatedManagedKeys(files, generated),
         ...strays,
     ].toSorted((a, b) => a.path.localeCompare(b.path));
 }

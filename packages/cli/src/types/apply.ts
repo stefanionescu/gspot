@@ -13,7 +13,7 @@ export type ApplyReport = {
     notes: string[];
 };
 
-export type StaleFile = {
+export type OutdatedFile = {
     path: string;
     kind: 'changed' | 'missing' | 'stray';
     diff?: string;

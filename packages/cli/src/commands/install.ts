@@ -5,9 +5,9 @@ import { GspotError } from '#cli/system/errors.ts';
 import { installTools } from '#cli/install/tools.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type Command } from '@commander-js/extra-typings';
-import { listStaleFiles } from '#cli/apply/stale-files.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
+import { listOutdatedFiles } from '#cli/apply/outdated-files.ts';
 import { TOOL_PROJECT_FILES } from '#cli/config/commands/install.ts';
 import type { InstallCommandJson } from '#cli/types/commands/install.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
@@ -24,7 +24,7 @@ async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promis
     const session = await openSession(root, { cancelSignal });
     const generated = generate(session);
     // The tools install from the tool projects on disk, so those must match the settings first.
-    if (listStaleFiles(session, generated).some((file) => TOOL_PROJECT_FILES.has(file.path)))
+    if (listOutdatedFiles(session, generated).some((file) => TOOL_PROJECT_FILES.has(file.path)))
         throw new GspotError('install', 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.');
     using writer = openWriter(root);
     const { note, steps } = await installTools(session, writer, generated);
