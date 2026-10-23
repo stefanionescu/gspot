@@ -11,9 +11,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildPlan, prepareBuild } from '#cli/checks/language/swift/cache.ts';
 import { listSwiftlintConfigFiles } from '#cli/checks/language/swift/build.ts';
-import { rm, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 import {
     runSandboxCheck,
@@ -200,7 +200,7 @@ test('compiler: a Swift build whose source file is missing removes its build.loc
     await rm(join(sandbox.path, 'Main.swift'));
     const run = resources.use(spyOn(processes, 'spawnProcess'));
     expect(await captureRejection(findBuiltInCheck('swift/build')(session, input))).toBe(
-        `ENOENT: no such file or directory, lstat '${join(await realpath(sandbox.path), 'Main.swift')}'`,
+        'Main.swift is tracked but missing. Restore it or commit its deletion.',
     );
     expect(run).not.toHaveBeenCalled();
     expect(await isOnDisk(join(plan.folder, 'build.lock'))).toBe(false);

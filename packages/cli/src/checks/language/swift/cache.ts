@@ -2,13 +2,13 @@ import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
@@ -45,7 +45,15 @@ function readBuildSources(root: string, paths: string[]): Map<string, FileConten
     using source = openFiles(root);
     const wantedFiles = new Map<string, FileContents>();
     for (const file of paths) {
-        const mode = statSync(source.readRealPath(file)).mode & MODE_BITS;
+        let mode: number;
+        try {
+            mode = statSync(source.readRealPath(file)).mode & MODE_BITS;
+        } catch (error) {
+            if (!hasErrorCode(error, 'ENOENT')) throw error;
+            throw new GspotError('filesystem', `${file} is tracked but missing. Restore it or commit its deletion.`, {
+                cause: error,
+            });
+        }
         wantedFiles.set(`${BUILD_SOURCE_FOLDER}/${file}`, { bytes: readBytes(root, file), mode });
     }
     return wantedFiles;
