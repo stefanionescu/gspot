@@ -1,5 +1,6 @@
 // Creates sandboxes: temporary repositories with gspot settings for one test or one test file.
 import { join } from 'node:path';
+import { format } from 'prettier';
 import { strToU8, zipSync } from 'fflate';
 import { afterAll, beforeAll } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
@@ -17,6 +18,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PROSE_SANDBOX } from '#tests/config/checks/general/prose.ts';
 import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
 import { VALE_PACKAGES } from '#cli/config/generation/configurations/general/prose.ts';
+import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { type Sandbox, type SandboxPlan, type InstalledSandboxPlan } from '#tests/types/sandbox.ts';
 import { runGspot, spawnGspot, runGspotStep, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
@@ -54,9 +56,16 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
                       JSON.stringify({ ...SANDBOX_PACKAGE_JSON, dependencies: plan.dependencies }, null, JSON_INDENT) +
                       '\n',
               }),
+        // The format configuration checks every tracked file, so the tsconfig.json has the layout Prettier writes.
         ...(plan.tsconfig === undefined
             ? {}
-            : { 'tsconfig.json': JSON.stringify(plan.tsconfig, null, JSON_INDENT) + '\n' }),
+            : {
+                  'tsconfig.json': await format(JSON.stringify(plan.tsconfig), {
+                      parser: 'json',
+                      tabWidth: JSON_INDENT,
+                      printWidth: SETTING_DEFINITIONS['format.print_width'].default,
+                  }),
+              }),
         ...plan.files,
     });
     if (plan.dependencies !== undefined) await pinSandboxNpm(root);

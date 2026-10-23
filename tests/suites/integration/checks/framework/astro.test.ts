@@ -46,17 +46,12 @@ test('ESLint, astro check, and Prettier each report a finding in one Astro proje
         },
     ]);
     await writeFile(join(root, ASTRO_PAGE_PATH), ASTRO_PAGE.replace('<h1>{title}</h1>', '<h1>{title}</h1   >'));
-    // The sandbox writes tsconfig.json with JSON.stringify, which Prettier formats differently, so the runs name the page.
     const loose = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'format/prettier', '--json', '--', ASTRO_PAGE_PATH], environment),
+        await spawnGspot(root, ['check', '--only', 'format/prettier', '--json'], environment),
     );
     expect(loose.code, loose.stdout + loose.stderr).toBe(1);
     expect(loose.report.checks[0]!.findings.map(({ file }) => file)).toStrictEqual([ASTRO_PAGE_PATH]);
-    const fixed = await spawnGspot(
-        root,
-        ['check', '--fix', '--only', 'format/prettier', '--', ASTRO_PAGE_PATH],
-        environment,
-    );
+    const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'format/prettier'], environment);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await readFile(join(root, ASTRO_PAGE_PATH), 'utf8')).toBe(ASTRO_PAGE);
     const clean = await spawnGspot(

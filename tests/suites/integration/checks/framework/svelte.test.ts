@@ -19,24 +19,14 @@ test('Prettier reports and fixes a Svelte component through the Svelte plugin', 
         files: { 'src/Greeting.svelte': CLEAN_SVELTE.replace('<p>', '<p     >') },
     });
 
-    // The sandbox writes tsconfig.json with JSON.stringify, which Prettier formats differently, so the runs name the
-    // component.
     const loose = parseCheckReport(
-        await spawnGspot(
-            root,
-            ['check', '--only', 'format/prettier', '--json', '--', 'src/Greeting.svelte'],
-            environment,
-        ),
+        await spawnGspot(root, ['check', '--only', 'format/prettier', '--json'], environment),
     );
     expect(loose.code, loose.stdout + loose.stderr).toBe(1);
     expect(loose.report.checks).toMatchObject([
         { check: 'format/prettier', status: 'failed', findings: [matchFields({ file: 'src/Greeting.svelte' })] },
     ]);
-    const fixed = await spawnGspot(
-        root,
-        ['check', '--fix', '--only', 'format/prettier', '--', 'src/Greeting.svelte'],
-        environment,
-    );
+    const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'format/prettier'], environment);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await readFile(path, 'utf8')).toBe(CLEAN_SVELTE);
 });
