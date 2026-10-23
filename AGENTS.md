@@ -140,7 +140,9 @@ repository.
   its folder in `packages/cli/configurations/`.
 - When the checks of a configuration pass the file length limit, they move to a folder `checks/<group>/<configuration>/`. That
   folder has one file per check, named after it, or per input that several checks read.
-- Code that checks of several configurations share sits at the top of `checks/`.
+- Code that checks of several configurations share sits at the top of `checks/`. Code that belongs to one
+  configuration stays in its folder when another configuration reuses it, such as the Postgres migrations reader that
+  supabase reads.
 - The code of one configuration sits at the same path in every tree. Its shipped files sit in
   `packages/cli/configurations/<group>/<configuration>/`, and its checks in `packages/cli/src/checks/<group>/`.
 - The code that writes a config file sits in `packages/cli/src/generation/configurations/<group>/<configuration>/`,

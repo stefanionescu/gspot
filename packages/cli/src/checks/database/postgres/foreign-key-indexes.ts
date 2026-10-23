@@ -4,7 +4,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
-import { readParsedMigrations } from '#cli/checks/postgres-migrations.ts';
+import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 /**
  * Reports each foreign key column that no index, primary key, or unique key leads with.

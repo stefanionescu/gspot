@@ -4,12 +4,12 @@ import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
-import { MIGRATION_DOWN } from '#cli/config/checks/postgres.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/code/sql/migrations.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
 import { readBlobs, listHeadEntries } from '#cli/repository/revisions/files.ts';
-import { readMigrations, readParsedMigrations } from '#cli/checks/postgres-migrations.ts';
+import { MIGRATION_DOWN } from '#cli/config/checks/database/postgres/migrations.ts';
+import { readMigrations, readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 const COMMITTED_MIGRATIONS = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
