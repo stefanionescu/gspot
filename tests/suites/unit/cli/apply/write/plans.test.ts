@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { GspotError } from '#cli/system/errors.ts';
-import { openWriter, writePlans } from '#cli/apply/writer.ts';
-import { planBlock, planRemoval } from '#cli/apply/write-plans.ts';
-import { NON_UTF8_BLOCK_CASES } from '#tests/config/apply/write-plans.ts';
+import { planBlock, planRemoval } from '#cli/apply/write/plans.ts';
+import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
+import { NON_UTF8_BLOCK_CASES } from '#tests/config/apply/write.ts';
 
 test.each([...NON_UTF8_BLOCK_CASES])(
     'block updates and removal refuse non-UTF-8 $path with a file error and keep its bytes',

@@ -4,10 +4,10 @@ import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
-import { planRemoval } from '#cli/apply/write-plans.ts';
-import { openWriter, writePlans } from '#cli/apply/writer.ts';
-import { planSettingsWrite } from '#cli/apply/managed-keys.ts';
+import { planRemoval } from '#cli/apply/write/plans.ts';
+import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { planSettingsWrite } from '#cli/apply/write/managed-keys.ts';
 import { BUN_SCANNER_KEYS, TWO_WEEKS_SECONDS } from '#tests/config/generation/configurations/general/dependencies.ts';
 
 test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig.toml', async () => {

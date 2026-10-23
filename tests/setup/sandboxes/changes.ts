@@ -1,9 +1,9 @@
 // Writes sample changes into a sandbox, and restores the files when the test ends.
 import { join, dirname } from 'node:path';
 import { openSession } from '#cli/session.ts';
-import { openWriter } from '#cli/apply/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import type { Sandbox } from '#tests/types/sandbox.ts';
+import { openWriter } from '#cli/apply/write/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';

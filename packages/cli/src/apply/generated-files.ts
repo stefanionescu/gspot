@@ -1,15 +1,15 @@
-import { writePlans } from '#cli/apply/writer.ts';
 import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { planSettingsWrite } from '#cli/apply/managed-keys.ts';
+import { writePlans } from '#cli/apply/write/writer.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import { listExpectedPaths } from '#cli/apply/outdated-files.ts';
 import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
+import { planSettingsWrite } from '#cli/apply/write/managed-keys.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { type Writer, type WritePlan, type ApplyReport } from '#cli/types/apply.ts';
-import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/apply/write-plans.ts';
+import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/apply/write/plans.ts';
 import { MANAGED_KEYS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_NEEDED_NOTE } from '#cli/config/apply/generated-files.ts';
 
 /**

@@ -281,8 +281,8 @@ name = "repository"
 paths = ["packages/cli/src/repository/**", "packages/cli/src/schemas/repository/**"]
 
 [[import_rule]]
-name = "writer"
-paths = ["packages/cli/src/apply/{writer,write-plans,managed-keys}.ts"]
+name = "write"
+paths = ["packages/cli/src/apply/write/**"]
 
 [[import_rule]]
 name = "settings"
@@ -310,7 +310,7 @@ paths = ["packages/cli/src/install/**", "packages/cli/src/schemas/install/**"]
 
 [[import_rule]]
 name = "apply"
-paths = ["packages/cli/src/apply/!(writer|write-plans|managed-keys).ts"]
+paths = ["packages/cli/src/apply/*.ts"]
 
 [[import_rule]]
 name = "runs"

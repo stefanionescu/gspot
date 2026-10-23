@@ -4,11 +4,11 @@ import { test, expect } from 'bun:test';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { captureThrow } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { openWriter, writePlans } from '#cli/apply/writer.ts';
-import { planSettingsWrite } from '#cli/apply/managed-keys.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
+import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
+import { planSettingsWrite } from '#cli/apply/write/managed-keys.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { planBlock, planReplacement } from '#cli/apply/write-plans.ts';
+import { planBlock, planReplacement } from '#cli/apply/write/plans.ts';
 
 test('one batch writes the planned binary bytes and removes a stray file', async () => {
     await using sandbox = await testdir();

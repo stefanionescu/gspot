@@ -1,9 +1,9 @@
 import { openSession } from '#cli/session.ts';
-import { openWriter } from '#cli/apply/writer.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { installTools } from '#cli/install/tools.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { openWriter } from '#cli/apply/write/writer.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';

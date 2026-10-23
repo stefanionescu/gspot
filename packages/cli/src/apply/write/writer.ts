@@ -2,7 +2,7 @@
 import { GspotError } from '#cli/system/errors.ts';
 import type { Writer, WritePlan } from '#cli/types/apply.ts';
 import { isSameContents } from '#cli/system/files/entries.ts';
-import { WRITER_LOCK_FILE } from '#cli/config/apply/writer.ts';
+import { WRITER_LOCK_FILE } from '#cli/config/apply/write/writer.ts';
 import { openFiles, removeEmptyFolders } from '#cli/system/files/open.ts';
 
 function writeBatch(writer: Writer, plans: WritePlan[]): void {

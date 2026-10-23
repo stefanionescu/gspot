@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { openWriter } from '#cli/apply/writer.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
+import { openWriter } from '#cli/apply/write/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';

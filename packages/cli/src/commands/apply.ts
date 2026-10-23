@@ -1,9 +1,9 @@
 import { openSession } from '#cli/session.ts';
-import { openWriter } from '#cli/apply/writer.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { type Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { openWriter } from '#cli/apply/write/writer.ts';
 import { type OutdatedFile } from '#cli/types/apply.ts';
 import { type Command } from '@commander-js/extra-typings';
 import cliPackage from '#cli-package' with { type: 'json' };

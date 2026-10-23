@@ -1,5 +1,4 @@
 import { openSession } from '#cli/session.ts';
-import { openWriter } from '#cli/apply/writer.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
@@ -7,6 +6,7 @@ import { writeSettings } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
+import { openWriter } from '#cli/apply/write/writer.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
