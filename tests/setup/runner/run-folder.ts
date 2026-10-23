@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
+import { DIGEST_ALGORITHM } from '#cli/config/files/hashes.ts';
 import { runtimeSettingsSchema } from '#tests/schemas/preparation.ts';
-import { DIGEST_ALGORITHM } from '#cli/config/checks/language/swift/cache.ts';
 import { PINNED_TOOLS_FILE, TEST_RUN_HASH_LENGTH, TEST_RUN_FOLDER_NAME } from '#tests/config/setup/runner.ts';
 
 /** The packages and tool paths of the test run for this checkout, named after the checkout folder. */

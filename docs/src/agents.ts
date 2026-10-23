@@ -3,7 +3,7 @@ import { DESCRIPTION } from './config/site.ts';
 import { AGENT_STEPS } from './config/setup.ts';
 import type { AgentSkillsIndex } from './types/agents.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
-import { DIGEST_ALGORITHM } from '#cli/config/checks/language/swift/cache.ts';
+import { DIGEST_ALGORITHM } from '#cli/config/files/hashes.ts';
 
 import {
     LLMS_FILE,

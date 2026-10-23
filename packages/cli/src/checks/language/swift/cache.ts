@@ -8,6 +8,7 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
+import { DIGEST_ALGORITHM } from '#cli/config/files/hashes.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
@@ -21,7 +22,6 @@ import {
     BUILD_LOG,
     BUILD_LOCK,
     SWIFT_PROGRAM,
-    DIGEST_ALGORITHM,
     CODE_SIGNING_OFF,
     SCRATCH_PATH_FLAG,
     DERIVED_DATA_FLAG,

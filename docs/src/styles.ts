@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { join, dirname, basename, relative } from 'node:path';
+import { DIGEST_ALGORITHM } from '#cli/config/files/hashes.ts';
 import { glob, rename, readFile, writeFile } from 'node:fs/promises';
-import { DIGEST_ALGORITHM } from '#cli/config/checks/language/swift/cache.ts';
 
 import {
     PURGECSS_EXTRACTOR,
