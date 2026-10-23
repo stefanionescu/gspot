@@ -24,9 +24,14 @@ import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspo
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
 import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/tool-projects.ts';
-import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
+import {
+    buildGithubWorkflow,
+    buildGitlabWorkflow,
+    listProjectLockfiles,
+    listProjectInstallLines,
+} from '#cli/generation/ci.ts';
 import {
     LF_ATTRIBUTES,
     AUTO_LF_ATTRIBUTES,
@@ -58,6 +63,8 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
             setupCommand: settings.ci.setup_command,
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
             operatingSystems: settings.ci.operating_systems,
+            linuxRunner: settings.ci.linux_runner,
+            lockfiles: listProjectLockfiles(session),
             hasSwift: isConfigurationSelected(scopes, SWIFT_CONFIGURATION),
             manualChecks: manual,
             manualTools: listDistinctTools(session.toolConfigurations).filter((tool) => required.has(tool.name)),

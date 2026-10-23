@@ -12,8 +12,8 @@ export type Pipeline = {
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     projectInstall: string[];
     operatingSystems: NonNullable<Settings['ci']>['operating_systems'];
+    linuxRunner: NonNullable<Settings['ci']>['linux_runner'];
+    lockfiles: string[];
     hasSwift: boolean;
     manualChecks: PlannedCheck[];
 };
-
-export type GithubCheck = { step: Record<string, unknown>; condition?: string };

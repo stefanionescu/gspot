@@ -5,6 +5,11 @@ description: Run checks in GitHub Actions, GitLab, or an existing pipeline.
 
 import { LOCKFILE_INSTALLS } from '../../../config/setup.ts';
 
+gspot writes one workflow file and never touches the others. Keep your tests, builds, and deploys in your own workflow
+files; GitHub runs every workflow file in parallel, so they never wait on gspot. A testing configuration such as `jest`
+or `pytest` runs its tests inside the gspot job. To run your tests only in your own workflow, leave those
+configurations out.
+
 `gspot init` plans a workflow for GitHub or GitLab. It picks the provider from `.github/workflows/` or `.gitlab-ci.yml`,
 or else from an `origin` remote on github.com or gitlab.com.
 
@@ -35,9 +40,12 @@ include:
 
 ## What the job checks
 
+On GitHub, the workflow has one job, `lint`. It runs for pull requests, merge queues, and pushes to the default branch.
+A push to another branch skips the job, so open a pull request to check a branch.
+
 The job checks the files changed after the pull or merge request base, or after the previous push. The first push of a
-branch checks every file. On pushes to the default branch, a second job runs the manual checks that your configurations
-select.
+branch checks every file. On pushes to the default branch, a last step, Slow checks, runs the manual checks that your
+configurations select, such as external links.
 
 ## Systems
 
@@ -48,8 +56,16 @@ macOS. To add other systems:
 gspot set ci.operating_systems linux macos windows
 ```
 
-This setting works on GitHub only; gspot refuses it with `ci.provider = "gitlab"`. Pick only systems where your checks
-can run.
+With more than one system, each system gets its own job: `lint-linux`, `lint-macos`, and `lint-windows`. Pick only
+systems where your checks can run.
+
+To run the Linux job on a larger or self-hosted runner, name its label:
+
+```shell
+gspot set ci.linux_runner ubuntu-24.04-8core
+```
+
+Both settings work on GitHub only; gspot refuses them with `ci.provider = "gitlab"`.
 
 ## Install steps
 
@@ -122,8 +138,9 @@ npm exec --no -- gspot check --only security/semgrep-registry
 Let the pipeline fail on the gspot exit code: `1` means findings, and `2` means the run did not finish. A missing
 program gives exit 2, and the report names it. `gspot check --json` prints the report as JSON.
 
-Do not cache or upload `.gspot/state/` or credentials. To cache downloads and installed tools, key the cache on
-`gspot.toml` and the files in `.gspot/`, as the GitHub job does.
+Do not cache or upload `.gspot/state/` or credentials. To cache downloads and installed tools, key the cache on the gspot
+version, the tool files in `.gspot/`, and your lockfiles, as the GitHub job does. Save the cache right after the
+installs, so a run with findings still saves it.
 
 ## Turn CI off
 

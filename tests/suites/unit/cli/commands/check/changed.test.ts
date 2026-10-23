@@ -70,6 +70,27 @@ test('--changed without an upstream names the fix, and uses the remote default b
     expect(defaultRange.stdout.split('\n', 1)[0]).toBe('Checked the files changed since refs/remotes/origin/main.');
 });
 
+test.each(['', '0'.repeat(40)])('--changed %p, as CI gives for a new branch, checks every file', async (base) => {
+    await using sandbox = await testdir();
+    await prepareChangedRepository(sandbox.path, {
+        '.gitignore': `${DOT_GSPOT}/\n`,
+        'api/source.txt': 'before',
+        'web/source.txt': 'before',
+    });
+    runGitStep(sandbox.path, ['init', '-b', 'topic']);
+    commitAll(sandbox.path);
+    const result = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', base, '--json']),
+    );
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(result.report.comparison).toBeUndefined();
+    expect(
+        result.report.checks
+            .flatMap((check) => check.findings.map((finding) => finding.message))
+            .toSorted((a, b) => a.localeCompare(b)),
+    ).toStrictEqual(['api/source.txt', 'web/source.txt']);
+});
+
 test('a shallow clone explains how to fetch the missing history', async () => {
     await using sandbox = await testdir();
     const source = join(sandbox.path, 'source');

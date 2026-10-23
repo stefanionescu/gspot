@@ -9,9 +9,9 @@ import { formatHeader } from '#cli/generation/header.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
+import type { Pipeline, ActionPin } from '#cli/types/generation/ci.ts';
 import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
 import { PROJECT_UV_LOCKFILE } from '#cli/config/install/python/project.ts';
-import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
 import { getTool, findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
 import { TOOL_BUILDS, NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
@@ -20,12 +20,14 @@ import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#c
 import {
     CI_PINS,
     CI_NODE,
-    ZERO_SHAS,
+    CI_JOB_NAME,
     GITLAB_RULES,
     CACHED_PATHS,
+    CI_CACHE_STEP,
     CI_STEP_NAMES,
     GITHUB_EVENTS,
     CI_CACHE_FILES,
+    CI_CACHE_PREFIX,
     FROZEN_INSTALLS,
     GITHUB_WORKFLOW,
     GITLAB_WORKFLOW,
@@ -36,9 +38,12 @@ import {
     YARN_BERRY_INSTALL,
     GITHUB_CONCURRENCY,
     CI_TIMEOUT_MINUTES,
+    CI_CACHE_SAVED_KEY,
+    GITHUB_PUSH_CONDITION,
+    GITHUB_SLOW_CONDITION,
     MISE_TOKEN_ENVIRONMENT,
     GITHUB_BASE_EXPRESSION,
-    GITHUB_MANUAL_CONDITION,
+    CI_CACHE_MISS_CONDITION,
     GITLAB_MANUAL_CONDITION,
 } from '#cli/config/generation/ci.ts';
 
@@ -46,18 +51,6 @@ function buildActionPin({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);
     node.comment = ` ${version}`;
     return node;
-}
-
-function buildCheckScript(command: string): string {
-    return [
-        `base="\${${CI_BASE_VARIABLE}:-}"`,
-        'case "${base}" in',
-        `    '' | ${ZERO_SHAS.join(' | ')}) ${command} ;;`,
-        '    *)',
-        `        ${command} --changed "\${base}"`,
-        '        ;;',
-        'esac',
-    ].join('\n');
 }
 
 function buildGspotCommand(pipeline: Pipeline): string {
@@ -87,47 +80,72 @@ function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSys
     };
 }
 
-function buildJob(
-    pipeline: Pipeline,
-    platform: Pipeline['operatingSystems'][number],
-    check: GithubCheck,
-): Record<string, unknown> {
+function listInstallSteps(pipeline: Pipeline, command: string): Record<string, unknown>[] {
+    return [
+        {
+            name: CI_STEP_NAMES.mise,
+            uses: buildActionPin(CI_PINS.actions.mise),
+            with: { version: CI_PINS.mise.version, cache: false },
+        },
+        ...(pipeline.setupCommand === undefined
+            ? []
+            : [
+                  {
+                      name: CI_STEP_NAMES.setup,
+                      run: pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' '),
+                  },
+              ]),
+        ...(pipeline.projectInstall.length === 0
+            ? []
+            : [{ name: CI_STEP_NAMES.projectInstall, run: pipeline.projectInstall.join('\n') }]),
+        { name: CI_STEP_NAMES.install, env: { ...MISE_TOKEN_ENVIRONMENT }, run: `${command} install` },
+    ];
+}
+
+function buildJob(pipeline: Pipeline, platform: Pipeline['operatingSystems'][number]): Record<string, unknown> {
     const machine = CI_PINS.githubRunners[platform];
     const command = buildGspotCommand(pipeline);
-    const cacheFiles = CI_CACHE_FILES.map((path) => `'${path}'`).join(', ');
+    const slow = selectManualChecks(pipeline, platform, machine.arch);
+    const hashed = [...CI_CACHE_FILES, ...pipeline.lockfiles].map((path) => `'${path}'`).join(', ');
+    const cache = {
+        key: `${CI_CACHE_PREFIX}${pipeline.version}-\${{ hashFiles(${hashed}) }}`,
+        path: `${CACHED_PATHS.join('\n')}\n`,
+    };
     return {
-        'runs-on': machine.label,
+        'runs-on': platform === 'linux' ? pipeline.linuxRunner : machine.label,
         'timeout-minutes': CI_TIMEOUT_MINUTES,
-        ...(check.condition === undefined ? {} : { if: check.condition }),
+        if: GITHUB_PUSH_CONDITION,
         defaults: { run: { shell: 'bash' } },
         steps: [
             { name: CI_STEP_NAMES.checkout, uses: buildActionPin(CI_PINS.actions.checkout), with: CHECKOUT_OPTIONS },
             {
-                name: CI_STEP_NAMES.cache,
-                uses: buildActionPin(CI_PINS.actions.cache),
-                with: {
-                    key: `gspot-\${{ runner.os }}-\${{ runner.arch }}-\${{ hashFiles(${cacheFiles}) }}`,
-                    path: `${CACHED_PATHS.join('\n')}\n`,
-                },
+                name: CI_STEP_NAMES.restoreCache,
+                id: CI_CACHE_STEP,
+                uses: buildActionPin(CI_PINS.actions.restoreCache),
+                with: { ...cache, 'restore-keys': CI_CACHE_PREFIX },
+            },
+            ...listInstallSteps(pipeline, command),
+            {
+                name: CI_STEP_NAMES.saveCache,
+                if: CI_CACHE_MISS_CONDITION,
+                uses: buildActionPin(CI_PINS.actions.saveCache),
+                with: { key: CI_CACHE_SAVED_KEY, path: cache.path },
             },
             {
-                name: CI_STEP_NAMES.mise,
-                uses: buildActionPin(CI_PINS.actions.mise),
-                with: { version: CI_PINS.mise.version, cache: false },
+                name: CI_STEP_NAMES.check,
+                env: { [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION },
+                run: `${command} check --changed "\${${CI_BASE_VARIABLE}}"\n`,
             },
-            ...(pipeline.setupCommand === undefined
+            ...(slow.checks.length === 0
                 ? []
                 : [
                       {
-                          name: CI_STEP_NAMES.setup,
-                          run: pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' '),
+                          name: CI_STEP_NAMES.slow,
+                          if: GITHUB_SLOW_CONDITION,
+                          ...(slow.tools.length === 0 ? {} : { env: { ...MISE_TOKEN_ENVIRONMENT } }),
+                          run: listManualLines(command, slow).join('\n') + '\n',
                       },
                   ]),
-            ...(pipeline.projectInstall.length === 0
-                ? []
-                : [{ name: CI_STEP_NAMES.projectInstall, run: pipeline.projectInstall.join('\n') }]),
-            { name: CI_STEP_NAMES.install, env: { ...MISE_TOKEN_ENVIRONMENT }, run: `${command} install` },
-            structuredClone(check.step),
         ],
     };
 }
@@ -153,53 +171,26 @@ function listManualLines(command: string, manual: { checks: string[]; tools: str
 }
 
 /**
- * Build the check job and the manual jobs for each machine with one mise setup.
+ * Build one lint job for each system, each with one mise setup.
  *
  * @param pipeline what the workflow runs.
  *
  * @returns the GitHub workflow file.
  */
 export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
-    const command = buildGspotCommand(pipeline);
-    const checkScript = buildCheckScript(`${command} check`);
-    const check: GithubCheck = {
-        step: {
-            name: CI_STEP_NAMES.check,
-            env: {
-                [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION,
-            },
-            run: `${checkScript}\n`,
-        },
-    };
     const platforms = [...new Set([...pipeline.operatingSystems, ...(pipeline.hasSwift ? (['macos'] as const) : [])])];
+    const jobs = platforms.map((platform): [string, Record<string, unknown>] =>
+        platforms.length === 1
+            ? [CI_JOB_NAME, buildJob(pipeline, platform)]
+            : [`${CI_JOB_NAME}-${platform}`, { name: `${CI_JOB_NAME} (${platform})`, ...buildJob(pipeline, platform) }],
+    );
     const workflow = new Document(
         {
             name: 'gspot',
             on: GITHUB_EVENTS,
             permissions: { contents: 'read' },
             concurrency: GITHUB_CONCURRENCY,
-            jobs: Object.fromEntries(
-                platforms.flatMap((platform) => {
-                    const machine = CI_PINS.githubRunners[platform];
-                    const manual = selectManualChecks(pipeline, platform, machine.arch);
-                    const jobs: [string, Record<string, unknown>][] = [
-                        [`check-${platform}`, buildJob(pipeline, platform, check)],
-                    ];
-                    if (manual.checks.length > 0)
-                        jobs.push([
-                            `manual-${platform}`,
-                            buildJob(pipeline, platform, {
-                                condition: GITHUB_MANUAL_CONDITION,
-                                step: {
-                                    name: CI_STEP_NAMES.manual,
-                                    ...(manual.tools.length === 0 ? {} : { env: { ...MISE_TOKEN_ENVIRONMENT } }),
-                                    run: listManualLines(command, manual).join('\n') + '\n',
-                                },
-                            }),
-                        ]);
-                    return jobs;
-                }),
-            ),
+            jobs: Object.fromEntries(jobs),
         },
         { aliasDuplicateObjects: false },
     );
@@ -221,7 +212,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
         pipeline.setupCommand === undefined
             ? pipeline.projectInstall
             : [pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' ')];
-    const check = [GITLAB_BASE_LINE, buildCheckScript(`${command} check`)].join('\n');
+    const check = [GITLAB_BASE_LINE, `${command} check --changed "\${${CI_BASE_VARIABLE}}"`].join('\n');
     const branches = OPERATING_SYSTEMS.flatMap((system) =>
         TOOL_BUILDS.filter((build) => build.startsWith(`${system.name}-`)).flatMap((build) => {
             const arch = build.slice(system.name.length + 1);
@@ -278,6 +269,21 @@ function buildFrozenInstall(session: Session, lockfile: string): readonly string
 }
 
 /**
+ * List the tracked lockfiles of the root and of each scope, which CI installs from and keys its cache on.
+ *
+ * @param session the repository and its scopes.
+ * @returns the repository paths of the lockfiles.
+ */
+export function listProjectLockfiles(session: Session): string[] {
+    const tracked = new Set(session.repository.files.map((file) => file.path));
+    return session.scopes.flatMap(({ folder }) =>
+        Object.keys(FROZEN_INSTALLS)
+            .map((lockfile) => joinScope(folder.path, lockfile))
+            .filter((path) => tracked.has(path)),
+    );
+}
+
+/**
  * List the shell lines that install the locked dependencies of each project, then write the route types of each
  * Next.js project, which typed lint rules read.
  *
@@ -285,10 +291,10 @@ function buildFrozenInstall(session: Session, lockfile: string): readonly string
  * @returns the lines, each run from the repository root.
  */
 export function listProjectInstallLines(session: Session): string[] {
-    const tracked = new Set(session.repository.files.map((file) => file.path));
+    const lockfiles = new Set(listProjectLockfiles(session));
     return session.scopes.flatMap(({ folder, configurations }) => {
         const installs = Object.keys(FROZEN_INSTALLS)
-            .filter((lockfile) => tracked.has(joinScope(folder.path, lockfile)))
+            .filter((lockfile) => lockfiles.has(joinScope(folder.path, lockfile)))
             .flatMap((lockfile) => {
                 const command = buildFrozenInstall(session, lockfile);
                 return command === undefined ? [] : [command.map((argument) => quoteArgument(argument)).join(' ')];

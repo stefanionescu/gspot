@@ -83,7 +83,9 @@ async function runCiJob(
     const script =
         'gspot' in generated
             ? generated.gspot.script
-            : generated.jobs['check-linux']!.steps.flatMap((step) => (step.run === undefined ? [] : [step.run]));
+            : generated.jobs['lint']!.steps.flatMap((step) =>
+                  step.run === undefined || step.if !== undefined ? [] : [step.run],
+              );
     return await runCommand(['bash', '-e', '-c', script.join('\n')], {
         cwd: root,
         env: {

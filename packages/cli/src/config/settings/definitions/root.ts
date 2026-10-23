@@ -1,3 +1,4 @@
+import { CI_PINS } from '#cli/config/generation/ci.ts';
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 
 export const LEVEL_SUMMARY =
@@ -86,5 +87,10 @@ export const ROOT_SETTING_DEFINITIONS = {
     'ci.operating_systems': {
         description: 'The operating systems of the CI jobs. GitHub only; refused with provider = "gitlab".',
         default: ['linux'] as ['linux'],
+    },
+    'ci.linux_runner': {
+        description:
+            'The GitHub runner label of the Linux job, such as a larger or self-hosted runner. GitHub only; refused with provider = "gitlab".',
+        default: CI_PINS.githubRunners.linux.label,
     },
 } as const satisfies Record<string, SettingDefinition>;

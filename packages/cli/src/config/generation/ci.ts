@@ -1,4 +1,3 @@
-import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
 export const CACHED_PATHS = [
@@ -28,8 +27,13 @@ export const CI_PINS = {
             sha: '2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca',
             version: 'v5.1.1',
         },
-        cache: {
-            name: 'actions/cache',
+        restoreCache: {
+            name: 'actions/cache/restore',
+            sha: '55cc8345863c7cc4c66a329aec7e433d2d1c52a9',
+            version: 'v6.1.0',
+        },
+        saveCache: {
+            name: 'actions/cache/save',
             sha: '55cc8345863c7cc4c66a329aec7e433d2d1c52a9',
             version: 'v6.1.0',
         },
@@ -43,31 +47,36 @@ export const CI_PINS = {
 
 export const CI_TIMEOUT_MINUTES = 60;
 
-export const ZERO_SHAS = [
-    '0000000000000000000000000000000000000000',
-    '0000000000000000000000000000000000000000000000000000000000000000',
-] as const;
-
 export const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: '${{ github.token }}' } as const;
 
 export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
 
 export const CI_CACHE_FILES = [
-    SETTINGS_FILE,
     GSPOT_PATHS.npmProject,
     `${DOT_GSPOT}/*lock*`,
     GSPOT_PATHS.pythonProject,
     GSPOT_PATHS.miseProject,
-    GSPOT_PATHS.versionPin,
 ] as const;
+
+export const CI_JOB_NAME = 'lint';
+
+export const CI_CACHE_STEP = 'cache';
+
+export const CI_CACHE_PREFIX = 'gspot-${{ runner.os }}-${{ runner.arch }}-';
+
+export const CI_CACHE_MISS_CONDITION = `steps.${CI_CACHE_STEP}.outputs.cache-hit != 'true'`;
+
+export const CI_CACHE_SAVED_KEY = `\${{ steps.${CI_CACHE_STEP}.outputs.cache-primary-key }}`;
 
 export const CHECKOUT_OPTIONS = { 'fetch-depth': 0, 'persist-credentials': false } as const;
 
 export const GITHUB_BASE_EXPRESSION =
     "${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}";
 
-export const GITHUB_MANUAL_CONDITION =
-    "github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)";
+export const GITHUB_PUSH_CONDITION =
+    "github.event_name != 'push' || github.ref_name == github.event.repository.default_branch";
+
+export const GITHUB_SLOW_CONDITION = "github.event_name == 'push'";
 
 export const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
 
@@ -90,13 +99,14 @@ export const CI_NODE = 'node@24';
 
 export const CI_STEP_NAMES = {
     checkout: 'Check out source',
-    cache: 'Restore tool caches',
+    restoreCache: 'Restore caches',
     mise: 'Set up mise',
     setup: 'Set up the project',
     projectInstall: 'Install project dependencies',
     install: 'Install gspot tools',
-    check: 'Check',
-    manual: 'Manual checks',
+    saveCache: 'Save caches',
+    check: 'Lint',
+    slow: 'Slow checks',
 } as const;
 
 export const FROZEN_INSTALLS: Readonly<Record<string, readonly string[]>> = {

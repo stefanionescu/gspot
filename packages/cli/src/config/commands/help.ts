@@ -66,7 +66,7 @@ export const COMMAND_HELP = {
                 'Run only these checks, such as `python/ruff`. Separate several with commas, or repeat the option',
             '--staged': 'Check the files as you staged them, not the working tree',
             '--changed [ref]':
-                'Check the files changed since ref (default: the upstream branch, else the default branch)',
+                'Check the files changed since ref (default: the upstream branch, else the default branch). An empty ref, or a ref of all zeros as CI gives for a new branch, checks every file',
             '--fix': 'Run the fixers, then run the checks on the fixed files',
             '--dry-run': 'With `--fix`: print the changes the fixers would make, and write nothing',
             '--hook <hook>':

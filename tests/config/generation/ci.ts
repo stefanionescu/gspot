@@ -43,7 +43,19 @@ export const LINUX_PIPELINE = {
     version: '1.2.3',
     packageManager: { name: 'npm', version: '11.10.1' },
     operatingSystems: ['linux'],
+    linuxRunner: 'ubuntu-24.04',
+    lockfiles: ['package-lock.json', 'web/pnpm-lock.yaml'],
     hasSwift: false,
     manualChecks: ['docs/lychee-external'],
     projectInstall: [],
 } as const;
+
+export const LINT_STEPS = [
+    'Check out source',
+    'Restore caches',
+    'Set up mise',
+    'Install gspot tools',
+    'Save caches',
+    'Lint',
+    'Slow checks',
+] as const;

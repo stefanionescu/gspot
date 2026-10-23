@@ -90,6 +90,7 @@ export type ParsedCi = {
     provider: (typeof CI_PROVIDERS)[number];
     setup_command?: string[] | undefined;
     operating_systems: (typeof OPERATING_SYSTEMS)[number]['name'][];
+    linux_runner: string;
 };
 
 export type ParsedRules = { enabled: boolean; exclude: string[] };

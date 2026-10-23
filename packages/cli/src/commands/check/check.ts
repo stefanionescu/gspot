@@ -17,8 +17,8 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-typings';
-import { PROGRESS_CLEAR, CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/check.ts';
+import { PROGRESS_CLEAR, NO_BASE_REVISION, CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
 
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
     cancelSignal.throwIfAborted();
@@ -46,7 +46,7 @@ function parseCheckNames(value: string, previous: string[] | undefined): string[
 }
 
 function getChangedBase(changed: CheckFlags['changed']): string | undefined {
-    if (typeof changed === 'string') return changed;
+    if (typeof changed === 'string') return NO_BASE_REVISION.test(changed) ? undefined : changed;
     return changed === true ? '' : undefined;
 }
 
