@@ -51,7 +51,7 @@ test('set names -- when a value reads as an option, and takes the values after -
     );
     const set = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'bun', 'install', '--frozen-lockfile']);
     expect(set.code, set.stdout + set.stderr).toBe(0);
-    expect(set.stdout.split('\n', 1)[0]).toBe('Added bun and install and --frozen-lockfile to ci.setup_command.');
+    expect(set.stdout.split('\n', 1)[0]).toBe('Added "bun", "install", "--frozen-lockfile" to ci.setup_command.');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(getValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['bun', 'install', '--frozen-lockfile']);
 });

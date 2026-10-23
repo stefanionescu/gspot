@@ -104,8 +104,11 @@ function formatSettingChange(
     if (isReasonTable) return `Added ${options.values.join(' and ')} to ${displayKey}.${was}`;
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
     if (!Array.isArray(change.value)) return `Set ${displayKey} to ${JSON.stringify(change.value)}.${reason}${was}`;
-    const items = change.value.map((item) => (typeof item === 'string' ? item : JSON.stringify(item))).join(' and ');
-    const description = change.type === 'list' ? `Added ${items} to ${displayKey}.` : `Set ${displayKey} to ${items}.`;
+    // A list value may hold a command, so each item keeps its quotes.
+    const description =
+        change.type === 'list'
+            ? `Added ${change.value.map((item) => JSON.stringify(item)).join(', ')} to ${displayKey}.`
+            : `Set ${displayKey} to ${JSON.stringify(change.value)}.`;
     return `${description}${reason}${was}`;
 }
 
