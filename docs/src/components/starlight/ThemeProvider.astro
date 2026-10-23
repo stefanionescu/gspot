@@ -6,5 +6,4 @@ import { THEME_STORAGE_KEY } from '../../config/site.ts';
 <script is:inline define:vars={{ THEME_STORAGE_KEY }}>
     const stored = typeof localStorage === 'undefined' ? null : localStorage.getItem(THEME_STORAGE_KEY);
     document.documentElement.dataset.theme = stored === 'light' ? 'light' : 'dark';
-    globalThis.StarlightThemeProvider = { updatePickers() {} };
 </script>

@@ -1,4 +1,4 @@
-# ![gspot](docs/assets/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/assets/readme/banner/dark.svg#gh-dark-mode-only)
+# ![gspot](docs/banner/light.svg#gh-light-mode-only)![gspot](docs/banner/dark.svg#gh-dark-mode-only)
 
 gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 

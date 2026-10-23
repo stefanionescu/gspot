@@ -80,11 +80,11 @@ project, including your own type roots.
 | The tsconfig uses `Bundler` resolution, or the project depends on a bundler such as Vite | `extensionless` |
 | Any other project                                                                        | `js`            |
 
-A framework configuration that chooses a style wins over the project. An import of another file, such as
-`./theme.css` or `./data.json`, keeps its extension. `.mjs` files, `.cjs` files, and Node.js shebang scripts always
-import the full file name, because Node.js needs it, and they take aliases only from the `imports` of `package.json`.
+A framework configuration that chooses a style wins over the project. An import of a stylesheet or a JSON file
+keeps its extension. `.mjs` files, `.cjs` files, and Node.js shebang scripts always import the full file name, because
+Node.js needs it, and they take aliases only from the `imports` of `package.json`.
 
-For modules that a host application provides at run time, such as `../../scripts/app.js`, see
+For modules that a host application provides at run time, see
 [modules that the host provides](/configure/import-rules/#modules-that-the-host-provides).
 
 ## Next.js
