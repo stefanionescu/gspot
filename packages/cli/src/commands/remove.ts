@@ -8,7 +8,7 @@ import { type ConfigurationsOptions } from '#cli/types/apply.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { applySettingsEdit, prepareConfigurationEdit } from '#cli/apply/settings-edit.ts';
+import { applySettingsEdit, prepareConfigurationEdit } from '#cli/apply/settings.ts';
 
 function assertNotRequired(names: string[], kept: string[], configurations: Map<string, Configuration>): void {
     for (const configuration of names) {

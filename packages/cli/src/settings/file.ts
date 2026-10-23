@@ -1,12 +1,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse } from '@decimalturn/toml-patch';
 import { isTable } from '#cli/system/tables.ts';
+import { writePlans } from '#cli/apply/writer.ts';
+import type { Writer } from '#cli/types/apply.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { writePlans } from '#cli/ownership/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { Writer } from '#cli/types/ownership.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { planReplacement } from '#cli/ownership/plans.ts';
+import { planReplacement } from '#cli/apply/write-plans.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';

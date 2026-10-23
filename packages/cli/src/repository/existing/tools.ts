@@ -1,6 +1,6 @@
 // Find existing lint commands, hooks, and config files.
 import { findText } from '#cli/system/files/reads.ts';
-import type { ManagedKeys } from '#cli/types/ownership.ts';
+import type { ManagedKeys } from '#cli/types/apply.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { type Repository } from '#cli/types/repository/files.ts';

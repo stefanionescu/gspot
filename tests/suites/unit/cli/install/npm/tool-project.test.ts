@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { openWriter } from '#cli/apply/writer.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openWriter } from '#cli/ownership/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';

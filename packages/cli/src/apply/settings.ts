@@ -1,8 +1,8 @@
 import { openSession } from '#cli/session.ts';
+import { openWriter } from '#cli/apply/writer.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { generate } from '#cli/generation/generate.ts';
@@ -15,7 +15,7 @@ import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
-import { formatApplyReport, writeGeneratedFiles } from '#cli/apply/write.ts';
+import { formatApplyReport, writeGeneratedFiles } from '#cli/apply/generated-files.ts';
 import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import type { Scope, SettingMatch, KnownSettings } from '#cli/types/settings/inheritance.ts';
 import { assertKnownConfigurations, assertConfigurationsEditable } from '#cli/configurations/select.ts';

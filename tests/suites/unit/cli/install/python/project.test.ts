@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { openWriter } from '#cli/ownership/writer.ts';
+import { openWriter } from '#cli/apply/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';

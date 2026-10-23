@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
+import { openWriter } from '#cli/apply/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
-import { writeGeneratedFiles } from '#cli/apply/write.ts';
+import { writeGeneratedFiles } from '#cli/apply/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
@@ -16,7 +16,7 @@ import {
     STYLELINT_PACKAGE_FIELDS,
     COMMITLINT_PACKAGE_FIELDS,
     EDITED_COMMITLINT_PACKAGE,
-} from '#tests/config/apply.ts';
+} from '#tests/config/apply/generated-files.ts';
 
 test.each([...TOOL_FOLDERS])(
     'writeGeneratedFiles deletes the $kind tool folder when no configuration needs it',

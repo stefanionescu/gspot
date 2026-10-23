@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openWriter } from '#cli/apply/writer.ts';
 import { readSettings } from '#cli/settings/read.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/settings/file.ts';
 import { link, stat, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';

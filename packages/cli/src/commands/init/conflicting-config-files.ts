@@ -1,5 +1,5 @@
 import { openFiles } from '#cli/system/files/open.ts';
-import type { ManagedKeys } from '#cli/types/ownership.ts';
+import type { ManagedKeys } from '#cli/types/apply.ts';
 import { isEditedInPlace } from '#cli/repository/existing/tools.ts';
 import type { ConflictingConfigFiles } from '#cli/types/commands/init.ts';
 import type { ExistingTools, ConflictingConfigFile } from '#cli/types/repository/existing.ts';

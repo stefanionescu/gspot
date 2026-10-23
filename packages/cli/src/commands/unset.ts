@@ -6,7 +6,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { UnsetOptions } from '#cli/types/commands/unset.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
+import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { deleteKey, getScopeTable, removeFromList, getWrittenValue } from '#cli/settings/edit.ts';
 
 // Remove entries from a written table, and drop the setting when no entries remain.

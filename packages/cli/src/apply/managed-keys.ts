@@ -6,8 +6,8 @@ import type { FileContents } from '#cli/types/system/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { openTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
-import type { Writer, WritePlan, ManagedKeys } from '#cli/types/ownership.ts';
-import { TOML_EXTENSION, EMPTY_JSON_TEXT, JSON_SETTINGS_EXTENSIONS } from '#cli/config/ownership/file-settings.ts';
+import type { Writer, WritePlan, ManagedKeys } from '#cli/types/apply.ts';
+import { TOML_EXTENSION, EMPTY_JSON_TEXT, JSON_SETTINGS_EXTENSIONS } from '#cli/config/apply/managed-keys.ts';
 
 /**
  * Open a shared settings file after checking its encoding.

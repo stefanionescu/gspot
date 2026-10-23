@@ -1,8 +1,8 @@
 import which from 'which';
+import type { Writer } from '#cli/types/apply.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { installHooks } from '#cli/install/hooks.ts';
 import type { Session } from '#cli/types/session.ts';
-import type { Writer } from '#cli/types/ownership.ts';
 import { MISE_TOOL } from '#cli/config/tools/locate.ts';
 import { installMiseTools } from '#cli/install/mise.ts';
 import { installValePackages } from '#cli/install/vale.ts';

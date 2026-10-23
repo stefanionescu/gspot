@@ -11,10 +11,10 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
-import { EDITED_STYLELINT_PACKAGE } from '#tests/config/apply.ts';
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
 import { simulateInteractiveTerminal } from '#tests/setup/system/environment.ts';
+import { EDITED_STYLELINT_PACKAGE } from '#tests/config/apply/generated-files.ts';
 import { INVALID_CSS, buildRetainedNote } from '#tests/config/commands/init/samples.ts';
 
 test.each([

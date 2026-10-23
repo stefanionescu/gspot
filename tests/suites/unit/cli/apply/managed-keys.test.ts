@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { planRemoval } from '#cli/ownership/plans.ts';
+import { planRemoval } from '#cli/apply/write-plans.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
+import { openWriter, writePlans } from '#cli/apply/writer.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
-import { openWriter, writePlans } from '#cli/ownership/writer.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { matchFields, captureThrow } from '#tests/setup/matchers.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
-import { hasManagedKeys, planSettingsWrite } from '#cli/ownership/file-settings.ts';
+import { hasManagedKeys, planSettingsWrite } from '#cli/apply/managed-keys.ts';
 
 test('managed JSON keys survive reopening and updates and keep other bytes and the mode', async () => {
     await using sandbox = await testdir();

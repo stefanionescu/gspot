@@ -12,7 +12,7 @@ import { listRecordFields, findSettingSchema } from '#cli/schemas/settings/file.
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type Setting, type EffectiveSetting } from '#cli/types/settings/inheritance.ts';
 import { setKey, addToList, getScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
-import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
+import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { type SetOptions, type ParsedSettingValue, type SettingReasonContext } from '#cli/types/commands/set.ts';
 
 // Structured values use the inline syntax of gspot.toml.

@@ -1,8 +1,8 @@
 import { openSession } from '#cli/session.ts';
+import { openWriter } from '#cli/apply/writer.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { installTools } from '#cli/install/tools.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { listStaleFiles } from '#cli/apply/stale-files.ts';

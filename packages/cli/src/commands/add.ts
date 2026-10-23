@@ -6,7 +6,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import { type ConfigurationsOptions } from '#cli/types/apply.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { applySettingsEdit, prepareConfigurationEdit } from '#cli/apply/settings-edit.ts';
+import { applySettingsEdit, prepareConfigurationEdit } from '#cli/apply/settings.ts';
 
 function restoreConfigurations(table: TomlTable, removed: string[], configurations: string[]): void {
     const previous = table['removed_configurations'];

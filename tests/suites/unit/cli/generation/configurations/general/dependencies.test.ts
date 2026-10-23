@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { planRemoval } from '#cli/ownership/plans.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { openWriter, writePlans } from '#cli/ownership/writer.ts';
-import { planSettingsWrite } from '#cli/ownership/file-settings.ts';
+import { planRemoval } from '#cli/apply/write-plans.ts';
+import { openWriter, writePlans } from '#cli/apply/writer.ts';
+import { planSettingsWrite } from '#cli/apply/managed-keys.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BUN_SCANNER_KEYS, TWO_WEEKS_SECONDS } from '#tests/config/generation/configurations/general/dependencies.ts';
 

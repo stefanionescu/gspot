@@ -1,5 +1,5 @@
+import type { Writer } from '#cli/types/apply.ts';
 import type { Session } from '#cli/types/session.ts';
-import type { Writer } from '#cli/types/ownership.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 

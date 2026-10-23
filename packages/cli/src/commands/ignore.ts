@@ -14,8 +14,8 @@ import { calendarDateSchema } from '#cli/schemas/settings/fields.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
+import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
 
 function assertIgnoreOptions(options: IgnoreOptions, settings: Settings): void {
     if (options.check !== undefined) {

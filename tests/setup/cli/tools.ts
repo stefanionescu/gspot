@@ -1,8 +1,8 @@
 // Builds tool pins, tool searches, and install states, and reads the tool project files that gspot install writes.
 import { join } from 'node:path';
+import type { Writer } from '#cli/types/apply.ts';
 import { open, readFile } from 'node:fs/promises';
 import type { Session } from '#cli/types/session.ts';
-import type { Writer } from '#cli/types/ownership.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';

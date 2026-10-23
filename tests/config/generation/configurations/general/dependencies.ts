@@ -1,4 +1,4 @@
-import type { ManagedKeys } from '#cli/types/ownership.ts';
+import type { ManagedKeys } from '#cli/types/apply.ts';
 
 /** The managed scanner key of a Bun scope. */
 export const BUN_SCANNER_KEYS: ManagedKeys[] = [

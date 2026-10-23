@@ -1,5 +1,5 @@
 import type { Session } from '#cli/types/session.ts';
-import type { ManagedKeys } from '#cli/types/ownership.ts';
+import type { ManagedKeys } from '#cli/types/apply.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';

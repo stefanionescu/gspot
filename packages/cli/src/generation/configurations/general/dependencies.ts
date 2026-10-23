@@ -1,6 +1,6 @@
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import type { ManagedKeys } from '#cli/types/ownership.ts';
+import type { ManagedKeys } from '#cli/types/apply.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';

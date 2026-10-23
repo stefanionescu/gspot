@@ -1,11 +1,11 @@
 import which from 'which';
 import { getUvPath } from '#cli/tools/locate.ts';
+import { writePlans } from '#cli/apply/writer.ts';
 import type { Session } from '#cli/types/session.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
-import { writePlans } from '#cli/ownership/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { planReplacement } from '#cli/ownership/plans.ts';
+import { planReplacement } from '#cli/apply/write-plans.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';

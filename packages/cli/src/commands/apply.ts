@@ -1,9 +1,9 @@
 import { openSession } from '#cli/session.ts';
+import { openWriter } from '#cli/apply/writer.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { type StaleFile } from '#cli/types/apply.ts';
 import { type Session } from '#cli/types/session.ts';
-import { openWriter } from '#cli/ownership/writer.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { listStaleFiles } from '#cli/apply/stale-files.ts';
@@ -14,8 +14,8 @@ import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/apply.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/apply/write.ts';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
+import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/apply/generated-files.ts';
 
 function formatStaleFiles(staleFiles: StaleFile[]): string {
     const lines = [

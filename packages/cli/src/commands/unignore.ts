@@ -7,8 +7,8 @@ import { assertKnownCheck } from '#cli/configurations/manifests.ts';
 import type { IgnoreRemoval } from '#cli/types/commands/unignore.ts';
 import { NO_CHECK_IGNORE_TEXTS } from '#cli/config/commands/unignore.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
+import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
-import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings-edit.ts';
 
 // Find the records and paths to remove, and leave the read settings unchanged.
 function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
