@@ -130,6 +130,7 @@ function parseTomlComments(text: string, path: string): SourceComment[] {
     });
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The comment parsers table calls it for .md and .mdx files.
 async function parseMarkdownComments(text: string): Promise<SourceComment[]> {
     const source = extractMarkdownHtml(text).replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->');
     return parseSyntaxComments('html', source, text);
@@ -168,6 +169,7 @@ async function parseSyntaxComments(grammar: GrammarName, source: string, text: s
  * @param text the source contents.
  * @returns comments in source order.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The comment parsers table and 3 other calls share it.
 export async function parseGrammarComments(grammar: GrammarName, text: string): Promise<SourceComment[]> {
     const parsed = grammar === 'html' ? text.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : text;
     return parseSyntaxComments(grammar, parsed, text);

@@ -38,6 +38,7 @@ export async function readToolProjectFiles(
  * @param writer holds the repository lock and saves files.
  * @returns the session, writer, generated files, and tools that the install steps read.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 3 files share it.
 export function buildToolInstall(session: Session, writer: Writer): ToolInstall {
     return {
         session,
@@ -57,6 +58,7 @@ export function buildToolInstall(session: Session, writer: Writer): ToolInstall 
  * @param npm package that ships the program.
  * @returns a tool with that program pinned.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 3 files share it.
 export function buildProgramPin(name: string, version: string, npm?: string): Tool {
     return {
         name,
@@ -79,6 +81,7 @@ export async function listToolInstallFiles(root: string): Promise<string[]> {
 }
 
 /** What tool search reads, for tests that inspect installed tools. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 30 calls in 3 files share it.
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {
         root,

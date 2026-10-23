@@ -66,6 +66,7 @@ export function readPackageJson(repositoryRoot: string, path: string): PackageJs
  * @param path the repository-relative package.json path.
  * @returns the validated fields, or undefined when the file does not exist.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 3 files share it.
 export function readCachedPackageJson(reads: ReadCache, path: string): PackageJson | undefined {
     const text = findCachedText(reads, path);
     return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);

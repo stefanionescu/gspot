@@ -9,6 +9,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
  * @param overrides what the test changes.
  * @returns the defaults with the overrides applied.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 115 calls in 43 files share it.
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
     return { stage: 'all', fix: false, isDryRun: false, ...overrides };
 }
@@ -32,6 +33,7 @@ export function planFixer(session: Session, script: string): PlannedCheck {
  * @param paths files the fixer covers.
  * @returns the gspot.toml text.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 2 files share it.
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []
 [[command_check]]

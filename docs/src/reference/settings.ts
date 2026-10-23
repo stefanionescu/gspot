@@ -31,6 +31,7 @@ function getSchemaNode(
     return node;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function isReasonedValue(node: JSONSchema.JSONSchema): boolean {
     return (
         node.type === 'object' &&
@@ -132,6 +133,7 @@ function formatSetting(
     );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
 function isSettingValue(schema: JSONSchema.JSONSchema, node: JSONSchema.JSONSchema): boolean {
     return isReasonedValue(node) || listSchemaProperties(schema, node).length === 0;
 }

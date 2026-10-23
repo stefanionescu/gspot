@@ -170,6 +170,7 @@ export function getLimit(scopeSettings: ScopeSettings, key: string, language?: s
  * @param check the check name.
  * @returns the matching ignores with normalized paths.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 6 files share it.
 export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeSettings['ignores'] {
     return scopeSettings.ignores.filter((ignore) => ignore.check === check || ignore.check === undefined);
 }

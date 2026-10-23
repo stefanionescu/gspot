@@ -10,6 +10,7 @@ import { parseTomlText, isReasonedValue, readSettingsFile } from '#cli/settings/
 import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in this file share it.
 function splitKey(key: string): SettingKey {
     const boundary = key.lastIndexOf('.');
     return { path: boundary === -1 ? [] : key.slice(0, boundary).split('.'), name: key.slice(boundary + 1) };

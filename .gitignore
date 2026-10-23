@@ -32,6 +32,5 @@ node_modules/
 .gspot/.venv/
 .gspot/vale/
 .gspot/state/
-.gspot/.npmrc
 .gspot/.yarnrc-install.yml
 # <<< gspot managed <<<

@@ -7,6 +7,7 @@ import type { Defined } from '#cli/types/shapes.ts';
  *
  * @returns the same object without its undefined entries.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 23 files call it.
 export function stripUndefined<T extends object>(value: T): Defined<T> {
     return Object.fromEntries(Object.entries(value).filter(([, field]) => field !== undefined)) as Defined<T>;
 }
@@ -17,6 +18,7 @@ export function stripUndefined<T extends object>(value: T): Defined<T> {
  * @param value the parsed value to tell apart from arrays, dates, and null.
  * @returns whether the value holds keys.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 export function isTable(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date);
 }

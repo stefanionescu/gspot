@@ -65,6 +65,7 @@ export async function runToolProcess(
  * @param tool the tool with its version pin.
  * @returns the executable path or its installation failure.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
 export function findTool(session: Session, cwd: string, tool: Tool): ToolAvailability {
     const miseBinPaths = getMiseBinPaths(session);
     return buildToolAvailability(tool, inspectTool({ ...session, cwd, miseBinPaths }, tool));

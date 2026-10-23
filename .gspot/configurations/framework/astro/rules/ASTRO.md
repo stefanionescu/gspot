@@ -4,10 +4,8 @@ Read this rule when you change Astro components, pages, or content collections.
 
 ## Components
 
-<!-- level: all -->
-
-- Keep the frontmatter to data: read the props, load what the page needs, and compute values.
-  Move a helper longer than a few lines into a module.
+- Keep the frontmatter to data: read the props, load what the page needs, and compute values. Move a helper longer than
+  a few lines into a module.
 
 ## Frontmatter and props
 
@@ -24,13 +22,15 @@ Read this rule when you change Astro components, pages, or content collections.
 ## Markup
 
 - Load a local image through `astro:assets`.
-- Astro bundles a `<script>` without attributes into a module. Keep `is:inline` for code that must run before the page renders.
+- Astro bundles a `<script>` without attributes into a module. Keep `is:inline` for code that must run before the page
+  renders.
 
 ## Routing and data
 
 - A page under `src/pages/` names its route by its path. A dynamic route of a static site exports `getStaticPaths`.
 - Load content through a content collection with a schema, so a missing field fails the build.
-- Read a secret on the server only, from a variable without the `PUBLIC_` prefix. Every visitor can read a `PUBLIC_` variable.
+- Read a secret on the server only, from a variable without the `PUBLIC_` prefix. Every visitor can read a `PUBLIC_`
+  variable.
 
 ## References
 

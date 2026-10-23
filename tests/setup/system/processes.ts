@@ -37,12 +37,14 @@ export function limitToTestDeadline(
 export function startTestTimeout(): Disposable {
     timeoutAt = performance.now() + TEST_TIMEOUT_MILLISECONDS;
     return {
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `using` calls it when the scope ends.
         [Symbol.dispose]() {
             timeoutAt = undefined;
         },
     };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function buildTimeoutError(
     timeoutMilliseconds: number,
     description: string,
@@ -151,6 +153,7 @@ export function startCommand(
  */
 export function stopOnSignals(stop: (code: number) => void): Disposable {
     const listeners = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => {
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: removeListener needs the same function that once registered.
         const listener = (): void => {
             stop(code);
         };
@@ -165,6 +168,7 @@ export function stopOnSignals(stop: (code: number) => void): Disposable {
 }
 
 /** A process result for check tests, with these fields changed. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 89 calls in 31 files share it.
 export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnResult {
     return {
         timedOut: false,

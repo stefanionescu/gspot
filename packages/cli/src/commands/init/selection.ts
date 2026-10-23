@@ -140,6 +140,7 @@ export function selectForInit(init: InitRepository): InitConfigurations {
  * @param draft the choices.
  * @returns the configuration choices for the root and each scope.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function buildSelectedConfigurations(draft: SettingsDraft): SelectedConfigurations {
     return {
         configurations: draft.configurations,

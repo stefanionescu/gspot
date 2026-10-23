@@ -85,6 +85,7 @@ function fakeNextjsCommands(fakeRun: (command: readonly string[], options: Async
     return {
         folders,
         commands,
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `using` calls it when the scope ends.
         [Symbol.dispose]() {
             owned.dispose();
         },

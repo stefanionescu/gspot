@@ -10,6 +10,7 @@ import {
     WINDOWS_ARGUMENT_OVERHEAD,
 } from '#cli/config/runs/command/batches.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function measureArgumentSize(argument: string, platform: NodeJS.Platform): number {
     return platform === 'win32'
         ? argument.length * WINDOWS_ESCAPE_EXPANSION + WINDOWS_ARGUMENT_OVERHEAD

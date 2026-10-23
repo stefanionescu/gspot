@@ -153,6 +153,7 @@ export function getMiseBinPaths(session: Session): string[] {
  * @param session the working tree and its tool search cache.
  * @returns the uv program to run.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function getUvPath(session: Session): string {
     session.uvPath ??=
         listExecutablePaths(session.installedRoot, UV_TOOL, {

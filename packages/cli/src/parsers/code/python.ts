@@ -27,6 +27,7 @@ function listFunctions(module: PythonModule): PythonFunction[] {
  * @param siblings the statements in the same file or function body.
  * @returns true when the string holds a docstring.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
 export function isDocstring(node: Node, siblings: Node[]): boolean {
     return (
         node.type === 'expression_statement' &&

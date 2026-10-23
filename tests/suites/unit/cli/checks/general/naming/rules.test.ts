@@ -240,6 +240,7 @@ test('an ignored_prefix override strips handle from function and method names in
     ]);
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 11 calls in this file share it.
 function readNaming(tables: string): FileNaming {
     return buildFileNaming(
         buildScopeNamingSettings(
@@ -248,6 +249,7 @@ function readNaming(tables: string): FileNaming {
     );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in this file share it.
 function listRuleMessages(identifier: Identifier, naming: FileNaming): { rule: string | undefined; message: string }[] {
     return validateIdentifier(identifier, naming).map(({ rule, message }) => ({ rule, message }));
 }

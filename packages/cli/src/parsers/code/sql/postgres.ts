@@ -93,6 +93,7 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
  * @param readerArguments the extra values to pass on.
  * @returns the result, or undefined for a kind without a reader.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function visitStatement<Result, Arguments extends unknown[]>(
     statement: SqlStatement,
     readers: SqlStatementVisitors<Result, Arguments>,

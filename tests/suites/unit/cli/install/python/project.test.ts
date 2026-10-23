@@ -28,6 +28,7 @@ const projectText = PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VE
 const pythonProject = toolPyprojectSchema.parse(parse(projectText));
 const lockfileText = PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION);
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function buildPythonProjectFiles(): Record<string, string> {
     return {
         'gspot.toml': buildSandboxSettings([]),

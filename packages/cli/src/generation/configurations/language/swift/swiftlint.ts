@@ -11,6 +11,7 @@ import {
     SWIFTLINT_FUNCTION_NESTING,
 } from '#cli/config/generation/configurations/language/swift/swiftlint.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
 function buildSeverityLimits(count: number) {
     return { warning: count, error: count };
 }

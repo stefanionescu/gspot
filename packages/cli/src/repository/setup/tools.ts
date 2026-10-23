@@ -69,6 +69,7 @@ function listFolder(root: string, folder: string): string[] {
         .filter((name) => !name.startsWith('.') || name === KEPT_DOT_FILE);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function listHookFiles(root: string, folder: string): string[] {
     return listFolder(root, folder).filter(
         (name) => statSync(join(root, folder, name), { throwIfNoEntry: false })?.isFile() === true,

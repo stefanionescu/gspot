@@ -154,6 +154,7 @@ test.each([...PACKAGE_METADATA_FAILURES])(
     },
 );
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in this file share it.
 function buildLibraryPin(name: string, version: string): Tool {
     return { name, kind: 'library', version, installers: { npm: { name, version } } };
 }

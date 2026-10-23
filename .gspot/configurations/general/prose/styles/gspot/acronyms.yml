@@ -1,5 +1,5 @@
 extends: conditional
-message: "'%s' is used without being spelled out on first use."
+message: Spell out '%s' on first use.
 level: error
 ignorecase: false
 first: \b([A-Z]{3,6})\b
@@ -31,7 +31,6 @@ exceptions:
   - TypeScript
   - markdownlint\-cli2
   - Markdown
-  - lychee
   - actionlint
   - shellcheck
   - zizmor
@@ -40,10 +39,18 @@ exceptions:
   - zsh
   - Bash
   - ShellCheck
-  - tree\-sitter
   - commitlint
+  - taplo
+  - yamllint
+  - v8r
+  - ajv
+  - xmllint
+  - JSON
+  - TOML
+  - YAML
   - osv\-scanner
   - syncpack
+  - lychee
   - jscpd
   - Bun
   - Node
@@ -54,16 +61,6 @@ exceptions:
   - macOS
   - Linux
   - Windows
-  - CSRF
-  - ASD
-  - taplo
-  - yamllint
-  - v8r
-  - ajv
-  - xmllint
-  - JSON
-  - TOML
-  - YAML
   - prettier
   - editorconfig\-checker
   - Prettier
@@ -77,10 +74,10 @@ exceptions:
   - DTO
   - RPC
   - gitleaks
-  - trufflehog
   - dotenv\-linter
   - semgrep
   - Semgrep
+  - CSRF
   - typos
   - stylelint
   - stylelint\-config\-standard
@@ -96,7 +93,6 @@ exceptions:
   - Cloudflare
   - html\-validate
   - HTML
-  - linkinator
   - purgecss
   - axe
   - optin
@@ -117,11 +113,14 @@ exceptions:
   - UI
   - URL
   - ASCII
+  - ASD
   - BSD
   - CPU
   - CRLF
   - CSV
   - ESM
+  - EUR
+  - GBP
   - GNU
   - HTTPS
   - INI
@@ -136,7 +135,9 @@ exceptions:
   - SSH
   - SVG
   - TLS
+  - TODO
   - TSX
+  - USD
   - UTC
   - UTF
   - WASM

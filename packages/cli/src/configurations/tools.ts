@@ -40,6 +40,7 @@ export function extractConfigFileName(file: string): string {
  * @param tool the declaration to read.
  * @returns whether gspot uses one of its installers.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The docs reference calls it, and findMiseInstaller stays private to this file.
 export function isInstalledByGspot(tool: Tool): boolean {
     return findToolProjectPackage(tool) !== undefined || findMiseInstaller(tool) !== undefined;
 }
@@ -140,6 +141,7 @@ export function getTool(configurations: Iterable<Configuration>, name: string): 
  * @param check the validated check.
  * @returns the executable, or undefined for a built-in check without a tool.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 5 files share it.
 export function getToolName(check: Check): string | undefined {
     return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
@@ -203,6 +205,7 @@ export function findMissingBuild(tool: Tool, host: Host): string | undefined {
  * @param rule the rule name, optionally prefixed by its plugin.
  * @returns the prefix before the last slash, or undefined for an unqualified rule.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
 export function extractRulePrefix(rule: string): string | undefined {
     const slash = rule.lastIndexOf('/');
     return slash === -1 ? undefined : rule.slice(0, slash);

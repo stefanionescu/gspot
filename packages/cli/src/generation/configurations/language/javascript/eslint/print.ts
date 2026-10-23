@@ -132,6 +132,7 @@ function printConfiguration(literal: string): string {
  * @param source the dotted path of the export, or empty for the whole import.
  * @returns the expression that reads the preset.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 5 files share it.
 export function serializePresetAccess(importName: string, source: string): string {
     return (
         importName +

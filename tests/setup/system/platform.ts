@@ -29,10 +29,10 @@ export function hasToolBuild(name: string): boolean {
  * @returns a resource that restores the real value.
  */
 export function simulateOperatingSystem(name: NodeJS.Platform): Disposable {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Node defines process.platform on the process object.
     const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
     Object.defineProperty(process, 'platform', { value: name });
     return {
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `using` calls it when the scope ends.
         [Symbol.dispose]() {
             Object.defineProperty(process, 'platform', descriptor);
         },

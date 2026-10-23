@@ -49,6 +49,7 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
     const server = Bun.serve({
         hostname: '127.0.0.1',
         port: 0,
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `Bun.serve` calls it for each request.
         async fetch() {
             return new Response(await readFile(join(root, 'schema.json')));
         },
@@ -95,6 +96,7 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
     const server = Bun.serve({
         hostname: '127.0.0.1',
         port: 0,
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `Bun.serve` calls it for each request.
         fetch() {
             requests++;
             return Response.json({ type: 'object', required: ['missing'] });
@@ -150,6 +152,7 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
 test('v8r checks gspot.toml against the schema in .gspot, which accepts an unquoted until date', async () => {
     const { root, environment } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), UNQUOTED_UNTIL_CHANGE);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
     const checkSettings = async () =>
         parseCheckReport(
             await spawnGspot(root, ['check', SETTINGS_FILE, '--only', 'data-files/v8r', '--json'], environment),

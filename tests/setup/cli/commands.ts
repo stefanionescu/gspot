@@ -62,7 +62,6 @@ export async function runGspot(
     );
     const variables: Record<string, string> = { ...GSPOT_ENVIRONMENT, ...environment };
     const exitCode = process.exitCode;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Node defines process.stdin on the process object.
     const stdin = Object.getOwnPropertyDescriptor(process, 'stdin')!;
     using _environment = overrideEnvironment(variables);
     process.exitCode = 0;
@@ -83,6 +82,7 @@ export async function runGspot(
 }
 
 /** Parse the JSON report of a completed check run. Keep its exit code and streams. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 240 calls in 71 files share it.
 export function parseCheckReport(output: ProcessOutput): ProcessOutput & { report: RunReport & { fixes?: FixReport } } {
     return { ...output, report: JSON.parse(output.stdout) as RunReport & { fixes?: FixReport } };
 }
@@ -96,6 +96,7 @@ export function parseCheckReport(output: ProcessOutput): ProcessOutput & { repor
  * @param options stdin for the child process.
  * @returns the exit code and both streams.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 61 files call it.
 export async function spawnGspot(
     cwd: string,
     commandArguments: readonly string[],
@@ -135,6 +136,7 @@ export async function installGeneratedTools(root: string): Promise<void> {
 }
 
 /** The init arguments for a test run without prompts. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 45 calls in 14 files share it.
 export function buildInitArguments(configurations: readonly string[], options: { json?: boolean } = {}): string[] {
     return [
         'init',

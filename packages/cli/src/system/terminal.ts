@@ -11,6 +11,7 @@ let options: OutputOptions = { json: false, color: false };
  *
  * @returns the enabled or disabled color functions.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 5 files share it.
 export function getColors(): ReturnType<typeof pc.createColors> {
     return pc.createColors(options.color);
 }
@@ -31,6 +32,7 @@ export function isColorAllowed(): boolean {
  *
  * @param next the JSON and color choices.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
 export function setOutputOptions(next: OutputOptions): void {
     options = next;
 }

@@ -92,6 +92,7 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
             context.report({ node, messageId: 'private', data: { public: publicText } });
         };
         return {
+            // eslint-disable-next-line gspot/no-trivial-functions -- reason: ESLint calls it for each matching node.
             MemberExpression(node) {
                 if (
                     node.object.type === AST_NODE_TYPES.MetaProperty &&

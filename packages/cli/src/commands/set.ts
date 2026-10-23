@@ -109,6 +109,7 @@ function formatSettingChange(
     return `${description}${reason}${was}`;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it puts runSetCommand over the complexity limit of 8.
 function assertReasonCoversList({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
     if (
         change.type === 'list' &&

@@ -79,6 +79,7 @@ export function validateSettingsText(text: string, repositoryRoot?: string): str
  * @param options which files and stage the check covers.
  * @returns the command check record.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
 export function buildReportingCheck(
     options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'paths' | 'stage'> & { id?: string },
 ): NonNullable<WrittenSettings['command_check']>[number] {
@@ -91,6 +92,7 @@ export function buildReportingCheck(
 }
 
 /** Resolve the settings and configuration defaults that apply in one scope. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 3 files share it.
 export function buildRootScopeSettings(settings: Settings, scopePath = ''): ScopeSettings {
     const configurations = selectForScope(settings, scopePath, readConfigurations());
     return buildScopeSettings(

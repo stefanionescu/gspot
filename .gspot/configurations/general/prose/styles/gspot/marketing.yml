@@ -1,5 +1,5 @@
 extends: existence
-message: "Marketing word '%s'."
+message: "Marketing word '%s'. Say what it does."
 level: error
 ignorecase: true
 tokens:

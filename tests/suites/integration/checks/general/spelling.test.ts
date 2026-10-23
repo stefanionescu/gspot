@@ -92,6 +92,7 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function buildTypoFinding(path: string) {
     return { file: `nested/${path}`, line: 1, column: 6, fixable: true, message: `\`${TYPO.the}\` should be \`the\`` };
 }

@@ -30,6 +30,7 @@ import {
     INHERITED_CONFIGURATION_SETTINGS,
 } from '#tests/config/commands/samples.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 async function removeBashSelection(root: string, scope: string) {
     const result = await runGspot(root, [
         'remove',

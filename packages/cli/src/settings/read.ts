@@ -33,6 +33,7 @@ export function parseSettings(text: string, repositoryRoot: string | undefined):
  * @param repositoryRoot the folder that contains gspot.toml.
  * @returns the settings and the file text.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 6 files share it.
 export function readSettings(repositoryRoot: string): SettingsFile {
     const { text } = readSettingsFile(repositoryRoot);
     return { settings: parseSettings(text, repositoryRoot), text };

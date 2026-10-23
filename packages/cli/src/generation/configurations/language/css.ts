@@ -17,6 +17,7 @@ import {
     STYLELINT_RULE_NAMES_FILE,
 } from '#cli/config/generation/configurations/language/css.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function dropChosenRules(
     rules: Record<string, unknown>,
     chosen: Record<string, unknown>,

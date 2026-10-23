@@ -143,6 +143,7 @@ export function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {
  * @param indent the spacing before each comment.
  * @returns the comment lines.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function formatReasonLines(reason: string, indent: string): string[] {
     return reason
         .replaceAll('\r\n', '\n')
@@ -214,6 +215,7 @@ export function listPythonIgnoredGlobs(planned: PlannedConfigFile, check: string
  * @param planned the config file with its scope, level, and target path.
  * @returns the ignore file text.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildPrettierignoreFile(planned: PlannedConfigFile): string {
     return formatIgnoreFile([
         ...buildIgnoreSections(planned.session),

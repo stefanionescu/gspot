@@ -50,6 +50,7 @@ function buildExecaOptions(options: SpawnOptions, executable: string) {
     };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function buildAsyncExecaOptions(options: AsyncSpawnOptions, executable: string) {
     return {
         ...buildExecaOptions(options, executable),
@@ -207,6 +208,7 @@ async function readProcessOutput(
     readStdout: StdoutReader,
 ): Promise<SpawnCompletion> {
     await readStdout({
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `for await` reads the output through it.
         async *[Symbol.asyncIterator]() {
             yield* child.stdout;
             options.cancelSignal?.throwIfAborted();

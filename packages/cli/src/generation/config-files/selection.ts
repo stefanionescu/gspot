@@ -12,6 +12,7 @@ import type { UsedNames, OwnedConfigFile, ConfigFileGeneration } from '#cli/type
  * @param targets the generated paths by scope and file name without extension.
  * @returns the file of the scope, or the root file as a fallback.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 16 calls in 11 files share it.
 export function getConfigFileTarget(
     scope: string,
     configFile: ConfigFile,

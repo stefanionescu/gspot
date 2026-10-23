@@ -1,4 +1,15 @@
 {
+    "parserPreset": {
+        "parserOpts": {
+            "headerPattern": "^(\\w*)(?:\\((.*)\\))?!?: (.*)$",
+            "breakingHeaderPattern": "^(\\w*)(?:\\((.*)\\))?!: (.*)$",
+            "headerCorrespondence": [
+                "type",
+                "scope",
+                "subject"
+            ]
+        }
+    },
     "rules": {
         "type-enum": [
             2,

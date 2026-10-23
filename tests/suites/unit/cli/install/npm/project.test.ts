@@ -18,6 +18,7 @@ import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
 import { FAILED_INSTALL_CASES, PACKAGE_MANAGER_TIMEOUT } from '#tests/config/install/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from '#cli/install/npm/project.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' | 'timedOut'>>): Disposable {
     return fakeCommand('bun', (command) =>
         Promise.resolve(
@@ -26,6 +27,7 @@ function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' |
     );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in this file share it.
 function buildNpmConfigFile(content: string): GeneratedFile {
     return { path: GSPOT_PATHS.npmProject, content };
 }

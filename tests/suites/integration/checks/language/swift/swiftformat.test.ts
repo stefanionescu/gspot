@@ -152,6 +152,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
     },
 );
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function blockCommentFindings(file: string) {
     return [
         [file, 1, 1, 'blockComments'],
@@ -159,6 +160,7 @@ function blockCommentFindings(file: string) {
     ];
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function spacedCommentFindings(file: string) {
     return [
         [file, 9, 1, 'docComments'],

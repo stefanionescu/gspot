@@ -20,6 +20,7 @@ import {
     WORKSPACE_SCOPE_CASES,
 } from '#tests/config/runs/command.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 async function writeListSetting(root: string, command: readonly string[], generate: readonly string[]): Promise<void> {
     const tables = stringify({
         openapi: { document: 'openapi.json', generate_command: [...generate] },

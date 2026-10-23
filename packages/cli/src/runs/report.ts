@@ -30,6 +30,7 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
  * @param session the scopes of the run.
  * @returns a passed result with no findings.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 11 calls in 9 files share it.
 export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 'scopes'>): CheckResult {
     return {
         check: planned.check.id,

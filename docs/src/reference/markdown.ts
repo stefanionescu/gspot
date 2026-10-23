@@ -32,6 +32,7 @@ export function buildReferencePage(title: string, description: string, body: str
  * @param body the Markdown text
  * @returns the heading and its text, or an empty string
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 4 files share it.
 export function formatSection(title: string, body: string): string {
     return body === '' ? '' : `\n## ${title}\n\n${body}\n`;
 }
@@ -55,6 +56,7 @@ export function formatTable(header: string[], rows: string[][]): string {
  * @param names the names, already formatted
  * @returns the names as one phrase, such as a, b, and c
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 3 files share it.
 export function formatList(names: string[]): string {
     return LIST_FORMAT.format(names);
 }
@@ -66,6 +68,7 @@ export function formatList(names: string[]): string {
  * @param name the page name, or empty for the index.
  * @returns the absolute site path.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 4 files share it.
 export function formatReferencePath(folder: keyof typeof REFERENCE_FOLDERS, name: string): string {
     return `${REFERENCE_PATH}${REFERENCE_FOLDERS[folder]}/${name === '' ? '' : name + '/'}`;
 }

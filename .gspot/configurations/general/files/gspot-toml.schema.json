@@ -1,3 +1,0 @@
-{
-    "description": "gspot validates gspot.toml on every run, including TOML local dates that JSON Schema cannot describe."
-}

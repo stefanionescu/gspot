@@ -44,6 +44,7 @@ export function getCachedMapValue<Key, Value>(
  * @param root the repository folder; the cache keeps its real path.
  * @returns the run cache.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 77 calls in 28 files share it.
 export function createReadCache(root: string): ReadCache {
     return { root: realpathSync(root), sources: new Map(), values: new Map() };
 }

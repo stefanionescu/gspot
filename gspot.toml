@@ -1,20 +1,8 @@
+#:schema ./.gspot/gspot.schema.json
 # gspot settings for this repository. Change them with gspot set, unset, add, remove, ignore, and unignore.
 
 level = "all"
 configurations = ["typescript", "markdown", "github-actions", "bash"]
-
-[allowed_words]
-axe = "Part of the published axe-core license name."
-optin = "Zod names its optional input marker optin."
-IIF = "ESLint names immediately invoked functions IIFEs."
-next-intl = "The next-intl package name."
-udid = "Apple names the device identifier udid."
-NGINX = "Official product name."
-Stylelint = "Official product name."
-markdownlint = "Official product name."
-React = "Official product name."
-Native = "Part of the React Native product name."
-Simple = "Part of the Simple Icons product name."
 
 [hooks]
 enabled = true
@@ -174,11 +162,6 @@ allowed_names = ["invocations"]
 reason = "SARIF names the field of a run that records each tool run invocations."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/language/swift/build.ts", "packages/cli/src/commands/doctor/suggestions.ts", "packages/cli/src/configurations/tools.ts", "packages/cli/src/configurations/manifests.ts", "packages/cli/src/generation/config-files/build.ts", "packages/cli/src/generation/config-files/generate.ts", "packages/cli/src/generation/config-files/selection.ts", "packages/cli/src/generation/configurations/language/javascript/eslint/plan.ts", "packages/cli/src/runs/command/check.ts", "packages/cli/src/runs/command/placeholders.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/generation/files.ts", "tests/setup/cli/generated-files.ts", "tests/types/tools.ts", "tests/suites/unit/cli/generation/config-files/selection.test.ts", "tests/suites/unit/cli/install/npm/project.test.ts", "packages/cli/src/checks/general/gspot/conflicting-config-files.ts", "packages/cli/src/commands/init/conflicting-config-files.ts", "packages/cli/src/commands/init/init.ts", "packages/cli/src/commands/init/plan.ts", "packages/cli/src/repository/setup/config-files.ts", "packages/cli/src/types/commands/init.ts", "packages/cli/src/types/repository/setup.ts", "tests/suites/e2e/cli.test.ts"]
-allowed_names = ["BuiltConfigFile", "ConflictingConfigFile", "ConflictingConfigFiles", "ConfigFile", "ConfigFileBuilder", "ConfigFileOutput", "ConfigFileGeneration", "ConfigFileOwner", "ConfigFilePointer", "GeneratedConfigFiles", "KnipConfigFile", "OwnedConfigFile", "PlannedConfigFile", "RuffConfigFile", "StylelintConfigFile", "buildConfigFile", "buildConfigFiles", "buildNpmConfigFile", "extractConfigFileName", "findConfigFilePath", "findMissingConfigFile", "getConfigFile", "getConfigFileTarget", "getConfigFiles", "isConfigFileWritten", "listCommandConfigFiles", "listConfigFileConfigurations", "listConfigFiles", "listOwnedConfigFiles", "listScopeConfigFiles", "listSwiftlintConfigFiles", "listUnownedConfigFiles", "parseConfigFile", "readConfigFiles", "addConflictingConfigFile", "assertConflictingConfigFiles", "checkConflictingConfigFiles", "deleteConflictingConfigFiles", "findConflictingConfigFiles", "formatConflictingConfigFiles", "listConflictingConfigFiles", "readConflictingConfigFiles"]
-reason = "These types and functions handle config files, the files that gspot writes for each tool. gspot 0.3.5 reserves config for values; 0.3.6 allows it in types and functions."
-
-[[naming.override]]
 paths = ["packages/cli/src/types/generation/eslint-functions.ts"]
 allowed_names = ["getDocumentFragment"]
 reason = "vue-eslint-parser names this parser service getDocumentFragment."
@@ -260,7 +243,7 @@ environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/sy
 bun_scanner = "@socketsecurity/bun-security-scanner"
 
 [docs]
-allowed_urls = { value = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$", "^https://generativespotting\\.com/configure/customize/$"], reason = "The npm package page returns HTTP 403 to automated requests, and /configure/customize/ goes live with the docs deploy of release 0.3.6." }
+allowed_urls = { value = ["^https://www\\.npmjs\\.com/package/@gspothq/cli$"], reason = "The npm package page returns HTTP 403 to automated requests." }
 
 [licenses]
 # MIT-0 is MIT without the notice condition.
@@ -291,6 +274,19 @@ name = "lightningcss"
 version = "1.33.0"
 reason = "Vite depends on it to build the docs site; the license binds changes to its own files, and none are made."
 
+[spelling.allowed_words]
+axe = "Part of the published axe-core license name."
+optin = "Zod names its optional input marker optin."
+IIF = "ESLint names immediately invoked functions IIFEs."
+next-intl = "The next-intl package name."
+udid = "Apple names the device identifier udid."
+NGINX = "Official product name."
+Stylelint = "Official product name."
+markdownlint = "Official product name."
+React = "Official product name."
+Native = "Part of the React Native product name."
+Simple = "Part of the Simple Icons product name."
+
 [tools.eslint]
 import_extension = "ts"
 
@@ -299,8 +295,8 @@ name = "repository"
 path = "packages/eslint-plugin/repository.mjs"
 
 [tools.eslint.plugins.rules]
-schema-location = [{ folders = ["packages/cli/src/schemas", "tests/schemas"] }]
 no-promise-matchers = []
+schema-location = [{ folders = ["packages/cli/src/schemas", "tests/schemas"] }]
 
 [tools.knip]
 entry = ["tests/setup/runner/unit.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-exports.ts"]
@@ -319,7 +315,7 @@ tools.knip.ignore_dependencies = { value = ["tree-sitter-bash", "tree-sitter-css
 [[scope]]
 path = "tests"
 configurations = ["zod"]
-removed_configurations = ["astro", "jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue", "cloudflare"]
+removed_configurations = { value = ["astro", "jest", "nestjs", "nextjs", "react", "react-dom", "svelte", "vitest", "vue", "cloudflare"], reason = "The test code uses none of these frameworks; only the sandboxes that the tests create do." }
 tools.knip.ignore_dependencies = { value = ["@darraghor/eslint-plugin-nestjs-typed", "@next/eslint-plugin-next", "@react-native/eslint-plugin", "@vitest/eslint-plugin", "bats", "eslint-plugin-drizzle", "eslint-plugin-expo", "eslint-plugin-i18next", "eslint-plugin-jest", "eslint-plugin-react", "eslint-plugin-react-hooks", "eslint-plugin-react-native", "eslint-plugin-react-refresh", "eslint-plugin-svelte", "eslint-plugin-testing-library", "eslint-plugin-vue", "eslint-plugin-vuejs-accessibility", "pnpm", "supabase", "svelte-eslint-parser", "vue-eslint-parser", "yarn", "@nestjs/common", "@nestjs/core", "@tanstack/eslint-plugin-query", "eslint-plugin-jsx-a11y", "reflect-metadata", "rxjs", "vue"], reason = "Native sandbox commands load these packages from the linked tests installation." }
 
 # Code may import its own files and the files of every import rule above it. can_import gives an exact list instead.
@@ -468,22 +464,9 @@ paths = ["packages/cli/configurations/infrastructure/docker/rules/DOCKER.md", "p
 reason = "Paths in shipped rules are examples for user projects."
 
 [[ignore]]
-check = "duplication/jscpd"
-paths = ["tests/suites/integration/checks/language/swift/swiftlint.test.ts", "tests/suites/integration/checks/language/css.test.ts", "tests/suites/integration/checks/language/sql.test.ts", "tests/suites/integration/checks/general/data-files.test.ts", "tests/suites/unit/cli/checks/language/python/vulture.test.ts", "tests/suites/unit/cli/checks/language/python/deptry.test.ts", "tests/suites/unit/cli/checks/language/python/pydoclint.test.ts", "tests/suites/unit/cli/checks/framework/nextjs.test.ts", "tests/suites/unit/cli/checks/language/bash/unused-functions.test.ts", "tests/suites/unit/cli/checks/language/bash/script-layout.test.ts"]
-reason = "These files share only an import list, which gspot 0.3.6 leaves out of jscpd; step 8.08 removes this ignore."
-until = 2026-11-30
-
-[[ignore]]
 check = "javascript/eslint"
 rule = "import-x/exports-last"
 reason = "This repository exports declarations inline. Its ESLint generator omits import-x/exports-last."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "n/no-unpublished-import"
-paths = ["packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts"]
-reason = "These shipped sources import only types, which the transpiled modules drop; gspot 0.3.6 sets ignoreTypeImport for this rule."
-until = 2026-11-30
 
 [[ignore]]
 check = "javascript/eslint"
@@ -548,6 +531,11 @@ check = "structure/lone-files"
 rule = "lone-file"
 paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts"]
 reason = "The manifest loader discovers config files in config-files/ and reads this module by its external markdownlint-cli2 target filename."
+
+[[ignore]]
+check = "structure/pass-through-folders"
+paths = ["packages/cli/src/checks/database", "packages/cli/src/config/checks/database", "tests/config/checks/database", "tests/suites/unit/cli/checks/database"]
+reason = "The database group holds one configuration, postgres, and every group keeps each configuration in its own folder."
 
 [[ignore]]
 check = "structure/shared-prefixes"

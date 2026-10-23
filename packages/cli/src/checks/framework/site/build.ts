@@ -77,6 +77,7 @@ export function listBuiltFiles(folder: string): string[] {
  * @param path the file path inside the build folder.
  * @returns the repository-relative path.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 1 file share it.
 export function buildRepositoryPath(planned: Pick<PlannedCheck, 'scope'>, path: string): string {
     return `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
 }

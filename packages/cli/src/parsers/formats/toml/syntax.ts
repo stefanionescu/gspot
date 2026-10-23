@@ -77,6 +77,7 @@ function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPa
  * @param kind the type name to match.
  * @returns whether the node has that kind.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 export function isTomlKind<Kind extends string>(
     node: { type: unknown },
     kind: Kind,

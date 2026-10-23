@@ -7,6 +7,7 @@ import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
 import { REASON_WORDS_MIN } from '#cli/config/settings/validation/reasons.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in this file share it.
 function buildErrorsAt(path: KeyPath, text: string | undefined): SettingsError[] {
     return text === undefined ? [] : [{ path, message: text }];
 }

@@ -27,6 +27,7 @@ export function overrideEnvironment(variables: Record<string, string | undefined
     const previous = Object.fromEntries(Object.keys(variables).map((name) => [name, process.env[name]]));
     applyEnvironment(process.env, variables);
     return {
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `using` calls it when the scope ends.
         [Symbol.dispose]() {
             applyEnvironment(process.env, previous);
         },

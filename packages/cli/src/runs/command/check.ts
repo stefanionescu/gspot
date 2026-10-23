@@ -144,6 +144,7 @@ function findMissingOtherTool(
  * @param copy.options the implementation overrides.
  * @returns the disposable temporary folder.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export async function copyCheckFiles(
     planned: PlannedCheck,
     { session, command, options }: { session: Session; command: string[]; options: CheckRunOptions },
@@ -168,6 +169,7 @@ export async function copyCheckFiles(
  * @param expansion.options the implementation overrides.
  * @returns the command expanded for that folder.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
 export function prepareCommandIn(
     folder: string,
     planned: PlannedCheck,

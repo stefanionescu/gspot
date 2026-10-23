@@ -122,6 +122,7 @@ export function mergeValue(setting: Setting, inherited: unknown, found: unknown)
  * @param settings the parsed gspot.toml.
  * @returns the tables in written order, root first.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in 8 files share it.
 export function listSettingsTables(settings: Settings): WrittenScopeTable[] {
     return [
         { table: settings, path: [] },

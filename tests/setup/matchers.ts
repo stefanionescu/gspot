@@ -22,6 +22,7 @@ export async function captureRejectedError(promise: Promise<unknown>): Promise<E
  * @param promise what must reject.
  * @returns the message of the error it rejected with.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 47 calls in 23 files share it.
 export async function captureRejection(promise: Promise<unknown>): Promise<string> {
     const error = await captureRejectedError(promise);
     return error.message;
@@ -49,6 +50,7 @@ export function captureThrow(run: () => unknown): string {
  * @param shape the properties the compared object must hold.
  * @returns the matcher.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 91 calls in 42 files share it.
 export function matchFields<T>(shape: NoInfer<Partial<T>>): T {
     return expect.objectContaining(shape) as T;
 }

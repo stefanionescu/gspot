@@ -5,6 +5,7 @@ import { formatTable, formatSection, buildReferencePage } from './markdown.ts';
 
 type Command = CliReference['commands'][number];
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function formatOptionValues(option: { choices?: string[]; default?: unknown }): string {
     return (
         (option.choices === undefined

@@ -24,6 +24,7 @@ function tokenizeExampleLine(text: string): ExampleToken[] {
  * @param code the complete example source.
  * @returns the numbered lines and their syntax tokens.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Example.astro calls it for each code sample.
 export function buildExampleLines(code: string): ExampleLine[] {
     return code
         .trimEnd()

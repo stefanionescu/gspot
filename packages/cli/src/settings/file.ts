@@ -20,6 +20,7 @@ import { SETTINGS_FILE, PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts
  * @param value the written setting.
  * @returns whether the setting has both reasoned-value fields.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 export function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
     return isTable(value) && Object.hasOwn(value, 'value') && Object.hasOwn(value, 'reason');
 }

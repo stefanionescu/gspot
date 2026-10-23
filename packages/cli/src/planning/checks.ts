@@ -118,6 +118,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
  * @param check the plan to inspect.
  * @returns whether the check has something to run over.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 12 calls in 6 files share it.
 export function isActive(check: PlannedCheck): boolean {
     return (
         check.files.length > 0 ||

@@ -17,6 +17,7 @@ import { GLOB_EXCLUDE, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/con
  * @param scope the folder that may contain the file.
  * @returns whether the scope contains the file.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 44 calls in 25 files share it.
 export function isInScope(path: string, scope: string): boolean {
     return scope === '' || path === scope || path.startsWith(`${scope}/`);
 }
@@ -28,6 +29,7 @@ export function isInScope(path: string, scope: string): boolean {
  * @param scope the parent folder, empty for the repository root.
  * @returns the nested paths in their original order.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 5 files share it.
 export function listNestedScopes(paths: readonly string[], scope: string): string[] {
     return paths.filter((path) => path !== scope && isInScope(path, scope));
 }
@@ -73,6 +75,7 @@ export function isScopeCovered(paths: string[], scope: string): boolean {
  * @param path the scope-relative file.
  * @returns the repository-relative path.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 56 calls in 39 files share it.
 export function joinScope(scope: string, path: string): string {
     return scope === '' ? path : `${scope}/${path}`;
 }

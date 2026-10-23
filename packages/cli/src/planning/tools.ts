@@ -97,6 +97,7 @@ export function listCheckTools(check: PlannedCheck): string[] {
  *
  * @returns the checks whose tools the scope needs.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function listScopeChecks(session: Session, scope: Scope): PlannedCheck[] {
     return session.configuredChecks.filter(
         (planned) => planned.scope.folder.path === scope.folder.path || planned.check.runs === 'once',

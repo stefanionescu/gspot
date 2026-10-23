@@ -18,6 +18,7 @@ import { MANAGED_KEYS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE } from '#cli/
  * @param count how many files gspot generates.
  * @returns the sentence, with the verb agreeing with the count.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function formatUpToDate(count: number): string {
     return `No change: the ${formatCount(count, 'generated file')} ${count === 1 ? 'is' : 'are'} up to date.`;
 }

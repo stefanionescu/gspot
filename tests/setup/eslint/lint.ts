@@ -55,6 +55,7 @@ export async function createEslint(sandboxRoot: string, options?: ESLint.Options
 }
 
 /** Order two findings by file, line, and rule. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three files sort findings with it.
 export function compareFindings(left: LintFinding, right: LintFinding): number {
     return (
         left.file.localeCompare(right.file) ||

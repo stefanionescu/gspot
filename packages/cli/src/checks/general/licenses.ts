@@ -59,6 +59,7 @@ function isSpdxExpression(license: string): boolean {
     }
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function assertInstalled(planned: PlannedCheck, name: string, start: string): void {
     if (statSync(join(start, name), { throwIfNoEntry: false })?.isDirectory() !== true)
         throw new Error(
@@ -133,6 +134,7 @@ function hasProjectDependencies(session: Session, dependencyFile: string): boole
     return (readDependencySpecifiers(session.reads, dependencyFile)?.size ?? 0) > 0;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function normalizeIdentity(identity: string): string {
     const split = splitIdentity(identity);
     return split === undefined

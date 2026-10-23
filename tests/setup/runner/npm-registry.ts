@@ -86,6 +86,7 @@ export async function createNpmRegistry(
     const server = Bun.serve({
         hostname: REGISTRY_HOST,
         port: 0,
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `Bun.serve` calls it for each request.
         fetch(request) {
             requests++;
             return answerRegistryRequest(request, { packages, token: options.token });
@@ -97,9 +98,11 @@ export async function createNpmRegistry(
     return {
         url,
         npmrc,
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers read the request count as a property.
         get requests() {
             return requests;
         },
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
         async [Symbol.asyncDispose]() {
             await server.stop(true);
         },

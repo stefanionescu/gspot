@@ -8,6 +8,7 @@ import ts from 'typescript';
  */
 export function listTypescriptNodes(syntaxRoot: ts.Node): ts.Node[] {
     const nodes: ts.Node[] = [];
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: It calls itself for each child node.
     const visit = (node: ts.Node): void => {
         nodes.push(node);
         ts.forEachChild(node, visit);

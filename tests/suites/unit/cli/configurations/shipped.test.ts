@@ -24,6 +24,7 @@ function listCommandSettings(check: Check): string[] {
     });
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it puts listSettingMismatches over the complexity limit of 8.
 function hasEmptyDefault(setting: Setting | undefined): boolean {
     const value = setting?.default;
     return (

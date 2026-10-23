@@ -17,6 +17,7 @@ import {
     TRANSLATION_FINDINGS,
 } from '#tests/config/checks/translations.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in this file share it.
 async function runMessagesCheck(files: Record<string, string>): Promise<readonly Finding[]> {
     await using sandbox = await testdir({
         ...files,

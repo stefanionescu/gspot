@@ -15,6 +15,7 @@ import { GIT_CONFIG_ARGUMENTS, GIT_ISOLATION_ENVIRONMENT } from '#tests/config/s
  * @param environment extra variables for git.
  * @returns the exit code and both streams.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 31 calls in 11 files share it.
 export function runGit(
     cwd: string,
     commandArguments: readonly string[],

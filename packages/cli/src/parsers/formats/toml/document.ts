@@ -152,6 +152,7 @@ export function openTomlFile(path: string, text: string): EditableFile {
                     configurable: true,
                 });
         },
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The TOML document type declares it.
         getText() {
             return buildPatchedToml(original, document);
         },

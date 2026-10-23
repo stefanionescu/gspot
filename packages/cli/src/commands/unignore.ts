@@ -96,6 +96,7 @@ async function runUnignoreCommand(
  * @param program the gspot program that gets the command.
  * @param onResult receives the result of the command.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
 export function registerUnignore(program: Command, onResult: CommandCompletion): void {
     program
         .command('unignore')

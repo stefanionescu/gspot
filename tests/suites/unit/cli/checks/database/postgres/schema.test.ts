@@ -14,6 +14,7 @@ import {
     DROPPED_CONSTRAINTS_SQL,
 } from '#tests/config/checks/database/postgres/schema.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
 async function parseMigration(name: string, text: string): Promise<Migration> {
     const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
     return { path: `migrations/${name}`, name, version: name.slice(0, 1), text, statements: parsed.statements };

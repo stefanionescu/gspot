@@ -43,6 +43,7 @@ function readUtf8(path: string, read: () => Buffer): string | undefined {
  * @param limit the maximum byte count.
  * @returns the bytes read.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 3 files share it.
 export function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer {
     const held = reads.sources.get(path);
     return held === undefined ? readFilePrefix(readContainedPath(reads.root, path), limit) : held.subarray(0, limit);
@@ -55,6 +56,7 @@ export function readCachedPrefix(reads: ReadCache, path: string, limit: number):
  * @param path the root-relative file.
  * @returns the file bytes.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 15 calls in 8 files share it.
 export function readBytes(root: string, path: string): Buffer {
     return readFileSync(readContainedPath(realpathSync(root), path));
 }
@@ -81,6 +83,7 @@ export function readCachedBytes(reads: ReadCache, path: string): Buffer {
  * @param path the root-relative file.
  * @returns the file text.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 18 calls in 12 files share it.
 export function findText(root: string, path: string): string | undefined {
     return readUtf8(path, () => readBytes(root, path));
 }
@@ -92,6 +95,7 @@ export function findText(root: string, path: string): string | undefined {
  * @param path the root-relative file.
  * @returns the cached file text.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 22 calls in 19 files share it.
 export function findCachedText(reads: ReadCache, path: string): string | undefined {
     return readUtf8(path, () => readCachedBytes(reads, path));
 }
@@ -147,6 +151,7 @@ export function readContainedPath(root: string, path: string): string {
  * @param bytes the source buffer to validate before decoding.
  * @returns the text, or undefined for invalid UTF-8.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 5 files share it.
 export function decodeUtf8(bytes: Uint8Array): string | undefined {
     return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }

@@ -38,6 +38,7 @@ function isInheritedValueChanged(
     );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function parseSelectedConfigurations(table: TomlTable) {
     return {
         configurations: settingsSchema.shape.configurations.parse(table['configurations']),

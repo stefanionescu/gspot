@@ -10,6 +10,7 @@ import { CATEGORY_LABELS } from '#cli/config/checks/general/naming/languages/ide
  * @param declaration what the code declares, and where.
  * @returns the labeled identifier.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 3 files share it.
 export function createIdentifier(
     source: Pick<FileIdentifiers, 'file' | 'language'>,
     declaration: Omit<Identifier, 'file' | 'language' | 'label'>,

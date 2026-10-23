@@ -86,6 +86,7 @@ export function buildFolderIdentifiers(path: string, language: string, container
  * @param planned the scope files to check.
  * @returns the findings.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The check registry calls it by its check name.
 export function checkNamingPaths(session: Session, planned: PlannedCheck): Finding[] {
     const settings = readNamingSettings(session.settingsFile.settings, planned.scope);
     return validateIdentifiers(planned, settings, listPathIdentifiers(planned));

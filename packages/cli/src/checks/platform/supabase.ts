@@ -101,6 +101,7 @@ function listFunctionEntrypoints(planned: PlannedCheck): string[] {
     return [...entrypoints.values()];
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 async function runDenoCommand(
     session: Session,
     planned: PlannedCheck,

@@ -12,6 +12,7 @@ import type {
     SchemaAlterations,
 } from '#cli/types/checks/postgres.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function buildRelationName(relation: RangeVar | undefined): string {
     const schema = relation?.schemaname ?? '';
     return `${schema === '' ? PUBLIC_SCHEMA : schema}.${relation?.relname ?? ''}`;

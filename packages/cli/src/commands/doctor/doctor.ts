@@ -30,6 +30,7 @@ import {
     SUGGESTION_SECTIONS,
 } from '#cli/config/commands/doctor.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 function isToolAvailable(inspection: ToolInspection): inspection is ToolInspection & { path: string } {
     return AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined;
 }
@@ -147,6 +148,7 @@ async function runDoctorCommand(cwd: string): Promise<CommandResult> {
  * @param program the gspot program that gets the command.
  * @param onResult receives the result of the command.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
 export function registerDoctor(program: Command, onResult: CommandCompletion): void {
     program
         .command('doctor')

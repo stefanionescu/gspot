@@ -10,6 +10,7 @@ import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in this file share it.
 async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {
     const gspotToml = stringify({
         configurations: [],

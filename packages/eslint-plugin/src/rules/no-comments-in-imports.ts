@@ -29,6 +29,7 @@ function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languag
     );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
     return (
         node?.type === AST_NODE_TYPES.CallExpression &&

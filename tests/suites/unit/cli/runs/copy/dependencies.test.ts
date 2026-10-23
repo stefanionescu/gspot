@@ -18,6 +18,7 @@ import {
     EXTERNAL_DEPENDENCY_FILES,
 } from '#tests/config/runs/copy/dependencies.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in this file share it.
 function stageRevision(root: string): void {
     runGitStep(root, ['init']);
     runGitStep(root, ['add', '.']);

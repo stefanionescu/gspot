@@ -5,7 +5,7 @@
 # Build output
 build/
 
-# Ignored by Git
+# Files that Git ignores
 .DS_Store
 .env
 .env.*
@@ -25,16 +25,16 @@ node_modules/
 Thumbs.db
 
 # Files that gspot generates
-.editorconfig
 .gspot/**
-.markdownlint.jsonc
-.prettierignore
-docs/.markdownlint.jsonc
-docs/.stylelintrc.json
-eslint.config.mjs
-packages/cli/.markdownlint.jsonc
-packages/eslint-plugin/.markdownlint.jsonc
-prettier.config.mjs
+/.editorconfig
+/.markdownlint.jsonc
+/.prettierignore
+/docs/.markdownlint.jsonc
+/docs/.stylelintrc.json
+/eslint.config.mjs
+/packages/cli/.markdownlint.jsonc
+/packages/eslint-plugin/.markdownlint.jsonc
+/prettier.config.mjs
 
 # Generator outputs
 docs/cloudflare-env.d.ts
@@ -42,8 +42,13 @@ docs/worker-configuration.d.ts
 packages/cli/configurations/**/*-names.json
 packages/cli/configurations/**/eslint-presets.json
 
-# Dependencies
-bower_components/
+# Paths that configurations leave out, such as installed dependencies and local secrets
+**/.dev.vars
+**/.dev.vars.*
+**/.env
+**/.env.*
+**/bower_components/**
+**/node_modules/**
 
 # Lockfiles
 bun.lock

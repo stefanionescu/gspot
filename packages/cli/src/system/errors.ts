@@ -63,6 +63,7 @@ export function parseFileFields<Value>(path: string, value: unknown, schema: z.Z
  * @param code the operating-system error code to match.
  * @returns whether the error carries that code.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 25 calls in 13 files share it.
 export function hasErrorCode(error: unknown, code: string): boolean {
     return error instanceof Error && 'code' in error && error.code === code;
 }

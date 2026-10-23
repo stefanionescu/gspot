@@ -2,19 +2,6 @@
 locale = "en"
 extend-ignore-re = ["\\b[0-9a-f]{7,40}\\b", "\\b[A-Za-z0-9+/]{40,}={0,2}\\b"]
 
-[default.extend-identifiers]
-axe = "axe"
-optin = "optin"
-IIF = "IIF"
-next-intl = "next-intl"
-udid = "udid"
-NGINX = "NGINX"
-Stylelint = "Stylelint"
-markdownlint = "markdownlint"
-React = "React"
-Native = "Native"
-Simple = "Simple"
-
 [default.extend-words]
 axe = "axe"
 optin = "optin"
@@ -32,7 +19,7 @@ Simple = "Simple"
 extend-exclude = [
   # Build output
   "**/build/**",
-  # Ignored by Git
+  # Files that Git ignores
   "**/.DS_Store",
   "**/Thumbs.db",
   "**/*.swp",
@@ -52,11 +39,11 @@ extend-exclude = [
   "findings/**",
   # Files that gspot generates
   ".gspot/**",
-  "**/eslint.config.mjs",
-  "**/.markdownlint.jsonc",
-  "**/.editorconfig",
-  "**/prettier.config.mjs",
-  "**/.prettierignore",
+  "eslint.config.mjs",
+  ".markdownlint.jsonc",
+  ".editorconfig",
+  "prettier.config.mjs",
+  ".prettierignore",
   "docs/.markdownlint.jsonc",
   "docs/.stylelintrc.json",
   "packages/cli/.markdownlint.jsonc",
@@ -71,8 +58,10 @@ extend-exclude = [
   "**/*.svg",
   "**/*.min.js",
   "**/*.min.css",
-  # Dependencies
+  # Paths that configurations leave out, such as installed dependencies and local secrets
   "**/bower_components/**",
+  "**/.dev.vars",
+  "**/.dev.vars.*",
   # Lockfiles
   "**/*.lock",
   "**/bun.lockb",
@@ -86,12 +75,3 @@ extend-exclude = [
   # This literal supplies a deliberate misspelling to the spelling checks and their corrections.
   "tests/config/checks/general/spelling.ts",
 ]
-
-[type]
-
-[type.gspot-settings]
-extend-glob = ["gspot.toml"]
-
-[type.gspot-settings.extend-identifiers]
-
-[type.gspot-settings.extend-words]

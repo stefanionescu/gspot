@@ -59,6 +59,7 @@ export function formatCodeList(names: readonly string[]): string {
  * @param options the declared names.
  * @returns the Did-you-mean clause.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 6 files share it.
 export function formatSimilarNames(name: string, options: string[]): string {
     const near = selectSimilarNames(name, options);
     return near.length === 0 ? '' : ` Did you mean ${formatCodeList(near)}?`;
@@ -96,6 +97,7 @@ export function getPosition(text: string, offset: number): TextPosition {
  * @param noun the singular word.
  * @returns the count and the noun with the matching ending.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 23 calls in 8 files share it.
 export function formatCount(count: number, noun: string): string {
     return `${String(count)} ${noun}${count === 1 ? '' : 's'}`;
 }

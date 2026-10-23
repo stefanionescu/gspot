@@ -35,6 +35,7 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
     });
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function buildRelativeTarget(pointerPath: string, targetPath: string): string {
     const relativePath = convertToPosixPath(relative(dirname(pointerPath), targetPath));
     return relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;

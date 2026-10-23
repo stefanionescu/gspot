@@ -156,6 +156,7 @@ export function checkTranslationsMessages(session: Session, planned: PlannedChec
     const options = getTable(planned.scope.settings, 'translations');
     const folder = options.messages_folder as string;
     const base = options.base_locale;
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
     const isMessageFile = (path: string): boolean =>
         path.startsWith(`${folder}/`) && path.endsWith(MESSAGE_FILE_SUFFIX);
     const files = planned.files.map((file) => file.path).filter((path) => isMessageFile(path));

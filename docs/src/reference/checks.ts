@@ -161,6 +161,7 @@ export function listGuideChecks(configurations: string[]): GuideCheck[] {
  * @param checks the declared checks in display order.
  * @returns the Markdown table, or nothing for no checks.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function formatCheckTable(checks: Check[]): string {
     return formatTable(
         ['Check', 'Stage', 'Level', 'What it does'],

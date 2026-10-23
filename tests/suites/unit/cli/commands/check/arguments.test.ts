@@ -194,6 +194,7 @@ test('a staged change to gspot.toml alone rechecks every file a configuration ch
     expect(checked.report.checks[0]?.findings).toMatchObject([{ file: 'db/report.sql', rule: 'file-lines' }]);
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function buildPassingCheck(stage: 'commit' | 'push' | 'manual') {
     return {
         id: `sandbox/${stage}`,

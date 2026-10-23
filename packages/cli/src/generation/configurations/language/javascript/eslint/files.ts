@@ -15,6 +15,7 @@ import {
     type EslintBlockFields,
 } from '#cli/types/generation/eslint.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 function isComponentConfiguration(name: string): name is (typeof COMPONENT_CONFIGURATIONS)[number] {
     const names: readonly string[] = COMPONENT_CONFIGURATIONS;
     return names.includes(name);
@@ -81,6 +82,7 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
  *
  * @returns the repository-relative file pattern.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 10 calls in 5 files share it.
 export function buildSourcePattern(...languages: string[]): string {
     return `**/*.{${listTaggedExtensions(...languages)
         .map((extension) => extension.slice(1))
@@ -145,6 +147,7 @@ export function buildScopeFiles(
  * @param scope the parent folder.
  * @returns the child scope globs.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 4 files share it.
 export function listNestedScopeGlobs(paths: string[], scope: string): string[] {
     return listNestedScopes(paths, scope).map((path) =>
         joinScope(path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**'),

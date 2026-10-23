@@ -97,6 +97,7 @@ export function selectRequiredTsconfigOptions(level: Level, configurations: Conf
  * @param scope the scope and its settings.
  * @returns the enabled compiler flags.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function selectCheckedTsconfigOptions(level: Level, scope: Scope): Record<string, boolean> {
     return Object.fromEntries(
         Object.entries(selectRequiredTsconfigOptions(level, scope.configurations)).filter(

@@ -148,6 +148,7 @@ export const formatSchema = formatFields.extend({
  * @param definition the description of the setting and the change that needs a reason.
  * @returns the setting schema with its default and definition.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 23 calls in 5 files share it.
 export function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
     definition: ReasonedSettingDefinition & { default: z.util.NoUndefined<Output> },

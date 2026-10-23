@@ -20,6 +20,7 @@ import { findRuleFilePath, findManifestTarget } from '#tests/setup/cli/generated
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply/writes.ts';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function writeStrayFile(root: string): void {
     using writer = openWriter(root);
 

@@ -9,6 +9,7 @@ const systemExecutables = EXECUTABLE_LAYOUTS[process.platform === 'win32' ? 'win
  * @param path the path, with system separators.
  * @returns the path with forward slashes.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 77 calls in 39 files share it.
 export function convertToPosixPath(path: string): string {
     return sep === '/' ? path : path.split(sep).join('/');
 }
@@ -19,6 +20,7 @@ export function convertToPosixPath(path: string): string {
  * @param path the path, with forward slashes.
  * @returns the path in the form of this system.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 1 file share it.
 export function convertToSystemPath(path: string): string {
     return sep === '/' ? path : path.split('/').join(sep);
 }
@@ -29,6 +31,7 @@ export function convertToSystemPath(path: string): string {
  * @param local the path relative to the folder, with either separator.
  * @returns whether the path stays inside the folder.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 files call it.
 export function isInside(local: string): boolean {
     return !(isAbsolute(local) || local === '..' || local.startsWith('../') || local.startsWith(`..${sep}`));
 }
@@ -65,6 +68,7 @@ export function trimTrailingSlashes(path: string): string {
  * @param path the slash-separated location to split at the last separator.
  * @returns everything before the last slash.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 18 calls in 15 files share it.
 export function extractParentFolder(path: string): string {
     const slash = path.lastIndexOf('/');
     return slash === -1 ? '' : path.slice(0, slash);
@@ -103,6 +107,7 @@ export function includeParentFolders(paths: readonly string[]): Set<string> {
  * @param name the executable without a suffix.
  * @returns the names to look for.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 5 files share it.
 export function listExecutableNames(name: string): string[] {
     return systemExecutables.executableSuffixes.map((suffix) => name + suffix);
 }
@@ -113,6 +118,7 @@ export function listExecutableNames(name: string): string[] {
  * @param folder the environment root.
  * @returns its Scripts folder on Windows, or its bin folder elsewhere.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 6 files share it.
 export function buildVenvBinPath(folder: string): string {
     return join(folder, systemExecutables.environmentFolder);
 }
@@ -124,6 +130,7 @@ export function buildVenvBinPath(folder: string): string {
  * @param name the Python program or console script inside the environment.
  * @returns the executable path, with the Python launcher suffix of this system.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 17 calls in 11 files share it.
 export function buildVenvExecutablePath(folder: string, name: string): string {
     return join(buildVenvBinPath(folder), name + systemExecutables.environmentSuffix);
 }

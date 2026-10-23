@@ -18,6 +18,7 @@ import {
 const installedSandbox = shareInstalledSandbox({
     install: false,
     ...PYTEST_SANDBOX,
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: shareInstalledSandbox calls it before the install.
     async before(root) {
         const installed = await runCommand(['uv', 'sync'], { cwd: root });
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);

@@ -73,6 +73,7 @@ export async function checkDuplicationJscpd(session: Session, planned: PlannedCh
         });
     }
     const report = parseToolReport(JSCPD, bytes.toString('utf8'), cloneReportSchema);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
     const normalizeClonePath = (name: string): string =>
         convertToPosixPath(isAbsolute(name) ? relative(toNamespacedPath(session.root), toNamespacedPath(name)) : name);
     return report.duplicates.flatMap((clone): Finding[] => {

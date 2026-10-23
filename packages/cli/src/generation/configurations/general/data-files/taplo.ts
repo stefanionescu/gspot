@@ -9,6 +9,7 @@ import { TAPLO_FORMATTING } from '#cli/config/generation/configurations/general/
  * @param planned the config file with its scope, level, and target path.
  * @returns the Taplo formatting settings with automatic schema lookup disabled.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildTaploFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.values;
 

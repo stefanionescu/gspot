@@ -18,6 +18,7 @@ import {
     POSITIONLESS_RESULTS,
 } from '#tests/config/runs/output/sarif.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in this file share it.
 function parseSarifReport(report: unknown, root: string): Finding[] {
     return parseOutput(
         {
@@ -32,6 +33,7 @@ function parseSarifReport(report: unknown, root: string): Finding[] {
     );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in this file share it.
 function buildLocationReport(artifactLocation: Record<string, unknown>): SarifLog {
     return { version: '2.1.0', runs: [{ results: [{ locations: [{ physicalLocation: { artifactLocation } }] }] }] };
 }

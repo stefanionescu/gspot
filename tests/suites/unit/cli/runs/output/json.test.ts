@@ -14,6 +14,7 @@ import {
     INVALID_FINDING_REPORTS,
 } from '#tests/config/runs/output/json.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in this file share it.
 function parseJsonReport(check: string, output: unknown, stdout: string): Finding[] {
     return parseJsonFindings({
         check,

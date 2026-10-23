@@ -27,6 +27,7 @@ const packageFolder = findNearestPackage() ?? dirname(createRequire(import.meta.
  * @param path the asset, such as `configurations/language/bash/manifest.toml`.
  * @returns the absolute path.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 16 calls in 13 files share it.
 export function buildAssetPath(path: string): string {
     return join(packageFolder, path);
 }

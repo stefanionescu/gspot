@@ -16,6 +16,7 @@ import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/files/outdated.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function buildDiff(path: string, before: string, after: string, beforeName: string): string {
     return createTwoFilesPatch(
         `a/${convertToPosixPath(path)}`,

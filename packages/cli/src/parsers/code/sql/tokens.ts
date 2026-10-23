@@ -61,6 +61,7 @@ function matchColonToken(text: string, at: number): MatchedToken | undefined {
     return end === -1 ? undefined : { end, kind: 'variable' };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The SQL token table calls it for both quote characters.
 function matchQuotedToken(text: string, at: number): MatchedToken {
     return { end: findDoubledQuoteEnd(text, at + 1, text[at] ?? ''), kind: 'other' };
 }

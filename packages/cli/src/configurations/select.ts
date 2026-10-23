@@ -72,6 +72,7 @@ export function isConfigurationSelected(scopes: Pick<Scope, 'configurations'>[],
     return scopes.some((scope) => scope.configurations.some((configuration) => configuration.name === name));
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function formatUnknownConfiguration(name: string, available: string[]): string {
     return `There is no configuration called \`${name}\`.${formatSimilarNames(name, available)} Run \`gspot list configurations\` to see the available configurations.`;
 }

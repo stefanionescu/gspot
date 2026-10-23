@@ -290,6 +290,7 @@ export function listKeptComments(syntax: TomlSyntax, destination: TomlTable, wri
     return comments;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 function isRecordArray(value: unknown): value is Record<string, unknown>[] {
     return Array.isArray(value) && value.length > 0 && value.every(isTable);
 }

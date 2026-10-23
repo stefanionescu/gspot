@@ -120,6 +120,7 @@ export function isSameContents(found: FileContents | undefined, expected: FileCo
  * @param path the root-relative file.
  * @returns the absolute path.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 3 files share it.
 export function buildContainedPath(bounds: FileBounds, path: string): string {
     return walkParentFolders(bounds, path, lstatSync);
 }
@@ -131,6 +132,7 @@ export function buildContainedPath(bounds: FileBounds, path: string): string {
  * @param path the root-relative file.
  * @returns the absolute path after preparing its parents.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 3 files share it.
 export function preparePath(bounds: FileBounds, path: string): string {
     return walkParentFolders(bounds, path, prepareParentFolder);
 }

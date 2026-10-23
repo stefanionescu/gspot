@@ -20,8 +20,10 @@ export const noPromiseMatchers = createRule<[], 'promise'>({
                 'Await the promise through captureRejectedError or captureRejection: Bun types this matcher as void, so a missing await passes silently.',
         },
     },
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: ESLint calls it to start the rule.
     create(context) {
         return {
+            // eslint-disable-next-line gspot/no-trivial-functions -- reason: ESLint calls it for each matching node.
             'MemberExpression[property.name=/^(?:rejects|resolves)$/][object.type="CallExpression"][object.callee.name="expect"]'(
                 node: TSESTree.MemberExpression,
             ) {

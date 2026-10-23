@@ -112,6 +112,7 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     });
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
     const missingText = await runGspot(sandbox.path, ['doctor']);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
     const findPytestCov = (output: string) =>
         (JSON.parse(output) as DoctorReport).tools.find(({ name }) => name === 'pytest-cov');
     const pytestCov = {

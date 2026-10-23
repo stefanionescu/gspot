@@ -93,6 +93,7 @@ export async function runCheckSample(sandbox: Sandbox, sample: CheckSample, plan
 }
 
 /** Reduce a sample result to exit codes and the check results that did not pass cleanly. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 31 calls in 31 files share it.
 export function buildSampleSummary(result: SampleResult): SampleSummary {
     return {
         failed: { code: result.failed.code, reported: listReportedChecks(result.failed.report) },
@@ -100,11 +101,13 @@ export function buildSampleSummary(result: SampleResult): SampleSummary {
     };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function listReportedChecks(report: RunReport): CheckResult[] {
     return report.checks.filter(({ status, findings }) => status !== 'passed' || findings.length > 0);
 }
 
 /** Describe the one failed check result of the sample, with its findings, and its clean rerun. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 31 calls in 31 files share it.
 export function expectedSummary(sample: CheckSample): SampleSummary {
     return {
         failed: {

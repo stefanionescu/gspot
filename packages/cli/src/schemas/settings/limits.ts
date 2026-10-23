@@ -18,6 +18,7 @@ const limitFields = Object.fromEntries(
 
 const languageLimitFields = z.strictObject(limitFields).partial();
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in this file share it.
 function buildLanguageMask<Language extends LimitLanguage>(
     language: Language,
 ): Record<LanguageLimitField<Language>, true> {

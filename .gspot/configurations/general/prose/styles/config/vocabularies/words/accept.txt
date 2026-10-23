@@ -2,7 +2,6 @@
 @gspothq/eslint-plugin
 actionlint
 ajv
-ASD
 astro-check
 axe
 Bash
@@ -46,7 +45,6 @@ jscpd
 JSON
 knip
 license-checker-rseidelsohn
-linkinator
 Linux
 lychee
 macOS
@@ -84,8 +82,6 @@ stylelint-config-standard
 syncpack
 taplo
 TOML
-tree-sitter
-trufflehog
 tsc
 TypeScript
 typescript-eslint

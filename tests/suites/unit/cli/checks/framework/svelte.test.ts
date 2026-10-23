@@ -46,6 +46,7 @@ test.each([...SVELTE_PROJECTS])(
         using run = spyOn(processes, 'spawnProcess').mockImplementation((commandArguments, options) => {
             runtimePath = textSchema.parse(commandArguments[commandArguments.indexOf('--tsconfig') + 1]);
             const config = fieldsSchema.parse(JSON.parse(readFileSync(runtimePath, 'utf8')));
+            // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
             const fromSandbox = (path: string): string =>
                 convertToPosixPath(relative(sandbox.path, resolve(dirname(runtimePath), path)));
             const compilerOptions = fieldsSchema.parse(config['compilerOptions']);

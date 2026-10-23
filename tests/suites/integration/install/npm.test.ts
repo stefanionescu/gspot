@@ -42,6 +42,7 @@ function createAuthenticatedRegistry(token: string) {
     return {
         url: `http://${REGISTRY_HOST}:${String(server.port)}/`,
         requests,
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
         async [Symbol.asyncDispose]() {
             await server.stop(true);
         },

@@ -18,6 +18,7 @@ import {
     REACT_COMPONENT_SOURCE,
 } from '#tests/config/checks/general/naming/identifiers.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
 async function checkIdentifiers(root: string): Promise<RunResult> {
     return runChecks(await openSession(root), buildRunOptions({ only: ['naming/identifiers'] }));
 }

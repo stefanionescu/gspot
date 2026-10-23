@@ -36,6 +36,7 @@ export const noIndexImports = createRule<[], 'index'>({
             context.report({ node, messageId: 'index', data: { source } });
         };
         return {
+            // eslint-disable-next-line gspot/no-trivial-functions -- reason: ESLint calls it for each matching node.
             [IMPORT_SELECTOR](node: ImportSource) {
                 check(node.source);
             },

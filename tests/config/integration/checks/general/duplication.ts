@@ -15,6 +15,7 @@ const COUNT_STEPS = Array.from(
  * @param name what the script calls its function.
  * @returns the source of the Bash script.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 1 file share it.
 export function buildCountScript(name: string): string {
     return `#!/usr/bin/env bash\nset -euo pipefail\n\n${name}() {\n    local total=0\n${COUNT_STEPS}\n    printf '%s\\n' "$total"\n}\n\n${name}\n`;
 }

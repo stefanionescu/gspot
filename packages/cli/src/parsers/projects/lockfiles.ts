@@ -104,6 +104,7 @@ const SPECIFIER_PARSERS: Readonly<
  * @param identity the package as `name@version`.
  * @returns the name and the version, or undefined without a version.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 4 files share it.
 export function splitIdentity(identity: string): [string, string] | undefined {
     const separator = identity.indexOf('@', 1);
     return separator === -1 ? undefined : [identity.slice(0, separator), identity.slice(separator + 1)];
@@ -140,6 +141,7 @@ export function readLockedPackages(
  * @param path the repository-relative lockfile path.
  * @returns the dependency specifiers for each folder, with an empty key for the root.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The lockfile formats it reads stay private to this parser.
 export function parseLockedSpecifiers(
     lockfile: (typeof IMPORTER_LOCKFILES)[number],
     text: string,

@@ -1,11 +1,12 @@
 rules:
-  - id: gspot.javascript.no-dom-html-sinks
+  - id: gspot.javascript.dom-html-sink
     pattern-either:
       - pattern: $ELEMENT.innerHTML = $VALUE
       - pattern: $ELEMENT.outerHTML = $VALUE
       - pattern: $ELEMENT.insertAdjacentHTML($POSITION, $VALUE)
       - pattern: document.write($VALUE)
-    message: DOM XSS risk. Use textContent, DOM node creation, or trusted static markup.
+    message: Writing HTML into the page allows XSS. Set textContent, create the
+      nodes, or write fixed markup.
     languages:
       - javascript
       - typescript
@@ -15,8 +16,8 @@ rules:
       - pattern-either:
           - pattern: fetch(req.$PART.$VALUE, ...)
           - pattern: fetch($URL.searchParams.get(...), ...)
-    message: SSRF risk - web request called with a URL from user input. Validate and
-      allowlist target hosts.
+    message: fetch() takes its URL from the request, which allows server-side
+      request forgery. Allow only known hosts.
     languages:
       - typescript
       - javascript
@@ -25,7 +26,7 @@ rules:
       cwe:
         - CWE-918
       category: security
-  - id: gspot.javascript.no-secret-in-log
+  - id: gspot.javascript.secret-in-log
     patterns:
       - pattern-either:
           - pattern: $LOGGER.$LEVEL(process.env.$VAR)
@@ -36,7 +37,7 @@ rules:
       - metavariable-regex:
           metavariable: $VAR
           regex: .*(KEY|SECRET|PASSWORD|TOKEN|CREDENTIAL).*
-    message: Sensitive environment variable logged. Remove or mask before logging.
+    message: The log writes a secret from the environment. Remove the value, or mask it.
     languages:
       - typescript
       - javascript
@@ -45,7 +46,7 @@ rules:
       cwe:
         - CWE-532
       category: security
-  - id: gspot.javascript.no-interpolated-exec
+  - id: gspot.javascript.interpolated-exec
     pattern: execSync(`...${$VAR}...`)
     message: Template literal interpolation in execSync() is a command injection
       vector. Use execFileSync() with an argument array instead.

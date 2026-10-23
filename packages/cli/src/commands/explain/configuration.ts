@@ -5,6 +5,7 @@ import { checkStageSchema } from '#cli/schemas/configurations/fields.ts';
 import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Explanation, ConfigurationExplanation } from '#cli/types/commands/explain.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in this file share it.
 function formatList(label: string, values: string[]): string[] {
     return values.length === 0 ? [] : [`${label}: ${values.join(', ')}`];
 }

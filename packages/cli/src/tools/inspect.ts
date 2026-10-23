@@ -61,6 +61,7 @@ function inspectLibrary(inspected: InspectedTool): ToolInspection {
         : buildLibraryInspection(inspected, installed.path, installed.version);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function buildMissingInspection(inspected: InspectedTool): ToolInspection {
     const { tool, help, want } = inspected;
     return { name: tool.name, state: 'missing', help, ...stripUndefined({ want }) };

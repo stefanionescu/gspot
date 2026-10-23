@@ -49,6 +49,7 @@ test('Vale package install replaces an edited package and keeps your files', asy
     await assertAuthoredFilesKept(sandbox.root);
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 async function assertAuthoredFilesKept(root: string): Promise<void> {
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe('keep\n');
     expect(await readFile(join(root, AUTHORED_STYLE_PATH), 'utf8')).toBe('authored legacy bytes\n');

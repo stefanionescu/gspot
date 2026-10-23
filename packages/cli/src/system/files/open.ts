@@ -23,6 +23,7 @@ import {
 export function openFiles(root: string): Files {
     const state: FileBounds = { root: realpathSync(root), locks: new Map() };
     const files: Files = {
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The Files type declares it.
         deleteFolder(path) {
             rmdirSync(buildContainedPath(state, path));
         },

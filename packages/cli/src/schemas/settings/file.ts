@@ -217,6 +217,7 @@ export const settingsSchema = z
  *
  * @returns record paths and their ordered field names; scopes retain their leading fields only.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
 export function listRecordFields(): Record<string, string[]> {
     return Object.fromEntries(
         Object.entries({

@@ -254,6 +254,7 @@ export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: Eslint
     };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function buildBarrelRule(planned: PlannedEslintFile, language: 'typescript' | 'javascript'): Record<string, unknown> {
     return planned.session.settingsFile.settings.structure.reexports === 'index-only'
         ? {
@@ -306,6 +307,7 @@ function buildLimitRules(settings: ScopeSettings, language: 'typescript' | 'java
  *
  * @returns the lint rules at this level.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The base rule sets and limit rules it reads stay private to this file.
 export function buildLevelRules(
     scopeSettings: ScopeSettings,
     selectors: Readonly<SelectorGroup['selectors']>,

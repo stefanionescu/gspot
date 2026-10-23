@@ -18,6 +18,7 @@ import {
     SQL_TABLE_PARAMETERS,
 } from '#cli/config/checks/general/naming/languages/sql.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function buildColumnName(column: ColumnDef): SqlNamed {
     return {
         category: 'columns',

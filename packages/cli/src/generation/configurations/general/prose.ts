@@ -25,6 +25,7 @@ import {
     VALE_PACKAGE_REPOSITORY,
 } from '#cli/config/generation/configurations/general/prose.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])].map((word) =>
         word.replaceAll(VALE_REGEX_SYMBOLS, BACKSLASH_BEFORE_MATCH),
@@ -37,6 +38,7 @@ function listExceptions(words: string[]): string[] {
  * @param planned the config file with its scope, level, and target path.
  * @returns the heading capitalization rule.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildHeadingCaseStyle(planned: PlannedConfigFile): string {
     return stringify({
         extends: 'capitalization',
@@ -54,6 +56,7 @@ export function buildHeadingCaseStyle(planned: PlannedConfigFile): string {
  * @param planned the config file with its scope, level, and target path.
  * @returns the title capitalization rule.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildTitleCaseStyle(planned: PlannedConfigFile): string {
     return stringify({
         extends: 'capitalization',
@@ -71,6 +74,7 @@ export function buildTitleCaseStyle(planned: PlannedConfigFile): string {
  * @param planned the config file with its scope, level, and target path.
  * @returns the Vale acronym rule with the allowed acronyms.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildAcronymsStyle(planned: PlannedConfigFile): string {
     const words = listAllowedWords(planned.session);
 
@@ -130,6 +134,7 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
  * @param planned the config file with its scope, level, and target path.
  * @returns the Vale alternative-text rule.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildAltTextStyle(planned: PlannedConfigFile): string {
     const isAll = planned.level === 'all';
 
@@ -170,6 +175,7 @@ export function buildBannedHeadingsStyle(planned: PlannedConfigFile): string {
  * @param planned the config file with its scope, level, and target path.
  * @returns the Vale list-item length rule.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildBulletLengthStyle(planned: PlannedConfigFile): string {
     const max = getTable(planned.scope.settings, 'prose').max_list_item_words;
     return stringify({
@@ -186,6 +192,7 @@ export function buildBulletLengthStyle(planned: PlannedConfigFile): string {
  * @param planned the config file with its scope, level, and target path.
  * @returns the Vale paragraph length rule with the configured ceiling.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildParagraphLengthStyle(planned: PlannedConfigFile): string {
     const max = getTable(planned.scope.settings, 'prose').max_paragraph_sentences;
     return stringify({
@@ -202,6 +209,7 @@ export function buildParagraphLengthStyle(planned: PlannedConfigFile): string {
  * @param planned the config file with its scope, level, and target path.
  * @returns the Vale sentence length rule with the configured ceiling.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildSentenceLengthStyle(planned: PlannedConfigFile): string {
     const max = getTable(planned.scope.settings, 'prose').max_sentence_words;
     return stringify({

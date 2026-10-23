@@ -27,11 +27,13 @@ export function buildScopeNamingSettings(text: string, scope = ''): NamingSettin
 }
 
 /** Build the settings and check declaration for one naming test. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 1 file share it.
 export function buildFileNaming(settings: NamingSettings): FileNaming {
     return { check: getShippedCheck('naming/identifiers'), settings, isTestFile: false };
 }
 
 /** An identifier with the source location and category defaults used by naming tests. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 28 calls in 1 file share it.
 export function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
     const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
     return { file, language, category, line, column, label: `${language} ${category}`, ...fields };

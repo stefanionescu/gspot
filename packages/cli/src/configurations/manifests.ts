@@ -101,6 +101,7 @@ function readShippedConfigurations(): Map<string, Configuration> {
  * @param errors the messages in plain English.
  * @returns the error to throw.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
 export function buildManifestError(configuration: string, errors: string[]): GspotError {
     return new GspotError(
         'configuration',
@@ -113,6 +114,7 @@ export function buildManifestError(configuration: string, errors: string[]): Gsp
  *
  * @returns the configurations by name.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 90 calls in 57 files share it.
 export function readConfigurations(): Map<string, Configuration> {
     CONFIGURATIONS ??= readShippedConfigurations();
     return CONFIGURATIONS;

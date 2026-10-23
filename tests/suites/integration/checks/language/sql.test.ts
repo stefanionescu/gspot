@@ -17,6 +17,7 @@ import {
 
 const installedSandbox = shareInstalledSandbox({
     ...SQL_SANDBOX,
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: shareInstalledSandbox calls it after the install.
     async prepare(root, environment) {
         const ignored = await spawnGspot(
             root,

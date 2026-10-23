@@ -53,6 +53,7 @@ export function findRuleFilePath(configuration: string, file: string): string {
 }
 
 /** Read each generated config file matched by a repository-relative glob. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export async function readGeneratedFiles(root: string, pattern: string): Promise<{ path: string; content: string }[]> {
     return Promise.all(
         [...new Bun.Glob(pattern).scanSync({ cwd: root, dot: true })].map(async (path) => ({

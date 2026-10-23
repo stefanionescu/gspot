@@ -12,6 +12,7 @@ import type { Finding, FindingPlace } from '#cli/types/runs/check.ts';
  * @param options the help and automatic-fix status.
  * @returns a finding ready for the report.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 109 calls in 62 files share it.
 export function buildFinding(
     planned: Pick<PlannedCheck, 'check'>,
     at: FindingPlace,
@@ -36,6 +37,7 @@ export function buildFinding(
  * @param node what the finding points at.
  * @returns the file, line, and column.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 6 files share it.
 export function getNodePlace(file: string, node: Node): FindingPlace {
     return { file, line: node.startPosition.row + 1, column: node.startPosition.column + 1 };
 }

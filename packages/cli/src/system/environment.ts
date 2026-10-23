@@ -27,6 +27,7 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
  * @param name the exact process environment key to read.
  * @returns the value when present.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 17 calls in 14 files share it.
 export function readEnvironmentVariable(name: string): string | undefined {
     return process.env[name];
 }
@@ -51,6 +52,7 @@ export function readCacheFolder(): string {
  *
  * @returns the gspot name, or the Node name for another system.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 4 files share it.
 export function getOperatingSystem(): string {
     return OPERATING_SYSTEMS.find((platform) => platform.nodeName === process.platform)?.name ?? process.platform;
 }

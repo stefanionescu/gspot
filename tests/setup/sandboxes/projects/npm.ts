@@ -96,6 +96,7 @@ export async function createNpmProject(
             artifacts,
             registry,
             ...authored,
+            // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
             async [Symbol.asyncDispose]() {
                 await resources.disposeAsync();
             },

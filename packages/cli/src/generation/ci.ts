@@ -80,6 +80,7 @@ function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSys
     };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it puts buildJob over the 60-line function limit.
 function listInstallSteps(pipeline: Pipeline, command: string): Record<string, unknown>[] {
     return [
         {
@@ -161,6 +162,7 @@ function spaceWorkflowGroups(workflow: Document): void {
     }
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function listManualLines(command: string, manual: { checks: string[]; tools: string[] }): string[] {
     return [
         ...(manual.tools.length === 0

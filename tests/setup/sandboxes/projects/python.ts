@@ -59,6 +59,7 @@ export async function createPythonProject(
             root,
             rootProject,
             rootConfiguration,
+            // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
             async [Symbol.asyncDispose]() {
                 await resources.disposeAsync();
             },

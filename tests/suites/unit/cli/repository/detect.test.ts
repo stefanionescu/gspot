@@ -160,6 +160,7 @@ test('Testing Library is detected only in the scope that declares it', async () 
 
     const session = await openSession(sandbox.path);
     const projects = await readDependencyFiles(createReadCache(sandbox.path), session.repository.files);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
     const detectTestingLibrary = (scope: string) =>
         detectConfigurations(
             { root: sandbox.path, files: session.repository.files, dependencyFiles: projects },

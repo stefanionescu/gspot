@@ -26,6 +26,7 @@ import {
     MDX_MISSING_PATH_FINDINGS,
 } from '#tests/config/checks/general/docs.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
 async function runMissingPathsCheck(
     files: Record<string, string>,
     options: { paths?: string[] } = {},

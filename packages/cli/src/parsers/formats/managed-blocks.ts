@@ -71,6 +71,7 @@ export function findBlockBody(text: string, file: BlockFile): string | undefined
  * @param file the file path and marker style.
  * @returns the text with the managed block removed.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 3 files share it.
 export function stripBlock(text: string, file: BlockFile): string {
     const span = findBlockSpan(text, file);
     return span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);

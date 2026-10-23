@@ -117,6 +117,7 @@ async function listGitFiles(
  * @param cancelSignal stops the command.
  * @returns validated entries, retaining stages of conflicted working files.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 12 calls in 4 files share it.
 export async function readIndexFiles(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitIndexFile[]> {
     const listed = await listGitFiles(repositoryRoot, GIT_INDEX_FILES_ARGUMENTS, cancelSignal);
     return parseIndexFiles(listed);

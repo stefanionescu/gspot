@@ -109,6 +109,7 @@ function formatAccessorName(node: Node, label: string): string {
     return name === undefined ? label : `${label} of ${name}`;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Merged into formatAccessorName, it passes the complexity limit of 8.
 function formatSwiftFunctionName(node: Node): string {
     const name = node.childForFieldName('name')?.text ?? SWIFT_FUNCTION_LABELS[node.type] ?? 'function';
     return SWIFT_ACCESSOR_NODES.has(node.type) ? formatAccessorName(node, name) : name;

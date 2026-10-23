@@ -148,6 +148,7 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
         await chmod(path, 0o755);
     }
     const shExecutable = Bun.which('sh')!;
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
     const runHook = (name: string, ...hookArguments: string[]): string[] => {
         const path = join(sandbox.path, GSPOT_PATHS.hooks, name);
         return isWindows ? [shExecutable, path, ...hookArguments] : [path, ...hookArguments];

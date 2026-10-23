@@ -12,6 +12,7 @@ import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e/languages.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
 import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 async function assertSample(installation: GspotProject, check: typeof PROSE_CHECK | typeof SWIFT_CHECK): Promise<void> {
     const result = await runCheckSample(installation.offline, check, { configurations: [], files: {} });
     expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(check));

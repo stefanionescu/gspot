@@ -11,6 +11,7 @@ let NAMING_DEFAULTS: NamingDefaults | undefined;
  *
  * @returns the shipped naming choices
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 5 files share it.
 export function readNamingDefaults(): NamingDefaults {
     NAMING_DEFAULTS ??= namingDefaultsSchema.parse(
         JSON.parse(readFileSync(buildAssetPath(NAMING_DEFAULTS_FILE), 'utf8')),

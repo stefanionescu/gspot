@@ -146,6 +146,7 @@ export async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): P
 export async function changeAppliedSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     const change = await changeSandbox(sandbox, changes);
     return {
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
         async [Symbol.asyncDispose]() {
             await change[Symbol.asyncDispose]();
             await runGspotStep(sandbox, ['apply']);
@@ -169,6 +170,7 @@ export async function applyGeneratedFiles(root: string): Promise<void> {
 }
 
 /** Change that replace the default sources of a sample but keep .gitignore. */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 22 calls in 11 files share it.
 export function buildSandboxChanges(
     originalFiles: Readonly<Record<string, string>>,
     files: Record<string, string>,

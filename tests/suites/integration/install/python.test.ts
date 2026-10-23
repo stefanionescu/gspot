@@ -161,6 +161,7 @@ async function createPythonIndex(work: string): Promise<AsyncDisposable & { url:
     });
     return {
         url: `http://${user}:${password}@${REGISTRY_HOST}:${String(server.port)}/simple`,
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
         async [Symbol.asyncDispose]() {
             await server.stop(true);
         },

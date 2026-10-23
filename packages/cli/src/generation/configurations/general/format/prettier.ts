@@ -59,6 +59,7 @@ function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
     return { plugins: shipped };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function convertFormatSettings(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
         ...(format.indent_width === undefined ? {} : { tabWidth: format.indent_width }),

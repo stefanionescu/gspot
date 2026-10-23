@@ -263,6 +263,7 @@ test('a naming category takes its shipped cases as its default, so gspot.toml ma
     expect(buildScopeNamingSettings(text).limitsFor('typescript', 'files').caseNames).toStrictEqual(['kebab']);
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 15 calls in this file share it.
 function buildSelectedAvailableSettings(configurations: string[], level: Level = 'recommended'): AvailableSettings {
     return buildAvailableSettings(selectConfigurations(configurations, readConfigurations()), level);
 }

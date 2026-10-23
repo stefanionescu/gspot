@@ -18,6 +18,7 @@ import {
     UNKNOWN_IGNORE_ARGUMENTS,
 } from '#tests/config/commands/ignore.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 async function readIgnoreRecords(
     root: string,
 ): Promise<Array<Omit<IgnoreRecord, 'until'> & { until: string | undefined }>> {

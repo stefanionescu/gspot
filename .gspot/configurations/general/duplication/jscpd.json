@@ -4,6 +4,9 @@
     "minTokens": 40,
     "absolute": true,
     "gitignore": true,
+    "ignorePattern": [
+        "import\\s[^;]*?from\\s*['\"][^'\"]+['\"]\\s*;"
+    ],
     "ignore": [
         "**/*.md",
         "**/*.mdx",
@@ -26,11 +29,11 @@
         "docs/.wrangler/**",
         "findings/**",
         ".gspot/**",
-        "**/eslint.config.mjs",
-        "**/.markdownlint.jsonc",
-        "**/.editorconfig",
-        "**/prettier.config.mjs",
-        "**/.prettierignore",
+        "eslint.config.mjs",
+        ".markdownlint.jsonc",
+        ".editorconfig",
+        "prettier.config.mjs",
+        ".prettierignore",
         "docs/.markdownlint.jsonc",
         "docs/.stylelintrc.json",
         "packages/cli/.markdownlint.jsonc",
@@ -40,17 +43,9 @@
         "docs/worker-configuration.d.ts",
         "docs/cloudflare-env.d.ts",
         "**/bower_components/**",
+        "**/.dev.vars",
+        "**/.dev.vars.*",
         "**/bun.lock",
-        "**/.env*",
-        "tests/suites/integration/checks/language/swift/swiftlint.test.ts",
-        "tests/suites/integration/checks/language/css.test.ts",
-        "tests/suites/integration/checks/language/sql.test.ts",
-        "tests/suites/integration/checks/general/data-files.test.ts",
-        "tests/suites/unit/cli/checks/language/python/vulture.test.ts",
-        "tests/suites/unit/cli/checks/language/python/deptry.test.ts",
-        "tests/suites/unit/cli/checks/language/python/pydoclint.test.ts",
-        "tests/suites/unit/cli/checks/framework/nextjs.test.ts",
-        "tests/suites/unit/cli/checks/language/bash/unused-functions.test.ts",
-        "tests/suites/unit/cli/checks/language/bash/script-layout.test.ts"
+        "**/.env*"
     ]
 }

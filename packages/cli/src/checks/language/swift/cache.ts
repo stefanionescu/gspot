@@ -101,6 +101,7 @@ function openBuildCache(folder: string): Files {
  * @param purpose the tool whose outputs stay separate.
  * @returns the cache folder path.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 3 files share it.
 export function getScopeBuildFolder(root: string, scope: string, purpose: SwiftBuildPurpose): string {
     return join(
         readCacheFolder(),

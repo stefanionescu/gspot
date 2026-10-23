@@ -209,6 +209,7 @@ export function formatInitPlan(plan: InitPlan): string {
     return `${lines.join('\n')}\n`;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 10 calls in this file share it.
 function formatDetectionRow(label: string, names: string[]): string | undefined {
     return names.length === 0
         ? undefined

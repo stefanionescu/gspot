@@ -59,7 +59,6 @@ export function fakeToolExecutables(tools: Tool[]): DisposableStack {
     );
     resources.use(
         spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- The process API requires an executable as the first command item.
             const executable = command[0]!;
             const pin = tools.find((tool) => listExecutableNames(tool.name).includes(basename(executable)));
             if (pin === undefined) return runBlocking(command, options);

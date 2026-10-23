@@ -40,6 +40,7 @@ export function convertWarningsToErrors(rules: Record<string, unknown>): Record<
  * @param configuration the configuration owning the preset.
  * @returns preset blocks without executable plugin or parser objects.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function readPresets(configuration: Configuration): EslintPresets {
     return eslintPresetsSchema.parse(
         JSON.parse(readFileSync(buildAssetPath(`${configuration.folder}/${ESLINT_PRESETS_FILE}`), 'utf8')),
@@ -121,6 +122,7 @@ export function addRuleOptions(ruleSetting: unknown, options: Record<string, unk
  * @param rules the captured jsx-a11y rules.
  * @returns the rules with region roles permitted by tabindex checks.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function allowFocusableRegions(rules: Record<string, unknown>): Record<string, unknown> {
     return Object.fromEntries(
         Object.entries(rules).map(([rule, ruleSetting]) => [
@@ -138,6 +140,7 @@ export function allowFocusableRegions(rules: Record<string, unknown>): Record<st
  * @param block one captured component preset.
  * @returns its fields, with warnings turned into errors.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: vue.ts and svelte.ts pass it to convert each preset block.
 export function convertPresetWarnings(block: EslintPreset['blocks'][number]): EslintBlockFields {
     const { parser: _parser, ...fields } = block;
     return {
