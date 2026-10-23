@@ -195,7 +195,7 @@ test('typescript/tsc builds a referenced project with its imported declarations 
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    // The root project references app, so the root and app scopes both report its error.
+    // The root project references app, and the app scope reports its error once.
     expect(
         failed.report.checks.map(({ scope, status, findings }) => ({
             scope,
@@ -203,7 +203,7 @@ test('typescript/tsc builds a referenced project with its imported declarations 
             findings: findings.map(({ file, rule }) => ({ file, rule })),
         })),
     ).toStrictEqual([
-        { scope: '', status: 'failed', findings: [{ file: 'app/src/main.ts', rule: 'TS2322' }] },
+        { scope: '', status: 'passed', findings: [] },
         { scope: 'app', status: 'failed', findings: [{ file: 'app/src/main.ts', rule: 'TS2322' }] },
         { scope: 'neighbor', status: 'failed', findings: [{ file: 'neighbor/source.ts', rule: 'TS2322' }] },
     ]);

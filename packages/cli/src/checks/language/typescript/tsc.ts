@@ -4,6 +4,7 @@ import { listCheckedFiles } from '#cli/planning/files.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
@@ -57,6 +58,30 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
         scratchSession = { ...session, root: scratch.path, reads: createReadCache(scratch.path) };
         scopeProject = { ...references, path: join(scratch.path, relative(session.root, references.path)) };
     }
-    const result = await runTsc(scratchSession, planned, scratch.path, scopeProject);
-    return restoreCommandPaths(result, scratch.path, session.root);
+    const result = restoreCommandPaths(
+        await runTsc(scratchSession, planned, scratch.path, scopeProject),
+        scratch.path,
+        session.root,
+    );
+    return references === undefined ? result : leaveChildScopeFindings(session, planned, result);
+}
+
+// A solution build also compiles the projects it references; a child scope that runs this check reports their errors.
+function leaveChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
+    const checked = new Set(
+        session.configuredChecks
+            .filter(({ check }) => check.id === planned.check.id)
+            .map(({ scope }) => scope.folder.path),
+    );
+    const own = planned.scope.folder.path;
+    const findings = result.findings.filter(({ file }) => {
+        const owner = file === '' ? own : findScopeFolder(file, session.repository.scopeFolders).path;
+        return owner === own || !checked.has(owner);
+    });
+    if (findings.length === result.findings.length) return result;
+    return {
+        ...result,
+        findings,
+        status: findings.length === 0 && result.status === 'failed' ? 'passed' : result.status,
+    };
 }
