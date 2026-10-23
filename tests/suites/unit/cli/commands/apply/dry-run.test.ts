@@ -38,8 +38,8 @@ test.skipIf(isWindows)(
         await chmod(path, 0o600);
         const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        const { stale } = JSON.parse(preview.stdout) as DryRunJson;
-        expect(stale.find((entry) => entry.path === '.editorconfig')).toStrictEqual({
+        const { outdated } = JSON.parse(preview.stdout) as DryRunJson;
+        expect(outdated.find((entry) => entry.path === '.editorconfig')).toStrictEqual({
             path: '.editorconfig',
             kind: 'changed',
             diff: 'old mode 600\nnew mode 644\n',
@@ -96,12 +96,12 @@ test('apply --dry-run shows a hand edit of the ESLint config file as a diff with
     await writeFile(join(sandbox.path, path), authored);
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const changed = (JSON.parse(preview.stdout) as DryRunJson).stale.find(({ path: output }) => output === path);
+    const changed = (JSON.parse(preview.stdout) as DryRunJson).outdated.find(({ path: output }) => output === path);
     expect(changed).toMatchObject({ kind: 'changed' });
     expect(changed?.diff).toContain(`-${authored.trim()}`);
     const repeated = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect((JSON.parse(repeated.stdout) as DryRunJson).stale.find((entry) => entry.path === path)).toStrictEqual(
+    expect((JSON.parse(repeated.stdout) as DryRunJson).outdated.find((entry) => entry.path === path)).toStrictEqual(
         changed,
     );
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(authored);
@@ -119,8 +119,8 @@ test('turning rules off lists the same rule files as stray in apply --dry-run as
     await writeFile(join(sandbox.path, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const { stale } = JSON.parse(preview.stdout) as DryRunJson;
-    const strays = stale
+    const { outdated } = JSON.parse(preview.stdout) as DryRunJson;
+    const strays = outdated
         .filter(({ kind }) => kind === 'stray')
         .map(({ path }) => path)
         .toSorted((first, second) => first.localeCompare(second));
@@ -142,9 +142,9 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
     const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const { pin, stale } = JSON.parse(preview.stdout) as DryRunJson;
-    expect(stale.filter(({ kind }) => kind !== 'missing')).toStrictEqual([]);
-    expect(stale.map(({ path }) => path)).toContain(
+    const { pin, outdated } = JSON.parse(preview.stdout) as DryRunJson;
+    expect(outdated.filter(({ kind }) => kind !== 'missing')).toStrictEqual([]);
+    expect(outdated.map(({ path }) => path)).toContain(
         findConfigFilePath(await openSession(sandbox.path), 'shellcheckrc'),
     );
     const human = await runGspot(sandbox.path, ['apply', '--dry-run']);
@@ -153,9 +153,9 @@ test('apply --dry-run lists missing generated files and writes nothing', async (
     expect(human.stdout).toBe(
         [
             `version unpinned -> ${pin.to}`,
-            `${String(stale.length)} generated files need updating:`,
+            `${String(outdated.length)} generated files need updating:`,
             '',
-            ...stale.map(({ path }) => `  ${path}  missing`),
+            ...outdated.map(({ path }) => `  ${path}  missing`),
             '',
             'Run gspot apply to write these files.',
             'Dry run: nothing was written.\n',
@@ -181,7 +181,7 @@ test('apply --dry-run after apply reports no change and writes nothing', async (
     expect(structured.stderr).toBe('');
     const result = JSON.parse(structured.stdout) as DryRunJson;
     expect(result.pin).toStrictEqual({ from: version, to: version });
-    expect(result.stale).toStrictEqual([]);
+    expect(result.outdated).toStrictEqual([]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -221,7 +221,7 @@ test('apply --dry-run shows a changed version pin as a diff and writes nothing',
     expect(structured.stderr).toBe('');
     const result = JSON.parse(structured.stdout) as DryRunJson;
     expect(result.pin).toStrictEqual({ from: TEST_VERSION, to: version });
-    expect(result.stale).toMatchObject([{ path: GSPOT_PATHS.versionPin, kind: 'changed' }]);
+    expect(result.outdated).toMatchObject([{ path: GSPOT_PATHS.versionPin, kind: 'changed' }]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -259,17 +259,17 @@ ${current}=======
     const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const { stale } = JSON.parse(preview.stdout) as DryRunJson;
+    const { outdated } = JSON.parse(preview.stdout) as DryRunJson;
     // The preview lists the edited and stray files with their diffs, and leaves out the files gspot does not own.
-    expect(stale).toContainEqual(
+    expect(outdated).toContainEqual(
         matchFields({ path: shellcheckrc, kind: 'changed', diff: expect.stringContaining('-# Edited.') as string }),
     );
-    expect(stale).toContainEqual(matchFields({ path: GSPOT_PATHS.npmProject, kind: 'changed' }));
-    expect(stale).toContainEqual(
+    expect(outdated).toContainEqual(matchFields({ path: GSPOT_PATHS.npmProject, kind: 'changed' }));
+    expect(outdated).toContainEqual(
         matchFields({ path: 'AGENTS.md', kind: 'changed', diff: expect.stringContaining('-Edited inside.') as string }),
     );
-    expect(stale).toContainEqual(matchFields({ path: markdownlint, kind: 'stray' }));
-    expect(stale.map(({ path }) => path)).not.toContain('README.md');
-    expect(stale.map(({ path }) => path)).not.toContain('settings.json');
+    expect(outdated).toContainEqual(matchFields({ path: markdownlint, kind: 'stray' }));
+    expect(outdated.map(({ path }) => path)).not.toContain('README.md');
+    expect(outdated.map(({ path }) => path)).not.toContain('settings.json');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

@@ -37,7 +37,7 @@ function buildDryRunResult(session: Session): CommandResult {
     const summary =
         outdatedFiles.length === 0 ? `${formatUpToDate(generated.files.length)}\n` : formatOutdatedFiles(outdatedFiles);
     const pin = { from: readVersionPin(session.root), to: cliPackage.version };
-    const json: DryRunJson = { dryRun: true, pin, stale: outdatedFiles };
+    const json: DryRunJson = { dryRun: true, pin, outdated: outdatedFiles };
     const version = pin.from === pin.to ? '' : `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n`;
     return { text: `${version}${summary}${DRY_RUN_NOTE}\n`, json, exitCode: 0 };
 }

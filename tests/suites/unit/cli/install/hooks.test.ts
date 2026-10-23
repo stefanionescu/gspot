@@ -116,7 +116,9 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     const preview = await runGspot(root, ['apply', '--dry-run', '--json']);
     expect(preview.code).toBe(0);
     expect(
-        (JSON.parse(preview.stdout) as DryRunJson).stale.filter(({ path }) => path.startsWith(`${GSPOT_PATHS.hooks}/`)),
+        (JSON.parse(preview.stdout) as DryRunJson).outdated.filter(({ path }) =>
+            path.startsWith(`${GSPOT_PATHS.hooks}/`),
+        ),
     ).toStrictEqual([
         { path: `${GSPOT_PATHS.hooks}/pre-commit`, kind: 'stray' },
         { path: `${GSPOT_PATHS.hooks}/pre-push`, kind: 'stray' },

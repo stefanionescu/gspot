@@ -71,7 +71,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         expect(staleApply.code, staleApply.stdout + staleApply.stderr).toBe(0);
         expect(await readFile(lockfilePath, 'utf8')).toBe(stale);
         const preview = await spawnGspot(root, ['apply', '--dry-run', '--json']);
-        expect((JSON.parse(preview.stdout) as DryRunJson).stale).toContainEqual({
+        expect((JSON.parse(preview.stdout) as DryRunJson).outdated).toContainEqual({
             path: `${DOT_GSPOT}/${selectLockfileName(packageManager)}`,
             kind: 'changed',
         });
@@ -83,7 +83,7 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         });
         expect(await readFile(lockfilePath, 'utf8')).not.toBe(stale);
         const repaired = await spawnGspot(root, ['apply', '--dry-run', '--json']);
-        expect((JSON.parse(repaired.stdout) as DryRunJson).stale).not.toContainEqual({
+        expect((JSON.parse(repaired.stdout) as DryRunJson).outdated).not.toContainEqual({
             path: `${DOT_GSPOT}/${selectLockfileName(packageManager)}`,
             kind: 'changed',
         });
@@ -181,7 +181,7 @@ test.each([...PACKAGE_MANAGER_CASES])(
             readyTools.map(() => 'ok'),
         );
         const preview = await spawnGspot(root, ['apply', '--dry-run', '--json']);
-        expect((JSON.parse(preview.stdout) as DryRunJson).stale).toStrictEqual([]);
+        expect((JSON.parse(preview.stdout) as DryRunJson).outdated).toStrictEqual([]);
         const applied = await spawnGspot(root, ['apply', '--json']);
         const second = JSON.parse(applied.stdout) as ApplyReport;
         expect(second.written).toStrictEqual([]);

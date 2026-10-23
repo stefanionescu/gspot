@@ -26,7 +26,7 @@ test('doctor tells a folder without Git to run git init for a commitlint field, 
 
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(
-        (JSON.parse(preview.stdout) as DryRunJson).stale.filter(({ path }) => path === 'package.json'),
+        (JSON.parse(preview.stdout) as DryRunJson).outdated.filter(({ path }) => path === 'package.json'),
     ).toStrictEqual([]);
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(
