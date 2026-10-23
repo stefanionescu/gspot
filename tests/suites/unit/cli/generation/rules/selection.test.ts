@@ -2,12 +2,12 @@ import { testdir } from 'testdirs';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type Level } from '#cli/types/configurations.ts';
+import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { test, expect, describe, beforeAll } from 'bun:test';
-import { selectRuleFiles } from '#cli/generation/agent-rules.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/config/generation/agent-rules.ts';
+import { RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/config/generation/rules.ts';
 
 // Generate the rule files of the shipped configurations at a level, keyed by path.
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {

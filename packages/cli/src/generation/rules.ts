@@ -16,7 +16,7 @@ import { type Repository } from '#cli/types/repository/files.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { type Level, type Configuration } from '#cli/types/configurations.ts';
-import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cli/types/generation/agent-rules.ts';
+import type { RuleFile, RuleSection, ShippedRule, AgentsBlockContent } from '#cli/types/generation/rules.ts';
 
 import {
     FIRST_READ,
@@ -26,7 +26,7 @@ import {
     MARKDOWN_HEADING,
     SETTINGS_COMMANDS,
     RULE_OPENING_PREFIX,
-} from '#cli/config/generation/agent-rules.ts';
+} from '#cli/config/generation/rules.ts';
 
 // List the rules of the configurations; a file with a condition installs only when the repository meets it.
 function listConfigurationRules(configurations: Configuration[], repository: Repository): ShippedRule[] {

@@ -1,4 +1,4 @@
-import { SETTINGS_COMMANDS } from '#cli/config/generation/agent-rules.ts';
+import { SETTINGS_COMMANDS } from '#cli/config/generation/rules.ts';
 
 export const OPENAPI_CONFIGURATION = 'openapi';
 

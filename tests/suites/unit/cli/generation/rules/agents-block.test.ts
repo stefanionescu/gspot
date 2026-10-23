@@ -6,11 +6,11 @@ import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { buildAgentsBlock } from '#cli/generation/rules.ts';
 import { START_RUNNERS } from '#cli/config/repository/npm.ts';
-import { buildAgentsBlock } from '#cli/generation/agent-rules.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
-import { JAVASCRIPT_IN_APP_TABLES } from '#tests/config/generation/agent-rules.ts';
+import { JAVASCRIPT_IN_APP_TABLES } from '#tests/config/generation/rules.ts';
 
 test('the AGENTS.md block names the folders of a scoped rule without parentheses', async () => {
     await using sandbox = await testdir({
