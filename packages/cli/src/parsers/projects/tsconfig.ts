@@ -52,12 +52,14 @@ function readReferencedProjects(
  * @returns the parsed compiler settings.
  */
 function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): TypeScriptConfiguration {
-    const source = ts.parseConfigFileTextToJson(path, text);
+    // The compiler compares file names with forward slashes; a Windows path with backslashes fails its assertions.
+    const fileName = convertToPosixPath(path);
+    const source = ts.parseConfigFileTextToJson(fileName, text);
     if (source.error !== undefined) throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
     const raw: unknown = source.config;
     const authored = typeScriptConfigSchema.parse(raw);
     const tsconfigFiles = [path];
-    const sourceFile: ts.TsConfigSourceFile = ts.parseJsonText(path, text);
+    const sourceFile: ts.TsConfigSourceFile = ts.parseJsonText(fileName, text);
     const parsed = ts.parseJsonSourceFileConfigFileContent(
         sourceFile,
         {
@@ -68,9 +70,9 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
                 return contents;
             },
         },
-        dirname(path),
+        dirname(fileName),
         undefined,
-        path,
+        fileName,
     );
     // The option and alias readers also read tsconfig files with no input files.
     const errors = parsed.errors.filter(

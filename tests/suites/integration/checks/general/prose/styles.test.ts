@@ -1,7 +1,7 @@
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -147,9 +147,9 @@ test.each([...SCOPE_SPELLING_CASES])(
                 findings.map(({ file, line, rule }) => ({ check, file, line, rule })),
             ),
         ).toStrictEqual([
-            { check: 'prose/vale', file: join(scope, 'guide.md'), line: 7, rule: 'gspot.possessives' },
-            { check: 'prose/vale', file: join(scope, 'guide.md'), line: 7, rule: 'gspot.possessives' },
-            { check: 'spelling/typos', file: join(scope, 'guide.md'), line: 5, rule: undefined },
+            { check: 'prose/vale', file: posix.join(scope, 'guide.md'), line: 7, rule: 'gspot.possessives' },
+            { check: 'prose/vale', file: posix.join(scope, 'guide.md'), line: 7, rule: 'gspot.possessives' },
+            { check: 'spelling/typos', file: posix.join(scope, 'guide.md'), line: 5, rule: undefined },
         ]);
         await writeFile(
             join(root, scope, 'guide.md'),
