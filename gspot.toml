@@ -230,6 +230,7 @@ path = "packages/eslint-plugin/repository.mjs"
 
 [tools.eslint.plugins.rules]
 schema-location = [{ folders = ["packages/cli/src/schemas", "packages/eslint-plugin/src/schemas", "tests/schemas"] }]
+no-promise-matchers = []
 
 [tools.knip]
 entry = ["tests/setup/runner/offline.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/installed-tools.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/pinned-linters.ts"]

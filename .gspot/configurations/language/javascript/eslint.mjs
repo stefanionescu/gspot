@@ -6781,6 +6781,9 @@ export default [
                         "tests/schemas"
                     ]
                 }
+            ],
+            "repository/no-promise-matchers": [
+                "error"
             ]
         },
         files: [
@@ -6801,6 +6804,9 @@ export default [
                         "tests/schemas"
                     ]
                 }
+            ],
+            "repository/no-promise-matchers": [
+                "error"
             ]
         },
         files: [
@@ -6827,6 +6833,9 @@ export default [
                         "tests/schemas"
                     ]
                 }
+            ],
+            "repository/no-promise-matchers": [
+                "error"
             ]
         },
         files: [
@@ -6853,6 +6862,9 @@ export default [
                         "tests/schemas"
                     ]
                 }
+            ],
+            "repository/no-promise-matchers": [
+                "error"
             ]
         },
         files: [
@@ -6879,6 +6891,9 @@ export default [
                         "tests/schemas"
                     ]
                 }
+            ],
+            "repository/no-promise-matchers": [
+                "error"
             ]
         },
         files: [
