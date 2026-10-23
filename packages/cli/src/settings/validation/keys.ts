@@ -122,15 +122,19 @@ export function formatUnknownSetting(knownSettings: KnownSettings, key: string):
         const limits = all.filter((name) => name.startsWith('limits.'));
         return `\`${key}\` is not a limit any check reads. The limits that exist are ${formatCodeList(limits.map((name) => name.slice('limits.'.length)))}.`;
     }
-    const prefix = getSettingTable(key);
-    const keys = all.filter((name) => name.startsWith(`${prefix}.`)).map((name) => name.slice(prefix.length + 1));
-    const near = selectSimilarNames(key.slice(prefix.length + 1), keys);
+    // A key without a table compares with the top-level settings.
+    const prefix = key.includes('.') ? getSettingTable(key) : '';
+    const keys = all
+        .filter((name) => (prefix === '' ? !name.includes('.') : name.startsWith(`${prefix}.`)))
+        .map((name) => (prefix === '' ? name : name.slice(prefix.length + 1)));
+    const near = selectSimilarNames(prefix === '' ? key : key.slice(prefix.length + 1), keys);
     const rest = keys.filter((item) => !near.includes(item));
     const suggestions = [...near, ...rest];
+    const place = prefix === '' ? 'at the top level' : 'under that table';
     return `No selected configuration has the setting ${key}. ${
         suggestions.length === 0
-            ? 'No setting exists under that table.'
-            : 'The settings that exist under that table are ' + formatCodeList(suggestions) + '.'
+            ? `No setting exists ${place}.`
+            : `The settings that exist ${place} are ${formatCodeList(suggestions)}.`
     } Run \`gspot list settings\` to see every one.`;
 }
 
