@@ -2,11 +2,11 @@ import { join, basename } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { findCheckCode } from '#cli/checks/code.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { type Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { findCheckCode } from '#cli/checks/registry.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runCheckCode } from '#cli/commands/check/run.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
@@ -16,8 +16,8 @@ import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { TSC_PLAIN_OUTPUT, TSC_BUILD_COMMAND } from '#cli/config/checks/tsc/compiler.ts';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
-import { TSC_PLAIN_OUTPUT, TSC_BUILD_COMMAND } from '#cli/config/checks/language/typescript/compiler.ts';
 
 import {
     NEXT_LAUNCHER,

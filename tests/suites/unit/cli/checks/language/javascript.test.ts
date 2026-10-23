@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { findCheckCode } from '#cli/checks/code.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { findCheckCode } from '#cli/checks/registry.ts';
 import { runCheckCode } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';

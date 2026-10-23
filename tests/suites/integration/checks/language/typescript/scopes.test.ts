@@ -10,7 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/checks/language/typescript/projects.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/config/checks/language/typescript.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {

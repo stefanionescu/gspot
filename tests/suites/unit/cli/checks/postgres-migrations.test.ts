@@ -6,9 +6,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { readMigrations } from '#cli/checks/postgres-migrations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
-import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
@@ -17,7 +17,7 @@ import {
     MALFORMED_MIGRATION_PATH,
     MALFORMED_MIGRATION_FILES,
     DEFAULT_MIGRATION_FOLDER_FILES,
-} from '#tests/config/checks/database/postgres/migrations.ts';
+} from '#tests/config/checks/postgres-migrations.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
     await using sandbox = await testdir(MALFORMED_MIGRATION_FILES);

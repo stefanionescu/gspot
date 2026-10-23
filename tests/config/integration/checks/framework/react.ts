@@ -1,6 +1,6 @@
 /** The packages of a test React web repository. */
 
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript/projects.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
 export const WEB_PACKAGES = ['@types/react', 'react', 'react-dom'] as const;
 

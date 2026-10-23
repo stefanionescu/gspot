@@ -9,13 +9,7 @@ import type { CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-
-import {
-    runTsc,
-    listCompilerFiles,
-    restoreCommandPaths,
-    writeReferenceProjects,
-} from '#cli/checks/language/typescript/compiler.ts';
+import { runTsc, listCompilerFiles, restoreCommandPaths, writeReferenceProjects } from '#cli/checks/tsc/compiler.ts';
 
 /**
  * Runs tsc on a project, or on every project that a solution tsconfig names.

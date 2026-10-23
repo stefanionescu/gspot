@@ -16,7 +16,7 @@ import {
     MIGRATION_DOWN,
     MIGRATION_SYNTAX_SKIP,
     DOWN_MIGRATION_SUFFIX,
-} from '#cli/config/checks/database/postgres/migrations.ts';
+} from '#cli/config/checks/postgres.ts';
 
 const MIGRATIONS = { create: () => new Map<string, Promise<Migration[]>>() };
 

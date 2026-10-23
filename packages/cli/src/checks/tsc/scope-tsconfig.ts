@@ -4,12 +4,12 @@ import type { Session } from '#cli/types/session.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { join, dirname, resolve, relative } from 'node:path';
+import type { PlannedTsconfig } from '#cli/types/checks/tsc.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
-import type { PlannedTsconfig } from '#cli/types/checks/language/typescript.ts';
 
 import {
     COMPILER_OPTIONS,
@@ -18,7 +18,7 @@ import {
     NESTJS_CONFIGURATION,
     NESTJS_COMPILER_OPTIONS,
     TYPESCRIPT_TSCONFIG_CHECK,
-} from '#cli/config/checks/language/typescript/scope-tsconfig.ts';
+} from '#cli/config/checks/tsc/scope-tsconfig.ts';
 
 /**
  * Builds a tsconfig that extends the tsconfig of the scope, or a standalone one when the scope has none.

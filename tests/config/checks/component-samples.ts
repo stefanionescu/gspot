@@ -1,4 +1,4 @@
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript/projects.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
 /** The tsconfig.json of the component samples: the strict compiler options over `src`. */
 export const COMPONENT_TSCONFIG = { compilerOptions: STRICT_COMPILER_OPTIONS, include: ['src'] } as const;

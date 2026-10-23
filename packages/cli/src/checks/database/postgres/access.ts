@@ -7,9 +7,9 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Migration } from '#cli/types/checks/postgres.ts';
 import type { SqlStatement } from '#cli/types/parsers/code/sql.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
+import { readParsedMigrations } from '#cli/checks/postgres-migrations.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
 import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql/postgres.ts';
-import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 function isLooseDefiner(statement: SqlStatement): boolean {
     if (statement.kind !== 'CreateFunctionStmt') return false;

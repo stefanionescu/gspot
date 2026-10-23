@@ -17,9 +17,9 @@ import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { readParsedMigrations } from '#cli/checks/postgres-migrations.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import type { SupabaseProjectFile } from '#cli/types/checks/platform/supabase.ts';
-import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { formatOutputTail, assertToolFindings } from '#cli/runs/command/output.ts';
 import { denoLintReportSchema, supabaseProjectFileSchema } from '#cli/schemas/checks/supabase.ts';
 

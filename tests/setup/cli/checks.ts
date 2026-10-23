@@ -1,8 +1,8 @@
 // Runs one check in a sandbox and returns its findings, and keeps compiler state in a temporary folder.
 import { spyOn } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { findCheckCode } from '#cli/checks/code.ts';
 import { type Session } from '#cli/types/session.ts';
+import { findCheckCode } from '#cli/checks/registry.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckCode } from '#cli/commands/check/run.ts';
 import * as environment from '#cli/system/environment.ts';

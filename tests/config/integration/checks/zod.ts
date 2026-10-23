@@ -1,6 +1,6 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript/projects.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
 export const LOOSE_ZOD_SCHEMA = `// A test file.
 

@@ -10,8 +10,8 @@ import { getTool } from '#cli/configurations/declared-tools.ts';
 import { listChecksById } from '#cli/configurations/manifests.ts';
 import type { ConfigurationCheck } from '#cli/types/configurations.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/checks/language/typescript/tsconfig.ts';
-import { runTsc, restoreCommandPaths } from '#cli/checks/language/typescript/compiler.ts';
+import { runTsc, restoreCommandPaths } from '#cli/checks/tsc/compiler.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/checks/language/typescript.ts';
 
 import {
     TSC_TOOL,

@@ -6,11 +6,11 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { isProjectChecked } from '#cli/checks/tsc/compiler.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
-import { isProjectChecked } from '#cli/checks/language/typescript/compiler.ts';
+import { selectRequiredTsconfigOptions } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { selectRequiredTsconfigOptions } from '#cli/checks/language/typescript/scope-tsconfig.ts';
-import { TSCONFIG_NAME, TYPESCRIPT_TAG } from '#cli/config/checks/language/typescript/tsconfig.ts';
+import { TSCONFIG_NAME, TYPESCRIPT_TAG } from '#cli/config/checks/language/typescript.ts';
 
 /**
  * Reports each required compiler option that a scope tsconfig leaves off.

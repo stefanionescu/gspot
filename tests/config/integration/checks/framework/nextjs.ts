@@ -1,4 +1,4 @@
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript/projects.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
 export const NEXT_PACKAGE = {
     name: 'example',

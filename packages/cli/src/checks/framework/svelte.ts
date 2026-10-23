@@ -9,9 +9,9 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { writeScopeTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
-import { writeScopeTsconfig } from '#cli/checks/language/typescript/scope-tsconfig.ts';
-import { TSCONFIG_COPY_FOLDER } from '#cli/config/checks/language/typescript/compiler.ts';
+import { TSCONFIG_COPY_FOLDER } from '#cli/config/checks/tsc/compiler.ts';
 import { findingSchema, failureMessageSchema } from '#cli/schemas/checks/framework/svelte.ts';
 
 import {

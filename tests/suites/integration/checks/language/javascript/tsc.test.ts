@@ -12,8 +12,8 @@ import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript.ts';
 import { findFileTarget, readGeneratedFiles } from '#tests/setup/cli/config-files.ts';
-import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript/projects.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {

@@ -1,7 +1,7 @@
 import type { RangeVar, Constraint } from '@pgsql/types';
 import type { SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
 import { getNodeFields, listNodeFields, visitStatement } from '#cli/parsers/code/sql/postgres.ts';
-import { PUBLIC_SCHEMA, SCHEMA_PART_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database/postgres/schema.ts';
+import { PUBLIC_SCHEMA, SCHEMA_PART_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/postgres.ts';
 
 import type {
     Schema,

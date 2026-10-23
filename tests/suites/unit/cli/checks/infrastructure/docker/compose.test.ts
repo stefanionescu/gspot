@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { findCheckCode } from '#cli/checks/code.ts';
 import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
+import { findCheckCode } from '#cli/checks/registry.ts';
 import { runCheckCode } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';

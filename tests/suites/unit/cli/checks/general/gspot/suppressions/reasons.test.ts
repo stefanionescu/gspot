@@ -7,7 +7,7 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript/projects.ts';
+import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript.ts';
 
 import {
     COMPILER_REASON,

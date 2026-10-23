@@ -1,4 +1,4 @@
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript/projects.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
 /** The declaration and generated files that a TypeScript check keeps. */
 export const KEPT_DECLARATION_FILES = [

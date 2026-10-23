@@ -12,7 +12,7 @@ import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { NESTJS_SANDBOX } from '#tests/config/checks/framework/nestjs.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/checks/language/typescript/projects.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/config/checks/language/typescript.ts';
 import { createEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {

@@ -4,17 +4,17 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/checks/language/typescript/projects.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     ROOT_PORT_SOURCE,
     CHILD_PORT_SOURCE,
+    STRICT_TSCONFIG_TEXT,
     TSCONFIG_READ_ERRORS,
     MISSING_TSCONFIG_FINDINGS,
     ALL_LEVEL_OPTION_FINDINGS,
     RECOMMENDED_COMPILER_OPTIONS,
-} from '#tests/config/checks/language/typescript/tsconfig.ts';
+} from '#tests/config/checks/language/typescript.ts';
 
 test.each([...TSCONFIG_READ_ERRORS])(
     '$name is a read error that names the file, not missing options',

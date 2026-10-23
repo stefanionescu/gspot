@@ -4,10 +4,10 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { readMigrations } from '#cli/checks/postgres-migrations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { TEAMS_TABLE_SQL, TEAMS_MIGRATION_PATH } from '#tests/config/checks/database/postgres/history.ts';
 

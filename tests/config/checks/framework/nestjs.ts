@@ -1,5 +1,5 @@
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 import { NESTJS_CONTROLLER } from '#tests/config/integration/checks/framework/nestjs.ts';
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript/projects.ts';
 
 export const NESTJS_SANDBOX = {
     configurations: ['typescript', 'nestjs'],

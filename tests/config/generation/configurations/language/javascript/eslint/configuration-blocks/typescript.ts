@@ -1,4 +1,4 @@
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript/projects.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
 const PORT_SOURCE =
     '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';

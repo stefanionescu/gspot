@@ -1,9 +1,9 @@
 import { createTwoFilesPatch } from 'diff';
-import { findCheckCode } from '#cli/checks/code.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { findCheckCode } from '#cli/checks/registry.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';

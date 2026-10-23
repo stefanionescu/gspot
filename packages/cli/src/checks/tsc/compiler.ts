@@ -12,11 +12,11 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { join, resolve, relative, isAbsolute } from 'node:path';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import type { TypeScriptReferenceCopy } from '#cli/types/checks/tsc.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
 import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import type { TypeScriptReferenceCopy } from '#cli/types/checks/language/typescript.ts';
+import { writeScopeTsconfig, selectCheckedTsconfigOptions } from '#cli/checks/tsc/scope-tsconfig.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
-import { writeScopeTsconfig, selectCheckedTsconfigOptions } from '#cli/checks/language/typescript/scope-tsconfig.ts';
 
 import {
     TSC_PLAIN_OUTPUT,
@@ -31,7 +31,7 @@ import {
     TSC_COMPILER_INPUT_PATHS,
     TSC_CONFIGURATION_REQUIRED,
     TSC_REFERENCE_OUTPUT_FOLDER,
-} from '#cli/config/checks/language/typescript/compiler.ts';
+} from '#cli/config/checks/tsc/compiler.ts';
 
 const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
 

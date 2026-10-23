@@ -7,7 +7,7 @@ import { readDeclaredSpecifiers } from '#cli/repository/dependencies.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { splitIdentity, readLockedPackages } from '#cli/parsers/projects/lockfiles.ts';
-import { REACT_PACKAGE, REACT_DOM_PACKAGE } from '#cli/config/checks/general/dependencies/react-versions.ts';
+import { REACT_PACKAGE, REACT_DOM_PACKAGE } from '#cli/config/checks/framework/react-dom.ts';
 
 function listVersions(locked: Set<string> | undefined, declared: Map<string, string>, name: string): string[] {
     const versions =

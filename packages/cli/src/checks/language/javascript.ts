@@ -17,20 +17,15 @@ import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
+import { TSC_PLAIN_OUTPUT } from '#cli/config/checks/tsc/compiler.ts';
 import type { WholeConfigFile } from '#cli/types/generation/files.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 import { buildPerScopeTarget } from '#cli/generation/config-files/generate.ts';
-import { TSC_PLAIN_OUTPUT } from '#cli/config/checks/language/typescript/compiler.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
 import { buildJsconfigFile } from '#cli/generation/configurations/language/javascript/jsconfig.ts';
 import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/language/javascript.ts';
-
-import {
-    listCompilerFiles,
-    restoreCommandPaths,
-    appendTsbuildinfoFlag,
-} from '#cli/checks/language/typescript/compiler.ts';
+import { listCompilerFiles, restoreCommandPaths, appendTsbuildinfoFlag } from '#cli/checks/tsc/compiler.ts';
 
 /**
  * Selects the source files and type roots of a scope.
