@@ -6,36 +6,36 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { SHELLCHECK_RC } from '#tests/config/checks/general/gspot/generated-files.ts';
 
 test('gspot/generated-files reports an edited file with the apply help and passes after apply, while tool lockfiles stay missing', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash']),
         'run.sh': '#!/usr/bin/env bash\necho ok\n',
-        '.gitignore': '.gspot/state/\n',
+        '.gitignore': `${GSPOT_PATHS.state}/\n`,
     });
 
     await applyGeneratedFiles(sandbox.path);
-    const initial = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['gspot/generated-files'] }),
-    );
+    const session = await openSession(sandbox.path);
+    const shellcheckrc = findConfigFilePath(session, 'shellcheckrc');
+    const initial = await runChecks(session, buildRunOptions({ only: ['gspot/generated-files'] }));
     const missingLocks = initial.report.checks[0]!.findings;
     expect(missingLocks).toMatchObject([
-        { file: '.gspot/package-lock.json', rule: 'missing' },
-        { file: '.gspot/uv.lock', rule: 'missing' },
+        { file: `${DOT_GSPOT}/package-lock.json`, rule: 'missing' },
+        { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
     ]);
-    const generated = await readFile(join(sandbox.path, SHELLCHECK_RC), 'utf8');
-    await writeFile(join(sandbox.path, SHELLCHECK_RC), `${generated}disable=SC2034\n`);
+    const generated = await readFile(join(sandbox.path, shellcheckrc), 'utf8');
+    await writeFile(join(sandbox.path, shellcheckrc), `${generated}disable=SC2034\n`);
     const edited = await runChecks(
         await openSession(sandbox.path),
         buildRunOptions({ only: ['gspot/generated-files'] }),
     );
 
-    expect(edited.report.checks[0]?.findings.filter(({ file }) => file === SHELLCHECK_RC)).toMatchObject([
+    expect(edited.report.checks[0]?.findings.filter(({ file }) => file === shellcheckrc)).toMatchObject([
         {
-            file: SHELLCHECK_RC,
+            file: shellcheckrc,
             rule: 'changed',
             message: 'This generated file differs from what gspot.toml generates.',
             help: 'Change settings in gspot.toml, then run gspot apply. gspot replaces the generated files that it owns.',
