@@ -5,7 +5,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { getValueAt } from '#cli/system/tables.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { generateFile, findFileTarget, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { generateFile, findManifestTarget, findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 import {
     CHILD_MIGRATIONS,
@@ -19,7 +19,7 @@ test.each([...SQUAWK_VERSION_CASES])(
     async (through, expected) => {
         const text = await generateFile(
             buildSandboxSettings(['postgres'], { tables: `[postgres]\nfrozen_through = "${through}"\n` }),
-            findFileTarget('postgres', 'squawk.toml'),
+            findManifestTarget('postgres', 'squawk.toml'),
             SQUAWK_MIGRATION_FILES,
         );
         expect(getValueAt(parse(text), ['excluded_paths'])).toStrictEqual(expected);
@@ -44,7 +44,7 @@ test('the Squawk config file of a Postgres child scope excludes the frozen migra
 test('the Squawk config file of a Postgres scope assumes that each migration runs in a transaction', async () => {
     const text = await generateFile(
         buildSandboxSettings(['postgres']),
-        findFileTarget('postgres', 'squawk.toml'),
+        findManifestTarget('postgres', 'squawk.toml'),
         SQUAWK_MIGRATION_FILES,
     );
     expect(getValueAt(parse(text), ['assume_in_transaction'])).toBe(true);

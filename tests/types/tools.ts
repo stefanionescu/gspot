@@ -1,18 +1,7 @@
 import type { Linter } from 'eslint';
-import type { Finding } from '#cli/types/runs/check.ts';
+import type { Config } from 'stylelint';
 
 export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; line: Linter.LintMessage['line'] };
-
-export type LinkFailure = { scope: string; file: string; rule: string };
-
-export type TypecheckResult = { code: number; output: string; findings: Finding[] };
-
-export type ParameterFinding = {
-    code?: string;
-    rule_id?: string;
-    line?: number;
-    location?: { row: number };
-};
 
 export type EslintConfiguration = {
     rules: Record<string, [Linter.Severity, ...unknown[]]>;
@@ -22,10 +11,6 @@ export type EslintConfiguration = {
     linterOptions: { reportUnusedDisableDirectives: Linter.Severity };
 };
 
-export type FindingRow = { file: string; line: number | undefined; rule: string | undefined };
-
-export type ScopeFindingRow = FindingRow & { scope: string };
-
 export type SourceRuleCase = { name?: string; source: string; rule: string; count: number };
 
 export type ScriptFindingCase = {
@@ -34,5 +19,22 @@ export type ScriptFindingCase = {
     all?: readonly { ruleId: string | null; line: number }[];
 };
 
+export type LinterJsonFinding = {
+    code?: string;
+    rule_id?: string;
+    line?: number;
+    location?: { row: number };
+};
+
 export type RuffRule = { code: string | null; preview: boolean };
-export type RuffConfiguration = { lint: { select: string[] } };
+
+export type RuffConfigFile = {
+    lint: { select: string[]; pylint: { 'max-statements': number }; 'per-file-ignores'?: Record<string, string[]> };
+    format: { 'quote-style': string };
+};
+
+export type KnipConfigFile = { ignore: string[]; workspaces: Record<string, { entry: string[] }> };
+
+export type StylelintConfigFile = Required<Pick<Config, 'rules'>> & Pick<Config, 'overrides'>;
+
+export type SemgrepRuleFile = { rules: { id: string; paths?: { include?: string[]; exclude?: string[] } }[] };

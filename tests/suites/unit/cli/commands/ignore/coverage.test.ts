@@ -8,9 +8,9 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { FUNCTION_NAME_IGNORES } from '#tests/config/commands/ignore.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 test('an ignore without paths stops a command check and its fixer until unignore', async () => {
@@ -115,7 +115,7 @@ test('ignore without a check keeps the paths out of every check and every config
     );
     const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(saved['ignore']).toStrictEqual([{ paths: ['data/**'], reason }]);
-    const typos = await readFile(join(sandbox.path, findFileTarget('spelling', 'typos.toml')), 'utf8');
+    const typos = await readFile(join(sandbox.path, findManifestTarget('spelling', 'typos.toml')), 'utf8');
     expect(typos).toEndWith(`  # ${reason}\n  "data/**",\n]\n`);
     const removed = await runGspot(sandbox.path, ['unignore', '--paths', 'data/**']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);

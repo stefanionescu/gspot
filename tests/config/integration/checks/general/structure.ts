@@ -1,4 +1,4 @@
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const PARAMETER_LIMIT_TOOLS = [
     {
@@ -8,7 +8,7 @@ export const PARAMETER_LIMIT_TOOLS = [
             'ruff',
             'check',
             '--config',
-            findFileTarget('python', 'ruff.toml'),
+            findManifestTarget('python', 'ruff.toml'),
             '--output-format',
             'json',
             'example.py',
@@ -42,7 +42,7 @@ def _eight(
             'swiftlint',
             'lint',
             '--config',
-            findFileTarget('swift', 'swiftlint.yml'),
+            findManifestTarget('swift', 'swiftlint.yml'),
             '--reporter',
             'json',
             '--quiet',

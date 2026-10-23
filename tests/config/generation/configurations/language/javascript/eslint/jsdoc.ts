@@ -1,4 +1,4 @@
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const JSDOC_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
@@ -77,7 +77,7 @@ export const TSC_ARGUMENTS = [
     'node',
     'node_modules/typescript/lib/tsc.js',
     '--project',
-    findFileTarget('javascript', 'jsconfig.json'),
+    findManifestTarget('javascript', 'jsconfig.json'),
     '--pretty',
     'false',
 ] as const;

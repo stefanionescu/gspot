@@ -1,4 +1,4 @@
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
@@ -26,7 +26,7 @@ export const REPLACED_PYPROJECT_TABLES = [
         text: '[tool.sqlfluff.core]\ndialect = "postgres"\n',
         source: { file: 'query.sql', text: 'SELECT 1;\n' },
         tool: 'sqlfluff',
-        generated: findFileTarget('sql', 'sqlfluff.cfg'),
+        generated: findManifestTarget('sql', 'sqlfluff.cfg'),
     },
 ] as const;
 

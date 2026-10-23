@@ -5,14 +5,14 @@ import { lstat, mkdir, writeFile } from 'node:fs/promises';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
-import { userEnvironment } from '#tests/setup/sandboxes/user-project.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
 import { PLUGIN_TYPES_SOURCE, PLUGIN_IMPORT_SCRIPT } from '#tests/config/e2e/eslint-plugin.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
     await writeFile(join(consumer, 'consumer.mjs'), PLUGIN_IMPORT_SCRIPT);
     await writeFile(join(consumer, 'consumer.mts'), PLUGIN_TYPES_SOURCE);
-    const options = { cwd: consumer, env: userEnvironment };
+    const options = { cwd: consumer, env: isolatedEnvironment };
     const checked = await runCommand(['node', 'consumer.mjs'], options);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const typed = await runCommand(
@@ -50,7 +50,7 @@ test('the installed ESLint plugin loads through import and require and enforces 
             ...peerPackages,
             ...NPM_INSTALL_FLAGS,
         ],
-        { cwd: consumer, env: userEnvironment },
+        { cwd: consumer, env: isolatedEnvironment },
     );
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     const installedPlugin = await lstat(join(consumer, 'node_modules', '@gspothq/eslint-plugin'));

@@ -5,7 +5,7 @@ import { openSession } from '#cli/session.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { LocalDate, stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { LYCHEE_MDX_EXPRESSION } from '#cli/config/generation/configurations/general/docs.ts';
 
@@ -27,7 +27,9 @@ test('keys and values with quotes, backslashes, newlines, and accented letters s
 
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    const markdownRules = output.files.find(({ path }) => path === findFileTarget('markdown', 'markdownlint.jsonc'))!;
+    const markdownRules = output.files.find(
+        ({ path }) => path === findManifestTarget('markdown', 'markdownlint.jsonc'),
+    )!;
     expect(parseJsonc(markdownRules.content)).toMatchObject({
         MD044: { names: [SPECIAL_CHARACTER_KEY, SPECIAL_CHARACTER_VALUE] },
     });
@@ -36,14 +38,14 @@ test('keys and values with quotes, backslashes, newlines, and accented letters s
             .filter((file) => /\.ya?ml$/u.test(file.path))
             .map((file) => [file.path, parseYaml(file.content) as unknown]),
     );
-    expect(yaml.get(findFileTarget('swift', 'periphery.yml'))).toMatchObject({
+    expect(yaml.get(findManifestTarget('swift', 'periphery.yml'))).toMatchObject({
         project: XCODE_PROJECT,
         schemes: [XCODE_SCHEME],
     });
-    expect(yaml.get(findFileTarget('docker', 'hadolint.yml'))).toMatchObject({
+    expect(yaml.get(findManifestTarget('docker', 'hadolint.yml'))).toMatchObject({
         trustedRegistries: REGISTRIES,
     });
-    expect(yaml.get(findFileTarget('data-files', 'yamllint.yml'))).toMatchObject({
+    expect(yaml.get(findManifestTarget('data-files', 'yamllint.yml'))).toMatchObject({
         rules: { truthy: { 'allowed-values': ['yes', 'no'] }, indentation: { spaces: 'consistent' } },
     });
 });
@@ -77,18 +79,18 @@ test('TOML config files keep keys and values with quotes, backslashes, newlines,
     const parsed = new Map(
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parseToml(file.content)]),
     );
-    expect(parsed.get(findFileTarget('dependencies', 'osv-scanner.toml'))).toMatchObject({
+    expect(parsed.get(findManifestTarget('dependencies', 'osv-scanner.toml'))).toMatchObject({
         IgnoredVulns: [{ id: text, reason, ignoreUntil: new Date('2099-09-20T00:00:00.000Z') }],
     });
-    expect(parsed.get(findFileTarget('data-files', 'taplo.toml'))).toMatchObject({
+    expect(parsed.get(findManifestTarget('data-files', 'taplo.toml'))).toMatchObject({
         formatting: { indent_string: '\t' },
     });
-    const markdown = output.files.find(({ path }) => path === findFileTarget('markdown', 'markdownlint.jsonc'));
+    const markdown = output.files.find(({ path }) => path === findManifestTarget('markdown', 'markdownlint.jsonc'));
     expect(parseJsonc(markdown!.content)).toMatchObject({ MD044: { [option]: text } });
-    expect(parsed.get(findFileTarget('docs', 'lychee.toml'))).toMatchObject({
+    expect(parsed.get(findManifestTarget('docs', 'lychee.toml'))).toMatchObject({
         exclude: [text, LYCHEE_MDX_EXPRESSION],
     });
-    expect(parsed.get(findFileTarget('python', 'ruff.toml'))).toMatchObject({
+    expect(parsed.get(findManifestTarget('python', 'ruff.toml'))).toMatchObject({
         lint: { 'per-file-ignores': { [`../../../../${path}`]: ['F401'] } },
     });
 });

@@ -10,7 +10,6 @@ import { listPointerPaths, buildPointerFiles } from '#cli/generation/config-file
 import { getConfigFileTarget, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 
 import type {
-    WholeConfigFile,
     BuiltConfigFile,
     OwnedConfigFile,
     ConfigFileGeneration,
@@ -33,10 +32,7 @@ export function getConfigFiles(session: Session): ConfigFileGeneration {
     );
 }
 
-function groupToolOutputs(
-    ownedFiles: (OwnedConfigFile & { configFile: WholeConfigFile })[],
-    generated: GeneratedConfigFiles,
-): BuiltConfigFile[][] {
+function groupToolOutputs(ownedFiles: OwnedConfigFile[], generated: GeneratedConfigFiles): BuiltConfigFile[][] {
     const owners = ownedFiles[0]?.configFile.per_scope === true ? ownedFiles : ownedFiles.slice(0, 1);
     const outputs = owners.map((each) => ({
         ...each,
@@ -82,9 +78,7 @@ function addToolOutput(target: string, group: BuiltConfigFile[], index: number, 
 }
 
 function buildSourceFiles(configFiles: OwnedConfigFile[], generated: GeneratedConfigFiles): void {
-    const sourced = configFiles.filter(
-        (each): each is OwnedConfigFile & { configFile: WholeConfigFile } => each.configFile.source !== undefined,
-    );
+    const sourced = configFiles.filter((each) => each.configFile.source !== undefined);
     for (const [declared, ownedFiles] of Map.groupBy(sourced, ({ configFile }) => configFile.target)) {
         const groups = groupToolOutputs(ownedFiles, generated);
         for (const [index, group] of groups.entries()) addToolOutput(declared, group, index, generated);

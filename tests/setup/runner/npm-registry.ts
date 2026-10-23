@@ -71,11 +71,12 @@ function buildPackageDocument(packed: PackedPackage, tarball: string): Record<st
 /** Serve the packed npm packages and any extra packages that a credential test asks for. */
 export async function createNpmRegistry(
     work: string,
-    options: { packages: readonly RegistryPackage[]; token?: string },
+    options: { packages?: readonly RegistryPackage[]; token?: string } = {},
 ): Promise<NpmRegistry> {
     const folder = TEST_RUN_FOLDER;
     const files = [join(folder, PACKED_PACKAGES_FILE)];
-    if (options.packages.length > 0) files.push(await runNpmPack(work, options.packages));
+    if (options.packages !== undefined && options.packages.length > 0)
+        files.push(await runNpmPack(work, options.packages));
 
     const packages = new Map<string, PackedPackage>();
     for (const file of files)

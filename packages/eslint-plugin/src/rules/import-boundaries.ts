@@ -1,14 +1,14 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
+import { createRule } from '../create-rule.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
 import { IMPORT_SELECTOR } from '../config/syntax.ts';
 import type { ImportSource } from '../types/syntax.ts';
-import { createRule } from '../schemas/rules/options.ts';
+import { OPTIONS_SCHEMA } from '../config/rules/import-boundaries.ts';
 import type { RuleContext, ImportBoundariesOptions } from '../types/rules.ts';
 import { STDIN_NAMES, TRAILING_STAR, TRAILING_SLASH } from '../config/paths.ts';
 import { RELATIVE_PREFIXES, DEFAULT_BOUNDARY_FOLDERS } from '../config/imports.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { importBoundariesOptionsSchema } from '../schemas/rules/import-boundaries.ts';
 
 const matchersByGlob = new Map<string, (path: string) => boolean>();
 function isGlobMatch(path: string, glob: string): boolean {
@@ -72,7 +72,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
             why: 'Relative paths between folders couple separate parts of a project to the tree shape.',
             fix: 'Keep relative imports within the selected folder. eslint --fix uses a configured alias when one exists. Otherwise, move shared code into this folder or into a package both projects depend on, and import its package name.',
         },
-        schema: [importBoundariesOptionsSchema],
+        schema: [OPTIONS_SCHEMA],
         messages: {
             alias: 'Import "{{alias}}" instead of climbing folders with "{{source}}".',
             escape: 'Relative import "{{source}}" leaves the "{{folder}}" folder for "{{target}}". Import through an alias, or move the shared code into this folder.',

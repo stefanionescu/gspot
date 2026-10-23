@@ -1,11 +1,11 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const RECOMMENDED_VALE_FILES = [
-    findFileTarget('prose', 'styles/gspot/alt-text.yml'),
-    findFileTarget('prose', 'styles/gspot/dates.yml'),
-    findFileTarget('prose', 'styles/gspot/link-text.yml'),
-    findFileTarget('prose', 'styles/LICENSES.md'),
+    findManifestTarget('prose', 'styles/gspot/alt-text.yml'),
+    findManifestTarget('prose', 'styles/gspot/dates.yml'),
+    findManifestTarget('prose', 'styles/gspot/link-text.yml'),
+    findManifestTarget('prose', 'styles/LICENSES.md'),
     GSPOT_PATHS.valeConfigFile,
 ] as const;
 

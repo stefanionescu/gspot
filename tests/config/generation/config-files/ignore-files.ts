@@ -1,5 +1,5 @@
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const PRETTIER_IGNORE_SETTINGS = {
     configurations: ['format', 'javascript'],
@@ -66,19 +66,19 @@ export const PATH_IGNORE_CASES = [
     {
         configuration: 'spelling',
         check: 'spelling/typos',
-        path: findFileTarget('spelling', 'typos.toml'),
+        path: findManifestTarget('spelling', 'typos.toml'),
         nativePath: ['files', 'extend-exclude'],
     },
     {
         configuration: 'duplication',
         check: 'duplication/jscpd',
-        path: findFileTarget('duplication', 'jscpd.json'),
+        path: findManifestTarget('duplication', 'jscpd.json'),
         nativePath: ['ignore'],
     },
     {
         configuration: 'javascript',
         check: 'javascript/knip',
-        path: findFileTarget('javascript', 'knip.json'),
+        path: findManifestTarget('javascript', 'knip.json'),
         nativePath: ['ignore'],
     },
 ] as const;

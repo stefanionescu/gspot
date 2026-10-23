@@ -2,8 +2,8 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { createEslint } from '#tests/setup/eslint/lint.ts';
+import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 
 import {
     RUNTIME_CASES,

@@ -31,41 +31,19 @@ createRuleTester().run<'location', [Partial<SchemaLocationOptions[0]>]>('schema-
         'import { z } from "zod"; function read(z) { return z.string(); }',
     ],
     invalid: [
-        {
-            code: 'import { z } from "zod"; export const name = z.coerce.string();',
+        ...[
+            'import { z } from "zod"; export const name = z.coerce.string();',
+            'import { iso } from "zod"; export const date = iso.datetime();',
+            'import { z } from "zod"; export const name = z.lazy(readSchema);',
+            'import { z } from "zod"; export const name = z.string();',
+            'import { z as schema } from "zod"; export const name = schema.string();',
+            'import * as schema from "zod"; export const name = schema.string();',
+            'import { string as text } from "zod"; export const name = text();',
+        ].map((code) => ({
+            code,
             filename: '/repo/src/parsers/name.ts',
-            errors: [{ messageId: 'location' }],
-        },
-        {
-            code: 'import { iso } from "zod"; export const date = iso.datetime();',
-            filename: '/repo/src/parsers/name.ts',
-            errors: [{ messageId: 'location' }],
-        },
-        {
-            code: 'import { z } from "zod"; export const name = z.lazy(readSchema);',
-            filename: '/repo/src/parsers/name.ts',
-            errors: [{ messageId: 'location' }],
-        },
-        {
-            code: 'import { z } from "zod"; export const name = z.string();',
-            filename: '/repo/src/parsers/name.ts',
-            errors: [{ messageId: 'location' }],
-        },
-        {
-            code: 'import { z as schema } from "zod"; export const name = schema.string();',
-            filename: '/repo/src/parsers/name.ts',
-            errors: [{ messageId: 'location' }],
-        },
-        {
-            code: 'import * as schema from "zod"; export const name = schema.string();',
-            filename: '/repo/src/parsers/name.ts',
-            errors: [{ messageId: 'location' }],
-        },
-        {
-            code: 'import { string as text } from "zod"; export const name = text();',
-            filename: '/repo/src/parsers/name.ts',
-            errors: [{ messageId: 'location' }],
-        },
+            errors: [{ messageId: 'location' as const }],
+        })),
         {
             code: 'import { z } from "zod"; export const name = z.string();',
             filename: '/repo/src/schemas-other/name.ts',

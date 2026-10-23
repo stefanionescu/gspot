@@ -43,9 +43,7 @@ export type PlannedNpmProject = {
     isYarnBerry: boolean;
 };
 
-export type WholeConfigFile = Extract<ConfigFile, { source: string }>;
-
-export type PlannedConfigFile = ConfigFileOwner & { targetPath: string; level: Level; configFile: WholeConfigFile };
+export type PlannedConfigFile = ConfigFileOwner & { targetPath: string; level: Level; configFile: ConfigFile };
 
 export type ConfigFileOutput = { content: string; companions: GeneratedFile[] };
 
@@ -66,7 +64,7 @@ export type IgnoreSection = { key: keyof typeof IGNORE_SECTION_TITLES | 'setting
 export type OwnedConfigFile = { configFile: ConfigFile; owner: ConfigFileOwner };
 
 export type BuiltConfigFile = OwnedConfigFile & {
-    configFile: WholeConfigFile;
+    configFile: ConfigFile;
     file: GeneratedFile;
     companions: GeneratedFile[];
 };

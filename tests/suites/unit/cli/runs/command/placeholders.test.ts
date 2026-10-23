@@ -7,8 +7,8 @@ import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { type CommandArgument } from '#cli/types/runs/command.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
 import { expandCommand, listCopyFiles, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
@@ -118,8 +118,8 @@ test('a Markdown command run in a copy keeps the config files its manifest write
     const planned = planChecks(session, { stage: 'commit', only: ['markdown/markdownlint'] })[0]!;
     expect(listCopyFiles(session, planned, planned.check.command!)).toStrictEqual([
         'README.md',
-        findFileTarget('markdown', 'markdownlint-cli2.mjs'),
-        findFileTarget('markdown', 'markdownlint.jsonc'),
+        findManifestTarget('markdown', 'markdownlint-cli2.mjs'),
+        findManifestTarget('markdown', 'markdownlint.jsonc'),
     ]);
     expect(() => listCopyFiles(session, planned, ['markdownlint-cli2', '{config_file:absent}'])).toThrow(
         'Check markdown/markdownlint names {config_file:absent} and no configuration writes it.',

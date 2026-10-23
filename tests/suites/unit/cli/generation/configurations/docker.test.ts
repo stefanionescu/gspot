@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 test('Trivy severity settings add up through the root and child scopes', async () => {
     await using sandbox = await testdir({

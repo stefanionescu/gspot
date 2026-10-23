@@ -8,9 +8,9 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { type ToolPackageJson } from '#cli/types/install/npm.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
@@ -79,12 +79,12 @@ test('the init plan deletes the conflicting config files and lists the lint fold
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     for (const { path } of REPLACED_CONFIG_DELETIONS) expect(await isOnDisk(join(sandbox.path, path))).toBe(false);
     expect(await readFile(join(sandbox.path, '.markdownlint.jsonc'), 'utf8')).toContain(
-        `{ "extends": "./${findFileTarget('markdown', 'markdownlint.jsonc')}" }`,
+        `{ "extends": "./${findManifestTarget('markdown', 'markdownlint.jsonc')}" }`,
     );
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     for (const carried of ['udid', 'SC2086', 'MD013']) expect(settings).not.toContain(carried);
     expect(await readFile(join(sandbox.path, 'eslint.config.mjs'), 'utf8')).toContain(
-        `export { default } from "./${findFileTarget('javascript', 'eslint/eslint.mjs')}";\n`,
+        `export { default } from "./${findManifestTarget('javascript', 'eslint/eslint.mjs')}";\n`,
     );
     expect(await isOnDisk(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
 });
@@ -149,7 +149,7 @@ test.each([true, false])(
         const attributes = await stat(target);
         expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(!isDryRun);
-        expect(await isOnDisk(join(sandbox.path, findFileTarget('sql', 'sqlfluff.cfg')))).toBe(!isDryRun);
+        expect(await isOnDisk(join(sandbox.path, findManifestTarget('sql', 'sqlfluff.cfg')))).toBe(!isDryRun);
     },
 );
 test.each([...REPLACED_PYPROJECT_TABLES])(

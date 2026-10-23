@@ -1,5 +1,5 @@
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const ESCAPED_SCOPE_CONFIGURATIONS = ['javascript', 'react'] as const;
 
-export const ESLINT_FILE = findFileTarget('javascript', 'eslint/eslint.mjs');
+export const ESLINT_FILE = findManifestTarget('javascript', 'eslint/eslint.mjs');

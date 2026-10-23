@@ -43,7 +43,7 @@ allowed_names = ["$schema"]
 reason = "The Agent Skills discovery index names its schema key $schema."
 
 [[naming.override]]
-paths = ["tests/types/tool-output.ts"]
+paths = ["tests/types/tools.ts"]
 allowed_names = ["rule_id"]
 reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
@@ -159,7 +159,7 @@ allowed_names = ["objects", "fileSystemSynchronizedGroups"]
 reason = "Xcode project files name these keys objects and fileSystemSynchronizedGroups."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/linter-lists.ts"]
+paths = ["packages/cli/src/types/linter-exports.ts"]
 allowed_names = ["resolveConfig"]
 reason = "Prettier and Stylelint name their configuration methods resolveConfig."
 
@@ -174,8 +174,8 @@ allowed_names = ["invocations"]
 reason = "SARIF names the field of a run that records each tool run invocations."
 
 [[naming.override]]
-paths = ["packages/cli/src/checks/language/swift/build.ts", "packages/cli/src/commands/doctor/suggestions.ts", "packages/cli/src/configurations/tools.ts", "packages/cli/src/configurations/manifests.ts", "packages/cli/src/generation/config-files/build.ts", "packages/cli/src/generation/config-files/generate.ts", "packages/cli/src/generation/config-files/selection.ts", "packages/cli/src/generation/configurations/language/javascript/eslint/plan.ts", "packages/cli/src/runs/command/check.ts", "packages/cli/src/runs/command/placeholders.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/generation/files.ts", "tests/setup/cli/config-files.ts", "tests/types/config-files.ts", "tests/suites/unit/cli/generation/config-files/selection.test.ts", "tests/suites/unit/cli/install/npm/project.test.ts", "packages/cli/src/checks/general/gspot/conflicting-config-files.ts", "packages/cli/src/commands/init/conflicting-config-files.ts", "packages/cli/src/commands/init/init.ts", "packages/cli/src/commands/init/plan.ts", "packages/cli/src/repository/setup/config-files.ts", "packages/cli/src/types/commands/init.ts", "packages/cli/src/types/repository/setup.ts", "tests/suites/e2e/cli.test.ts"]
-allowed_names = ["BuiltConfigFile", "ConflictingConfigFile", "ConflictingConfigFiles", "ConfigFile", "ConfigFileBuilder", "ConfigFileOutput", "ConfigFileGeneration", "ConfigFileOwner", "ConfigFilePointer", "GeneratedConfigFiles", "KnipConfigFile", "OwnedConfigFile", "PlannedConfigFile", "RuffConfigFile", "StylelintConfigFile", "WholeConfigFile", "buildConfigFile", "buildConfigFiles", "buildNpmConfigFile", "extractConfigFileName", "findConfigFilePath", "findMissingConfigFile", "getConfigFile", "getConfigFileTarget", "getConfigFiles", "isConfigFileNeeded", "listCommandConfigFiles", "listConfigFileConfigurations", "listConfigFiles", "listOwnedConfigFiles", "listScopeConfigFiles", "listSwiftlintConfigFiles", "listUnownedConfigFiles", "parseConfigFile", "readConfigFiles", "addConflictingConfigFile", "assertConflictingConfigFiles", "checkConflictingConfigFiles", "deleteConflictingConfigFiles", "findConflictingConfigFiles", "formatConflictingConfigFiles", "listConflictingConfigFiles", "readConflictingConfigFiles"]
+paths = ["packages/cli/src/checks/language/swift/build.ts", "packages/cli/src/commands/doctor/suggestions.ts", "packages/cli/src/configurations/tools.ts", "packages/cli/src/configurations/manifests.ts", "packages/cli/src/generation/config-files/build.ts", "packages/cli/src/generation/config-files/generate.ts", "packages/cli/src/generation/config-files/selection.ts", "packages/cli/src/generation/configurations/language/javascript/eslint/plan.ts", "packages/cli/src/runs/command/check.ts", "packages/cli/src/runs/command/placeholders.ts", "packages/cli/src/types/configurations.ts", "packages/cli/src/types/generation/files.ts", "tests/setup/cli/generated-files.ts", "tests/types/tools.ts", "tests/suites/unit/cli/generation/config-files/selection.test.ts", "tests/suites/unit/cli/install/npm/project.test.ts", "packages/cli/src/checks/general/gspot/conflicting-config-files.ts", "packages/cli/src/commands/init/conflicting-config-files.ts", "packages/cli/src/commands/init/init.ts", "packages/cli/src/commands/init/plan.ts", "packages/cli/src/repository/setup/config-files.ts", "packages/cli/src/types/commands/init.ts", "packages/cli/src/types/repository/setup.ts", "tests/suites/e2e/cli.test.ts"]
+allowed_names = ["BuiltConfigFile", "ConflictingConfigFile", "ConflictingConfigFiles", "ConfigFile", "ConfigFileBuilder", "ConfigFileOutput", "ConfigFileGeneration", "ConfigFileOwner", "ConfigFilePointer", "GeneratedConfigFiles", "KnipConfigFile", "OwnedConfigFile", "PlannedConfigFile", "RuffConfigFile", "StylelintConfigFile", "buildConfigFile", "buildConfigFiles", "buildNpmConfigFile", "extractConfigFileName", "findConfigFilePath", "findMissingConfigFile", "getConfigFile", "getConfigFileTarget", "getConfigFiles", "isConfigFileWritten", "listCommandConfigFiles", "listConfigFileConfigurations", "listConfigFiles", "listOwnedConfigFiles", "listScopeConfigFiles", "listSwiftlintConfigFiles", "listUnownedConfigFiles", "parseConfigFile", "readConfigFiles", "addConflictingConfigFile", "assertConflictingConfigFiles", "checkConflictingConfigFiles", "deleteConflictingConfigFiles", "findConflictingConfigFiles", "formatConflictingConfigFiles", "listConflictingConfigFiles", "readConflictingConfigFiles"]
 reason = "These types and functions handle config files, the files that gspot writes for each tool. gspot 0.3.5 reserves config for values; 0.3.6 allows it in types and functions."
 
 [[naming.override]]
@@ -214,7 +214,7 @@ allowed_names = ["raw"]
 reason = "toml-patch and the TypeScript compiler API name the source text raw."
 
 [[naming.override]]
-paths = ["packages/cli/src/config/generation/configurations/language/javascript/knip.ts", "packages/cli/src/generation/configurations/language/javascript/knip.ts", "packages/cli/src/types/settings/tools.ts", "tests/types/config-files.ts"]
+paths = ["packages/cli/src/config/generation/configurations/language/javascript/knip.ts", "packages/cli/src/generation/configurations/language/javascript/knip.ts", "packages/cli/src/types/settings/tools.ts", "tests/types/tools.ts"]
 allowed_names = ["KNIP_JAVASCRIPT_ENTRY_FILES", "KNIP_ENTRY_SETTING", "selectEntryFiles", "entry"]
 reason = "knip names its start files entry, and tools.knip.entry passes them on."
 
@@ -254,7 +254,7 @@ allowed_names = ["data-files", "data-files.test", "sensitive-data", "sensitive-d
 reason = "These files and folders take the names of the data-files configuration and the security/sensitive-data check."
 
 [structure]
-environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts", "tests/setup/runner/offline.ts"]
+environment_readers = ["packages/cli/src/system/environment.ts", "tests/setup/system/environment.ts", "tests/setup/runner/unit.ts"]
 
 [dependencies]
 bun_scanner = "@socketsecurity/bun-security-scanner"
@@ -299,11 +299,11 @@ name = "repository"
 path = "packages/eslint-plugin/repository.mjs"
 
 [tools.eslint.plugins.rules]
-schema-location = [{ folders = ["packages/cli/src/schemas", "packages/eslint-plugin/src/schemas", "tests/schemas"] }]
+schema-location = [{ folders = ["packages/cli/src/schemas", "tests/schemas"] }]
 no-promise-matchers = []
 
 [tools.knip]
-entry = ["tests/setup/runner/offline.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/installed-tools.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-lists.ts"]
+entry = ["tests/setup/runner/unit.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-exports.ts"]
 
 [[scope]]
 path = "docs"
@@ -410,7 +410,7 @@ can_import = []
 
 [[import_rule]]
 name = "plugin"
-paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/src/schemas/**", "packages/eslint-plugin/plugin.d.ts", "packages/eslint-plugin/repository.mjs"]
+paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/plugin.d.ts", "packages/eslint-plugin/repository.mjs"]
 can_import = ["plugin-config", "plugin-types"]
 
 [[import_rule]]

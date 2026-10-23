@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
@@ -18,7 +18,7 @@ test('init replaces your pyrightconfig.json with a pointer, and basedpyright rep
         check: 'python/basedpyright',
         files: { [ARITHMETIC_MODULE_PATH]: typed },
     });
-    const pointer = { extends: `./${findFileTarget('python', 'basedpyright.json')}` };
+    const pointer = { extends: `./${findManifestTarget('python', 'basedpyright.json')}` };
     expect(await readFile(join(root, 'pyrightconfig.json'), 'utf8')).toBe(
         `${JSON.stringify(pointer, null, JSON_INDENT)}\n`,
     );

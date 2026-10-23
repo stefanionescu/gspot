@@ -9,7 +9,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildAgentsBlock } from '#cli/generation/rules.ts';
 import { START_RUNNERS } from '#cli/config/repository/npm.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { JAVASCRIPT_IN_APP_TABLES } from '#tests/config/generation/rules.ts';
 
 test('the AGENTS.md block names the folders of a scoped rule without parentheses', async () => {
@@ -37,7 +37,7 @@ test('with a check selected the block names the command, and an excluded file le
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['spelling'], {
             rules: true,
-            tables: `[rules]\nexclude = ["${findRuleFileTarget('engineering', 'ACCESSIBILITY.md')}"]\n`,
+            tables: `[rules]\nexclude = ["${findRuleFilePath('engineering', 'ACCESSIBILITY.md')}"]\n`,
         }),
     });
 

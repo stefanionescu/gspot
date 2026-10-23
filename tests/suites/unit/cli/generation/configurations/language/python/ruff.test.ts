@@ -1,13 +1,13 @@
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { type RuffConfigFile } from '#tests/types/config-files.ts';
+import type { RuffConfigFile } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { generateFile, findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('Ruff selects the pytest and FastAPI families only when selected, and adds no per-file ignores', async () => {
     const defaults = parse(
-        await generateFile(buildSandboxSettings(['python']), findFileTarget('python', 'ruff.toml'), {
+        await generateFile(buildSandboxSettings(['python']), findManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
@@ -15,7 +15,7 @@ test('Ruff selects the pytest and FastAPI families only when selected, and adds 
     expect(defaults.lint['per-file-ignores']).toBeUndefined();
     expect(defaults.lint.pylint['max-statements']).toBe(30);
     const tested = parse(
-        await generateFile(buildSandboxSettings(['python', 'pytest']), findFileTarget('python', 'ruff.toml'), {
+        await generateFile(buildSandboxSettings(['python', 'pytest']), findManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
@@ -24,7 +24,7 @@ test('Ruff selects the pytest and FastAPI families only when selected, and adds 
     );
     expect(tested.lint['per-file-ignores']).toBeUndefined();
     const served = parse(
-        await generateFile(buildSandboxSettings(['python', 'fastapi']), findFileTarget('python', 'ruff.toml'), {
+        await generateFile(buildSandboxSettings(['python', 'fastapi']), findManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
@@ -37,7 +37,7 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
             buildSandboxSettings(['python', 'pytest'], {
                 tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/test_*.py"]\nreason = "The sandbox uses deliberate assertions."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Samples are documented by their names."\n',
             }),
-            findFileTarget('python', 'ruff.toml'),
+            findManifestTarget('python', 'ruff.toml'),
             { 'example.py': 'value = 1\n' },
         ),
     ) as RuffConfigFile;
@@ -45,13 +45,13 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
 });
 test('Ruff formats with double quotes unless format.quotes is written, while Prettier keeps single quotes', async () => {
     const files = { 'example.py': 'value = 1\n', 'entry.js': 'export const value = 1;\n' };
-    const ruffPath = findFileTarget('python', 'ruff.toml');
+    const ruffPath = findManifestTarget('python', 'ruff.toml');
     const unset = parse(await generateFile(buildSandboxSettings(['python']), ruffPath, files)) as RuffConfigFile;
     expect(unset.format['quote-style']).toBe('double');
     const prettier = JSON.parse(
         await generateFile(
             buildSandboxSettings(['python', 'javascript']),
-            findFileTarget('format', 'prettier.json'),
+            findManifestTarget('format', 'prettier.json'),
             files,
         ),
     ) as Record<string, unknown>;
@@ -69,7 +69,7 @@ test('Ruff takes its style from a format override that names every Python file',
     const tables =
         '[format]\nprint_width = 120\n[[format.override]]\npaths = ["**/*.py"]\nquotes = "single"\nprint_width = 88\n';
     const ruff = parse(
-        await generateFile(buildSandboxSettings(['python'], { tables }), findFileTarget('python', 'ruff.toml'), {
+        await generateFile(buildSandboxSettings(['python'], { tables }), findManifestTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile & { 'line-length': number };

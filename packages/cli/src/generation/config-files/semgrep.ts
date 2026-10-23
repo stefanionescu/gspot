@@ -17,7 +17,7 @@ export function buildSemgrepFile(planned: PlannedConfigFile): string {
     const { scopes } = planned.session;
     const { dependencyFiles } = planned.session.repository;
     const document = parse(
-        readFileSync(buildAssetPath(`${planned.configuration.folder}/${configFile.source}`), 'utf8'),
+        readFileSync(buildAssetPath(`${planned.configuration.folder}/${configFile.source ?? configFile.file}`), 'utf8'),
     ) as SemgrepDocument;
     const scopeDependencies = new Set(listProjectDependencyNames(dependencyFiles, scope.folder.path));
     const conditions = configFile.rule_dependencies;

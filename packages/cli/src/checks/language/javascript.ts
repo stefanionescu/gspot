@@ -18,7 +18,6 @@ import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
-import type { WholeConfigFile } from '#cli/types/generation/files.ts';
 import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/tsc/compiler.ts';
 import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPerScopeTarget } from '#cli/generation/config-files/generate.ts';
@@ -54,7 +53,7 @@ function buildScopeCompilerProject(
 }
 
 function findJavascriptProject(session: Session, planned: PlannedCheck): string {
-    const configFile = getConfigFile(session, planned, extractConfigFileName(JSCONFIG_FILE)) as WholeConfigFile;
+    const configFile = getConfigFile(session, planned, extractConfigFileName(JSCONFIG_FILE));
     const paths = new Set([
         configFile.target,
         ...session.scopes.map(({ folder }) => buildPerScopeTarget(configFile, folder.path)),

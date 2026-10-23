@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { generateFile } from '#tests/setup/cli/config-files.ts';
 import { captureRejectedError } from '#tests/setup/matchers.ts';
+import { generateFile } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { EDITORCONFIG_SELECTOR_ERRORS } from '#tests/config/generation/configurations/general/format.ts';
 

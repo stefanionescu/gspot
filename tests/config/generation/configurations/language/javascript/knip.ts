@@ -1,5 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const KNIP_COMPONENT_FILES = {
     'package.json':
@@ -52,7 +52,7 @@ export const KNIP_ARGUMENTS = [
     'node',
     `${GSPOT_PATHS.nodeModules}/knip/bin/knip.js`,
     '--config',
-    findFileTarget('javascript', 'knip.json'),
+    findManifestTarget('javascript', 'knip.json'),
     '--no-progress',
     '--reporter',
     'json',

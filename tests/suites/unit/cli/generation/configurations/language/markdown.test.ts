@@ -2,7 +2,7 @@ import { parse } from 'jsonc-parser';
 import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { generateFile, findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test.each([...LEVELS])('%s turns on MD041 and MD025 only at level all and keeps your MD044 names', async (level) => {
     const content = await generateFile(
@@ -12,7 +12,7 @@ test.each([...LEVELS])('%s turns on MD041 and MD025 only at level all and keeps 
 names = ["Widget"]
 `,
         }),
-        findFileTarget('markdown', 'markdownlint.jsonc'),
+        findManifestTarget('markdown', 'markdownlint.jsonc'),
         { 'source.md': '# Widget\n' },
     );
     const config = parse(content) as Record<string, unknown>;

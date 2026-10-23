@@ -4,7 +4,7 @@ import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findFileTarget, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget, findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { BRITISH_SCOPE_SETTINGS } from '#tests/config/generation/configurations/general/spelling.ts';
 
 test('typos.toml lists each allowed word once and keeps quoted paths', async () => {
@@ -23,7 +23,7 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
 
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    const target = output.files.find((file) => file.path === findFileTarget('spelling', 'typos.toml'))!;
+    const target = output.files.find((file) => file.path === findManifestTarget('spelling', 'typos.toml'))!;
     const parsed = parse(target.content) as Record<string, unknown>;
     expect(Object.keys(parsed).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'default',

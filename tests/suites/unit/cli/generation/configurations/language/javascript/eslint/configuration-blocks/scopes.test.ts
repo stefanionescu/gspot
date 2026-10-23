@@ -5,9 +5,9 @@ import { pathToFileURL } from 'node:url';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/setup/eslint/lint.ts';
+import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
-import type { EslintConfiguration } from '#tests/types/tool-output.ts';
+import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 import {
     BLOCK_SCOPE_CASES,

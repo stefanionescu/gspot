@@ -7,9 +7,9 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -140,7 +140,7 @@ test('markdownlint reports line, column, and fixable for findings in files whose
         },
     });
     const environment = installedSandbox().environment;
-    const configuration = findFileTarget('markdown', 'markdownlint-cli2.mjs');
+    const configuration = findManifestTarget('markdown', 'markdownlint-cli2.mjs');
     expect(await isOnDisk(join(root, configuration))).toBe(true);
     const command = ['check', ...paths, '--only', 'markdown/markdownlint', '--json'];
     const failed = parseCheckReport(await spawnGspot(root, command, environment));

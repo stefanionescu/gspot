@@ -1,9 +1,9 @@
 import { resolve } from 'node:path';
-import { createRule } from '../schemas/rules/options.ts';
+import { createRule } from '../create-rule.ts';
 import { findZodSchemaConstructors } from '../syntax.ts';
 import { DEFAULT_SCHEMA_FOLDERS } from '../config/schemas.ts';
 import type { SchemaLocationOptions } from '../types/rules.ts';
-import { locationOptionsSchema } from '../schemas/rules/schema-location.ts';
+import { OPTIONS_SCHEMA } from '../config/rules/schema-location.ts';
 
 export const schemaLocation = createRule<SchemaLocationOptions, 'location'>({
     name: 'schema-location',
@@ -17,7 +17,7 @@ export const schemaLocation = createRule<SchemaLocationOptions, 'location'>({
             fix: 'Move the schema declaration into a configured schema folder and import it where it is used.',
             example: 'Move `const nameSchema = z.string()` from a parser into `src/schemas/name.ts`.',
         },
-        schema: [locationOptionsSchema],
+        schema: [OPTIONS_SCHEMA],
         messages: { location: 'Declare this Zod schema in a configured schema folder: {{folders}}.' },
     },
     create(context, [options]) {

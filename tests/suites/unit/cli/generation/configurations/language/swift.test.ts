@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { CLEAN_SWIFT } from '#tests/config/checks/language/swift/sandbox.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/checks/infrastructure/xcode.ts';
 import { SWIFT_VERSION_FILES, SWIFT_PROJECT_SETTINGS } from '#tests/config/generation/configurations/language/swift.ts';

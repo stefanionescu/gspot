@@ -1,5 +1,5 @@
 import { SQL_CHECK_SCRIPT } from '#tests/config/runs/command.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { ALWAYS_SELECTED_REFUSAL } from '#tests/config/commands/configurations.ts';
 
 export const INHERITED_CONFIGURATION_SETTINGS = `configurations = ["markdown", "bash"]
@@ -28,7 +28,7 @@ export const UNKNOWN_CONFIGURATION_REFUSALS = ['not-a-real-config-a', 'not-a-rea
     )
     .join('');
 
-export const API_BASH_FILES = [findFileTarget('bash', 'semgrep.yml'), findFileTarget('bash', 'shellcheckrc')];
+export const API_BASH_FILES = [findManifestTarget('bash', 'semgrep.yml'), findManifestTarget('bash', 'shellcheckrc')];
 
 export const SQL_COMMAND_CHECK_TABLES = `[[command_check]]
 id = "project/read-sql"

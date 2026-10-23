@@ -13,7 +13,7 @@ import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript.ts';
-import { findFileTarget, readGeneratedFiles } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget, readGeneratedFiles } from '#tests/setup/cli/generated-files.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
@@ -130,8 +130,8 @@ export const total = accepted;
         });
         expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
         const generated = {
-            path: findFileTarget('javascript', 'jsconfig.json'),
-            content: await readFile(join(sandbox.path, findFileTarget('javascript', 'jsconfig.json')), 'utf8'),
+            path: findManifestTarget('javascript', 'jsconfig.json'),
+            content: await readFile(join(sandbox.path, findManifestTarget('javascript', 'jsconfig.json')), 'utf8'),
         };
         await chmod(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/tsc', '--json'];

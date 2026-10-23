@@ -1,7 +1,7 @@
 import type { CheckResult } from '#cli/types/runs/check.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
-export const TRIVY_CONFIG_PATH = findFileTarget('docker', 'trivy.yml');
+export const TRIVY_CONFIG_PATH = findManifestTarget('docker', 'trivy.yml');
 
 export const DOCKER_SANDBOX = {
     install: false,

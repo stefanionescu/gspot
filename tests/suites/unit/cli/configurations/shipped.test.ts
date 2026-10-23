@@ -50,7 +50,7 @@ test('each shipped name list and ESLint preset names the pinned package version'
     expect(pins[pluginPackage.name]).toBe(pluginPackage.version);
     for (const path of listAssets('configurations/').filter((asset) => asset.endsWith('-names.json'))) {
         const names = nameListSchema.parse(JSON.parse(readFileSync(buildAssetPath(path), 'utf8')));
-        expect(pins[names.package], path).toBe(names.version);
+        expect(pins[names.package], `${path}: run mise run packages:cli:copy-linter-exports`).toBe(names.version);
     }
     const presetFiles = new Set(
         listAssets('configurations/').filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`)),
@@ -59,7 +59,10 @@ test('each shipped name list and ESLint preset names the pinned package version'
         presetFiles.has(`${folder}/${ESLINT_PRESETS_FILE}`),
     ))
         for (const [name, preset] of Object.entries(readPresets(configuration)))
-            expect(pins[preset.package], `${configuration.name}/${name}`).toBe(preset.version);
+            expect(
+                pins[preset.package],
+                `${configuration.name}/${name}: run mise run packages:cli:copy-linter-exports`,
+            ).toBe(preset.version);
 });
 
 test('configurations agree on the version of each installer package', () => {

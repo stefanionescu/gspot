@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Copy rule names, global names, and presets from the pinned linter packages into configurations/. Run it after you change a linter pin."
+#MISE dir="{{config_root}}/packages/cli"
+set -euo pipefail
+
+bun src/configurations/linter-exports.ts

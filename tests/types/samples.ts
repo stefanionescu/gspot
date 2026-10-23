@@ -19,7 +19,7 @@ export type CheckSample = SampleChanges & {
 export type GspotCall = (
     cwd: string,
     commandArguments: readonly string[],
-    environment: Record<string, string>,
+    environment?: Record<string, string>,
 ) => Promise<ProcessOutput>;
 
 export type SampleResult = {

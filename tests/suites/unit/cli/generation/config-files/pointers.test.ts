@@ -7,11 +7,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import type { WholeConfigFile } from '#cli/types/generation/files.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
 
 import {
@@ -46,7 +45,7 @@ test.each([...XCTEST_POINTER_CASES])(
         const written = generate(await openSession(sandbox.path)).files.filter(({ path }) =>
             path.endsWith('.swiftlint.yml'),
         );
-        const config = findFileTarget('swift', 'swiftlint.yml');
+        const config = findManifestTarget('swift', 'swiftlint.yml');
         const testsPointer = readConfigurations()
             .get('swift')!
             .configFiles.find(({ pointer }) => pointer?.folders !== undefined)!.pointer!;
@@ -72,7 +71,7 @@ test('JavaScript pointers import modules from folders with URI characters and Un
     const session = await openSession(sandbox.path);
     const configuration = session.configurations.get('javascript')!;
     const configFile = configuration.configFiles
-        .filter((file): file is WholeConfigFile => file.source !== undefined)
+        .filter((file) => file.source !== undefined)
         .find((file) => file.pointer?.body.includes('{target_module}') === true)!;
     const components = MODULE_PATHS.filter((component) => !isWindows || !component.includes('?'));
     const paths = [];

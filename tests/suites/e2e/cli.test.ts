@@ -4,15 +4,15 @@ import { join, delimiter } from 'node:path';
 import { CI_PINS } from '#cli/config/generation/ci.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import type { UserProject } from '#tests/types/packages.ts';
+import type { GspotProject } from '#tests/types/packages.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
-import { createUserProject } from '#tests/setup/sandboxes/user-project.ts';
+import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
 import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e/cli.ts';
 
 async function assertConflictingConfigFiles(root: string, output: string): Promise<void> {
@@ -29,11 +29,11 @@ async function assertConflictingConfigFiles(root: string, output: string): Promi
     expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(STARTING_FILES['CLAUDE.md']);
     const agents = await readFile(join(root, 'AGENTS.md'), 'utf8');
     expect(agents).toStartWith('# Team notes\n');
-    expect(agents).toContain(findRuleFileTarget('engineering', 'WORKING.md'));
+    expect(agents).toContain(findRuleFilePath('engineering', 'WORKING.md'));
 }
 
 test('init replaces formatter files, keeps your notes and CLAUDE.md, and check reports findings', async () => {
-    await using sandbox = await createUserProject();
+    await using sandbox = await createGspotProject();
     const { root } = sandbox;
     await createFileTree(root, STARTING_FILES);
     const initialized = await initSandbox(sandbox.online, {
@@ -42,11 +42,12 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     await assertConflictingConfigFiles(root, initialized.stdout);
     expect(initialized.stdout).not.toContain('formatter stdout');
     const checked = parseCheckReport(
-        await sandbox.offline.run(
-            root,
-            ['check', '--only', 'bash/shellcheck,dependencies/lockfiles,format/prettier', '--json'],
-            sandbox.offline.environment,
-        ),
+        await sandbox.offline.run(root, [
+            'check',
+            '--only',
+            'bash/shellcheck,dependencies/lockfiles,format/prettier',
+            '--json',
+        ]),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const { checks } = checked.report;
@@ -71,7 +72,7 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     });
     await writeFile(join(root, 'broken.sh'), 'echo example\n');
     const corrected = parseCheckReport(
-        await sandbox.offline.run(root, ['check', '--only', 'bash/shellcheck', '--json'], sandbox.offline.environment),
+        await sandbox.offline.run(root, ['check', '--only', 'bash/shellcheck', '--json']),
     );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks).toMatchObject([
@@ -80,7 +81,7 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe(STARTING_FILES['authored.txt']);
 });
 
-async function prepareFormatterSandbox(installation: UserProject) {
+async function prepareFormatterSandbox(installation: GspotProject) {
     const toolConsumer = join(installation.workspace, 'tool-consumer');
     const systemTools = join(installation.workspace, 'system-tools');
     await mkdir(toolConsumer);
@@ -107,7 +108,7 @@ async function prepareFormatterSandbox(installation: UserProject) {
 }
 
 test('the installed formatter reports and fixes source and keeps your package.json fields', async () => {
-    await using consumer = await createUserProject();
+    await using consumer = await createGspotProject();
     const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterSandbox(consumer);
     const formatter = ['check', 'source.js', '--only', 'format/prettier', '--json'];
     const invalid = parseCheckReport(await toolOptions.run(toolConsumer, formatter, toolOptions.environment));

@@ -9,10 +9,10 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { findFileTarget, readGeneratedFiles } from '#tests/setup/cli/config-files.ts';
 import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/checks/ruff.ts';
 import { RUFF_SANDBOX } from '#tests/config/integration/checks/language/python/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { findManifestTarget, readGeneratedFiles } from '#tests/setup/cli/generated-files.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
@@ -86,7 +86,7 @@ test('Ruff selects the pytest lint rules only in the scope that selects pytest, 
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
 
-    const rootConfig = findFileTarget('python', 'ruff.toml');
+    const rootConfig = findManifestTarget('python', 'ruff.toml');
     const appConfig = `${dirname(rootConfig)}/scopes/app/ruff.toml`;
     const configs = await readGeneratedFiles(root, `${GSPOT_PATHS.configurations}/**/ruff.toml`);
     expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
@@ -126,7 +126,7 @@ test.each([...LEVELS])(
         const previewCodes = new Set(rules.flatMap(({ code, preview }) => (code !== null && preview ? [code] : [])));
         const command = ['check', 'sample.py', '--only', 'python/ruff', '--json'];
         const config = ruffConfigurationSchema.parse(
-            parse(await readFile(join(root, findFileTarget('python', 'ruff.toml')), 'utf8')),
+            parse(await readFile(join(root, findManifestTarget('python', 'ruff.toml')), 'utf8')),
         );
         expect(config.lint.select.filter((code) => previewCodes.has(code))).toStrictEqual([]);
         const result = parseCheckReport(await spawnGspot(root, command));

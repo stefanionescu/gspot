@@ -6,8 +6,8 @@ import { generate } from '#cli/generation/generate.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
 import { runCheckCode } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { EMPTY_PROJECT_RESULT } from '#tests/config/checks/language/javascript.ts';
 
 test('a scope whose jsconfig lists no JavaScript file passes with nothing to compile', async () => {

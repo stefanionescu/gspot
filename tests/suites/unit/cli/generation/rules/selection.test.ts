@@ -5,7 +5,7 @@ import { type Level } from '#cli/types/configurations.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { test, expect, describe, beforeAll } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/config/generation/rules.ts';
 
@@ -75,9 +75,9 @@ describe('which rule files gspot writes', () => {
     });
 
     test('a rule file whose sections are all for level all is written only at all', () => {
-        expect(recommended.has(findRuleFileTarget('naming', 'NAMING.md'))).toBe(false);
-        expect(all.has(findRuleFileTarget('naming', 'NAMING.md'))).toBe(true);
-        expect(recommended.has(findRuleFileTarget('engineering', 'WORKING.md'))).toBe(true);
+        expect(recommended.has(findRuleFilePath('naming', 'NAMING.md'))).toBe(false);
+        expect(all.has(findRuleFilePath('naming', 'NAMING.md'))).toBe(true);
+        expect(recommended.has(findRuleFilePath('engineering', 'WORKING.md'))).toBe(true);
     });
 
     test('rule files that need a file or a dependency are written only when it is there', async () => {
@@ -87,9 +87,9 @@ describe('which rule files gspot writes', () => {
                 '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
         });
         for (const path of [
-            findRuleFileTarget('javascript', 'BUN.md'),
-            findRuleFileTarget('css', 'TAILWIND.md'),
-            findRuleFileTarget('javascript', 'PLAYWRIGHT.md'),
+            findRuleFilePath('javascript', 'BUN.md'),
+            findRuleFilePath('css', 'TAILWIND.md'),
+            findRuleFilePath('javascript', 'PLAYWRIGHT.md'),
         ]) {
             expect(all.has(path)).toBe(false);
             expect(present.has(path)).toBe(true);
@@ -101,7 +101,7 @@ describe('which rule files gspot writes', () => {
             'View.swift': '// import UIKit\nlet text = "import SwiftUI"\n',
         });
         const present = await generateRuleFiles('all', { 'View.swift': 'import SwiftUI\nimport class UIKit.UIView\n' });
-        for (const path of [findRuleFileTarget('swift', 'SWIFTUI.md'), findRuleFileTarget('swift', 'UIKIT.md')]) {
+        for (const path of [findRuleFilePath('swift', 'SWIFTUI.md'), findRuleFilePath('swift', 'UIKIT.md')]) {
             expect(absent.has(path)).toBe(false);
             expect(present.has(path)).toBe(true);
         }
@@ -124,8 +124,8 @@ test.each(['deno.json', 'deno.jsonc'].flatMap((file) => ['', 'apps/api'].map((sc
         const session = await openSession(sandbox.path);
         using _resources = session.resources;
         const files = generate(session).files;
-        expect(files.map(({ path }) => path)).toContain(findRuleFileTarget('javascript', 'DENO.md'));
-        const supabase = files.find(({ path }) => path === findRuleFileTarget('supabase', 'SUPABASE.md'));
+        expect(files.map(({ path }) => path)).toContain(findRuleFilePath('javascript', 'DENO.md'));
+        const supabase = files.find(({ path }) => path === findRuleFilePath('supabase', 'SUPABASE.md'));
         expect(supabase?.content).toContain('Edge Functions run on Deno; read DENO.md too.');
     },
 );

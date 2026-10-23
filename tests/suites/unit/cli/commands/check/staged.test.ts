@@ -8,10 +8,10 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { STAGED_PACKAGE_JSON } from '#tests/config/commands/check/staged.ts';
@@ -159,7 +159,7 @@ test('a staged check keeps the generated basedpyright.json of each Python scope 
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);
-    const original = await readFile(join(sandbox.path, findFileTarget('python', 'basedpyright.json')));
+    const original = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
     const commandArguments = ['check', '--staged', '--only', 'gspot/generated-files', '--json'];
     const checked = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
@@ -169,7 +169,9 @@ test('a staged check keeps the generated basedpyright.json of each Python scope 
         { file: `${DOT_GSPOT}/package-lock.json`, rule: 'missing' },
         { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
     ]);
-    expect(await readFile(join(sandbox.path, findFileTarget('python', 'basedpyright.json')))).toStrictEqual(original);
+    expect(await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')))).toStrictEqual(
+        original,
+    );
     await writeFile(join(sandbox.path, 'child/pyproject.toml'), project + '# Unstaged project change.\n');
     const refused = await runGspot(sandbox.path, commandArguments);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -178,7 +180,9 @@ test('a staged check keeps the generated basedpyright.json of each Python scope 
         message:
             'Installed dependencies do not match the dependency files and lockfiles of the revision or its compiler configurations. Check this commit in its own clone after installing its project dependencies and running gspot install there.',
     });
-    expect(await readFile(join(sandbox.path, findFileTarget('python', 'basedpyright.json')))).toStrictEqual(original);
+    expect(await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')))).toStrictEqual(
+        original,
+    );
 });
 
 test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep both spellings and bytes', async () => {

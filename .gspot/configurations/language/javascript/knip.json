@@ -119,16 +119,16 @@
     "workspaces": {
         ".": {
             "entry": [
-                "tests/setup/runner/offline.ts",
+                "tests/setup/runner/unit.ts",
                 "packages/eslint-plugin/repository.mjs",
                 "tests/setup/runner/prepare.ts",
-                "tests/setup/runner/installed-tools.ts",
+                "tests/setup/runner/integration.ts",
                 "packages/cli/src/checks/framework/site/purgecss-process.ts",
                 "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts",
                 "docs/src/route-data.ts",
                 "packages/cli/src/bin.ts",
                 "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts",
-                "packages/cli/src/configurations/linter-lists.ts",
+                "packages/cli/src/configurations/linter-exports.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",
@@ -171,7 +171,7 @@
                 "configurations/language/javascript/config-files/eslint-functions.ts",
                 "src/bin.ts",
                 "configurations/language/markdown/config-files/markdownlint-cli2.ts",
-                "src/configurations/linter-lists.ts",
+                "src/configurations/linter-exports.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",
@@ -214,9 +214,9 @@
         },
         "tests": {
             "entry": [
-                "setup/runner/offline.ts",
+                "setup/runner/unit.ts",
                 "setup/runner/prepare.ts",
-                "setup/runner/installed-tools.ts",
+                "setup/runner/integration.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",

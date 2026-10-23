@@ -4,9 +4,9 @@ import { openSession } from '#cli/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import type { LintFinding, EslintConfiguration } from '#tests/types/tool-output.ts';
+import type { LintFinding, EslintConfiguration } from '#tests/types/tools.ts';
 
 /** Lint the files and keep the findings of these rules and fatal errors, sorted. */
 export async function listLintFindings(

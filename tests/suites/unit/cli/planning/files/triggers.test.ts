@@ -12,11 +12,11 @@ import { BASE_CHECK } from '#tests/config/runs/command.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { mkdir, unlink, readFile } from 'node:fs/promises';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/planning/samples.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
 
 import {
@@ -150,7 +150,7 @@ configurations = []
     ).toStrictEqual([['api/nested', ['api/nested/removed.ts']]]);
     expect(planned.find((check) => check.scope.folder.path === 'api')?.files).toStrictEqual([]);
 });
-test.each(['gspot.toml', findFileTarget('docs', 'lychee.toml')])(
+test.each(['gspot.toml', findManifestTarget('docs', 'lychee.toml')])(
     'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
     async (path) => {
         await using sandbox = await testdir({

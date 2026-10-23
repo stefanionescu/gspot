@@ -1,11 +1,11 @@
 import { posix } from 'node:path';
 import { unwrap } from '../syntax.ts';
+import { createRule } from '../create-rule.ts';
 import { INDEX_BASENAMES } from '../config/paths.ts';
 import { ALIASED_VALUES } from '../config/syntax.ts';
-import { createRule } from '../schemas/rules/options.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
+import { OPTIONS_SCHEMA } from '../config/rules/no-trivial-files.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { trivialFilesOptionsSchema } from '../schemas/rules/no/trivial.ts';
 
 function listBoundValues(statement: TSESTree.Node): (TSESTree.Node | null)[] {
     switch (statement.type) {
@@ -67,7 +67,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
             why: 'A file that only forwards to another module adds a step to every import and hides where the code lives.',
             fix: 'Import re-exported values from the modules that define them, and use the original name of each alias. Then delete the forwarding file.',
         },
-        schema: [trivialFilesOptionsSchema],
+        schema: [OPTIONS_SCHEMA],
         messages: {
             trivial:
                 'This file only forwards or renames code. Import from the module that defines it, and delete this file.',

@@ -10,8 +10,8 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import type { FindingRow, ScopeFindingRow } from '#tests/types/reports.ts';
 import type { StdinOptions, ProcessOutput } from '#tests/types/processes.ts';
-import type { FindingRow, ScopeFindingRow } from '#tests/types/tool-output.ts';
 
 export const CLI_SOURCE_PATH = join(import.meta.dir, '../../../packages/cli/src');
 

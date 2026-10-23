@@ -1,4 +1,4 @@
-import { createRule } from '../schemas/rules/options.ts';
+import { createRule } from '../create-rule.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { SERVER_DIRECTIVE, SERVER_ONLY_MODULE } from '../config/nextjs.ts';
 

@@ -15,15 +15,13 @@ import {
     CORRECTED_MATH_TEST_SOURCE,
 } from '#tests/config/integration/checks/testing/jest.ts';
 
-function buildJestFiles(): Record<string, string> {
-    const packageJson = { name: 'jest-acceptance', private: true, devDependencies: { jest: jestPackage.version } };
-    return { ...JEST_PROJECT_FILES, 'package.json': JSON.stringify(packageJson) + '\n' };
-}
-
 function prepareJest(root: string, testSource: string) {
     return createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
-        ...buildJestFiles(),
+        ...JEST_PROJECT_FILES,
+        'package.json':
+            JSON.stringify({ name: 'jest-acceptance', private: true, devDependencies: { jest: jestPackage.version } }) +
+            '\n',
         'math.test.cjs': testSource,
     });
 }

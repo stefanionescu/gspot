@@ -17,7 +17,7 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { IndexedPythonProject } from '#tests/types/packages.ts';
 import { PYTHON_VERSION } from '#cli/config/install/python/project.ts';
 import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
-import { createPythonProject } from '#tests/setup/sandboxes/python-project.ts';
+import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { spawnGspot, installGeneratedTools } from '#tests/setup/cli/commands.ts';
 import { REGISTRY_HOST, ZIP_FILE_OPTIONS } from '#tests/config/setup/sandboxes.ts';
 

@@ -11,8 +11,8 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { EDITED_STYLELINT_PACKAGE } from '#tests/config/apply/files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
 import { simulateInteractiveTerminal } from '#tests/setup/system/environment.ts';
 import { INVALID_CSS, buildRetainedNote } from '#tests/config/commands/init/samples.ts';
@@ -77,7 +77,7 @@ test('init keeps the old config file when the generated one cannot be written', 
     await createFileTree(sandbox.path, { 'typos.toml': authored });
     const rename = fs.renameSync;
     using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(sandbox.path, findFileTarget('spelling', 'typos.toml')))
+        if (String(target) === join(sandbox.path, findManifestTarget('spelling', 'typos.toml')))
             throw new Error('Generated write denied');
         rename(source, target);
     });
@@ -87,7 +87,7 @@ test('init keeps the old config file when the generated one cannot be written', 
         'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
     );
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(sandbox.path, findFileTarget('spelling', 'typos.toml')))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, findManifestTarget('spelling', 'typos.toml')))).toBe(false);
 });
 
 test('init refuses to write package.json when one of its managed fields changed after the plan, and keeps its bytes and mode', async () => {
@@ -145,7 +145,7 @@ ignore = E501
     const written = await runGspot(sandbox.path, ['init', '--configurations', 'sql']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    expect(await isOnDisk(join(sandbox.path, findFileTarget('sql', 'sqlfluff.cfg')))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, findManifestTarget('sql', 'sqlfluff.cfg')))).toBe(true);
 });
 test.each([true, false])('init writes gspot.toml only when you confirm the plan (answer %s)', async (answer) => {
     await using sandbox = await testdir({ 'README.md': '# Example\n' });

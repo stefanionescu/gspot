@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
 import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import type { ImportBoundariesOptions } from '#eslint-plugin/types/rules.ts';
-import { IMPORT_ALIASES, PROJECT_FOLDERS } from '#tests/config/eslint-plugin/rules/import-boundaries.ts';
+import { IMPORT_ALIASES, PROJECT_FOLDERS } from '#tests/config/eslint-plugin/import-boundaries.ts';
 
 createRuleTester().run<
     keyof (typeof plugin.rules)['import-boundaries']['meta']['messages'],

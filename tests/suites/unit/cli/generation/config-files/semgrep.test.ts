@@ -6,9 +6,9 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import type { SemgrepRuleFile } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { SemgrepRuleFile } from '#tests/types/config-files.ts';
-import { findFileTarget, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget, findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 test('a language choice brings its security rules without selecting security', async () => {
     await using sandbox = await testdir({
@@ -16,7 +16,7 @@ test('a language choice brings its security rules without selecting security', a
         'sample.sh': 'echo sample\n',
     });
 
-    const target = findFileTarget('bash', 'semgrep.yml');
+    const target = findManifestTarget('bash', 'semgrep.yml');
     const defaultSession = await openSession(sandbox.path);
     const defaultOutput = generate(defaultSession);
     expect(
@@ -53,7 +53,7 @@ test.each([...LEVELS])(
             });
             expect(parseDocument(worker!.content).getIn(['rules', 0, 'paths'])).toBeUndefined();
         }
-        const javascript = output.files.find(({ path }) => path === findFileTarget('javascript', 'semgrep.yml'))!;
+        const javascript = output.files.find(({ path }) => path === findManifestTarget('javascript', 'semgrep.yml'))!;
         const { rules: javascriptRules } = parseDocument(javascript.content).toJS() as SemgrepRuleFile;
         expect(javascriptRules.map(({ id }) => id)).toContain('gspot.javascript.ssrf-web-request-user-input');
         const supabase = output.files.find(({ path }) => path.endsWith('/supabase/semgrep.yml'))!;

@@ -12,10 +12,10 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { listToolInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 import {
     PARENT_REQUIREMENT_SETTINGS,
@@ -157,7 +157,7 @@ test('remove --scope writes removed_configurations with its reason and applies i
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')))).toBe(true);
     using npm = recordNpmCommands();
     const reason = 'The API scope no longer uses Bash.';
     const result = await runGspot(sandbox.path, ['remove', 'bash', '--scope', 'api', '--reason', reason, '--json']);
@@ -177,7 +177,7 @@ test('remove --scope writes removed_configurations with its reason and applies i
     ]);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')))).toBe(false);
     expect(await listToolInstallFiles(sandbox.path)).toStrictEqual([]);
 });
 

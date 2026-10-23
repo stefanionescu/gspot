@@ -52,13 +52,3 @@ export function captureThrow(run: () => unknown): string {
 export function matchFields<T>(shape: NoInfer<Partial<T>>): T {
     return expect.objectContaining(shape) as T;
 }
-
-/**
- * An array that must hold these items, typed as the compared value.
- *
- * @param expected what the compared array must hold.
- * @returns the matcher.
- */
-export function matchElements<T>(expected: NoInfer<T[]>): T[] {
-    return expect.arrayContaining(expected) as T[];
-}

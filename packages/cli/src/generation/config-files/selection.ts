@@ -20,7 +20,7 @@ export function getConfigFileTarget(
     return configFile.per_scope ? (targets.get(scope)?.get(configFile.target) ?? configFile.target) : configFile.target;
 }
 
-function isConfigFileNeeded(session: Session, file: ConfigFile, used: UsedNames): boolean {
+function isConfigFileWritten(session: Session, file: ConfigFile, used: UsedNames): boolean {
     if (file.level === 'all' && session.settingsFile.settings.level !== 'all') return false;
     const constraints = [
         [file.tool, used.tools],
@@ -39,7 +39,7 @@ function listScopeConfigFiles(session: Session, scope: Scope, repositoryNames: U
     };
     return scope.configurations.flatMap((configuration) =>
         configuration.configFiles
-            .filter((file) => isConfigFileNeeded(session, file, file.per_scope ? used : repositoryNames))
+            .filter((file) => isConfigFileWritten(session, file, file.per_scope ? used : repositoryNames))
             .map((configFile) => ({
                 configFile,
                 owner: { session, scope, configuration },

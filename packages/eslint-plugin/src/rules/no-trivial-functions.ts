@@ -1,9 +1,9 @@
-import { createRule } from '../schemas/rules/options.ts';
+import { createRule } from '../create-rule.ts';
 import type { ImplementedFunction } from '../types/syntax.ts';
 import type { TrivialFunctionsOptions } from '../types/rules.ts';
 import { countStatements, findOutermostValue } from '../syntax.ts';
+import { OPTIONS_SCHEMA } from '../config/rules/no-trivial-functions.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { trivialFunctionsOptionsSchema } from '../schemas/rules/no/trivial.ts';
 import { FUNCTION_SELECTOR, INLINE_VALUE_PARENTS, TRIVIAL_FUNCTION_STATEMENTS } from '../config/syntax.ts';
 
 function isInlineValue(node: ImplementedFunction): boolean {
@@ -45,7 +45,7 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline the function at its call sites and delete it.',
         },
-        schema: [trivialFunctionsOptionsSchema],
+        schema: [OPTIONS_SCHEMA],
         messages: {
             trivial: 'This function has {{statements}}. Inline it into its callers and delete it.',
         },

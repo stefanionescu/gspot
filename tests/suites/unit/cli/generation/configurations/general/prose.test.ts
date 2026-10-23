@@ -7,8 +7,8 @@ import { generate } from '#cli/generation/generate.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 import {
     PRODUCT_WORD_SETTINGS,
@@ -29,7 +29,7 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
     runGitStep(sandbox.path, ['init', '-q']);
     const output = generate(await openSession(sandbox.path));
     const paths = new Set(output.files.map((file) => file.path));
-    expect(paths.has(findFileTarget('prose', 'styles/gspot/link-text.yml'))).toBe(true);
+    expect(paths.has(findManifestTarget('prose', 'styles/gspot/link-text.yml'))).toBe(true);
     const configuration = output.files.find((file) => file.path === GSPOT_PATHS.valeConfigFile)!;
     expect(/^Packages = /mu.test(configuration.content)).toBe(level === 'all');
     expect(configuration.content).toContain(

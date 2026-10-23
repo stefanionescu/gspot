@@ -3,8 +3,8 @@ import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
 import { runAppliedSample } from '#tests/setup/cli/samples.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { SEMGREP_CHECK, SEMGREP_SANDBOX } from '#tests/config/integration/checks/general/security/samples.ts';
@@ -38,7 +38,7 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
             await writeFile(join(root, path), 'res.json({ message: "Accepted" });\n');
         const corrected = await spawnGspot(root, SEMGREP_CHECK);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const invalidRule = join(root, findFileTarget('express', 'semgrep.yml'));
+        const invalidRule = join(root, findManifestTarget('express', 'semgrep.yml'));
         await writeFile(invalidRule, 'rules: [');
         const invalid = parseCheckReport(await spawnGspot(root, SEMGREP_CHECK));
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);

@@ -1,6 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const EDITORCONFIG_SAMPLES = [
     {
@@ -41,7 +41,7 @@ export const STAGED_FORMAT_SOURCE = {
 
 export const STAGED_FORMAT_PATHS = {
     source: 'app/value.js',
-    rootConfig: findFileTarget('format', 'prettier.json'),
+    rootConfig: findManifestTarget('format', 'prettier.json'),
     scopeConfig: `${GSPOT_PATHS.configurations}/general/format/scopes/app/prettier.json`,
     settings: 'gspot.toml',
 } as const;

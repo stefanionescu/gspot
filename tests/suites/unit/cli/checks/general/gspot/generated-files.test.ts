@@ -7,8 +7,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 test('gspot/generated-files reports an edited file with the apply help and passes after apply, while tool lockfiles stay missing', async () => {
     await using sandbox = await testdir({

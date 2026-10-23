@@ -1,5 +1,5 @@
+import { createRule } from '../create-rule.ts';
 import type { RuleContext } from '../types/rules.ts';
-import { createRule } from '../schemas/rules/options.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {

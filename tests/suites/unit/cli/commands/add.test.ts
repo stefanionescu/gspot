@@ -9,9 +9,9 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listToolInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 import {
     API_BASH_FILES,
@@ -30,7 +30,7 @@ test('add --scope writes the scope list and applies it without an npm install', 
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')))).toBe(false);
     using npm = recordNpmCommands();
     const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -46,7 +46,7 @@ test('add --scope writes the scope list and applies it without an npm install', 
     expect(saved.configurations).toStrictEqual(['markdown']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')))).toBe(true);
     expect(await listToolInstallFiles(sandbox.path)).toStrictEqual([]);
 });
 

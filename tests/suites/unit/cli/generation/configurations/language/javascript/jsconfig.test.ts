@@ -4,8 +4,8 @@ import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('a jsconfig beside a tsconfig excludes build output and lists only tracked declaration files', async () => {
     await using sandbox = await testdir({
@@ -31,7 +31,7 @@ test('a jsconfig beside a tsconfig excludes build output and lists only tracked 
     ]);
     const files = generate(await openSession(sandbox.path)).files;
     const jsconfig = JSON.parse(
-        files.find(({ path }) => path === findFileTarget('javascript', 'jsconfig.json'))!.content,
+        files.find(({ path }) => path === findManifestTarget('javascript', 'jsconfig.json'))!.content,
     ) as { files: string[]; exclude: string[] };
     expect(jsconfig.files).toStrictEqual(['../../../../cloudflare-env.d.ts']);
     expect(jsconfig.exclude).toStrictEqual(

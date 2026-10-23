@@ -6,10 +6,10 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
 import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
@@ -98,7 +98,9 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
     for (const level of ['recommended', 'all', 'recommended']) {
         const switched = await spawnGspot(sandbox.path, ['set', 'level', level]);
         expect(switched.code, switched.stdout + switched.stderr).toBe(0);
-        expect(await isOnDisk(join(sandbox.path, findFileTarget('commits', 'commitlint.json')))).toBe(level === 'all');
+        expect(await isOnDisk(join(sandbox.path, findManifestTarget('commits', 'commitlint.json')))).toBe(
+            level === 'all',
+        );
         const checked = parseCheckReport(await spawnGspot(sandbox.path, command));
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(checked.report.checks).toMatchObject(
@@ -176,7 +178,7 @@ test.each(['', 'app'])(
         const execution = { cwd, env: {} };
         const command = [join(testModules, COMMITLINT_EXECUTABLE), '--edit', join(sandbox.path, messageFile)];
         await replaceCommitlint(sandbox.path, command, execution);
-        const target = `${scope === '' ? './' : '../'}${findFileTarget('commits', 'commitlint.json')}`;
+        const target = `${scope === '' ? './' : '../'}${findManifestTarget('commits', 'commitlint.json')}`;
         expect(await readFile(join(sandbox.path, packageFile), 'utf8')).toBe(
             COMMITLINT_PACKAGE.replace(
                 '{"rules":{"type-enum":[2,"always",["special"]]}}',
@@ -197,7 +199,7 @@ test.each(['', 'app'])(
                     ),
                 ),
             );
-            const generatedConfig = join(sandbox.path, findFileTarget('commits', 'commitlint.json'));
+            const generatedConfig = join(sandbox.path, findManifestTarget('commits', 'commitlint.json'));
             expect(await isOnDisk(generatedConfig)).toBe(level === 'all');
             if (level === 'all') {
                 const native = await runCommand([...command, '--config', generatedConfig], execution);
@@ -207,7 +209,7 @@ test.each(['', 'app'])(
         }
         await writeFile(join(sandbox.path, messageFile), 'fix: generated contract\n');
         const corrected = await runCommand(
-            [...command, '--config', join(sandbox.path, findFileTarget('commits', 'commitlint.json'))],
+            [...command, '--config', join(sandbox.path, findManifestTarget('commits', 'commitlint.json'))],
             execution,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

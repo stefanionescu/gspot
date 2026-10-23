@@ -1142,7 +1142,6 @@ export default [
                         "pattern": [
                             "packages/eslint-plugin/src/*.ts",
                             "packages/eslint-plugin/src/rules/**",
-                            "packages/eslint-plugin/src/schemas/**",
                             "packages/eslint-plugin/plugin.d.ts",
                             "packages/eslint-plugin/repository.mjs"
                         ]
@@ -5436,7 +5435,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ],
             [
                 "**/*.astro",
@@ -5451,7 +5450,7 @@ export default [
             [
                 "**/*.astro",
                 "**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ]
         ]
     },
@@ -5465,7 +5464,7 @@ export default [
             "tests/**",
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/offline.ts"
+            "tests/setup/runner/unit.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -5632,7 +5631,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "docs/**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ],
             [
                 "**/*.astro",
@@ -5647,7 +5646,7 @@ export default [
             [
                 "**/*.astro",
                 "docs/**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ]
         ]
     },
@@ -5657,7 +5656,7 @@ export default [
         "ignores": [
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/offline.ts"
+            "tests/setup/runner/unit.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -5824,7 +5823,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "packages/cli/**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ],
             [
                 "**/*.astro",
@@ -5839,7 +5838,7 @@ export default [
             [
                 "**/*.astro",
                 "packages/cli/**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ]
         ]
     },
@@ -5849,7 +5848,7 @@ export default [
         "ignores": [
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/offline.ts"
+            "tests/setup/runner/unit.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6016,7 +6015,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "packages/eslint-plugin/**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ],
             [
                 "**/*.astro",
@@ -6031,7 +6030,7 @@ export default [
             [
                 "**/*.astro",
                 "packages/eslint-plugin/**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ]
         ]
     },
@@ -6041,7 +6040,7 @@ export default [
         "ignores": [
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/offline.ts"
+            "tests/setup/runner/unit.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6208,7 +6207,7 @@ export default [
             [
                 "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
                 "tests/**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ],
             [
                 "**/*.astro",
@@ -6223,7 +6222,7 @@ export default [
             [
                 "**/*.astro",
                 "tests/**/*",
-                "tests/setup/runner/offline.ts"
+                "tests/setup/runner/unit.ts"
             ]
         ]
     },
@@ -6233,7 +6232,7 @@ export default [
         "ignores": [
             "packages/cli/src/system/environment.ts",
             "tests/setup/system/environment.ts",
-            "tests/setup/runner/offline.ts"
+            "tests/setup/runner/unit.ts"
         ],
         rules: {
             "no-restricted-syntax": [
@@ -6582,8 +6581,8 @@ export default [
             "packages/cli/src/system/environment.ts/**",
             "tests/setup/system/environment.ts",
             "tests/setup/system/environment.ts/**",
-            "tests/setup/runner/offline.ts",
-            "tests/setup/runner/offline.ts/**"
+            "tests/setup/runner/unit.ts",
+            "tests/setup/runner/unit.ts/**"
         ],
         rules: {
             "n/no-process-env": [
@@ -6778,7 +6777,6 @@ export default [
                 {
                     "folders": [
                         "packages/cli/src/schemas",
-                        "packages/eslint-plugin/src/schemas",
                         "tests/schemas"
                     ]
                 }
@@ -6801,7 +6799,6 @@ export default [
                 {
                     "folders": [
                         "packages/cli/src/schemas",
-                        "packages/eslint-plugin/src/schemas",
                         "tests/schemas"
                     ]
                 }
@@ -6830,7 +6827,6 @@ export default [
                 {
                     "folders": [
                         "packages/cli/src/schemas",
-                        "packages/eslint-plugin/src/schemas",
                         "tests/schemas"
                     ]
                 }
@@ -6859,7 +6855,6 @@ export default [
                 {
                     "folders": [
                         "packages/cli/src/schemas",
-                        "packages/eslint-plugin/src/schemas",
                         "tests/schemas"
                     ]
                 }
@@ -6888,7 +6883,6 @@ export default [
                 {
                     "folders": [
                         "packages/cli/src/schemas",
-                        "packages/eslint-plugin/src/schemas",
                         "tests/schemas"
                     ]
                 }

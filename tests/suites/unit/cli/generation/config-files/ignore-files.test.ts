@@ -9,7 +9,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { openWriter } from '#cli/apply/write/writer.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { generateFile } from '#tests/setup/cli/config-files.ts';
+import { generateFile } from '#tests/setup/cli/generated-files.ts';
 import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';

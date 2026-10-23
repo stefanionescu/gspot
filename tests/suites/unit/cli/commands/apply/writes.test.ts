@@ -16,7 +16,7 @@ import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
-import { findFileTarget, findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findRuleFilePath, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply/writes.ts';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 
@@ -44,7 +44,7 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/obsolete`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
     const written = (JSON.parse(applied.stdout) as ApplyReport).written;
-    const rulePath = findRuleFileTarget('engineering', 'WORKING.md');
+    const rulePath = findRuleFilePath('engineering', 'WORKING.md');
     expect(written).toContain(rulePath);
     const bytes = await readFile(join(sandbox.path, rulePath), 'utf8');
     const attributes = await stat(join(sandbox.path, rulePath));
@@ -88,7 +88,7 @@ test('a fresh Git clone keeps the committed generated files byte for byte and mo
     const cloned = runGit(original.path, ['clone', '--quiet', '--no-local', original.path, clone.path]);
     expect(cloned.code, cloned.stderr).toBe(0);
     using files = openFiles(clone.path);
-    const config = findFileTarget('bash', 'shellcheckrc');
+    const config = findManifestTarget('bash', 'shellcheckrc');
     const initial = files.read(config)!;
     const applied = await runGspot(clone.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -113,7 +113,7 @@ test('apply rewrites an edited generated file, deletes unknown files in .gspot, 
     const settingsPath = join(sandbox.path, 'gspot.toml');
     const settings = await readFile(settingsPath, 'utf8');
     await writeFile(join(sandbox.path, 'added.py'), 'print("example")\n');
-    const generated = join(sandbox.path, findFileTarget('bash', 'shellcheckrc'));
+    const generated = join(sandbox.path, findManifestTarget('bash', 'shellcheckrc'));
     const edited = `${await readFile(generated, 'utf8')}# Authored after installation.\n`;
     await chmod(generated, 0o644);
     await writeFile(generated, edited);
@@ -146,7 +146,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     using writer = openWriter(initial.root);
     writeGeneratedFiles(initial, generate(initial), writer);
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, findFileTarget('format', 'prettier.json')))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, findManifestTarget('format', 'prettier.json')))).toBe(true);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     const excluded = await openSession(sandbox.path);
     const plans = planChecks(excluded, { stage: 'commit', only: ['format/prettier'] });
@@ -156,7 +156,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
         excluded.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     ).not.toContain('prettier');
     const generated = generate(excluded);
-    expect(generated.files.map((file) => file.path)).not.toContain(findFileTarget('format', 'prettier.json'));
+    expect(generated.files.map((file) => file.path)).not.toContain(findManifestTarget('format', 'prettier.json'));
     const removed = writeGeneratedFiles(excluded, generated, writer);
     expect(removed.removed).toContain('.prettierignore');
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(false);

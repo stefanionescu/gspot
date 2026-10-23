@@ -11,7 +11,7 @@ import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/setup/sandboxes.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 

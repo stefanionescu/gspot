@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import stylelint, { type Config } from 'stylelint';
 import { generate } from '#cli/generation/generate.ts';
+import type { StylelintConfigFile } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { type StylelintConfigFile } from '#tests/types/config-files.ts';
-import { findFileTarget, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget, findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { STYLELINT_SCOPE_FILES, STYLELINT_SCOPE_TABLES } from '#tests/config/generation/configurations/language/css.ts';
 
 test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
@@ -92,7 +92,7 @@ test('a scope with CSS Modules files accepts composes, :global, and @value in th
     });
 
     const output = generate(await openSession(sandbox.path)).files.find(
-        (file) => file.path === findFileTarget('css', 'stylelint.json'),
+        (file) => file.path === findManifestTarget('css', 'stylelint.json'),
     )!;
     const config = JSON.parse(output.content) as Config;
     const code =

@@ -1,6 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const JAVASCRIPT_PROJECT_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
@@ -172,7 +172,7 @@ export const AUTHORED_JSCONFIG_CASES = [
 ] as const;
 
 export const SCOPE_JSCONFIG_PATHS = [
-    findFileTarget('javascript', 'jsconfig.json'),
+    findManifestTarget('javascript', 'jsconfig.json'),
     `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/child/jsconfig.json`,
     `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/jsconfig.json`,
     `${GSPOT_PATHS.configurations}/language/javascript/scopes/sibling/jsconfig.json`,

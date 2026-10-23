@@ -6,7 +6,7 @@ import type { Level } from '#cli/types/configurations.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, compareFindings, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import type { LintFinding, ScriptFindingCase, EslintConfiguration } from '#tests/types/tool-output.ts';
+import type { LintFinding, ScriptFindingCase, EslintConfiguration } from '#tests/types/tools.ts';
 
 import {
     ENGINE_PATHS,

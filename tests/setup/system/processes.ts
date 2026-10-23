@@ -150,20 +150,16 @@ export function startCommand(
  * @returns a disposable that removes the registered handlers.
  */
 export function stopOnSignals(stop: (code: number) => void): Disposable {
-    const subscriptions = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => {
-        process.once(signal, () => {
+    const listeners = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => {
+        const listener = (): void => {
             stop(code);
-        });
-        return [
-            signal,
-            () => {
-                stop(code);
-            },
-        ] as const;
+        };
+        process.once(signal, listener);
+        return [signal, listener] as const;
     });
     return {
         [Symbol.dispose]() {
-            for (const [signal, stopForSignal] of subscriptions) process.removeListener(signal, stopForSignal);
+            for (const [signal, listener] of listeners) process.removeListener(signal, listener);
         },
     };
 }

@@ -41,69 +41,70 @@ createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-im
         "import { a } from './a';",
         "import { a } from './a';\n\nconst value = 1;\n// A note between two blocks is not inside either.\nimport { b } from './b';",
     ],
-    invalid: [
-        {
-            code: "import { a } from './a';\n// @ts-expect-error The declaration is incomplete.\nimport { b } from './b';",
-            output: null,
-            errors: [{ messageId: 'comment', line: 2 }],
-        },
-        {
-            code: "import { a } from './a';\n/* global process */\nimport { b } from '../b';",
-            output: null,
-            errors: [{ messageId: 'comment', line: 2 }],
-        },
-        {
-            code: "import { a } from './a';\n// Explains the complete\n// import below.\nimport { c } from './c';\nexport const b = a + c;",
-            output: "// Explains the complete\n// import below.\nimport { a } from './a';\nimport { c } from './c';\nexport const b = a + c;",
-            errors: [{ messageId: 'comment' }],
-        },
-        {
-            code: "import { a } from './a'; // trailing\nexport const b = a;",
-            output: "// trailing\nimport { a } from './a';\nexport const b = a;",
-            errors: [{ messageId: 'comment' }],
-        },
-        {
-            code: "import { a } from './a';\n\n// The complete\n// file header.\n\n\nexport const b = a;",
-            output: "// The complete\n// file header.\n\nimport { a } from './a';\n\nexport const b = a;",
-            errors: [{ messageId: 'comment' }],
-        },
-
-        {
-            code: "import { a } from './a';\n/* header */\n\n\nexport const b = a;",
-            output: "/* header */\n\nimport { a } from './a';\nexport const b = a;",
-            errors: [{ messageId: 'comment' }],
-        },
-        {
-            code: "import { a } from './a';\n// the b helper\nimport { b } from './b';",
-            output: "// the b helper\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'comment', line: 2 }],
-        },
-        {
-            code: "import { a } from './a'; // trailing\nimport { b } from './b';",
-            output: "// trailing\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'comment', line: 1 }],
-        },
-        {
-            code: "import { a } from './a';\nimport { b } from './b'; // last line",
-            output: "// last line\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'comment', line: 2 }],
-        },
-        {
-            code: "import { a } from './a';\n/* block */\nimport { b } from './b';",
-            output: "/* block */\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'comment', line: 2 }],
-        },
-        {
-            code: "import {\n    a, // inside the braces\n} from './a';\nimport { b } from './b';",
-            output: "// inside the braces\nimport {\n    a,\n} from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'comment', line: 2 }],
-        },
-        {
-            code: "import { a } from './a';\n// one\n// two\nimport { b } from './b';",
-            output: "// one\n// two\nimport { a } from './a';\nimport { b } from './b';",
-            errors: [{ messageId: 'comment', line: 2 }],
-        },
-    ],
+    invalid: (
+        [
+            [
+                "import { a } from './a';\n// @ts-expect-error The declaration is incomplete.\nimport { b } from './b';",
+                null,
+                2,
+            ],
+            ["import { a } from './a';\n/* global process */\nimport { b } from '../b';", null, 2],
+            [
+                "import { a } from './a';\n// Explains the complete\n// import below.\nimport { c } from './c';\nexport const b = a + c;",
+                "// Explains the complete\n// import below.\nimport { a } from './a';\nimport { c } from './c';\nexport const b = a + c;",
+                undefined,
+            ],
+            [
+                "import { a } from './a'; // trailing\nexport const b = a;",
+                "// trailing\nimport { a } from './a';\nexport const b = a;",
+                undefined,
+            ],
+            [
+                "import { a } from './a';\n\n// The complete\n// file header.\n\n\nexport const b = a;",
+                "// The complete\n// file header.\n\nimport { a } from './a';\n\nexport const b = a;",
+                undefined,
+            ],
+            [
+                "import { a } from './a';\n/* header */\n\n\nexport const b = a;",
+                "/* header */\n\nimport { a } from './a';\nexport const b = a;",
+                undefined,
+            ],
+            [
+                "import { a } from './a';\n// the b helper\nimport { b } from './b';",
+                "// the b helper\nimport { a } from './a';\nimport { b } from './b';",
+                2,
+            ],
+            [
+                "import { a } from './a'; // trailing\nimport { b } from './b';",
+                "// trailing\nimport { a } from './a';\nimport { b } from './b';",
+                1,
+            ],
+            [
+                "import { a } from './a';\nimport { b } from './b'; // last line",
+                "// last line\nimport { a } from './a';\nimport { b } from './b';",
+                2,
+            ],
+            [
+                "import { a } from './a';\n/* block */\nimport { b } from './b';",
+                "/* block */\nimport { a } from './a';\nimport { b } from './b';",
+                2,
+            ],
+            [
+                "import {\n    a, // inside the braces\n} from './a';\nimport { b } from './b';",
+                "// inside the braces\nimport {\n    a,\n} from './a';\nimport { b } from './b';",
+                2,
+            ],
+            [
+                "import { a } from './a';\n// one\n// two\nimport { b } from './b';",
+                "// one\n// two\nimport { a } from './a';\nimport { b } from './b';",
+                2,
+            ],
+        ] as const
+    ).map(([code, output, line]) => ({
+        code,
+        output,
+        errors: [{ messageId: 'comment' as const, ...(line === undefined ? {} : { line }) }],
+    })),
 });
 
 createRuleTester({ languageOptions: { sourceType: 'commonjs' } }).run(

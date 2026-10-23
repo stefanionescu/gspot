@@ -8,7 +8,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { generateFile, findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('Prettier loads the selected plugin through the root pointer', async () => {
     await using sandbox = await testdir({
@@ -18,7 +18,7 @@ test('Prettier loads the selected plugin through the root pointer', async () => 
     const generated = generate(await openSession(sandbox.path));
     await createFileTree(sandbox.path, Object.fromEntries(generated.files.map(({ path, content }) => [path, content])));
     const configFile = JSON.parse(
-        generated.files.find(({ path }) => path === findFileTarget('format', 'prettier.json'))!.content,
+        generated.files.find(({ path }) => path === findManifestTarget('format', 'prettier.json'))!.content,
     ) as Options;
     expect(configFile.plugins).toStrictEqual([`./${GSPOT_PATHS.nodeModules}/prettier-plugin-svelte/plugin.js`]);
     const pointer = await prettier.resolveConfig(join(sandbox.path, 'source.svelte'), {
@@ -35,7 +35,7 @@ test('the Prettier plugin overrides come before your overrides, and without a pl
         format: { override: [{ paths: ['docs/**'], print_width: 80 }] },
     };
     const pluginPolicy = JSON.parse(
-        await generateFile(stringify(settings), findFileTarget('format', 'prettier.json'), {
+        await generateFile(stringify(settings), findManifestTarget('format', 'prettier.json'), {
             'source.svelte': '<h1>Example</h1>\n',
         }),
     ) as Options;
@@ -46,7 +46,7 @@ test('the Prettier plugin overrides come before your overrides, and without a pl
     const without = JSON.parse(
         await generateFile(
             stringify({ ...settings, configurations: ['format'] }),
-            findFileTarget('format', 'prettier.json'),
+            findManifestTarget('format', 'prettier.json'),
             { 'source.js': 'export {};\n' },
         ),
     ) as Options;

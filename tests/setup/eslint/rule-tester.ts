@@ -1,17 +1,6 @@
-import { it, afterAll, describe } from 'bun:test';
 import * as parser from '@typescript-eslint/parser';
 import { RuleTester, type RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { RULE_TESTER_ROOT, RULE_TESTER_PARSER_OPTIONS } from '#tests/config/setup/eslint.ts';
-
-RuleTester.afterAll = afterAll;
-
-RuleTester.describe = describe;
-
-RuleTester.it = it;
-
-RuleTester.itSkip = it.skip;
-
-RuleTester.describeSkip = describe.skip;
 
 /**
  * A rule tester using the TypeScript parser and a fixed repository root.

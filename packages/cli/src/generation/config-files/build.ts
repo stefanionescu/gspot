@@ -163,8 +163,9 @@ export function buildConfigFile(
             : CONFIG_FILE_BUILDERS[`${planned.configuration.name}/${configFile.file}`];
     let built: ReturnType<ConfigFileBuilder>;
     if (builder === undefined) {
-        const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${configFile.source}`), 'utf8');
-        built = configFile.source.endsWith('.ts')
+        const source = configFile.source ?? configFile.file;
+        const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${source}`), 'utf8');
+        built = source.endsWith('.ts')
             ? ts.transpileModule(shipped, { compilerOptions: TRANSPILE_OPTIONS }).outputText
             : shipped;
     } else built = builder(planned);

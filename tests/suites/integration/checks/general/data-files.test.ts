@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields, matchElements } from '#tests/setup/matchers.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -157,7 +157,7 @@ test('v8r checks gspot.toml against the schema in .gspot, which accepts an unquo
     const accepted = await checkSettings();
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(accepted.report.checks).toMatchObject([
-        { check: 'data-files/v8r', status: 'passed', command: matchElements([SETTINGS_FILE]) },
+        { check: 'data-files/v8r', status: 'passed', command: expect.arrayContaining([SETTINGS_FILE]) as string[] },
     ]);
     await writeFile(join(root, GSPOT_PATHS.settingsSchema), REJECTING_SCHEMA);
     const rejected = await checkSettings();

@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {

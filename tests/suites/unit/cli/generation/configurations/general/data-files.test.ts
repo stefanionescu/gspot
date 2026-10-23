@@ -5,7 +5,7 @@ import { openSession } from '#cli/session.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { MISE_SCHEMA, SETTINGS_SCHEMA } from '#cli/config/generation/configurations/general/data-files/v8r.ts';
 import { MAPPED_SCHEMAS, MAPPED_SCHEMA_RECORDS } from '#tests/config/generation/configurations/general/data-files.ts';
 

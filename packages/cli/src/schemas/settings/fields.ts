@@ -153,21 +153,17 @@ export function allowReasonedValue<Output, Input>(
     definition: ReasonedSettingDefinition & { default: z.util.NoUndefined<Output> },
 ): z.ZodDefault<z.ZodUnion<readonly [z.ZodType<Output, Input>, z.ZodType<Output, ReasonedValue<Input>>]>> {
     return z
-        .union([schema, buildReasonedValueSchema(schema, definition)])
+        .union([
+            schema,
+            z
+                .strictObject({
+                    value: schema.describe(definition.description),
+                    reason: z.string().describe(REASON_DESCRIPTIONS[definition.reason_needed]),
+                })
+                .transform((reasoned) => reasoned.value) satisfies z.ZodType<Output, ReasonedValue<Input>>,
+        ])
         .default(definition.default)
         .meta(definition);
-}
-
-function buildReasonedValueSchema<Output, Input>(
-    schema: z.ZodType<Output, Input>,
-    definition: ReasonedSettingDefinition,
-): z.ZodType<Output, ReasonedValue<Input>> {
-    return z
-        .strictObject({
-            value: schema.describe(definition.description),
-            reason: z.string().describe(REASON_DESCRIPTIONS[definition.reason_needed]),
-        })
-        .transform((reasoned) => reasoned.value) satisfies z.ZodType<Output, ReasonedValue<Input>>;
 }
 
 /**

@@ -5,8 +5,8 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { LintFinding, SourceRuleCase, EslintConfiguration } from '#tests/types/tools.ts';
 import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import type { LintFinding, SourceRuleCase, EslintConfiguration } from '#tests/types/tool-output.ts';
 
 import {
     BARREL_CASES,

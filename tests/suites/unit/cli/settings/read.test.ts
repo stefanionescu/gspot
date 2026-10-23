@@ -8,7 +8,7 @@ import { captureThrow } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { FIRST_READ } from '#cli/config/generation/rules.ts';
 import { REVIEWED_REASON } from '#tests/config/settings/samples.ts';
-import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 import {
@@ -20,14 +20,14 @@ import {
 } from '#tests/config/settings/read.ts';
 
 test('rules.exclude accepts a rule file path and a configuration folder', () => {
-    const exclude = [findRuleFileTarget('engineering', 'ACCESSIBILITY.md'), `${GSPOT_PATHS.configurations}/library`];
+    const exclude = [findRuleFilePath('engineering', 'ACCESSIBILITY.md'), `${GSPOT_PATHS.configurations}/library`];
     expect(validateSettingsText(stringify({ rules: { exclude } }))).toStrictEqual([]);
 });
 
 test('a rules.exclude entry that matches no rule file names the near match', () => {
-    const misspelled = findRuleFileTarget('engineering', 'ACCESSIBILITY.txt');
+    const misspelled = findRuleFilePath('engineering', 'ACCESSIBILITY.md').replace(/\.md$/u, '.txt');
     const near = ['ACCESSIBILITY.md', 'CLI.md', 'TESTING.md'].map(
-        (file) => `\`${findRuleFileTarget('engineering', file)}\``,
+        (file) => `\`${findRuleFilePath('engineering', file)}\``,
     );
     expect(captureThrow(() => parseSettings(stringify({ rules: { exclude: [misspelled] } }), undefined))).toBe(
         `gspot.toml: rules.exclude.0: [rules] exclude names \`${misspelled}\`, which matches no rule. Did you mean ${near.join(', ')}?`,

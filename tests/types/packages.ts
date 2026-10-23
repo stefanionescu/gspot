@@ -1,6 +1,6 @@
 import type { Sandbox } from '#tests/types/sandbox.ts';
 
-export type UserProject = AsyncDisposable & {
+export type GspotProject = AsyncDisposable & {
     root: string;
     workspace: string;
     online: Sandbox;

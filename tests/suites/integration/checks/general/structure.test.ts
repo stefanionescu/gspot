@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import type { LinterJsonFinding } from '#tests/types/tools.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { ParameterFinding } from '#tests/types/tool-output.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { spawnGspot, installGeneratedTools } from '#tests/setup/cli/commands.ts';
@@ -24,7 +24,7 @@ test.each(['default', 8] as const)('Ruff counts declared parameters with maximum
         ],
         { cwd: sandbox.path },
     );
-    const findings = JSON.parse(result.stdout) as ParameterFinding[];
+    const findings = JSON.parse(result.stdout) as LinterJsonFinding[];
     expect(result.code, result.stdout + result.stderr).toBe(maximum === defaultMaximum ? scenario.failureStatus : 0);
     expect(findings.filter((finding) => finding.code === 'PLR0913')).toMatchObject(
         maximum === defaultMaximum ? [scenario.finding] : [],
@@ -38,7 +38,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['default', 8] as const)(
         await using sandbox = await testdir();
         const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, supplied);
         const result = runCommandBlocking(scenario.command, { cwd: sandbox.path });
-        const findings = JSON.parse(result.stdout) as ParameterFinding[];
+        const findings = JSON.parse(result.stdout) as LinterJsonFinding[];
         expect(result.code, result.stdout + result.stderr).toBe(
             maximum === defaultMaximum ? scenario.failureStatus : 0,
         );

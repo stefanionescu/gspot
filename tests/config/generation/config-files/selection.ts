@@ -1,7 +1,7 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/setup/sandboxes.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 export const NESTED_PYTHON_GSPOT_TOML = buildSandboxSettings([], {
     scopes: [
@@ -72,10 +72,10 @@ export const IGNORED_CHECK_FILES = [
         name: 'ignoring SwiftLint and Periphery keeps SwiftFormat',
         settings: SWIFT_FORMAT_SETTINGS,
         files: { 'main.swift': 'let value = 1\n' },
-        kept: [findFileTarget('swift', 'swiftformat')],
+        kept: [findManifestTarget('swift', 'swiftformat')],
         dropped: [
-            findFileTarget('swift', 'swiftlint.yml'),
-            findFileTarget('swift', 'periphery.yml'),
+            findManifestTarget('swift', 'swiftlint.yml'),
+            findManifestTarget('swift', 'periphery.yml'),
             GSPOT_PATHS.npmProject,
         ],
     },
@@ -84,7 +84,7 @@ export const IGNORED_CHECK_FILES = [
         settings: EDITORCONFIG_SETTINGS,
         files: { 'sample.json': '{"value":1}\n' },
         kept: ['.editorconfig'],
-        dropped: [findFileTarget('format', 'prettier.json'), '.prettierignore'],
+        dropped: [findManifestTarget('format', 'prettier.json'), '.prettierignore'],
     },
 ] as const;
 

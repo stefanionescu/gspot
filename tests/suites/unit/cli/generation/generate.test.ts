@@ -11,7 +11,7 @@ import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 import { runGit, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 
 test.each(['absent', 'authored', 'managed'])(
@@ -59,7 +59,7 @@ test('generated attributes keep LF through an autocrlf checkout', async () => {
     runGitStep(sandbox.path, ['init', '-q']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const path = findRuleFileTarget('engineering', 'WORKING.md');
+    const path = findRuleFilePath('engineering', 'WORKING.md');
     const bytes = await readFile(join(sandbox.path, path));
     runGitStep(sandbox.path, ['add', '--', '.gitattributes', path]);
     await rm(join(sandbox.path, path));

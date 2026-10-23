@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import type { LinkFailure } from '#tests/types/tool-output.ts';
+import type { LinkFailure } from '#tests/types/reports.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 

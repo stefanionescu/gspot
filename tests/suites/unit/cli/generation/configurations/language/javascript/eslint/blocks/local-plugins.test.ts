@@ -8,7 +8,7 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { captureRejectedError } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { generateFile, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { generateFile, findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
 import {
     LOCAL_PLUGIN,

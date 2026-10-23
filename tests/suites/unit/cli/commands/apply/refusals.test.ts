@@ -7,10 +7,10 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { startCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/apply/write/writer.ts';
 import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { LINKED_FILE_CASES } from '#tests/config/commands/apply/refusals.ts';
 
 test('a broken managed block stops apply before generated files change', async () => {
@@ -30,7 +30,7 @@ Unclosed instructions.
         'AGENTS.md has incomplete or repeated gspot block markers. Fix the markers, then run gspot apply.\n',
     );
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, findManifestTarget('bash', 'shellcheckrc')))).toBe(false);
 });
 test('apply refuses an empty writer lock left after a crash and names the lock to delete', async () => {
     await using sandbox = await testdir({

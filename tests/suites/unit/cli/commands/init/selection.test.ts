@@ -12,9 +12,9 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { type ToolPackageJson } from '#cli/types/install/npm.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -112,7 +112,7 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
         );
         for (const name of ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'])
             expect(dependencies).not.toContain(name);
-        expect(await isOnDisk(join(sandbox.path, findFileTarget('javascript', 'eslint/eslint.mjs')))).toBe(false);
+        expect(await isOnDisk(join(sandbox.path, findManifestTarget('javascript', 'eslint/eslint.mjs')))).toBe(false);
     }
     await writeFile(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
     const discovered = await runGspot(sandbox.path, ['add', 'javascript']);
@@ -127,7 +127,7 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
                 .devDependencies,
         );
         expect(dependencies).toContain('eslint');
-        expect(await isOnDisk(join(sandbox.path, findFileTarget('javascript', 'eslint/eslint.mjs')))).toBe(true);
+        expect(await isOnDisk(join(sandbox.path, findManifestTarget('javascript', 'eslint/eslint.mjs')))).toBe(true);
     }
 });
 

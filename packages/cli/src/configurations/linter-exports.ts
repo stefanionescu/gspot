@@ -13,10 +13,14 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { eslintPresetSchema } from '#cli/schemas/configurations/eslint-presets.ts';
 import type { EslintPreset, EslintPresets } from '#cli/types/generation/eslint.ts';
-import type { PackageIdentity, InstalledPackage } from '#cli/types/linter-lists.ts';
+import type { PackageIdentity, InstalledPackage } from '#cli/types/linter-exports.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
-import { LINTER_PACKAGES, PRESET_BLOCK_KEYS, LINTER_INSTALL_FOLDER } from '#cli/config/configurations/linter-lists.ts';
 
+import {
+    LINTER_PACKAGES,
+    PRESET_BLOCK_KEYS,
+    LINTER_INSTALL_FOLDER,
+} from '#cli/config/configurations/linter-exports.ts';
 import {
     globalsModuleSchema,
     packageModuleSchema,
@@ -26,7 +30,7 @@ import {
     stylelintModuleSchema,
     eslintRuleModuleSchema,
     stylelintSettingsSchema,
-} from '#cli/schemas/configurations/linter-lists.ts';
+} from '#cli/schemas/configurations/linter-exports.ts';
 
 function findInstalledPackage(
     folder: string,
@@ -89,7 +93,7 @@ async function installPackages(
     );
     const install = await spawnProcess(LINTER_INSTALL_FOLDER.install, { cwd: folder });
     if (install.code !== 0)
-        throw new Error(`Bun install failed, so the linter data stays as it was. ${install.stderr}`);
+        throw new Error(`Bun install failed, so the linter exports stay as they were. ${install.stderr}`);
     return new Map(
         Object.entries(dependencies).map(([name, version]) => [
             name,
@@ -175,7 +179,7 @@ async function captureNames(installed: Map<string, InstalledPackage>, folder: st
     ]);
 }
 
-async function copyLinterLists(): Promise<void> {
+async function copyLinterExports(): Promise<void> {
     const recipes = listAssets('configurations/')
         .filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`))
         .map((path) => {
@@ -222,7 +226,7 @@ async function copyLinterLists(): Promise<void> {
         ),
     );
     for (const [path, text] of formatted) writeFileSync(buildAssetPath(path), text);
-    process.stdout.write(`Refreshed ${String(capturedNames.size)} linter data files.\n`);
+    process.stdout.write(`Wrote ${String(capturedNames.size)} linter export files.\n`);
 }
 
-await copyLinterLists();
+await copyLinterExports();

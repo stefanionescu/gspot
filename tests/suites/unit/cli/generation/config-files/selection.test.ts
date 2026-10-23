@@ -10,12 +10,12 @@ import { generate } from '#cli/generation/generate.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { LEVELS } from '#cli/config/configurations/names.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
@@ -36,7 +36,7 @@ test('a Ruff-only Python scope gets no type checker file or pointer', async () =
     });
 
     const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
-    expect(paths).toContain(findFileTarget('python', 'ruff.toml'));
+    expect(paths).toContain(findManifestTarget('python', 'ruff.toml'));
     expect(paths).toContain('linted/ruff.toml');
     expect(paths).toContain('typed/ruff.toml');
     expect(paths).not.toContain(`${GSPOT_PATHS.configurations}/language/python/scopes/linted/basedpyright.json`);
@@ -44,7 +44,7 @@ test('a Ruff-only Python scope gets no type checker file or pointer', async () =
     expect(
         paths.filter((path) => path.startsWith(`${GSPOT_PATHS.configurations}/`) && path.endsWith('/ruff.toml')),
     ).toHaveLength(1);
-    expect(paths).toContain(findFileTarget('python', 'basedpyright.json'));
+    expect(paths).toContain(findManifestTarget('python', 'basedpyright.json'));
     expect(paths).toContain('typed/pyrightconfig.json');
 });
 test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
@@ -55,8 +55,8 @@ test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
 
     const session = await openSession(sandbox.path);
     const paths = generate(session).files.map((file) => file.path);
-    expect(paths).toContain(findFileTarget('javascript', 'knip.json'));
-    expect(paths).not.toContain(findFileTarget('javascript', 'jsconfig.json'));
+    expect(paths).toContain(findManifestTarget('javascript', 'knip.json'));
+    expect(paths).not.toContain(findManifestTarget('javascript', 'jsconfig.json'));
 });
 test.each([...IGNORED_CHECK_FILES])(
     '$name and drops the files of the ignored checks',
@@ -79,8 +79,8 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
     const files = generate(session).files;
     const paths = files.map((file) => file.path);
     expect(paths).toContain('.editorconfig');
-    expect(paths).toContain(findFileTarget('data-files', 'taplo.toml'));
-    for (const path of [findFileTarget('format', 'prettier.json'), '.prettierignore'])
+    expect(paths).toContain(findManifestTarget('data-files', 'taplo.toml'));
+    for (const path of [findManifestTarget('format', 'prettier.json'), '.prettierignore'])
         expect(paths).not.toContain(path);
     const packages = listToolProjectPins(session.toolConfigurations).npm;
     const expected = listToolProjectPins([session.configurations.get('data-files')!]).npm;
@@ -134,7 +134,7 @@ test.each([...LEVELS])("every configuration's config files parse at level %s", a
 test('an ignore whose reason equals a built-in section title keeps its paths in the jsconfig exclude', async () => {
     await using sandbox = await testdir(JSCONFIG_TITLE_IGNORE_PROJECT);
     const files = generate(await openSession(sandbox.path)).files;
-    const content = files.find(({ path }) => path === findFileTarget('javascript', 'jsconfig.json'))!.content;
+    const content = files.find(({ path }) => path === findManifestTarget('javascript', 'jsconfig.json'))!.content;
     const jsconfig: unknown = JSON.parse(content);
     expect(getValueAt(jsconfig, ['exclude'])).toContain('../../../../legacy/**');
 });

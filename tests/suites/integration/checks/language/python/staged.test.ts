@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { createPythonProject } from '#tests/setup/sandboxes/python-project.ts';
+import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 
 test('Ruff from the installed environment reports a staged Python finding while the working tree differs', async () => {
     await using sandbox = await testdir();

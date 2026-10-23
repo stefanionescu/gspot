@@ -5,7 +5,7 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { spawnGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { SYNCPACK_FILES } from '#tests/config/integration/checks/general/dependencies.ts';
 
@@ -34,7 +34,13 @@ test.each([...SYNCPACK_FILES])(
         expect(await isOnDisk(join(sandbox.path, file))).toBe(false);
         expect(await readFile(join(sandbox.path, 'syncpack.config.cts'), 'utf8')).toBe('module.exports = {};\n');
         expect(await readFile(join(sandbox.path, 'syncpack.config.mts'), 'utf8')).toBe('export default {};\n');
-        const command = ['syncpack', 'lint', '--config', findFileTarget('dependencies', 'syncpack.json'), '--no-ansi'];
+        const command = [
+            'syncpack',
+            'lint',
+            '--config',
+            findManifestTarget('dependencies', 'syncpack.json'),
+            '--no-ansi',
+        ];
         const after = await runCommand(command, execution);
         expect(after.code, after.stdout + after.stderr).toBe(1);
         expect(after.stderr).toContain('fixture');

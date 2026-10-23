@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { RuffRule, RuffConfiguration } from '#tests/types/tool-output.ts';
+import type { RuffRule, RuffConfigFile } from '#tests/types/tools.ts';
 
 export const ruffRulesSchema = z.array(
     z.object({ code: z.string().nullable(), preview: z.boolean() }),
@@ -7,4 +7,4 @@ export const ruffRulesSchema = z.array(
 
 export const ruffConfigurationSchema = z.object({
     lint: z.object({ select: z.array(z.string()) }),
-}) satisfies z.ZodType<RuffConfiguration>;
+}) satisfies z.ZodType<{ lint: Pick<RuffConfigFile['lint'], 'select'> }>;
