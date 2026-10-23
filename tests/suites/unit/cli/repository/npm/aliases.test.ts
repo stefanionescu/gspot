@@ -8,9 +8,7 @@ import { ALIAS_FILES, SCOPE_ALIASES, ALIAS_PROJECT } from '#tests/config/reposit
 
 test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, message }) => {
     await using sandbox = await testdir({ [path]: '{ "compilerOptions": { "paths": {} },' });
-    expect(() => readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toThrow(
-        message.replace('{PATH}', join(sandbox.path, path)),
-    );
+    expect(() => readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toThrow(message);
 });
 
 test('root and child aliases read their own files, and tsconfig paths win', async () => {

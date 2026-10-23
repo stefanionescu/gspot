@@ -189,7 +189,8 @@ export function readTsconfig(
         return parsed;
     } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
-        throw new Error(`Cannot read the tsconfig file ${path}: ${detail}`, { cause: error });
+        const shown = convertToPosixPath(relative(repositoryRoot, path));
+        throw new Error(`Cannot read the compiler settings in ${shown}: ${detail}`, { cause: error });
     }
 }
 

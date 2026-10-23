@@ -5,7 +5,7 @@ export const ALIAS_FILES = [
     },
     {
         path: 'tsconfig.json',
-        message: 'Cannot read the tsconfig file {PATH}',
+        message: "Cannot read the compiler settings in tsconfig.json: '}' expected.",
     },
 ] as const;
 

@@ -8,10 +8,10 @@ import type { CheckResult } from '#cli/types/runs/check.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/locate.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { stat, chmod, readFile, realpath, writeFile } from 'node:fs/promises';
 import { findFileTarget, readGeneratedFiles } from '#tests/setup/cli/config-files.ts';
 import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript/projects.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -189,7 +189,7 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
         {
             scope: 'app',
             status: 'error',
-            note: `The javascript/tsc check failed: Cannot read the tsconfig file ${join(await realpath(sandbox.path), 'app', 'jsconfig.json')}: '}' expected.`,
+            note: "The javascript/tsc check failed: Cannot read the compiler settings in app/jsconfig.json: '}' expected.",
         },
         { scope: 'app/child', status: 'passed' },
         { scope: 'sibling', status: 'passed' },
