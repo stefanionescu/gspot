@@ -53,7 +53,7 @@ ${SITE_BUILD_SCRIPT}`,
     expect(findings).toMatchObject([{ rule: 'build', line: 1 }]);
     // The message ends with the stack frame in the build folder and the Bun version.
     expect(findings[0]!.message).toStartWith(
-        `["bun","build.js"] did not build the site: 1 | import { readFileSync } from 'node:fs'; | 2 | readFileSync('local-input.txt');`,
+        `bun build.js did not build the site.\n1 | import { readFileSync } from 'node:fs';\n2 | readFileSync('local-input.txt');`,
     );
     expect(findings[0]!.message).toContain("ENOENT: no such file or directory, open 'local-input.txt'");
     const checkedSession = await openSession(sandbox.path, { resources });
@@ -120,7 +120,7 @@ test("build: a scope's site build copies only the workspace packages it depends 
     const session = await openSession(sandbox.path, { resources });
     const input = planSandboxCheck(session, 'site/build', { scope: 'web' });
     const built = await getSuccessfulBuild(session, input);
-    expect(built.isBuilt, built.outputTail).toBe(true);
+    expect(built.isBuilt, built.failure).toBe(true);
     expect(await readFile(join(built.folder, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
     expect(await isOnDisk(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, 'web/dist'))).toBe(false);
@@ -158,7 +158,7 @@ test('build: a failed site build skips every check that reads the build, and a n
             {
                 check: 'site/build',
                 status: 'failed',
-                message: '["bun","build.js"] did not build the site: Test build failure',
+                message: 'bun build.js did not build the site.\nTest build failure',
             },
             ...[...consumers].map((check) => ({
                 check,

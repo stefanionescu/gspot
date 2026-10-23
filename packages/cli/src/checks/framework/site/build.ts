@@ -1,6 +1,7 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
+import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { join, relative, normalize } from 'node:path';
 import { type Finding } from '#cli/types/runs/check.ts';
@@ -27,8 +28,8 @@ async function runSiteBuild(session: Session, planned: PlannedCheck, copyRoot: s
     if (built?.isSymbolicLink() === true)
         throw new Error(`The build output folder is a link: ${convertToPosixPath(relative(copyRoot, folder))}`);
     const isBuilt = built?.isDirectory() === true;
-    const outputTail = formatOutputTail(result).replaceAll('\n', ' | ');
-    return { cwd, command, folder, isBuilt, outputTail };
+    const failure = result.code === 0 ? `It wrote no ${folderPath} folder.` : formatOutputTail(result);
+    return { cwd, command, folder, isBuilt, failure };
 }
 
 /**
@@ -115,7 +116,7 @@ export async function checkSiteBuild(session: Session, planned: PlannedCheck): P
             planned,
             { file: '', line: 1 },
             'build',
-            `${JSON.stringify(build.command)} did not build the site: ${build.outputTail}`,
+            `${build.command.map((argument) => quoteArgument(argument)).join(' ')} did not build the site.\n${build.failure}`,
         ),
     ];
 }

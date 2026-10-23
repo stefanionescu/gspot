@@ -4,7 +4,8 @@ export type SiteBuild = {
     command: string[];
     folder: string;
     isBuilt: boolean;
-    outputTail: string;
+    /** Why the build wrote no site: the output of a failed command, or the folder it did not write. */
+    failure: string;
 };
 
 /** The PurgeCSS class: purge takes the config file options with the stylesheets and pages to compare. */
