@@ -1,3 +1,5 @@
+import { Linter } from 'eslint';
+import { test, expect } from 'bun:test';
 import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 import { schemaLocation } from '#eslint-plugin/rules/schema-location.ts';
 import type { SchemaLocationOptions } from '#eslint-plugin/types/rules.ts';
@@ -71,4 +73,18 @@ createRuleTester().run<'location', [Partial<SchemaLocationOptions[0]>]>('schema-
             errors: [{ messageId: 'location' }],
         },
     ],
+});
+
+test('schema placement resolves configured folders from the ESLint working directory', () => {
+    const linter = new Linter({ configType: 'flat', cwd: '/repo' });
+    const config: object[] = [
+        {
+            plugins: { gspot: { rules: { 'schema-location': schemaLocation } } },
+            rules: { 'gspot/schema-location': ['error', { folders: ['src/schemas'] }] },
+        },
+    ];
+    const source = 'import { z } from "zod"; export const schema = z.string();';
+    expect(linter.verify(source, config, { filename: '/repo/src/schemas/name.js' })).toStrictEqual([]);
+    const messages = linter.verify(source, config, { filename: '/repo/src/parsers/name.js' });
+    expect(messages).toMatchObject([{ ruleId: 'gspot/schema-location', messageId: 'location' }]);
 });

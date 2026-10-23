@@ -1,7 +1,6 @@
 import type { RuleDocs } from './types/rules.ts';
 import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { noClientEnv } from './rules/no-client-env.ts';
-import { schemaLocation } from './rules/schema-location.ts';
 import { noIndexImports } from './rules/no-index-imports.ts';
 import { noMagicNumbers } from './rules/no-magic-numbers.ts';
 import { noTrivialFiles } from './rules/no-trivial-files.ts';
@@ -13,7 +12,6 @@ import { name, version } from '../package.json' with { type: 'json' };
 import { noCommentsInImports } from './rules/no-comments-in-imports.ts';
 
 const rules = {
-    'schema-location': schemaLocation,
     'no-comments-in-imports': noCommentsInImports,
     'no-client-env': noClientEnv,
     'import-boundaries': importBoundaries,

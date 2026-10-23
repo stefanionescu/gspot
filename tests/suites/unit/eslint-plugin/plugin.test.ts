@@ -41,25 +41,16 @@ test('configs.all lints beside a config that registers the plugin again', () => 
     expect(messages).toStrictEqual([]);
 });
 
-test('schema placement remains opt-in', () => {
-    const linter = new Linter({ configType: 'flat', cwd: '/repo' });
-    const config: object[] = [plugin.configs.all];
-    const messages = linter.verify('import { z } from "zod"; export const schema = z.string();', config, {
-        filename: '/repo/src/parsers/name.js',
-    });
-    expect(messages).toStrictEqual([]);
-});
-
-test('schema placement resolves configured folders from the ESLint working directory', () => {
-    const linter = new Linter({ configType: 'flat', cwd: '/repo' });
-    const config: object[] = [
-        {
-            plugins: { gspot: plugin },
-            rules: { 'gspot/schema-location': ['error', { folders: ['src/schemas'] }] },
-        },
-    ];
-    const source = 'import { z } from "zod"; export const schema = z.string();';
-    expect(linter.verify(source, config, { filename: '/repo/src/schemas/name.js' })).toStrictEqual([]);
-    const messages = linter.verify(source, config, { filename: '/repo/src/parsers/name.js' });
-    expect(messages).toMatchObject([{ ruleId: 'gspot/schema-location', messageId: 'location' }]);
+test('the published plugin exports its public rules and keeps schema-location to this repository', () => {
+    expect(Object.keys(plugin.rules).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        'import-boundaries',
+        'no-client-env',
+        'no-comments-in-imports',
+        'no-index-imports',
+        'no-magic-numbers',
+        'no-renamed-exports',
+        'no-trivial-files',
+        'no-trivial-functions',
+        'require-server-only',
+    ]);
 });
