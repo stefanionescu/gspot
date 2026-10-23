@@ -4,11 +4,12 @@ import { open, readFile } from 'node:fs/promises';
 import type { Session } from '#cli/types/session.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { generate } from '#cli/generation/generate.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
 import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
@@ -64,6 +65,18 @@ export function buildProgramPin(name: string, version: string, npm?: string): To
         version,
         installers: npm === undefined ? {} : { npm: { name: npm, version } },
     };
+}
+
+/**
+ * List the npm install folder and lockfile of the tool project that exist, to show that a command installed nothing.
+ *
+ * @param root the repository.
+ * @returns the paths from the repository root.
+ */
+export async function listToolInstallFiles(root: string): Promise<string[]> {
+    const paths = [GSPOT_PATHS.nodeModules, `${DOT_GSPOT}/package-lock.json`];
+    const found = await Promise.all(paths.map(async (path) => ((await isOnDisk(join(root, path))) ? [path] : [])));
+    return found.flat();
 }
 
 /** What tool search reads, for tests that inspect installed tools. */

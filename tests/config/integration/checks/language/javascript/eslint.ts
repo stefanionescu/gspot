@@ -1,5 +1,5 @@
-/** A documented JavaScript module that passes ESLint. */
-export const JAVASCRIPT_MODULE = `// Doubles numbers.
+// A documented JavaScript module that passes ESLint.
+const JAVASCRIPT_MODULE = `// Doubles numbers.
 
 /**
  * Doubles a number, and returns an infinite number unchanged.

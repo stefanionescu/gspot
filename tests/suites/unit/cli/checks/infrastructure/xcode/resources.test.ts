@@ -47,14 +47,7 @@ test('xcode/assets reports an image that the set names and the repository does n
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['xcode']), ...LOGO_IMAGE_SET.files });
     commitAll(sandbox.path);
     await rm(join(sandbox.path, LOGO_IMAGE_SET.image));
-    expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toMatchObject([
-        {
-            file: LOGO_IMAGE_SET.contents,
-            line: 1,
-            rule: 'missing-image',
-            message: 'The image logo.png is not in the set.',
-        },
-    ]);
+    expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toMatchObject([LOGO_IMAGE_SET.missingFinding]);
 });
 
 test('xcode/assets reports an ignored image that is on disk but not in the repository', async () => {
@@ -64,14 +57,7 @@ test('xcode/assets reports an ignored image that is on disk but not in the repos
         ...LOGO_IMAGE_SET.files,
     });
     commitAll(sandbox.path);
-    expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toMatchObject([
-        {
-            file: LOGO_IMAGE_SET.contents,
-            line: 1,
-            rule: 'missing-image',
-            message: 'The image logo.png is not in the set.',
-        },
-    ]);
+    expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toMatchObject([LOGO_IMAGE_SET.missingFinding]);
 
     await writeFile(join(sandbox.path, '.gitignore'), '');
     expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toStrictEqual([]);

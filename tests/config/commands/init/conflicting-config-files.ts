@@ -52,7 +52,7 @@ const findings = result.results.flatMap(({ warnings, parseErrors, invalidOptionW
 process.stdout.write(JSON.stringify(findings));
 `;
 
-export const REPLACED_CONFIG_FILES = {
+const REPLACED_CONFIG_FILES = {
     'typos.toml': `[default.extend-words]
 # The device identifier API name.
 udid = "udid"

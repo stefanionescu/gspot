@@ -100,10 +100,16 @@ export const ENTITLEMENT_SCOPE_RESULTS = [
 const LOGO_CONTENTS = 'App/Assets.xcassets/Logo.imageset/Contents.json';
 const LOGO_IMAGE = 'App/Assets.xcassets/Logo.imageset/logo.png';
 
-/** An image set that a Swift view names, with its image file. */
+/** An image set that a Swift view names, with its image file and the finding when the repository lacks the image. */
 export const LOGO_IMAGE_SET = {
     contents: LOGO_CONTENTS,
     image: LOGO_IMAGE,
+    missingFinding: {
+        file: LOGO_CONTENTS,
+        line: 1,
+        rule: 'missing-image',
+        message: 'The image logo.png is not in the set.',
+    },
     files: {
         [LOGO_CONTENTS]: '{"images":[{"filename":"logo.png"}]}\n',
         [LOGO_IMAGE]: new Uint8Array([0, 1, 2]),

@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import type { RunResult } from '#cli/types/runs/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -16,6 +17,11 @@ import {
     TEST_FILE_FINDINGS,
     REACT_COMPONENT_SOURCE,
 } from '#tests/config/checks/general/naming/identifiers.ts';
+
+// Run naming/identifiers in a new session of the sandbox.
+async function checkIdentifiers(root: string): Promise<RunResult> {
+    return runChecks(await openSession(root), buildRunOptions({ only: ['naming/identifiers'] }));
+}
 
 test.each([...FRAMEWORK_NAMES])(
     `a framework's allowed function name passes only inside the framework's scope`,
@@ -38,10 +44,7 @@ test.each([...FRAMEWORK_NAMES])(
             'sibling/entry.ts': source,
         });
 
-        const failed = await runChecks(
-            await openSession(sandbox.path),
-            buildRunOptions({ only: ['naming/identifiers'] }),
-        );
+        const failed = await checkIdentifiers(sandbox.path);
 
         expect(
             failed.report.checks.flatMap(({ findings }) =>
@@ -59,10 +62,7 @@ test.each([...FRAMEWORK_NAMES])(
             join(sandbox.path, 'app/parameters.ts'),
             'export function readValue(value: string) { return null; }\n',
         );
-        const corrected = await runChecks(
-            await openSession(sandbox.path),
-            buildRunOptions({ only: ['naming/identifiers'] }),
-        );
+        const corrected = await checkIdentifiers(sandbox.path);
 
         expect(corrected.report.failed).toStrictEqual([]);
     },
@@ -78,7 +78,7 @@ test('SwiftLint owns the case and length of Swift types; banned words are still 
         'Entry.swift': sourceText + 'let helperCount = 1\nfunc readValue(URLSession: String) {}\n',
     });
 
-    const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
+    const failed = await checkIdentifiers(sandbox.path);
 
     expect(
         failed.report.checks.flatMap(({ findings }) => findings.map(({ line, rule }) => ({ line, rule }))),
@@ -91,10 +91,7 @@ test('SwiftLint owns the case and length of Swift types; banned words are still 
         join(sandbox.path, 'Entry.swift'),
         'typealias URL = String\nlet entryCount = 1\nfunc readValue(client: String) {}\n',
     );
-    const corrected = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['naming/identifiers'] }),
-    );
+    const corrected = await checkIdentifiers(sandbox.path);
 
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
@@ -111,7 +108,7 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
         'sibling/test_entry.py': source,
     });
 
-    const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
+    const failed = await checkIdentifiers(sandbox.path);
 
     expect(
         failed.report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),
@@ -122,10 +119,7 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
     for (const file of ['test_entry.py', 'sibling/test_entry.py']) {
         await writeFile(join(sandbox.path, file), 'def read_account_summary_columns():\n    pass\n');
     }
-    const corrected = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['naming/identifiers'] }),
-    );
+    const corrected = await checkIdentifiers(sandbox.path);
 
     expect(corrected.report.failed).toStrictEqual([]);
 });
@@ -140,7 +134,7 @@ test('an allowed property name does not hide a bad name on the next line', async
         'source.ts': source,
     });
 
-    const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
+    const failed = await checkIdentifiers(sandbox.path);
 
     expect(
         failed.report.checks.flatMap(({ findings }) =>
@@ -148,17 +142,14 @@ test('an allowed property name does not hide a bad name on the next line', async
         ),
     ).toStrictEqual([{ file: 'source.ts', line: 3, column: 5, rule: 'case' }]);
     await writeFile(join(sandbox.path, 'source.ts'), source.replace('user_name', 'userName'));
-    const corrected = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['naming/identifiers'] }),
-    );
+    const corrected = await checkIdentifiers(sandbox.path);
     expect(corrected.report.failed).toStrictEqual([]);
 });
 
 test(`test-file exemptions follow each scope's test_files and Swift test names`, async () => {
     await using sandbox = await testdir({ 'gspot.toml': TEST_PATH_SETTINGS, ...TEST_PATH_FILES });
 
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
+    const result = await checkIdentifiers(sandbox.path);
 
     expect(
         result.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),

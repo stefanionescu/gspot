@@ -2,8 +2,8 @@ import type { RunReport } from '#cli/types/runs/run.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 
-/** The fields of a finding that a sample names. */
-export type SampleFinding = Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;
+// The fields of a finding that a sample names.
+type SampleFinding = Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;
 
 /** What the clean rerun of a test case writes: corrected files, and the case's settings unless it names another. */
 export type SampleFix = {

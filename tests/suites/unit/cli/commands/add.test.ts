@@ -6,11 +6,12 @@ import { readSettings } from '#cli/settings/read.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { listToolInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
 import {
     API_BASH_FILES,
@@ -46,8 +47,7 @@ test('add --scope writes the scope list and applies it without an npm install', 
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/package-lock.json`))).toBe(false);
+    expect(await listToolInstallFiles(sandbox.path)).toStrictEqual([]);
 });
 
 test('add security exits 2, names gspot set level, and writes nothing', async () => {

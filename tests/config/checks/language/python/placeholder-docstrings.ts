@@ -1,6 +1,6 @@
 import { GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
 
-export const CLEAN_PYTHON_MODULE = `"""Prices."""
+const CLEAN_PYTHON_MODULE = `"""Prices."""
 
 
 def _rounded(amount: float) -> float:
