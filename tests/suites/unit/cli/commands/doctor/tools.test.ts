@@ -79,6 +79,18 @@ test.each(['ok', 'newer', 'outdated'] as const)(
     },
 );
 
+test('doctor lists a tool once when two scopes find the same install', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['zod'], { scopes: [{ path: 'app', configurations: ['zod'] }] }),
+        'source.js': 'export const value = 1;\n',
+        'app/source.js': 'export const value = 1;\n',
+    });
+
+    const result = await runGspot(sandbox.path, ['doctor', '--json']);
+    const report = JSON.parse(result.stdout) as DoctorReport;
+    expect(report.tools.filter(({ name }) => name === 'eslint-plugin-zod')).toHaveLength(1);
+});
+
 test('doctor names a missing coverage plugin and leaves it out when every coverage limit is zero', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['python', 'pytest'], { level: 'all', tables: '[coverage]\nlines = 80\n' }),

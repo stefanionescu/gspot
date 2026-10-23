@@ -61,13 +61,19 @@ function formatTools(tools: ToolInspection[]): string[] {
 
 function formatSuggestions(suggestions: Suggestions): string[] {
     const sections = SUGGESTION_SECTIONS.map(({ key, title }) => {
-        const rows = suggestions[key].map((entry) => {
-            const name = ('configuration' in entry ? entry.configuration : entry.path).padEnd(COLUMN_WIDTHS.name);
-            const detail = 'evidence' in entry ? entry.evidence : entry.note;
-            return entry.command === undefined
-                ? `  ${name} ${detail}`
-                : `  ${name} ${detail.padEnd(COLUMN_WIDTHS.note)} ${entry.command}`;
-        });
+        const entries = suggestions[key].map((entry) => ({
+            name: 'configuration' in entry ? entry.configuration : entry.path,
+            detail: 'evidence' in entry ? entry.evidence : entry.note,
+            command: entry.command,
+        }));
+        // Each column takes the width of its longest entry, so a long scope path keeps the rows aligned.
+        const nameWidth = Math.max(COLUMN_WIDTHS.name, ...entries.map(({ name }) => name.length));
+        const detailWidth = Math.max(COLUMN_WIDTHS.note, ...entries.map(({ detail }) => detail.length));
+        const rows = entries.map(({ name, detail, command }) =>
+            command === undefined
+                ? `  ${name.padEnd(nameWidth)} ${detail}`
+                : `  ${name.padEnd(nameWidth)} ${detail.padEnd(detailWidth)} ${command}`,
+        );
         return rows.length === 0 ? [] : [title, ...rows, ''];
     });
     return sections.flat();
@@ -103,7 +109,8 @@ function buildDoctorReport(session: Session, pinned: string | undefined): Doctor
                 { ...session, cwd: join(session.root, folder.path), miseBinPaths: getMiseBinPaths(session) },
                 tool,
             );
-            inspections.set(`${tool.name}\0${folder.path}`, inspection);
+            // Scopes that find the same tool in the same place share one row.
+            inspections.set(JSON.stringify(inspection), inspection);
         }
     }
     const tools = [...inspections.values()].toSorted((left, right) => left.name.localeCompare(right.name));
