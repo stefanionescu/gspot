@@ -8,4 +8,10 @@ set -euo pipefail
 for package in packages/cli packages/eslint-plugin; do
     cp LICENSE.md "${package}/LICENSE.md"
 done
-cp README.md packages/cli/README.md
+# npm reads image paths from packages/cli and ignores the light and dark mode fragments that GitHub reads. The npm copy
+# keeps the light banner and loads it from GitHub.
+sed \
+    -e 's|!\[[^]]*\]([^)]*#gh-dark-mode-only)||g' \
+    -e 's|#gh-light-mode-only)|)|g' \
+    -e 's|](docs/|](https://raw.githubusercontent.com/stefanionescu/gspot/main/docs/|g' \
+    README.md >packages/cli/README.md
