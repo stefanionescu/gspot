@@ -1,7 +1,7 @@
 import { getValueAt, createTable } from '#cli/system/tables.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
+import { tableValuesSchema } from '#cli/schemas/settings/configuration-tables.ts';
 import { findSettingSchema, rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';
@@ -13,8 +13,8 @@ import type {
     Scope,
     ScopeValues,
     ScopeSettings,
-    KnownSettings,
     EffectiveSetting,
+    AvailableSettings,
     SelectedConfigurations,
 } from '#cli/types/settings/inheritance.ts';
 
@@ -64,28 +64,36 @@ export function selectForScope(
     return selectConfigurations([...choices, ...automatic], configurations);
 }
 
-function listNamingVariants(knownSettings: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
+function listNamingVariants(
+    availableSettings: AvailableSettings,
+    settings: Settings,
+    scope: string,
+): EffectiveSetting[] {
     return SETTING_LANGUAGES.flatMap((language) =>
         Object.keys(namingCategorySchema.shape).flatMap((field) => [
             `naming.${language}.${field}`,
             ...NAMING_LANGUAGE_CATEGORIES[language].map((category) => `naming.${language}.${category}.${field}`),
         ]),
     )
-        .filter((key) => !knownSettings.settings.has(key))
-        .map((key) => getSettingValue(knownSettings, settings, key, scope))
+        .filter((key) => !availableSettings.settings.has(key))
+        .map((key) => getSettingValue(availableSettings, settings, key, scope))
         .filter((row) => row !== undefined);
 }
 
-function listLimitVariants(knownSettings: KnownSettings, settings: Settings, scope: string): EffectiveSetting[] {
-    return [...knownSettings.settings.values()]
+function listLimitVariants(
+    availableSettings: AvailableSettings,
+    settings: Settings,
+    scope: string,
+): EffectiveSetting[] {
+    return [...availableSettings.settings.values()]
         .filter((setting) => setting.name.startsWith('limits.') && setting.type === 'number')
         .flatMap((setting) =>
             (setting.languages ?? []).map(
                 (language) => `limits.${language}.${setting.name.slice(setting.name.lastIndexOf('.') + 1)}`,
             ),
         )
-        .filter((key) => !knownSettings.settings.has(key))
-        .map((key) => getSettingValue(knownSettings, settings, key, scope))
+        .filter((key) => !availableSettings.settings.has(key))
+        .map((key) => getSettingValue(availableSettings, settings, key, scope))
         .filter((row) => row !== undefined);
 }
 
@@ -93,19 +101,19 @@ function listLimitVariants(knownSettings: KnownSettings, settings: Settings, sco
  * Build the merged settings of a scope from the known settings, the written settings, and the configurations of the
  * scope.
  *
- * @param knownSettings the settings and defaults of the selected configurations.
+ * @param availableSettings the settings and defaults of the selected configurations.
  * @param settings the written root values and scoped overrides.
  * @param configurations the configurations that the scope selects.
  * @param scope the folder, '' for the root.
  * @returns the scope settings that planning, checks, and the config file builders read.
  */
 export function buildScopeSettings(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     settings: Settings,
     configurations: Configuration[],
     scope: string,
 ): ScopeSettings {
-    const { settings: entries, values, test_files: testFiles } = buildScopeValues(knownSettings, settings, scope);
+    const { settings: entries, values, test_files: testFiles } = buildScopeValues(availableSettings, settings, scope);
     const ignores = settings.ignore.map((entry) => ({ ...entry, paths: entry.paths ?? [] }));
     return {
         configurations: configurations.map((configuration) => configuration.name),
@@ -180,19 +188,19 @@ export function listIgnoredRules(scope: Scope, check: string): string[] {
 /**
  * Resolve the known settings once into validated table values and numeric limits.
  *
- * @param knownSettings the declarations and defaults.
+ * @param availableSettings the declarations and defaults.
  * @param settings the written gspot.toml.
  * @param scope the folder to resolve for.
  * @returns typed values for the run without adding defaults to written tables.
  */
-function buildScopeValues(knownSettings: KnownSettings, settings: Settings, scope: string): ScopeValues {
-    const listed = listEffectiveSettings(knownSettings, settings, scope);
+function buildScopeValues(availableSettings: AvailableSettings, settings: Settings, scope: string): ScopeValues {
+    const listed = listEffectiveSettings(availableSettings, settings, scope);
     const entries = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
     fillTableValues(namespaces, listed);
-    const variants = listNamingVariants(knownSettings, settings, scope);
+    const variants = listNamingVariants(availableSettings, settings, scope);
     fillTableValues(namespaces, variants);
-    fillTableValues(namespaces, listLimitVariants(knownSettings, settings, scope));
+    fillTableValues(namespaces, listLimitVariants(availableSettings, settings, scope));
     return {
         settings: entries,
         values: tableValuesSchema.parse(namespaces),

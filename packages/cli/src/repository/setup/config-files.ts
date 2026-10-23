@@ -11,9 +11,9 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
-import { YAML_EXTENSIONS } from '#cli/config/repository/existing/tools.ts';
-import type { ConflictingConfigFile } from '#cli/types/repository/existing.ts';
-import { INI_EXTENSIONS } from '#cli/config/repository/existing/config-files.ts';
+import { YAML_EXTENSIONS } from '#cli/config/repository/setup/tools.ts';
+import type { ConflictingConfigFile } from '#cli/types/repository/setup.ts';
+import { INI_EXTENSIONS } from '#cli/config/repository/setup/config-files.ts';
 
 // List the root and every folder that a project file marks. A plain config file name such as knip.ts counts only in these
 // folders, because a source file deeper in the code can share it. A dotfile such as .prettierrc.json counts in any

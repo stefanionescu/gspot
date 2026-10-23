@@ -5,11 +5,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { test, expect, setSystemTime } from 'bun:test';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { setKey, getScopeTable } from '#cli/settings/edit.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { buildSandboxSettings, buildRootScopeSettings } from '#tests/setup/cli/settings.ts';
@@ -125,11 +125,11 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
         );
         const rootSettings = buildRootScopeSettings(settings);
         const configurations = selectForScope(settings, '', readConfigurations());
-        const knownSettings = buildKnownSettings(configurations, settings.level);
+        const availableSettings = buildAvailableSettings(configurations, settings.level);
         const scope: Scope = {
             folder: { path: '', configurations: [], origin: 'root' },
             configurations,
-            knownSettings,
+            availableSettings,
             settings: rootSettings,
         };
         expect(listIgnores(rootSettings, 'dependencies/osv-scanner')).toStrictEqual([

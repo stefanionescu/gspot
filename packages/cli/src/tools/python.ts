@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
+import { getTool } from '#cli/configurations/tools.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
-import { getTool } from '#cli/configurations/declared-tools.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 

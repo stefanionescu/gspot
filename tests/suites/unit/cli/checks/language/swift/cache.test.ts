@@ -14,10 +14,10 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
-import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { SWIFT_PACKAGE } from '#tests/config/checks/language/swift/build.ts';
 import { SWIFT_PACKAGE_HEADER } from '#tests/config/checks/language/swift/samples.ts';
 import { rm, open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
+import { configurationTableSchemas } from '#cli/schemas/settings/configuration-tables.ts';
 import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/checks/language/swift/cache.ts';
 

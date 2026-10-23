@@ -20,7 +20,7 @@ import { listSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { findMissingBuild, listDistinctTools } from '#cli/configurations/declared-tools.ts';
+import { findMissingBuild, listDistinctTools } from '#cli/configurations/tools.ts';
 
 import {
     VERSION_GAP,

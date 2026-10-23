@@ -10,12 +10,12 @@ import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
-import type { BlockStyle } from '#cli/types/parsers/managed-blocks.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
+import type { BlockStyle } from '#cli/types/parsers/formats/managed-blocks.ts';
 import type { Writer, WritePlan, ReplacementRequest } from '#cli/types/apply.ts';
-import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/managed-blocks.ts';
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
+import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 
 /**
  * Remove only the marked block and its separating blank line.

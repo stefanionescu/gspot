@@ -24,15 +24,15 @@ import { Option, type Command } from '@commander-js/extra-typings';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
 import { writeGeneratedFiles } from '#cli/apply/generated-files.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import type { ExistingTools } from '#cli/types/repository/existing.ts';
+import type { RepositorySetup } from '#cli/types/repository/setup.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
-import { readLintJobs, readExistingTools } from '#cli/repository/existing/tools.ts';
+import { readLintJobs, readRepositorySetup } from '#cli/repository/setup/tools.ts';
 import { listForeignDisableComments } from '#cli/commands/init/eslint-disable-comments.ts';
 import { readConflictingConfigFiles } from '#cli/commands/init/conflicting-config-files.ts';
 import { planInitFiles, formatInitPlan, formatDetection } from '#cli/commands/init/plan.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
-import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/existing/tools.ts';
+import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup/tools.ts';
 
 import {
     REMOTE_URL_USER,
@@ -139,8 +139,8 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const configurations = readConfigurations();
     const repository = await readRepository(reads, { generatedPaths: [], scopes: [], configurations });
     const initConfigurations = selectForInit({ repository, configurations, options });
-    const existingTools = readExistingTools(reads, repository);
-    const answers: InitAnswers = { hooks: true, rules: true, ci: detectCiProvider(root, existingTools) };
+    const repositorySetup = readRepositorySetup(reads, repository);
+    const answers: InitAnswers = { hooks: true, rules: true, ci: detectCiProvider(root, repositorySetup) };
     const draft = buildSettingsDraft(initConfigurations, answers, options);
     const settingsText = buildInitSettings(draft, repository, configurations);
     const settings = parseSettings(settingsText, root);
@@ -149,25 +149,25 @@ async function planInit(root: string, options: InitOptions): Promise<InitPrepare
     const applicable = session.neededToolConfigurations;
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     const detectedTools = [
-        ...new Set(existingTools.conflictingConfigFiles.map((configFile) => configFile.tool)),
+        ...new Set(repositorySetup.conflictingConfigFiles.map((configFile) => configFile.tool)),
     ].toSorted((a, b) => a.localeCompare(b));
     const detection: DetectionSummary = {
         files: repository.files,
         detected: initConfigurations.detected,
         scopes: initConfigurations.scopes,
-        existingTools,
+        repositorySetup,
         owned: detectedTools.filter((tool) => tools.has(tool)),
         unowned: detectedTools.filter((tool) => !tools.has(tool)),
         configurations,
         hasGit: repository.hasGit,
     };
     const generated = generate(session);
-    const conflicts = readConflictingConfigFiles(root, existingTools, tools, generated.managedKeys);
+    const conflicts = readConflictingConfigFiles(root, repositorySetup, tools, generated.managedKeys);
     const planning: InitScan = {
         reads,
         repository: session.repository,
         options,
-        existingTools,
+        repositorySetup,
         configurations: initConfigurations,
         everySelected,
         answers,
@@ -240,14 +240,14 @@ function writeInitFiles(root: string, prepared: InitPrepared): string[] {
  * Choose the CI provider from the existing files and the origin host.
  *
  * @param root the folder whose origin remote gives the host when no CI files exist.
- * @param existingTools the tool and CI files that init found.
+ * @param repositorySetup the tool and CI files that init found.
  * @returns the provider to propose, or none when the repository needs no workflow.
  */
-function detectCiProvider(root: string, existingTools: ExistingTools): InitAnswers['ci'] {
-    if (readLintJobs(root, existingTools.ci).length > 0) return 'none';
+function detectCiProvider(root: string, repositorySetup: RepositorySetup): InitAnswers['ci'] {
+    if (readLintJobs(root, repositorySetup.ci).length > 0) return 'none';
     let existing: InitAnswers['ci'] | undefined;
-    if (existingTools.ci.includes(GITLAB_CI_FILE)) existing = 'gitlab';
-    else if (existingTools.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) existing = 'github';
+    if (repositorySetup.ci.includes(GITLAB_CI_FILE)) existing = 'gitlab';
+    else if (repositorySetup.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) existing = 'github';
     if (existing !== undefined) return existing;
     const remote = readGitSetting(root, ORIGIN_URL_SETTING) ?? '';
     const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');

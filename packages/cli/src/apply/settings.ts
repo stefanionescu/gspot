@@ -17,7 +17,7 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { formatApplyReport, writeGeneratedFiles } from '#cli/apply/generated-files.ts';
 import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
-import type { Scope, SettingMatch, KnownSettings } from '#cli/types/settings/inheritance.ts';
+import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { assertKnownConfigurations, assertConfigurationsEditable } from '#cli/configurations/select.ts';
 
 import type {
@@ -131,26 +131,27 @@ export async function readSetting(
     prepared: PreparedSettingsEdit,
     key: string,
     scope: string | undefined,
-): Promise<{ known: KnownSettings; match: SettingMatch }> {
+): Promise<{ known: AvailableSettings; match: SettingMatch }> {
     if (['configurations', 'removed_configurations'].includes(key))
         throw new GspotError('arguments', 'Use gspot add or gspot remove to change configurations.');
     getScopeTable(prepared.input.table, scope);
     const { settings, reads } = prepared;
     const session = await openSession(prepared.root, { settingsFile: { settings, text: prepared.input.text }, reads });
-    const knownSettings = (session.scopes.find((entry) => entry.folder.path === (scope ?? '')) as Scope).knownSettings;
-    const match = findSetting(knownSettings, key);
+    const availableSettings = (session.scopes.find((entry) => entry.folder.path === (scope ?? '')) as Scope)
+        .availableSettings;
+    const match = findSetting(availableSettings, key);
     if (match === undefined) {
         const selectedScope = session.scopes.find(
             (entry) =>
                 Object.hasOwn(settings.scopes, entry.folder.path) &&
-                findSetting(entry.knownSettings, key) !== undefined,
+                findSetting(entry.availableSettings, key) !== undefined,
         )?.folder.path;
         if (selectedScope !== undefined)
             throw new GspotError(
                 'arguments',
                 `A configuration has the setting ${key} in the scope ${selectedScope}; add --scope ${quoteArgument(selectedScope)}.`,
             );
-        throw new GspotError('arguments', formatUnknownSetting(knownSettings, key));
+        throw new GspotError('arguments', formatUnknownSetting(availableSettings, key));
     }
-    return { known: knownSettings, match };
+    return { known: availableSettings, match };
 }

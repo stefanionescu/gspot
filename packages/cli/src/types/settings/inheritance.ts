@@ -1,7 +1,7 @@
-import type { PATH_ROLES } from '#cli/config/settings/known.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import type { PATH_ROLES } from '#cli/config/settings/available.ts';
 import type { ReasonNeeded } from '#cli/types/settings/definitions.ts';
 import type { SETTING_TYPES } from '#cli/config/settings/inheritance.ts';
 import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/file.ts';
@@ -30,7 +30,7 @@ export type Setting = {
 export type Scope = {
     folder: ScopeFolder;
     configurations: Configuration[];
-    knownSettings: KnownSettings;
+    availableSettings: AvailableSettings;
     settings: ScopeSettings;
 };
 
@@ -65,7 +65,7 @@ export type EffectiveValue = Pick<EffectiveSetting, 'value' | 'source' | 'origin
     reason: string | undefined;
 };
 
-export type KnownSettings = {
+export type AvailableSettings = {
     settings: Map<string, Setting>;
     defaults: Map<string, SettingDefault>;
     errors: { key: string; message: string }[];

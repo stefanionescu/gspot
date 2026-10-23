@@ -3,7 +3,7 @@ import { formatCount } from '#cli/system/text.ts';
 import { getColors } from '#cli/system/terminal.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
-import { readLintJobs } from '#cli/repository/existing/tools.ts';
+import { readLintJobs } from '#cli/repository/setup/tools.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
@@ -12,7 +12,7 @@ import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
-import { listMisePins, listToolProjectPins } from '#cli/configurations/declared-tools.ts';
+import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 
 import {
     type InitPlan,
@@ -52,11 +52,11 @@ function buildToolProjectRows(configurations: Configuration[]): InitPlan['change
 
 // Name the dependencies that the generated tool project pins. Keep your own dependency file.
 function buildPinnedDependencyRows(
-    { repository, existingTools }: InitScan,
+    { repository, repositorySetup }: InitScan,
     requirements: Configuration[],
 ): InitFileRow[] {
     const pinned = new Set(Object.keys(listToolProjectPins(requirements).npm));
-    return existingTools.toolOnlyPackages.flatMap((path) => {
+    return repositorySetup.toolOnlyPackages.flatMap((path) => {
         const packageJson = readPackageJson(repository.root, path) as PackageJson;
         const names = [
             ...new Set(
@@ -147,7 +147,7 @@ export function planInitFiles(
         generated,
     }: { settings: Settings; settingsText: string; requirements: Configuration[]; generated: GenerationResult },
 ): InitPlan {
-    const { repository, existingTools, answers, conflicts } = scan;
+    const { repository, repositorySetup, answers, conflicts } = scan;
     const { root, hasGit } = repository;
     const change = buildToolProjectRows(requirements);
     if (hasGit) {
@@ -178,11 +178,11 @@ export function planInitFiles(
         retained: [
             ...conflicts.retained,
             ...listSubmodulePaths(repository.index).map((path) => ({ path, note: 'submodule; init does not read it' })),
-            ...buildKeptCiRows(answers.ci, existingTools.ci, readLintJobs(root, existingTools.ci)),
+            ...buildKeptCiRows(answers.ci, repositorySetup.ci, readLintJobs(root, repositorySetup.ci)),
             ...scan.foreignDisableComments,
         ],
         change: [...change, ...conflicts.changed, ...buildPinnedDependencyRows(scan, requirements)],
-        noLongerRuns: existingTools.lintFolders.map((folder) => ({
+        noLongerRuns: repositorySetup.lintFolders.map((folder) => ({
             path: `${folder}/`,
             note: 'a folder of lint scripts; check remaining references before deleting it',
         })),
@@ -228,17 +228,17 @@ function formatDetectedScopes(summary: DetectionSummary): string | undefined {
 }
 
 function formatExistingTools(summary: DetectionSummary): (string | undefined)[] {
-    const { existingTools } = summary;
-    const hooks = existingTools.hooks.map(
+    const { repositorySetup } = summary;
+    const hooks = repositorySetup.hooks.map(
         (hook) => `${hook.path}/  ${hook.files.join(', ')} (${hook.kind === 'husky' ? 'husky' : 'your own'})`,
     );
-    const lint = existingTools.lintFolders.map((folder) => `${folder}/`);
+    const lint = repositorySetup.lintFolders.map((folder) => `${folder}/`);
     return [
         formatDetectionRow('hooks', hooks.length === 0 ? ['none'] : hooks),
-        formatDetectionRow('ci', existingTools.ci.length === 0 ? ['none'] : existingTools.ci),
+        formatDetectionRow('ci', repositorySetup.ci.length === 0 ? ['none'] : repositorySetup.ci),
         formatDetectionRow('agent files', [
-            ...existingTools.agentFiles,
-            ...existingTools.ruleFolders.map((folder) => `${folder}/`),
+            ...repositorySetup.agentFiles,
+            ...repositorySetup.ruleFolders.map((folder) => `${folder}/`),
         ]),
         formatDetectionRow('lint folders', lint.length === 0 ? [] : [...lint, 'old lint setup; gspot replaces it']),
     ];

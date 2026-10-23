@@ -1,11 +1,11 @@
 import { posix } from 'node:path';
 import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
+import { getTool } from '#cli/configurations/tools.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { getTool } from '#cli/configurations/declared-tools.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';

@@ -4,14 +4,14 @@ import { isDeepStrictEqual } from 'node:util';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
-import { listSettings, buildKnownSettings } from '#cli/settings/known.ts';
+import { listSettings, buildAvailableSettings } from '#cli/settings/available.ts';
 import type { CliReference, SettingVariant, CommandReference } from '../types/reference.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
 
 function groupSettingVariants(configurations: CliReference['configurations']): SettingVariant[] {
     const settings = new Map<string, SettingVariant[]>();
     const ownedSettings = [
-        ...[...buildKnownSettings([], 'recommended').settings.values()].map((setting) => ({
+        ...[...buildAvailableSettings([], 'recommended').settings.values()].map((setting) => ({
             setting,
             owner: 'gspot',
         })),

@@ -6,12 +6,12 @@ import { readCachedText } from '#cli/system/files/reads.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { listDistinctTools } from '#cli/configurations/tools.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 
 import {

@@ -1,5 +1,5 @@
 import type { Session } from '#cli/types/session.ts';
-import { listSettings } from '#cli/settings/known.ts';
+import { listSettings } from '#cli/settings/available.ts';
 import { selectRuleFiles } from '#cli/generation/agent-rules.ts';
 import { checkStageSchema } from '#cli/schemas/configurations/fields.ts';
 import { listRuleFiles, readConfigurations } from '#cli/configurations/manifests.ts';

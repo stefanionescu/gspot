@@ -2,9 +2,9 @@ import { posix } from 'node:path';
 import { linkSetting } from './settings.ts';
 import { formatCheckTable } from './checks.ts';
 import type { readCliReference } from './cli.ts';
+import { isInstalledByGspot } from '#cli/configurations/tools.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import type { CliReference, ReferencePage } from '../types/reference.ts';
-import { isInstalledByGspot } from '#cli/configurations/declared-tools.ts';
 import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../config/reference.ts';
 import { formatList, formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
 

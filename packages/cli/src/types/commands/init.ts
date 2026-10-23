@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
+import type { RepositorySetup } from '#cli/types/repository/setup.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
-import type { ExistingTools } from '#cli/types/repository/existing.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
@@ -11,7 +11,7 @@ export type InitScan = {
     reads: ReadCache;
     repository: Repository;
     options: InitOptions;
-    existingTools: ExistingTools;
+    repositorySetup: RepositorySetup;
     configurations: InitConfigurations;
     everySelected: Configuration[];
     answers: InitAnswers;
@@ -68,7 +68,7 @@ export type DetectionSummary = {
     files: TrackedFile[];
     detected: ConfigurationEvidence[];
     scopes: ScopeFolder[];
-    existingTools: ExistingTools;
+    repositorySetup: RepositorySetup;
     owned: string[];
     unowned: string[];
     configurations: Map<string, Configuration>;

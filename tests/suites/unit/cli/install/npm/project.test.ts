@@ -15,8 +15,8 @@ import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
-import { FAILED_INSTALL_CASES, PACKAGE_MANAGER_TIMEOUT } from '#tests/config/install/npm/tool-project.ts';
-import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from '#cli/install/npm/tool-project.ts';
+import { FAILED_INSTALL_CASES, PACKAGE_MANAGER_TIMEOUT } from '#tests/config/install/npm/project.ts';
+import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from '#cli/install/npm/project.ts';
 
 /**
  * Fake bun 1.4.2, and fail every other bun run.

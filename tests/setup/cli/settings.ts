@@ -3,8 +3,8 @@ import { GspotError } from '#cli/system/errors.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { type Level } from '#cli/types/configurations.ts';
 import { REPORT_SCRIPT } from '#tests/config/setup/cli.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
@@ -94,5 +94,10 @@ export function buildReportingCheck(
 /** Resolve the settings and configuration defaults that apply in one scope. */
 export function buildRootScopeSettings(settings: Settings, scopePath = ''): ScopeSettings {
     const configurations = selectForScope(settings, scopePath, readConfigurations());
-    return buildScopeSettings(buildKnownSettings(configurations, 'recommended'), settings, configurations, scopePath);
+    return buildScopeSettings(
+        buildAvailableSettings(configurations, 'recommended'),
+        settings,
+        configurations,
+        scopePath,
+    );
 }

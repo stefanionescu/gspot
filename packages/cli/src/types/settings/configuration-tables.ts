@@ -1,5 +1,5 @@
-import type { SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
 import type { COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
+import type { SPELLING_LOCALES } from '#cli/config/settings/configuration-tables.ts';
 
 /** One package version allowed under a license that the list does not allow. */
 type AllowedPackage = { name: string; version: string; reason: string };

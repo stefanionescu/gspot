@@ -83,7 +83,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
 function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson {
     const rows = scopes.flatMap((scope) => {
         const scopePath = scope.folder.path;
-        return listEffectiveSettings(scope.knownSettings, settings, scopePath)
+        return listEffectiveSettings(scope.availableSettings, settings, scopePath)
             .filter((entry) => scopePath === '' || entry.origin !== 'configuration')
             .map((entry) => ({
                 key: entry.key,

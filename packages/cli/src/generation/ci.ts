@@ -13,9 +13,9 @@ import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
 import { PROJECT_UV_LOCKFILE } from '#cli/config/install/python/project.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
+import { getTool, findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
 import { TOOL_BUILDS, NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
-import { getTool, findMisePin, findMissingBuild } from '#cli/configurations/declared-tools.ts';
 import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
 import {

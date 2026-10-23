@@ -1,15 +1,15 @@
 // Explain a check, or one lint rule of the tool that a check runs.
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
-import { listSettings } from '#cli/settings/known.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
+import { listSettings } from '#cli/settings/available.ts';
 import { RULE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { CommandCheck } from '#cli/types/settings/file.ts';
 import { selectRuleFiles } from '#cli/generation/agent-rules.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
 import type { CheckFacts, Explanation } from '#cli/types/commands/explain.ts';
-import { getTool, getToolName, extractRulePrefix } from '#cli/configurations/declared-tools.ts';
+import { getTool, getToolName, extractRulePrefix } from '#cli/configurations/tools.ts';
 import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
 import { type Tool, type Check, type KnownCheck, type Configuration } from '#cli/types/configurations.ts';
 

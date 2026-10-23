@@ -38,7 +38,7 @@ import {
     PACKAGE_MANAGER_ARGUMENTS,
     NPM_CONFIG_FOLDER_VARIABLE,
     YARN_SETTINGS_FILE_VARIABLE,
-} from '#cli/config/install/npm/tool-project.ts';
+} from '#cli/config/install/npm/project.ts';
 
 // Resolve in a temporary folder, and keep repository credentials out of the portable result.
 async function createNpmLockfile(

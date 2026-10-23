@@ -4,7 +4,7 @@ import type { LimitSchemas } from '#cli/types/settings/definitions.ts';
 import { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
 import { wholeNumber, allowReasonedValue } from '#cli/schemas/settings/fields.ts';
 import { type WrittenLimits, type TableSettings } from '#cli/types/settings/file.ts';
-import { type LimitLanguage, type LanguageLimitField } from '#cli/types/settings/tables.ts';
+import { type LimitLanguage, type LanguageLimitField } from '#cli/types/settings/values.ts';
 
 const limitFields = Object.fromEntries(
     Object.entries(LIMIT_DEFINITIONS).map(([key, definition]) => [

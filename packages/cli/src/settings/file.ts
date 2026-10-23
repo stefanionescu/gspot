@@ -10,7 +10,7 @@ import { planReplacement } from '#cli/apply/write-plans.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { FileContents } from '#cli/types/system/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import type { ReasonedValue } from '#cli/types/settings/tables.ts';
+import type { ReasonedValue } from '#cli/types/settings/values.ts';
 import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
 import { SETTINGS_FILE, PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
 

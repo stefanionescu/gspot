@@ -9,9 +9,9 @@ import { classifyFile } from '#cli/repository/files/classify.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning/files.ts';
+import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 import type { Check, KnownCheck, Configuration } from '#cli/types/configurations.ts';
 import type { ToolIgnore, PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 

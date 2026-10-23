@@ -6,12 +6,12 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
 import type { Level } from '#cli/types/configurations.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildScopeNamingSettings } from '#tests/setup/cli/naming.ts';
-import type { KnownSettings } from '#cli/types/settings/inheritance.ts';
+import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 import { findSetting, getSettingValue, listEffectiveSettings } from '#cli/settings/inherit.ts';
 
@@ -24,14 +24,14 @@ import {
 
 test('[naming.css] and [naming.html.folders] accept max_words, max_characters, and cases', () => {
     const settings = parseSettings(CSS_HTML_NAMING_SETTINGS, undefined);
-    const knownSettings = buildSelectedKnownSettings(['css', 'html', 'naming']);
+    const availableSettings = buildSelectedAvailableSettings(['css', 'html', 'naming']);
     for (const table of ['naming.css', 'naming.css.files', 'naming.html.folders']) {
         for (const [name, value] of Object.entries({ max_words: 3, max_characters: 20, cases: ['kebab'] })) {
-            expect(getSettingValue(knownSettings, settings, `${table}.${name}`)?.value).toStrictEqual(value);
+            expect(getSettingValue(availableSettings, settings, `${table}.${name}`)?.value).toStrictEqual(value);
         }
     }
-    expect(findSetting(knownSettings, 'naming.css.functions.max_words')).toBeUndefined();
-    expect(findSetting(knownSettings, 'naming.html.types.max_characters')).toBeUndefined();
+    expect(findSetting(availableSettings, 'naming.css.functions.max_words')).toBeUndefined();
+    expect(findSetting(availableSettings, 'naming.html.types.max_characters')).toBeUndefined();
 });
 
 test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {
@@ -79,23 +79,23 @@ test('an empty PurgeCSS safelist is inherited, and a scope value applies to its 
 });
 
 test('two configurations with different defaults are an error until gspot.toml sets the value', () => {
-    const knownSettings = CONFLICTING_SETTINGS;
+    const availableSettings = CONFLICTING_SETTINGS;
 
     const source = buildSandboxSettings(['sql'], { rules: true });
     const settings = parseSettings(source, undefined);
-    expect(validateKeys(knownSettings, settings, new Map(), buildSelectedKnownSettings([]))).toStrictEqual([
+    expect(validateKeys(availableSettings, settings, new Map(), buildSelectedAvailableSettings([]))).toStrictEqual([
         ...CONFLICTING_DEFAULT_ERRORS,
     ]);
     const corrected = parseSettings(`${source}[tools.sqlfluff]\ndialect = "sqlite"\n`, undefined);
-    expect(validateKeys(knownSettings, corrected, new Map(), buildSelectedKnownSettings([]))).toStrictEqual([]);
-    expect(getSettingValue(knownSettings, corrected, 'tools.sqlfluff.dialect')).toMatchObject({
+    expect(validateKeys(availableSettings, corrected, new Map(), buildSelectedAvailableSettings([]))).toStrictEqual([]);
+    expect(getSettingValue(availableSettings, corrected, 'tools.sqlfluff.dialect')).toMatchObject({
         value: 'sqlite',
         source: 'gspot.toml',
     });
 });
 
 test('the conflict is reported at the scope that selects both configurations', () => {
-    const knownSettings = CONFLICTING_SETTINGS;
+    const availableSettings = CONFLICTING_SETTINGS;
 
     const settings = parseSettings(
         buildSandboxSettings([], { rules: true, scopes: [{ path: 'db', configurations: ['sql'] }] }),
@@ -103,16 +103,16 @@ test('the conflict is reported at the scope that selects both configurations', (
     );
     expect(
         validateKeys(
-            buildSelectedKnownSettings([]),
+            buildSelectedAvailableSettings([]),
             settings,
-            new Map([['db', knownSettings]]),
-            buildSelectedKnownSettings([]),
+            new Map([['db', availableSettings]]),
+            buildSelectedAvailableSettings([]),
         ),
-    ).toStrictEqual([{ path: ['scope', 0, 'configurations'], message: knownSettings.errors[0]!.message }]);
+    ).toStrictEqual([{ path: ['scope', 0, 'configurations'], message: availableSettings.errors[0]!.message }]);
 });
 
 test('a scope value settles the scopes below it, and a sibling scope still reports the conflict', () => {
-    const knownSettings = CONFLICTING_SETTINGS;
+    const availableSettings = CONFLICTING_SETTINGS;
 
     const settings = parseSettings(
         buildSandboxSettings([], {
@@ -121,43 +121,43 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
         }),
         undefined,
     );
-    const scopes = new Map(Object.keys(settings.scopes).map((path) => [path, knownSettings]));
+    const scopes = new Map(Object.keys(settings.scopes).map((path) => [path, availableSettings]));
     expect(
-        validateKeys(buildSelectedKnownSettings([]), settings, scopes, buildSelectedKnownSettings([])),
-    ).toStrictEqual([{ path: ['scope', 2, 'configurations'], message: knownSettings.errors[0]!.message }]);
-    expect(getSettingValue(knownSettings, settings, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
+        validateKeys(buildSelectedAvailableSettings([]), settings, scopes, buildSelectedAvailableSettings([])),
+    ).toStrictEqual([{ path: ['scope', 2, 'configurations'], message: availableSettings.errors[0]!.message }]);
+    expect(getSettingValue(availableSettings, settings, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
         value: 'sqlite',
         source: '[scope "app"]',
     });
 });
 
 test("a written false overrides a configuration's true default", () => {
-    const knownSettings = buildSelectedKnownSettings(['postgres']);
+    const availableSettings = buildSelectedAvailableSettings(['postgres']);
     const source = buildSandboxSettings(['postgres'], { rules: true });
     const settings = parseSettings(source, undefined);
-    expect(getSettingValue(knownSettings, settings, 'tools.squawk.assume_in_transaction')).toMatchObject({
+    expect(getSettingValue(availableSettings, settings, 'tools.squawk.assume_in_transaction')).toMatchObject({
         value: true,
         source: 'configuration postgres',
     });
     const corrected = parseSettings(`${source}[tools.squawk]\nassume_in_transaction = false\n`, undefined);
-    expect(getSettingValue(knownSettings, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
+    expect(getSettingValue(availableSettings, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
         value: false,
         source: 'gspot.toml',
     });
 });
 
 test('an inherited default names the configuration that declares it', () => {
-    const knownSettings = buildSelectedKnownSettings(['supabase']);
+    const availableSettings = buildSelectedAvailableSettings(['supabase']);
     const settings = parseSettings(buildSandboxSettings(['supabase'], { rules: true }), undefined);
-    expect(validateKeys(knownSettings, settings, new Map(), buildSelectedKnownSettings([]))).toStrictEqual([]);
-    expect(getSettingValue(knownSettings, settings, 'tools.sqlfluff.dialect')).toMatchObject({
+    expect(validateKeys(availableSettings, settings, new Map(), buildSelectedAvailableSettings([]))).toStrictEqual([]);
+    expect(getSettingValue(availableSettings, settings, 'tools.sqlfluff.dialect')).toMatchObject({
         value: 'postgres',
         source: 'configuration postgres',
     });
 });
 
 test('a per-language key maps to its base setting', () => {
-    const baseKnown = buildSelectedKnownSettings(['structure', 'bash', 'naming', 'format', 'prose']);
+    const baseKnown = buildSelectedAvailableSettings(['structure', 'bash', 'naming', 'format', 'prose']);
 
     expect(findSetting(baseKnown, 'limits.bash.function_lines')?.setting.name).toBe('limits.function_lines');
     expect(findSetting(baseKnown, 'limits.python.file_lines')?.language).toBe('python');
@@ -166,10 +166,10 @@ test('a per-language key maps to its base setting', () => {
 });
 
 test('limits that no check reads are refused', () => {
-    const knownSettings = buildSelectedKnownSettings(['structure', 'sql', 'bash']);
-    expect(findSetting(knownSettings, 'limits.sql.function_lines')).toBeUndefined();
-    expect(findSetting(knownSettings, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
-    expect(findSetting(knownSettings, 'limits.sql.function_parameters')).toBeUndefined();
+    const availableSettings = buildSelectedAvailableSettings(['structure', 'sql', 'bash']);
+    expect(findSetting(availableSettings, 'limits.sql.function_lines')).toBeUndefined();
+    expect(findSetting(availableSettings, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
+    expect(findSetting(availableSettings, 'limits.sql.function_parameters')).toBeUndefined();
     const errors = validateSettingsText(
         buildSandboxSettings(['sql', 'bash'], {
             rules: true,
@@ -183,7 +183,7 @@ test('limits that no check reads are refused', () => {
 });
 
 test('a value comes from the configuration default, then the root table, then the scope table', () => {
-    const baseKnown = buildSelectedKnownSettings(['structure', 'bash', 'naming', 'format', 'prose']);
+    const baseKnown = buildSelectedAvailableSettings(['structure', 'bash', 'naming', 'format', 'prose']);
 
     const settings = parseSettings(
         buildSandboxSettings(['bash'], {
@@ -207,7 +207,7 @@ test('list defaults add up across configurations before root and scope additions
             defaults: { 'naming.banned_words': terms },
         });
     }
-    const defaults = buildKnownSettings(configurations, 'recommended');
+    const defaults = buildAvailableSettings(configurations, 'recommended');
     const settings = parseSettings(
         buildSandboxSettings(['naming'], {
             rules: true,
@@ -222,12 +222,12 @@ test('list defaults add up across configurations before root and scope additions
         'handler',
     ]);
     expect(
-        validateKeys(defaults, settings, new Map([['api', defaults]]), buildSelectedKnownSettings([])),
+        validateKeys(defaults, settings, new Map([['api', defaults]]), buildSelectedAvailableSettings([])),
     ).toStrictEqual([]);
 });
 
 test("a scope's rules keep other rules and replace the whole options of the same rule", () => {
-    const knownSettings = buildSelectedKnownSettings(['css']);
+    const availableSettings = buildSelectedAvailableSettings(['css']);
     const settings = parseSettings(
         buildSandboxSettings(['css'], {
             rules: true,
@@ -235,11 +235,11 @@ test("a scope's rules keep other rules and replace the whole options of the same
         }),
         undefined,
     );
-    expect(getSettingValue(knownSettings, settings, 'tools.stylelint.rules', 'app')?.value).toStrictEqual({
+    expect(getSettingValue(availableSettings, settings, 'tools.stylelint.rules', 'app')?.value).toStrictEqual({
         'selector-max-id': 0,
         'color-named': ['always-where-possible'],
     });
-    expect(getSettingValue(knownSettings, settings, 'tools.stylelint.rules')?.value).toStrictEqual({
+    expect(getSettingValue(availableSettings, settings, 'tools.stylelint.rules')?.value).toStrictEqual({
         'selector-max-id': 0,
         'color-named': ['never', { severity: 'error' }],
     });
@@ -251,18 +251,18 @@ test('a naming category takes its shipped cases as its default, so gspot.toml ma
     });
     const settings = parseSettings(text, undefined);
     const configurations = selectConfigurations(['typescript', 'naming'], readConfigurations());
-    const knownSettings = buildKnownSettings(configurations, 'recommended');
+    const availableSettings = buildAvailableSettings(configurations, 'recommended');
     const key = 'naming.typescript.files.cases';
     const defaults = parseSettings(buildSandboxSettings(['typescript']), undefined);
-    expect(getSettingValue(knownSettings, defaults, key)?.value).toStrictEqual(['kebab']);
-    expect(getSettingValue(knownSettings, settings, key)?.value).toStrictEqual(['kebab']);
-    expect(listEffectiveSettings(knownSettings, settings).find((entry) => entry.key === key)?.value).toStrictEqual([
+    expect(getSettingValue(availableSettings, defaults, key)?.value).toStrictEqual(['kebab']);
+    expect(getSettingValue(availableSettings, settings, key)?.value).toStrictEqual(['kebab']);
+    expect(listEffectiveSettings(availableSettings, settings).find((entry) => entry.key === key)?.value).toStrictEqual([
         'kebab',
     ]);
     expect(buildScopeNamingSettings(text).limitsFor('typescript', 'files').caseNames).toStrictEqual(['kebab']);
 });
 
 /** Read the defaults and declarations of the selected configurations at one level. */
-function buildSelectedKnownSettings(configurations: string[], level: Level = 'recommended'): KnownSettings {
-    return buildKnownSettings(selectConfigurations(configurations, readConfigurations()), level);
+function buildSelectedAvailableSettings(configurations: string[], level: Level = 'recommended'): AvailableSettings {
+    return buildAvailableSettings(selectConfigurations(configurations, readConfigurations()), level);
 }

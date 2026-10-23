@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { type Session } from '#cli/types/session.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { getTool } from '#cli/configurations/tools.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { getTool } from '#cli/configurations/declared-tools.ts';
 import { listChecksById } from '#cli/configurations/manifests.ts';
 import type { ConfigurationCheck } from '#cli/types/configurations.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';

@@ -1,10 +1,10 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { getTool } from '#cli/configurations/tools.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { captureThrow } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildNpmProject } from '#cli/generation/tool-projects.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };

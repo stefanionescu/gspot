@@ -1,15 +1,17 @@
 import { z } from 'zod';
+import { ciSchema } from '#cli/schemas/settings/ci.ts';
 import { type SchemaShape } from '#cli/types/shapes.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
+import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
+import { rulesSchema } from '#cli/schemas/settings/rules.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { SETTINGS_EXAMPLES, NAMED_FINDING_CHECKS } from '#cli/config/settings/file.ts';
 import { levelSchema, commandCheckFields } from '#cli/schemas/configurations/fields.ts';
-import { ciSchema, hooksSchema, rulesSchema } from '#cli/schemas/settings/integrations.ts';
-import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { type WrittenScope, type ParsedSettings, type WrittenSettings } from '#cli/types/settings/file.ts';
+import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/configuration-tables.ts';
 
 import {
     formatSchema,

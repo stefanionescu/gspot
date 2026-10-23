@@ -2,7 +2,7 @@ import type { Check } from '#cli/types/configurations.ts';
 import type { FindingPlace } from '#cli/types/runs/check.ts';
 import type { SqlFile } from '#cli/types/parsers/code/sql.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import type { NamingCase, NamedCategory } from '#cli/types/settings/tables.ts';
+import type { NamingCase, NamedCategory } from '#cli/types/settings/naming.ts';
 
 /** A banned word split into parts, with where it came from. */
 export type BannedWord = { word: string; parts: string[]; setting: string; group?: string; categories?: string[] };

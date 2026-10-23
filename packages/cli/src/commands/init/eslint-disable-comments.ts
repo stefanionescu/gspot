@@ -1,6 +1,6 @@
 import type { Session } from '#cli/types/session.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { extractRulePrefix } from '#cli/configurations/declared-tools.ts';
+import { extractRulePrefix } from '#cli/configurations/tools.ts';
 import { DIRECTIVE_TAIL, CODE_FILE_TAGS, ESLINT_DIRECTIVE } from '#cli/config/commands/init/eslint-disable-comments.ts';
 
 /**

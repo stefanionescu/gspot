@@ -142,12 +142,12 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
         );
     const edit = prepareSettingsEdit(options.cwd);
     const { root, input, settings } = edit;
-    const { known: knownSettings, match } = await readSetting(edit, options.key, options.scope);
+    const { known: availableSettings, match } = await readSetting(edit, options.key, options.scope);
     const setting = match.setting;
     const change =
         setting.reason_values === true ? parseReasonEntries(options) : parseSettingValue(options.values, setting);
-    const previous = getSettingValue(knownSettings, settings, options.key, options.scope);
-    const shippedDefault = findSettingDefault(knownSettings, settings, match, options.scope)?.value;
+    const previous = getSettingValue(availableSettings, settings, options.key, options.scope);
+    const shippedDefault = findSettingDefault(availableSettings, settings, match, options.scope)?.value;
     assertCompleteReason({ options, setting, change, previous, shippedDefault });
     assertReasonNeeded({ options, setting, change, shippedDefault });
     const summary = formatSettingChange(change, {

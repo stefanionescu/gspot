@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import type { NamedCategory } from '#cli/types/settings/tables.ts';
+import type { NamedCategory } from '#cli/types/settings/naming.ts';
 import type { Identifier, FileIdentifiers } from '#cli/types/checks/general/naming.ts';
 import { CATEGORY_LABELS } from '#cli/config/checks/general/naming/languages/identifier.ts';
 

@@ -4,12 +4,12 @@ import type { Session } from '#cli/types/session.ts';
 import { listHookNames } from '#cli/generation/hooks.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { readHooks } from '#cli/repository/existing/tools.ts';
+import { readHooks } from '#cli/repository/setup/tools.ts';
 import { statSync, readdirSync, readFileSync } from 'node:fs';
 import { type Repository } from '#cli/types/repository/files.ts';
-import { type ExistingTools } from '#cli/types/repository/existing.ts';
+import { type RepositorySetup } from '#cli/types/repository/setup.ts';
 import type { HookPlan, HookStatus } from '#cli/types/install/hooks.ts';
-import { HOOKS_PATH_SETTING } from '#cli/config/repository/existing/tools.ts';
+import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup/tools.ts';
 import { readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git.ts';
 import { LFS_HOOKS, HOOK_CHECKS, HOOK_SHEBANG, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
 import { LFS_PUSH_CALLS, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install/hooks.ts';
@@ -26,7 +26,7 @@ function isLfsHookScript(folder: string, name: string): boolean {
 
 // Find the hooks that another setup in this clone runs: another hooks folder, a hook tool,
 // or scripts in the default Git hooks folder.
-function readForeignHooks(root: string, own: string): ExistingTools['hooks'] {
+function readForeignHooks(root: string, own: string): RepositorySetup['hooks'] {
     const found = readHooks(root).filter((hook) => !(hook.kind === 'hooksPath' && hook.path === own));
     const folder = readHooksFolder(root);
     if (
@@ -50,7 +50,7 @@ function readForeignHooks(root: string, own: string): ExistingTools['hooks'] {
 }
 
 // List the commands that another hook setup must run. Install and the status line share this text.
-function formatForeignHooks(hooks: ExistingTools['hooks'], session: Session): string {
+function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): string {
     const runner = session.startRunner;
     const names = listHookNames(session.configuredChecks);
     const lines = names.map((name) => `  ${name}: ${runner.command} ${HOOK_CHECKS[name].arguments}`);

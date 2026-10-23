@@ -1,17 +1,17 @@
 import { z } from 'zod';
 import { selectForScope } from '#cli/settings/scopes.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { LimitLanguage } from '#cli/types/settings/tables.ts';
+import type { LimitLanguage } from '#cli/types/settings/values.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
-import { type KnownSettings } from '#cli/types/settings/inheritance.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import type { WrittenConfiguration } from '#cli/types/configurations.ts';
 import { listUnknownConfigurations } from '#cli/configurations/select.ts';
+import { type AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { validateSettingReasons } from '#cli/settings/validation/reasons.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 import { SETTINGS_REFERENCE_URL } from '#cli/config/settings/validation/schema.ts';
@@ -109,21 +109,22 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
     if (unknown.length > 0) throwErrors(unknown);
     const bundledChecks = listCheckIds([]);
     const checks = listCheckIds(Object.values(settings.commandChecks));
-    const knownBySelection = new Map<string, KnownSettings>();
+    const knownBySelection = new Map<string, AvailableSettings>();
     const scopes = new Map(
         ['', ...Object.keys(settings.scopes)].map((scope) => {
             const selected = selectForScope(settings, scope, configurations);
             const key = JSON.stringify(selected.map((configuration) => configuration.name));
             let known = knownBySelection.get(key);
             if (known === undefined) {
-                known = buildKnownSettings(selected, settings.level);
+                known = buildAvailableSettings(selected, settings.level);
                 knownBySelection.set(key, known);
             }
             return [scope, known];
         }),
     );
-    const rootKeys = scopes.get('') as KnownSettings;
+    const rootKeys = scopes.get('') as AvailableSettings;
     scopes.delete('');
+    const allSettings = buildAvailableSettings([...configurations.values()], settings.level);
     const errors: SettingsError[] = [
         ...validateSettingReasons(settings),
         ...validateSettingRules(settings),
@@ -150,7 +151,7 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
         ...validateRuleExcludes(settings.rules.exclude, configurations),
         ...(repositoryRoot === undefined ? [] : validateScopePaths(repositoryRoot, settings)),
         ...(repositoryRoot === undefined ? [] : validateRuleFilePaths(repositoryRoot, settings)),
-        ...validateKeys(rootKeys, settings, scopes, buildKnownSettings([...configurations.values()], settings.level)),
+        ...validateKeys(rootKeys, settings, scopes, allSettings),
     ];
     if (errors.length > 0) throwErrors(errors);
 }

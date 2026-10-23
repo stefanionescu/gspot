@@ -2,16 +2,16 @@ import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import type { Check } from '#cli/types/configurations.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import { classifyToolVersion } from '#cli/tools/versions.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { EACH_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
-import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { readPresets } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
 
@@ -106,7 +106,7 @@ test('each tool has a pin or a min_version, and no pin is below its min_version'
 
 test('each shipped check whose command uses a setting with an empty default waits for that setting with when.setting', () => {
     const configurations = [...readConfigurations().values()];
-    const declarations = buildKnownSettings(configurations, 'all').settings;
+    const declarations = buildAvailableSettings(configurations, 'all').settings;
     const mismatches = configurations.flatMap((configuration) =>
         configuration.checks.flatMap((check) => listSettingMismatches(check, declarations)),
     );
@@ -115,7 +115,7 @@ test('each shipped check whose command uses a setting with an empty default wait
 
 test('every default names a declared setting', () => {
     const configurations = [...readConfigurations().values()];
-    const declarations = buildKnownSettings(configurations, 'all').settings;
+    const declarations = buildAvailableSettings(configurations, 'all').settings;
     expect(
         configurations.flatMap((configuration) =>
             Object.keys(configuration.defaults)

@@ -1,7 +1,7 @@
 // Reports the system and its tool builds, and fakes the system for tests.
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { getTool, findMissingBuild } from '#cli/configurations/declared-tools.ts';
+import { getTool, findMissingBuild } from '#cli/configurations/tools.ts';
 
 /** Whether the tests run on Windows. */
 export const isWindows = process.platform === 'win32';

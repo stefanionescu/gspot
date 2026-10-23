@@ -7,7 +7,7 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { readHooks, readLintJobs, readExistingTools } from '#cli/repository/existing/tools.ts';
+import { readHooks, readLintJobs, readRepositorySetup } from '#cli/repository/setup/tools.ts';
 
 import {
     HUSKY_STUBS,
@@ -20,13 +20,13 @@ import {
     LINKED_RUFF_SECTION,
     PRETTIER_SETTINGS_FILES,
     SIMPLE_GIT_HOOKS_PACKAGES,
-} from '#tests/config/repository/existing.ts';
+} from '#tests/config/repository/setup.ts';
 
 test('tool discovery finds nested config files and skips root .gspot and vendored folders', async () => {
     await using sandbox = await testdir(PRETTIER_SETTINGS_FILES);
 
     const repository = await readTestRepository(sandbox.path);
-    const discovered = readExistingTools(createReadCache(sandbox.path), {
+    const discovered = readRepositorySetup(createReadCache(sandbox.path), {
         files: repository.files,
         dependencyFiles: [],
     });
@@ -53,8 +53,8 @@ test('tool discovery reads tool sections through a link inside the repository', 
     const source = '[tool.ruff]\nline-length = 100\n';
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
-    const existingTools = readExistingTools(createReadCache(sandbox.path), { files: [], dependencyFiles: [] });
-    expect(existingTools.conflictingConfigFiles).toStrictEqual([LINKED_RUFF_SECTION]);
+    const repositorySetup = readRepositorySetup(createReadCache(sandbox.path), { files: [], dependencyFiles: [] });
+    expect(repositorySetup.conflictingConfigFiles).toStrictEqual([LINKED_RUFF_SECTION]);
 });
 
 test.each([...LINKED_RULE_FOLDERS])(
@@ -68,14 +68,14 @@ test.each([...LINKED_RULE_FOLDERS])(
         const root = join(sandbox.path, 'project');
         await mkdir(dirname(join(root, path)), { recursive: true });
         await symlink(join(sandbox.path, 'outside'), join(root, path), 'dir');
-        expect(readExistingTools(createReadCache(root), { files: [], dependencyFiles: [] }).ruleFolders).toStrictEqual([
-            path,
-        ]);
+        expect(
+            readRepositorySetup(createReadCache(root), { files: [], dependencyFiles: [] }).ruleFolders,
+        ).toStrictEqual([path]);
         await unlink(join(root, path));
         await createFileTree(root, { [`${path}/guide.md`]: 'authored rules\n' });
-        expect(readExistingTools(createReadCache(root), { files: [], dependencyFiles: [] }).ruleFolders).toStrictEqual([
-            path,
-        ]);
+        expect(
+            readRepositorySetup(createReadCache(root), { files: [], dependencyFiles: [] }).ruleFolders,
+        ).toStrictEqual([path]);
     },
 );
 test('hook discovery keeps spaces in core.hooksPath and refuses a broken Git configuration', async () => {

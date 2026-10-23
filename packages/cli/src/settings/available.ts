@@ -7,8 +7,8 @@ import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
-import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
-import { type Setting, type KnownSettings, type SettingDefault } from '#cli/types/settings/inheritance.ts';
+import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/configuration-tables.ts';
+import { type Setting, type SettingDefault, type AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 import {
     PATH_ROLES,
@@ -16,7 +16,7 @@ import {
     OPENNEXT_PACKAGE,
     OVERRIDING_GROUPS,
     OPENNEXT_TYPE_DEFAULTS,
-} from '#cli/config/settings/known.ts';
+} from '#cli/config/settings/available.ts';
 
 function getSchemaPathRole(schema: z.core.JSONSchema.JSONSchema): unknown {
     if (schema['path_role'] !== undefined) return schema['path_role'];
@@ -30,18 +30,18 @@ function isScalarConflict(previous: SettingDefault, configuration: Configuration
     return !OVERRIDING_GROUPS.has(configuration.group);
 }
 
-function addDefault(knownSettings: KnownSettings, configuration: Configuration, setting: Setting): void {
+function addDefault(availableSettings: AvailableSettings, configuration: Configuration, setting: Setting): void {
     if (setting.default === undefined) return;
-    const previous = knownSettings.defaults.get(setting.name);
-    const isList = knownSettings.settings.get(setting.name)?.type === 'list';
+    const previous = availableSettings.defaults.get(setting.name);
+    const isList = availableSettings.settings.get(setting.name)?.type === 'list';
     if (!isList && previous !== undefined && isScalarConflict(previous, configuration, setting)) {
-        knownSettings.errors.push({
+        availableSettings.errors.push({
             key: setting.name,
             message: `The configurations ${previous.configuration} and ${configuration.name} set ${setting.name} to different values. Set it yourself in gspot.toml to decide.`,
         });
         return;
     }
-    knownSettings.defaults.set(setting.name, {
+    availableSettings.defaults.set(setting.name, {
         value: isList ? mergeValue(setting, previous?.value, setting.default) : setting.default,
         configuration: configuration.name,
     });
@@ -49,29 +49,33 @@ function addDefault(knownSettings: KnownSettings, configuration: Configuration, 
 
 // Add the settings of one configuration and their defaults, then its [defaults] for settings that other configurations
 // declare. Those apply only while the repository selects that configuration.
-function addConfigurationSettings(knownSettings: KnownSettings, configuration: Configuration, level: Level): void {
+function addConfigurationSettings(
+    availableSettings: AvailableSettings,
+    configuration: Configuration,
+    level: Level,
+): void {
     const isAll = level === 'all';
     const settings = listSettings(configuration.name).map((declared) =>
         isAll && declared.default_all !== undefined ? { ...declared, default: declared.default_all } : declared,
     );
     for (const setting of settings) {
-        if (!knownSettings.settings.has(setting.name)) knownSettings.settings.set(setting.name, setting);
-        addDefault(knownSettings, configuration, setting);
+        if (!availableSettings.settings.has(setting.name)) availableSettings.settings.set(setting.name, setting);
+        addDefault(availableSettings, configuration, setting);
     }
     for (const setting of settings.filter((entry) => entry.language_defaults !== undefined)) {
         const [table, field] = setting.name.split('.');
         const languageDefaults = setting.language_defaults as NonNullable<Setting['language_defaults']>;
         for (const [language, value] of Object.entries(languageDefaults))
-            knownSettings.defaults.set(`${table as string}.${language}.${field as string}`, {
+            availableSettings.defaults.set(`${table as string}.${language}.${field as string}`, {
                 value,
                 configuration: configuration.name,
             });
     }
     const overrides = Object.entries(configuration.defaults)
-        .map(([name, value]) => ({ setting: knownSettings.settings.get(name), value }))
+        .map(([name, value]) => ({ setting: availableSettings.settings.get(name), value }))
         .filter((entry): entry is typeof entry & { setting: Setting } => entry.setting !== undefined);
     for (const { setting, value } of overrides)
-        addDefault(knownSettings, configuration, { ...setting, default: value });
+        addDefault(availableSettings, configuration, { ...setting, default: value });
 }
 
 // Map a JSON Schema type to the setting type that gspot list settings shows.
@@ -127,28 +131,28 @@ const TOOL_SETTINGS: Map<string, Setting[]> = new Map(
  * @param level picks the recommended or all defaults.
  * @returns the settings, their defaults, and the conflicts found on the way.
  */
-export function buildKnownSettings(configurations: Configuration[], level: Level): KnownSettings {
+export function buildAvailableSettings(configurations: Configuration[], level: Level): AvailableSettings {
     const roots = ROOT_SETTINGS;
     const settingsByTool = TOOL_SETTINGS;
 
-    const knownSettings: KnownSettings = { settings: new Map(), defaults: new Map(), errors: [] };
+    const availableSettings: AvailableSettings = { settings: new Map(), defaults: new Map(), errors: [] };
     for (const setting of roots) {
-        knownSettings.settings.set(setting.name, setting);
-        knownSettings.defaults.set(setting.name, { value: setting.default, configuration: 'gspot default' });
+        availableSettings.settings.set(setting.name, setting);
+        availableSettings.defaults.set(setting.name, { value: setting.default, configuration: 'gspot default' });
     }
     for (const [language, { categories }] of Object.entries(readNamingDefaults().languages))
         for (const [category, { cases }] of Object.entries(categories))
-            knownSettings.defaults.set(`naming.${language}.${category}.cases`, {
+            availableSettings.defaults.set(`naming.${language}.${category}.cases`, {
                 value: cases,
                 configuration: 'gspot default',
             });
-    for (const configuration of configurations) addConfigurationSettings(knownSettings, configuration, level);
+    for (const configuration of configurations) addConfigurationSettings(availableSettings, configuration, level);
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     for (const [, settings] of [...settingsByTool].filter(([tool]) => tools.has(tool))) {
-        for (const setting of settings.filter((entry) => !knownSettings.settings.has(entry.name)))
-            knownSettings.settings.set(setting.name, setting);
+        for (const setting of settings.filter((entry) => !availableSettings.settings.has(entry.name)))
+            availableSettings.settings.set(setting.name, setting);
     }
-    return knownSettings;
+    return availableSettings;
 }
 
 /**
@@ -188,25 +192,25 @@ export function listSettings(configuration: string): Setting[] {
 /**
  * Apply defaults detected from the package manager and project dependencies.
  *
- * @param knownSettings the mutable defaults of the selected configurations.
+ * @param availableSettings the mutable defaults of the selected configurations.
  * @param detected the package manager and dependency names of the scope.
  * @param detected.packageManagerName the package manager when the scope holds a site build default.
  * @param detected.dependencyNames the package names recorded in the scope.
  */
 export function applyDetectedDefaults(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     detected: { packageManagerName: string | undefined; dependencyNames: string[] },
 ): void {
-    const build = knownSettings.defaults.get('site.build_command');
+    const build = availableSettings.defaults.get('site.build_command');
     if (build !== undefined && detected.packageManagerName !== undefined)
-        knownSettings.defaults.set('site.build_command', {
+        availableSettings.defaults.set('site.build_command', {
             ...build,
             value: [detected.packageManagerName, ...BUILD_SCRIPT],
         });
     if (detected.dependencyNames.includes(OPENNEXT_PACKAGE)) {
         for (const [name, value] of Object.entries(OPENNEXT_TYPE_DEFAULTS)) {
-            const held = knownSettings.defaults.get(name);
-            if (held !== undefined) knownSettings.defaults.set(name, { ...held, value });
+            const held = availableSettings.defaults.get(name);
+            if (held !== undefined) availableSettings.defaults.set(name, { ...held, value });
         }
     }
 }

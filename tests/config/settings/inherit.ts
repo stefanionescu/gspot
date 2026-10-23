@@ -1,7 +1,7 @@
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import type { KnownSettings } from '#cli/types/settings/inheritance.ts';
+import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 /** The error of two configurations with different defaults. */
 export const CONFLICTING_DEFAULT_ERRORS = [
@@ -29,7 +29,7 @@ removed_configurations = { value = ["site"], reason = "This scope does not use t
 const sqlConfiguration = readConfigurations().get('sql') as Configuration;
 
 /** Two configuration defaults that disagree on the SQL dialect. */
-export const CONFLICTING_SETTINGS: KnownSettings = buildKnownSettings(
+export const CONFLICTING_SETTINGS: AvailableSettings = buildAvailableSettings(
     [
         sqlConfiguration,
         {

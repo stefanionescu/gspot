@@ -1,7 +1,7 @@
 import type { Tool } from '#cli/types/configurations.ts';
 import { CLI_REFERENCE, type readCliReference } from './cli.ts';
+import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
-import { getTool, getToolName } from '#cli/configurations/declared-tools.ts';
 import type { GuideCheck, CliReference, ReferencePage } from '../types/reference.ts';
 import { WHOLE_SETTING_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import { CHECK_RUN_LABELS, CHECK_NEEDS_LABELS, SUPPRESSIONS_CHECK } from '../config/reference.ts';

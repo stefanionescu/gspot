@@ -26,7 +26,7 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
         ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks)),
         ...readConfigurations().keys(),
         ...(session?.scopes.flatMap((scope) =>
-            listEffectiveSettings(scope.knownSettings, session.settingsFile.settings, scope.folder.path).map(
+            listEffectiveSettings(scope.availableSettings, session.settingsFile.settings, scope.folder.path).map(
                 (setting) => setting.key,
             ),
         ) ?? []),

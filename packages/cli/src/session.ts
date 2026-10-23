@@ -8,14 +8,14 @@ import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { selectNeededConfigurations } from '#cli/planning/tools.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { Settings, SettingsFile } from '#cli/types/settings/file.ts';
-import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { listAutomaticConfigurations } from '#cli/configurations/select.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { buildKnownSettings, applyDetectedDefaults } from '#cli/settings/known.ts';
 import type { PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
+import { applyDetectedDefaults, buildAvailableSettings } from '#cli/settings/available.ts';
 import { findRootScope, selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { classifyFile, listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
@@ -33,14 +33,14 @@ async function buildScopes(
     return await Promise.all(
         scopes.map(async (scope) => {
             const selected = selectForScope(effective, scope.path, configurations);
-            const known = buildKnownSettings(selected, settings.level);
+            const known = buildAvailableSettings(selected, settings.level);
             const packageManager = known.defaults.has('site.build_command') ? await readPackageManager() : undefined;
             applyDetectedDefaults(known, {
                 packageManagerName: packageManager?.name,
                 dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
             });
             const view = buildScopeSettings(known, effective, selected, scope.path);
-            return { folder: scope, configurations: selected, knownSettings: known, settings: view };
+            return { folder: scope, configurations: selected, availableSettings: known, settings: view };
         }),
     );
 }

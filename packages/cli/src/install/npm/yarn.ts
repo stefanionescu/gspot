@@ -9,7 +9,7 @@ import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { addEnvironmentReference } from '#cli/install/npm/registry.ts';
-import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/tool-project.ts';
+import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
 import { GSPOT_PACKAGES, MINUTES_PER_DAY } from '#cli/config/install/npm/release-age.ts';
 import { yarnSettingsSchema, yarnConfigEntrySchema } from '#cli/schemas/install/npm/yarn.ts';
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import type { CiJob } from '#cli/types/repository/existing.ts';
+import type { CiJob } from '#cli/types/repository/setup.ts';
 
 const ciStepSchema = z.object({ run: z.string().optional() } satisfies SchemaShape<{ run?: string | undefined }>);
 

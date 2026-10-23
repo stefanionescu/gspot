@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/config/parsers/managed-blocks.ts';
-import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/managed-blocks.ts';
+import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/config/parsers/formats/managed-blocks.ts';
+import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 
 test('a managed block is appended and replaced without changing your own text', () => {
     const first = replaceBlock('# Mine\n\ntext\n', 'block one', { path: 'AGENTS.md', style: 'markdown' });

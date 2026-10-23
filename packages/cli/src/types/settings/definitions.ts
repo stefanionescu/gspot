@@ -1,7 +1,8 @@
 import type { z } from 'zod';
 import type { TableSettings } from '#cli/types/settings/file.ts';
+import { type ReasonedValue } from '#cli/types/settings/values.ts';
+import { type SettingLanguage } from '#cli/types/settings/naming.ts';
 import type { REASON_DESCRIPTIONS } from '#cli/config/settings/fields.ts';
-import { type ReasonedValue, type SettingLanguage } from '#cli/types/settings/tables.ts';
 
 /**
  * The part of a setting definition that the schema keeps for a reasoned value: what the setting holds, and which change

@@ -1,6 +1,6 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { MARKERS, LEADING_NEWLINE } from '#cli/config/parsers/managed-blocks.ts';
-import type { BlockSpan, BlockFile } from '#cli/types/parsers/managed-blocks.ts';
+import { MARKERS, LEADING_NEWLINE } from '#cli/config/parsers/formats/managed-blocks.ts';
+import type { BlockSpan, BlockFile } from '#cli/types/parsers/formats/managed-blocks.ts';
 
 /**
  * Locate one complete block. Refuse ambiguous or malformed markers.

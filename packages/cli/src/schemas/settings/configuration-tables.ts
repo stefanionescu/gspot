@@ -1,6 +1,9 @@
 import { z } from 'zod';
+import { ciFields } from '#cli/schemas/settings/ci.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { type SchemaShape } from '#cli/types/shapes.ts';
+import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
+import { rulesSchema } from '#cli/schemas/settings/rules.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
@@ -8,8 +11,7 @@ import { licensesSchema } from '#cli/schemas/settings/licenses.ts';
 import { pythonSchema, javascriptSchema } from '#cli/schemas/settings/languages.ts';
 import { commandSchema, nonemptyString } from '#cli/schemas/configurations/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { ciFields, hooksSchema, rulesSchema } from '#cli/schemas/settings/integrations.ts';
-import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
+import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/configuration-tables.ts';
 
 import {
     type TableValues,

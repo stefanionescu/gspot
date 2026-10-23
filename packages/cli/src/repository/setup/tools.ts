@@ -13,10 +13,10 @@ import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/configurations/names.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { MARKDOWN_EXTENSION } from '#cli/config/repository/files/classify.ts';
-import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/existing.ts';
-import { listConflictingConfigFiles } from '#cli/repository/existing/config-files.ts';
+import { ciJobSchema, ciDocumentSchema } from '#cli/schemas/repository/setup.ts';
+import { listConflictingConfigFiles } from '#cli/repository/setup/config-files.ts';
 import { readPackageJson, listToolOnlyPackages } from '#cli/repository/dependencies.ts';
-import { type CiJob, type ExistingTools, type ConflictingConfigFile } from '#cli/types/repository/existing.ts';
+import { type CiJob, type RepositorySetup, type ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 import {
     RUN_WORD,
@@ -44,7 +44,7 @@ import {
     FOREIGN_HOOK_FOLDERS,
     SIMPLE_GIT_HOOKS_KEY,
     GITHUB_WORKFLOWS_FOLDER,
-} from '#cli/config/repository/existing/tools.ts';
+} from '#cli/config/repository/setup/tools.ts';
 
 // Check whether a CI command line runs a linter: eslint, a two-word lint command, or a lint task.
 function isLintCommand(command: string): boolean {
@@ -79,7 +79,11 @@ function listHookFiles(root: string, folder: string): string[] {
     );
 }
 
-function detectHookFolder(root: string, folder: string, hooksPath: string): ExistingTools['hooks'][number] | undefined {
+function detectHookFolder(
+    root: string,
+    folder: string,
+    hooksPath: string,
+): RepositorySetup['hooks'][number] | undefined {
     if (hooksPath === folder) return undefined;
     const files = listHookFiles(root, folder);
     if (files.length === 0 && lstatSync(join(root, folder), { throwIfNoEntry: false })?.isSymbolicLink() !== true)
@@ -117,7 +121,7 @@ function listLintCommands(path: string, document: unknown): string[] {
 
 // Read the folder that core.hooksPath names. Husky points it at its stubs in .husky/_, or at .husky in Husky 8, and
 // keeps the hooks of the user in .husky, which the Husky entry lists.
-function readHooksPathEntry(root: string, hooksPath: string): ExistingTools['hooks'] {
+function readHooksPathEntry(root: string, hooksPath: string): RepositorySetup['hooks'] {
     if (hooksPath === '') return [];
     const location = readHooksFolder(root);
     return [{ kind: 'hooksPath', path: hooksPath, files: listHookFiles(dirname(location), basename(location)) }];
@@ -129,7 +133,7 @@ function readHooksPathEntry(root: string, hooksPath: string): ExistingTools['hoo
  * @param repositoryRoot the repository to read.
  * @returns each hook setup and its location.
  */
-export function readHooks(repositoryRoot: string): ExistingTools['hooks'] {
+export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
     const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
     const packageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
     const written = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
@@ -190,10 +194,10 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
  * @param repository the inventory and parsed package declarations.
  * @returns what to replace, keep, or report.
  */
-export function readExistingTools(
+export function readRepositorySetup(
     reads: ReadCache,
     repository: Pick<Repository, 'files' | 'dependencyFiles'>,
-): ExistingTools {
+): RepositorySetup {
     const repositoryRoot = reads.root;
     const { files, dependencyFiles } = repository;
     const paths = new Set(files.map((file) => file.path));

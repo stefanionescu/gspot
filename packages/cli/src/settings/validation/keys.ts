@@ -2,7 +2,7 @@ import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
 import { isLoosening, validateReason, isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { type Settings, type SettingsError, type SettingsTable } from '#cli/types/settings/file.ts';
-import type { SettingMatch, KnownSettings, WrittenSetting } from '#cli/types/settings/inheritance.ts';
+import type { SettingMatch, WrittenSetting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 import {
     findSetting,
@@ -62,17 +62,17 @@ function validateWrittenScalar(
 }
 
 function validateWrittenKey(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     settings: Settings,
     table: SettingsTable,
     scope: string | undefined,
     key: string,
 ): SettingsError[] {
-    const match = findSetting(knownSettings, key);
-    if (!match) return [{ path: key.split('.'), message: formatUnknownSetting(knownSettings, key) }];
+    const match = findSetting(availableSettings, key);
+    if (!match) return [{ path: key.split('.'), message: formatUnknownSetting(availableSettings, key) }];
     const written = getWrittenSetting(table, key);
     if (!written) return [];
-    const shipped = findSettingDefault(knownSettings, settings, match, scope)?.value;
+    const shipped = findSettingDefault(availableSettings, settings, match, scope)?.value;
     if (written.reason !== undefined && !isLoosening(match.setting, written.value, shipped))
         return [
             {
@@ -87,13 +87,13 @@ function validateWrittenKey(
 // List the conflicts between configuration defaults that no written table settles. The root table and every scope table
 // get their own list.
 function listUnsettledConflicts(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     settings: Settings,
-    scopeKnown: Map<string, KnownSettings>,
+    scopeKnown: Map<string, AvailableSettings>,
 ): SettingsError[] {
     const errors: SettingsError[] = [];
     const knownByScope = [
-        { selected: knownSettings, scope: undefined, path: ['configurations'] as KeyPath },
+        { selected: availableSettings, scope: undefined, path: ['configurations'] as KeyPath },
         ...[...scopeKnown].map(([scope, selected], index) => ({
             selected,
             scope,
@@ -112,12 +112,12 @@ function listUnsettledConflicts(
 /**
  * Name an unknown setting, and list the closest keys in the same table.
  *
- * @param knownSettings the settings of the configurations.
+ * @param availableSettings the settings of the configurations.
  * @param key the written dotted name.
  * @returns the error, with a command that lists the settings.
  */
-export function formatUnknownSetting(knownSettings: KnownSettings, key: string): string {
-    const all = knownSettings.settings.keys().toArray();
+export function formatUnknownSetting(availableSettings: AvailableSettings, key: string): string {
+    const all = availableSettings.settings.keys().toArray();
     if (key.startsWith('limits.')) {
         const limits = all.filter((name) => name.startsWith('limits.'));
         return `\`${key}\` is not a limit any check reads. The limits that exist are ${formatCodeList(limits.map((name) => name.slice('limits.'.length)))}.`;
@@ -141,25 +141,25 @@ export function formatUnknownSetting(knownSettings: KnownSettings, key: string):
 /**
  * Validate every written key against the known settings and the loosening rule.
  *
- * @param knownSettings the settings and defaults of the selected configurations.
+ * @param availableSettings the settings and defaults of the selected configurations.
  * @param settings the parsed gspot.toml.
  * @param scopeKnown the settings of each scope by path, which its own table uses.
  * @param everyConfiguration the settings saved for configurations whose repository evidence disappeared.
  * @returns the errors in plain English, empty when the settings pass validation.
  */
 export function validateKeys(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     settings: Settings,
-    scopeKnown: Map<string, KnownSettings>,
-    everyConfiguration: KnownSettings,
+    scopeKnown: Map<string, AvailableSettings>,
+    everyConfiguration: AvailableSettings,
 ): SettingsError[] {
-    const errors = listUnsettledConflicts(knownSettings, settings, scopeKnown);
+    const errors = listUnsettledConflicts(availableSettings, settings, scopeKnown);
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
-    const later = [knownSettings, ...scopeKnown.values(), everyConfiguration].toReversed();
-    const everywhere: KnownSettings = {
+    const later = [availableSettings, ...scopeKnown.values(), everyConfiguration].toReversed();
+    const everywhere: AvailableSettings = {
         settings: new Map(later.flatMap((entry) => entry.settings.entries().toArray())),
         defaults: new Map(later.flatMap((entry) => entry.defaults.entries().toArray())),
-        errors: knownSettings.errors,
+        errors: availableSettings.errors,
     };
     const coverageLines = getSettingValue(everywhere, settings, 'coverage.lines')?.value;
     const targetErrors = (settings.coverage?.swift_target ?? [])
@@ -174,8 +174,8 @@ export function validateKeys(
         }));
     errors.push(...targetErrors);
     for (const { table, scope, path } of listSettingsTables(settings)) {
-        const active = scope === undefined ? everywhere : (scopeKnown.get(scope) as KnownSettings);
-        const selectedKnown: KnownSettings = {
+        const active = scope === undefined ? everywhere : (scopeKnown.get(scope) as AvailableSettings);
+        const selectedKnown: AvailableSettings = {
             settings: new Map([...everywhere.settings, ...active.settings]),
             defaults: new Map([...everywhere.defaults, ...active.defaults]),
             errors: active.errors,

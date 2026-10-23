@@ -16,7 +16,7 @@ import { join, dirname, extname, basename, delimiter } from 'node:path';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { ZERO_COVERAGE_TABLES } from '#tests/config/commands/doctor/tools.ts';
 import { fakeExecutableLookup, fakePinnedExecutables } from '#tests/setup/system/fakes.ts';
-import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configurations/declared-tools.ts';
+import { getTool, listDistinctTools, findToolProjectPackage } from '#cli/configurations/tools.ts';
 
 test('doctor reports no unowned gspot files in a fresh clone', async () => {
     await using sandbox = await testdir();

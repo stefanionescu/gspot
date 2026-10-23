@@ -6,15 +6,10 @@ import { CASE_NAMES } from '#cli/config/configurations/naming.ts';
 import { nonemptyString } from '#cli/schemas/configurations/fields.ts';
 import type { ReasonedSettingDefinition } from '#cli/types/settings/definitions.ts';
 import { type WrittenFormat, type TableSettings } from '#cli/types/settings/file.ts';
+import { type SettingValue, type ReasonedValue } from '#cli/types/settings/values.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { type NamingCase, type NamingFields, type ParsedNamingFields } from '#cli/types/settings/naming.ts';
 
-import {
-    type NamingCase,
-    type SettingValue,
-    type NamingFields,
-    type ReasonedValue,
-    type ParsedNamingFields,
-} from '#cli/types/settings/tables.ts';
 import {
     INDENT_MAX,
     QUOTE_STYLES,

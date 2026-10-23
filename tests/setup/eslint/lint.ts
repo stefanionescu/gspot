@@ -3,9 +3,9 @@ import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
-import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import type { LintFinding, EslintConfiguration } from '#tests/types/tool-output.ts';
 

@@ -12,8 +12,8 @@ import { BANNER_BYTES } from '#cli/config/repository/files/classify.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
-import { type ExistingTools, type ConflictingConfigFile } from '#cli/types/repository/existing.ts';
-import { readLintJobs, isEditedInPlace, readExistingTools } from '#cli/repository/existing/tools.ts';
+import { type RepositorySetup, type ConflictingConfigFile } from '#cli/types/repository/setup.ts';
+import { readLintJobs, isEditedInPlace, readRepositorySetup } from '#cli/repository/setup/tools.ts';
 
 function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
     const { root, repository, configurations, settingsFile } = session;
@@ -131,13 +131,13 @@ function buildFileRow(
 
 function listUnownedConfigFiles(
     session: Session,
-    existingTools: ExistingTools,
+    repositorySetup: RepositorySetup,
     tools: Set<string>,
     generated: GenerationResult,
 ): SuggestionRow[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     const generatedPaths = new Set(generated.files.map((file) => file.path));
-    return existingTools.conflictingConfigFiles
+    return repositorySetup.conflictingConfigFiles
         .filter((configFile) => tracked.has(configFile.path) && !generatedPaths.has(configFile.path))
         .filter((configFile) => !isEditedInPlace(configFile, generated.managedKeys))
         .filter(
@@ -160,16 +160,16 @@ function listUnownedConfigFiles(
  */
 export function listSuggestions(session: Session): Suggestions {
     const configurations = session.neededToolConfigurations;
-    const existingTools = readExistingTools(session.reads, session.repository);
+    const repositorySetup = readRepositorySetup(session.reads, session.repository);
     const generated = generate(session);
     const tools = new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         ...listConfigurationSuggestions(session),
-        unowned: listUnownedConfigFiles(session, existingTools, tools, generated),
+        unowned: listUnownedConfigFiles(session, repositorySetup, tools, generated),
         lintJobs: readLintJobs(
             session.root,
-            existingTools.ci.filter((path) => !workflows.has(path)),
+            repositorySetup.ci.filter((path) => !workflows.has(path)),
         ).map((path) => ({ path, note: 'an existing lint job' })),
     };
 }

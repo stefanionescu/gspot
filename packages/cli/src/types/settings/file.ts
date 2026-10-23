@@ -1,32 +1,34 @@
 import type { Check } from '#cli/types/configurations.ts';
 import type { STAGES } from '#cli/config/configurations/names.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
-import type { REEXPORT_MODES } from '#cli/config/settings/tables.ts';
 import type { Defined, Optional, SchemaShape } from '#cli/types/shapes.ts';
 import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output.ts';
-import type { ParsedTools, WrittenTools } from '#cli/types/settings/tool-tables.ts';
+import type { ParsedTools, WrittenTools } from '#cli/types/settings/tools.ts';
+import type { REEXPORT_MODES } from '#cli/config/settings/configuration-tables.ts';
 import type { ConfigurationTables } from '#cli/types/settings/configuration-tables.ts';
 import type { ImportRule, WrittenImportRule } from '#cli/types/settings/import-rules.ts';
 
 import type {
+    NamingCase,
+    NamingFields,
+    ParsedNaming,
+    SettingLanguage,
+    ParsedNamingOverride,
+    NamingLanguageFields,
+} from '#cli/types/settings/naming.ts';
+import type {
     ParsedCi,
     ParsedRoot,
-    NamingCase,
     ParsedRules,
     ParsedHooks,
     LimitFields,
-    NamingFields,
     ParsedLimits,
-    ParsedNaming,
     ParsedFormat,
     SettingValue,
     LimitLanguage,
-    SettingLanguage,
     ParsedStructure,
     LanguageLimitFields,
-    ParsedNamingOverride,
-    NamingLanguageFields,
-} from '#cli/types/settings/tables.ts';
+} from '#cli/types/settings/values.ts';
 
 export type TableValues = {
     [Name in keyof ConfigurationTables]?: ConfigurationTables[Name] | undefined;

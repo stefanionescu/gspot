@@ -1,28 +1,9 @@
 import { z } from 'zod';
 import { type SchemaShape } from '#cli/types/shapes.ts';
-import { type ParsedRules } from '#cli/types/settings/tables.ts';
-import { CI_PROVIDERS } from '#cli/config/settings/integrations.ts';
+import { CI_PROVIDERS } from '#cli/config/settings/ci.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { commandSchema, operatingSystemSchema } from '#cli/schemas/configurations/fields.ts';
-
-export const rulesSchema = z.strictObject({
-    enabled: z
-        .boolean()
-        .default(SETTING_DEFINITIONS['rules.enabled'].default)
-        .meta(SETTING_DEFINITIONS['rules.enabled']),
-    exclude: z
-        .array(z.string())
-        .default(SETTING_DEFINITIONS['rules.exclude'].default)
-        .meta(SETTING_DEFINITIONS['rules.exclude']),
-} satisfies SchemaShape<ParsedRules, NonNullable<WrittenSettings['rules']>>);
-
-export const hooksSchema = z.strictObject({
-    enabled: z
-        .boolean()
-        .default(SETTING_DEFINITIONS['hooks.enabled'].default)
-        .meta(SETTING_DEFINITIONS['hooks.enabled']),
-} satisfies SchemaShape<NonNullable<Settings['hooks']>, NonNullable<WrittenSettings['hooks']>>);
 
 export const ciFields = {
     enabled: z

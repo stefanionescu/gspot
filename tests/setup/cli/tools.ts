@@ -7,11 +7,11 @@ import { generate } from '#cli/generation/generate.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
+import { listDistinctTools } from '#cli/configurations/tools.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
-import { listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 

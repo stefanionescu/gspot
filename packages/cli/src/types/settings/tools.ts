@@ -1,4 +1,4 @@
-import { type SettingValue } from '#cli/types/settings/tables.ts';
+import { type SettingValue } from '#cli/types/settings/values.ts';
 import { type StylelintOptions } from '#cli/types/settings/file.ts';
 import { type Optional, type JsonValue } from '#cli/types/shapes.ts';
 

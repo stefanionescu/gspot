@@ -10,7 +10,7 @@ import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { extractUrlPasswords } from '#cli/install/credentials.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';
-import { NPMRC_FILE, NPM_SETTING_PREFIX } from '#cli/config/install/npm/tool-project.ts';
+import { NPMRC_FILE, NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
 
 import {
     CREDENTIAL_KEY,

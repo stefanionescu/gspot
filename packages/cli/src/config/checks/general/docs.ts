@@ -1,4 +1,4 @@
-import { RUNNER_NAMES } from '#cli/config/repository/existing/tools.ts';
+import { RUNNER_NAMES } from '#cli/config/repository/setup/tools.ts';
 
 export const MISE_TASKS_FOLDER = '.mise/tasks';
 

@@ -1,8 +1,8 @@
 import { openFiles } from '#cli/system/files/open.ts';
 import type { ManagedKeys } from '#cli/types/apply.ts';
-import { isEditedInPlace } from '#cli/repository/existing/tools.ts';
+import { isEditedInPlace } from '#cli/repository/setup/tools.ts';
 import type { ConflictingConfigFiles } from '#cli/types/commands/init.ts';
-import type { ExistingTools, ConflictingConfigFile } from '#cli/types/repository/existing.ts';
+import type { RepositorySetup, ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 // Record what init does with one file: a shared file stays for you, and init deletes an owned one.
 function addConflictingConfigFile(entry: ConflictingConfigFile, conflicts: ConflictingConfigFiles): void {
@@ -19,19 +19,19 @@ function addConflictingConfigFile(entry: ConflictingConfigFile, conflicts: Confl
  * Read the config files of the chosen tools, and sort them into the files init deletes and the files it keeps.
  *
  * @param root the folder where init reads the originals before it replaces them.
- * @param existingTools the config files that init found.
+ * @param repositorySetup the config files that init found.
  * @param tools what the checks at this level run.
  * @param fileEdits the shared config file edits for these configurations.
  * @returns the reads, the deletions, and the shared files that stay.
  */
 export function readConflictingConfigFiles(
     root: string,
-    existingTools: ExistingTools,
+    repositorySetup: RepositorySetup,
     tools: Set<string>,
     fileEdits: ManagedKeys[],
 ): ConflictingConfigFiles {
     const conflicts: ConflictingConfigFiles = { read: new Map(), deleted: [], retained: [], changed: [] };
-    const owned = existingTools.conflictingConfigFiles.filter(({ tool }) => tools.has(tool));
+    const owned = repositorySetup.conflictingConfigFiles.filter(({ tool }) => tools.has(tool));
     using files = openFiles(root);
     for (const path of new Set(owned.filter((entry) => !entry.shared).map((entry) => entry.path))) {
         conflicts.read.set(path, files.read(path));

@@ -15,52 +15,52 @@ import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/
 import {
     type Setting,
     type SettingMatch,
-    type KnownSettings,
     type EffectiveValue,
     type SettingDefault,
     type WrittenSetting,
     type EffectiveSetting,
+    type AvailableSettings,
     type WrittenScopeTable,
 } from '#cli/types/settings/inheritance.ts';
 
 function findLanguageSetting(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     table: string,
     language: string,
     name: string,
 ): SettingMatch | undefined {
-    const base = knownSettings.settings.get(`${table}.${name}`);
+    const base = availableSettings.settings.get(`${table}.${name}`);
     const languages = base?.languages ?? [];
     if (base && languages.includes(language)) return { setting: base, language };
     return undefined;
 }
 
 function findVariantSetting(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     table: string,
     language: string,
     rest: string[],
 ): SettingMatch | undefined {
     const [first, second] = rest;
     if (first === undefined) return undefined;
-    if (second === undefined) return findLanguageSetting(knownSettings, table, language, first);
+    if (second === undefined) return findLanguageSetting(availableSettings, table, language, first);
     if (table !== 'naming' || rest.length !== CATEGORY_KEY_PARTS) return undefined;
-    return findCategorySetting(knownSettings, language, first, second);
+    return findCategorySetting(availableSettings, language, first, second);
 }
 
 function findCategorySetting(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     language: string,
     category: string,
     name: string,
 ): SettingMatch | undefined {
-    const base = knownSettings.settings.get(`naming.${name}`);
+    const base = availableSettings.settings.get(`naming.${name}`);
     if (!base) return undefined;
     const categories: Readonly<Record<string, readonly string[]>> = NAMING_LANGUAGE_CATEGORIES;
     const isCovered =
         (base.languages ?? []).includes(language) &&
         (categories[language]?.includes(category) === true ||
-            (name === 'cases' && knownSettings.defaults.has(`naming.${language}.${category}.cases`)));
+            (name === 'cases' && availableSettings.defaults.has(`naming.${language}.${category}.cases`)));
     return isCovered ? { setting: base, language, category } : undefined;
 }
 
@@ -149,16 +149,16 @@ export function listApplicableTables(settings: Settings, scope: string | undefin
 /**
  * Match a written key to its setting. Per-language and per-category keys map back to their base setting.
  *
- * @param knownSettings the settings and defaults of the selected configurations.
+ * @param availableSettings the settings and defaults of the selected configurations.
  * @param key the dotted name as written.
  * @returns the match with its language and category, or undefined.
  */
-export function findSetting(knownSettings: KnownSettings, key: string): SettingMatch | undefined {
-    const direct = knownSettings.settings.get(key);
+export function findSetting(availableSettings: AvailableSettings, key: string): SettingMatch | undefined {
+    const direct = availableSettings.settings.get(key);
     if (direct) return { setting: direct };
     const [table, language, ...rest] = key.split('.');
     if (table === undefined || language === undefined || !LANGUAGE_GROUP_TABLES.has(table)) return undefined;
-    return findVariantSetting(knownSettings, table, language, rest);
+    return findVariantSetting(availableSettings, table, language, rest);
 }
 
 /**
@@ -206,14 +206,14 @@ function listPossibleKeys(match: SettingMatch, key: string): string[] {
 /**
  * Resolve one default against its language, scope, and site build folder.
  *
- * @param knownSettings the settings and defaults of the configurations in use.
+ * @param availableSettings the settings and defaults of the configurations in use.
  * @param settings reads a value from the settings tables of the caller.
  * @param match the setting and its language, if any.
  * @param scope the project whose shipped paths apply.
  * @returns the default with repository-relative paths, or undefined.
  */
 export function findSettingDefault(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     settings: Settings,
     match: SettingMatch,
     scope: string | undefined,
@@ -226,11 +226,11 @@ export function findSettingDefault(
         keys.unshift(`${table}.${match.language}.${field}`);
         if (match.category !== undefined) keys.unshift(`${table}.${match.language}.${match.category}.${field}`);
     }
-    const shipped = keys.map((key) => knownSettings.defaults.get(key)).find((value) => value !== undefined);
+    const shipped = keys.map((key) => availableSettings.defaults.get(key)).find((value) => value !== undefined);
     if (shipped === undefined) return undefined;
     const folder =
         setting.path_role === 'build'
-            ? (getSettingValue(knownSettings, settings, 'site.build_folder', scope)?.value as string)
+            ? (getSettingValue(availableSettings, settings, 'site.build_folder', scope)?.value as string)
             : (scope ?? '');
     return { ...shipped, value: joinDefaultPaths(setting.name, shipped.value, folder) };
 }
@@ -238,22 +238,22 @@ export function findSettingDefault(
 /**
  * Resolve one key: the configuration default, then the root table, then each scope table; mergeValue merges them.
  *
- * @param knownSettings the settings and defaults of the selected configurations.
+ * @param availableSettings the settings and defaults of the selected configurations.
  * @param settings the parsed gspot.toml.
  * @param key the dotted setting name.
  * @param scope the folder whose table applies last, if any.
  * @returns the value with where it came from, or undefined when nothing exposes the key.
  */
 export function getSettingValue(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     settings: Settings,
     key: string,
     scope?: string,
 ): EffectiveSetting | undefined {
-    const match = findSetting(knownSettings, key);
+    const match = findSetting(availableSettings, key);
     if (!match) return undefined;
     const { setting } = match;
-    const shipped = findSettingDefault(knownSettings, settings, match, scope);
+    const shipped = findSettingDefault(availableSettings, settings, match, scope);
     const tables = listApplicableTables(settings, scope);
     let initialSource = 'unset';
     if (shipped !== undefined)
@@ -280,8 +280,12 @@ export function getSettingValue(
 }
 
 // Check whether a written tool table groups exposed keys instead of exposing one key.
-function isKeyGroup(knownSettings: KnownSettings, key: string, value: unknown): value is Record<string, unknown> {
-    if (knownSettings.settings.has(key) || !isTable(value)) return false;
+function isKeyGroup(
+    availableSettings: AvailableSettings,
+    key: string,
+    value: unknown,
+): value is Record<string, unknown> {
+    if (availableSettings.settings.has(key) || !isTable(value)) return false;
     let schema = findSettingSchema(key);
     if (schema !== undefined) schema = unwrapSettingSchema(schema);
     return schema instanceof z.ZodObject;
@@ -291,10 +295,10 @@ function isKeyGroup(knownSettings: KnownSettings, key: string, value: unknown): 
  * List every setting key that a settings table writes, in dotted form.
  *
  * @param settings the root table or one scope.
- * @param knownSettings the known settings, with nested tool keys.
+ * @param availableSettings the known settings, with nested tool keys.
  * @returns all known written keys, plus unknown keys from open settings tables.
  */
-export function listWrittenKeys(settings: SettingsTable, knownSettings: KnownSettings): string[] {
+export function listWrittenKeys(settings: SettingsTable, availableSettings: AvailableSettings): string[] {
     const keys: string[] = [];
     const pending = (settings.tools === undefined ? [] : Object.entries(settings.tools)).flatMap(([tool, table]) =>
         table === undefined
@@ -303,19 +307,19 @@ export function listWrittenKeys(settings: SettingsTable, knownSettings: KnownSet
     );
     pending.push(
         ...Object.entries(settings.written).flatMap(([name, table]) => {
-            if (knownSettings.settings.has(name)) return [{ key: name, value: table }];
+            if (availableSettings.settings.has(name)) return [{ key: name, value: table }];
             if (isTable(table) && name !== 'tools' && name !== 'removed_configurations')
                 return Object.entries(table).map(([field, value]) => ({ key: `${name}.${field}`, value }));
             return [];
         }),
     );
     for (const { key, value } of pending) {
-        if (isKeyGroup(knownSettings, key, value))
+        if (isKeyGroup(availableSettings, key, value))
             pending.push(...Object.entries(value).map(([field, child]) => ({ key: `${key}.${field}`, value: child })));
         else keys.push(key);
     }
     const format = (settings.format === undefined ? [] : Object.keys(settings.format)).map((key) => `format.${key}`);
-    const knownKeys = [...knownSettings.settings.keys()].filter(
+    const knownKeys = [...availableSettings.settings.keys()].filter(
         (key) => getWrittenSetting(settings, key) !== undefined,
     );
     return [...new Set([...knownKeys, ...keys, ...format])];
@@ -324,26 +328,30 @@ export function listWrittenKeys(settings: SettingsTable, knownSettings: KnownSet
 /**
  * List the settings that apply, with language defaults and written variants, in key order.
  *
- * @param knownSettings the settings and defaults of the selected configurations.
+ * @param availableSettings the settings and defaults of the selected configurations.
  * @param settings the parsed gspot.toml.
  * @param scope the folder whose table applies last, if any.
  * @returns the resolved settings in key order.
  */
 export function listEffectiveSettings(
-    knownSettings: KnownSettings,
+    availableSettings: AvailableSettings,
     settings: Settings,
     scope?: string,
 ): EffectiveSetting[] {
     const keys = [
         ...new Set([
-            ...knownSettings.settings.keys(),
-            ...knownSettings.defaults.keys(),
+            ...availableSettings.settings.keys(),
+            ...availableSettings.defaults.keys(),
             ...listApplicableTables(settings, scope).flatMap(({ table }) =>
-                listWrittenKeys(table, knownSettings).filter((key) => findSetting(knownSettings, key) !== undefined),
+                listWrittenKeys(table, availableSettings).filter(
+                    (key) => findSetting(availableSettings, key) !== undefined,
+                ),
             ),
         ]),
     ].toSorted((a, b) => a.localeCompare(b));
-    return keys.map((key) => getSettingValue(knownSettings, settings, key, scope)).filter((row) => row !== undefined);
+    return keys
+        .map((key) => getSettingValue(availableSettings, settings, key, scope))
+        .filter((row) => row !== undefined);
 }
 
 /**

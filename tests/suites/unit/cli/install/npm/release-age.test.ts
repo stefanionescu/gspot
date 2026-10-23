@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { readdir, readFile } from 'node:fs/promises';
 import { prepareReleaseAge } from '#cli/install/npm/release-age.ts';
 import { OWN_PACKAGES } from '#tests/config/install/npm/release-age.ts';
-import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/install/npm/tool-project.ts';
+import { PACKAGE_MANAGER_ARGUMENTS } from '#cli/config/install/npm/project.ts';
 
 test('an npm tool lockfile gets the minimum release age as flags and writes no file', async () => {
     await using sandbox = await testdir();

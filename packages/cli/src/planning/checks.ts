@@ -5,9 +5,9 @@ import { stripUndefined } from '#cli/system/tables.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findRootScope } from '#cli/settings/scopes.ts';
+import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
 import type { Check, KnownCheck } from '#cli/types/configurations.ts';
-import { getTool, getToolName } from '#cli/configurations/declared-tools.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/planning.ts';
 import { isRootOnlyCheck, listChildScopes, selectCheckFiles, stripToolIgnoredFiles } from '#cli/planning/files.ts';
 

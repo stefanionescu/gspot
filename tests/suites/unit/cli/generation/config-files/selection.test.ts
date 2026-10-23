@@ -11,12 +11,12 @@ import { listNeededTools } from '#cli/planning/tools.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 

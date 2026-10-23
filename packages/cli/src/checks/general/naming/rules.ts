@@ -3,7 +3,7 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { NamingCase } from '#cli/types/settings/tables.ts';
+import type { NamingCase } from '#cli/types/settings/naming.ts';
 import { splitParts } from '#cli/checks/general/naming/settings.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { NUMERIC_WORDS, CATEGORY_PARENTS } from '#cli/config/checks/general/naming/settings.ts';

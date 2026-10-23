@@ -7,9 +7,9 @@ import type { Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
-import { extractConfigFileName } from '#cli/configurations/declared-tools.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 /** Find the generated config file for a tool and scope. */

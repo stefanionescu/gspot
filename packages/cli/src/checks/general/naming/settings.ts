@@ -7,7 +7,7 @@ import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { type Scope, type ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/naming.ts';
-import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/tables.ts';
+import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/naming.ts';
 import type { BannedWord, NamingOverride, NamingSettings, CompiledOverride } from '#cli/types/checks/general/naming.ts';
 
 import {

@@ -1,4 +1,4 @@
-export type ExistingTools = {
+export type RepositorySetup = {
     conflictingConfigFiles: ConflictingConfigFile[];
     hooks: {
         kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';

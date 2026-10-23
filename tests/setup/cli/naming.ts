@@ -1,8 +1,8 @@
 // Builds the naming settings, file naming, and identifiers of the naming tests.
 import { parseSettings } from '#cli/settings/read.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getShippedCheck } from '#tests/setup/cli/configurations.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildRootScopeSettings } from '#tests/setup/cli/settings.ts';
@@ -13,11 +13,11 @@ import type { FileNaming, Identifier, NamingSettings } from '#cli/types/checks/g
 export function buildScopeNamingSettings(text: string, scope = ''): NamingSettings {
     const settings = parseSettings(text, undefined);
     const configurations = selectForScope(settings, scope, readConfigurations());
-    const knownSettings = buildKnownSettings(configurations, 'recommended');
+    const availableSettings = buildAvailableSettings(configurations, 'recommended');
     const scopeSettings = buildRootScopeSettings(settings, scope);
     return readNamingSettings(settings, {
         settings: scopeSettings,
-        knownSettings,
+        availableSettings,
         configurations,
         folder: {
             path: scope,

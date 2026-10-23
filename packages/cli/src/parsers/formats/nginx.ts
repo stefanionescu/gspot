@@ -1,6 +1,6 @@
 // Reads nginx configuration text into directives.
 import { findQuotedEnd } from '#cli/system/text.ts';
-import type { DirectiveScan } from '#cli/types/parsers/nginx.ts';
+import type { DirectiveScan } from '#cli/types/parsers/formats/nginx.ts';
 
 import {
     WORD_STOPS,
@@ -10,7 +10,7 @@ import {
     WORD_START_STOPS,
     ESCAPED_CHARACTER,
     NGINX_PUNCTUATION,
-} from '#cli/config/parsers/nginx.ts';
+} from '#cli/config/parsers/formats/nginx.ts';
 
 // The index past an escape pair or a braced variable that starts at at, or `-1` when neither starts there.
 function findProtectedUnitEnd(text: string, at: number): number {

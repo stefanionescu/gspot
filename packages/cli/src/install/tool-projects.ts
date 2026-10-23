@@ -10,13 +10,13 @@ import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { isLockfileCurrent } from '#cli/install/npm/lockfiles.ts';
+import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import type { StaleLockfile } from '#cli/types/install/tool-projects.ts';
-import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
 import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
-import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/tool-project.ts';
+import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
 import { installPythonTools, preparePythonLockfile, isPythonLockfileCurrent } from '#cli/install/python/project.ts';
 
 // Preparation may replace a lockfile in the command's generated files.

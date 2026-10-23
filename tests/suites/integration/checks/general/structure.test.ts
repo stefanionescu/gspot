@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { buildKnownSettings } from '#cli/settings/known.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { ParameterFinding } from '#tests/types/tool-output.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -54,9 +54,10 @@ async function prepareParameterProject(
     scenario: (typeof PARAMETER_LIMIT_TOOLS)[number],
     supplied: 'default' | number,
 ) {
-    const { value: defaultMaximum } = buildKnownSettings([readConfigurations().get('structure')!], 'all').defaults.get(
-        'limits.function_parameters',
-    )!;
+    const { value: defaultMaximum } = buildAvailableSettings(
+        [readConfigurations().get('structure')!],
+        'all',
+    ).defaults.get('limits.function_parameters')!;
     const maximum = supplied === 'default' ? defaultMaximum : supplied;
     const limits =
         maximum === defaultMaximum

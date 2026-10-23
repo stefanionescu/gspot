@@ -1,12 +1,12 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { getToolName } from '#cli/configurations/tools.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import { getToolName } from '#cli/configurations/declared-tools.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { Finding, FindingPlace } from '#cli/types/runs/check.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';

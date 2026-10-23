@@ -1,7 +1,7 @@
 import type { Host } from '#cli/types/planning.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { NODE_TOOL } from '#cli/config/install/npm/tool-project.ts';
+import { NODE_TOOL } from '#cli/config/install/npm/project.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import { PYTHON_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { readConfigurations, buildManifestError } from '#cli/configurations/manifests.ts';

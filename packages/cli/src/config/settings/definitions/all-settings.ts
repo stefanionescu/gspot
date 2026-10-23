@@ -1,4 +1,4 @@
-import { BUILD_SCRIPT } from '#cli/config/settings/known.ts';
+import { BUILD_SCRIPT } from '#cli/config/settings/available.ts';
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 import { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
 import { FORMAT_DEFINITIONS } from '#cli/config/settings/definitions/format.ts';

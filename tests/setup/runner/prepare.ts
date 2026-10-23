@@ -14,8 +14,8 @@ import { MISE_INSTALL_ARGUMENTS } from '#cli/config/install/mise.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/locate.ts';
 import { runCommand, stopOnSignals } from '#tests/setup/system/processes.ts';
+import { findMisePin, listDistinctTools } from '#cli/configurations/tools.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { findMisePin, listDistinctTools } from '#cli/configurations/declared-tools.ts';
 import { MISE_TRUST, TOOL_PATHS_FILE, PINNED_TOOLS_FILE, GSPOT_LAUNCHER_PATH } from '#tests/config/setup/runner.ts';
 
 const controller = new AbortController();

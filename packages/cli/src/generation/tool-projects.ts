@@ -6,9 +6,9 @@ import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
 import { findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/build.ts';
-import { listMisePins, listToolProjectPins } from '#cli/configurations/declared-tools.ts';
 import { type GeneratedFile, type PlannedNpmProject } from '#cli/types/generation/files.ts';
 
 import {

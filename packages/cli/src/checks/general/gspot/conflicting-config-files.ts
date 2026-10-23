@@ -3,7 +3,7 @@ import { type Session } from '#cli/types/session.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { listConflictingConfigFiles } from '#cli/repository/existing/config-files.ts';
+import { listConflictingConfigFiles } from '#cli/repository/setup/config-files.ts';
 
 /**
  * Reports each settings file of a tool that gspot writes settings for, such as .commitlintrc.json while commitlint
