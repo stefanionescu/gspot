@@ -8,9 +8,9 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { stopOnSignals } from '#tests/setup/system/processes.ts';
 import { TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { createNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { PACKED_PACKAGES_FILE } from '#tests/config/setup/environment.ts';
-import { createNpmRegistry } from '#tests/setup/sandboxes/npm/registry.ts';
 import { TOOL_PATHS_FILE, GSPOT_LAUNCHER_PATH } from '#tests/config/setup/runner.ts';
 import { testModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
 

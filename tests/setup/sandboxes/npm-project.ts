@@ -8,9 +8,9 @@ import type { ApplyReport } from '#cli/types/apply.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import { createNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import type { NpmProject, NpmRegistry } from '#tests/types/packages.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
-import { createNpmRegistry } from '#tests/setup/sandboxes/npm/registry.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
 import {

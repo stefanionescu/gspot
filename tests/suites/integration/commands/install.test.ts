@@ -5,7 +5,7 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
-import { createNpmProject } from '#tests/setup/sandboxes/npm/project.ts';
+import { createNpmProject } from '#tests/setup/sandboxes/npm-project.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';

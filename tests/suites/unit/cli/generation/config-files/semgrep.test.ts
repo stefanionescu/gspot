@@ -7,7 +7,7 @@ import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { SemgrepRuleFile } from '#tests/types/generated-files.ts';
+import type { SemgrepRuleFile } from '#tests/types/config-files.ts';
 import { findFileTarget, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 
 test('a language choice brings its security rules without selecting security', async () => {

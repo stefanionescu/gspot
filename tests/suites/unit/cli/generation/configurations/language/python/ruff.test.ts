@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
+import { type RuffConfigFile } from '#tests/types/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { type RuffConfigFile } from '#tests/types/generated-files.ts';
 import { generateFile, findFileTarget } from '#tests/setup/cli/config-files.ts';
 
 test('Ruff selects the pytest and FastAPI families only when selected, and adds no per-file ignores', async () => {

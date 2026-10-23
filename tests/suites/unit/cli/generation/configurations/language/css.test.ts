@@ -5,7 +5,7 @@ import stylelint, { type Config } from 'stylelint';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { type StylelintConfigFile } from '#tests/types/generated-files.ts';
+import { type StylelintConfigFile } from '#tests/types/config-files.ts';
 import { findFileTarget, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { STYLELINT_SCOPE_FILES, STYLELINT_SCOPE_TABLES } from '#tests/config/generation/configurations/language/css.ts';
 

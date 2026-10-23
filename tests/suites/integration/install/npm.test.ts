@@ -11,7 +11,7 @@ import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
 import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
-import { createNpmProject } from '#tests/setup/sandboxes/npm/project.ts';
+import { createNpmProject } from '#tests/setup/sandboxes/npm-project.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
