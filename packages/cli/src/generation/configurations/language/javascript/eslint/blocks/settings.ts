@@ -7,6 +7,13 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 
+import type {
+    EslintRuleBlock,
+    EslintBlockFields,
+    EslintRuleOptions,
+    PlannedEslintFile,
+    ScopeEslintSettings,
+} from '#cli/types/generation/eslint.ts';
 import {
     CODE_LANGUAGES,
     PACKAGE_JSON_PATTERN,
@@ -19,13 +26,6 @@ import {
     buildSourcePattern,
     listNestedScopeGlobs,
 } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
-import type {
-    EslintRuleBlock,
-    EslintBlockFields,
-    EslintRuleOptions,
-    PlannedEslintFile,
-    ScopeEslintSettings,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     TYPED_LANGUAGES,
     ENVIRONMENT_RULES,

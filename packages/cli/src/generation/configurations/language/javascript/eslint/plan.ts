@@ -14,6 +14,7 @@ import type { ConfigFile, Configuration } from '#cli/types/configurations.ts';
 import { readPresets } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import { buildLevelRules } from '#cli/generation/configurations/language/javascript/eslint/blocks/base.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
+import { type EslintPresets, type EslintRuleBlock, type PlannedEslintFile } from '#cli/types/generation/eslint.ts';
 
 import {
     splitGlobs,
@@ -25,11 +26,6 @@ import {
     BASE_SELECTORS,
     CODE_LANGUAGES,
 } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
-import {
-    type EslintPresets,
-    type EslintRuleBlock,
-    type PlannedEslintFile,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     buildRuleOptions,
     buildRulesOffBlocks,

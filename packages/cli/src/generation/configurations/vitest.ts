@@ -1,11 +1,9 @@
+import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+
 import {
     getPreset,
     buildPresetRuleExpression,
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
-import {
-    type EslintScope,
-    type ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     TEST_RULE_NAMES,
     CONFIGURATION_PLUGINS,

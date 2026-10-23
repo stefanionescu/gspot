@@ -30,7 +30,7 @@ import type {
     PlannedEslintFile,
     PlannedEslintBlock,
     ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
+} from '#cli/types/generation/eslint.ts';
 
 // Scope inputs determine block data before the builder attaches labels and inclusion masks.
 function buildConfigurationBlocks(

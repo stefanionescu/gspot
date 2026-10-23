@@ -39,7 +39,7 @@ import {
     type EslintBlockFields,
     type PlannedEslintFile,
     type ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
+} from '#cli/types/generation/eslint.ts';
 import {
     NODE_RULES,
     BASE_RULES,

@@ -3,9 +3,9 @@ import { relativePath } from '#cli/schemas/settings/fields.ts';
 import type { ParsedTools } from '#cli/types/settings/tools.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
 import { type JsonValue, type SchemaShape } from '#cli/types/shapes.ts';
-import { buildRuleTableSchema } from '#cli/schemas/settings/tool-rules.ts';
+import { buildRuleTableSchema } from '#cli/schemas/settings/tools/rules.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { ESLINT_PLUGIN_NAME, ESLINT_PLUGIN_MODULE, ESLINT_OPTION_STRING } from '#cli/config/settings/eslint.ts';
+import { ESLINT_PLUGIN_NAME, ESLINT_PLUGIN_MODULE, ESLINT_OPTION_STRING } from '#cli/config/settings/tools/eslint.ts';
 
 const firstEslintOption = z.union([
     z.string().regex(ESLINT_OPTION_STRING),

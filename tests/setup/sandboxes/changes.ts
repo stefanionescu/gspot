@@ -7,7 +7,7 @@ import { openWriter } from '#cli/apply/write/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGspotStep } from '#tests/setup/cli/commands.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { writeGeneratedFiles } from '#cli/apply/generated-files.ts';
+import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { runGit, markExecutable } from '#tests/setup/system/git.ts';
 import type { OriginalFile, SampleChanges } from '#tests/types/samples.ts';
 

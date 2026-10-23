@@ -10,7 +10,7 @@ import type {
     EslintBlockFields,
     PlannedEslintBlock,
     EslintRuleExpression,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
+} from '#cli/types/generation/eslint.ts';
 
 // Your own options apply only to rules that this block already enables. Each applied rule joins the applied set.
 function buildOptionBlocks(

@@ -21,7 +21,7 @@ import { selectForInit } from '#cli/commands/init/selection.ts';
 import { CI_FILE_LABELS } from '#cli/config/commands/doctor.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
 import { findRoot, readRepository } from '#cli/repository/read.ts';
-import { writeGeneratedFiles } from '#cli/apply/generated-files.ts';
+import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { RepositorySetup } from '#cli/types/repository/setup.ts';

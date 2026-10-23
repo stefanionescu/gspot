@@ -2,13 +2,9 @@
 import ts from 'typescript';
 import { isDeepStrictEqual } from 'node:util';
 import type { Level } from '#cli/types/configurations.ts';
+import type { EslintBlockFields, EslintFileMatcher, EslintRuleExpression } from '#cli/types/generation/eslint.ts';
 import { RUNTIME_DECLARATIONS } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
-import type {
-    EslintBlockFields,
-    EslintFileMatcher,
-    EslintRuleExpression,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     ESLINT_FUNCTIONS,
     COMPONENT_MATCHERS,

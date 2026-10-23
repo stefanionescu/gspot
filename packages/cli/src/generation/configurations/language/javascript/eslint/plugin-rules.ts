@@ -1,9 +1,5 @@
+import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { PLUGIN_RULE_BLOCKS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
-
-import {
-    type EslintScope,
-    type ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 
 /**
  * Build the declared plugin imports and lint rule blocks.

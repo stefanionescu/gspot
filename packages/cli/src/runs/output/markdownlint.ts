@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
-import { markdownlintReportSchema } from '#cli/schemas/runs/output/markdownlint.ts';
+import { markdownlintReportSchema } from '#cli/schemas/runs/markdownlint.ts';
 
 /**
  * Read the findings in the markdownlint JSON report.

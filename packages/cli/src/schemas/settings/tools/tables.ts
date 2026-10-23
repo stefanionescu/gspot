@@ -3,14 +3,14 @@ import { readFileSync } from 'node:fs';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { TableSettings } from '#cli/types/settings/file.ts';
-import { stylelintRules } from '#cli/schemas/settings/stylelint.ts';
 import { nonemptyString } from '#cli/schemas/configurations/fields.ts';
-import { RULE_OPTIONS_REFUSAL } from '#cli/config/settings/tool-rules.ts';
+import { stylelintRules } from '#cli/schemas/settings/tools/stylelint.ts';
+import { RULE_OPTIONS_REFUSAL } from '#cli/config/settings/tools/rules.ts';
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
-import { buildRuleTableSchema } from '#cli/schemas/settings/tool-rules.ts';
+import { buildRuleTableSchema } from '#cli/schemas/settings/tools/rules.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tools.ts';
-import { eslintRules, eslintPluginsSchema } from '#cli/schemas/settings/eslint.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { eslintRules, eslintPluginsSchema } from '#cli/schemas/settings/tools/eslint.ts';
 import { COMMITLINT_RULES } from '#cli/config/generation/configurations/general/commits.ts';
 import { YAMLLINT_RULES } from '#cli/config/generation/configurations/general/data-files/yamllint.ts';
 import { relativePath, nonemptyPaths, nonemptyStrings, allowReasonedValue } from '#cli/schemas/settings/fields.ts';
@@ -21,7 +21,7 @@ import {
     DOCSTRING_CONVENTIONS,
     IMPORT_EXTENSION_STYLES,
     ESLINT_GLOBAL_NAMES_FILE,
-} from '#cli/config/settings/tools.ts';
+} from '#cli/config/settings/tools/tables.ts';
 
 const ESLINT_RUNTIMES = nameListSchema.parse(
     JSON.parse(readFileSync(buildAssetPath(ESLINT_GLOBAL_NAMES_FILE), 'utf8')),

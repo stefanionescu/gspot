@@ -1,4 +1,4 @@
-import type { ConfigurationTables } from '#cli/types/settings/configuration-tables.ts';
+import type { ConfigurationTables } from '#cli/types/settings/tables.ts';
 
 export type LicensedPackage = { name: string; license: string };
 

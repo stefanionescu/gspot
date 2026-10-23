@@ -6,6 +6,7 @@ import { join, dirname, basename, relative } from 'node:path/posix';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { getPreset } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
+import type { BlockWriter, EslintPresets, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import type { GeneratedFile, ConfigFileOutput, PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { buildPlannedEslintFile } from '#cli/generation/configurations/language/javascript/eslint/plan.ts';
 import { buildSelectedBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
@@ -26,11 +27,6 @@ import {
     listLocalPlugins,
     buildLocalPluginBlocks,
 } from '#cli/generation/configurations/language/javascript/eslint/blocks/local-plugins.ts';
-import type {
-    BlockWriter,
-    EslintPresets,
-    PlannedEslintBlock,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     selectPlugins,
     buildClosingBlocks,

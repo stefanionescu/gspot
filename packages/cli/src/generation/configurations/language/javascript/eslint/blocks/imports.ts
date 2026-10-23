@@ -7,15 +7,15 @@ import { readScopeAliases, readPackageAliases } from '#cli/repository/npm/aliase
 import { FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 
 import {
+    type EslintBlock,
+    type PlannedEslintFile,
+    type EslintImportBoundaryRule,
+} from '#cli/types/generation/eslint.ts';
+import {
     buildNodePatterns,
     buildSourcePattern,
     listNestedScopeGlobs,
 } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
-import {
-    type EslintBlock,
-    type PlannedEslintFile,
-    type EslintImportBoundaryRule,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     CODE_LANGUAGES,
     ESLINT_SETTINGS_TABLE,

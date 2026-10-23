@@ -1,10 +1,7 @@
 import { REACT_RULES } from '#cli/config/generation/configurations/framework/react.ts';
+import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 
-import {
-    type EslintScope,
-    type ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     REACT_FILES,
     CONFIGURATION_PLUGINS,

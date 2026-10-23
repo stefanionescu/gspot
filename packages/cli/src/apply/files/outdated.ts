@@ -14,7 +14,7 @@ import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/outdated-files.ts';
+import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/files/outdated.ts';
 
 function buildDiff(path: string, before: string, after: string, beforeName: string): string {
     return createTwoFilesPatch(

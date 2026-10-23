@@ -6,7 +6,7 @@ import {
     type RULE_CONDITIONS,
     type DOCSTRING_CONVENTIONS,
     type IMPORT_EXTENSION_STYLES,
-} from '#cli/config/settings/tools.ts';
+} from '#cli/config/settings/tools/tables.ts';
 
 export type WrittenTools = {
     hadolint?: { trusted_registries?: string[] | undefined } | undefined;

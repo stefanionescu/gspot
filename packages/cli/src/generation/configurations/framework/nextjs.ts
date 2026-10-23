@@ -1,7 +1,5 @@
-import {
-    type EslintScope,
-    type ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
+import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
+
 import {
     REACT_FILES,
     CONFIGURATION_PLUGINS,

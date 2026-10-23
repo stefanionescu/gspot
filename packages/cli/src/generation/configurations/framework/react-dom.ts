@@ -1,9 +1,6 @@
+import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { REACT_NATIVE_CONFIGURATION } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
-import {
-    type EslintScope,
-    type ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     REACT_FILES,
     CONFIGURATION_PLUGINS,

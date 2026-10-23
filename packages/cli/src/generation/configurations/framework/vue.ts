@@ -1,9 +1,6 @@
+import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { VUE_RULES, VUE_FILES } from '#cli/config/generation/configurations/framework/vue.ts';
 
-import {
-    type EslintScope,
-    type ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     getPreset,
     convertPresetWarnings,

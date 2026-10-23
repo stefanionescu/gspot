@@ -20,11 +20,11 @@ import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readDeclaredSpecifiers } from '#cli/repository/dependencies.ts';
 import type { PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
+import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { getWrittenSetting, listSettingsTables } from '#cli/settings/inherit.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { splitIdentity, readLockedPackages } from '#cli/parsers/projects/lockfiles.ts';
-import { configurationTableSchemas } from '#cli/schemas/settings/configuration-tables.ts';
 import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 import { pythonReportSchema, javascriptReportSchema } from '#cli/schemas/checks/general/licenses.ts';
 

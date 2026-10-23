@@ -6,8 +6,8 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
+import { reportedTypoSchema } from '#cli/schemas/runs/typos.ts';
 import type { ReportedTypo } from '#cli/types/runs/tool-reports.ts';
-import { reportedTypoSchema } from '#cli/schemas/runs/output/typos.ts';
 
 // Read the lines of a source file as bytes, once per file, so byte offsets map to columns.
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {

@@ -15,7 +15,7 @@ import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
-import { formatApplyReport, writeGeneratedFiles } from '#cli/apply/generated-files.ts';
+import { formatApplyReport, writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { getScopeTable, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import type { Scope, SettingMatch, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import { assertKnownConfigurations, assertConfigurationsEditable } from '#cli/configurations/select.ts';

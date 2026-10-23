@@ -1,10 +1,10 @@
 import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { MISE_SCRIPT_PATH } from '#cli/config/files/names.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
 import { joinScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
-import type { EslintRuntime } from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import { splitGlobs, listNestedScopeGlobs } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
 import {

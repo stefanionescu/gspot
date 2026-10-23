@@ -13,7 +13,7 @@ import {
     type PathExpressions,
     type EslintFileGroups,
     type EslintBlockFields,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
+} from '#cli/types/generation/eslint.ts';
 
 // Component selectors carry the parser discriminator for the declared component configurations.
 function isComponentConfiguration(name: string): name is (typeof COMPONENT_CONFIGURATIONS)[number] {

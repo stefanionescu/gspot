@@ -14,9 +14,9 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { nameListSchema } from '#cli/schemas/configurations/name-lists.ts';
 import { eslintPresetSchema } from '#cli/schemas/configurations/eslint-presets.ts';
+import type { EslintPreset, EslintPresets } from '#cli/types/generation/eslint.ts';
 import type { PackageIdentity, InstalledPackage } from '#cli/types/pinned-linters.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
-import type { EslintPreset, EslintPresets } from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import { PINNED_LINTERS, PRESET_BLOCK_KEYS, PINNED_LINTER_FOLDER } from '#cli/config/configurations/pinned-linters.ts';
 
 import {

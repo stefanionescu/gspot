@@ -6,12 +6,9 @@ import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
+import { type SelectorGroup, type SelectorPaths } from '#cli/types/generation/eslint.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
-import {
-    type SelectorGroup,
-    type SelectorPaths,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     REEXPORT_SELECTORS,
     ENVIRONMENT_SELECTOR,

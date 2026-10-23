@@ -2,11 +2,11 @@ import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { stripDefaults } from '#cli/settings/text/defaults.ts';
+import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';
 import { encodeSettings, listKeptComments } from '#cli/settings/text/layout.ts';
 import { settingsSchema, listRecordFields } from '#cli/schemas/settings/file.ts';
-import { tableValuesSchema } from '#cli/schemas/settings/configuration-tables.ts';
 import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/text/build.ts';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 

@@ -1093,7 +1093,8 @@ export default [
                     {
                         "category": "import-rule:apply",
                         "pattern": [
-                            "packages/cli/src/apply/*.ts"
+                            "packages/cli/src/apply/*.ts",
+                            "packages/cli/src/apply/files/**"
                         ]
                     },
                     {

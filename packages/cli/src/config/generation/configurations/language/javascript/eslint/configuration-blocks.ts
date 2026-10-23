@@ -1,4 +1,4 @@
-import type { EslintPlugins } from '#cli/types/generation/configurations/language/javascript/eslint.ts';
+import type { EslintPlugins } from '#cli/types/generation/eslint.ts';
 
 const EXPO_RULES = {
     'expo/no-env-var-destructuring': 'error',

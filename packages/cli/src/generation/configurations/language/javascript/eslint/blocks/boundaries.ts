@@ -13,7 +13,7 @@ import type {
     ScopeBoundaries,
     PlannedEslintFile,
     EslintBoundaryPolicy,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
+} from '#cli/types/generation/eslint.ts';
 import {
     TEMPLATE_OPEN,
     TRPC_CONFIGURATION,

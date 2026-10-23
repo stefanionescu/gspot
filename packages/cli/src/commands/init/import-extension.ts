@@ -9,9 +9,9 @@ import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
-import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/tools.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import type { IMPORT_EXTENSION_STYLES } from '#cli/config/settings/tools/tables.ts';
 import { BUNDLER_PACKAGES, IMPORT_EXTENSION_SETTING } from '#cli/config/commands/init/import-extension.ts';
 
 function detectImportExtension(

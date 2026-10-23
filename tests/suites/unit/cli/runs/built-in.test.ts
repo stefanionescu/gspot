@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { SCOPE_FINDINGS, SCOPE_CHECK_FILES } from '#tests/config/runs/built-in-checks.ts';
+import { SCOPE_FINDINGS, SCOPE_CHECK_FILES } from '#tests/config/runs/built-in.ts';
 
 test.each([...SCOPE_FINDINGS])("each check in a scope reads only that scope's files: $check", async (entry) => {
     await using sandbox = await testdir(SCOPE_CHECK_FILES);

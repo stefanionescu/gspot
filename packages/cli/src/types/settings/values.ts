@@ -1,8 +1,8 @@
 import type { Optional } from '#cli/types/shapes.ts';
 import { type CI_PROVIDERS } from '#cli/config/settings/ci.ts';
 import type { LEVELS } from '#cli/config/configurations/names.ts';
+import { type REEXPORT_MODES } from '#cli/config/settings/tables.ts';
 import type { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
-import { type REEXPORT_MODES } from '#cli/config/settings/configuration-tables.ts';
 import type { LIMIT_DEFINITIONS } from '#cli/config/settings/definitions/limits.ts';
 
 import {

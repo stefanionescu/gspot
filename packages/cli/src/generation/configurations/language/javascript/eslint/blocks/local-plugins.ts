@@ -7,12 +7,8 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import type { EslintPlugins, EslintBlockFields } from '#cli/types/generation/eslint.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
-
-import type {
-    EslintPlugins,
-    EslintBlockFields,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 
 function listPluginRecords(scopes: Scope[]) {
     return scopes

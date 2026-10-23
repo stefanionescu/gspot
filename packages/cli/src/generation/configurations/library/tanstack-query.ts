@@ -1,9 +1,6 @@
+import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
-import type {
-    EslintScope,
-    ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     getPreset,
     buildArrayPresetBlocks,

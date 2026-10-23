@@ -15,7 +15,7 @@ import type {
     EslintBlockFields,
     ConfigurationBlocks,
     EslintRuleExpression,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
+} from '#cli/types/generation/eslint.ts';
 
 /**
  * Turn enabled warnings into errors, and keep every preset option.

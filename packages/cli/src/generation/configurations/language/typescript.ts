@@ -1,3 +1,4 @@
+import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { TYPESCRIPT_RULES, TYPESCRIPT_TEST_RULES } from '#cli/config/generation/configurations/language/typescript.ts';
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
@@ -5,10 +6,6 @@ import {
     getPreset,
     buildArrayPresetBlocks,
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
-import type {
-    EslintScope,
-    ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 
 /**
  * Apply the typed presets and the project files.

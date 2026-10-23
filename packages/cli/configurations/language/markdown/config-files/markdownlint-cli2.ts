@@ -1,7 +1,7 @@
 // The markdownlint-cli2 options of the markdown/markdownlint-cli2 check. gspot transpiles this file to
 // markdownlint-cli2.mjs.
 import { fileURLToPath } from 'node:url';
-import type { MarkdownlintFormatterInput } from '#cli/types/generation/configurations/language/markdownlint-cli2.ts';
+import type { MarkdownlintFormatterInput } from '#cli/types/generation/markdownlint-cli2.ts';
 
 export default {
     config: { extends: fileURLToPath(new URL('markdownlint.jsonc', import.meta.url)) },

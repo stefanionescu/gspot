@@ -164,12 +164,12 @@ allowed_names = ["resolveConfig"]
 reason = "Prettier and Stylelint name their configuration methods resolveConfig."
 
 [[naming.override]]
-paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/types/generation/configurations/language/markdownlint-cli2.ts"]
+paths = ["packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/types/generation/markdownlint-cli2.ts"]
 allowed_names = ["markdownlint-cli2"]
 reason = "The manifest loader reads this source by the external markdownlint-cli2 target filename."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/schemas/runs/output/sarif.ts", "packages/cli/src/runs/output/sarif.ts", "tests/suites/unit/cli/runs/output/sarif.test.ts", "tests/suites/unit/cli/runs/output/formats.test.ts"]
+paths = ["packages/cli/src/types/runs/tool-reports.ts", "packages/cli/src/schemas/runs/sarif.ts", "packages/cli/src/runs/output/sarif.ts", "tests/suites/unit/cli/runs/output/sarif.test.ts", "tests/suites/unit/cli/runs/output/formats.test.ts"]
 allowed_names = ["invocations"]
 reason = "SARIF names the field of a run that records each tool run invocations."
 
@@ -179,7 +179,7 @@ allowed_names = ["BuiltConfigFile", "ConflictingConfigFile", "ConflictingConfigF
 reason = "These types and functions handle config files, the files that gspot writes for each tool. gspot 0.3.5 reserves config for values; 0.3.6 allows it in types and functions."
 
 [[naming.override]]
-paths = ["packages/cli/src/types/generation/configurations/language/javascript/eslint-functions.ts"]
+paths = ["packages/cli/src/types/generation/eslint-functions.ts"]
 allowed_names = ["getDocumentFragment"]
 reason = "vue-eslint-parser names this parser service getDocumentFragment."
 
@@ -310,7 +310,7 @@ paths = ["packages/cli/src/install/**", "packages/cli/src/schemas/install/**"]
 
 [[import_rule]]
 name = "apply"
-paths = ["packages/cli/src/apply/*.ts"]
+paths = ["packages/cli/src/apply/*.ts", "packages/cli/src/apply/files/**"]
 
 [[import_rule]]
 name = "runs"

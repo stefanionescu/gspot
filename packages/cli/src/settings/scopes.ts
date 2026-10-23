@@ -1,7 +1,7 @@
 import { getValueAt, createTable } from '#cli/system/tables.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
-import { tableValuesSchema } from '#cli/schemas/settings/configuration-tables.ts';
 import { findSettingSchema, rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import type { Settings, TableValues, TableSettings } from '#cli/types/settings/file.ts';
 import { isInScope, isScopeCovered, compareScopeDepth } from '#cli/repository/scopes.ts';

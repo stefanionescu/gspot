@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { mergeValue } from '#cli/settings/inherit.ts';
-import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { toolsSchema } from '#cli/schemas/settings/tools/tables.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
-import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/configuration-tables.ts';
+import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { type Setting, type SettingDefault, type AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
 import {

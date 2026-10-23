@@ -1,9 +1,6 @@
+import type { EslintScope, ConfigurationBlocks } from '#cli/types/generation/eslint.ts';
 import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 
-import type {
-    EslintScope,
-    ConfigurationBlocks,
-} from '#cli/types/generation/configurations/language/javascript/eslint.ts';
 import {
     ASTRO_RULES,
     ASTRO_FILES,

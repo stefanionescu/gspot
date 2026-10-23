@@ -7,7 +7,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { openWriter } from '#cli/apply/write/writer.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
-import { writeGeneratedFiles } from '#cli/apply/generated-files.ts';
+import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';

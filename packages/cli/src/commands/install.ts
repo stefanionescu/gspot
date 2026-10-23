@@ -7,7 +7,7 @@ import { openWriter } from '#cli/apply/write/writer.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
-import { listOutdatedFiles } from '#cli/apply/outdated-files.ts';
+import { listOutdatedFiles } from '#cli/apply/files/outdated.ts';
 import { TOOL_PROJECT_FILES } from '#cli/config/commands/install.ts';
 import type { InstallCommandJson } from '#cli/types/commands/install.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
