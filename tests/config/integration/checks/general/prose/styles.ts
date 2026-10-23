@@ -13,7 +13,6 @@ export const STYLE_CASES = [
             { line: 3, rule: 'gspot.currency', message: "Ambiguous currency '$5.00'. Write the ISO code (USD 5)." },
             { line: 5, rule: 'gspot.currency', message: "Ambiguous currency '$15'. Write the ISO code (USD 5)." },
             { line: 7, rule: 'gspot.currency', message: "Ambiguous currency '5 dollars'. Write the ISO code (USD 5)." },
-            { line: 9, rule: 'gspot.acronyms', message: "Spell out 'USD' on first use." },
         ],
     },
     {
@@ -184,10 +183,7 @@ A todo app lists tasks.
 
 Use TODO to label work.
 `,
-        findings: [
-            { line: 3, rule: 'gspot.future', message: "Future promise 'will be added'. Document what exists." },
-            { line: 7, rule: 'gspot.acronyms', message: "Spell out 'TODO' on first use." },
-        ],
+        findings: [{ line: 3, rule: 'gspot.future', message: "Future promise 'will be added'. Document what exists." }],
     },
     {
         rule: 'placeholders',

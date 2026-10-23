@@ -115,6 +115,9 @@ export const ACRONYMS = [
     'CRLF',
     'CSV',
     'ESM',
+    // The currency codes that the currency rule asks for.
+    'EUR',
+    'GBP',
     'GNU',
     'HTTPS',
     'INI',
@@ -129,7 +132,10 @@ export const ACRONYMS = [
     'SSH',
     'SVG',
     'TLS',
+    // The code-comment marker.
+    'TODO',
     'TSX',
+    'USD',
     'UTC',
     'UTF',
     'WASM',
