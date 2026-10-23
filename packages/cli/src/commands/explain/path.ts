@@ -6,7 +6,6 @@ import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
-import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { type Explanation, type PathExplanation } from '#cli/types/commands/explain.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | undefined {
@@ -27,27 +26,24 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     const { path } = file;
     const folder = findScopeFolder(path, session.repository.scopeFolders);
     const scope = session.scopes.find((entry) => entry.folder.path === folder.path) as Scope;
-    const configurations = scope.configurations.filter(
-        (configuration) =>
-            listCoveredFiles(configuration.files, [file], {
-                configurations: scope.configurations,
-                scopePath: scope.folder.path,
-                settings: scope.settings,
-            }).length > 0,
+    const checks = session.configuredChecks.filter((check) =>
+        listCheckedFiles(session.scopes, check).some((entry) => entry.path === file.path),
+    );
+    // A configuration applies to the file when one of its checks reads it, so the two lists agree.
+    const covering = new Set(
+        checks.flatMap(({ configuration }) => (configuration === undefined ? [] : [configuration.name])),
     );
     const report: PathExplanation = {
         path,
         scope: folder.path === '' ? ROOT_SCOPE_LABEL : folder.path,
         fileKind: file.kind,
         tags: file.tags,
-        configurations: configurations.map((configuration) => configuration.name),
-        checks: session.configuredChecks
-            .filter((check) => listCheckedFiles(session.scopes, check).some((entry) => entry.path === file.path))
-            .map((check) => ({
-                check: check.check.id,
-                stage: check.check.stage,
-                ...(check.configuration === undefined ? {} : { configuration: check.configuration.name }),
-            })),
+        configurations: scope.configurations.map(({ name }) => name).filter((name) => covering.has(name)),
+        checks: checks.map((check) => ({
+            check: check.check.id,
+            stage: check.check.stage,
+            ...(check.configuration === undefined ? {} : { configuration: check.configuration.name }),
+        })),
         ignores: session.settingsFile.settings.ignore
             .filter(
                 (entry) => entry.paths === undefined || entry.paths.length === 0 || buildPathMatcher(entry.paths)(path),

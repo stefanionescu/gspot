@@ -104,6 +104,12 @@ test('a file path reports its scope, checks, and ignores', async () => {
     });
     // The api scope adds the bash configuration and its commit checks to the ones every repository selects.
     expect(explanation.configurations.filter((name) => !listAlwaysSelected().includes(name))).toStrictEqual(['bash']);
+    // The configurations match the ones whose checks read the file.
+    expect(explanation.configurations.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+        [...new Set(explanation.checks.flatMap(({ configuration }) => configuration ?? []))].toSorted((left, right) =>
+            left.localeCompare(right),
+        ),
+    );
     expect(explanation.checks.filter(({ configuration }) => configuration === 'bash')).toStrictEqual(
         ['shellcheck', 'shfmt', 'unused-functions', 'unread-arguments', 'safety'].map((name) => ({
             check: `bash/${name}`,
