@@ -30,7 +30,11 @@ test('a nested scope uses the default example environment file names', async () 
         }),
     });
     expect(await runSandboxCheck(sandbox.path, 'secrets/env-examples', { scope: 'app' })).toMatchObject([
-        { file: 'app/source.ts', rule: 'missing-key', message: expect.stringContaining('MISSING') as string },
+        {
+            file: 'app/source.ts',
+            rule: 'missing-key',
+            message: 'MISSING is read here and appears in no example environment file.',
+        },
     ]);
     await createFileTree(sandbox.path, { 'app/.env.example': 'KNOWN=example\nMISSING=example\n' });
     expect(await runSandboxCheck(sandbox.path, 'secrets/env-examples', { scope: 'app' })).toStrictEqual([]);
@@ -41,8 +45,7 @@ test('keys read through Bun.env and environment functions are reported until the
 
     const failed = await runChecks(await openSession(sandbox.path), buildRunOptions(ENVIRONMENT_CHECK_OPTIONS));
 
-    const report = failed.report;
-    expect(report.checks).toMatchObject([
+    expect(failed.report.checks).toMatchObject([
         { check: 'secrets/env-examples', status: 'failed', findings: ENVIRONMENT_FUNCTION_FINDINGS },
     ]);
     await createFileTree(sandbox.path, { 'config/example.env': ENVIRONMENT_FUNCTION_EXAMPLE });
@@ -56,12 +59,11 @@ test('each scope checks its own example env files and environment functions', as
 
     const failed = await runChecks(await openSession(sandbox.path), buildRunOptions(ENVIRONMENT_CHECK_OPTIONS));
 
-    const report = failed.report;
-    expect(report.checks).toMatchObject([...ENVIRONMENT_SCOPE_RESULTS]);
+    expect(failed.report.checks).toMatchObject([...ENVIRONMENT_SCOPE_RESULTS]);
     await createFileTree(sandbox.path, SCOPE_FUNCTION_CORRECTIONS);
     const corrected = await runChecks(await openSession(sandbox.path), buildRunOptions(ENVIRONMENT_CHECK_OPTIONS));
 
-    expect(corrected.report.checks.map((check) => check.status)).toEqual(['passed', 'passed', 'passed']);
+    expect(corrected.report.checks.map((check) => check.status)).toStrictEqual(['passed', 'passed', 'passed']);
 });
 
 test('Bun.env reads are checked with no environment functions declared', async () => {
@@ -104,8 +106,11 @@ test('a scope with env reads and no example env file is skipped with a note', as
 
 test('import.meta.env and Deno.env reads in component and module files need example keys', async () => {
     const settings = buildSandboxSettings(['data-files'], { level: 'all' });
-    const sources = ENV_ACCESSOR_FILES;
-    await using sandbox = await testdir({ 'gspot.toml': settings, '.env.example': 'KNOWN=example\n', ...sources });
+    await using sandbox = await testdir({
+        'gspot.toml': settings,
+        '.env.example': 'KNOWN=example\n',
+        ...ENV_ACCESSOR_FILES,
+    });
     const rejected = await runSandboxCheck(sandbox.path, 'secrets/env-examples');
     expect(rejected.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         ...COMPONENT_ENVIRONMENT_FINDINGS,

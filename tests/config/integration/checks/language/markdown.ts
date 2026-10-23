@@ -1,6 +1,7 @@
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { GUIDE, README, LICENSE } from '#tests/config/checks/samples.ts';
 
-export const MARKDOWNLINT_EXECUTABLE = '.gspot/node_modules/.bin/markdownlint-cli2';
+export const MARKDOWNLINT_EXECUTABLE = `${GSPOT_PATHS.nodeModules}/.bin/markdownlint-cli2`;
 
 /** Markdown files in the root and a scope, to test which config file applies, with no extra tools to install. */
 export const MARKDOWN_FILES = {
@@ -56,3 +57,6 @@ export const MARKDOWN_SANDBOX = {
     configurations: ['markdown'],
     files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
 } as const;
+
+/** A Markdown document that starts with its title. */
+export const TITLED_DOCUMENT = '# Title\n\nA document with a title.\n';

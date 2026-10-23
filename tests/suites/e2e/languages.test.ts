@@ -3,21 +3,19 @@ import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { UserProject } from '#tests/types/packages.ts';
-import { runCheckSample } from '#tests/setup/cli/samples.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e/languages.ts';
 import { createUserProject } from '#tests/setup/sandboxes/user-project.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 /** Run a sample of a check: it fails with the expected finding, and passes after its fix. */
 async function assertSample(installation: UserProject, check: typeof PROSE_CHECK | typeof SWIFT_CHECK): Promise<void> {
-    const { failed, passed } = await runCheckSample(installation.offline, check, { configurations: [], files: {} });
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks).toMatchObject([{ check: check.check, status: 'failed', findings: [check.expected] }]);
-    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    expect(passed.report.checks).toMatchObject([{ check: check.check, status: 'passed', findings: [] }]);
+    const result = await runCheckSample(installation.offline, check, { configurations: [], files: {} });
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(check));
 }
 
 /** Install the configurations with the packed CLI, and add the project name to allowed_words. */
@@ -56,7 +54,7 @@ test('gspot installed from npm runs Vale and the built-in Swift naming check, re
     expect(level.code, level.stdout + level.stderr).toBe(0);
     await assertSample(installation, SWIFT_CHECK);
     const vocabulary = await readFile(
-        join(installation.root, '.gspot/configurations/general/prose/styles/config/vocabularies/words/accept.txt'),
+        join(installation.root, findFileTarget('prose', 'styles/config/vocabularies/words/accept.txt')),
         'utf8',
     );
     const acceptedWords = vocabulary.trim().split('\n');
@@ -72,7 +70,7 @@ test('gspot installed from npm suggests gspot add sql for a SQL file, and SQLFlu
     const listed = await offline.run(root, ['list', '--json'], offline.environment);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const available = JSON.parse(listed.stdout) as ConfigurationsListJson;
-    expect(available.available.some((configuration) => configuration.name === 'sql')).toBe(true);
+    expect(available.available.map(({ name }) => name)).toContain('sql');
     const inspected = await offline.run(root, ['doctor', '--json'], offline.environment);
     const report = JSON.parse(inspected.stdout) as DoctorReport;
     expect(inspected.code, inspected.stdout + inspected.stderr).toBe(report.exitCode);

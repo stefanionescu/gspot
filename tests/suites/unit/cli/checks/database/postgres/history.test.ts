@@ -51,8 +51,8 @@ test('history: edited-migrations fails when it cannot read the committed Git his
     const session = await openSession(sandbox.path);
     const planned = planSandboxCheck(session, 'postgres/edited-migrations');
     await writeFile(join(sandbox.path, '.git', runGitStep(sandbox.path, ['symbolic-ref', 'HEAD'])), 'broken');
-    expect(await captureRejection(findBuiltInCheck('postgres/edited-migrations')(session, planned))).toContain(
-        'Cannot read committed Git history',
+    expect(await captureRejection(findBuiltInCheck('postgres/edited-migrations')(session, planned))).toBe(
+        'Cannot read committed Git history. Restore HEAD and check again.',
     );
 });
 

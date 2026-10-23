@@ -8,6 +8,7 @@ import { planChecks } from '#cli/planning/checks.ts';
 import { type Session } from '#cli/types/session.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runCheckCode } from '#cli/commands/check/run.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
@@ -53,7 +54,7 @@ async function preparePydoclintCheck(
 ): Promise<DisposableStack & { session: Session; planned: PlannedCheck }> {
     using cleanup = new DisposableStack();
     const resources = cleanup.use(new DisposableStack());
-    const executable = buildVenvExecutablePath('.gspot/.venv', 'pydoclint');
+    const executable = buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'pydoclint');
     await createFileTree(root, {
         ...files,
         'gspot.toml': buildSandboxSettings(['python'], { tables }),

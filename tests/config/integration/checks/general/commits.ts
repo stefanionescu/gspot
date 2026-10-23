@@ -23,3 +23,17 @@ export const COMMITS_FILES = {
     'README.md': '# Test\n',
     LICENSE,
 } as const;
+
+/**
+ * The commitlint findings of a commit message with no type, one sentence such as `Bad message.`
+ *
+ * @param hash the commit.
+ * @returns each rule with its message.
+ */
+export function buildUntypedMessageFindings(hash: string): { rule: string; message: string }[] {
+    return [
+        { rule: 'type-empty', message: `${hash}: type may not be empty` },
+        { rule: 'subject-empty', message: `${hash}: subject may not be empty` },
+        { rule: 'subject-full-stop', message: `${hash}: subject may not end with full stop` },
+    ];
+}

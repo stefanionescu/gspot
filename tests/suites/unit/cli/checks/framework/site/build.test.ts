@@ -4,7 +4,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -24,7 +24,7 @@ import {
 test('build: a push run builds the site without changing committed dist files or Git status', async () => {
     await using sandbox = await testdir({
         'gspot.toml': SITE_SETTINGS,
-        '.gitignore': '.gspot/\n',
+        '.gitignore': `${DOT_GSPOT}/\n`,
         'build.js': SITE_BUILD_SCRIPT,
         'dist/index.html': 'committed output\n',
     });
@@ -49,9 +49,13 @@ ${SITE_BUILD_SCRIPT}`,
     });
     const session = await openSession(sandbox.path, { resources });
     const request = planSandboxCheck(session, 'site/build', { paths: ['build.js'] });
-    expect(await findBuiltInCheck('site/build')(session, request)).toStrictEqual([
-        matchFields({ rule: 'build', message: expect.stringContaining('local-input.txt') as string }),
-    ]);
+    const findings = await findBuiltInCheck('site/build')(session, request);
+    expect(findings).toMatchObject([{ rule: 'build', line: 1 }]);
+    // The message ends with the stack frame in the build folder and the Bun version.
+    expect(findings[0]!.message).toStartWith(
+        `["bun","build.js"] did not build the site: 1 | import { readFileSync } from 'node:fs'; | 2 | readFileSync('local-input.txt');`,
+    );
+    expect(findings[0]!.message).toContain("ENOENT: no such file or directory, open 'local-input.txt'");
     const checkedSession = await openSession(sandbox.path, { resources });
     const corrected = await getSuccessfulBuild(
         checkedSession,
@@ -75,13 +79,7 @@ test.each([0, 7])("build: a run deletes the build's copy after exit %i", async (
             cwd = options.cwd!;
             await mkdir(join(cwd, 'dist'), { recursive: true });
             await writeFile(join(cwd, 'dist/index.html'), 'isolated output');
-            return buildProcessResult({
-                code,
-                stdout: '',
-                stderr: code === 0 ? '' : 'Test build failure',
-                missing: false,
-                duration: 1,
-            });
+            return buildProcessResult({ code, stderr: code === 0 ? '' : 'Test build failure' });
         }),
     );
     const runResources = new DisposableStack();
@@ -157,11 +155,15 @@ test('build: a failed site build skips every check that reads the build, and a n
             .toSorted((left, right) => left.check.localeCompare(right.check)),
     ).toMatchObject(
         [
-            { check: 'site/build', status: 'failed', message: expect.stringContaining('Test build failure') as string },
+            {
+                check: 'site/build',
+                status: 'failed',
+                message: '["bun","build.js"] did not build the site: Test build failure',
+            },
             ...[...consumers].map((check) => ({
                 check,
                 status: 'skipped',
-                note: expect.stringContaining('did not build') as string,
+                note: 'The site did not build.',
             })),
         ].toSorted((left, right) => left.check.localeCompare(right.check)),
     );

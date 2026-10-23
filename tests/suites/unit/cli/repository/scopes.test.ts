@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, writeFile } from 'node:fs/promises';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -51,7 +52,7 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
     await using sandbox = await testdir(PRIVATE_TOOL_PACKAGES);
 
     const root = join(sandbox.path, 'project');
-    await symlink('../../../../outside/python', join(root, '.gspot/.venv/bin/python'));
+    await symlink('../../../../outside/python', join(root, `${GSPOT_PATHS.pythonEnvironment}/bin/python`));
     const repository = await readTestRepository(root);
     expect(listWorkspaceFolders(root)).toStrictEqual(['packages/app']);
     expect(

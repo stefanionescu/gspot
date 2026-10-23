@@ -177,7 +177,7 @@ test('OpenAPI stays off without a document and in a scope that removes it', asyn
 
     const session = await openSession(sandbox.path);
     expect(getTable(session.scopes[0]!.settings, 'openapi').document).toBeUndefined();
-    expect(session.scopes[1]!.configurations.some((configuration) => configuration.name === 'openapi')).toBe(false);
+    expect(session.scopes[1]!.configurations.map(({ name }) => name)).not.toContain('openapi');
     expect(
         planChecks(session, { stage: 'all', only: ['openapi/spectral'] }).map(({ skip }) => skip?.cause),
     ).toStrictEqual(['setting']);

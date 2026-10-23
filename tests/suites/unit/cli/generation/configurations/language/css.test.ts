@@ -5,8 +5,8 @@ import stylelint, { type Config } from 'stylelint';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { type StylelintConfigFile } from '#tests/types/generated-files.ts';
+import { findFileTarget, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { STYLELINT_SCOPE_FILES, STYLELINT_SCOPE_TABLES } from '#tests/config/generation/configurations/language/css.ts';
 
 test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
@@ -15,13 +15,11 @@ test('Vue and Svelte stylesheet rules stay inside their scopes', async () => {
         ...STYLELINT_SCOPE_FILES,
     });
 
-    const outputs = generate(await openSession(sandbox.path)).files;
+    const session = await openSession(sandbox.path);
+    const outputs = generate(session).files;
     const documents = Object.fromEntries(
         ['', 'vue', 'svelte', 'mixed'].map((scope) => {
-            const prefix = scope === '' ? '' : `scopes/${scope}/`;
-            const output = outputs.find(
-                (file) => file.path === `.gspot/configurations/language/css/${prefix}stylelint.json`,
-            )!;
+            const output = outputs.find((file) => file.path === findConfigFilePath(session, 'stylelint', scope))!;
             return [scope, JSON.parse(output.content) as StylelintConfigFile];
         }),
     );
@@ -94,7 +92,7 @@ test('a scope with CSS Modules files accepts composes, :global, and @value in th
     });
 
     const output = generate(await openSession(sandbox.path)).files.find(
-        (file) => file.path === '.gspot/configurations/language/css/stylelint.json',
+        (file) => file.path === findFileTarget('css', 'stylelint.json'),
     )!;
     const config = JSON.parse(output.content) as Config;
     const code =

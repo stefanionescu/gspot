@@ -1,5 +1,3 @@
-import { ROOT_PACKAGE_WITHOUT_DEPENDENCIES } from '#tests/config/repository/dependencies.ts';
-
 /**
  * A check that fails while a file holds its first argument, and a correction that replaces that text with its second.
  */
@@ -37,8 +35,6 @@ export const FIX_LINTER_CASES = [
         corrected: 'a { color: #fff; }\n',
     },
 ] as const;
-
-export const CLEAR_DEPENDENCIES_SCRIPT = `require('node:fs').writeFileSync('package.json', ${JSON.stringify(ROOT_PACKAGE_WITHOUT_DEPENDENCIES)})`;
 
 /** The generated type files that a fix run keeps. */
 export const GENERATED_TYPE_FILES = [

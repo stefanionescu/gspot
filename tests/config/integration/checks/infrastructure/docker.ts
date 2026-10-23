@@ -1,8 +1,8 @@
 /** Trivy uses this configured exit code when an image report contains findings. */
-
 import type { CheckResult } from '#cli/types/runs/check.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 
-export const TRIVY_CONFIG_PATH = '.gspot/configurations/infrastructure/docker/trivy.yml';
+export const TRIVY_CONFIG_PATH = findFileTarget('docker', 'trivy.yml');
 
 export const DOCKER_SANDBOX = {
     install: false,

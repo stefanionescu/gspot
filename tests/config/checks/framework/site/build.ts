@@ -1,5 +1,6 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
+/** The site checks that read the build output. */
 export const BUILD_OUTPUT_CHECKS = [
     'site/html-validate',
     'site/purgecss',
@@ -8,6 +9,7 @@ export const BUILD_OUTPUT_CHECKS = [
     'site/sitemap',
 ] as const;
 
+/** A build script that writes dist/index.html. */
 export const SITE_BUILD_SCRIPT = `import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 const hadOutput = existsSync('dist/index.html');
 rmSync('dist', { recursive: true, force: true });
@@ -16,10 +18,11 @@ mkdirSync('dist');
 writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
 `;
 
+/** A site scope that imports one of two workspace packages. */
 export const WORKSPACE_SITE_FILES = {
     'gspot.toml': buildSandboxSettings([], {
         scopes: [{ path: 'web', configurations: ['site', 'javascript'] }],
-        tables: 'site.build_command = ["bun", "build.js"]\n[rules]\nenabled = false\n',
+        tables: 'site.build_command = ["bun", "build.js"]\n',
     }),
     'package.json': '{"private":true,"workspaces":["web","packages/*"]}',
     'web/package.json': '{"name":"web","type":"module","dependencies":{"core":"workspace:*"}}',

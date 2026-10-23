@@ -2,16 +2,17 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openFiles } from '#cli/system/files/open.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
+    LOGO_IMAGE_SET,
     ASSET_SETTING_CASES,
     UNREADABLE_RESOURCES,
     PARTLY_TRANSLATED_STRINGS,
@@ -30,54 +31,46 @@ test.each([...UNREADABLE_RESOURCES])(
 
         const session = await openSession(sandbox.path);
         const options = buildRunOptions({ stage: 'commit', only: [check] });
-        using files = openFiles(sandbox.path);
         const target = join(sandbox.path, path);
         await rm(target);
         await mkdir(target);
         const unreadable = await runChecks(session, options);
 
         expect(unreadable.report.checks).toMatchObject([{ check, status: 'error', findings: [] }]);
-        expect(unreadable.report.checks[0]?.note).toContain(
-            `${path} could not be read. Check the file and its permissions.`,
+        expect(unreadable.report.checks[0]?.note).toBe(
+            `The ${check} check failed: ${path} could not be read. Check the file and its permissions.`,
         );
-        const folder = files.readStats(path)!;
-        expect(folder.isDirectory()).toBe(true);
     },
 );
 
 test('xcode/assets reports an image that the set names and the repository does not hold', async () => {
-    const contentsPath = 'App/Assets.xcassets/Logo.imageset/Contents.json';
-    const image = 'App/Assets.xcassets/Logo.imageset/logo.png';
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['xcode']),
-        [contentsPath]: '{"images":[{"filename":"logo.png"}]}\n',
-        [image]: new Uint8Array([0, 1, 2]),
-        'App/Home.swift': 'let logo = Image("Logo")\n',
-    });
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['xcode']), ...LOGO_IMAGE_SET.files });
     commitAll(sandbox.path);
-    await rm(join(sandbox.path, image));
-    const findings = await runSandboxCheck(sandbox.path, 'xcode/assets');
-    expect(findings).toMatchObject([
-        { file: contentsPath, line: 1, rule: 'missing-image', message: 'The image logo.png is not in the set.' },
+    await rm(join(sandbox.path, LOGO_IMAGE_SET.image));
+    expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toMatchObject([
+        {
+            file: LOGO_IMAGE_SET.contents,
+            line: 1,
+            rule: 'missing-image',
+            message: 'The image logo.png is not in the set.',
+        },
     ]);
 });
 
 test('xcode/assets reports an ignored image that is on disk but not in the repository', async () => {
-    const contentsPath = 'App/Assets.xcassets/Logo.imageset/Contents.json';
-    const image = 'App/Assets.xcassets/Logo.imageset/logo.png';
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['xcode']),
-        '.gitignore': `${image}\n`,
-        [contentsPath]: '{"images":[{"filename":"logo.png"}]}\n',
-        [image]: new Uint8Array([0, 1, 2]),
-        'App/Home.swift': 'let logo = Image("Logo")\n',
+        '.gitignore': `${LOGO_IMAGE_SET.image}\n`,
+        ...LOGO_IMAGE_SET.files,
     });
     commitAll(sandbox.path);
-    expect(runGitStep(sandbox.path, ['check-ignore', image])).toBe(image);
-    expect(await readFile(join(sandbox.path, image))).toStrictEqual(Buffer.from([0, 1, 2]));
-    const findings = await runSandboxCheck(sandbox.path, 'xcode/assets');
-    expect(findings).toMatchObject([
-        { file: contentsPath, line: 1, rule: 'missing-image', message: 'The image logo.png is not in the set.' },
+    expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toMatchObject([
+        {
+            file: LOGO_IMAGE_SET.contents,
+            line: 1,
+            rule: 'missing-image',
+            message: 'The image logo.png is not in the set.',
+        },
     ]);
 
     await writeFile(join(sandbox.path, '.gitignore'), '');
@@ -117,7 +110,7 @@ test.each([...ASSET_SETTING_CASES])(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['xcode'], {
                 level: 'all',
-                tables: scope === '' ? '' : '[[scope]]\npath = "app"\n',
+                scopes: scope === '' ? [] : [{ path: 'app' }],
             }),
             [asset]: '{}\n',
             [path]: text,
@@ -144,25 +137,26 @@ test.each([...INVALID_RESOURCE_DOCUMENTS])(
             [path]: text,
         });
 
-        const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-        const report = result.report;
+        const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
         expect(report.checks.map(({ status }) => status)).toStrictEqual(['failed']);
-        expect(
-            report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
-        ).toStrictEqual([{ file: path, line: 1, rule: 'syntax' }]);
+        expect(listFindingRows(report)).toStrictEqual([{ file: path, line: 1, rule: 'syntax' }]);
     },
 );
 
 test('xcode/assets reports an image set that names no image file', async () => {
-    const contentsPath = 'App/Assets.xcassets/Logo.imageset/Contents.json';
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['xcode']),
-        [contentsPath]: '{"images":[{"idiom":"universal"}]}\n',
-        'App/Home.swift': 'let logo = Image("Logo")\n',
+        [LOGO_IMAGE_SET.contents]: '{"images":[{"idiom":"universal"}]}\n',
+        'App/Home.swift': LOGO_IMAGE_SET.files['App/Home.swift'],
     });
     commitAll(sandbox.path);
     expect(await runSandboxCheck(sandbox.path, 'xcode/assets')).toStrictEqual([
-        matchFields({ file: contentsPath, line: 1, rule: 'empty-set', message: 'This image set names no image file.' }),
+        matchFields({
+            file: LOGO_IMAGE_SET.contents,
+            line: 1,
+            rule: 'empty-set',
+            message: 'This image set names no image file.',
+        }),
     ]);
 });
 

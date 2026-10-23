@@ -7,6 +7,7 @@ import * as processes from '#cli/system/processes.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import type { Tool } from '#cli/types/configurations.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { unlink, symlink, writeFile } from 'node:fs/promises';
 import { getTool } from '#cli/configurations/declared-tools.ts';
@@ -18,7 +19,7 @@ import { SYSTEM_PLUGIN_REPORTS, PACKAGE_METADATA_FAILURES } from '#tests/config/
 
 test('a library is found only in the tool project', async () => {
     await using sandbox = await testdir({
-        '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
+        [`${GSPOT_PATHS.nodeModules}/globals/package.json`]: '{"name":"globals","version":"17.12.0"}',
         'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
     });
 
@@ -30,7 +31,7 @@ test('a library is found only in the tool project', async () => {
 
 test('a library that is absent is missing, and one off its pin is reported', async () => {
     await using sandbox = await testdir({
-        '.gspot/node_modules/typescript/package.json': '{"name":"typescript","version":"6.0.0"}',
+        [`${GSPOT_PATHS.nodeModules}/typescript/package.json`]: '{"name":"typescript","version":"6.0.0"}',
     });
 
     const absent = inspectTool(buildToolSearch(sandbox.path), buildLibraryPin('eslint-plugin-regexp', '3.3.0'));
@@ -43,7 +44,8 @@ test('a library that is absent is missing, and one off its pin is reported', asy
 
 test('a system library is read from the chosen project, not from the tool project', async () => {
     await using sandbox = await testdir({
-        '.gspot/node_modules/@vitest/coverage-v8/package.json': '{"name":"@vitest/coverage-v8","version":"4.1.11"}',
+        [`${GSPOT_PATHS.nodeModules}/@vitest/coverage-v8/package.json`]:
+            '{"name":"@vitest/coverage-v8","version":"4.1.11"}',
         'app/package.json': '{}',
     });
 
@@ -68,7 +70,7 @@ test('a system library is read from the chosen project, not from the tool projec
     );
 });
 
-test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report as $state', async (report) => {
+test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report', async (report) => {
     await using sandbox = await testdir();
     const tool = {
         ...getTool(readConfigurations().values(), 'pytest-cov'),
@@ -79,23 +81,26 @@ test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $nam
         buildProcessResult({ code: report.code, stdout: report.stdout, missing: report.missing }),
     );
     const inspected = inspectTool(buildToolSearch(sandbox.path, { cwd: join(sandbox.path, 'app') }), tool);
-    expect(inspected.state).toBe(report.state);
+    expect(inspected).toStrictEqual({
+        name: 'pytest-cov',
+        path: '/native/pytest',
+        help: tool.install_help!,
+        ...report.inspection,
+    });
     expect(versionRun).toHaveBeenCalledWith(
         ['/native/pytest', '--version', '--version'],
         expect.objectContaining({ cwd: join(sandbox.path, 'app') }),
     );
-    if ('found' in report) expect(inspected.found).toBe(report.found);
-    if ('note' in report) expect(inspected.note).toContain(report.note);
 });
 
 test('a library linked inside the tool project is accepted and one linked outside is refused', async () => {
     await using sandbox = await testdir();
     await using outside = await testdir();
     await createFileTree(sandbox.path, {
-        '.gspot/node_modules/.store/globals/package.json': '{"name":"globals","version":"17.12.0"}',
+        [`${GSPOT_PATHS.nodeModules}/.store/globals/package.json`]: '{"name":"globals","version":"17.12.0"}',
     });
     await createFileTree(outside.path, { 'package.json': '{"name":"globals","version":"17.12.0"}' });
-    const link = join(sandbox.path, '.gspot/node_modules/globals');
+    const link = join(sandbox.path, `${GSPOT_PATHS.nodeModules}/globals`);
     await symlink('.store/globals', link);
     const context = buildToolSearch(sandbox.path);
     const tool = buildLibraryPin('globals', '17.12.0');
@@ -105,7 +110,7 @@ test('a library linked inside the tool project is accepted and one linked outsid
     context.inspections.clear();
     expect(() => inspectTool(context, tool)).toThrow(
         new Error(
-            '.gspot/node_modules/globals/package.json links to a file outside the repository. Replace the link with the file.',
+            `${GSPOT_PATHS.nodeModules}/globals/package.json links to a file outside the repository. Replace the link with the file.`,
         ),
     );
 });
@@ -120,7 +125,7 @@ test('library reads are kept per session and see a new install in the next sessi
     const pin = buildLibraryPin('example', '1.0.0');
     expect(inspectTool(session, pin).state).toBe('missing');
     await createFileTree(sandbox.path, {
-        '.gspot/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
+        [`${GSPOT_PATHS.nodeModules}/example/package.json`]: '{"name":"example","version":"1.0.0"}',
     });
     expect(inspectTool(session, pin).state).toBe('missing');
     const next = await openSession(sandbox.path);
@@ -132,9 +137,9 @@ test.each([...PACKAGE_METADATA_FAILURES])(
     'a tool project library with a non-string $field is refused until it is fixed',
     async ({ field, packageJson }) => {
         await using sandbox = await testdir();
-        const path = join(sandbox.path, '.gspot/node_modules/teller/package.json');
+        const path = join(sandbox.path, `${GSPOT_PATHS.nodeModules}/teller/package.json`);
         const original = JSON.stringify(packageJson);
-        await createFileTree(sandbox.path, { '.gspot/node_modules/teller/package.json': original });
+        await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/teller/package.json`]: original });
         const context = buildToolSearch(sandbox.path);
         const tool = buildLibraryPin('teller', '5.0.1');
         expect(() => inspectTool(context, tool)).toThrow(

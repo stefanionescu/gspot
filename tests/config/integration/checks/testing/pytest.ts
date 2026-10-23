@@ -1,4 +1,5 @@
 import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
+import { COVERAGE_ZERO_LIMITS } from '#tests/config/integration/checks/testing/samples.ts';
 
 export const PYTEST_PYPROJECT = `[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ["pytest==9.1.1", "pytest-cov==7.1.0"]\n\n[tool.pytest.ini_options]\npythonpath = ["."]\n`;
 
@@ -40,5 +41,28 @@ def test_multiplication() -> None:
         settings: '[coverage]\nlines = 95\n',
         expected: { message: 'FAIL Required test coverage of 95% not reached. Total coverage: 85.71%' },
         corrected: { files: { 'tests/test_math.py': ARITHMETIC_TESTS } },
+    },
+] as const;
+
+/**
+ * A coverage limit for a project without pytest-cov, and what pytest/coverage does in each scope. Above 0 the check
+ * needs the plugin, and at 0 it runs pytest without coverage arguments.
+ */
+export const COVERAGE_LIMIT_CASES = [
+    {
+        limit: 80,
+        coverage: COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80'),
+        code: 2,
+        result: {
+            status: 'missing',
+            note: 'pytest-cov is not installed. Install pytest-cov in the Python environment used by pytest.',
+            coverage: undefined,
+        },
+    },
+    {
+        limit: 0,
+        coverage: COVERAGE_ZERO_LIMITS,
+        code: 0,
+        result: { status: 'passed', note: undefined, coverage: false },
     },
 ] as const;

@@ -10,8 +10,10 @@ import { generate } from '#cli/generation/generate.ts';
 import { listNeededTools } from '#cli/planning/tools.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { listToolProjectPins } from '#cli/configurations/declared-tools.ts';
@@ -34,15 +36,15 @@ test('a Ruff-only Python scope gets no type checker file or pointer', async () =
     });
 
     const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
-    expect(paths).toContain('.gspot/configurations/language/python/ruff.toml');
+    expect(paths).toContain(findFileTarget('python', 'ruff.toml'));
     expect(paths).toContain('linted/ruff.toml');
     expect(paths).toContain('typed/ruff.toml');
-    expect(paths).not.toContain('.gspot/configurations/language/python/scopes/linted/basedpyright.json');
+    expect(paths).not.toContain(`${GSPOT_PATHS.configurations}/language/python/scopes/linted/basedpyright.json`);
     expect(paths).not.toContain('linted/pyrightconfig.json');
     expect(
-        paths.filter((path) => path.startsWith('.gspot/configurations/') && path.endsWith('/ruff.toml')),
+        paths.filter((path) => path.startsWith(`${GSPOT_PATHS.configurations}/`) && path.endsWith('/ruff.toml')),
     ).toHaveLength(1);
-    expect(paths).toContain('.gspot/configurations/language/python/basedpyright.json');
+    expect(paths).toContain(findFileTarget('python', 'basedpyright.json'));
     expect(paths).toContain('typed/pyrightconfig.json');
 });
 test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
@@ -53,8 +55,8 @@ test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
 
     const session = await openSession(sandbox.path);
     const paths = generate(session).files.map((file) => file.path);
-    expect(paths).toContain('.gspot/configurations/language/javascript/knip.json');
-    expect(paths).not.toContain('.gspot/configurations/language/javascript/jsconfig.json');
+    expect(paths).toContain(findFileTarget('javascript', 'knip.json'));
+    expect(paths).not.toContain(findFileTarget('javascript', 'jsconfig.json'));
 });
 test.each([...IGNORED_CHECK_FILES])(
     '$name and drops the files of the ignored checks',
@@ -77,8 +79,8 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
     const files = generate(session).files;
     const paths = files.map((file) => file.path);
     expect(paths).toContain('.editorconfig');
-    expect(paths).toContain('.gspot/configurations/general/data-files/taplo.toml');
-    for (const path of ['.gspot/configurations/general/format/prettier.json', '.prettierignore'])
+    expect(paths).toContain(findFileTarget('data-files', 'taplo.toml'));
+    for (const path of [findFileTarget('format', 'prettier.json'), '.prettierignore'])
         expect(paths).not.toContain(path);
     const packages = listToolProjectPins(session.neededToolConfigurations).npm;
     const expected = listToolProjectPins([session.configurations.get('data-files')!]).npm;
@@ -100,8 +102,8 @@ test.each([...LEVELS])("every configuration's config files parse at level %s", a
     const output = generate(session);
     const generated = output.files.filter(
         (file) =>
-            !file.path.startsWith('.gspot/') ||
-            (file.path.startsWith('.gspot/configurations/') && !file.path.includes('/rules/')),
+            !file.path.startsWith(`${DOT_GSPOT}/`) ||
+            (file.path.startsWith(`${GSPOT_PATHS.configurations}/`) && !file.path.includes('/rules/')),
     );
     const selected = new Set(
         session.scopes
@@ -132,17 +134,17 @@ test.each([...LEVELS])("every configuration's config files parse at level %s", a
 test('an ignore whose reason equals a built-in section title keeps its paths in the jsconfig exclude', async () => {
     await using sandbox = await testdir(JSCONFIG_TITLE_IGNORE_PROJECT);
     const files = generate(await openSession(sandbox.path)).files;
-    const content = files.find(
-        ({ path }) => path === '.gspot/configurations/language/javascript/jsconfig.json',
-    )!.content;
+    const content = files.find(({ path }) => path === findFileTarget('javascript', 'jsconfig.json'))!.content;
     const jsconfig: unknown = JSON.parse(content);
     expect(getValueAt(jsconfig, ['exclude'])).toContain('../../../../legacy/**');
 });
+// Parse JSON with comments and trailing commas, and throw at the first error.
 function parseJson(text: string, path: string): void {
     const errors: ParseError[] = [];
     parseJsonc(text, errors, { allowTrailingComma: true });
     if (errors.length > 0) throw new Error(`${path}: JSON error at offset ${String((errors[0] as ParseError).offset)}`);
 }
+// Transpile a JavaScript or TypeScript module, and throw its syntax errors.
 function parseModule(text: string, path: string): void {
     const result = ts.transpileModule(text, { reportDiagnostics: true, fileName: path });
     const errors = (result.diagnostics ?? []).map((message) =>

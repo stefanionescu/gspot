@@ -1,17 +1,18 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { parse } from '@decimalturn/toml-patch';
-import { matchItems } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readGeneratedFiles } from '#tests/setup/cli/config-files.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { findFileTarget, readGeneratedFiles } from '#tests/setup/cli/config-files.ts';
 import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/checks/ruff.ts';
 import { RUFF_SANDBOX } from '#tests/config/integration/checks/language/python/samples.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
@@ -31,7 +32,9 @@ async function assertPytestSelection(root: string, sample: string): Promise<void
         await spawnGspot(root, ['check', 'app/tests/test_example.py', '--only', 'python/ruff', '--json']),
     );
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks.flatMap((check) => check.findings)).toMatchObject([{ rule: 'PT001' }]);
+    expect(listFindingRows(failed.report)).toStrictEqual([
+        { file: 'app/tests/test_example.py', line: 6, rule: 'PT001' },
+    ]);
     await writeFile(join(root, 'app/tests/test_example.py'), sample.replace('@pytest.fixture()', '@pytest.fixture'));
     const corrected = await spawnGspot(root, ['check', 'app/tests/test_example.py', '--only', 'python/ruff', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -51,7 +54,9 @@ assert True
         await spawnGspot(root, ['check', 'tests/test_example.py', '--only', 'python/ruff', '--json']),
     );
     expect(rootAssertion.code, rootAssertion.stderr).toBe(1);
-    expect(rootAssertion.report.checks.flatMap((check) => check.findings)).toMatchObject([{ rule: 'S101' }]);
+    expect(listFindingRows(rootAssertion.report)).toStrictEqual([
+        { file: 'tests/test_example.py', line: 3, rule: 'S101' },
+    ]);
     const testAssertion = await spawnGspot(root, [
         'check',
         'app/tests/test_example.py',
@@ -66,7 +71,6 @@ const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 
 test('Ruff selects the pytest lint rules only in the scope that selects pytest, and an S101 ignore on app/tests stays in that scope', async () => {
     const { root } = installedSandbox();
-    const sample = PYTEST_SAMPLE;
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
@@ -76,25 +80,30 @@ test('Ruff selects the pytest lint rules only in the scope that selects pytest, 
         'tests/__init__.py': '"""Root test package."""\n',
         'app/__init__.py': '"""Application package."""\n',
         'app/tests/__init__.py': '"""Application test package."""\n',
-        'tests/test_example.py': sample,
-        'app/tests/test_example.py': sample,
+        'tests/test_example.py': PYTEST_SAMPLE,
+        'app/tests/test_example.py': PYTEST_SAMPLE,
     };
     await using _sourceChange = await applySandboxChanges(
         installedSandbox(),
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
 
-    const configs = await readGeneratedFiles(root, '.gspot/configurations/**/ruff.toml');
+    const rootConfig = findFileTarget('python', 'ruff.toml');
+    const appConfig = `${dirname(rootConfig)}/scopes/app/ruff.toml`;
+    const configs = await readGeneratedFiles(root, `${GSPOT_PATHS.configurations}/**/ruff.toml`);
     expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        '.gspot/configurations/language/python/ruff.toml',
-        '.gspot/configurations/language/python/scopes/app/ruff.toml',
+        rootConfig,
+        appConfig,
     ]);
-    const app: unknown = parse(
-        configs.find(({ path }) => path === '.gspot/configurations/language/python/scopes/app/ruff.toml')!.content,
+    const [rootSelect, appSelect] = [rootConfig, appConfig].map(
+        (path) =>
+            ruffConfigurationSchema.parse(parse(configs.find((config) => config.path === path)!.content)).lint.select,
     );
-    expect(app).toMatchObject({ lint: { select: matchItems(['PT001']) } });
+    // The scope selects pytest at level all, so it adds the recommended and the level-all pytest rules.
+    const { ruff } = readConfigurations().get('pytest')!;
+    expect(appSelect!.filter((code) => !rootSelect!.includes(code))).toStrictEqual([...ruff.recommended, ...ruff.all]);
 
-    await assertPytestSelection(root, sample);
+    await assertPytestSelection(root, PYTEST_SAMPLE);
     await assertIgnoreScope(root);
 });
 
@@ -112,7 +121,7 @@ test.each([...LEVELS])(
         );
 
         const resultRules = runCommandBlocking(
-            [buildVenvExecutablePath(join(root, '.gspot/.venv'), 'ruff'), ...RUFF_RULE_ARGUMENTS],
+            [buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'), ...RUFF_RULE_ARGUMENTS],
             { cwd: root },
         );
         expect(resultRules.code, resultRules.stdout + resultRules.stderr).toBe(0);
@@ -120,24 +129,15 @@ test.each([...LEVELS])(
         const previewCodes = new Set(rules.flatMap(({ code, preview }) => (code !== null && preview ? [code] : [])));
         const command = ['check', 'sample.py', '--only', 'python/ruff', '--json'];
         const config = ruffConfigurationSchema.parse(
-            parse(await readFile(join(root, '.gspot/configurations/language/python/ruff.toml'), 'utf8')),
+            parse(await readFile(join(root, findFileTarget('python', 'ruff.toml')), 'utf8')),
         );
         expect(config.lint.select.filter((code) => previewCodes.has(code))).toStrictEqual([]);
-        const result = parseCheckReport(await spawnGspot(root, command, {}));
+        const result = parseCheckReport(await spawnGspot(root, command));
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        const findings = result.report.checks.flatMap((check) => check.findings);
-        expect(
-            findings
-                .filter(({ rule }) => rule !== undefined && ['F821', 'T201'].includes(rule))
-                .map(({ rule, line }) => [rule, line]),
-        ).toStrictEqual(
-            level === 'all'
-                ? [
-                      ['F821', 1],
-                      ['T201', 2],
-                  ]
-                : [['F821', 1]],
-        );
+        expect(listFindingRows(result.report)).toStrictEqual([
+            { file: 'sample.py', line: 3, rule: 'F821' },
+            ...(level === 'all' ? [{ file: 'sample.py', line: 4, rule: 'T201' }] : []),
+        ]);
         await writeFile(
             join(root, 'sample.py'),
             `"""An arithmetic example."""
@@ -145,7 +145,7 @@ test.each([...LEVELS])(
 answer = 42
 `,
         );
-        const corrected = await spawnGspot(root, command, {});
+        const corrected = await spawnGspot(root, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
 );
@@ -166,11 +166,15 @@ test('Ruff run by an editor and through gspot formats each scope the same way', 
     );
 
     for (const { file, formatted } of RUFF_FORMAT_CASES) {
-        const fixed = await spawnGspot(root, ['check', file, '--only', 'python/ruff-format', '--fix', '--json'], {});
+        const fixed = await spawnGspot(root, ['check', file, '--only', 'python/ruff-format', '--fix', '--json']);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await readFile(join(root, file), 'utf8')).toBe(formatted);
         const editor = runCommandBlocking(
-            [buildVenvExecutablePath(join(root, '.gspot/.venv'), 'ruff'), ...RUFF_FORMAT_ARGUMENTS, file],
+            [
+                buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'),
+                ...RUFF_FORMAT_ARGUMENTS,
+                file,
+            ],
             { cwd: root, env: {} },
         );
         expect(editor.code, editor.stdout + editor.stderr).toBe(0);
@@ -191,9 +195,8 @@ test('Ruff alone reports an unused import, and basedpyright still reports the ty
     const command = ['check', '--only', 'python/ruff,python/basedpyright', '--json'];
     const checked = parseCheckReport(await spawnGspot(root, command));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = checked.report;
     expect(
-        report.checks.flatMap(({ findings }) =>
+        checked.report.checks.flatMap(({ findings }) =>
             findings.map(({ check, file, line, rule }) => ({ check, file, line, rule })),
         ),
     ).toStrictEqual([

@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test.each([...LEVELS])(
@@ -20,12 +21,12 @@ test.each([...LEVELS])(
 
         const output = generate(await openSession(sandbox.path));
         const source = output.files.filter(({ path }) => path.endsWith('/html/html-validate.json'));
-        expect(source.map(({ path }) => path)).toEqual(['.gspot/configurations/language/html/html-validate.json']);
+        expect(source.map(({ path }) => path)).toStrictEqual([findFileTarget('html', 'html-validate.json')]);
         expect(parse(source[0]!.content)).toMatchObject({
             rules: { 'no-inline-style': level === 'all' ? 'error' : 'off' },
         });
         const built = output.files.filter(({ path }) => path.endsWith('/site/html-validate.json'));
-        expect(built.map(({ path }) => path)).toEqual(['.gspot/configurations/framework/site/html-validate.json']);
+        expect(built.map(({ path }) => path)).toStrictEqual([findFileTarget('site', 'html-validate.json')]);
     },
 );
 test.each(['html/html-validate', 'site/html-validate'])(

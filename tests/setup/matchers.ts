@@ -5,16 +5,27 @@ import { expect } from 'bun:test';
  * Await a promise that must reject with an error.
  *
  * @param promise what must reject.
- * @returns the message of the error it rejected with.
+ * @returns the error it rejected with.
  */
-export async function captureRejection(promise: Promise<unknown>): Promise<string> {
+export async function captureRejectedError(promise: Promise<unknown>): Promise<Error> {
     try {
         await promise;
     } catch (error) {
-        if (error instanceof Error) return error.message;
+        if (error instanceof Error) return error;
         throw new Error(`The promise rejected with a value that is not an error: ${String(error)}`);
     }
     throw new Error('The promise resolved, and a rejection was expected.');
+}
+
+/**
+ * Await a promise that must reject with an error.
+ *
+ * @param promise what must reject.
+ * @returns the message of the error it rejected with.
+ */
+export async function captureRejection(promise: Promise<unknown>): Promise<string> {
+    const error = await captureRejectedError(promise);
+    return error.message;
 }
 
 /**

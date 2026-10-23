@@ -15,6 +15,7 @@ import {
     ACCESSOR_DECLARATIONS,
     STATEMENT_COUNT_CASES,
     TRIVIAL_FUNCTION_CASES,
+    NESTED_PYTHON_FUNCTIONS,
     TRIVIAL_EXAMPLE_MESSAGE,
     BASH_TRIVIAL_FUNCTION_CASES,
 } from '#tests/config/checks/general/structure/trivial-functions.ts';
@@ -41,15 +42,15 @@ async function runTrivialFunctionsCheck(
 
 test('Swift reports constructors, accessors, decorated methods, and nested functions, and counts the statements of closures toward their function', async () => {
     const initial = await runTrivialFunctionsCheck('swift', 'example.swift', ACCESSOR_DECLARATIONS);
-    expect(initial.map((finding) => ({ rule: finding.rule, line: finding.line }))).toStrictEqual([
-        ...[2, 4, 5, 7].map((line) => ({ rule: 'trivial-function', line })),
-    ]);
+    expect(initial.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
+        [2, 4, 5, 7].map((line) => ({ rule: 'trivial-function', line })),
+    );
     const increased = await runTrivialFunctionsCheck('swift', 'example.swift', ACCESSOR_DECLARATIONS, {
         statements: 3,
     });
-    expect(increased.map((finding) => ({ rule: finding.rule, line: finding.line }))).toStrictEqual([
-        ...[2, 4, 5, 7, 9].map((line) => ({ rule: 'trivial-function', line })),
-    ]);
+    expect(increased.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
+        [2, 4, 5, 7, 9].map((line) => ({ rule: 'trivial-function', line })),
+    );
 });
 
 test.each([...TRIVIAL_FUNCTION_CASES])(
@@ -63,16 +64,14 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
 );
 
 test('Python counts the statements of nested functions, lambdas, and control flow, and reports decorated methods', async () => {
-    const text =
-        'class A:\n    @decorator\n    def method(self):\n        return 1\ndef outer():\n    def inner():\n        one()\n        two()\n        three()\n    return lambda x: x\ndef flow(x):\n    if x:\n        one()\n        two()\n';
-    const initial = await runTrivialFunctionsCheck('python', 'example.py', text);
-    expect(initial.map((entry) => ({ rule: entry.rule, line: entry.line }))).toStrictEqual(
-        [3].map((line) => ({ rule: 'trivial-function', line })),
+    const initial = await runTrivialFunctionsCheck('python', 'example.py', NESTED_PYTHON_FUNCTIONS);
+    expect(initial.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'trivial-function', line: 3 }]);
+    const increased = await runTrivialFunctionsCheck('python', 'example.py', NESTED_PYTHON_FUNCTIONS, {
+        statements: 3,
+    });
+    expect(increased.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
+        [3, 6, 11].map((line) => ({ rule: 'trivial-function', line })),
     );
-    const increased = await runTrivialFunctionsCheck('python', 'example.py', text, { statements: 3 });
-    expect(increased.map((entry) => ({ rule: entry.rule, line: entry.line }))).toStrictEqual([
-        ...[3, 6, 11].map((line) => ({ rule: 'trivial-function', line })),
-    ]);
 });
 
 test('Python reports overloads, abstract and protocol methods, properties, setters, and stubs', async () => {

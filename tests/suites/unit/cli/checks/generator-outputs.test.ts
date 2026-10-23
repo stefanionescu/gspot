@@ -32,6 +32,7 @@ import {
     UNTRACKED_CLOUDFLARE_FINDINGS,
 } from '#tests/config/checks/generator-outputs.ts';
 
+// Commit a generator project, then leave its output and an untracked file changed.
 async function prepareGeneratorCheck(root: string, row: (typeof GENERATOR_CASES)[number]) {
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings([row.configuration], { tables: row.tables }),
@@ -50,6 +51,7 @@ async function prepareGeneratorCheck(root: string, row: (typeof GENERATOR_CASES)
     return { session, planned: { ...input, check: { ...input.check, command: ['bun', 'generate.ts', row.output] } } };
 }
 
+// Put a wrangler launcher in node_modules/.bin and fake its pinned version.
 async function mockWrangler(root: string): Promise<DisposableStack> {
     const pin = getTool(readConfigurations().values(), 'wrangler');
     const path = join(root, 'node_modules', '.bin', pin.name);
@@ -59,6 +61,7 @@ async function mockWrangler(root: string): Promise<DisposableStack> {
     return fakePinnedExecutables([pin]);
 }
 
+// Fake wrangler types so that it writes this source in its working folder.
 function spyOnWranglerTypes(source: string) {
     return spyOn(processes, 'spawnProcess').mockImplementation(async (_commandArguments, options) => {
         await writeFile(join(options.cwd, 'cloudflare-env.d.ts'), source);
@@ -66,6 +69,7 @@ function spyOnWranglerTypes(source: string) {
     });
 }
 
+// Write a Supabase project in the scope, and fake the supabase and docker commands with this types result.
 async function prepareSupabaseCheck(
     root: string,
     scope: string,
@@ -75,12 +79,11 @@ async function prepareSupabaseCheck(
     using resources = new DisposableStack();
 
     const prefix = scope === '' ? '' : `${scope}/`;
-    const settings =
-        scope === '' ? '[supabase]' : `[[scope]]\npath = "${scope}"\nconfigurations = ["supabase"]\n[scope.supabase]`;
     const declared = schemas === undefined ? '' : `schemas = ${JSON.stringify(schemas)}\n`;
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['supabase'], {
-            tables: `${settings}\ntypes_file = "${prefix}database.ts"\n${declared}`,
+            scopes: scope === '' ? [] : [{ path: scope, configurations: ['supabase'] }],
+            tables: `[${scope === '' ? '' : 'scope.'}supabase]\ntypes_file = "${prefix}database.ts"\n${declared}`,
         }),
         [`${prefix}supabase/config.toml`]: SUPABASE_PROJECT_FILE_SOURCE,
     });
@@ -130,18 +133,17 @@ test.each([...GENERATOR_CASES])(
     async (row) => {
         await using sandbox = await testdir();
         const { session, planned } = await prepareGeneratorCheck(sandbox.path, row);
-        expect(await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)))).toContain(
-            'Generation failed',
+        expect(await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)))).toBe(
+            'The generator command failed: Generation failed\nfailure',
         );
         await writeFile(join(sandbox.path, 'schema.txt'), 'changed');
-        const staleResult = await runCheckCode(session, planned, findCheckCode(planned.check));
-        const findings = staleResult.findings;
-        expect(findings.map(({ check, file, rule }) => ({ check, file, rule }))).toEqual([
+        const stale = await runCheckCode(session, planned, findCheckCode(planned.check));
+        expect(stale.findings.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
             { check: row.check, file: row.output, rule: 'stale' },
         ]);
         await writeFile(join(sandbox.path, 'schema.txt'), 'dirty');
-        const currentResult = await runCheckCode(session, planned, findCheckCode(planned.check));
-        expect(currentResult.findings).toEqual([]);
+        const fresh = await runCheckCode(session, planned, findCheckCode(planned.check));
+        expect(fresh.findings).toStrictEqual([]);
         expect(await readFile(join(sandbox.path, row.output), 'utf8')).toBe('dirty');
         expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('Keep project notes\n');
         expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('Keep untracked notes\n');
@@ -178,19 +180,15 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     using resources = new DisposableStack();
     resources.use(await mockWrangler(sandbox.path));
     const run = resources.use(spyOnWranglerTypes(source));
-    const workerResult = await runCheckCode(
-        session,
-        planSandboxCheck(session, 'cloudflare/stale-types', { scope: 'workers/api' }),
-        findCheckCode(planSandboxCheck(session, 'cloudflare/stale-types', { scope: 'workers/api' }).check),
-    );
-    expect(workerResult.findings).toStrictEqual([]);
+    const planned = planSandboxCheck(session, 'cloudflare/stale-types', { scope: 'workers/api' });
+    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    expect(result.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
         ['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv'],
     ]);
-    const folders = run.mock.calls.map(([, options]) => options.cwd);
-    expect(folders).toHaveLength(1);
-    expect(folders[0]).not.toBe(join(sandbox.path, 'workers/api'));
-    expect(await isOnDisk(folders[0]!)).toBe(false);
+    const { cwd } = run.mock.calls[0]![1];
+    expect(cwd).not.toBe(join(sandbox.path, 'workers/api'));
+    expect(await isOnDisk(cwd)).toBe(false);
     expect(await readFile(join(sandbox.path, 'workers/api/cloudflare-env.d.ts'), 'utf8')).toBe(source);
 });
 test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and reports the file until Git tracks it', async () => {
@@ -211,20 +209,14 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         types_file: 'cloudflare-env.d.ts',
         types_interface: 'CloudflareEnv',
     });
-    const untrackedResult = await runCheckCode(
-        untracked,
-        planSandboxCheck(untracked, 'cloudflare/stale-types'),
-        findCheckCode(planSandboxCheck(untracked, 'cloudflare/stale-types').check),
-    );
+    const untrackedCheck = planSandboxCheck(untracked, 'cloudflare/stale-types');
+    const untrackedResult = await runCheckCode(untracked, untrackedCheck, findCheckCode(untrackedCheck.check));
     expect(untrackedResult.findings).toMatchObject([...UNTRACKED_CLOUDFLARE_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
     commitAll(sandbox.path);
     const tracked = await openSession(sandbox.path);
-    const trackedResult = await runCheckCode(
-        tracked,
-        planSandboxCheck(tracked, 'cloudflare/stale-types'),
-        findCheckCode(planSandboxCheck(tracked, 'cloudflare/stale-types').check),
-    );
+    const trackedCheck = planSandboxCheck(tracked, 'cloudflare/stale-types');
+    const trackedResult = await runCheckCode(tracked, trackedCheck, findCheckCode(trackedCheck.check));
     expect(trackedResult.findings).toStrictEqual([]);
     expect(run.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
         ['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv'],

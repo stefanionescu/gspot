@@ -1,23 +1,32 @@
 import { TYPO } from '#tests/config/checks/general/spelling.ts';
 
+/**
+ * Prose samples for one gspot Vale rule each: the file, its source, and every finding Vale reports on it, which can come
+ * from another gspot rule.
+ */
 export const STYLE_CASES = [
     {
         path: 'prices.md',
         source: '# Prices\n\nThe price is $5.00.\n\nThe price is $15.\n\nThe price is 5 dollars.\n\nThe price is USD 5.\n',
-        lines: [3, 5, 7],
         rule: 'currency',
+        findings: [
+            { line: 3, rule: 'gspot.currency', message: "Ambiguous currency '$5.00'. Write the ISO code (USD 5)." },
+            { line: 5, rule: 'gspot.currency', message: "Ambiguous currency '$15'. Write the ISO code (USD 5)." },
+            { line: 7, rule: 'gspot.currency', message: "Ambiguous currency '5 dollars'. Write the ISO code (USD 5)." },
+            { line: 9, rule: 'gspot.acronyms', message: "Spell out 'USD' on first use." },
+        ],
     },
     {
         path: 'source.sh',
         source: '# Read $1 and $2 as positional parameters.\nprintf "%s" "$1"\n',
-        lines: [],
         rule: 'currency',
+        findings: [],
     },
     {
         path: 'source.ts',
         source: '// Use $1 as the regular expression replacement.\nconst value = 1;\n',
-        lines: [],
         rule: 'currency',
+        findings: [],
     },
     {
         rule: 'en-dashes',
@@ -28,18 +37,24 @@ Read pages 3–5.
 
 Read pages 3 to 5.
 `,
-        lines: [3],
+        findings: [
+            {
+                line: 3,
+                rule: 'gspot.en-dashes',
+                message: "En dash '\u2013'. Write 'to' for a range, or use a hyphen in a compound.",
+            },
+        ],
     },
     {
         rule: 'acronyms',
-        path: 'agents.md',
+        path: 'instructions.md',
         source: `# Guide
 
 Read CLAUDE.md and AGENTS.md before RGBA colors.
 
 - \`.gspot/configurations/language/javascript/rules/BUN.md\`: when code runs on Bun.
 `,
-        lines: [3],
+        findings: [{ line: 3, rule: 'gspot.acronyms', message: "Spell out 'RGBA' on first use." }],
     },
     {
         rule: 'acronyms',
@@ -53,7 +68,7 @@ file_list="$(mktemp)" || exit 1
 trap 'rm -f -- "\${file_list}"' EXIT
 \`\`\`
 `,
-        lines: [],
+        findings: [],
     },
     {
         rule: 'acronyms',
@@ -65,7 +80,7 @@ trap 'rm -f -- "\${file_list}"' EXIT
  */
 export const reply = {};
 `,
-        lines: [],
+        findings: [],
     },
     {
         rule: 'tree-blocks',
@@ -81,7 +96,14 @@ src/
 └── data/
 \`\`\`
 `,
-        lines: [7],
+        findings: [
+            {
+                line: 7,
+                rule: 'gspot.tree-blocks',
+                message:
+                    'A file tree inventories the layout and goes stale with each move. Document behavior and ownership instead.',
+            },
+        ],
     },
     {
         rule: 'tree-blocks',
@@ -90,7 +112,7 @@ src/
 // └── data/
 export const branch = '└──';
 `,
-        lines: [],
+        findings: [],
     },
     {
         rule: 'file-paths',
@@ -107,7 +129,32 @@ Inspect src/lib.rs.
 
 Use \`src/view.tsx\` in the command.
 `,
-        lines: [3, 5, 7, 9],
+        findings: [
+            {
+                line: 3,
+                rule: 'gspot.file-paths',
+                message:
+                    "A file path in prose goes stale: 'src/view.tsx'. Name the concept, or put the path in code formatting only where the reader must open it.",
+            },
+            {
+                line: 5,
+                rule: 'gspot.file-paths',
+                message:
+                    "A file path in prose goes stale: 'src/site.css'. Name the concept, or put the path in code formatting only where the reader must open it.",
+            },
+            {
+                line: 7,
+                rule: 'gspot.file-paths',
+                message:
+                    "A file path in prose goes stale: 'src/lib.go'. Name the concept, or put the path in code formatting only where the reader must open it.",
+            },
+            {
+                line: 9,
+                rule: 'gspot.file-paths',
+                message:
+                    "A file path in prose goes stale: 'src/lib.rs'. Name the concept, or put the path in code formatting only where the reader must open it.",
+            },
+        ],
     },
     {
         rule: 'since',
@@ -118,7 +165,13 @@ Use \`src/view.tsx\` in the command.
 // Use cached values since the source is stable.
 const sinceValue = "since";
 `,
-        lines: [4],
+        findings: [
+            {
+                line: 4,
+                rule: 'gspot.since',
+                message: "'since' is ambiguous between time and cause. Use 'because' or 'after'.",
+            },
+        ],
     },
     {
         rule: 'future',
@@ -131,14 +184,13 @@ A todo app lists tasks.
 
 Use TODO to label work.
 `,
-        lines: [3],
+        findings: [
+            { line: 3, rule: 'gspot.future', message: "Future promise 'will be added'. Document what exists." },
+            { line: 7, rule: 'gspot.acronyms', message: "Spell out 'TODO' on first use." },
+        ],
     },
     {
         rule: 'placeholders',
-        messages: [
-            "Placeholder style 'YOUR_TOKEN'. Use <kebab-case> in angle brackets.",
-            "Placeholder style '{{token}}'. Use <kebab-case> in angle brackets.",
-        ],
         path: 'parameters.md',
         source: `# Guide
 
@@ -148,7 +200,18 @@ Supply {{token}}.
 
 Use <api-token> in the command.
 `,
-        lines: [3, 5],
+        findings: [
+            {
+                line: 3,
+                rule: 'gspot.placeholders',
+                message: "Placeholder style 'YOUR_TOKEN'. Use <kebab-case> in angle brackets.",
+            },
+            {
+                line: 5,
+                rule: 'gspot.placeholders',
+                message: "Placeholder style '{{token}}'. Use <kebab-case> in angle brackets.",
+            },
+        ],
     },
 ] as const;
 

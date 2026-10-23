@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { STAGE_SCOPE_SETTINGS } from '#tests/config/commands/check/arguments.ts';
@@ -31,9 +30,8 @@ test('file and folder arguments narrow the files each check gets', async () => {
         ]),
     );
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    const report = selected.report;
-    expect(report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one', 'sandbox/two']);
-    for (const check of report.checks)
+    expect(selected.report.checks.map((check) => check.check)).toStrictEqual(['sandbox/one', 'sandbox/two']);
+    for (const check of selected.report.checks)
         expect(new Set(check.findings.map((finding) => finding.message))).toStrictEqual(
             new Set(['docs/guide.md', 'src/selected.ts']),
         );
@@ -104,16 +102,9 @@ test('path arguments keep the findings of a project-wide check in the named file
 });
 
 test('--staged keeps every stage while --hook pre-commit runs only commit checks', async () => {
-    const definitions = ['commit', 'push', 'manual'].map(
-        (name) => `
-[[command_check]]\nid = "sandbox/${name}"
-command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
-paths = ["source.txt"]
-stage = "${name}"
-`,
-    );
+    const definitions = (['commit', 'push', 'manual'] as const).map((stage) => buildPassingCheck(stage));
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: definitions.join('\n') }),
+        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: definitions }) }),
         'source.txt': 'input',
     });
 
@@ -124,8 +115,7 @@ stage = "${name}"
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/commit,sandbox/push', '--staged', '--json']),
     );
     expect(staged.code, staged.stdout + staged.stderr).toBe(0);
-    const stagedReport = staged.report;
-    expect(stagedReport.checks.map((check) => [check.check, check.status])).toStrictEqual([
+    expect(staged.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
         ['sandbox/commit', 'passed'],
         ['sandbox/push', 'passed'],
     ]);
@@ -140,29 +130,24 @@ stage = "${name}"
         ]),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    const report = checked.report;
-    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([['sandbox/commit', 'passed']]);
+    expect(checked.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
+        ['sandbox/commit', 'passed'],
+    ]);
 });
 
 test('a manual check runs only when --only names it', async () => {
-    const definition = `
-[[command_check]]\nid = "sandbox/manual"
-command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
-paths = ["source.txt"]
-stage = "manual"
-`;
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: definition }),
+        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [buildPassingCheck('manual')] }) }),
         'source.txt': 'input',
     });
 
     const plain = parseCheckReport(await runGspot(sandbox.path, ['check', '--json']));
-    const initial = plain.report;
-    expect(initial.checks.map((check) => check.check)).not.toContain('sandbox/manual');
+    expect(plain.report.checks.map((check) => check.check)).not.toContain('sandbox/manual');
     const named = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/manual', '--json']));
     expect(named.code, named.stdout + named.stderr).toBe(0);
-    const report = named.report;
-    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([['sandbox/manual', 'passed']]);
+    expect(named.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
+        ['sandbox/manual', 'passed'],
+    ]);
 });
 
 test('a scope path narrows to its checks and its reproduce command finds the same findings', async () => {
@@ -176,18 +161,15 @@ test('a scope path narrows to its checks and its reproduce command finds the sam
         await runGspot(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']),
     );
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    const report = selected.report;
-    const failed = report.checks.filter((check) => check.status === 'failed');
-    expect(failed.map((check) => check.scope)).toStrictEqual(['api']);
-    const command = failed.map(({ reproduce }) => reproduce);
-    expect(command).toStrictEqual(['gspot check api --only naming/identifiers']);
-    const repeated = parseCheckReport(
-        await runGspot(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']),
-    );
+    const failed = selected.report.checks.filter((check) => check.status === 'failed');
+    expect(failed.map(({ scope, reproduce }) => ({ scope, reproduce }))).toStrictEqual([
+        { scope: 'api', reproduce: 'gspot check api --only naming/identifiers' },
+    ]);
+    const [, ...reproduce] = failed[0]!.reproduce!.split(' ');
+    const repeated = parseCheckReport(await runGspot(sandbox.path, [...reproduce, '--json']));
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
-    const repeatedReport = repeated.report;
-    expect(repeatedReport.checks.flatMap((check) => check.findings)).toStrictEqual(
-        report.checks.flatMap((check) => check.findings),
+    expect(repeated.report.checks.flatMap((check) => check.findings)).toStrictEqual(
+        selected.report.checks.flatMap((check) => check.findings),
     );
 });
 
@@ -209,6 +191,15 @@ test('a staged change to gspot.toml alone rechecks every file a configuration ch
         await runGspot(sandbox.path, ['check', '--staged', '--only', 'structure/long-files', '--json']),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = checked.report;
-    expect(report.checks[0]?.findings).toContainEqual(matchFields({ file: 'db/report.sql' }));
+    expect(checked.report.checks[0]?.findings).toMatchObject([{ file: 'db/report.sql', rule: 'file-lines' }]);
 });
+
+// A command check of this stage that passes on source.txt.
+function buildPassingCheck(stage: 'commit' | 'push' | 'manual') {
+    return {
+        id: `sandbox/${stage}`,
+        command: [process.execPath, '-e', 'process.exitCode = 0'],
+        paths: ['source.txt'],
+        stage,
+    };
+}

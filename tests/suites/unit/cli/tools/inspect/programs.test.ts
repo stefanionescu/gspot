@@ -4,6 +4,7 @@ import { runTool } from '#cli/tools/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listExecutablePaths } from '#cli/tools/locate.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
@@ -27,7 +28,7 @@ test('tool inspection finds the project compiler, and the original repository co
 
     const work = join(sandbox.path, 'work');
     const snapshot = join(sandbox.path, 'snapshot');
-    await linkTypescript(work, join(work, '.gspot/node_modules'));
+    await linkTypescript(work, join(work, GSPOT_PATHS.nodeModules));
     await linkTypescript(work);
     const compiler = getTool(readConfigurations().values(), 'tsc');
     const projectPath = join(work, 'node_modules/typescript/package.json');
@@ -133,13 +134,13 @@ test('a tool project program linked outside the repository is refused before it 
         'outside/teller': `#!/bin/sh\ntouch '${join(sandbox.path, 'outside/executed')}'\necho 1.2.3\n`,
     });
     const root = join(sandbox.path, 'project');
-    const binary = join(root, '.gspot/node_modules/.bin/teller');
+    const binary = join(root, `${GSPOT_PATHS.nodeModules}/.bin/teller`);
     await chmod(join(sandbox.path, 'outside/teller'), EXECUTABLE_FILE);
-    await chmod(join(root, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
+    await chmod(join(root, `${GSPOT_PATHS.nodeModules}/teller/run.sh`), EXECUTABLE_FILE);
     await symlink('../../../../outside/teller', binary);
     expect(() => inspectTool(buildToolSearch(root), buildProgramPin('teller', '1.2.3'))).toThrow(
         new Error(
-            '.gspot/node_modules/.bin/teller links to a file outside the repository. Replace the link with the file.',
+            `${GSPOT_PATHS.nodeModules}/.bin/teller links to a file outside the repository. Replace the link with the file.`,
         ),
     );
     expect(await isOnDisk(join(sandbox.path, 'outside/executed'))).toBe(false);
@@ -182,9 +183,10 @@ test('a Python tool uses the tool project environment, not the repository .venv'
     tool.installers['pypi'] = { name: 'teller', version: '1.2.3' };
     expect(inspectTool(buildToolSearch(sandbox.path), tool).state).toBe('missing');
     await createFileTree(sandbox.path, {
-        [buildVenvExecutablePath('.gspot/.venv', 'teller')]: `#!${process.execPath}\nconsole.log('1.2.3');\n`,
+        [buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'teller')]:
+            `#!${process.execPath}\nconsole.log('1.2.3');\n`,
     });
-    await chmod(join(sandbox.path, buildVenvExecutablePath('.gspot/.venv', 'teller')), EXECUTABLE_FILE);
+    await chmod(join(sandbox.path, buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'teller')), EXECUTABLE_FILE);
     expect(inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({
         state: 'ok',
         found: '1.2.3',

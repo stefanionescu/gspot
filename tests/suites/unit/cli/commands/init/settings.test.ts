@@ -39,8 +39,10 @@ test('the gspot.toml text keeps root and scope configurations', async () => {
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { settings: text } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'settings'>>;
     const settings = parseSettings(text, undefined);
-    expect(settings.configurations).toContain('typescript');
-    expect(settings.scopes['apps/site']?.configurations).toContain('python');
+    expect({ root: settings.configurations, site: settings.scopes['apps/site']?.configurations }).toStrictEqual({
+        root: ['typescript'],
+        site: ['javascript', 'python'],
+    });
     expect(await isOnDisk(`${sandbox.path}/gspot.toml`)).toBe(false);
 });
 

@@ -19,9 +19,7 @@ import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT, SVELTE_CHECK_FINDINGS } from '#te
 async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<Finding[]> {
     const scope = options.scope ?? '';
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['svelte'], {
-            tables: scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`,
-        }),
+        'gspot.toml': buildSandboxSettings(['svelte'], { scopes: scope === '' ? [] : [{ path: scope }] }),
         [scope === '' ? 'src/Count.svelte' : `${scope}/src/Count.svelte`]: '<p>Count</p>',
     });
     await fakeNpmTool(sandbox.path, 'svelte-check');

@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     STYLESHEETS,
@@ -43,28 +43,23 @@ test.each([...LEVELS])(
         });
         const failed = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND]));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const failedReport = failed.report;
-        expect(failedReport.checks).toMatchObject([
-            { check: 'css/stylelint', scope: '', status: 'failed' },
-            { check: 'css/stylelint', scope: 'app', status: 'failed' },
+        expect(failed.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+            { scope: '', status: 'failed' },
+            { scope: 'app', status: 'failed' },
         ]);
-        const findings = failedReport.checks.flatMap((check) => check.findings);
-        expect(findings).toStrictEqual(
-            matchItems([
-                matchFields({ file: 'build/site.css', rule: 'color-hex-length', line: 2 }),
-                matchFields({ file: 'app/site.css', rule: 'color-hex-length', line: 2 }),
-                matchFields({ file: 'build/site.css', rule: 'property-no-vendor-prefix', line: 4 }),
-                matchFields({ file: 'app/site.css', rule: 'property-no-vendor-prefix', line: 4 }),
-            ]),
-        );
-        expect(findings.filter(({ rule }) => rule === 'number-max-precision').map(({ file }) => file)).toStrictEqual(
-            level === 'all' ? ['build/site.css', 'app/site.css'] : [],
+        // Only level all turns on number-max-precision.
+        const rows = [
+            { line: 2, rule: 'color-hex-length' },
+            ...(level === 'all' ? [{ line: 3, rule: 'number-max-precision' }] : []),
+            { line: 4, rule: 'property-no-vendor-prefix' },
+        ];
+        expect(listFindingRows(failed.report)).toStrictEqual(
+            ['build/site.css', 'app/site.css'].flatMap((file) => rows.map((row) => ({ file, ...row }))),
         );
         await createFileTree(root, CORRECTED_STYLESHEETS);
         const corrected = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND]));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const correctedReport = corrected.report;
-        expect(correctedReport.checks).toMatchObject([
+        expect(corrected.report.checks).toMatchObject([
             { check: 'css/stylelint', scope: '', status: 'passed', findings: [] },
             { check: 'css/stylelint', scope: 'app', status: 'passed', findings: [] },
         ]);
@@ -82,10 +77,15 @@ test("Stylelint run by an editor finds the scope's config file and checks your b
         },
     });
 
-    const tool = join(root, '.gspot/node_modules/.bin/stylelint');
-    const failed = await runCommand([tool, 'build/site.css'], { cwd: root });
+    const tool = join(root, `${GSPOT_PATHS.nodeModules}/.bin/stylelint`);
+    const failed = await runCommand([tool, '--formatter', 'json', 'build/site.css'], { cwd: root });
     expect(failed.code, failed.stdout + failed.stderr).toBe(2);
-    expect(failed.stdout + failed.stderr).toContain('property-no-vendor-prefix');
+    const [result] = JSON.parse(failed.stderr) as { warnings: { rule: string; line: number }[] }[];
+    expect(result!.warnings.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([
+        { rule: 'color-hex-length', line: 2 },
+        { rule: 'number-max-precision', line: 3 },
+        { rule: 'property-no-vendor-prefix', line: 4 },
+    ]);
     await createFileTree(root, CORRECTED_STYLESHEETS);
     for (const folder of ['', 'app']) {
         const native = await runCommand([tool, folder === '' ? 'build/site.css' : 'site.css'], {
@@ -106,17 +106,17 @@ test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind
     });
     const failed = parseCheckReport(await spawnGspot(root, [...STYLELINT_COMMAND]));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const report = failed.report;
-    expect(report.checks.find((check) => check.scope === 'app')).toMatchObject({
-        status: 'passed',
-        findings: [],
-    });
-    expect(report.checks.flatMap((check) => check.findings)).toStrictEqual(
-        matchItems([
-            matchFields({ file: 'build/site.css', rule: 'at-rule-no-unknown', line: 1 }),
-            matchFields({ file: 'other/site.css', rule: 'at-rule-no-unknown', line: 1 }),
-            matchFields({ file: 'build/site.css', rule: 'function-no-unknown', line: 4 }),
-            matchFields({ file: 'other/site.css', rule: 'function-no-unknown', line: 4 }),
+    expect(failed.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+        { scope: '', status: 'failed' },
+        { scope: 'app', status: 'passed' },
+        { scope: 'other', status: 'failed' },
+    ]);
+    // Outside the Tailwind scope, Stylelint reports the `theme()` call as an unknown function and as an unknown value.
+    expect(listFindingRows(failed.report)).toStrictEqual(
+        ['build/site.css', 'other/site.css'].flatMap((file) => [
+            { file, line: 1, rule: 'at-rule-no-unknown' },
+            { file, line: 4, rule: 'declaration-property-value-no-unknown' },
+            { file, line: 4, rule: 'function-no-unknown' },
         ]),
     );
     await writeFile(join(root, 'app/site.css'), 'a { color: #ggg; }\n');
@@ -124,9 +124,9 @@ test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind
         await spawnGspot(root, ['check', 'app', '--only', 'css/stylelint', '--json']),
     );
     expect(invalidValue.code, invalidValue.stdout + invalidValue.stderr).toBe(1);
-    expect(invalidValue.report.checks.flatMap((check) => check.findings)).toStrictEqual(
-        matchItems([matchFields({ file: 'app/site.css', rule: 'declaration-property-value-no-unknown', line: 1 })]),
-    );
+    expect(listFindingRows(invalidValue.report)).toStrictEqual([
+        { file: 'app/site.css', line: 1, rule: 'declaration-property-value-no-unknown' },
+    ]);
     await writeFile(join(root, 'app/site.css'), TAILWIND_FILES['app/site.css']);
     await writeFile(join(root, 'build/site.css'), 'a { color: red; }\n');
     await writeFile(join(root, 'other/site.css'), 'a { color: red; }\n');

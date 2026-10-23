@@ -8,11 +8,11 @@ import type { RunReport } from '#cli/types/runs/run.ts';
 import type { FixReport } from '#cli/types/runs/fixes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import type { FindingRow } from '#tests/types/tool-output.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/environment.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import type { StdinOptions, ProcessOutput } from '#tests/types/processes.ts';
+import type { FindingRow, ScopeFindingRow } from '#tests/types/tool-output.ts';
 
 /** The gspot source folder in this checkout. */
 export const CLI_SOURCE_PATH = join(import.meta.dir, '../../../packages/cli/src');
@@ -26,6 +26,13 @@ export const CLI_BIN = join(CLI_SOURCE_PATH, 'bin.ts');
 /** List the file, line, and rule of every finding in the report. */
 export function listFindingRows(report: RunReport): FindingRow[] {
     return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
+}
+
+/** List the scope, file, line, and rule of every finding in the report. */
+export function listScopeFindingRows(report: RunReport): ScopeFindingRow[] {
+    return report.checks.flatMap(({ scope, findings }) =>
+        findings.map(({ file, line, rule }) => ({ scope, file, line, rule })),
+    );
 }
 
 /**

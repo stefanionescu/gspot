@@ -9,6 +9,7 @@ import { CLI_SOURCE_PATH } from '#tests/setup/cli/commands.ts';
 import { spawnProcess, streamProcess } from '#cli/system/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { isWindows, simulateOperatingSystem } from '#tests/setup/system/platform.ts';
+import { CHILD_TIMEOUT_SECONDS, DESCENDANT_TIMEOUT_MILLISECONDS } from '#tests/config/system/processes.ts';
 import { waitForExit, waitForFile, startCommand, limitToTestDeadline } from '#tests/setup/system/processes.ts';
 
 /** Whether the supervisor stopped the child: a signal on a POSIX host, an exit code on Windows. */
@@ -61,32 +62,36 @@ test('a failed byte stream read stops the child and rejects with the stream erro
 test.each([
     ['text', 'timeout'],
     ['bytes', 'canceled'],
-] as const)('%s capture stops the descendants of a child stopped by %s', async (capture, termination) => {
-    await using sandbox = await testdir();
-    const marker = join(sandbox.path, 'descendant-survived');
-    const descendant = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); console.log("descendant-ready"); setInterval(() => {}, 1000);`;
-    const parent = `Bun.spawn([process.execPath, "-e", ${JSON.stringify(descendant)}], {stdout:"inherit", stderr:"inherit"}); await Bun.sleep(60000);`;
-    const controller = new AbortController();
-    const running = captureProcess(capture, [process.execPath, '-e', parent], {
-        cwd: sandbox.path,
-        ...(termination === 'timeout' ? { timeoutSeconds: 5 } : {}),
-        ...(termination === 'canceled' ? { cancelSignal: controller.signal } : {}),
-    });
-    if (termination === 'canceled') {
-        expect(await waitForFile(marker)).toBe(true);
-        controller.abort();
-    }
-    if (capture === 'bytes') expect(await captureRejection(running)).toBe('The operation was aborted.');
-    else {
-        const result = await running;
-        expect(Buffer.from(result.stdout).toString('utf8')).toBe('descendant-ready\n');
-        expect(result.timedOut).toBe(termination === 'timeout');
-        expect(result.canceled).toBe(termination === 'canceled');
-    }
-    const pid = Number(await readFile(marker, 'utf8'));
-    expect(pid).toBeGreaterThan(0);
-    await waitForExit(pid);
-});
+] as const)(
+    '%s capture stops the descendants of a child stopped by %s',
+    async (capture, termination) => {
+        await using sandbox = await testdir();
+        const marker = join(sandbox.path, 'descendant-survived');
+        const descendant = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); console.log("descendant-ready"); setInterval(() => {}, 1000);`;
+        const parent = `Bun.spawn([process.execPath, "-e", ${JSON.stringify(descendant)}], {stdout:"inherit", stderr:"inherit"}); await Bun.sleep(60000);`;
+        const controller = new AbortController();
+        const running = captureProcess(capture, [process.execPath, '-e', parent], {
+            cwd: sandbox.path,
+            ...(termination === 'timeout' ? { timeoutSeconds: CHILD_TIMEOUT_SECONDS } : {}),
+            ...(termination === 'canceled' ? { cancelSignal: controller.signal } : {}),
+        });
+        if (termination === 'canceled') {
+            expect(await waitForFile(marker)).toBe(true);
+            controller.abort();
+        }
+        if (capture === 'bytes') expect(await captureRejection(running)).toBe('The operation was aborted.');
+        else {
+            const result = await running;
+            expect(Buffer.from(result.stdout).toString('utf8')).toBe('descendant-ready\n');
+            expect(result.timedOut).toBe(termination === 'timeout');
+            expect(result.canceled).toBe(termination === 'canceled');
+        }
+        const pid = Number(await readFile(marker, 'utf8'));
+        expect(pid).toBeGreaterThan(0);
+        await waitForExit(pid);
+    },
+    DESCENDANT_TIMEOUT_MILLISECONDS,
+);
 
 test('an exiting CLI stops its running process group', async () => {
     await using sandbox = await testdir();

@@ -6,6 +6,7 @@ import { planChecks } from '#cli/planning/checks.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runCheckCode } from '#cli/commands/check/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { EMPTY_PROJECT_RESULT } from '#tests/config/checks/language/javascript.ts';
 
@@ -20,7 +21,7 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
 
     const session = await openSession(sandbox.path);
     const projects = generate(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
-    expect(projects.map(({ path }) => path)).toStrictEqual(['.gspot/configurations/language/javascript/jsconfig.json']);
+    expect(projects.map(({ path }) => path)).toStrictEqual([findConfigFilePath(session, 'jsconfig')]);
     await applyGeneratedFiles(sandbox.path);
     const reopened = await openSession(sandbox.path);
     const site = planChecks(reopened, {

@@ -24,7 +24,9 @@ _tiny() {
 
 # main: runs the script.
 main() {
-    _tiny "$1"
+    local name="$1"
+    _tiny "\${name}"
+    printf 'done\n'
 }
 
 main "$@"
@@ -42,8 +44,9 @@ _forward() {
 
 # main: runs the script.
 main() {
-    _forward "$1"
-    _forward "$1"
+    local format="$1"
+    _forward "\${format}"
+    _forward "\${format}"
 }
 
 main "$@"
@@ -236,3 +239,20 @@ export const STATEMENT_COUNT_CASES = [
 /** The message of a two-statement function named example. */
 export const TRIVIAL_EXAMPLE_MESSAGE =
     'example has 2 statements. Functions with 2 or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.';
+
+/** A decorated method, a function with a nested function and a lambda, and a function with a branch. */
+export const NESTED_PYTHON_FUNCTIONS = `class A:
+    @decorator
+    def method(self):
+        return 1
+def outer():
+    def inner():
+        one()
+        two()
+        three()
+    return lambda x: x
+def flow(x):
+    if x:
+        one()
+        two()
+`;

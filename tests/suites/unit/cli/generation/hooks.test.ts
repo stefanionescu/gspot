@@ -5,6 +5,7 @@ import { join, dirname, delimiter } from 'node:path';
 import { parseSettings } from '#cli/settings/read.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/cli.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -33,9 +34,9 @@ test.each([...HOOK_LEVEL_CASES])(
         });
         runGitStep(sandbox.path, ['init', '-q']);
         const written = generate(await openSession(sandbox.path)).files.filter((file) =>
-            file.path.startsWith('.gspot/hooks/'),
+            file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
         );
-        expect(written.map((file) => file.path)).toStrictEqual(hooks.map((name) => `.gspot/hooks/${name}`));
+        expect(written.map((file) => file.path)).toStrictEqual(hooks.map((name) => `${GSPOT_PATHS.hooks}/${name}`));
     },
 );
 
@@ -68,7 +69,9 @@ test.each(
             names: HOOK_CASES.map(([name]) => name),
             usesLfs: false,
         });
-        expect(files.map((file) => file.path)).toStrictEqual(HOOK_CASES.map(([name]) => `.gspot/hooks/${name}`));
+        expect(files.map((file) => file.path)).toStrictEqual(
+            HOOK_CASES.map(([name]) => `${GSPOT_PATHS.hooks}/${name}`),
+        );
         await writeScriptCommand(sandbox.path, `bin/${program}`, HOOK_SCRIPT);
         // Git runs each hook in its top-level folder, wherever gspot.toml lives.
         const cwd = await realpath(sandbox.path);
@@ -117,16 +120,20 @@ test('a hook says how to install mise when mise is missing', async () => {
         stdin: 'refs/heads/main 123 refs/heads/main 456\n',
     });
     expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toContain('mise is not installed. Install mise, then run: mise install.');
+    expect(result.stderr).toBe(
+        'mise is not installed. Install mise, then run: mise install. Install gspot with: mise use --pin --tool-option allow_low_downloads=true npm:@gspothq/cli@<version>\n',
+    );
 });
 
 test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {
     await using sandbox = await createLfsRepository();
     const hooks = generate(await openSession(sandbox.path)).files.filter((file) =>
-        file.path.startsWith('.gspot/hooks/'),
+        file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
     );
     expect(hooks.map((file) => file.path)).toStrictEqual(
-        ['post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'].map((name) => `.gspot/hooks/${name}`),
+        ['post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'].map(
+            (name) => `${GSPOT_PATHS.hooks}/${name}`,
+        ),
     );
     const bin = await writeScriptCommand(sandbox.path, 'bin/git', LOGGING_SCRIPT);
     await writeScriptCommand(sandbox.path, 'bin/git-lfs', LOGGING_SCRIPT);
@@ -145,7 +152,7 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
     // Windows, whose folder holds no git.
     const shExecutable = Bun.which('sh')!;
     const runHook = (name: string, ...hookArguments: string[]): string[] => {
-        const path = join(sandbox.path, '.gspot/hooks', name);
+        const path = join(sandbox.path, GSPOT_PATHS.hooks, name);
         return isWindows ? [shExecutable, path, ...hookArguments] : [path, ...hookArguments];
     };
     const input = 'refs/heads/main 123 refs/heads/main 456\n';

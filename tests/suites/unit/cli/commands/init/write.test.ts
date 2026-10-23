@@ -6,14 +6,16 @@ import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { TEST_VERSION } from '#tests/config/commands/samples.ts';
 import { rm, stat, readFile, writeFile } from 'node:fs/promises';
 import { EDITED_STYLELINT_PACKAGE } from '#tests/config/apply.ts';
-import { INVALID_CSS } from '#tests/config/commands/init/samples.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
 import { simulateInteractiveTerminal } from '#tests/setup/system/environment.ts';
+import { INVALID_CSS, buildRetainedNote } from '#tests/config/commands/init/samples.ts';
 
 test.each([
     [
@@ -48,11 +50,11 @@ test.each([
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(
         (JSON.parse(preview.stdout) as InitJson).settings,
     );
-    expect(await isOnDisk(join(sandbox.path, '.gspot/version'))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.versionPin))).toBe(true);
 });
 
 test('a failed init keeps the version pin it already wrote', async () => {
-    await using sandbox = await testdir({ '.gspot/version': `${TEST_VERSION}\n` });
+    await using sandbox = await testdir({ [GSPOT_PATHS.versionPin]: `${TEST_VERSION}\n` });
 
     commitAll(sandbox.path);
     const rename = fs.renameSync;
@@ -66,7 +68,7 @@ test('a failed init keeps the version pin it already wrote', async () => {
     expect(refused.stderr).toBe(
         'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
     );
-    expect(await readFile(join(sandbox.path, '.gspot/version'), 'utf8')).toBe(`${cliPackage.version}\n`);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.versionPin), 'utf8')).toBe(`${cliPackage.version}\n`);
 });
 
 test('init keeps the old config file when the generated one cannot be written', async () => {
@@ -75,7 +77,7 @@ test('init keeps the old config file when the generated one cannot be written', 
     await createFileTree(sandbox.path, { 'typos.toml': authored });
     const rename = fs.renameSync;
     using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(sandbox.path, '.gspot/configurations/general/spelling/typos.toml'))
+        if (String(target) === join(sandbox.path, findFileTarget('spelling', 'typos.toml')))
             throw new Error('Generated write denied');
         rename(source, target);
     });
@@ -85,7 +87,7 @@ test('init keeps the old config file when the generated one cannot be written', 
         'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
     );
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/general/spelling/typos.toml'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, findFileTarget('spelling', 'typos.toml')))).toBe(false);
 });
 
 test('init refuses to write package.json when one of its managed fields changed after the plan, and keeps its bytes and mode', async () => {
@@ -95,7 +97,7 @@ test('init refuses to write package.json when one of its managed fields changed 
     const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'css', '--json']);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
     expect(plan.change).toContainEqual({ path: 'package.json', note: 'managed stylelint fields; other content stays' });
-    expect(plan.delete.some((entry) => entry.path === 'package.json')).toBe(false);
+    expect(plan.delete.map(({ path }) => path)).not.toContain('package.json');
     let mode = 0;
     await using _terminal = await simulateInteractiveTerminal();
     mockResources.use(
@@ -115,7 +117,7 @@ test('init refuses to write package.json when one of its managed fields changed 
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(
         (JSON.parse(preview.stdout) as InitJson).settings,
     );
-    expect(await isOnDisk(join(sandbox.path, '.gspot/version'))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.versionPin))).toBe(true);
 });
 
 test('init keeps a shared file that was edited after the plan', async () => {
@@ -127,10 +129,7 @@ test('init keeps a shared file that was edited after the plan', async () => {
 
     const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'sql', '--json']);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.retained).toContainEqual({
-        path: 'setup.cfg',
-        note: expect.stringContaining('Delete the section; the generated config file replaces it.') as string,
-    });
+    expect(plan.retained).toStrictEqual([{ path: 'setup.cfg', note: buildRetainedNote('sqlfluff') }]);
     const edited = `[sqlfluff]
 exclude_rules = LT01, RF01
 [flake8]
@@ -146,7 +145,7 @@ ignore = E501
     const written = await runGspot(sandbox.path, ['init', '--configurations', 'sql']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/sql/sqlfluff.cfg'))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, findFileTarget('sql', 'sqlfluff.cfg')))).toBe(true);
 });
 test.each([true, false])('init writes gspot.toml only when you confirm the plan (answer %s)', async (answer) => {
     await using sandbox = await testdir({ 'README.md': '# Example\n' });

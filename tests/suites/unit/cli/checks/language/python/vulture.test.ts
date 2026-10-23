@@ -5,6 +5,7 @@ import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -18,7 +19,7 @@ test('vulture reads every Python file of the scope and reports unused definition
         'app/nodes.py': 'def helper():\n    return 1\n',
         'app/main.py': 'import os\n',
         'child/other.py': 'VALUE = 1\n',
-        [join(buildVenvBinPath('.gspot/.venv'), 'vulture')]: 'fixture',
+        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'vulture')]: 'fixture',
     });
     const session = await openSession(sandbox.path);
     using resources = fakePinnedExecutables([getTool(session.configurations.values(), 'vulture')]);

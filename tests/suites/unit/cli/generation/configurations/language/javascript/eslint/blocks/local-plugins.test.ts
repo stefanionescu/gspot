@@ -2,11 +2,10 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { GspotError } from '#cli/system/errors.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { captureRejectedError } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { generateFile, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
@@ -44,14 +43,15 @@ test('a scope plugin reaches its scope, and an inherited root plugin writes one 
     expect([...generated.matchAll(/"scoped\/no-forbidden"\s*:/gu)]).toHaveLength(1);
 });
 
-test('one plugin name with two modules is a settings error that names both paths', () => {
-    expect(
+test('one plugin name with two modules is a settings error that names both paths', async () => {
+    const error = await captureRejectedError(
         generateFile(
             buildSandboxSettings(['javascript'], { tables: CONFLICTING_LOCAL_PLUGIN_TABLES }),
             'eslint.config.mjs',
             CONFLICTING_LOCAL_PLUGIN_FILES,
         ),
-    ).rejects.toThrow(matchFields<GspotError>(DUPLICATE_PLUGIN_ERROR));
+    );
+    expect(error).toMatchObject(DUPLICATE_PLUGIN_ERROR);
 });
 test('tools.eslint.plugins loads your plugin by its path and turns its rules on as errors', async () => {
     await using sandbox = await testdir({
@@ -73,7 +73,8 @@ test('tools.eslint.plugins loads your plugin by its path and turns its rules on 
     );
     const refused = await runGspot(sandbox.path, ['apply']);
     expect(refused.code).toBe(2);
-    expect(refused.stdout + refused.stderr).toContain(
-        'tools.eslint.plugins: gspot is the rule prefix of a plugin that gspot loads. Choose another name.',
-    );
+    expect({ stdout: refused.stdout, stderr: refused.stderr }).toStrictEqual({
+        stdout: '',
+        stderr: 'tools.eslint.plugins: gspot is the rule prefix of a plugin that gspot loads. Choose another name.\n',
+    });
 });

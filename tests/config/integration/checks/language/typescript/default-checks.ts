@@ -12,6 +12,11 @@ export const receiptLabel = \`Order: \${receipt}\`;
 `,
         },
         expected: { file: 'src/orders/back.ts', rule: 'boundaries/dependencies', line: 2 },
+        // The alias rule also asks the exact package.json import #entry for a file extension, which it cannot take.
+        findings: [
+            { file: 'src/orders/back.ts', rule: 'no-restricted-syntax', line: 2 },
+            { file: 'src/orders/back.ts', rule: 'boundaries/dependencies', line: 2 },
+        ],
     },
     {
         check: 'javascript/knip',

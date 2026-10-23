@@ -6,7 +6,7 @@ import { unlink, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { SETTING_REASON } from '#tests/config/commands/set.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -18,6 +18,7 @@ import {
     LOCKFILE_HOST_CASES,
     DEPENDENCIES_SANDBOX,
     REGISTRY_SCOPE_RESULTS,
+    ALLOWED_GITHUB_REGISTRIES,
 } from '#tests/config/checks/general/dependencies.ts';
 
 test('dependencies/lockfiles reports Git download hosts until they are allowed, and plain HTTP even when allowed', async () => {
@@ -40,12 +41,19 @@ test('dependencies/lockfiles reports Git download hosts until they are allowed, 
         buildRunOptions({ only: ['dependencies/lockfiles'] }),
     );
 
-    expect(failed.report.checks.flatMap(({ findings }) => findings)).toHaveLength(3);
+    expect(listFindingRows(failed.report)).toStrictEqual([
+        { file: 'package-lock.json', line: 4, rule: 'host' },
+        { file: 'package-lock.json', line: 7, rule: 'host' },
+        { file: 'package-lock.json', line: 10, rule: 'host' },
+    ]);
+    expect(failed.report.checks.flatMap(({ findings }) => findings.map(({ message }) => message))).toStrictEqual([
+        'github.com is not an allowed registry host.',
+        'codeload.github.com is not an allowed registry host.',
+        `${insecureDownload.href} is not HTTPS.`,
+    ]);
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings([], {
-            tables: `[dependencies]\nallowed_registries = { value = ["github.com", "codeload.github.com"], reason = ${JSON.stringify(SETTING_REASON)} }\n`,
-        }),
+        buildSandboxSettings([], { tables: `[dependencies]\n${ALLOWED_GITHUB_REGISTRIES}` }),
     );
     const insecure = await runChecks(
         await openSession(sandbox.path),
@@ -76,7 +84,7 @@ test('an allowed registry host in a scope applies only to that scope', async () 
     const lockfile = JSON.stringify(HOST_LOCKFILE, null, 2);
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
-            tables: `[[scope]]\npath = "app"\n[scope.dependencies]\nallowed_registries = { value = ["github.com", "codeload.github.com"], reason = ${JSON.stringify(SETTING_REASON)} }\n[[scope]]\npath = "sibling"\n`,
+            tables: `[[scope]]\npath = "app"\n[scope.dependencies]\n${ALLOWED_GITHUB_REGISTRIES}[[scope]]\npath = "sibling"\n`,
         }),
         'package-lock.json': lockfile,
         'app/package-lock.json': lockfile,

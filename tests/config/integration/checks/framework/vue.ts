@@ -21,9 +21,13 @@ export const VUE_CASES = [
     {
         check: 'javascript/eslint',
         files: {
-            'src/SharedPolicy.vue': `<script lang="ts">
-function forward(value: any) { return build(value); }
+            'src/SharedPolicy.vue': `<script setup lang="ts">
+function shout(text: string): string { return text.toUpperCase(); }
 </script>
+
+<template>
+    <p>{{ shout('hello') }}</p>
+</template>
 `,
         },
         expected: {

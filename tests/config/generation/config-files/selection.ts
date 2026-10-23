@@ -1,9 +1,16 @@
-/** Sibling Python projects with different enabled tools. */
-
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/setup/sandboxes.ts';
 
-export const NESTED_PYTHON_GSPOT_TOML = `configurations = []\n[[ignore]]\ncheck = "python/basedpyright"\npaths = ["linted/**"]\nreason = "This project uses Ruff without a type checker."\n[[scope]]\npath = "linted"\n\nconfigurations = ["python"]\n[[scope]]\npath = "typed"\n\nconfigurations = ["python"]\n[rules]\nenabled = false\n`;
+/** Sibling Python projects with different enabled tools. */
+export const NESTED_PYTHON_GSPOT_TOML = buildSandboxSettings([], {
+    scopes: [
+        { path: 'linted', configurations: ['python'] },
+        { path: 'typed', configurations: ['python'] },
+    ],
+    tables: '[[ignore]]\ncheck = "python/basedpyright"\npaths = ["linted/**"]\nreason = "This project uses Ruff without a type checker."\n',
+});
 
 export const CONFIG_FILE_PROJECT = {
     '.github/workflows/check.yml': `name: Check
@@ -69,11 +76,11 @@ export const IGNORED_CHECK_FILES = [
         name: 'ignoring SwiftLint and Periphery keeps SwiftFormat',
         settings: SWIFT_FORMAT_SETTINGS,
         files: { 'main.swift': 'let value = 1\n' },
-        kept: ['.gspot/configurations/language/swift/swiftformat'],
+        kept: [findFileTarget('swift', 'swiftformat')],
         dropped: [
-            '.gspot/configurations/language/swift/swiftlint.yml',
-            '.gspot/configurations/language/swift/periphery.yml',
-            '.gspot/package.json',
+            findFileTarget('swift', 'swiftlint.yml'),
+            findFileTarget('swift', 'periphery.yml'),
+            GSPOT_PATHS.npmProject,
         ],
     },
     {
@@ -81,7 +88,7 @@ export const IGNORED_CHECK_FILES = [
         settings: EDITORCONFIG_SETTINGS,
         files: { 'sample.json': '{"value":1}\n' },
         kept: ['.editorconfig'],
-        dropped: ['.gspot/configurations/general/format/prettier.json', '.prettierignore'],
+        dropped: [findFileTarget('format', 'prettier.json'), '.prettierignore'],
     },
 ] as const;
 

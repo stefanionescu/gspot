@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildKnownSettings } from '#cli/settings/known.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
@@ -17,7 +18,10 @@ test.each(['default', 8] as const)('Ruff counts declared parameters with maximum
     const { maximum, defaultMaximum } = await prepareParameterProject(sandbox.path, scenario, supplied);
     await installGeneratedTools(sandbox.path);
     const result = runCommandBlocking(
-        [buildVenvExecutablePath(join(sandbox.path, '.gspot/.venv'), 'ruff'), ...scenario.command.slice(1)],
+        [
+            buildVenvExecutablePath(join(sandbox.path, GSPOT_PATHS.pythonEnvironment), 'ruff'),
+            ...scenario.command.slice(1),
+        ],
         { cwd: sandbox.path },
     );
     const findings = JSON.parse(result.stdout) as ParameterFinding[];

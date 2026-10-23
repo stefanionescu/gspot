@@ -27,10 +27,8 @@ test.each([...FRAMEWORK_NAMES])(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
                 level: 'all',
-                tables:
-                    `[naming]\nbanned_words = ${JSON.stringify(bannedWords)}\n` +
-                    `[[scope]]\npath = "app"\nconfigurations = ["${configuration}"]\n` +
-                    '[[scope]]\npath = "sibling"\n',
+                scopes: [{ path: 'app', configurations: [configuration] }, { path: 'sibling' }],
+                tables: `[naming]\nbanned_words = ${JSON.stringify(bannedWords)}\n`,
             }),
             'entry.ts': source,
             'app/entry.ts': source,
@@ -66,7 +64,7 @@ test.each([...FRAMEWORK_NAMES])(
             buildRunOptions({ only: ['naming/identifiers'] }),
         );
 
-        expect(corrected.report.checks.every(({ findings }) => findings.length === 0)).toBe(true);
+        expect(corrected.report.failed).toStrictEqual([]);
     },
 );
 
@@ -129,7 +127,7 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
         buildRunOptions({ only: ['naming/identifiers'] }),
     );
 
-    expect(corrected.report.checks.every(({ findings }) => findings.length === 0)).toBe(true);
+    expect(corrected.report.failed).toStrictEqual([]);
 });
 test('an allowed property name does not hide a bad name on the next line', async () => {
     const source =
@@ -144,9 +142,8 @@ test('an allowed property name does not hide a bad name on the next line', async
 
     const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
 
-    const report = failed.report;
     expect(
-        report.checks.flatMap(({ findings }) =>
+        failed.report.checks.flatMap(({ findings }) =>
             findings.map(({ file, line, column, rule }) => ({ file, line, column, rule })),
         ),
     ).toStrictEqual([{ file: 'source.ts', line: 3, column: 5, rule: 'case' }]);
@@ -163,10 +160,9 @@ test(`test-file exemptions follow each scope's test_files and Swift test names`,
 
     const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
 
-    const report = result.report;
-    expect(report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))).toStrictEqual([
-        ...TEST_FILE_FINDINGS,
-    ]);
+    expect(
+        result.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
+    ).toStrictEqual([...TEST_FILE_FINDINGS]);
 });
 
 test('Python dunders and type aliases follow their own naming', async () => {

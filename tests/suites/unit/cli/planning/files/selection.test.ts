@@ -2,9 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { symlink, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
@@ -21,7 +23,6 @@ import {
     TYPESCRIPT_SCOPES_SETTINGS,
 } from '#tests/config/planning/files.ts';
 
-/** Prepare a local TypeScript compiler that reports one project finding. */
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
     await using sandbox = await testdir({
         'gspot.toml': TYPESCRIPT_SCOPES_SETTINGS,
@@ -35,7 +36,7 @@ test("a file named on the command line runs its scope's project check on every f
     const declaration = await fakeNpmTool(sandbox.path, 'tsc');
     await writeScriptCommand(
         sandbox.path,
-        '.gspot/node_modules/.bin/tsc',
+        `${GSPOT_PATHS.nodeModules}/.bin/tsc`,
         `if (process.argv.includes('--version')) console.log(${JSON.stringify(declaration.version)}); else { console.log('source.ts(1,1): error TS2304: Project finding'); process.exitCode = 1; }`,
     );
     const session = await openSession(sandbox.path);
@@ -55,16 +56,14 @@ test.each([...PROJECT_PATH_IGNORES])(
     '$name, and the TypeScript check plans only the files that the ignore leaves',
     async ({ changed, present, check, rule, files }) => {
         await using sandbox = await testdir();
-        const ruleField = rule === undefined ? '' : `rule = "${rule}"\n`;
+        const ignore = {
+            check,
+            ...(rule === undefined ? {} : { rule }),
+            paths: ['api/ignored.ts'],
+            reason: 'This input is evaluated by its owning pipeline.',
+        };
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                TYPESCRIPT_SCOPES_SETTINGS +
-                `
-[[ignore]]
-check = "${check}"
-${ruleField}paths = ["api/ignored.ts"]
-reason = "This input is evaluated by its owning pipeline."
-`,
+            'gspot.toml': `${TYPESCRIPT_SCOPES_SETTINGS}\n${stringify({ ignore: [ignore] })}`,
             'api/kept.ts': 'export {};\n',
             ...(present ? { 'api/ignored.ts': 'export {};\n' } : {}),
         });
@@ -104,7 +103,7 @@ test('a project-wide TypeScript check counts its source file and tsconfig.json, 
     const declaration = await fakeNpmTool(sandbox.path, 'tsc');
     await writeScriptCommand(
         sandbox.path,
-        '.gspot/node_modules/.bin/tsc',
+        `${GSPOT_PATHS.nodeModules}/.bin/tsc`,
         `if (process.argv.includes('--version')) console.log(${JSON.stringify(declaration.version)});`,
     );
     const all = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
@@ -175,7 +174,7 @@ test('Prettier filters its files through a linked ignore file inside the reposit
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['markdown']),
         'settings/format.ignore': ignored,
-        '.gspot/configurations/.keep': '',
+        [`${GSPOT_PATHS.configurations}/.keep`]: '',
         'ignored.md': '# Ignored\n',
         'kept.md': '# Kept\n',
     });

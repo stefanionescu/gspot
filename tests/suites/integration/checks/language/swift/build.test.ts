@@ -59,13 +59,10 @@ test.skipIf(!isMacos)(
     async () => {
         await using sandbox = await testdir();
         await using _cache = await redirectCacheFolder();
-        const project = XCODE_TOOL_PROJECT;
         const source = 'let value: Int = 1\nprint(value)\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings(['swift', 'xcode'], {
-                tables: XCODE_BUILD_TABLES,
-            }),
-            'Example.xcodeproj/project.pbxproj': project,
+            'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: XCODE_BUILD_TABLES }),
+            'Example.xcodeproj/project.pbxproj': XCODE_TOOL_PROJECT,
             'Example.xcodeproj/xcshareddata/xcschemes/Example.xcscheme': XCODE_TOOL_SCHEME,
             'main.swift': source,
             'untracked.txt': 'authored content\n',
@@ -90,7 +87,9 @@ test.skipIf(!isMacos)(
             ),
         ).toStrictEqual(times);
         expect(await readFile(join(sandbox.path, 'main.swift'), 'utf8')).toBe(source);
-        expect(await readFile(join(sandbox.path, 'Example.xcodeproj/project.pbxproj'), 'utf8')).toBe(project);
+        expect(await readFile(join(sandbox.path, 'Example.xcodeproj/project.pbxproj'), 'utf8')).toBe(
+            XCODE_TOOL_PROJECT,
+        );
         expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('authored content\n');
         expect(await isOnDisk(join(sandbox.path, 'build'))).toBe(false);
         await writeFile(join(sandbox.path, 'main.swift'), 'let value: Int = "wrong"\nprint(value)\n');

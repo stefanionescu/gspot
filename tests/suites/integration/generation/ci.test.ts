@@ -112,9 +112,15 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         await fakeCiMise(executables.path);
         const invalid = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-        expect(invalid.stdout).toContain('project/syntax');
-        expect(invalid.stdout).toContain('changed.sh');
-        expect(invalid.stdout).not.toContain('legacy.sh');
+        // The job checks only the changed file, so the report leaves out the other broken script.
+        const lines = invalid.stdout.split('\n');
+        const start = lines.indexOf('project/syntax  failed  1 finding');
+        expect(lines.slice(start, start + 4)).toStrictEqual([
+            'project/syntax  failed  1 finding',
+            '  changed.sh: syntax error',
+            '  help: Read the command output; this repository declares the check.',
+            '  run again: gspot check --only project/syntax',
+        ]);
         await writeFile(join(sandbox.path, 'changed.sh'), 'echo corrected\n');
         // The fix commits changed.sh alone: a commit of the tool lockfiles that the job installed makes it check every
         // file.
@@ -124,7 +130,9 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         const firstPush = await runCiJob(sandbox.path, generated, executables.path, '0'.repeat(base.length));
         expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
-        expect(firstPush.stdout).toContain('legacy.sh');
+        expect(firstPush.stdout.split('\n').filter((line) => line.includes('.sh'))).toStrictEqual([
+            '  legacy.sh: syntax error',
+        ]);
     });
 
     test('a malformed or unknown base revision exits 2 without running it, and a failed install fails the job', async () => {
@@ -135,16 +143,18 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         const failurePath = await fakeCiMise(executables.path);
         const malformed = await runCiJob(sandbox.path, generated, executables.path, '$(touch injected)');
         expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-        expect(malformed.stderr).toContain('Git merge-base failed for $(touch injected):');
+        expect(malformed.stderr).toBe(
+            'Git merge-base failed for $(touch injected): fatal: Not a valid object name $(touch injected).\n',
+        );
         expect(await isOnDisk(join(sandbox.path, 'injected'))).toBe(false);
         const missing = await runCiJob(sandbox.path, generated, executables.path, 'f'.repeat(base.length));
-        expect(missing.code).toBe(2);
+        expect(missing.code, missing.stdout + missing.stderr).toBe(2);
         expect(missing.stderr).toBe(
             `Git merge-base failed for ${'f'.repeat(base.length)}: fatal: Not a valid commit name ${'f'.repeat(base.length)}.\n`,
         );
         await writeFile(failurePath, '');
         const refused = await runCiJob(sandbox.path, generated, executables.path, base);
-        expect(refused.code).toBe(1);
-        expect(refused.stderr).toContain('404 Not Found');
+        expect(refused.code, refused.stdout + refused.stderr).toBe(1);
+        expect(refused.stderr).toBe('npm error 404 Not Found - GET https://registry.npmjs.org/@gspothq/cli\n');
     });
 });

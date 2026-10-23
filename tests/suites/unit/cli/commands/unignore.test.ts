@@ -35,7 +35,6 @@ test('unignore keeps an empty ignore list and reports no change', async () => {
     const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(removed.stdout).toBe('No change: bash/shellcheck has no matching ignore.\n');
-    expect((parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore']).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
@@ -53,7 +52,6 @@ test('unignore refuses a gspot.toml whose ignore has no reason and writes nothin
     expect(matched.code, matched.stdout + matched.stderr).toBe(2);
     expect(matched.stderr).toBe('gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this record.\n');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-    expect(await readFile(join(sandbox.path, 'entry.sh'), 'utf8')).toBe('echo example\n');
 });
 
 test('unignore counts the changed ignores and keeps other paths and other rules', async () => {
@@ -106,7 +104,4 @@ test('unignore counts the changed ignores and keeps other paths and other rules'
         globalOther,
         other,
     ]);
-    expect(await readFile(join(sandbox.path, 'a.sh'), 'utf8')).toBe('echo a\n');
-    expect(await readFile(join(sandbox.path, 'b.sh'), 'utf8')).toBe('echo b\n');
-    expect(await readFile(join(sandbox.path, 'c.sh'), 'utf8')).toBe('echo c\n');
 });

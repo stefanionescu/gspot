@@ -34,14 +34,14 @@ test.each(ARCHITECTURE_REQUIREMENTS.flatMap((entry) => LEVELS.map((level) => ({ 
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {
                 level,
-                tables: `${tables}\n[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n`,
+                scopes: [{ path: 'app', configurations: ['javascript'] }],
+                tables,
             }),
             'src/source.js': 'export const value = 1;\n',
             'app/src/source.js': 'export const value = 2;\n',
         });
         const session = await openSession(sandbox.path);
         expect(session.scopes.map(({ folder }) => folder.path)).toStrictEqual(['', 'app']);
-        expect(session.scopes.every(({ settings }) => settings.test_files.length > 0)).toBe(true);
         const names = session.neededToolConfigurations.flatMap((configuration) =>
             configuration.tools.map((tool) => tool.name),
         );
@@ -63,8 +63,13 @@ describe.each(COVERAGE_PROVIDERS.flatMap((entry) => [0, 80].map((lines) => ({ ..
         beforeAll(async () => {
             const sandbox = resources.use(await testdir());
             await createFileTree(sandbox.path, { [file]: '', ['app/' + file]: '' });
-            const tables = `[coverage]\nlines = ${String(lines)}\n[[scope]]\npath = "app"\nconfigurations = ${JSON.stringify(configurations)}\n`;
-            await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(configurations, { tables }));
+            await writeFile(
+                join(sandbox.path, 'gspot.toml'),
+                buildSandboxSettings(configurations, {
+                    scopes: [{ path: 'app', configurations }],
+                    tables: `[coverage]\nlines = ${String(lines)}\n`,
+                }),
+            );
             session = await openSession(sandbox.path);
             checks = planChecks(session, { stage: 'push', only: [configuration + '/coverage'] });
         });

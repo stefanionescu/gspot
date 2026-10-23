@@ -1,11 +1,10 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { matchItems } from '#tests/setup/matchers.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import { findFileTarget, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { BRITISH_SCOPE_SETTINGS } from '#tests/config/generation/configurations/general/spelling.ts';
 
 test('typos.toml lists each allowed word once and keeps quoted paths', async () => {
@@ -24,9 +23,8 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
 
     const session = await openSession(sandbox.path);
     const output = generate(session);
-    const target = output.files.find((file) => file.path === '.gspot/configurations/general/spelling/typos.toml');
-    expect(target).toBeDefined();
-    const parsed = parse(target!.content) as Record<string, unknown>;
+    const target = output.files.find((file) => file.path === findFileTarget('spelling', 'typos.toml'))!;
+    const parsed = parse(target.content) as Record<string, unknown>;
     expect(Object.keys(parsed).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'default',
         'files',
@@ -34,8 +32,11 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
     expect(parsed).not.toHaveProperty('type');
     expect(parsed['default']).not.toHaveProperty('extend-identifiers');
     expect(parsed['default']).toMatchObject({ 'extend-words': Object.fromEntries(words.map((word) => [word, word])) });
-    expect(parsed['files']).toMatchObject({ 'extend-exclude': matchItems(paths) });
-    expect(parsed['files']).not.toMatchObject({ 'extend-exclude': matchItems(['**']) });
+    const { 'extend-exclude': excluded, ...otherFiles } = parsed['files'] as { 'extend-exclude': string[] };
+    expect(otherFiles).toStrictEqual({});
+    // Your paths follow the generated ones, and the reason text adds no exclusion of its own.
+    expect(excluded.slice(-paths.length)).toStrictEqual(paths);
+    expect(excluded).not.toContain('**');
 });
 
 test('typos.toml selects the spelling locale of each scope', async () => {

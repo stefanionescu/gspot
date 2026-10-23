@@ -71,7 +71,7 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
     await using sandbox = await testdir();
     const scope = 'apps/café [web]';
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['swift'], { tables: `[[scope]]\npath = ${JSON.stringify(scope)}\n` }),
+        'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: scope }] }),
         'Sources/Main.swift': 'let value = 1\n',
         [`${scope}/Sources/Main.swift`]: 'let value = 2\n',
     });
@@ -91,8 +91,17 @@ test.skipIf(isWindows)('a command check whose program lost its execute bit error
     const executable = join(sandbox.path, 'checker');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
-            tables: `[[command_check]]
-id = "project/checker"\noutput = { format = "none" }\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'project/checker',
+                        output: { format: 'none' },
+                        stage: 'commit',
+                        paths: ['source.txt'],
+                        command: [executable],
+                    },
+                ],
+            }),
         }),
         'source.txt': 'input\n',
     });

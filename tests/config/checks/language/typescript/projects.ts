@@ -22,3 +22,7 @@ export const STRICT_COMPILER_OPTIONS = {
 export const STRICT_TSCONFIG_TEXT = JSON.stringify({ compilerOptions: STRICT_TYPE_FLAGS });
 
 export const COMPILER_SOURCE = 'export const value = missing;\n';
+
+/** An ignore of the noImplicitReturns option of typescript/tsconfig. */
+export const IMPLICIT_RETURNS_IGNORE =
+    '[[ignore]]\ncheck = "typescript/tsconfig"\nrule = "noImplicitReturns"\nreason = "Returns are checked separately."\n';

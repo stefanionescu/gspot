@@ -1,3 +1,5 @@
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+
 /** The source, command, and failure exit code of each parameter-limit tool. */
 export const PARAMETER_LIMIT_TOOLS = [
     {
@@ -7,7 +9,7 @@ export const PARAMETER_LIMIT_TOOLS = [
             'ruff',
             'check',
             '--config',
-            '.gspot/configurations/language/python/ruff.toml',
+            findFileTarget('python', 'ruff.toml'),
             '--output-format',
             'json',
             'example.py',
@@ -41,7 +43,7 @@ def _eight(
             'swiftlint',
             'lint',
             '--config',
-            '.gspot/configurations/language/swift/swiftlint.yml',
+            findFileTarget('swift', 'swiftlint.yml'),
             '--reporter',
             'json',
             '--quiet',

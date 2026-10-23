@@ -17,11 +17,16 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
+import { TSC_PLAIN_OUTPUT, TSC_BUILD_COMMAND } from '#cli/config/checks/language/typescript/compiler.ts';
 
 import {
+    NEXT_LAUNCHER,
+    UNRELATED_FILE,
     NEXT_CACHE_BYTES,
+    AUTHORED_NEXT_ENV,
     TSC_FAILURE_OUTPUT,
     NEXT_VERSION_OUTPUT,
+    RETAINED_ROUTE_TYPES,
     OUTPUT_PRESERVATION_CASES,
     TYPESCRIPT_VERSION_OUTPUT,
 } from '#tests/config/checks/framework/nextjs.ts';
@@ -34,9 +39,8 @@ import {
  * @returns the session after apply and commit.
  */
 async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<Session> {
-    const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;
     await createFileTree(sandboxRoot, {
-        'gspot.toml': buildSandboxSettings(['nextjs'], { level: 'all', tables: scopeTable }),
+        'gspot.toml': buildSandboxSettings(['nextjs'], { level: 'all', scopes: scope === '' ? [] : [{ path: scope }] }),
         [join(scope, 'package.json')]: JSON.stringify({
             private: true,
             dependencies: { next: '16.3.5' },
@@ -45,11 +49,11 @@ async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<S
             },
         }),
         [join(scope, 'tsconfig.json')]: '{"compilerOptions":{"strict":true}}\n',
-        [join(scope, 'next-env.d.ts')]: '// Authored type declaration\n',
-        [join(scope, '.next/types/routes.d.ts')]: '// Retained route types\n',
+        [join(scope, 'next-env.d.ts')]: AUTHORED_NEXT_ENV,
+        [join(scope, '.next/types/routes.d.ts')]: RETAINED_ROUTE_TYPES,
         [join(scope, 'src/app/page.ts')]: 'bad input\n',
-        'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
-        'unrelated/private.txt': 'Preserve unrelated scope\n',
+        'node_modules/.bin/next': NEXT_LAUNCHER,
+        [UNRELATED_FILE.path]: UNRELATED_FILE.text,
     });
     await applyGeneratedFiles(sandboxRoot);
     commitAll(sandboxRoot);
@@ -152,13 +156,11 @@ test.each([...OUTPUT_PRESERVATION_CASES])(
         const current = await currentFile.stat();
         expect(current.mode).toBe(mode);
         expect(await readFile(untracked)).toStrictEqual(Buffer.from(NEXT_CACHE_BYTES));
-        expect(await readFile(join(sandbox.path, join(scope, 'next-env.d.ts')), 'utf8')).toBe(
-            '// Authored type declaration\n',
-        );
+        expect(await readFile(join(sandbox.path, join(scope, 'next-env.d.ts')), 'utf8')).toBe(AUTHORED_NEXT_ENV);
         expect(await readFile(join(sandbox.path, join(scope, '.next/types/routes.d.ts')), 'utf8')).toBe(
-            '// Retained route types\n',
+            RETAINED_ROUTE_TYPES,
         );
-        expect(await readFile(join(sandbox.path, 'unrelated/private.txt'), 'utf8')).toBe('Preserve unrelated scope\n');
+        expect(await readFile(join(sandbox.path, UNRELATED_FILE.path), 'utf8')).toBe(UNRELATED_FILE.text);
     },
 );
 
@@ -168,7 +170,7 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         'gspot.toml': buildSandboxSettings(['nextjs']),
         'package.json': '{"private":true}\n',
         'tsconfig.json': '{}\n',
-        'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
+        'node_modules/.bin/next': NEXT_LAUNCHER,
     });
 
     const session = await openSession(sandbox.path);
@@ -180,7 +182,9 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         await writeFile(join(sandbox.path, 'tsconfig.json'), 'Concurrent developer edit\n');
         return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
     });
-    expect(await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)))).toContain(message);
+    expect(await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)))).toBe(
+        `The next typegen command failed: Error: ${message}`,
+    );
     expect(scratch).not.toBe('');
     expect(await isOnDisk(scratch)).toBe(false);
     expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
@@ -211,13 +215,15 @@ test.each(['', 'apps/web'])(
         const { folders, commands } = read;
         const result = await runCheckCode(session, planned, findCheckCode(planned.check));
         expect(result).toMatchObject({ status: 'passed', findings: [] });
-        expect(folders).toHaveLength(2);
-        expect(new Set(folders).size).toBe(1);
-        expect(commands[1]).toContain('-b');
-        expect(await isOnDisk(folders[0]!)).toBe(false);
+        const copy = folders[0]!;
+        expect(folders).toStrictEqual([copy, copy]);
+        expect(commands[1]?.slice(1)).toStrictEqual([
+            ...TSC_BUILD_COMMAND.slice(1),
+            join(copy, 'tsconfig.json'),
+            ...TSC_PLAIN_OUTPUT,
+        ]);
+        expect(await isOnDisk(copy)).toBe(false);
         expect(await readFile(join(sandbox.path, scope, 'tsconfig.json'), 'utf8')).toBe(authored);
-        expect(await readFile(join(sandbox.path, scope, 'next-env.d.ts'), 'utf8')).toBe(
-            '// Authored type declaration\n',
-        );
+        expect(await readFile(join(sandbox.path, scope, 'next-env.d.ts'), 'utf8')).toBe(AUTHORED_NEXT_ENV);
     },
 );

@@ -1,11 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { startCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+import { WRITER_LOCK_FILE } from '#cli/config/ownership/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { LINKED_FILE_CASES } from '#tests/config/commands/apply/refusals.ts';
@@ -27,19 +30,19 @@ Unclosed instructions.
         'AGENTS.md has incomplete or repeated gspot block markers. Fix the markers, then run gspot apply.\n',
     );
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/bash/shellcheckrc'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(false);
 });
 test('apply refuses an empty writer lock left after a crash and names the lock to delete', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([]),
-        '.gspot/state/writer.lock': '',
+        [WRITER_LOCK_FILE]: '',
     });
     const refused = await runGspot(sandbox.path, ['apply']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toBe(
-        '.gspot/state/writer.lock names no gspot process. Delete .gspot/state/writer.lock when no gspot command is running.\n',
+        `${WRITER_LOCK_FILE} names no gspot process. Delete ${WRITER_LOCK_FILE} when no gspot command is running.\n`,
     );
-    expect(await readFile(join(sandbox.path, '.gspot/state/writer.lock'), 'utf8')).toBe('');
+    expect(await readFile(join(sandbox.path, WRITER_LOCK_FILE), 'utf8')).toBe('');
 });
 
 test.each([['a live process', undefined], ...(isWindows ? [] : [['process 1', '1:held'] as const])] as const)(
@@ -52,14 +55,14 @@ test.each([['a live process', undefined], ...(isWindows ? [] : [['process 1', '1
         const lock = holder ?? `${String(sleeper!.child.pid)}:held`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([]),
-            '.gspot/state/writer.lock': lock,
+            [WRITER_LOCK_FILE]: lock,
         });
         const refused = await runGspot(sandbox.path, ['apply']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(refused.stderr).toBe(
-            `Another gspot command, process ${lock.split(':', 1)[0]!}, holds .gspot/state/writer.lock. Retry after it finishes, or delete .gspot/state/writer.lock when no gspot command is running.\n`,
+            `Another gspot command, process ${lock.split(':', 1)[0]!}, holds ${WRITER_LOCK_FILE}. Retry after it finishes, or delete ${WRITER_LOCK_FILE} when no gspot command is running.\n`,
         );
-        expect(await readFile(join(sandbox.path, '.gspot/state/writer.lock'), 'utf8')).toBe(lock);
+        expect(await readFile(join(sandbox.path, WRITER_LOCK_FILE), 'utf8')).toBe(lock);
     },
 );
 test('apply --json prints one error object when an unowned file blocks generation', async () => {
@@ -101,7 +104,7 @@ test('a malformed reason reports a settings error and apply preserves the author
         'gspot.toml: limits.file_lines.reason: Invalid input: expected string, received number\n',
     );
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
-    expect(await isOnDisk(join(sandbox.path, '.gspot'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, DOT_GSPOT))).toBe(false);
 });
 test.each([...LINKED_FILE_CASES])(
     'apply --dry-run refuses a $path that links outside the repository and writes nothing',

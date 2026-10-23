@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
+import { parseSettings } from '#cli/settings/read.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -49,15 +50,6 @@ test('the init plan keeps existing CI jobs apart from tool settings that the gen
     expect(retained).toBe(
         '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
     );
-    expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
-    );
-    expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
-    );
-    expect(retained).toBe(
-        '  setup.cfg                sqlfluff settings stay here, and the generated sqlfluff config file takes over. Delete the section; the generated config file replaces it.\n  .gitlab-ci.yml: quality  existing lint job kept. gspot adds no second CI job.',
-    );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
@@ -81,9 +73,9 @@ test('the init plan groups test runners and infrastructure under their own label
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toMatch(/^testing\s+jest\b/mu);
-    expect(result.stdout).toMatch(/^infrastructure\s+docker\b/mu);
-    expect(result.stdout).not.toMatch(/^tools\s/mu);
+    expect(result.stdout.split('\n').filter((line) => /^(?:testing|infrastructure|tools)\s/u.test(line))).toStrictEqual(
+        ['testing              jest  jest in package.json', 'infrastructure       docker  Dockerfile'],
+    );
 });
 
 test('the init plan lists each submodule once and reads none of it', async () => {
@@ -116,8 +108,7 @@ test('init plans no scope for an old lint folder, and --level all replaces the c
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan, settings } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'settings'>>;
     expect(plan.level).toBe('all');
-    expect(settings).toContain('level = "all"');
-    expect(settings).not.toContain('path = "quality"');
+    expect(parseSettings(settings, undefined)).toMatchObject({ level: 'all', scopes: {} });
     expect(plan.noLongerRuns.map(({ path }) => path)).toStrictEqual(['quality/']);
     expect(plan.delete.map(({ path }) => path)).toContain('.commitlintrc.json');
 });
@@ -131,10 +122,10 @@ test('init names disable comments for rules that the new setup does not load', a
     const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-    expect(plan.retained).toContainEqual({
-        path: 'src/old.js',
-        note: 'local-rules/no-legacy: gspot does not load these rules; delete the comments',
-    });
+    // no-console and unicorn/no-null belong to plugins that the new setup loads.
+    expect(plan.retained).toStrictEqual([
+        { path: 'src/old.js', note: 'local-rules/no-legacy: gspot does not load these rules; delete the comments' },
+    ]);
 });
 
 test('init lists your .editorconfig under write and not under delete when the generated one replaces it', async () => {

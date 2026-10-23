@@ -2,7 +2,6 @@ import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { TYPO } from '#tests/config/checks/general/spelling.ts';
-import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -70,24 +69,33 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
     };
     const checked = await runTyposCheck(sourceFiles);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const findings = checked.report.checks.flatMap(({ findings }) => findings);
-    for (const path of paths)
-        expect(findings).toContainEqual(matchFields({ file: `nested/${path}`, line: 1, column: 6, fixable: true }));
-    expect(findings).toStrictEqual(
-        matchItems([
-            matchFields({
-                file: `nested/${TYPO.the}.txt`,
-                message: `Filename: \`${TYPO.the}\` should be \`the\``,
-                fixable: false,
-            }),
-        ]),
-    );
+    expect(
+        checked.report.checks.flatMap(({ findings }) =>
+            findings.map(({ file, line, column, fixable, message }) => ({ file, line, column, fixable, message })),
+        ),
+    ).toStrictEqual([
+        ...(isWindows ? [] : [buildTypoFinding('name:part.txt')]),
+        buildTypoFinding('space name.txt'),
+        {
+            file: `nested/${TYPO.the}.txt`,
+            line: undefined,
+            column: undefined,
+            fixable: false,
+            message: `Filename: \`${TYPO.the}\` should be \`the\``,
+        },
+        buildTypoFinding(`${TYPO.the}.txt`),
+    ]);
     const corrected = await runTyposCheck({
         'gspot.toml': sourceFiles['gspot.toml'],
         ...Object.fromEntries(paths.map((path) => [`nested/${path.replace(TYPO.the, 'the')}`, 'café the\n'])),
     });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
+
+/** The finding of the misspelling after "café " in a nested file. */
+function buildTypoFinding(path: string) {
+    return { file: `nested/${path}`, line: 1, column: 6, fixable: true, message: `\`${TYPO.the}\` should be \`the\`` };
+}
 
 /** Run typos against these files and list the reported paths in order. */
 async function runTyposCheck(sourceFiles: Record<string, string>) {
@@ -105,6 +113,7 @@ async function runTyposCheck(sourceFiles: Record<string, string>) {
             .toSorted((left, right) => left.localeCompare(right)),
     };
 }
+
 // typos needs an explicit option to keep exclusions for paths from the command line.
 test('typos keeps its excluded paths for a file named on the command line', async () => {
     const { root, environment } = installedSandbox();
@@ -116,8 +125,6 @@ test('typos keeps its excluded paths for a file named on the command line', asyn
     const excluded = parseCheckReport(
         await spawnGspot(root, ['check', '--only', 'spelling/typos', '--json', '--', 'assets/mark.svg'], environment),
     );
-
     expect(excluded.code, excluded.stdout + excluded.stderr).toBe(0);
-
     expect(excluded.report.checks).toMatchObject([{ check: 'spelling/typos', status: 'passed', fileCount: 1 }]);
 });

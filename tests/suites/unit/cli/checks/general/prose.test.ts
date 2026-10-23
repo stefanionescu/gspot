@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
@@ -21,7 +21,7 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     const path = 'sample.md';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['prose', 'markdown'], { tables: 'tool_timeout_seconds = 1\n' }),
-        '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
+        [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
         [path]: '# Example text\n',
     });
     using resources = new DisposableStack();
@@ -35,8 +35,8 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
     expect(run.mock.calls).toHaveLength(1);
     const [command, options] = run.mock.calls[0]!;
     expect(options.timeoutSeconds).toBe(1);
-    expect(options.cwd).toBe(join(sandbox.path, '.gspot/configurations/general/prose'));
-    expect(command).toContain(join(sandbox.path, '.gspot/configurations/general/prose/vale.ini'));
+    expect(options.cwd).toBe(join(sandbox.path, dirname(GSPOT_PATHS.valeConfigFile)));
+    expect(command).toContain(join(sandbox.path, GSPOT_PATHS.valeConfigFile));
     expect(command).toContain(join(sandbox.path, path));
     expect(options.stdin).toBeUndefined();
 
@@ -49,7 +49,7 @@ test('Vale gets the timeout setting, and its alerts become findings with file, l
 test('prose/vale sends Vale each stdin file as gspot read it at the start of the run, not a later edit', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['prose', 'typescript']),
-        '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
+        [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
         'first.mts': '// First explanation.\n',
         'second.cts': '// Second explanation.\n',
     });
@@ -84,7 +84,7 @@ test('prose/vale sends Vale each stdin file as gspot read it at the start of the
 test('Vale reads known file types by path, and .mts files and scripts without an extension through stdin', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['prose', 'typescript', 'bash']),
-        '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
+        [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
         'a.tsx': '// Component explanation.\n',
         'a.mts': '// Module explanation.\n',
         'hooks/pre-commit': '#!/bin/sh\n# Hook explanation.\n',

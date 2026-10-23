@@ -123,8 +123,9 @@ test("service role keys are allowed in each scope's test files and refused in cl
         buildRunOptions({ only: ['supabase/service-role-key'] }),
     );
 
-    const report = result.report;
-    expect(report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))).toStrictEqual([
+    expect(
+        result.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
+    ).toStrictEqual([
         { file: 'client.ts', rule: 'service-role-key' },
         { file: 'apps/web/client.ts', rule: 'service-role-key' },
     ]);
@@ -133,11 +134,10 @@ test("service role keys are allowed in each scope's test files and refused in cl
 test('service role keys are refused in component and module clients and allowed in the functions folder', async () => {
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['supabase'], { tables: '[supabase]\nfunctions_folder = "server"\n' });
-    const sources = SERVICE_ROLE_CLIENTS;
-    await createFileTree(sandbox.path, { 'gspot.toml': settings, ...sources });
+    await createFileTree(sandbox.path, { 'gspot.toml': settings, ...SERVICE_ROLE_CLIENTS });
     const findings = await runSandboxCheck(sandbox.path, 'supabase/service-role-key');
     expect(findings.map(({ file }) => file)).toStrictEqual([...SERVICE_ROLE_CLIENT_FILES]);
-    for (const [path, text] of Object.entries(sources)) {
+    for (const [path, text] of Object.entries(SERVICE_ROLE_CLIENTS)) {
         if (path.startsWith('client.'))
             await writeFile(
                 join(sandbox.path, path),
@@ -189,11 +189,11 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
 });
 
 test.each(['', 'apps/api'])(
-    'supabase/storage-policies fails on a config.toml whose buckets value is not a table in scope %s',
+    'supabase/storage-policies fails on a config.toml whose buckets value is not a table in scope %j',
     async (scope) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['supabase'], {
-                tables: scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`,
+                scopes: scope === '' ? [] : [{ path: scope }],
             }),
             [join(scope, 'supabase/config.toml')]: INVALID_BUCKETS_CONFIG,
         });
@@ -204,9 +204,9 @@ test.each(['', 'apps/api'])(
 
         const check = failed.report.checks.find((entry) => entry.scope === scope);
         expect(check).toMatchObject({ check: 'supabase/storage-policies', scope, status: 'error', findings: [] });
-        expect(check?.note).toContain('expected record, received string');
-        expect(check?.note).toContain('storage.buckets:');
-        expect(check?.note).toContain(posix.join(scope, 'supabase/config.toml'));
+        expect(check?.note).toBe(
+            `The supabase/storage-policies check failed: ${posix.join(scope, 'supabase/config.toml')}: storage.buckets: Invalid input: expected record, received string. Fix the field.`,
+        );
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );

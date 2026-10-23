@@ -1,10 +1,12 @@
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+
 /** Git-dependent plan rows belong only to a repository with a Git index. */
 export const GIT_PLAN_CASES = [
-    { name: 'a folder outside Git', hasGit: false, changes: ['.gspot/mise.toml', '.gspot/package.json'] },
+    { name: 'a folder outside Git', hasGit: false, changes: [GSPOT_PATHS.miseProject, GSPOT_PATHS.npmProject] },
     {
         name: 'a Git repository',
         hasGit: true,
-        changes: ['.gitignore', '.gitattributes', '.gspot/mise.toml', '.gspot/package.json', '.gspot/hooks'],
+        changes: ['.gitignore', '.gitattributes', GSPOT_PATHS.miseProject, GSPOT_PATHS.npmProject, GSPOT_PATHS.hooks],
     },
 ] as const;
 

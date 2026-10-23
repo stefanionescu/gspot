@@ -42,7 +42,6 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
         MISE_CACHE_DIR: join(sandbox.path, 'cache'),
         MISE_CEILING_PATHS: dirname(root),
     };
-
     const runtimePins = await readRuntimePins();
     await linkQuickstartTools(root, environment);
     for (const command of [
@@ -68,7 +67,8 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
     const source = join(root, row.sourcePath);
     const original = await readFile(source);
     runGitStep(root, ['add', '-A']);
-    expect(runGit(root, ['commit', '-qm', 'chore: Set up gspot'], environment).code).toBe(0);
+    const committed = runGit(root, ['commit', '-qm', 'chore: Set up gspot'], environment);
+    expect(committed.code, committed.stdout + committed.stderr).toBe(0);
     await writeFile(source, row.invalidSource);
     const command = ['mise', 'exec', '--', 'gspot', 'check', '--only', row.check];
     const rejected = await runCommand(command, { cwd: root, env: environment });
@@ -90,19 +90,15 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
 async function linkQuickstartTools(tutorialRoot: string, environment: Record<string, string>): Promise<void> {
     for (const pin of listMisePins([...readConfigurations().values()]).filter((pin) => hasToolBuild(pin.name))) {
         const requirement = `${pin.name}@${pin.version}`;
-
         const installed = await runCommand(
             pin.name === 'uv' ? ['mise', 'which', 'uv'] : ['mise', 'where', requirement],
-            {
-                cwd: TEST_RUN_FOLDER,
-            },
+            { cwd: TEST_RUN_FOLDER },
         );
         expect(installed.code, `Quickstart tool lookup failed: ${installed.stdout}${installed.stderr}`).toBe(0);
         const location = installed.stdout.trim();
         // The uv archive keeps its program in a subfolder of its install folder, so link the folder that holds the
         // program.
         const folder = pin.name === 'uv' ? dirname(location) : location;
-
         const linked = await runCommand(['mise', 'link', requirement, folder], { cwd: tutorialRoot, env: environment });
         expect(linked.code, `Quickstart tool linking failed: ${linked.stdout}${linked.stderr}`).toBe(0);
     }
@@ -112,6 +108,6 @@ async function linkQuickstartTools(tutorialRoot: string, environment: Record<str
 function assertCommitRejected(repositoryRoot: string, rule: string, environment: Record<string, string>): void {
     runGitStep(repositoryRoot, ['add', '-A']);
     const refused = runGit(repositoryRoot, ['commit', '-qm', 'feat: Add invalid source'], environment);
-    expect(refused.code).not.toBe(0);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     expect(refused.stdout + refused.stderr).toContain(rule);
 }

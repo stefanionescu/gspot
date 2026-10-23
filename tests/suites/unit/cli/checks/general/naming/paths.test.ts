@@ -6,6 +6,7 @@ import { rename, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';
@@ -33,8 +34,7 @@ test('[slug] path brackets are allowed in every scope and banned file names are 
 
     const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));
 
-    const findings = result.report.checks.flatMap(({ findings }) => findings);
-    expect(findings.map(({ file }) => file)).toStrictEqual(['handler.ts']);
+    expect(listFindingRows(result.report)).toStrictEqual([{ file: 'handler.ts', line: 1, rule: 'banned-word' }]);
 });
 
 test.each([...FILE_NAME_CASES])('$name', async ({ configurations, files, invalid, renamed }) => {
@@ -54,27 +54,17 @@ test.each([...FILE_NAME_CASES])('$name', async ({ configurations, files, invalid
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
-test.each(['', 'app'])(
-    'migration timestamps are allowed without postgres while other numeric folders are reported (scope "%s")',
-    async (scope) => {
-        await using sandbox = await testdir();
+test.each(['', 'app'].flatMap((scope) => ['sql', 'postgres'].map((configuration) => ({ scope, configuration }))))(
+    'migration timestamps pass with $configuration while other numeric folders are reported (scope "$scope")',
+    async ({ scope, configuration }) => {
         const prefix = scope === '' ? '' : `${scope}/`;
-        for (const [path, text] of Object.entries(MIGRATION_FILES))
-            await createFileTree(sandbox.path, { [`${prefix}${path}`]: text });
-        const settings = buildSandboxSettings(['naming', 'sql'], { level: 'all', scopes: [{ path: 'app' }] });
-        await writeFile(join(sandbox.path, 'gspot.toml'), settings);
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['naming', configuration], { level: 'all', scopes: [{ path: 'app' }] }),
+            ...Object.fromEntries(Object.entries(MIGRATION_FILES).map(([path, text]) => [`${prefix}${path}`, text])),
+        });
 
-        const refused = await runSandboxCheck(sandbox.path, 'naming/paths', { scope });
-        expect(refused.filter(({ rule }) => rule === 'digits').map(({ file }) => file)).toStrictEqual([
-            `${prefix}other/20240101000000_create_teams/query.sql`,
-        ]);
-        await writeFile(
-            join(sandbox.path, 'gspot.toml'),
-            buildSandboxSettings(['naming', 'postgres'], { level: 'all', scopes: [{ path: 'app' }] }),
-        );
-
-        const allowed = await runSandboxCheck(sandbox.path, 'naming/paths', { scope });
-        expect(allowed.filter(({ rule }) => rule === 'digits').map(({ file }) => file)).toStrictEqual([
+        const findings = await runSandboxCheck(sandbox.path, 'naming/paths', { scope });
+        expect(findings.filter(({ rule }) => rule === 'digits').map(({ file }) => file)).toStrictEqual([
             `${prefix}other/20240101000000_create_teams/query.sql`,
         ]);
     },
@@ -134,7 +124,7 @@ test.each(['', 'apps/api'])(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['supabase', 'typescript', 'naming'], {
                 level: 'all',
-                tables: scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`,
+                scopes: scope === '' ? [] : [{ path: scope }],
             }),
             [`${prefix}supabase/config.toml`]: 'project_id = "example"\n',
             [`${prefix}supabase/functions/_shared/entry.ts`]: 'export const origin = "example.com";\n',

@@ -1,3 +1,5 @@
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+
 export const PACKAGE_FIELDS = {
     name: 'example-package',
     dependencies: { next: '16.0.0' },
@@ -11,7 +13,7 @@ export const PROJECT_DEPENDENCY_FILES = {
     'app/package.json': '{"devDependencies":{"tailwindcss":"4.1.13"}}',
     'other/package.json': '{"dependencies":{"next":"16.3.5"}}',
     'empty/package.json': '{"private":true}',
-    '.gspot/package.json': '{"dependencies":{"tailwindcss":"4.1.13"}}',
+    [GSPOT_PATHS.npmProject]: '{"dependencies":{"tailwindcss":"4.1.13"}}',
 } as const;
 
 export const PROJECT_DEPENDENCY_SCOPES = [

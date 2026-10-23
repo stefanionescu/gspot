@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildTrackedFile } from '#tests/setup/cli/repository.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -17,9 +18,9 @@ test('files are covered by extension, file name at any depth, tag and glob', () 
 
     const bash = configurations.get('bash')!;
     expect(buildFileMatcher(bash.files)(buildTrackedFile('scripts/build.sh'))).toBe(true);
-    expect(buildFileMatcher(bash.files)(buildTrackedFile('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(
-        true,
-    );
+    expect(
+        buildFileMatcher(bash.files)(buildTrackedFile(`${GSPOT_PATHS.hooks}/pre-commit`, ['text', 'shebang:shell'])),
+    ).toBe(true);
     expect(buildFileMatcher(bash.files)(buildTrackedFile('README.md'))).toBe(false);
     const filenames = { ...bash.files, extensions: [], filenames: ['_headers'], tags: [] };
     expect(buildFileMatcher(filenames)(buildTrackedFile('public/_headers'))).toBe(true);

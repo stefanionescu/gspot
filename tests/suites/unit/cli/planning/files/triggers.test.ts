@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { type Session } from '#cli/types/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { type Check } from '#cli/types/configurations.ts';
@@ -11,6 +12,7 @@ import { BASE_CHECK } from '#tests/config/runs/command.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { mkdir, unlink, readFile } from 'node:fs/promises';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -30,7 +32,11 @@ import {
  * @param session sandbox whose checks to replace.
  */
 async function replaceChildScopeChecks(session: Session): Promise<void> {
-    await writeScriptCommand(session.root, '.gspot/mock-tsc', "console.log('Project finding'); process.exitCode = 1");
+    await writeScriptCommand(
+        session.root,
+        `${DOT_GSPOT}/mock-tsc`,
+        "console.log('Project finding'); process.exitCode = 1",
+    );
     const configuration = session.configurations.get('typescript')!;
     const check: Check = {
         ...BASE_CHECK,
@@ -38,7 +44,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         stage: TSC_PUSH_OPTIONS.stage,
         runs: 'scope',
         cwd: 'root',
-        command: [join(session.root, '.gspot/mock-tsc')],
+        command: [join(session.root, `${DOT_GSPOT}/mock-tsc`)],
         output: { format: 'lines' },
         files: configuration.files,
         fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
@@ -149,7 +155,7 @@ configurations = []
     ).toStrictEqual([['api/nested', ['api/nested/removed.ts']]]);
     expect(planned.find((check) => check.scope.folder.path === 'api')?.files).toStrictEqual([]);
 });
-test.each(['gspot.toml', '.gspot/configurations/general/docs/lychee.toml'])(
+test.each(['gspot.toml', findFileTarget('docs', 'lychee.toml')])(
     'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
     async (path) => {
         await using sandbox = await testdir({

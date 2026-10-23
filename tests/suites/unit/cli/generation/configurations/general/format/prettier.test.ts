@@ -6,8 +6,9 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { generate } from '#cli/generation/generate.ts';
-import { generateFile } from '#tests/setup/cli/config-files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { generateFile, findFileTarget } from '#tests/setup/cli/config-files.ts';
 
 test('Prettier loads the selected plugin through the root pointer', async () => {
     await using sandbox = await testdir({
@@ -17,15 +18,15 @@ test('Prettier loads the selected plugin through the root pointer', async () => 
     const generated = generate(await openSession(sandbox.path));
     await createFileTree(sandbox.path, Object.fromEntries(generated.files.map(({ path, content }) => [path, content])));
     const configFile = JSON.parse(
-        generated.files.find(({ path }) => path === '.gspot/configurations/general/format/prettier.json')!.content,
+        generated.files.find(({ path }) => path === findFileTarget('format', 'prettier.json'))!.content,
     ) as Options;
-    expect(configFile.plugins).toStrictEqual(['./.gspot/node_modules/prettier-plugin-svelte/plugin.js']);
+    expect(configFile.plugins).toStrictEqual([`./${GSPOT_PATHS.nodeModules}/prettier-plugin-svelte/plugin.js`]);
     const pointer = await prettier.resolveConfig(join(sandbox.path, 'source.svelte'), {
         config: join(sandbox.path, 'prettier.config.mjs'),
         useCache: false,
     });
     expect(pointer?.plugins).toStrictEqual([
-        join(sandbox.path, '.gspot/node_modules/prettier-plugin-svelte/plugin.js'),
+        join(sandbox.path, GSPOT_PATHS.nodeModules, 'prettier-plugin-svelte/plugin.js'),
     ]);
 });
 test('the Prettier plugin overrides come before your overrides, and without a plugin the Prettier file has no plugins key', async () => {
@@ -34,7 +35,7 @@ test('the Prettier plugin overrides come before your overrides, and without a pl
         format: { override: [{ paths: ['docs/**'], print_width: 80 }] },
     };
     const pluginPolicy = JSON.parse(
-        await generateFile(stringify(settings), '.gspot/configurations/general/format/prettier.json', {
+        await generateFile(stringify(settings), findFileTarget('format', 'prettier.json'), {
             'source.svelte': '<h1>Example</h1>\n',
         }),
     ) as Options;
@@ -45,10 +46,8 @@ test('the Prettier plugin overrides come before your overrides, and without a pl
     const without = JSON.parse(
         await generateFile(
             stringify({ ...settings, configurations: ['format'] }),
-            '.gspot/configurations/general/format/prettier.json',
-            {
-                'source.js': 'export {};\n',
-            },
+            findFileTarget('format', 'prettier.json'),
+            { 'source.js': 'export {};\n' },
         ),
     ) as Options;
     expect(without).not.toHaveProperty('plugins');

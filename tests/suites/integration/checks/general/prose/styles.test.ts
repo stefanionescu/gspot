@@ -5,12 +5,13 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { TYPO } from '#tests/config/checks/general/spelling.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { VALE_INI } from '#tests/config/integration/checks/general/prose/samples.ts';
-import { spawnGspot, spawnRootCheck, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/samples.ts';
+import { spawnGspot, spawnRootCheck, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     STYLE_CASES,
@@ -29,8 +30,8 @@ const installedSandbox = shareProseSandbox();
 test(`Vale's em-dashes rule checks the reason text of ESLint comments and skips the -- separator`, async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['prose', 'typescript']),
-        '.gspot/configurations/general/prose/vale.ini': VALE_INI,
-        '.gspot/configurations/general/prose/styles/Example/Dashes.yml': readFileSync(
+        [GSPOT_PATHS.valeConfigFile]: VALE_INI,
+        [`${EXAMPLE_STYLE_FOLDER}/Dashes.yml`]: readFileSync(
             buildAssetPath('configurations/general/prose/config-files/styles/gspot/em-dashes.yml'),
             'utf8',
         ),
@@ -51,8 +52,8 @@ test(`Vale's em-dashes rule checks the reason text of ESLint comments and skips 
 test("Vale's version-range rule accepts a minimum version and reports vague ranges", async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
-        '.gspot/configurations/general/prose/vale.ini': VALE_INI,
-        '.gspot/configurations/general/prose/styles/Example/Versions.yml': readFileSync(
+        [GSPOT_PATHS.valeConfigFile]: VALE_INI,
+        [`${EXAMPLE_STYLE_FOLDER}/Versions.yml`]: readFileSync(
             buildAssetPath('configurations/general/prose/config-files/styles/gspot/version-range.yml'),
             'utf8',
         ),
@@ -77,10 +78,8 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
         },
     });
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
-    const findings = result.report.checks.flatMap(({ findings }) => findings);
-    expect(
-        findings.filter(({ rule }) => rule === 'gspot.heading-case').map(({ line, rule }) => ({ line, rule })),
-    ).toStrictEqual([{ line: 7, rule: 'gspot.heading-case' }]);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(listFindingRows(result.report)).toStrictEqual([{ file: 'guide.md', line: 7, rule: 'gspot.heading-case' }]);
 });
 
 test('the generated vale.ini at level recommended reports link text such as here', async () => {
@@ -121,13 +120,9 @@ test.each([...STYLE_CASES])(
             },
         });
         const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json']));
-        const alerts = result.report.checks
-            .flatMap(({ findings }) => findings)
-            .filter(({ rule }) => rule === `gspot.${entry.rule}`);
-        expect(alerts.map(({ line, rule }) => ({ line, rule }))).toStrictEqual(
-            entry.lines.map((line) => ({ line, rule: `gspot.${entry.rule}` })),
-        );
-        if ('messages' in entry) expect(alerts.map(({ message }) => message)).toStrictEqual([...entry.messages]);
+        expect(
+            result.report.checks[0]!.findings.map(({ file, line, rule, message }) => ({ file, line, rule, message })),
+        ).toStrictEqual(entry.findings.map((finding) => ({ file: entry.path, ...finding })));
     },
 );
 
@@ -137,14 +132,8 @@ test.each([...SCOPE_SPELLING_CASES])(
         const { root } = installedSandbox();
         const settings = buildSandboxSettings(scope === '' ? ['prose', 'sql', 'spelling'] : ['prose', 'spelling'], {
             level: 'all',
-            tables:
-                '[spelling]\nallowed_words = { NebulaProduct = "The project product." }\n' +
-                (scope === ''
-                    ? ''
-                    : `[[scope]]
-path = "app"
-configurations = ["sql"]
-`),
+            scopes: scope === '' ? [] : [{ path: scope, configurations: ['sql'] }],
+            tables: '[spelling]\nallowed_words = { NebulaProduct = "The project product." }\n',
         });
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
             check: '',
@@ -153,15 +142,15 @@ configurations = ["sql"]
         const result = parseCheckReport(
             await spawnGspot(root, ['check', '--only', 'prose/vale', '--only', 'spelling/typos', '--json']),
         );
-        const findings = result.report.checks.flatMap(({ findings }) => findings);
         expect(
-            findings.filter(({ rule }) => rule === 'gspot.possessives').map(({ line, rule }) => ({ line, rule })),
+            result.report.checks.flatMap(({ check, findings }) =>
+                findings.map(({ file, line, rule }) => ({ check, file, line, rule })),
+            ),
         ).toStrictEqual([
-            { rule: 'gspot.possessives', line: 7 },
-            { rule: 'gspot.possessives', line: 7 },
+            { check: 'prose/vale', file: join(scope, 'guide.md'), line: 7, rule: 'gspot.possessives' },
+            { check: 'prose/vale', file: join(scope, 'guide.md'), line: 7, rule: 'gspot.possessives' },
+            { check: 'spelling/typos', file: join(scope, 'guide.md'), line: 5, rule: undefined },
         ]);
-        expect(findings.filter(({ line }) => line === 5)).toHaveLength(1);
-        expect(findings.some(({ line }) => line === 3)).toBe(false);
         await writeFile(
             join(root, scope, 'guide.md'),
             VOCABULARY_SOURCE.replace(TYPO.receive, 'receive').replace("Avoid vale's and ajv's.", 'Use Vale and ajv.'),

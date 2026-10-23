@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { type DryRunJson } from '#cli/types/commands/apply.ts';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
-import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { STYLELINT_FILES } from '#tests/config/checks/language/css.ts';
@@ -86,33 +86,24 @@ test('doctor suggests moving authored Stylelint fields while excluding managed f
 });
 test('doctor leaves the tool projects in .gspot out of detection, detects python from your pyproject.toml, and lists a submodule', async () => {
     await using sandbox = await testdir();
-    const python = `[project]
-name = "example"
-version = "1.0.0"
-dependencies = ["pytest==8.4.2"]
-`;
+    const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([]),
-        '.gspot/pyproject.toml': python,
-        '.gspot/package.json': '{"dependencies":{"react":"19.1.1"}}',
+        [GSPOT_PATHS.pythonProject]: python,
+        [GSPOT_PATHS.npmProject]: '{"dependencies":{"react":"19.1.1"}}',
     });
     const privateOnly = await runGspot(sandbox.path, ['doctor', '--json']);
     const detected = (JSON.parse(privateOnly.stdout) as DoctorReport).suggestions.detected.map(
         ({ configuration }) => configuration,
     );
-    expect(detected).not.toContain('python');
-    expect(detected).not.toContain('react');
-    expect(detected).not.toContain('files');
+    expect(detected).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'pyproject.toml'), python);
     const authored = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect(JSON.parse(authored.stdout)).toMatchObject({
-        suggestions: {
-            detected: matchItems([
-                matchFields({ configuration: 'python', evidence: 'pyproject.toml', command: 'gspot add python' }),
-            ]),
-        },
-    });
-    expect(await readFile(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);
+    expect((JSON.parse(authored.stdout) as DoctorReport).suggestions.detected).toStrictEqual([
+        { configuration: 'pytest', evidence: 'pytest in pyproject.toml', command: 'gspot add pytest' },
+        { configuration: 'python', evidence: 'pyproject.toml', command: 'gspot add python' },
+    ]);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.pythonProject), 'utf8')).toBe(python);
     runGitStep(sandbox.path, ['init']);
     runGitStep(sandbox.path, ['add', '.']);
     runGitStep(sandbox.path, ['commit', '-qm', 'Source']);
@@ -133,22 +124,26 @@ test('doctor detects installed test frameworks and suggests no other runner', as
     });
     const currentResult = await runGspot(sandbox.path, ['doctor', '--json']);
     const current = JSON.parse(currentResult.stdout) as DoctorReport;
-    expect(current.suggestions.suggested.map((row) => row.configuration)).not.toContain('vitest');
-    expect(current.suggestions.detected.map((row) => row.configuration)).toContain('jest');
+    expect({ suggested: current.suggestions.suggested, detected: current.suggestions.detected }).toStrictEqual({
+        suggested: [],
+        detected: [{ configuration: 'jest', evidence: 'jest in package.json', command: 'gspot add jest' }],
+    });
     await writeFile(
         join(sandbox.path, 'package.json'),
         JSON.stringify({ name: 'service', private: true, dependencies: { ...dependencies, vitest: '4.1.11' } }),
     );
     const changedResult = await runGspot(sandbox.path, ['doctor', '--json']);
     const changed = JSON.parse(changedResult.stdout) as DoctorReport;
-    expect(changed.suggestions.detected.map((row) => row.configuration)).toContain('vitest');
+    expect(changed.suggestions.detected).toStrictEqual([
+        { configuration: 'jest', evidence: 'jest in package.json', command: 'gspot add jest' },
+        { configuration: 'vitest', evidence: 'vitest in package.json', command: 'gspot add vitest' },
+    ]);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 test('doctor suggests a remove command per scope after detection evidence goes, and changes nothing', async () => {
-    const level = 'all';
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['bash'], {
-        level,
+        level: 'all',
         scopes: [{ path: 'api app', configurations: ['python'] }, { path: 'api app/deep' }],
     });
     await createFileTree(sandbox.path, {
@@ -166,8 +161,13 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
     const missingText = await runGspot(sandbox.path, ['doctor']);
     expect((JSON.parse(missing.stdout) as DoctorReport).suggestions.undetected).toStrictEqual([...REMOVE_SUGGESTIONS]);
-    expect(missingText.stdout).toContain('selected, but no matching files found');
-    expect(missingText.stdout).toContain("gspot remove python --scope 'api app'");
+    expect(missingText.stdout.split('\n\n').find((block) => block.startsWith('selected, but no matching'))).toBe(
+        [
+            'selected, but no matching files found',
+            '  bash                               no detection evidence in root  gspot remove bash (if you no longer need it)',
+            "  python                             no detection evidence in api app gspot remove python --scope 'api app' (if you no longer need it)",
+        ].join('\n'),
+    );
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     await writeFile(join(sandbox.path, 'entry.sh'), 'echo ready\n');

@@ -4,8 +4,10 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { chmod, readFile } from 'node:fs/promises';
+import { stringify } from '@decimalturn/toml-patch';
 import { quoteArgument } from '#cli/system/text.ts';
 import { CI_NODE } from '#cli/config/generation/ci.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { type Pipeline } from '#cli/types/generation/ci.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -28,7 +30,11 @@ async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline>
     const sandbox = resources.use(
         await testdir({
             'gspot.toml': buildSandboxSettings(['docs'], {
-                tables: '[[command_check]]\nid = "project/audit"\npaths = ["**/*"]\nstage = "manual"\ncommand = ["echo", "sample"]\n',
+                tables: stringify({
+                    command_check: [
+                        { id: 'project/audit', paths: ['**/*'], stage: 'manual', command: ['echo', 'sample'] },
+                    ],
+                }),
             }),
             'README.md': '# Example\n',
             'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
@@ -68,8 +74,10 @@ test('the manual jobs name every manual check in one comma list', async () => {
     const cli = `npm:@gspothq/cli@${pipeline.version}`;
     const expected = `mise exec ${quoteArgument(CI_NODE)} ${quoteArgument(cli)} -- gspot check --only ${quoteArgument('docs/lychee-external,project/audit')}`;
     const github = parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow;
-    expect(github.jobs['manual-linux']!.steps.some((step) => step.run?.includes(expected) === true)).toBe(true);
-    expect(github.jobs['check-linux']!.steps.some((step) => step.run?.includes('--only') === true)).toBe(false);
+    expect(github.jobs['manual-linux']!.steps.find((step) => step.name === 'Manual checks')?.run).toBe(
+        `(cd ${DOT_GSPOT} && mise install lychee)\n${expected}\n`,
+    );
+    expect(github.jobs['check-linux']!.steps.filter((step) => step.run?.includes('--only') === true)).toStrictEqual([]);
     expect(buildGitlabWorkflow(pipeline).content).toContain(expected);
 });
 
@@ -156,7 +164,7 @@ test('without a setup command, CI installs the locked dependencies of each proje
         }),
         'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
         'package-lock.json': '{"lockfileVersion":3}',
-        'pyproject.toml': '[project]\nid = "service"\nversion = "1.0.0"\n',
+        'pyproject.toml': '[project]\nname = "service"\nversion = "1.0.0"\n',
         'uv.lock': 'version = 1\n',
         'web/package.json': '{"private":true,"dependencies":{"next":"16.0.0"}}',
         'web/pnpm-lock.yaml': "lockfileVersion: '9.0'\n",

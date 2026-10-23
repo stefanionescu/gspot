@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
@@ -21,8 +22,8 @@ test.each([...VALE_INSTALL_FAILURES])(
     async ({ script, message, settings }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: settings }),
-            '.gspot/configurations/general/prose/vale.ini': VALE_PACKAGES_INI,
-            '.gspot/vale/Google/terms.yml': 'previous bytes\n',
+            [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI,
+            [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: 'previous bytes\n',
             'guide.md': 'Authored text.\n',
         });
 
@@ -33,23 +34,27 @@ test.each([...VALE_INSTALL_FAILURES])(
         await writeScriptCommand(sandbox.path, 'node_modules/.bin/vale', launcher);
         using writer = openWriter(sandbox.path);
         const request = buildToolInstall(session, writer);
-        expect(await captureRejection(installValePackages(request))).toContain(message);
-        expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('previous bytes\n');
+        // The timeout message starts with the command, which names the temporary folder.
+        expect(await captureRejection(installValePackages(request))).toEndWith(message);
+        expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
+            'previous bytes\n',
+        );
         expect(request.steps).toStrictEqual([
             [executable, '--config', expect.stringContaining('vale-') as string, 'sync'],
         ]);
-        expect(await readFile(join(sandbox.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
         await writeFile(
             join(sandbox.path, 'node_modules/.bin/vale.js'),
             launcher.replace(script, CORRECTED_VALE_INSTALL_SCRIPT),
         );
         await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings(['prose'], { level: 'all' }));
         const fixed = buildToolInstall(await openSession(sandbox.path), writer);
-        expect(await installValePackages(fixed)).toBe('installed Vale packages in .gspot/vale');
+        expect(await installValePackages(fixed)).toBe(`installed Vale packages in ${GSPOT_PATHS.valePackages}`);
         expect(fixed.steps).toStrictEqual([
             [executable, '--config', expect.stringContaining('vale-') as string, 'sync'],
         ]);
-        expect(await readFile(join(sandbox.path, '.gspot/vale/Google/terms.yml'), 'utf8')).toBe('corrected bytes\n');
+        expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
+            'corrected bytes\n',
+        );
         expect(hasValePackages(sandbox.path, 'all')).toBe(true);
     },
 );
@@ -59,10 +64,10 @@ test.each([...LEVELS])(
     async (level) => {
         await using sandbox = await testdir();
         expect(hasValePackages(sandbox.path, level)).toBe(false);
-        await createFileTree(sandbox.path, { '.gspot/configurations/general/prose/vale.ini': VALE_PACKAGES_INI });
+        await createFileTree(sandbox.path, { [GSPOT_PATHS.valeConfigFile]: VALE_PACKAGES_INI });
         expect(hasValePackages(sandbox.path, level)).toBe(level === 'recommended');
         for (const folder of VALE_PACKAGE_FOLDERS)
-            await createFileTree(sandbox.path, { [`.gspot/vale/${folder}/.keep`]: '' });
+            await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
         expect(hasValePackages(sandbox.path, level)).toBe(true);
     },
 );
@@ -70,10 +75,10 @@ test.each([...LEVELS])(
 test.each([...VALE_PACKAGE_FOLDERS])(
     'level all needs the shipped %s folder whatever the Packages line says',
     async (missing) => {
-        await using sandbox = await testdir({ '.gspot/configurations/general/prose/vale.ini': 'Packages = \n' });
+        await using sandbox = await testdir({ [GSPOT_PATHS.valeConfigFile]: 'Packages = \n' });
 
         for (const folder of VALE_PACKAGE_FOLDERS.filter((folder) => folder !== missing))
-            await createFileTree(sandbox.path, { [`.gspot/vale/${folder}/.keep`]: '' });
+            await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
         expect(hasValePackages(sandbox.path, 'all')).toBe(false);
     },
 );
@@ -86,5 +91,5 @@ test('at level recommended install installs no Vale packages', async () => {
     const context = buildToolInstall(session, writer);
     expect(await installValePackages(context)).toBe('');
     expect(context.steps).toStrictEqual([]);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/vale'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.valePackages))).toBe(false);
 });

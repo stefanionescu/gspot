@@ -81,14 +81,7 @@ test.each([...LIMIT_SUPPRESSION_CASES])(
             [file]: `${directive}\n${code}\n`,
         });
         const found = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
-        expect(
-            found.map((finding) => ({
-                file: finding.file,
-                line: finding.line,
-                rule: finding.rule,
-                message: finding.message,
-            })),
-        ).toStrictEqual([
+        expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
             { file, line: 1, rule, message: SUPPRESSION_KIND_MESSAGES[rule.endsWith('-all') ? 'all' : 'limit'] },
         ]);
     },

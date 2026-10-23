@@ -7,6 +7,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { planChecks } from '#cli/planning/checks.ts';
 import { spawnProcess } from '#cli/system/processes.ts';
 import { type CommandPart } from '#cli/types/runs/command.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
@@ -118,8 +119,8 @@ test('a Markdown command run in a copy keeps the config files its manifest write
     const planned = planChecks(session, { stage: 'commit', only: ['markdown/markdownlint'] })[0]!;
     expect(listCopyFiles(session, planned, planned.check.command!)).toStrictEqual([
         'README.md',
-        '.gspot/configurations/language/markdown/markdownlint-cli2.mjs',
-        '.gspot/configurations/language/markdown/markdownlint.jsonc',
+        findFileTarget('markdown', 'markdownlint-cli2.mjs'),
+        findFileTarget('markdown', 'markdownlint.jsonc'),
     ]);
     expect(() => listCopyFiles(session, planned, ['markdownlint-cli2', '{config_file:absent}'])).toThrow(
         'Check markdown/markdownlint names {config_file:absent} and no configuration writes it.',
@@ -127,22 +128,33 @@ test('a Markdown command run in a copy keeps the config files its manifest write
 });
 
 test('per-file commands keep expanded flags and the arguments after the file', async () => {
-    const settings = `configurations = []
-[[command_check]]\nid = "sandbox/arguments"
-command = ${JSON.stringify([process.execPath, 'echo.cjs', '{existing:--config:settings.txt}', '{file}', 'config', '--quiet'])}
-paths = ["inputs/**"]
-stage = "commit"
-`;
     await using sandbox = await testdir({
-        'gspot.toml': settings,
+        'gspot.toml': buildSandboxSettings([], {
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'sandbox/arguments',
+                        command: [
+                            process.execPath,
+                            'echo.cjs',
+                            '{existing:--config:settings.txt}',
+                            '{file}',
+                            'config',
+                            '--quiet',
+                        ],
+                        paths: ['inputs/**'],
+                        stage: 'commit',
+                    },
+                ],
+            }),
+        }),
         'settings.txt': '',
         'inputs/café source.txt': '',
         'echo.cjs': 'process.stdout.write(JSON.stringify([process.env.TOOL_RELEASE, ...process.argv.slice(2)]));',
     });
 
     const session = await openSession(sandbox.path);
-    const plans = planChecks(session, { stage: 'all', only: ['sandbox/arguments'] });
-    const planned = plans[0]!;
+    const planned = planChecks(session, { stage: 'all', only: ['sandbox/arguments'] })[0]!;
     planned.tool = { name: 'echo', installers: {}, kind: 'program' };
     planned.check.env = { TOOL_RELEASE: 'v3.4.0' };
     const prepared = prepareCommand(planned, {
@@ -172,10 +184,7 @@ test.each([...SHFMT_INDENT_CASES])(
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['format', 'bash'], {
                 level: 'all',
-                tables: `[format]
-indent_style = "${style}"
-indent_width = ${String(width)}
-`,
+                tables: stringify({ format: { indent_style: style, indent_width: width } }),
             }),
             'sample.sh': 'echo example\n',
         });

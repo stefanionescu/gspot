@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -20,7 +21,7 @@ test('each Ansible project lints its own files and not those of a nested project
     const session = await openPinnedSession(sandbox.path, ['ansible-lint'], resources);
     resources.use(session.resources);
     await createFileTree(sandbox.path, {
-        [buildVenvExecutablePath('.gspot/.venv', 'ansible-lint')]: 'fixture',
+        [buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'ansible-lint')]: 'fixture',
     });
     const input = planSandboxCheck(session, 'ansible/ansible-lint');
     const run = resources.use(

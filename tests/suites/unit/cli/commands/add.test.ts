@@ -7,8 +7,10 @@ import type { ApplyReport } from '#cli/types/apply.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
 import {
     API_BASH_FILES,
@@ -27,13 +29,13 @@ test('add --scope writes the scope list and applies it without an npm install', 
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/bash/shellcheckrc'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(false);
     using npm = recordNpmCommands();
     const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
     expect({ written, removed, notes }).toStrictEqual({
-        written: [...API_BASH_FILES, '.gspot/mise.toml'],
+        written: [...API_BASH_FILES, GSPOT_PATHS.miseProject],
         removed: [],
         notes: [TOOLS_CHANGED_NOTE],
     });
@@ -43,9 +45,9 @@ test('add --scope writes the scope list and applies it without an npm install', 
     expect(saved.configurations).toStrictEqual(['markdown']);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/bash/shellcheckrc'))).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/package-lock.json'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/package-lock.json`))).toBe(false);
 });
 
 test('add security exits 2, names gspot set level, and writes nothing', async () => {

@@ -13,6 +13,8 @@ import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     POSTGRES_CHECKS,
+    SECURED_TEAMS_SQL,
+    MALFORMED_MIGRATION_PATH,
     MALFORMED_MIGRATION_FILES,
     DEFAULT_MIGRATION_FOLDER_FILES,
 } from '#tests/config/checks/database/postgres/migrations.ts';
@@ -25,18 +27,14 @@ test('postgres/migration-order reports a migration that does not parse at its li
 
     const syntax = failed.report.checks.find(({ check }) => check === 'postgres/migration-order');
     expect(syntax?.status).toBe('failed');
-    expect(syntax?.findings).toMatchObject([
-        { file: 'migrations/20240201_teams.sql', line: 1, column: 14, rule: 'syntax' },
-    ]);
+    expect(syntax?.findings).toMatchObject([{ file: MALFORMED_MIGRATION_PATH, line: 1, column: 14, rule: 'syntax' }]);
     expect(
         failed.report.checks
             .filter(({ check }) => check !== 'postgres/migration-order')
-            .map(({ check, status, findings, note }) => ({ check, status, findings, note }))
-            .toSorted((left, right) => left.check.localeCompare(right.check)),
+            .map(({ check, status, findings, note }) => ({ check, status, findings, note })),
     ).toStrictEqual(
         checks
-            .slice(1)
-            .toSorted((left, right) => left.localeCompare(right))
+            .filter((check) => check !== 'postgres/migration-order')
             .map((check) => ({
                 check,
                 status: 'skipped',
@@ -44,15 +42,11 @@ test('postgres/migration-order reports a migration that does not parse at its li
                 note: 'A migration does not parse. postgres/migration-order reports where.',
             })),
     );
-    await writeFile(
-        join(sandbox.path, 'migrations/20240201_teams.sql'),
-        'CREATE TABLE teams (id integer PRIMARY KEY);\nALTER TABLE teams ENABLE ROW LEVEL SECURITY;\n',
-    );
+    await writeFile(join(sandbox.path, MALFORMED_MIGRATION_PATH), SECURED_TEAMS_SQL);
     const fixed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: checks }));
 
-    expect(fixed.report.checks).toHaveLength(checks.length);
-    expect(fixed.report.checks.every(({ status, findings }) => status === 'passed' && findings.length === 0)).toBe(
-        true,
+    expect(fixed.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual(
+        checks.map((check) => ({ check, status: 'passed', findings: [] })),
     );
 });
 

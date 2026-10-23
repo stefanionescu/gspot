@@ -4,6 +4,7 @@ import { findRoot } from '#cli/repository/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isGitRepository } from '#cli/system/git.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
@@ -83,7 +84,7 @@ test('a broken Git index is reported instead of a folder walk', async () => {
     const entries = await listTrackedFiles(cwd, await readIndexEntries(cwd), { hasGit: true });
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
     await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
-    expect(await captureRejection(readIndexEntries(cwd))).toContain('Git ls-files failed');
+    expect(await captureRejection(readIndexEntries(cwd))).toStartWith('Git ls-files failed');
 });
 test('a .git file that points at a missing folder is reported, not read as a folder without Git', async () => {
     await using sandbox = await testdir({
@@ -91,7 +92,7 @@ test('a .git file that points at a missing folder is reported, not read as a fol
         'source.ts': 'export {};\n',
     });
 
-    expect(await captureRejection(readIndexEntries(sandbox.path))).toContain('Git ls-files failed');
+    expect(await captureRejection(readIndexEntries(sandbox.path))).toStartWith('Git ls-files failed');
     expect(() => findRoot(sandbox.path)).toThrow('Git could not find the repository root of');
     expect(() => isGitRepository(sandbox.path)).toThrow('is a work tree (exit 128)');
 });
@@ -187,7 +188,7 @@ test.each(
             [`${folder}/deeper/keep.log`]: 'retained by inherited override',
             'sibling/keep.log': 'ignored by root',
             'sibling/local.ts': 'retained',
-            '.gspot/state/private.txt': 'ownership metadata',
+            [`${GSPOT_PATHS.state}/private.txt`]: 'ownership metadata',
         });
         await createFileTree(sandbox.path, { 'outside/private.ts': 'external bytes' });
         await symlink('source.ts', join(root, 'linked.ts'));

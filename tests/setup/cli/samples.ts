@@ -2,10 +2,11 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { afterAll, beforeAll } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { RunReport } from '#cli/types/runs/run.ts';
 import { markExecutable } from '#tests/setup/system/git.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
-import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import { type Sandbox, type SandboxPlan } from '#tests/types/sandbox.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -90,38 +91,38 @@ export async function runCheckSample(sandbox: Sandbox, entry: CheckSample, plan:
         removed: given.removed,
     };
     const passed = parseCheckReport(await runCheckOnChanges(sandbox.root, corrected, sandbox.environment, sandbox.run));
-    const failedReport = failed.report;
-    const passedReport = passed.report;
-    return { failed: { ...failed, report: failedReport }, passed: { ...passed, report: passedReport } };
+    return { failed, passed };
 }
 
-/** Reduce a sample result to exit codes and check results for assertions. */
+/** Reduce a sample result to exit codes and the check results that did not pass cleanly. */
 export function buildSampleSummary(result: SampleResult): SampleSummary {
     return {
-        failed: { code: result.failed.code, checks: result.failed.report.checks },
-        passed: { code: result.passed.code, checks: result.passed.report.checks },
+        failed: { code: result.failed.code, reported: listReportedChecks(result.failed.report) },
+        passed: { code: result.passed.code, reported: listReportedChecks(result.passed.report) },
     };
 }
 
-/** Describe the required failed finding and its clean rerun. */
+// The check results of a report that failed or hold a finding.
+function listReportedChecks(report: RunReport): CheckResult[] {
+    return report.checks.filter(({ status, findings }) => status !== 'passed' || findings.length > 0);
+}
+
+/** Describe the one failed check result of the sample, with its findings, and its clean rerun. */
 export function expectedSummary(entry: CheckSample): SampleSummary {
     return {
         failed: {
             code: 1,
-            checks: matchItems<CheckResult>([
+            reported: [
                 matchFields<CheckResult>({
                     check: entry.check,
                     status: 'failed',
-                    findings: matchItems<Finding>([matchFields<Finding>({ check: entry.check, ...entry.expected })]),
+                    findings: (entry.findings ?? [entry.expected]).map((finding) =>
+                        matchFields<Finding>({ check: entry.check, ...finding }),
+                    ),
                 }),
-            ]),
+            ],
         },
-        passed: {
-            code: 0,
-            checks: matchItems<CheckResult>([
-                matchFields<CheckResult>({ check: entry.check, status: 'passed', findings: [] }),
-            ]),
-        },
+        passed: { code: 0, reported: [] },
     };
 }
 

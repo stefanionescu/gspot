@@ -35,7 +35,7 @@ test.each([...XCTEST_FAILURES])(
         });
         expect(result.report.exitCode).toBe(code);
         expect(result.report.checks[0]!.status).toBe(status);
-        if (note !== undefined) expect(result.report.checks[0]!.note).toContain(note);
+        expect(result.report.checks[0]!.note).toBe(note);
         expect(await isOnDisk(join(sandbox.path, 'viewed.txt'))).toBe(false);
         await writeFile(join(sandbox.path, 'gspot.toml'), XCTEST_SETTINGS);
         const session = await openSession(sandbox.path);
@@ -103,7 +103,9 @@ test('swift/coverage: XCTest coverage refuses an external result link and remove
     await symlink(outside.path, bundle, 'dir');
     const refused = await runXcodeCoverage(sandbox, files);
     expect(refused.report.exitCode).toBe(2);
-    expect(refused.report.checks[0]?.note).toContain('is a link. gspot does not write through links.');
+    expect(refused.report.checks[0]?.note).toBe(
+        'The swift/coverage check failed: coverage.xcresult is a link. gspot does not write through links.',
+    );
     expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
     expect(await isOnDisk(join(cache, 'source/tested.txt'))).toBe(false);
     await rm(bundle);
@@ -159,7 +161,9 @@ else if (process.argv.includes('describe')) console.log(${JSON.stringify(JSON.st
         buildRunOptions({ stage: 'push', only: ['swift/coverage'] }),
     );
 
-    expect(omitted.report.checks[0]?.note).toContain('The Swift coverage report has no source lines for target API.');
+    expect(omitted.report.checks[0]?.note).toBe(
+        'The swift/coverage check failed: The Swift coverage report has no source lines for target API.',
+    );
 });
 test('Swift coverage skips a scope that holds no Swift tests', async () => {
     await using sandbox = await testdir({

@@ -1,5 +1,5 @@
+import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -38,16 +38,14 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
 });
 test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, async () => {
     const { code, stdout, stderr, message } = TRIVY_REGISTRY_FAILURE;
-    await using sandbox = await testdir();
-    const source = NGINX_COMPOSE;
-    await createFileTree(sandbox.path, {
+    await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['docker']),
-        'compose.yaml': source,
+        'compose.yaml': NGINX_COMPOSE,
     });
     using resources = new DisposableStack();
     const session = await openPinnedSession(sandbox.path, ['trivy'], resources);
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code, stdout, stderr })));
-    expect(await captureRejection(runSandboxCheck(session.root, 'docker/trivy-image'))).toContain(message);
+    expect(await captureRejection(runSandboxCheck(session.root, 'docker/trivy-image'))).toStartWith(message);
 });
 test.each([...INVALID_COMPOSE_SOURCES])(
     'docker/trivy-image fails on $name in compose.yaml before it runs Trivy',
@@ -58,7 +56,7 @@ test.each([...INVALID_COMPOSE_SOURCES])(
         });
 
         using scan = spyOn(processes, 'spawnProcess');
-        expect(await captureRejection(runSandboxCheck(sandbox.path, 'docker/trivy-image'))).toContain(message);
+        expect(await captureRejection(runSandboxCheck(sandbox.path, 'docker/trivy-image'))).toStartWith(message);
         expect(scan).not.toHaveBeenCalled();
     },
 );

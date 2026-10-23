@@ -1,3 +1,5 @@
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+
 export const WORKSPACE_SOURCE_FILES = {
     'package.json': '{"private":true,"workspaces":["apps/*","packages/*"],"dependencies":{"unused":"workspace:*"}}',
     'bun.lock': '{}',
@@ -27,6 +29,6 @@ export const TEST_WORKSPACE_FILES = {
     'tests/package.json': '{"name":"tests"}',
     'tests/app.js': 'import "vue";',
     'node_modules/.bun/vue@3/node_modules/vue/package.json': '{"name":"vue"}',
-    '.gspot/package.json': '{"private":true}',
-    '.gspot/node_modules/prettier/package.json': '{"name":"prettier"}',
+    [GSPOT_PATHS.npmProject]: '{"private":true}',
+    [`${GSPOT_PATHS.nodeModules}/prettier/package.json`]: '{"name":"prettier"}',
 } as const;

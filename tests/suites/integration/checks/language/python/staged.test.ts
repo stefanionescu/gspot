@@ -9,11 +9,9 @@ import { createPythonProject } from '#tests/setup/sandboxes/python-project.ts';
 
 test('Ruff from the installed environment reports a staged Python finding while the working tree differs', async () => {
     await using sandbox = await testdir();
-    await using prepared = await createPythonProject(sandbox.path, {
-        indexFile: 'pyproject.toml',
-    });
-    expect(await spawnGspot(prepared.root, ['install'])).toMatchObject({ code: 0 });
-    // createPythonSandbox ran apply after its commit, so this commit adds the generated Ruff config file.
+    await using project = await createPythonProject(sandbox.path, { indexFile: 'pyproject.toml' });
+    expect(await spawnGspot(project.root, ['install'])).toMatchObject({ code: 0 });
+    // createPythonProject ran apply after its commit, so this commit adds the generated Ruff config file.
     commitAll(sandbox.path);
     // The index holds a second sample beside the committed one; the working tree has the correction.
     await writeFile(join(sandbox.path, 'source.py'), 'import os\nimport sys\n');
@@ -22,8 +20,7 @@ test('Ruff from the installed environment reports a staged Python finding while 
     const command = ['check', '--only', 'python/ruff', '--json'];
     const staged = parseCheckReport(await spawnGspot(sandbox.path, [...command, '--staged']));
     expect(staged.code, staged.stdout + staged.stderr).toBe(1);
-    const report = staged.report;
-    expect(report.checks).toMatchObject([
+    expect(staged.report.checks).toMatchObject([
         {
             check: 'python/ruff',
             status: 'failed',

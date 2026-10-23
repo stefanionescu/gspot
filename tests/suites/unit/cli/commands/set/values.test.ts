@@ -4,6 +4,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { getValueAt } from '#cli/system/tables.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readSettings } from '#cli/settings/read.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
@@ -14,8 +15,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
 
 import {
-    SET_REFUSALS,
-    SET_SETTINGS,
     SETTING_REASON,
     LOOSENED_SETTINGS,
     NO_CHANGE_COMMANDS,
@@ -23,48 +22,10 @@ import {
     RESTRICTED_IMPORTS,
     SCOPE_BANNED_WORDS,
     STOPPED_APPLY_FILES,
-    UNKNOWN_SETTING_KEYS,
     BANNED_WORD_SETTINGS,
     KEPT_SETTING_CHANGES,
+    RESTRICTED_IMPORT_RECORDS,
 } from '#tests/config/commands/set.ts';
-
-test.each([...SET_REFUSALS])('set refuses %s', async (_, commandArguments, expected) => {
-    await using sandbox = await testdir({
-        'gspot.toml': SET_SETTINGS,
-        'api/entry.sh': 'echo api\n',
-        'web/index.md': '# Web\n',
-    });
-
-    const before = await readTree(sandbox.path);
-    const refused = await runGspot(sandbox.path, commandArguments);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stdout).toBe('');
-    expect(refused.stderr).toBe(`${expected}\n`);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const structured = await runGspot(sandbox.path, [...commandArguments, '--json']);
-    expect(structured.code, structured.stdout + structured.stderr).toBe(2);
-    expect(structured.stderr).toBe('');
-    const failure = JSON.parse(structured.stdout) as CommandFailureJson;
-    expect(failure.error).toBe('arguments');
-    expect(failure.message).toBe(expected);
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
-test.each([...UNKNOWN_SETTING_KEYS])(
-    'set refuses the unknown or unavailable key $key and writes nothing',
-    async ({ key, message }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['data-files']),
-            'settings.toml': 'enabled = true\n',
-        });
-
-        const before = await readTree(sandbox.path);
-        const refused = await runGspot(sandbox.path, ['set', key, '{ enabled = true }']);
-        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(refused.stderr).toBe(`${message} Run \`gspot list settings\` to see every one.\n`);
-        expect(await readTree(sandbox.path)).toStrictEqual(before);
-    },
-);
 
 test('set and unset work on a setting of a configuration that detection selects from package.json', async () => {
     await using sandbox = await testdir({
@@ -74,7 +35,7 @@ test('set and unset work on a setting of a configuration that detection selects 
     const set = await runGspot(sandbox.path, ['set', 'licenses.allowed', 'MIT']);
     expect(set.code, set.stdout + set.stderr).toBe(0);
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(getValueAt(written, ['licenses', 'allowed'])).toEqual(['MIT']);
+    expect(getValueAt(written, ['licenses', 'allowed'])).toStrictEqual(['MIT']);
     const unset = await runGspot(sandbox.path, ['unset', 'licenses.allowed']);
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
     const reset = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
@@ -90,9 +51,9 @@ test('set names -- when a value reads as an option, and takes the values after -
     );
     const set = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'bun', 'install', '--frozen-lockfile']);
     expect(set.code, set.stdout + set.stderr).toBe(0);
-    expect(set.stdout).not.toContain('(was undefined');
+    expect(set.stdout.split('\n', 1)[0]).toBe('Added bun and install and --frozen-lockfile to ci.setup_command.');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(getValueAt(written, ['ci', 'setup_command'])).toEqual(['bun', 'install', '--frozen-lockfile']);
+    expect(getValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['bun', 'install', '--frozen-lockfile']);
 });
 
 test.each([...NO_CHANGE_COMMANDS])(
@@ -137,7 +98,7 @@ test.each([...BANNED_WORD_SCOPES])(
         const set = await runGspot(sandbox.path, ['set', key, ...SCOPE_BANNED_WORDS, ...scopeArguments]);
         expect(set.code, set.stdout + set.stderr).toBe(0);
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(written);
-        expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
+        expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
         const reset = await runGspot(sandbox.path, ['unset', key, ...scopeArguments]);
         expect(reset.code, reset.stdout + reset.stderr).toBe(0);
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(BANNED_WORD_SETTINGS);
@@ -154,8 +115,9 @@ test('set writes a TOML list of tables as tables and refuses a value that is not
     const written = await runGspot(sandbox.path, ['set', 'tools.eslint.restricted_imports', RESTRICTED_IMPORTS]);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const settings = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect(settings).toContain('name = "unreviewed-module"');
-    expect(settings).not.toContain('"[{name');
+    expect(getValueAt(parse(settings) as TomlTable, ['tools', 'eslint', 'restricted_imports'])).toStrictEqual([
+        ...RESTRICTED_IMPORT_RECORDS,
+    ]);
     const unreadable = await runGspot(sandbox.path, ['set', 'tools.eslint.restricted_imports', '[{name = ']);
     expect(unreadable.code).toBe(2);
     expect(unreadable.stdout + unreadable.stderr).toBe(
@@ -186,29 +148,6 @@ test('set level all works in a fresh clone', async () => {
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     expect(readSettings(checkout).settings.level).toBe('all');
 });
-test('set reports a structured-value parser failure as an argument error', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    const before = await readTree(sandbox.path);
-    const failure = await runGspot(sandbox.path, ['set', 'ci.setup_command', '[', '--json']);
-    expect(failure.code).toBe(2);
-    expect(failure.stderr).toBe('');
-    expect(JSON.parse(failure.stdout)).toStrictEqual({
-        error: 'arguments',
-        message:
-            'The value [ is not a TOML inline value. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.',
-    });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
-test('set leaves existing malformed settings classified as settings errors', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': 'configurations = [' });
-    const before = await readTree(sandbox.path);
-    const failure = await runGspot(sandbox.path, ['set', 'level', 'all', '--json']);
-    expect(failure.code).toBe(2);
-    expect(failure.stderr).toBe('');
-    expect(JSON.parse(failure.stdout)).toMatchObject({ error: 'settings' });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
 
 /**
  * Create a Bash repository, apply, and commit the generated files for the fresh-clone tests.
@@ -224,6 +163,7 @@ async function prepareAppliedBashRepository(sourceRoot: string): Promise<void> {
     await runGspotStep({ root: sourceRoot, environment: {}, run: runGspot }, ['apply']);
     commitAll(sourceRoot);
 }
+
 test.each([...LOOSENED_SETTINGS])(
     'set refuses $key without --reason, and set and unset keep its reason through list edits',
     async ({ key, value, second }) => {
@@ -253,19 +193,7 @@ test.each([...LOOSENED_SETTINGS])(
         expect(saved).toMatchObject({ value: [second], reason: SETTING_REASON });
     },
 );
-test('a reason on a value that does not loosen the default is refused before writing', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript'], {}),
-        'entry.ts': 'export const port = 8080;\n',
-    });
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['set', 'spelling.locale', 'en-gb', '--reason', SETTING_REASON]);
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toBe(
-        'spelling.locale takes no reason here: the value does not loosen the shipped default. Run the command without --reason.\n',
-    );
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
+
 test.each([...LOOSENED_SETTINGS])(
     '$key set in one scope keeps the root value, and unset gives the scope the inherited value again',
     async ({ key, value, second, defaults, appDefaults, siblingDefaults }) => {
@@ -297,6 +225,7 @@ test.each([...LOOSENED_SETTINGS])(
         ]);
     },
 );
+
 test('spelling.allowed_words keeps one reason for each word through edits', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),

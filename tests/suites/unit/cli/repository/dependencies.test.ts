@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields, captureRejectedError } from '#tests/setup/matchers.ts';
 import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/samples.ts';
 import { buildTrackedFile, readTestRepository } from '#tests/setup/cli/repository.ts';
 import { readPackageJson, readDependencyFiles, listProjectDependencyNames } from '#cli/repository/dependencies.ts';
@@ -45,7 +45,7 @@ test.each(INVALID_DEPENDENCY_FILES)(
         await using sandbox = await testdir({ [path]: content, 'source.ts': 'export {};\n' });
 
         const files = [buildTrackedFile(path)];
-        expect(readDependencyFiles(createReadCache(sandbox.path), files)).rejects.toMatchObject({
+        expect(await captureRejectedError(readDependencyFiles(createReadCache(sandbox.path), files))).toMatchObject({
             name: 'GspotError',
             code: 'filesystem',
             message,
@@ -60,13 +60,17 @@ test('a dependency file that disappears after the repository read is an error', 
 
     const repository = await readTestRepository(sandbox.path);
     await rm(join(sandbox.path, path));
-    expect(readDependencyFiles(createReadCache(sandbox.path), repository.files)).rejects.toMatchObject({
+    expect(
+        await captureRejectedError(readDependencyFiles(createReadCache(sandbox.path), repository.files)),
+    ).toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
         message: 'pyproject.toml is tracked but missing. Restore it or commit its deletion.',
     });
     await mkdir(join(sandbox.path, path));
-    expect(readDependencyFiles(createReadCache(sandbox.path), repository.files)).rejects.toMatchObject({
+    expect(
+        await captureRejectedError(readDependencyFiles(createReadCache(sandbox.path), repository.files)),
+    ).toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
         message: 'pyproject.toml could not be read. Check the file and its permissions.',
@@ -89,7 +93,9 @@ test('package.json reads keep your own fields and tell a missing file from inval
             message: 'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',
         }),
     );
-    expect(readDependencyFiles(createReadCache(sandbox.path), repository.files)).rejects.toMatchObject({
+    expect(
+        await captureRejectedError(readDependencyFiles(createReadCache(sandbox.path), repository.files)),
+    ).toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
         message: 'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',
@@ -103,7 +109,9 @@ test('package.json reads keep your own fields and tell a missing file from inval
         }),
     );
     await rm(join(sandbox.path, 'package.json'));
-    expect(readDependencyFiles(createReadCache(sandbox.path), repository.files)).rejects.toMatchObject({
+    expect(
+        await captureRejectedError(readDependencyFiles(createReadCache(sandbox.path), repository.files)),
+    ).toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
         message: 'package.json is tracked but missing. Restore it or commit its deletion.',
@@ -131,7 +139,7 @@ test('a broken package.json stops the next session and a fixed one changes the s
 
     await openSession(sandbox.path);
     await writeFile(join(sandbox.path, 'package.json'), '{');
-    expect(openSession(sandbox.path)).rejects.toMatchObject({
+    expect(await captureRejectedError(openSession(sandbox.path))).toMatchObject({
         name: 'GspotError',
         code: 'filesystem',
         message: 'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',

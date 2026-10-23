@@ -21,14 +21,13 @@ async function assertWorkingTreeKept(root: string, head: string): Promise<void> 
     expect(await readFile(join(root, 'changed.sh'), 'utf8')).toBe(PUSH_CONTENT.working);
 }
 
+// Push the broken commit over the base, and return the report of that revision.
 async function runBrokenPushCheck(root: string, base: string, broken: string): Promise<RunReport> {
     const result = await runGspot(
         root,
         PUSH_CHECK_COMMAND,
         {},
-        {
-            stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n`,
-        },
+        { stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n` },
     );
     expect(result.code, result.stdout + result.stderr).toBe(1);
     return (JSON.parse(result.stdout) as PushReport).revisions[0]!.report;
@@ -151,12 +150,15 @@ test('pre-push checks the pushed commits, not the repaired working tree', async 
         { stdin: `refs/heads/reviewed ${reviewed} refs/heads/reviewed ${base}\n` },
     );
     expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-    const first = (JSON.parse(passing.stdout) as PushReport).revisions;
-    expect(first).toHaveLength(1);
-    const firstReport = first[0]!.report;
-    expect(firstReport.comparison).toStrictEqual({ content: 'commit', reference: reviewed });
-    expect(firstReport.checks[0]?.status).toBe('passed');
-    expect(firstReport.checks[0]?.fileCount).toBe(1);
+    expect((JSON.parse(passing.stdout) as PushReport).revisions).toMatchObject([
+        {
+            hash: reviewed,
+            report: {
+                comparison: { content: 'commit', reference: reviewed },
+                checks: [{ check: 'project/bash-syntax', status: 'passed', fileCount: 1 }],
+            },
+        },
+    ]);
     const failedReport = await runBrokenPushCheck(sandbox.path, base, broken);
     expect(new Set(failedReport.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
         new Set(['changed.sh']),
@@ -233,9 +235,9 @@ test('pre-push checks a commit pushed to two refs once', async () => {
         },
     );
     expect(duplicated.code, duplicated.stdout + duplicated.stderr).toBe(0);
-    const merged = JSON.parse(duplicated.stdout) as PushReport;
-    expect(merged.revisions).toHaveLength(1);
-    expect(merged.revisions[0]!.refs).toHaveLength(2);
+    expect(
+        (JSON.parse(duplicated.stdout) as PushReport).revisions.map(({ hash, refs }) => ({ hash, refs })),
+    ).toStrictEqual([{ hash: reviewed, refs: ['refs/heads/reviewed', 'refs/heads/also-reviewed'] }]);
     await assertWorkingTreeKept(sandbox.path, broken);
 });
 

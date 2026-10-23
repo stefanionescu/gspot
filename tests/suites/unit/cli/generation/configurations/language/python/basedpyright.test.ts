@@ -1,12 +1,12 @@
 import { test, expect } from 'bun:test';
-import { generateFile } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { generateFile, findFileTarget } from '#tests/setup/cli/config-files.ts';
 
 test('python.extra_paths reach the basedpyright search paths', async () => {
     const config = JSON.parse(
         await generateFile(
             buildSandboxSettings(['python'], { tables: '[python]\nextra_paths = ["vendor/host"]\n' }),
-            '.gspot/configurations/language/python/basedpyright.json',
+            findFileTarget('python', 'basedpyright.json'),
             { 'main.py': 'VALUE = 1\n' },
         ),
     ) as { extraPaths: string[] };
@@ -18,7 +18,7 @@ test.each(['recommended', 'all'] as const)(
         const config = JSON.parse(
             await generateFile(
                 buildSandboxSettings(['python'], { level }),
-                '.gspot/configurations/language/python/basedpyright.json',
+                findFileTarget('python', 'basedpyright.json'),
                 { 'main.py': 'VALUE = 1\n' },
             ),
         ) as Record<string, unknown>;
@@ -27,7 +27,7 @@ test.each(['recommended', 'all'] as const)(
     },
 );
 test('basedpyright reads the uv environment of a project with a tracked uv.lock, whether .venv exists yet or not', async () => {
-    const basedpyrightPath = '.gspot/configurations/language/python/basedpyright.json';
+    const basedpyrightPath = findFileTarget('python', 'basedpyright.json');
     const locked = JSON.parse(
         await generateFile(buildSandboxSettings(['python']), basedpyrightPath, {
             'example.py': 'value = 1\n',
@@ -35,7 +35,8 @@ test('basedpyright reads the uv environment of a project with a tracked uv.lock,
         }),
     ) as { venv?: string; venvPath?: string };
     expect(locked.venv).toBe('.venv');
-    expect(locked.venvPath).toBeDefined();
+    // The config file sits four folders below the root, which holds .venv.
+    expect(locked.venvPath).toBe('../../../..');
     const unlocked = JSON.parse(
         await generateFile(buildSandboxSettings(['python']), basedpyrightPath, {
             'example.py': 'value = 1\n',

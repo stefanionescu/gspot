@@ -14,7 +14,7 @@ test.each([...UNSET_REFUSALS])(
         const before = await readFile(path, 'utf8');
         const result = await runGspot(sandbox.path, commandArguments);
         expect(result.code).toBe(2);
-        expect(result.stderr).toContain(message);
+        expect(result.stderr).toBe(`${message}\n`);
         expect(await readFile(path, 'utf8')).toBe(before);
     },
 );

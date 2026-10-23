@@ -3,7 +3,6 @@ import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -59,7 +58,7 @@ test.each(['ok', 'newer', 'outdated'] as const)(
                     if (tool.kind === 'library') {
                         const name = tool.installers['npm']!.name;
                         return [
-                            `.gspot/node_modules/${name}/package.json`,
+                            join(GSPOT_PATHS.nodeModules, name, 'package.json'),
                             JSON.stringify({ name, version: tool.name === pin.name ? version : tool.version }),
                         ];
                     }
@@ -81,9 +80,8 @@ test.each(['ok', 'newer', 'outdated'] as const)(
 );
 
 test('doctor names a missing coverage plugin and leaves it out when every coverage limit is zero', async () => {
-    const level = 'all';
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['python', 'pytest'], { level, tables: '[coverage]\nlines = 80\n' }),
+        'gspot.toml': buildSandboxSettings(['python', 'pytest'], { level: 'all', tables: '[coverage]\nlines = 80\n' }),
         'test_math.py': '',
     });
 
@@ -94,35 +92,35 @@ test('doctor names a missing coverage plugin and leaves it out when every covera
     let present = false;
     using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
         if (command.slice(1).join(' ') === '--version --version')
-            return buildProcessResult({
-                code: 0,
-                stdout: present ? 'pytest-cov-7.1.0' : 'pytest 9.1.1',
-                stderr: '',
-                missing: false,
-                duration: 1,
-            });
+            return buildProcessResult({ stdout: present ? 'pytest-cov-7.1.0' : 'pytest 9.1.1' });
         const pin = tools.find((tool) => tool.name === basename(command[0] ?? ''));
         const version = pin?.version ?? pin?.min_version;
         if (version === undefined) return nativeVersion(command, options);
-        return buildProcessResult({ code: 0, stdout: version, stderr: '', missing: false, duration: 1 });
+        return buildProcessResult({ stdout: version });
     });
     const missing = await runGspot(sandbox.path, ['doctor', '--json']);
     const missingText = await runGspot(sandbox.path, ['doctor']);
-    expect((JSON.parse(missing.stdout) as DoctorReport).tools).toContainEqual(
-        matchFields({ name: 'pytest-cov', state: 'missing' }),
-    );
-    expect(missingText.stdout).toContain('pytest-cov');
+    const findPytestCov = (output: string) =>
+        (JSON.parse(output) as DoctorReport).tools.find(({ name }) => name === 'pytest-cov');
+    const pytestCov = {
+        name: 'pytest-cov',
+        path: join(sandbox.path, 'tool-bin', 'pytest'),
+        help: 'Install pytest-cov in the Python environment used by pytest.',
+    };
+    expect(findPytestCov(missing.stdout)).toStrictEqual({
+        ...pytestCov,
+        state: 'missing',
+        note: 'The version command of the host tool does not list pytest-cov.',
+    });
+    expect(missingText.stdout.split('\n').filter((line) => line.includes('pytest-cov'))).toStrictEqual([
+        '  missing   pytest-cov                    The version command of the host tool does not list pytest-cov. Install pytest-cov in the Python environment used by pytest.',
+    ]);
     present = true;
     const available = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(available.stdout) as DoctorReport).tools).toContainEqual(
-        matchFields({ name: 'pytest-cov', state: 'system', found: '7.1.0' }),
-    );
+    expect(findPytestCov(available.stdout)).toStrictEqual({ ...pytestCov, state: 'system', found: '7.1.0' });
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['python', 'pytest'], {
-            level,
-            tables: ZERO_COVERAGE_TABLES,
-        }),
+        buildSandboxSettings(['python', 'pytest'], { level: 'all', tables: ZERO_COVERAGE_TABLES }),
     );
     const zero = await runGspot(sandbox.path, ['doctor', '--json']);
     expect((JSON.parse(zero.stdout) as DoctorReport).tools.map((tool) => tool.name)).not.toContain('pytest-cov');
@@ -151,9 +149,11 @@ test('doctor and gspot check report a missing xmllint with its install command',
     };
     const doctor = await runGspot(root, ['doctor', '--json'], environment);
     expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);
-    expect((JSON.parse(doctor.stdout) as DoctorReport).tools).toContainEqual(
-        matchFields({ name: 'xmllint', state: 'missing', help }),
-    );
+    expect((JSON.parse(doctor.stdout) as DoctorReport).tools.find(({ name }) => name === 'xmllint')).toStrictEqual({
+        name: 'xmllint',
+        state: 'missing',
+        help,
+    });
     const checked = parseCheckReport(
         await runGspot(root, ['check', 'document.xml', '--only', 'data-files/xmllint', '--json'], environment),
     );

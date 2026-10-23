@@ -2,6 +2,8 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test('each configuration with ESLint blocks gets its own ESLint config file, and the main file spreads it in plan order', async () => {
@@ -14,9 +16,9 @@ test('each configuration with ESLint blocks gets its own ESLint config file, and
 
     const files = generate(await openSession(sandbox.path)).files.filter((file) => file.path.endsWith('/eslint.mjs'));
     expect(files.map((file) => file.path)).toStrictEqual([
-        '.gspot/configurations/language/javascript/eslint.mjs',
-        '.gspot/configurations/language/typescript/eslint.mjs',
-        '.gspot/configurations/library/zod/eslint.mjs',
+        findFileTarget('javascript', 'eslint.mjs'),
+        `${GSPOT_PATHS.configurations}/language/typescript/eslint.mjs`,
+        `${GSPOT_PATHS.configurations}/library/zod/eslint.mjs`,
     ]);
     const [main, typescript] = files.map((file) => file.content);
     expect(main).toContain('import typescriptBlocks from "../typescript/eslint.mjs";');

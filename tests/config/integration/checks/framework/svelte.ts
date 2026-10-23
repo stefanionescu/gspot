@@ -29,6 +29,11 @@ export const SVELTE_CASES = [
 `,
         },
         expected: { file: 'src/Binding.svelte', rule: 'function-no-unknown', line: 4 },
+        // Stylelint reports the Vue function twice: as an unknown value and as an unknown function.
+        findings: [
+            { file: 'src/Binding.svelte', rule: 'declaration-property-value-no-unknown', line: 4 },
+            { file: 'src/Binding.svelte', rule: 'function-no-unknown', line: 4 },
+        ],
         corrected: {
             files: {
                 'src/Binding.svelte': `<p>Card</p>
@@ -46,8 +51,9 @@ export const SVELTE_CASES = [
         check: 'javascript/eslint',
         files: {
             'src/SharedPolicy.svelte': `<script lang="ts">
-function forward(value: any) { return build(value); }
+function shout(text: string): string { return text.toUpperCase(); }
 </script>
+<p>{shout('hello')}</p>
 `,
         },
         expected: { file: 'src/SharedPolicy.svelte', rule: 'gspot/no-trivial-functions', line: 2 },

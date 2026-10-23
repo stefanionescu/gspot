@@ -5,11 +5,14 @@ import { symlink } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
 import { parseSettings } from '#cli/settings/read.ts';
 import { captureThrow } from '#tests/setup/matchers.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { FIRST_READ } from '#cli/config/generation/rules.ts';
 import { REVIEWED_REASON } from '#tests/config/settings/samples.ts';
+import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 import {
+    EMPTY_REASONS,
     KEY_PATH_CASES,
     RULE_FILE_ERRORS,
     UNKNOWN_KEY_CASES,
@@ -17,24 +20,17 @@ import {
 } from '#tests/config/settings/read.ts';
 
 test('rules.exclude accepts a rule file path and a configuration folder', () => {
-    expect(() =>
-        parseSettings(
-            '[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESSIBILITY.md", ".gspot/configurations/library"]\n',
-            undefined,
-        ),
-    ).not.toThrow();
+    const exclude = [findRuleFileTarget('engineering', 'ACCESSIBILITY.md'), `${GSPOT_PATHS.configurations}/library`];
+    expect(validateSettingsText(stringify({ rules: { exclude } }))).toStrictEqual([]);
 });
 
 test('a rules.exclude entry that matches no rule file names the near match', () => {
-    expect(
-        captureThrow(() =>
-            parseSettings(
-                '[rules]\nexclude = [".gspot/configurations/general/engineering/rules/ACCESIBILITY.md"]\n',
-                undefined,
-            ),
-        ),
-    ).toBe(
-        'gspot.toml: rules.exclude.0: [rules] exclude names `.gspot/configurations/general/engineering/rules/ACCESIBILITY.md`, which matches no rule. Did you mean `.gspot/configurations/general/engineering/rules/ACCESSIBILITY.md`, `.gspot/configurations/general/engineering/rules/CLI.md`, `.gspot/configurations/general/engineering/rules/TESTING.md`?',
+    const misspelled = findRuleFileTarget('engineering', 'ACCESSIBILITY.txt');
+    const near = ['ACCESSIBILITY.md', 'CLI.md', 'TESTING.md'].map(
+        (file) => `\`${findRuleFileTarget('engineering', file)}\``,
+    );
+    expect(captureThrow(() => parseSettings(stringify({ rules: { exclude: [misspelled] } }), undefined))).toBe(
+        `gspot.toml: rules.exclude.0: [rules] exclude names \`${misspelled}\`, which matches no rule. Did you mean ${near.join(', ')}?`,
     );
 });
 
@@ -42,9 +38,11 @@ test.each([...FIRST_READ.slice(0, 1), 'general/prose'])(
     'rules.exclude refuses %s, a rule file that every agent reads first',
     (entry) => {
         expect(
-            captureThrow(() => parseSettings(`[rules]\nexclude = [".gspot/configurations/${entry}"]\n`, undefined)),
+            captureThrow(() =>
+                parseSettings(stringify({ rules: { exclude: [`${GSPOT_PATHS.configurations}/${entry}`] } }), undefined),
+            ),
         ).toBe(
-            `gspot.toml: rules.exclude.0: [rules] exclude names \`.gspot/configurations/${entry}\`, which holds a file every agent opens first (\`general/engineering/rules/WORKING.md\`, \`general/prose/rules/WRITING.md\`, \`general/engineering/rules/TALKING.md\`). Remove the entry.`,
+            `gspot.toml: rules.exclude.0: [rules] exclude names \`${GSPOT_PATHS.configurations}/${entry}\`, which holds a file every agent opens first (\`general/engineering/rules/WORKING.md\`, \`general/prose/rules/WRITING.md\`, \`general/engineering/rules/TALKING.md\`). Remove the entry.`,
         );
     },
 );
@@ -55,26 +53,22 @@ test('a limit looser than the default needs a reason, and a tighter one does not
     ).toBe(
         'gspot.toml: limits.file_lines: `limits.file_lines = 1000` is looser than the shipped default 300, so it needs a reason. Run: gspot set limits.file_lines 1000 --reason "<why>"',
     );
-    expect(() => parseSettings('configurations = ["bash"]\n[limits]\nfile_lines = 100\n', undefined)).not.toThrow();
+    expect(validateSettingsText('configurations = ["bash"]\n[limits]\nfile_lines = 100\n')).toStrictEqual([]);
 });
 
 test.each([...UNKNOWN_KEY_CASES])('an unknown key is refused: $name', (row) => {
     expect(() => parseSettings(row.text, undefined)).toThrow(row.message);
-    expect(() => parseSettings(row.text.replace(row.correction[0], row.correction[1]), undefined)).not.toThrow();
+    expect(validateSettingsText(row.text.replace(row.correction[0], row.correction[1]))).toStrictEqual([]);
 });
 test('a record without a reason is refused at its reason field', () => {
     const text = 'configurations = ["bash"]\n[[ignore]]\ncheck = "bash/shellcheck"\n';
     expect(captureThrow(() => parseSettings(text, undefined))).toBe(
         'gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this record.',
     );
-    expect(() => parseSettings(text + `reason = "${REVIEWED_REASON}"\n`, undefined)).not.toThrow();
+    expect(validateSettingsText(`${text}reason = "${REVIEWED_REASON}"\n`)).toStrictEqual([]);
 });
 
-test.each([
-    { reason: '', refused: 'an empty reason' },
-    { reason: 'because', refused: '"because"' },
-    { reason: 'Codex', refused: '"Codex"' },
-])('a word with the reason "$reason" is refused', ({ reason, refused }) => {
+test.each([...EMPTY_REASONS])('a word with the reason "$reason" is refused', ({ reason, refused }) => {
     expect(
         captureThrow(() =>
             parseSettings(
@@ -136,8 +130,7 @@ test('a scope path through a link to a folder outside the repository is refused'
         buildSandboxSettings(['bash'], { rules: true, scopes: [{ path: 'linked' }] }),
         root,
     );
-    expect(found).toHaveLength(1);
-    expect(found[0]).toBe('gspot.toml: scope.linked: linked is a link. gspot does not write through links.');
+    expect(found).toStrictEqual(['gspot.toml: scope.linked: linked is a link. gspot does not write through links.']);
 });
 
 test('a Semgrep rule file or a scope plugin module that names no file is refused at its key', async () => {

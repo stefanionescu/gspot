@@ -8,7 +8,9 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { rmSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
@@ -32,7 +34,7 @@ async function createCaseClashingSandbox(): Promise<TestdirResult> {
         };
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([], {
-                tables: stringify({ rules: { enabled: false }, command_check: [{ id: 'sandbox/report', ...check }] }),
+                tables: stringify({ command_check: [{ id: 'sandbox/report', ...check }] }),
             }),
             'docs/guide.md': '# Guide\n',
         });
@@ -74,12 +76,11 @@ test('a staged check reads index bytes and file modes, converts no line endings,
         'task.sh': '#!/bin/sh\nexit 0\n',
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
-            tables: `[[command_check]]
-id = "project/index-bytes"
-command = ${JSON.stringify(command)}
-paths = ["payload.dat", "task.sh"]
-stage = "commit"
-`,
+            tables: stringify({
+                command_check: [
+                    { id: 'project/index-bytes', command, paths: ['payload.dat', 'task.sh'], stage: 'commit' },
+                ],
+            }),
         }),
     });
     await chmod(join(sandbox.path, 'task.sh'), 0o755);
@@ -100,11 +101,10 @@ stage = "commit"
 
 test('a staged check copies the locked dependencies and leaves the working tree as it was', async () => {
     await using sandbox = await testdir();
-    const packageJson = STAGED_PACKAGE_JSON;
     const lockfile = JSON.stringify({
-        name: packageJson.name,
+        name: STAGED_PACKAGE_JSON.name,
         lockfileVersion: 3,
-        packages: { '': packageJson, 'node_modules/dependency': { version: '1.0.0' } },
+        packages: { '': STAGED_PACKAGE_JSON, 'node_modules/dependency': { version: '1.0.0' } },
     });
     const command = [
         process.execPath,
@@ -116,8 +116,8 @@ test('a staged check copies the locked dependencies and leaves the working tree 
     `,
     ];
     await createFileTree(sandbox.path, {
-        '.gitignore': '.gspot/\nnode_modules/\n',
-        'package.json': JSON.stringify(packageJson),
+        '.gitignore': `${DOT_GSPOT}/\nnode_modules/\n`,
+        'package.json': JSON.stringify(STAGED_PACKAGE_JSON),
         'package-lock.json': lockfile,
         'node_modules/dependency/package.json':
             '{"name":"dependency","version":"1.0.0","type":"module","exports":"./index.js"}',
@@ -126,12 +126,9 @@ test('a staged check copies the locked dependencies and leaves the working tree 
         'source.txt': 'authored input',
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
-            tables: `[[command_check]]
-id = "project/dependencies"
-command = ${JSON.stringify(command)}
-paths = ["source.txt"]
-stage = "commit"
-`,
+            tables: stringify({
+                command_check: [{ id: 'project/dependencies', command, paths: ['source.txt'], stage: 'commit' }],
+            }),
         }),
     });
     runGitStep(sandbox.path, ['init', '-q']);
@@ -147,10 +144,7 @@ stage = "commit"
 
 test('a staged check keeps the generated basedpyright.json of each Python scope and refuses an unstaged pyproject.toml change', async () => {
     await using sandbox = await testdir();
-    const project = `[project]
-id = "example"
-version = "0.0.0"
-`;
+    const project = '[project]\nname = "example"\nversion = "0.0.0"\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['python'], {
             level: 'all',
@@ -166,7 +160,7 @@ version = "0.0.0"
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     runGitStep(sandbox.path, ['add', '-A']);
-    const original = await readFile(join(sandbox.path, '.gspot/configurations/language/python/basedpyright.json'));
+    const original = await readFile(join(sandbox.path, findFileTarget('python', 'basedpyright.json')));
     const commandArguments = ['check', '--staged', '--only', 'gspot/generated-files', '--json'];
     const checked = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     // gspot install writes the lockfiles, and unit tests do not install.
@@ -174,12 +168,10 @@ version = "0.0.0"
     expect(
         checked.report.checks.flatMap((check) => check.findings).map(({ file, rule }) => ({ file, rule })),
     ).toStrictEqual([
-        { file: '.gspot/package-lock.json', rule: 'missing' },
-        { file: '.gspot/uv.lock', rule: 'missing' },
+        { file: `${DOT_GSPOT}/package-lock.json`, rule: 'missing' },
+        { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
     ]);
-    expect(await readFile(join(sandbox.path, '.gspot/configurations/language/python/basedpyright.json'))).toEqual(
-        original,
-    );
+    expect(await readFile(join(sandbox.path, findFileTarget('python', 'basedpyright.json')))).toStrictEqual(original);
     await writeFile(join(sandbox.path, 'child/pyproject.toml'), project + '# Unstaged project change.\n');
     const refused = await runGspot(sandbox.path, commandArguments);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -188,9 +180,7 @@ version = "0.0.0"
         message:
             'Installed dependencies do not match the dependency files and lockfiles of the revision or its compiler configurations. Check this commit in its own clone after installing its project dependencies and running gspot install there.',
     });
-    expect(await readFile(join(sandbox.path, '.gspot/configurations/language/python/basedpyright.json'))).toEqual(
-        original,
-    );
+    expect(await readFile(join(sandbox.path, findFileTarget('python', 'basedpyright.json')))).toStrictEqual(original);
 });
 
 test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep both spellings and bytes', async () => {
@@ -199,7 +189,7 @@ test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep 
         await runGspot(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']),
     );
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = result.report;
+    const { report } = result;
     expect(report.checks.map((entry) => [entry.check, entry.status, entry.fileCount])).toStrictEqual([
         ['sandbox/report', 'failed', 2],
     ]);
@@ -218,8 +208,7 @@ test.skipIf(!isCaseFolding())(
             await runGspot(sandbox.path, ['check', '--staged', '--only', 'sandbox/report', '--json']),
         );
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        const failure = JSON.parse(result.stdout) as CommandFailureJson;
-        expect(failure).toStrictEqual({
+        expect(JSON.parse(result.stdout) as CommandFailureJson).toStrictEqual({
             error: 'copy',
             message:
                 'Git holds docs/NOTES.md and docs/Notes.md, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.',
@@ -241,10 +230,15 @@ test('staged checks use index bytes and settings on an unborn branch while prese
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const failedReport = failed.report;
     expect(failedReport.comparison?.content).toBe('index');
-    expect(failedReport.checks[0]?.reproduce).toBe('gspot check --only project/bash-syntax --staged');
-    expect(new Set(failedReport.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
-        new Set(['script with spaces.sh']),
-    );
+    expect(failedReport.checks).toMatchObject([
+        {
+            reproduce: 'gspot check --only project/bash-syntax --staged',
+            findings: [
+                { file: 'script with spaces.sh', line: 1, message: "syntax error near unexpected token `then'" },
+                { file: 'script with spaces.sh', line: 1, message: "`if then'" },
+            ],
+        },
+    ]);
     expect(runGitStep(sandbox.path, ['ls-files', '--stage', '-z'])).toBe(index);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe('invalid working settings');
     expect(await readFile(join(sandbox.path, 'script with spaces.sh'), 'utf8')).toBe(
@@ -255,9 +249,8 @@ test('staged checks use index bytes and settings on an unborn branch while prese
     await writeFile(join(sandbox.path, 'script with spaces.sh'), 'if then\n');
     const passed = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    const passedReport = passed.report;
-    expect(passedReport.checks[0]?.status).toBe('passed');
-    expect(passedReport.comparison?.reference).not.toBe(failedReport.comparison?.reference);
+    expect(passed.report.checks[0]?.status).toBe('passed');
+    expect(passed.report.comparison?.reference).not.toBe(failedReport.comparison?.reference);
     expect(await readFile(join(sandbox.path, 'script with spaces.sh'), 'utf8')).toBe('if then\n');
 });
 

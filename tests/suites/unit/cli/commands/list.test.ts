@@ -3,6 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 import { LIST_SCOPE_ROWS, LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/list.ts';
 
@@ -20,11 +21,18 @@ test('list shows selected settings and available configurations', async () => {
     const result = JSON.parse(listed.stdout) as ConfigurationsListJson;
     expect(Object.keys(result)).toStrictEqual(['selected', 'available']);
     const checks = result.selected.flatMap((configuration) => configuration.checks);
-    expect(checks).toContainEqual({ name: 'bash/shellcheck', scope: '', state: 'on' });
-    expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'off (ignore)' });
-    expect(checks).toContainEqual({ name: 'structure/shared-prefixes', scope: '', state: 'off (level)' });
-    expect(result.available.some((configuration) => configuration.name === 'sql')).toBe(true);
-    expect(result.available.some((configuration) => configuration.name === 'python')).toBe(true);
+    const named = new Set(['bash/shellcheck', 'bash/shfmt', 'structure/shared-prefixes']);
+    expect(checks.filter(({ name }) => named.has(name))).toStrictEqual([
+        { name: 'bash/shellcheck', scope: '', state: 'on' },
+        { name: 'bash/shfmt', scope: '', state: 'off (ignore)' },
+        { name: 'structure/shared-prefixes', scope: '', state: 'off (level)' },
+    ]);
+    // Each configuration appears once: either selected or available.
+    expect(
+        [...result.selected, ...result.available]
+            .map(({ name }) => name)
+            .toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual([...readConfigurations().keys()].toSorted((left, right) => left.localeCompare(right)));
     const defaults = await runGspot(sandbox.path, ['list', '--json']);
     expect(defaults.code, defaults.stdout + defaults.stderr).toBe(0);
     expect(JSON.parse(defaults.stdout)).toStrictEqual(result);
@@ -132,7 +140,6 @@ test('the text settings list shortens long values', async () => {
     expect(human.stderr).toBe('');
     expect(human.stdout).toMatch(/^naming\.banned_words\s+\["generated-long-name-one\/\*… /mu);
     expect(human.stdout).not.toContain('generated-long-name-two');
-    expect(human.stdout).not.toContain('extra tool options');
     const structured = await runGspot(sandbox.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');

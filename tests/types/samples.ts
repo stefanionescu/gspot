@@ -2,6 +2,9 @@ import type { RunReport } from '#cli/types/runs/run.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 
+/** The fields of a finding that a sample names. */
+export type SampleFinding = Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;
+
 /** What the clean rerun of a test case writes: corrected files, and the case's settings unless it names another. */
 export type SampleFix = {
     files: Record<string, string>;
@@ -12,7 +15,9 @@ export type SampleFix = {
 
 /** A test case that checks a finding at its source location, and what corrects it for the clean rerun. */
 export type CheckSample = SampleChanges & {
-    expected: Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;
+    expected: SampleFinding;
+    /** Every finding of the sample in report order, when the tool reports more than the expected one. */
+    findings?: readonly SampleFinding[];
     /** What the clean rerun writes instead; the case's settings with no files unless a case says otherwise. */
     corrected?: SampleFix;
 };
@@ -45,8 +50,8 @@ export type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | {
 
 /** Exit codes and check results of the broken and corrected samples. */
 export type SampleSummary = {
-    failed: { code: number; checks: readonly CheckResult[] };
-    passed: { code: number; checks: readonly CheckResult[] };
+    failed: { code: number; reported: readonly CheckResult[] };
+    passed: { code: number; reported: readonly CheckResult[] };
 };
 
 /** One Bash function-size boundary, its diagnostic, and the corrected source. */

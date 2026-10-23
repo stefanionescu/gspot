@@ -1,3 +1,5 @@
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+
 /** Files that link outside the repository, and the error that refuses each one. */
 export const LINKED_FILE_CASES = [
     {
@@ -7,9 +9,9 @@ export const LINKED_FILE_CASES = [
         message: 'gspot.toml is not a regular file with one link. Use a regular file without extra hard links.',
     },
     {
-        path: '.gspot/version',
+        path: GSPOT_PATHS.versionPin,
         outside: '0.0.1\n',
         files: { 'project/gspot.toml': 'configurations = []\n' },
-        message: '.gspot/version is not a regular file with one link. Use a regular file without extra hard links.',
+        message: `${DOT_GSPOT}/version is not a regular file with one link. Use a regular file without extra hard links.`,
     },
 ] as const;

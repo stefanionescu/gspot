@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR } from '#tests/config/runs/output/semgrep.ts';
+import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR, SEMGREP_REFUSED_REPORTS } from '#tests/config/runs/output/semgrep.ts';
 
 test('Semgrep rule findings and source parse errors keep positions and Unicode paths', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\neval input\n' });
@@ -38,30 +38,14 @@ test('Semgrep rule findings and source parse errors keep positions and Unicode p
         },
     ]);
 });
-test('Semgrep scanner, rule, unpositioned and malformed reports are errors', async () => {
+test.each([...SEMGREP_REFUSED_REPORTS])('a Semgrep report with %s is an error', async (_name, stdout, note) => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\n' });
-    const configuration = readConfigurations().get('security')!;
-    const check = configuration.checks.find((check) => check.id === 'security/semgrep')!;
-    const outputs = [
-        '',
-        '{}',
-        'not JSON',
-        JSON.stringify({ results: [], errors: [{ ...SEMGREP_PARSE_ERROR, code: 2 }] }),
-        JSON.stringify({ results: [], errors: [{ ...SEMGREP_PARSE_ERROR, type: 'RuleParseError' }] }),
-        JSON.stringify({ results: [], errors: [{ ...SEMGREP_PARSE_ERROR, spans: [] }] }),
-        JSON.stringify({ results: [{ ...SEMGREP_MATCH, start: { line: 0, col: 1 } }], errors: [] }),
-    ];
-    for (const stdout of outputs)
-        expect(
-            parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), {
-                cwd: sandbox.path,
-                root: sandbox.path,
-            }).note,
-        ).toBeDefined();
+    const check = readConfigurations()
+        .get('security')!
+        .checks.find((entry) => entry.id === 'security/semgrep')!;
+    const paths = { cwd: sandbox.path, root: sandbox.path };
+    expect(parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), paths).note).toBe(note);
     expect(
-        parseCommandFindings({ check }, buildProcessResult({ stdout: '{"results":[],"errors":[]}' }), {
-            cwd: sandbox.path,
-            root: sandbox.path,
-        }).findings,
+        parseCommandFindings({ check }, buildProcessResult({ stdout: '{"results":[],"errors":[]}' }), paths).findings,
     ).toStrictEqual([]);
 });

@@ -1,7 +1,6 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createEslint } from '#tests/setup/eslint/lint.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
@@ -35,12 +34,21 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
         'n/file-extension-in-import',
     ]);
     const [result] = await eslint.lintFiles(['application/source.js']);
-    expect(result!.messages.some(({ ruleId }) => ruleId === 'n/no-process-exit')).toBe(false);
-    expect(
-        result!.messages.some(({ ruleId, message }) => ruleId === 'no-undef' && message === "'Buffer' is not defined."),
-    ).toBe(true);
+    // No runtime of this table defines the Node.js global Buffer.
+    expect(result!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
+        ...(globals.includes('process') ? [] : [{ ruleId: 'no-undef', line: 1, message: "'process' is not defined." }]),
+        {
+            ruleId: 'unicorn/no-process-exit',
+            line: 1,
+            message: 'Only use `process.exit()` in CLI apps. Throw an error instead.',
+        },
+        { ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." },
+    ]);
     const [server] = await eslint.lintFiles(['server.js']);
-    expect(server!.messages.some(({ ruleId }) => ruleId === 'n/no-process-exit')).toBe(true);
+    // In Node.js code the Node.js rule reports the exit, in place of the browser rule.
+    expect(server!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
+        { ruleId: 'n/no-process-exit', line: 1, message: "Don't use process.exit(); throw an error instead." },
+    ]);
 });
 
 test('ES modules reject CommonJS globals and .cjs files keep CommonJS', async () => {
@@ -52,13 +60,13 @@ test('ES modules reject CommonJS globals and .cjs files keep CommonJS', async ()
 
     const eslint = await createEslint(sandbox.path);
     const [module] = await eslint.lintFiles(['source.mjs']);
-    expect(module!.messages).toContainEqual(
-        matchFields({ ruleId: 'no-undef', message: "'__dirname' is not defined." }),
-    );
+    expect(module!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
+        { ruleId: 'no-undef', line: 1, message: "'__dirname' is not defined." },
+    ]);
     const commonjs = (await eslint.calculateConfigForFile('source.cjs')) as EslintConfiguration;
     expect(commonjs.languageOptions.sourceType).toBe('commonjs');
     const [required] = await eslint.lintFiles(['source.cjs']);
-    expect(required!.messages.some(({ ruleId }) => ruleId === 'no-undef')).toBe(false);
+    expect(required!.messages.map(({ ruleId }) => ruleId)).not.toContain('no-undef');
 });
 
 test('framework runtimes and your runtime settings stay inside their scopes', async () => {
@@ -109,7 +117,7 @@ test('a later [[tools.eslint.override]] runtime replaces an earlier one', async 
 
     const eslint = await createEslint(sandbox.path);
     const [browser] = await eslint.lintFiles(['application.js']);
-    expect(browser!.messages.some(({ ruleId }) => ruleId === 'no-undef')).toBe(false);
+    expect(browser!.messages.map(({ ruleId }) => ruleId)).not.toContain('no-undef');
     const [worker] = await eslint.lintFiles(['worker.js']);
     expect(worker!.messages.find(({ ruleId }) => ruleId === 'no-undef')?.message).toBe("'window' is not defined.");
 });

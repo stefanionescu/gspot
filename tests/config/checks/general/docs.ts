@@ -18,23 +18,10 @@ Run \`npm run root-js\` and \`bun run sibling-js\`.
 } as const;
 
 /** One scope for each project folder. */
-export const DOC_TASK_TABLES = `[[scope]]
-path = "app"
-
-configurations = []
-[[scope]]
-path = "app/nested"
-
-configurations = []
-[[scope]]
-path = "app/empty"
-
-configurations = []
-[[scope]]
-path = "sibling"
-
-configurations = []
-`;
+export const DOC_TASK_SCOPES = ['app', 'app/nested', 'app/empty', 'sibling'].map((path) => ({
+    path,
+    configurations: [],
+}));
 
 /** Each rejected command and the document line that holds it. */
 export const DOC_TASK_FINDINGS = [
@@ -102,7 +89,7 @@ export const MALFORMED_TASK_FILES = [
         message: 'package.json is not valid JSON: Invalid JSON at offset 1: InvalidSymbol. Fix the file.',
         text: '{broken',
         document: 'a.md',
-        tables: '',
+        scopes: [],
         files: { 'a.md': 'Run `bun run build`.\n', 'package.json': '{}' },
     },
     {
@@ -110,7 +97,7 @@ export const MALFORMED_TASK_FILES = [
         message: 'mise.toml:1:7 is not valid TOML:',
         text: '[tasks',
         document: 'a.md',
-        tables: '',
+        scopes: [],
         files: { 'a.md': 'Run `bun run build`.\n', 'mise.toml': '' },
     },
     {
@@ -118,7 +105,7 @@ export const MALFORMED_TASK_FILES = [
         message: 'app/package.json is not valid JSON: Invalid JSON at offset 1: InvalidSymbol. Fix the file.',
         text: '{broken',
         document: 'app/nested/guide.md',
-        tables: DOC_TASK_TABLES,
+        scopes: DOC_TASK_SCOPES,
         files: DOC_TASK_FILES,
     },
     {
@@ -126,7 +113,7 @@ export const MALFORMED_TASK_FILES = [
         message: 'app/mise.toml:1:7 is not valid TOML:',
         text: '[tasks',
         document: 'app/nested/guide.md',
-        tables: DOC_TASK_TABLES,
+        scopes: DOC_TASK_SCOPES,
         files: DOC_TASK_FILES,
     },
 ] as const;

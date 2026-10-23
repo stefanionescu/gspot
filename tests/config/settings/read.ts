@@ -104,3 +104,10 @@ export const RULE_FILE_ERRORS = [
     'gspot.toml: scope.0.tools.eslint.plugins.0.path: `missing-scope.mjs` names no file. Point path at a file, relative to the repository root.',
     'gspot.toml: scope.0.tools.semgrep.rule_files.0: `missing-scope.yml` names no file. Point rule_files at a file, relative to the repository root.',
 ] as const;
+
+/** Reasons for an allowed word that say nothing, and how the refusal names each. */
+export const EMPTY_REASONS = [
+    { reason: '', refused: 'an empty reason' },
+    { reason: 'because', refused: '"because"' },
+    { reason: 'Codex', refused: '"Codex"' },
+] as const;

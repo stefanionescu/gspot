@@ -10,8 +10,10 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 
 import {
@@ -27,6 +29,7 @@ import {
     INHERITED_CONFIGURATION_SETTINGS,
 } from '#tests/config/commands/samples.ts';
 
+// Remove bash from the scope, and return the result and the saved settings.
 async function removeBashSelection(root: string, scope: string) {
     const result = await runGspot(root, [
         'remove',
@@ -154,14 +157,14 @@ test('remove --scope writes removed_configurations with its reason and applies i
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/bash/shellcheckrc'))).toBe(true);
+    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(true);
     using npm = recordNpmCommands();
     const reason = 'The API scope no longer uses Bash.';
     const result = await runGspot(sandbox.path, ['remove', 'bash', '--scope', 'api', '--reason', reason, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { written, removed, notes } = JSON.parse(result.stdout) as ApplyReport;
     expect({ written, removed, notes }).toStrictEqual({
-        written: ['.gspot/mise.toml'],
+        written: [GSPOT_PATHS.miseProject],
         removed: API_BASH_FILES,
         notes: [TOOLS_CHANGED_NOTE],
     });
@@ -169,14 +172,14 @@ test('remove --scope writes removed_configurations with its reason and applies i
     const saved = readSettings(sandbox.path).settings;
     expect(saved.scopes['api']!.configurations).toStrictEqual([]);
     expect(saved.configurations).toStrictEqual(['markdown']);
-    expect((parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['scope']).toEqual([
+    expect((parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['scope']).toStrictEqual([
         { path: 'api', removed_configurations: { value: ['bash'], reason } },
     ]);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/configurations/language/bash/shellcheckrc'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/package-lock.json'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, findFileTarget('bash', 'shellcheckrc')))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/package-lock.json`))).toBe(false);
 });
 
 test('remove security exits 2, names gspot set level, and writes nothing', async () => {
@@ -206,8 +209,7 @@ test('remove security exits 2, names gspot set level, and writes nothing', async
 });
 
 test('remove reports no change for a configuration the root does not list', async () => {
-    const settings =
-        'configurations = ["typescript"]\n[rules]\nenabled = false\n[[scope]]\npath = "api"\nconfigurations = ["bash"]\n';
+    const settings = buildSandboxSettings(['typescript'], { scopes: [{ path: 'api', configurations: ['bash'] }] });
     await using sandbox = await testdir({ 'gspot.toml': settings, 'api/entry.sh': 'echo api\n' });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);

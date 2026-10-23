@@ -13,12 +13,8 @@ test.each([...DOCKERIGNORE_CASES])(
         });
 
         const findings = await runSandboxCheck(sandbox.path, 'docker/dockerignore');
-        expect(
-            findings.map(({ file, rule, message }) => ({
-                file,
-                rule,
-                message,
-            })),
-        ).toStrictEqual([...expectedFindings]);
+        expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
+            ...expectedFindings,
+        ]);
     },
 );

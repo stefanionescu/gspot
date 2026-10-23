@@ -11,6 +11,7 @@ import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
 import { createUserProject } from '#tests/setup/sandboxes/user-project.ts';
 import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e/cli.ts';
 
@@ -24,18 +25,12 @@ async function assertConflictingConfigFiles(root: string, output: string): Promi
             note: `replaces your file; read the old one with git show HEAD:${path}`,
         })),
     );
-    const formatter = await readFile(join(root, 'prettier.config.mjs'), 'utf8');
-    expect({
-        settings: await isOnDisk(join(root, 'gspot.toml')),
-        authoredFormatter: formatter.includes('formatter stdout'),
-        instructions: await isOnDisk(join(root, 'CLAUDE.md')),
-    }).toStrictEqual({ settings: true, authoredFormatter: false, instructions: true });
+    expect(await isOnDisk(join(root, 'gspot.toml'))).toBe(true);
+    expect(await readFile(join(root, 'prettier.config.mjs'), 'utf8')).not.toContain('formatter stdout');
     expect(await readFile(join(root, 'CLAUDE.md'), 'utf8')).toBe(STARTING_FILES['CLAUDE.md']);
     const agents = await readFile(join(root, 'AGENTS.md'), 'utf8');
-    expect({
-        teamNotes: agents.startsWith('# Team notes\n'),
-        ruleLink: agents.includes('WORKING.md'),
-    }).toStrictEqual({ teamNotes: true, ruleLink: true });
+    expect(agents).toStartWith('# Team notes\n');
+    expect(agents).toContain(findRuleFileTarget('engineering', 'WORKING.md'));
 }
 
 test('init replaces formatter files, keeps your notes and CLAUDE.md, and check reports findings', async () => {
@@ -55,10 +50,10 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
         ),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const { checks, exitCode } = checked.report;
-    expect(exitCode).toBe(1);
-    expect(checks).toHaveLength(3);
-    expect(checks.filter(({ status }) => status === 'error' || status === 'missing')).toStrictEqual([]);
+    const { checks } = checked.report;
+    expect(checks.map(({ check, status }) => ({ check, status }))).toStrictEqual(
+        ['bash/shellcheck', 'dependencies/lockfiles', 'format/prettier'].map((check) => ({ check, status: 'failed' })),
+    );
     // The throwaway registry serves HTTP archives, which the lockfile of the test project must report.
     const lockfileHosts = checks.find(({ check }) => check === 'dependencies/lockfiles')!.findings;
     expect(lockfileHosts.length).toBeGreaterThan(0);
@@ -81,10 +76,9 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
         await sandbox.offline.run(root, ['check', '--only', 'bash/shellcheck', '--json'], sandbox.offline.environment),
     );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const clean = corrected.report;
-    expect(clean.exitCode).toBe(0);
-    expect(clean.checks).toHaveLength(1);
-    expect(clean.checks[0]).toMatchObject({ check: 'bash/shellcheck', status: 'passed', fileCount: 1, findings: [] });
+    expect(corrected.report.checks).toMatchObject([
+        { check: 'bash/shellcheck', status: 'passed', fileCount: 1, findings: [] },
+    ]);
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe(STARTING_FILES['authored.txt']);
 });
 
@@ -97,10 +91,7 @@ async function prepareFormatterSandbox(installation: UserProject) {
     const systemTools = join(installation.workspace, 'system-tools');
     await mkdir(toolConsumer);
     await writeScriptCommand(systemTools, 'mise', `console.log(${JSON.stringify(CI_PINS.mise.version)});\n`);
-    const bun = await runCommand(['bun', '--version'], {
-        cwd: toolConsumer,
-        env: installation.online.environment,
-    });
+    const bun = await runCommand(['bun', '--version'], { cwd: toolConsumer, env: installation.online.environment });
     if (bun.code !== 0) throw new Error(`Bun version failed: ${bun.stdout}${bun.stderr}`);
     const authoredPackage = JSON.stringify({
         private: true,
@@ -117,16 +108,12 @@ async function prepareFormatterSandbox(installation: UserProject) {
             PATH: `${systemTools}${delimiter}${installation.online.environment['PATH'] ?? ''}`,
         },
     };
-    await initSandbox(toolOptions, {
-        configurations: ['format'],
-        level: 'all',
-    });
+    await initSandbox(toolOptions, { configurations: ['format'], level: 'all' });
     return { toolConsumer, toolOptions, authoredPackage };
 }
 
 test('the installed formatter reports and fixes source and keeps your package.json fields', async () => {
     await using consumer = await createUserProject();
-
     const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterSandbox(consumer);
     const formatter = ['check', 'source.js', '--only', 'format/prettier', '--json'];
     const invalid = parseCheckReport(await toolOptions.run(toolConsumer, formatter, toolOptions.environment));

@@ -1,3 +1,5 @@
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+
 export const MINIMUM_VERSION_CASES = [
     { minimum: '4', expected: '4.0.0' },
     { minimum: '4.4', expected: '4.4.0' },
@@ -90,10 +92,10 @@ try {
 
 /** The source and target of each discovered config file. */
 export const SEMGREP_CONFIG_FILE_PATHS: string[][] = [
-    ['config-files/other.yml', '.gspot/configurations/language/example/other.yml'],
-    ['config-files/semgrep/first.yml', '.gspot/configurations/language/example/semgrep/first.yml'],
-    ['config-files/semgrep/second.yml', '.gspot/configurations/language/example/semgrep/second.yml'],
-    ['config-files/semgrep/not-a-pack.txt', '.gspot/configurations/language/example/semgrep/not-a-pack.txt'],
+    ['config-files/other.yml', `${GSPOT_PATHS.configurations}/language/example/other.yml`],
+    ['config-files/semgrep/first.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`],
+    ['config-files/semgrep/second.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/second.yml`],
+    ['config-files/semgrep/not-a-pack.txt', `${GSPOT_PATHS.configurations}/language/example/semgrep/not-a-pack.txt`],
 ];
 
 /** Replacement items that a manifest refuses. */

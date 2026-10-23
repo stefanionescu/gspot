@@ -19,7 +19,7 @@ export const SQL_SANDBOX = {
 export const SQL_CASES = [
     {
         check: 'sql/sqlfluff',
-        files: { 'db/lower.sql': 'select id from user_accounts;\n' },
+        files: { 'db/lower.sql': 'SELECT id from user_accounts;\n' },
         corrected: { files: { 'db/lower.sql': 'SELECT id FROM user_accounts;\n' } },
         expected: { file: 'db/lower.sql', rule: 'CP01', line: 1 },
     },

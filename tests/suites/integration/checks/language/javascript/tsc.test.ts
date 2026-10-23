@@ -3,16 +3,16 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/locate.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { readGeneratedFiles } from '#tests/setup/cli/config-files.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { stat, chmod, readFile, realpath, writeFile } from 'node:fs/promises';
+import { findFileTarget, readGeneratedFiles } from '#tests/setup/cli/config-files.ts';
 import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript/projects.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
@@ -42,9 +42,10 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
     );
     const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/tsc', '--json']));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const report = broken.report;
-    expect(report.checks).toMatchObject([...OWN_TYPESCRIPT_RESULTS]);
-    expect(report.checks[0]!.command![0]).toBe(Bun.which('tsc', { PATH: join(root, DOT_GSPOT, NPM_BIN_FOLDER) })!);
+    expect(broken.report.checks).toMatchObject([...OWN_TYPESCRIPT_RESULTS]);
+    expect(broken.report.checks[0]!.command![0]).toBe(
+        Bun.which('tsc', { PATH: join(root, DOT_GSPOT, NPM_BIN_FOLDER) })!,
+    );
     await writeFile(join(root, 'source.js'), 'export const value = 1;\n');
     const corrected = parseCheckReport(await spawnGspot(root, ['check', '--only', 'javascript/tsc', '--json']));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -52,30 +53,28 @@ test("javascript/tsc uses gspot's own TypeScript when the project has none", asy
 });
 
 test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps your files', async (entry) => {
-    const level = 'all';
     const { root } = installedSandbox();
     const sourceFiles = {
         ...JAVASCRIPT_PROJECT_FILES,
         ...entry.files,
-        'gspot.toml': buildSandboxSettings(['javascript'], { level, tables: entry.tables }),
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: entry.tables }),
     };
     await using _sourceChange = await applySandboxChanges(
         installedSandbox(),
         buildSandboxChanges(JSCONFIG_SANDBOX.files, sourceFiles),
     );
     await createFileTree(root, {
-        '.gspot/node_modules/@types/private/index.d.ts':
-            JAVASCRIPT_PROJECT_FILES['.gspot/node_modules/@types/private/index.d.ts'],
+        [`${GSPOT_PATHS.nodeModules}/@types/private/index.d.ts`]:
+            JAVASCRIPT_PROJECT_FILES[`${GSPOT_PATHS.nodeModules}/@types/private/index.d.ts`],
     });
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const broken = parseCheckReport(await spawnGspot(root, command));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const report = broken.report;
-    expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+    expect(broken.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
         ...(entry.scope === '' ? [] : [{ scope: '', status: 'skipped' as const }]),
         { scope: entry.scope, status: 'failed' as const },
     ]);
-    expect(report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
+    expect(broken.report.checks.flatMap(({ findings }) => findings)).toStrictEqual(
         entry.diagnostics.map((finding) => matchFields(finding)),
     );
     await writeFile(join(root, entry.sourceFile), entry.correctedSource);
@@ -88,30 +87,28 @@ test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps your files
     for (const [path, original] of Object.entries({ ...JAVASCRIPT_PROJECT_FILES, ...entry.files }))
         if (path !== entry.sourceFile) expect(await readFile(join(root, path), 'utf8')).toBe(original);
 });
+
 test('javascript/tsc at level all also checks your build and dist folders', async () => {
     await using sandbox = await testdir();
     const paths = ['source/build/value.js', 'source/dist/value.js', 'coverage/value.js'];
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            level: 'all',
-        }),
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
         '.gitattributes': 'emitted/** linguist-generated\n',
         ...Object.fromEntries([...paths, 'emitted/value.js'].map((path) => [path, 'export const value = missing;\n'])),
     });
     commitAll(sandbox.path);
-    const environment = {};
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
     const command = ['check', '--only', 'javascript/tsc', '--json'];
-    const broken = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
+    const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const report = broken.report;
-    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual(
+    expect(broken.report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual(
         paths.toSorted((left, right) => left.localeCompare(right)),
     );
     for (const path of paths) await writeFile(join(sandbox.path, path), 'export const value = 1;\n');
-    const corrected = await spawnGspot(sandbox.path, command, environment);
+    const corrected = await spawnGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
+
 test.each([...AUTHORED_JSCONFIG_CASES])(
     "javascript/tsc keeps the project's module resolution and ignores gspot's own @types, $name",
     async ({ authored }) => {
@@ -127,28 +124,24 @@ export const total = accepted;
             'source/value.js':
                 '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n',
             'node_modules/@types/domain/index.d.ts': 'declare const accepted: number;\n',
-            '.gspot/node_modules/@types/private/index.d.ts': 'This is invalid private tooling input.\n',
+            [`${GSPOT_PATHS.nodeModules}/@types/private/index.d.ts`]: 'This is invalid private tooling input.\n',
             'authored/cache.tsbuildinfo': 'Preserve this authored metadata.\n',
             ...authoredFiles,
         });
         expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
         const generated = {
-            path: '.gspot/configurations/language/javascript/jsconfig.json',
-            content: await readFile(
-                join(sandbox.path, '.gspot/configurations/language/javascript/jsconfig.json'),
-                'utf8',
-            ),
+            path: findFileTarget('javascript', 'jsconfig.json'),
+            content: await readFile(join(sandbox.path, findFileTarget('javascript', 'jsconfig.json')), 'utf8'),
         };
         await chmod(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/tsc', '--json'];
-        const env = {};
-        const broken = parseCheckReport(await spawnGspot(sandbox.path, command, env));
+        const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         expect(broken.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
             { file: 'source/main.js', line: 2, column: 28, rule: 'TS2345' },
         ]);
         await writeFile(join(sandbox.path, 'source/main.js'), source.replace('format(42)', 'format("42")'));
-        const corrected = await spawnGspot(sandbox.path, command, env);
+        const corrected = await spawnGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await readFile(join(sandbox.path, 'authored/cache.tsbuildinfo'), 'utf8')).toBe(
             'Preserve this authored metadata.\n',
@@ -161,21 +154,20 @@ export const total = accepted;
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
     },
 );
+
 test("javascript/tsc reads each scope's own jsconfig options, and a broken one fails only its scope", async () => {
     await using sandbox = await testdir();
     const { config, corrected } = await prepareJsconfigScopes(sandbox.path);
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
-    const outputs = await readGeneratedFiles(sandbox.path, '.gspot/configurations/**/jsconfig.json');
+    const outputs = await readGeneratedFiles(sandbox.path, `${GSPOT_PATHS.configurations}/**/jsconfig.json`);
     expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         ...SCOPE_JSCONFIG_PATHS,
     ]);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
-    const env = {};
-    const broken = parseCheckReport(await spawnGspot(sandbox.path, command, env));
+    const broken = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const report = broken.report;
     expect(
-        report.checks.flatMap(({ scope, findings }) => findings.map((finding) => ({ scope, finding }))),
+        broken.report.checks.flatMap(({ scope, findings }) => findings.map((finding) => ({ scope, finding }))),
     ).toStrictEqual([
         {
             scope: 'app/child',
@@ -183,18 +175,22 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
         },
     ]);
     await writeFile(join(sandbox.path, 'app/child/source.js'), corrected);
-    const fixed = await spawnGspot(sandbox.path, command, env);
+    const fixed = await spawnGspot(sandbox.path, command);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'app/jsconfig.json'), 'utf8')).toBe(config);
     expect(await readFile(join(sandbox.path, 'app/authored.cache'), 'utf8')).toBe('Preserve this cache.\n');
     for (const output of outputs) expect(await readFile(join(sandbox.path, output.path), 'utf8')).toBe(output.content);
     await writeFile(join(sandbox.path, 'app/jsconfig.json'), '{');
-    const invalid = parseCheckReport(await spawnGspot(sandbox.path, command, env));
+    const invalid = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
     // The scope with the unreadable jsconfig.json errors alone; the other scopes keep their results.
     expect(invalid.report.checks).toMatchObject([
         { scope: '', status: 'passed' },
-        { scope: 'app', status: 'error', note: expect.stringContaining(join('app', 'jsconfig.json')) as string },
+        {
+            scope: 'app',
+            status: 'error',
+            note: `The javascript/tsc check failed: Cannot read the tsconfig file ${join(await realpath(sandbox.path), 'app', 'jsconfig.json')}: '}' expected.`,
+        },
         { scope: 'app/child', status: 'passed' },
         { scope: 'sibling', status: 'passed' },
     ]);
@@ -224,24 +220,24 @@ async function prepareJsconfigScopes(root: string): Promise<{ config: string; co
     });
     return { config, corrected };
 }
+
 test('javascript/tsc copies imported ambient types and keeps other scopes apart', async () => {
     await using sandbox = await testdir({
         ...IMPORTED_AMBIENT_FILES,
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', scopes: [{ path: 'apps/web' }] }),
     });
     expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
-    const environment = {};
     const command = ['check', '--only', 'javascript/tsc', '--json', '--', 'apps/web/src/main.js'];
-    const passed = await spawnGspot(sandbox.path, command, environment);
+    const passed = await spawnGspot(sandbox.path, command);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     await writeFile(join(sandbox.path, 'types/api.d.ts'), 'export declare const amount: string;\n');
-    const failed = parseCheckReport(await spawnGspot(sandbox.path, command, environment));
+    const failed = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks.flatMap((check) => check.findings)).toStrictEqual([
         matchFields({ file: 'apps/web/src/main.js', rule: 'TS2339', line: 1 }),
     ]);
     await writeFile(join(sandbox.path, 'types/api.d.ts'), IMPORTED_AMBIENT_FILES['types/api.d.ts']);
-    const corrected = await spawnGspot(sandbox.path, command, environment);
+    const corrected = await spawnGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     for (const [path, original] of Object.entries(IMPORTED_AMBIENT_FILES))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);

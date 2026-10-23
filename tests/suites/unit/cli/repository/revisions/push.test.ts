@@ -21,7 +21,7 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     runGitStep(sandbox.path, ['branch', '--set-upstream-to=upstream']);
     expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([]);
     runGitStep(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
-    expect(await captureRejection(readPushedCommits(sandbox.path, undefined))).toContain('Git merge-base failed');
+    expect(await captureRejection(readPushedCommits(sandbox.path, undefined))).toStartWith('Git merge-base failed');
 });
 test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });

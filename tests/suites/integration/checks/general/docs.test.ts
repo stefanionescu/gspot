@@ -17,7 +17,7 @@ import {
 
 /** Check the exit code, and the status and finding positions of the root and child scopes. */
 async function assertLinkFailures(root: string, check: string, failures: readonly LinkFailure[]): Promise<void> {
-    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json'], {}));
+    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', check, '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(failures.length === 0 ? 0 : 1);
     expect(checked.report.checks).toMatchObject(
         ['', 'app'].map((scope) => {
@@ -69,9 +69,8 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
         await assertLinkFailures(sandbox.path, 'docs/lychee', []);
         expect(requests).toStrictEqual([]);
         await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
-        expect(requests).toContain('/missing');
-        expect(requests).not.toContain('/root-only');
-        expect(requests).not.toContain('/child-only');
+        // The root and child scopes run at the same time, so the order of their requests varies.
+        expect(requests.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(['/missing', '/page']);
         await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}child-only).\n`);
         await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
         await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}page#setup).\n`);
@@ -94,10 +93,10 @@ test('docs/lychee reads a root-relative link from the repository root, and leave
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'docs/lychee', '--json'];
-    const passed = await spawnGspot(sandbox.path, command, {});
+    const passed = await spawnGspot(sandbox.path, command);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
     await writeFile(join(sandbox.path, 'root.md'), '# Links\n\nRead [the setup guide](/guides/missing.md).\n');
-    const failed = parseCheckReport(await spawnGspot(sandbox.path, command, {}));
+    const failed = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([
         matchFields({ file: 'root.md', line: 3, column: 6 }),

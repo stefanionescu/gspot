@@ -1,5 +1,5 @@
 /** Declared file kinds and check path ignores must reach the Prettier ignore patterns. */
-
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 export const PRETTIER_IGNORE_SETTINGS = {
@@ -69,19 +69,19 @@ export const PATH_IGNORE_CASES = [
     {
         configuration: 'spelling',
         check: 'spelling/typos',
-        path: '.gspot/configurations/general/spelling/typos.toml',
+        path: findFileTarget('spelling', 'typos.toml'),
         nativePath: ['files', 'extend-exclude'],
     },
     {
         configuration: 'duplication',
         check: 'duplication/jscpd',
-        path: '.gspot/configurations/general/duplication/jscpd.json',
+        path: findFileTarget('duplication', 'jscpd.json'),
         nativePath: ['ignore'],
     },
     {
         configuration: 'javascript',
         check: 'javascript/knip',
-        path: '.gspot/configurations/language/javascript/knip.json',
+        path: findFileTarget('javascript', 'knip.json'),
         nativePath: ['ignore'],
     },
 ] as const;

@@ -49,12 +49,7 @@ test('membership combines projects in a scope and checks nested scopes independe
         buildRunOptions({ only: ['xcode/files-without-target'] }),
     );
 
-    expect(
-        broken.report.checks.map((check) => ({
-            scope: check.scope,
-            findings: check.findings,
-        })),
-    ).toStrictEqual([
+    expect(broken.report.checks.map(({ scope, findings }) => ({ scope, findings }))).toStrictEqual([
         { scope: '', findings: [] },
         { scope: 'nested', findings: [matchFields({ file: 'nested/Extra.swift', rule: 'untargeted' })] },
     ]);

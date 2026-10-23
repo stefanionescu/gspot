@@ -1,3 +1,5 @@
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+
 export const ALLOWED_PACKAGE_REASON = 'reason = "Reviewed the installed project."\n';
 
 const ABSENT_PACKAGE_LOCKFILE = `[[package]]
@@ -129,11 +131,11 @@ export const PYTHON_LICENSE_REPORT = [
 ] as const;
 
 export const LICENSE_TOOL_PROJECT_FILES = {
-    '.gspot/probe/pyproject.toml': `[project]
+    [`${DOT_GSPOT}/probe/pyproject.toml`]: `[project]
 name = "tooling"
 version = "0.0.0"
 `,
-    '.gspot/probe/.venv/installed': 'Absent_Package@2.0.0',
+    [`${DOT_GSPOT}/probe/.venv/installed`]: 'Absent_Package@2.0.0',
 } as const;
 
 /** pip-licenses entries with a Software Package Data Exchange (SPDX) expression, metadata, and trove classifiers. */

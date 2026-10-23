@@ -5,10 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
-import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
+import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 
 import {
@@ -23,13 +23,16 @@ import {
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await testdir();
-    const tables = SYNTAX_CHECK_TABLES;
-    const settings = buildSandboxSettings([], { rules: true, scopes: [{ path: 'api', configurations: [] }], tables });
+    const settings = buildSandboxSettings([], {
+        rules: true,
+        scopes: [{ path: 'api', configurations: [] }],
+        tables: SYNTAX_CHECK_TABLES,
+    });
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             scopes: [{ path: 'api', configurations: [] }],
-            tables,
+            tables: SYNTAX_CHECK_TABLES,
             ignore: { checks: ['project/syntax'], reason: 'The sandbox tests a disabled check.' },
         }),
         'api/build.sh': CLEAN_BASH_SCRIPT,
@@ -42,17 +45,20 @@ test('a path explanation lists the command checks and the ignores that apply', a
     await writeFile(join(sandbox.path, 'gspot.toml'), settings);
     const corrected = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(JSON.parse(corrected.stdout)).toMatchObject({
-        checks: matchItems([matchFields({ check: 'project/syntax', stage: 'manual' })]),
-        ignores: [],
+    const explanation = JSON.parse(corrected.stdout) as PathExplanation;
+    expect(explanation.ignores).toStrictEqual([]);
+    expect(explanation.checks.find(({ check }) => check === 'project/syntax')).toStrictEqual({
+        check: 'project/syntax',
+        stage: 'manual',
     });
     expect(JSON.parse(corrected.stdout)).not.toHaveProperty('unchecked');
     const command = await runGspot(sandbox.path, ['explain', 'project/syntax', '--json']);
     expect(command.code, command.stdout + command.stderr).toBe(0);
     expect(JSON.parse(command.stdout)).toMatchObject(SYNTAX_CHECK_EXPLANATION);
-    const remaining = (JSON.parse(ignored.stdout) as PathExplanation).checks;
-    expect(remaining.map((entry) => entry.check)).not.toContain('project/syntax');
-    expect(remaining.map((entry) => entry.check)).toContain('format/editorconfig-checker');
+    // The ignore drops project/syntax and no other check.
+    expect((JSON.parse(ignored.stdout) as PathExplanation).checks).toStrictEqual(
+        explanation.checks.filter(({ check }) => check !== 'project/syntax'),
+    );
 });
 test('a configuration name stays a name, and a tracked or ./ path explains the file', async () => {
     await using sandbox = await testdir({
@@ -87,16 +93,24 @@ test('a file path reports its scope, checks, and ignores', async () => {
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({
+    const explanation = JSON.parse(result.stdout) as PathExplanation;
+    expect(explanation).toMatchObject({
         kind: 'path',
         subject: 'api/build.sh',
         path: 'api/build.sh',
         scope: 'api',
         fileKind: 'source',
-        configurations: matchItems(['bash']),
-        checks: matchItems([{ check: 'bash/shellcheck', stage: 'commit', configuration: 'bash' }]),
         ignores: [...PATH_IGNORES],
     });
+    // The api scope adds the bash configuration and its commit checks to the ones every repository selects.
+    expect(explanation.configurations.filter((name) => !listAlwaysSelected().includes(name))).toStrictEqual(['bash']);
+    expect(explanation.checks.filter(({ configuration }) => configuration === 'bash')).toStrictEqual(
+        ['shellcheck', 'shfmt', 'unused-functions', 'unread-arguments', 'safety'].map((name) => ({
+            check: `bash/${name}`,
+            stage: 'commit',
+            configuration: 'bash',
+        })),
+    );
 });
 test.each([...UNKNOWN_SUBJECT_CASES])(
     'explain of %s fails with an arguments error that names the subject',
@@ -106,10 +120,7 @@ test.each([...UNKNOWN_SUBJECT_CASES])(
         commitAll(sandbox.path);
         const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(JSON.parse(result.stdout)).toMatchObject({
-            error: 'arguments',
-            message: expect.stringContaining(message) as string,
-        });
+        expect(JSON.parse(result.stdout)).toStrictEqual({ error: 'arguments', message });
     },
 );
 test.each([

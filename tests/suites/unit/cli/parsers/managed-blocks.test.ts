@@ -4,12 +4,11 @@ import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/managed
 
 test('a managed block is appended and replaced without changing your own text', () => {
     const first = replaceBlock('# Mine\n\ntext\n', 'block one', { path: 'AGENTS.md', style: 'markdown' });
-    expect(first).toContain('# Mine');
     expect(findBlockBody(first, { path: 'AGENTS.md', style: 'markdown' })).toBe('block one');
     const second = replaceBlock(first, 'block two', { path: 'AGENTS.md', style: 'markdown' });
     expect(second.match(/gspot managed >>>/g)).toHaveLength(1);
     expect(findBlockBody(second, { path: 'AGENTS.md', style: 'markdown' })).toBe('block two');
-    expect(second.startsWith('# Mine\n\ntext\n\n')).toBe(true);
+    expect(second).toStartWith('# Mine\n\ntext\n\n');
     expect(replaceBlock(second, 'block two', { path: 'AGENTS.md', style: 'markdown' })).toBe(second);
 });
 test.each([...MALFORMED_BLOCKS])('every block operation refuses malformed markers in $path: $source', (context) => {
@@ -35,7 +34,7 @@ test.each(
     const source = `before${newline}${context.start}${newline}  instructions  ${newline}${context.end}${newline}after`;
     expect(findBlockBody(source, context)).toBe('instructions');
     const replaced = replaceBlock(source, 'replacement', context);
-    expect(replaced.startsWith(`before${newline}`)).toBe(true);
-    expect(replaced.endsWith('after')).toBe(true);
+    expect(replaced).toStartWith(`before${newline}`);
+    expect(replaced).toEndWith('after');
     expect(findBlockBody(replaced, context)).toBe('replacement');
 });

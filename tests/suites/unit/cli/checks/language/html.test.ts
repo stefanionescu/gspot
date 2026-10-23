@@ -25,28 +25,22 @@ test('html/inline-scripts reports an executable inline script and an event handl
         'index.html': INLINE_SCRIPT_PAGE,
     });
     const found = await runSandboxCheck(sandbox.path, 'html/inline-scripts');
-    expect(
-        found.map(({ file, line, column, rule, message }) => ({
-            file,
-            line,
-            column,
-            rule,
-            message,
-        })),
-    ).toStrictEqual([
-        {
-            file: 'index.html',
-            line: 5,
-            column: 1,
-            rule: 'inline-script',
-            message: 'Move executable inline script to a script file.',
-        },
-        {
-            file: 'index.html',
-            line: 6,
-            column: 9,
-            rule: 'handler-attribute',
-            message: 'The onclick attribute is inline script. Attach the handler from a script file.',
-        },
-    ]);
+    expect(found.map(({ file, line, column, rule, message }) => ({ file, line, column, rule, message }))).toStrictEqual(
+        [
+            {
+                file: 'index.html',
+                line: 5,
+                column: 1,
+                rule: 'inline-script',
+                message: 'Move executable inline script to a script file.',
+            },
+            {
+                file: 'index.html',
+                line: 6,
+                column: 9,
+                rule: 'handler-attribute',
+                message: 'The onclick attribute is inline script. Attach the handler from a script file.',
+            },
+        ],
+    );
 });

@@ -22,6 +22,7 @@ __all__ = ["total"]
 
 export const PYTHON_MODULE_SANDBOX = {
     configurations: ['python'],
+    cleanSource: CLEAN_PYTHON_MODULE,
 
     files: {
         'pyproject.toml': GOOGLE_PYPROJECT,

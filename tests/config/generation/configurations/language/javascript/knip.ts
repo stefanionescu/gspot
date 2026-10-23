@@ -1,3 +1,6 @@
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+
 export const KNIP_COMPONENT_FILES = {
     'package.json':
         '{"name":"native-project","private":true,"type":"module","workspaces":["child"],"dependencies":{"vue":"3.5.0","svelte":"5.57.0","astro":"7.3.2","@astrojs/mdx":"4.0.0"}}',
@@ -47,9 +50,9 @@ export const KNIP_POINTER_TABLES = `\n[tools.knip]\nentry = ["main.js"]\n[[scope
 
 export const KNIP_ARGUMENTS = [
     'node',
-    '.gspot/node_modules/knip/bin/knip.js',
+    `${GSPOT_PATHS.nodeModules}/knip/bin/knip.js`,
     '--config',
-    '.gspot/configurations/language/javascript/knip.json',
+    findFileTarget('javascript', 'knip.json'),
     '--no-progress',
     '--reporter',
     'json',

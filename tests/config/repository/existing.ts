@@ -1,3 +1,5 @@
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+
 export const LINKED_HOOK_FOLDERS = [
     { path: '.husky', kind: 'husky' },
     { path: '.githooks', kind: 'githooks' },
@@ -33,7 +35,7 @@ export const HOOK_FOLDER_FILES = {
     '.githooks/pre-commit': '#!/bin/sh\nexit 0\n',
     '.husky/pre-commit': '#!/bin/sh\nexit 0\n',
     '.git-hooks/pre-commit': '#!/bin/sh\nexit 0\n',
-    '.gspot/hooks/pre-commit': '#!/bin/sh\nexit 0\n',
+    [`${GSPOT_PATHS.hooks}/pre-commit`]: '#!/bin/sh\nexit 0\n',
     '.mise/tasks/hook/pre-commit': '#!/bin/sh\nexit 0\n',
 } as const;
 
@@ -99,7 +101,7 @@ export const CI_JOB_DOCUMENTS = [
 export const PRETTIER_SETTINGS_FILES = {
     'src/.prettierrc.json': '{"semi":false}',
     'vendor/.prettierrc.json': '{"semi":true}',
-    '.gspot/.prettierrc.json': '{"tabWidth":8}',
-    '.gspot/package.json': 'unowned malformed output',
+    [`${DOT_GSPOT}/.prettierrc.json`]: '{"tabWidth":8}',
+    [GSPOT_PATHS.npmProject]: 'unowned malformed output',
     'nested/.gspot/package.json': '{}',
 } as const;

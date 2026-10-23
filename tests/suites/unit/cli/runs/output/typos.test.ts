@@ -17,10 +17,9 @@ test('the typos format tells findings from fatal exits', async () => {
     });
 
     const session = await openSession(sandbox.path);
-    const plans = planChecks(session, { stage: 'all', only: ['spelling/typos'] });
-    const planned = plans[0]!;
+    const planned = planChecks(session, { stage: 'all', only: ['spelling/typos'] })[0]!;
     const stdout = JSON.stringify(TYPO_REPORT);
-    const result = buildProcessResult({ stdout, stderr: '', code: 2, missing: false, duration: 1 });
+    const result = buildProcessResult({ stdout, code: 2 });
     expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }).findings).toMatchObject([
         { file: 'sample.txt' },
     ]);
@@ -30,10 +29,10 @@ test('the typos format tells findings from fatal exits', async () => {
             { ...result, code: 78, stderr: 'Invalid native configuration.' },
             { cwd: sandbox.path, root: sandbox.path },
         ).note,
-    ).toBeDefined();
+    ).toBe(`typos crashed with exit 78.\nInvalid native configuration.\n${stdout}`);
     expect(
         parseCommandFindings(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }).note,
-    ).toBeDefined();
+    ).toBe('typos crashed with exit 2.\ntypos exited 2');
     expect(
         parseCommandFindings(planned, { ...result, stdout: '', code: 0 }, { cwd: sandbox.path, root: sandbox.path })
             .findings,

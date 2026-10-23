@@ -1,12 +1,11 @@
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+
+/** A JavaScript root and a TypeScript scope, with the tsconfig that svelte-check must read in each. */
 export const SVELTE_PROJECTS = [
     {
         name: 'root JavaScript',
         scope: '',
-        settings: `configurations = ["svelte"]
-[[scope]]
-path = "app"
-
-`,
+        settings: buildSandboxSettings(['svelte'], { scopes: [{ path: 'app' }] }),
         files: {},
         extends: null,
         include: ['Component.svelte'],
@@ -14,11 +13,7 @@ path = "app"
     {
         name: 'scoped TypeScript',
         scope: 'app',
-        settings: `configurations = ["svelte", "typescript"]
-[[scope]]
-path = "app"
-
-`,
+        settings: buildSandboxSettings(['svelte', 'typescript'], { scopes: [{ path: 'app' }] }),
         files: {
             'app/tsconfig.json': JSON.stringify({ compilerOptions: { strict: true }, include: ['Component.svelte'] }),
         },

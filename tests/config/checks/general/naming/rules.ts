@@ -75,8 +75,8 @@ export const OVERLONG_NAME_FINDINGS = [
 
 /** Expected naming findings where the language linter owns some of the naming rules. */
 export const LINTER_LIMIT_CASES = [
-    { language: 'swift', category: 'types', expected: [] },
-    { language: 'swift', category: 'functions', expected: ['case', 'length'] },
-    { language: 'python', category: 'classes', expected: ['length'] },
-    { language: 'python', category: 'exceptions', expected: ['length'] },
+    { language: 'swift', category: 'types', expected: [], wordy: ['words'] },
+    { language: 'swift', category: 'functions', expected: ['case', 'length'], wordy: ['case', 'words'] },
+    { language: 'python', category: 'classes', expected: ['length'], wordy: ['length', 'words'] },
+    { language: 'python', category: 'exceptions', expected: ['length'], wordy: ['length', 'words'] },
 ] as const;

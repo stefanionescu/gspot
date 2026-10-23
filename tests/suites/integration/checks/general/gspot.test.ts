@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -20,7 +21,7 @@ test('suppression detection agrees with Ruff on every noqa comment form and plac
         ...Object.fromEntries(RUFF_SUPPRESSIONS.map(({ source }, index) => [paths[index]!, source])),
     });
     await installGeneratedTools(sandbox.path);
-    const ruff = buildVenvExecutablePath(join(sandbox.path, '.gspot/.venv'), 'ruff');
+    const ruff = buildVenvExecutablePath(join(sandbox.path, GSPOT_PATHS.pythonEnvironment), 'ruff');
     const toolResult = await runCommand(
         [ruff, 'check', '--isolated', '--select', 'F401', '--output-format', 'json', ...paths],
         { cwd: sandbox.path, env: {} },

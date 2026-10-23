@@ -8,9 +8,8 @@ import PackageDescription
 let package = Package(name: "Example", targets: [.target(name: "Example", path: ".")])
 `;
 
-/** The SwiftLint config files of a nested scope. */
+/** The SwiftLint config files of a nested scope after the generated one, the last through a link. */
 export const NESTED_SWIFTLINT_FILES = [
-    '.gspot/configurations/language/swift/swiftlint.yml',
     'app/.swiftlint.yml',
     'app/Sources/.swiftlint.yml',
     'app/Sources/Feature/.swiftlint.yml',
@@ -50,11 +49,11 @@ export const FAILED_BUILD_FINDINGS = [
 
 /** The two analyzer exits, with the exact message of each. */
 export const ANALYZER_EXIT_CASES = [
-    { buildCode: 7, analyzerCode: 0, message: /build exited 7/u },
+    { buildCode: 7, analyzerCode: 0, message: 'Cannot analyze Swift because the build exited 7.' },
     {
         buildCode: 0,
         analyzerCode: 7,
-        message: /^The swiftlint command failed \(exit 7\): The tool printed no error output\.$/u,
+        message: 'The swiftlint command failed (exit 7): The tool printed no error output.',
     },
 ] as const;
 

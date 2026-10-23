@@ -1,7 +1,9 @@
 import { join } from 'node:path/posix';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GUIDE, README, LICENSE } from '#tests/config/checks/samples.ts';
 
+/** One Vale alert at line 1, columns 3 to 5. */
 export const VALE_ALERT = {
     Line: 1,
     Span: [3, 5],
@@ -12,7 +14,7 @@ export const VALE_ALERT = {
 /** A Markdown sandbox for the tests of valid and refused Vale output. */
 export const VALE_SANDBOX_FILES = {
     'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
-    '.gspot/configurations/general/prose/vale.ini': 'Packages =\n',
+    [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
     'example.md': '# Documentation\n',
 };
 

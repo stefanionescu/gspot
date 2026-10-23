@@ -12,11 +12,10 @@ test('empty SQL has no statements', async () => {
 });
 
 test('SQL statement positions skip nested comments and count Unicode correctly', async () => {
-    const text = NESTED_COMMENT_SQL;
-    const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
+    const parsed = await parseSqlFile(NESTED_COMMENT_SQL, createReadCache(process.cwd()));
     expect(parsed.error).toBeUndefined();
     expect(parsed.statements.map((statement) => statement.kind)).toStrictEqual(['DropStmt', 'SelectStmt']);
-    expect(parsed.statements.map((statement) => getPosition(text, statement.start))).toStrictEqual([
+    expect(parsed.statements.map((statement) => getPosition(NESTED_COMMENT_SQL, statement.start))).toStrictEqual([
         { line: 5, column: 1 },
         { line: 8, column: 2 },
     ]);
@@ -47,7 +46,11 @@ test('psql tokens inside quoted SQL and nested comments stay literal', async () 
     expect(parsed.source).toBe(text);
     expect(parsed.variables).toStrictEqual([]);
     const unclosedComment = await parseSqlFile('SELECT 1; /* :unclosed', createReadCache(process.cwd()));
-    expect(unclosedComment.error?.text).toContain('unterminated');
+    expect(unclosedComment.error).toStrictEqual({
+        text: 'unterminated /* comment at or near "/* :unclosed"',
+        line: 1,
+        column: 11,
+    });
 });
 
 test('an SQL error after Unicode points at the right token', async () => {
@@ -67,7 +70,10 @@ test.each(["'", "E'", '"'])('an unterminated SQL %s value gives the parser error
     const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
     expect(parsed.source).toBe(text);
     expect(parsed.variables).toStrictEqual([]);
-    expect(parsed.error?.text).toContain('unterminated');
-    expect(parsed.error?.line).toBe(1);
-    expect(parsed.error?.column).toBe(8);
+    const kind = opener === '"' ? 'quoted identifier' : 'quoted string';
+    expect(parsed.error).toStrictEqual({
+        text: `unterminated ${kind} at or near "${text.slice('SELECT '.length)}"`,
+        line: 1,
+        column: 8,
+    });
 });

@@ -13,7 +13,6 @@ async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
-                rules: { enabled: false },
                 command_check: [buildReportingCheck({ id: 'sandbox/report', paths: ['src/**'], stage: 'commit' })],
             }),
         }),
@@ -29,7 +28,6 @@ async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
     const staged = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']),
     );
-    const stagedReport = staged.report;
     runGitStep(sandbox.path, ['commit', '-qm', 'change']);
     const head = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
@@ -43,7 +41,7 @@ async function runChangeChecks(format: 'sha1' | 'sha256'): Promise<unknown> {
     return {
         staged: [
             staged.code,
-            stagedReport.checks.map((entry) => [entry.status, entry.findings.map((finding) => finding.message)]),
+            staged.report.checks.map((entry) => [entry.status, entry.findings.map((finding) => finding.message)]),
         ],
         pushed: [
             pushed.code,

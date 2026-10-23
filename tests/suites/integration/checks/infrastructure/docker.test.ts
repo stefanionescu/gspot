@@ -1,8 +1,7 @@
-import { join } from 'node:path';
 import { promisify } from 'node:util';
 import { test, expect } from 'bun:test';
+import { join, posix } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isLinux } from '#tests/setup/system/platform.ts';
@@ -11,7 +10,7 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {
@@ -30,18 +29,14 @@ async function importImage(root: string, tag: string, contents: string | Buffer)
     await writeFile(join(root, 'payload.pem'), contents);
     const archive = runCommandBlocking(['tar', '-cf', 'payload.tar', 'payload.pem'], { cwd: root });
     if (archive.code !== 0) throw new Error(archive.stderr);
-    const imported = runCommandBlocking(['docker', 'import', 'payload.tar', tag], {
-        cwd: root,
-    });
+    const imported = runCommandBlocking(['docker', 'import', 'payload.tar', tag], { cwd: root });
     if (imported.code !== 0) throw new Error(imported.stderr);
 }
 
 test('Trivy checks each Dockerfile in its deepest scope and honors an ignore limited to a scope path', async () => {
     await using sandbox = await testdir();
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
-    const settings = buildSandboxSettings(['docker'], {
-        tables: TRIVY_SCOPE_TABLES,
-    });
+    const settings = buildSandboxSettings(['docker'], { tables: TRIVY_SCOPE_TABLES });
     // Trivy rule DS-0002 reports `USER root`. Use `USER node` to fix it.
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
@@ -53,8 +48,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'docker/trivy-config', '--json'];
-    const failedCommand = parseCheckReport(await spawnGspot(sandbox.path, command));
-    const failed = failedCommand.report;
+    const failed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
     expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
     expect(
         failed.checks.map((check) => ({
@@ -65,8 +59,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
     ).toStrictEqual([...TRIVY_SCOPE_RESULTS]);
     for (const path of ['Dockerfile', 'sibling/Dockerfile'])
         await writeFile(join(sandbox.path, path), ROOT_USER_DOCKERFILE.replace('USER root', 'USER node'));
-    const correctedCommand = parseCheckReport(await spawnGspot(sandbox.path, command));
-    const corrected = correctedCommand.report;
+    const corrected = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
     expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
 });
 
@@ -85,32 +78,41 @@ test.each([...LEVELS])(
         });
 
         expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
+        // At level all, Hadolint also asks for version pins in apt and apk installs.
+        const pins =
+            level === 'all'
+                ? ([
+                      ['Dockerfile', 'DL3008'],
+                      ['Dockerfile.alpine', 'DL3018'],
+                  ] as const)
+                : [];
         for (const scope of ['', 'app']) {
-            const prefix = scope === '' ? '' : `${scope}/`;
+            const dockerfile = posix.join(scope, 'Dockerfile');
             const result = parseCheckReport(
                 await spawnGspot(sandbox.path, [
                     'check',
-                    `${prefix}Dockerfile`,
-                    `${prefix}Dockerfile.alpine`,
+                    dockerfile,
+                    posix.join(scope, 'Dockerfile.alpine'),
                     '--only',
                     'docker/hadolint',
                     '--json',
                 ]),
             );
-            expect(result.code, result.stdout + result.stderr).toBe(level === 'all' ? 1 : 0);
-            const findings = result.report.checks.flatMap((check) => check.findings);
-            expect(findings.map((finding) => finding.rule)).toStrictEqual(level === 'all' ? ['DL3008', 'DL3018'] : []);
-            await writeFile(
-                join(sandbox.path, `${prefix}Dockerfile`),
-                DEBIAN_DOCKERFILE.replace('debian:12', 'debian:latest'),
+            expect(result.code, result.stdout + result.stderr).toBe(pins.length === 0 ? 0 : 1);
+            expect(listFindingRows(result.report)).toStrictEqual(
+                pins.map(([file, rule]) => ({ file: posix.join(scope, file), line: 2, rule })),
             );
+            await writeFile(join(sandbox.path, dockerfile), DEBIAN_DOCKERFILE.replace('debian:12', 'debian:latest'));
             const unpinned = parseCheckReport(
-                await spawnGspot(sandbox.path, ['check', `${prefix}Dockerfile`, '--only', 'docker/hadolint', '--json']),
+                await spawnGspot(sandbox.path, ['check', dockerfile, '--only', 'docker/hadolint', '--json']),
             );
             expect(unpinned.code, unpinned.stdout + unpinned.stderr).toBe(1);
-            expect(unpinned.report.checks.flatMap((check) => check.findings)).toContainEqual(
-                matchFields({ rule: 'DL3007' }),
-            );
+            expect(listFindingRows(unpinned.report)).toStrictEqual([
+                { file: dockerfile, line: 1, rule: 'DL3007' },
+                ...pins
+                    .filter(([file]) => file === 'Dockerfile')
+                    .map(([, rule]) => ({ file: dockerfile, line: 2, rule })),
+            ]);
         }
     },
 );

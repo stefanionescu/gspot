@@ -7,6 +7,7 @@ const NPM_PROJECT_PACKAGE =
 export const HOOK_REPOSITORIES = [
     {
         name: 'another hooks folder',
+        location: '.githooks',
         startProgram: 'mise',
         files: { '.githooks/pre-commit': '#!/bin/sh\n' },
         setting: ['config', 'core.hooksPath', '.githooks'],
@@ -14,6 +15,7 @@ export const HOOK_REPOSITORIES = [
     },
     {
         name: 'a Husky folder',
+        location: '.husky',
         startProgram: 'npm',
         files: {
             'package.json': NPM_PROJECT_PACKAGE,
@@ -24,6 +26,7 @@ export const HOOK_REPOSITORIES = [
     },
     {
         name: 'a Husky 9 folder',
+        location: '.husky',
         startProgram: 'npm',
         files: {
             'package.json': NPM_PROJECT_PACKAGE,
@@ -35,6 +38,7 @@ export const HOOK_REPOSITORIES = [
     },
     {
         name: 'a Lefthook configuration',
+        location: 'lefthook.yml',
         startProgram: 'npm',
         files: {
             'package.json': NPM_PROJECT_PACKAGE,
@@ -45,6 +49,7 @@ export const HOOK_REPOSITORIES = [
     },
     {
         name: 'a script in the Git hooks folder',
+        location: '.git/hooks',
         startProgram: 'npm',
         files: {
             'package.json': NPM_PROJECT_PACKAGE,
@@ -75,3 +80,14 @@ export const HOOK_CONFIGURATION_CASES = [
             '{"simple-git-hooks":{"pre-commit":"gspot check --hook pre-commit","pre-push":"gspot check --hook pre-push"}}',
     },
 ] as const;
+
+/**
+ * The install text for a repository whose hooks run from somewhere else.
+ *
+ * @param location the hooks folder or hook manager file.
+ * @param command the gspot command, such as `mise exec -- gspot`.
+ * @returns the lines to add to those hooks.
+ */
+export function buildHookInstructions(location: string, command: string): string {
+    return `hooks already run from ${location}; add these gspot lines to them:\n  pre-commit: ${command} check --hook pre-commit\n  pre-push: ${command} check --hook pre-push -- "$@"`;
+}

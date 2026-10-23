@@ -176,12 +176,10 @@ test('limits that no check reads are refused', () => {
             tables: '[limits.sql]\nfunction_lines = 60\n[limits.bash]\ncyclomatic_complexity = 8\n',
         }),
     );
-    expect(errors).toContainEqual(
-        expect.stringContaining('`limits.sql.function_lines` is not a limit any check reads.') as string,
-    );
-    expect(errors).toContainEqual(
-        expect.stringContaining('`limits.bash.cyclomatic_complexity` is not a limit any check reads.') as string,
-    );
+    expect(errors).toStrictEqual([
+        'gspot.toml: `limits.bash.cyclomatic_complexity` is not a limit any check reads. The limits that bash reads are `file_lines`, `function_lines`, `block_nesting`, `function_branches`, `function_assignments`, `trivial_function_statements`.',
+        'gspot.toml: `limits.sql.function_lines` is not a limit any check reads. The limits that sql reads are `file_lines`.',
+    ]);
 });
 
 test('a value comes from the configuration default, then the root table, then the scope table', () => {

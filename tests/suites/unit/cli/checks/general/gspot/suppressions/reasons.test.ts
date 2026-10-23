@@ -5,7 +5,6 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { matchItems, matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript/projects.ts';
@@ -128,14 +127,14 @@ test('noqa in a SQL file needs a sqlfluff reason and noqa in a Python file needs
 
     const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['gspot/suppressions'] }));
 
-    const report = result.report;
-    expect(report.checks[0]!.findings).toStrictEqual(
-        matchItems([
-            matchFields({ file: 'query.sql', rule: 'sqlfluff-no-reason' }),
-            matchFields({ file: 'entry.py', rule: 'ruff-no-reason' }),
-        ]),
-    );
-    expect(report.checks[0]!.findings).toHaveLength(2);
+    expect(result.report.checks).toMatchObject([
+        {
+            findings: [
+                { file: 'entry.py', rule: 'ruff-no-reason' },
+                { file: 'query.sql', rule: 'sqlfluff-no-reason' },
+            ],
+        },
+    ]);
 });
 
 test.each([...SWIFT_REASON_CASES])(

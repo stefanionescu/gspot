@@ -59,7 +59,9 @@ test.each([...DECLARATION_ORDER_CASES])(
     async ({ file, source, language, expected }) => {
         const found = await listIdentifiers(file, source, language);
         expect(found.map(({ name }) => name)).toStrictEqual([...expected]);
-        expect(found.every((identifier) => identifier.file === file && identifier.language === language)).toBe(true);
+        expect(found.map((identifier) => [identifier.file, identifier.language])).toStrictEqual(
+            expected.map(() => [file, language]),
+        );
     },
 );
 test('JavaScript destructured and arrow parameters are declarations; object keys are not', async () => {

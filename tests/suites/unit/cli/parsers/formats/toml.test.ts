@@ -67,7 +67,7 @@ test('TOML edits keep dates, array order and keys named like object properties',
     document.set(['copied'], document.getValue(['published']));
     document.set(['metadata', 'entries'], entries);
     const text = document.getText();
-    expect(text.startsWith(source)).toBe(true);
+    expect(text).toStartWith(source);
     expect(Reflect.get(Bun.TOML.parse(text), 'metadata')).toStrictEqual({ entries });
     expect(document.getValue(['copied'])).toBeInstanceOf(Date);
 });
@@ -76,7 +76,7 @@ test('TOML schema failures name the source file and the field', () => {
     expect(() => parseTomlFile('package.toml', 'name = 42', packageJsonSchema)).toThrow(
         matchFields<GspotError>({
             code: 'filesystem',
-            message: expect.stringContaining('package.toml: name:') as string,
+            message: 'package.toml: name: Invalid input: expected string, received number. Fix the field.',
         }),
     );
 });

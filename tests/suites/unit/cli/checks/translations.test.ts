@@ -2,12 +2,11 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { runCheckSample } from '#tests/setup/cli/samples.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     MESSAGE_LAYOUTS,
@@ -18,6 +17,7 @@ import {
     TRANSLATION_FINDINGS,
 } from '#tests/config/checks/translations.ts';
 
+// Run translations/messages on these message files with the next-intl dependencies.
 async function runMessagesCheck(files: Record<string, string>): Promise<readonly Finding[]> {
     await using sandbox = await testdir({
         ...files,
@@ -32,12 +32,9 @@ test('a missing base locale is reported and restoring it enables key comparisons
     await using sandbox = await testdir({
         'messages/de.json': '{}',
         'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
+        'gspot.toml': buildSandboxSettings(['translations'], { level: 'all', tables: TRANSLATION_TABLES }),
     });
 
-    await writeFile(
-        join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['translations'], { level: 'all', tables: TRANSLATION_TABLES }),
-    );
     const missing = await runSandboxCheck(sandbox.path, 'translations/messages', { paths: ['messages/de.json'] });
     expect(missing).toMatchObject([{ file: 'messages/en.json', rule: 'base-locale' }]);
     await writeFile(join(sandbox.path, 'messages/en.json'), '{"heading":"Welcome"}');
@@ -49,12 +46,8 @@ test('a missing base locale is reported and restoring it enables key comparisons
 
 test.each([...TRANSLATION_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
     await using repository = await createSandbox(TRANSLATION_SANDBOX);
-    const { failed, passed } = await runCheckSample(repository, entry, TRANSLATION_SANDBOX);
-
-    expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
-    expect(failed.report.checks[0]?.findings).toContainEqual(matchFields({ check: entry.check, ...entry.expected }));
-
-    expect(passed.report.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
+    const result = await runCheckSample(repository, entry, TRANSLATION_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });
 
 test.each([...MESSAGE_LAYOUTS])(

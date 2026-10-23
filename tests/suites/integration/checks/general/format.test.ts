@@ -25,9 +25,8 @@ async function assertFormatOverrides(root: string): Promise<void> {
     const files = PRETTIER_OPTIONS_BY_FILE.map(({ file }) => file);
     const before = parseCheckReport(await spawnGspot(root, [...commandArguments, '--', ...files]));
     expect(before.code, before.stdout + before.stderr).toBe(1);
-    const report = before.report;
     expect(
-        report.checks
+        before.report.checks
             .flatMap(({ findings }) => findings.map(({ file }) => file))
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(files.toSorted((left, right) => left.localeCompare(right)));
@@ -47,11 +46,7 @@ async function assertFormatOverrides(root: string): Promise<void> {
             ].join(ending),
         );
     }
-    const editor = await spawnGspot(
-        root,
-        ['check', '--only', 'format/editorconfig-checker', '--json', '--', ...files],
-        {},
-    );
+    const editor = await spawnGspot(root, ['check', '--only', 'format/editorconfig-checker', '--json', '--', ...files]);
     expect(editor.code, editor.stdout + editor.stderr).toBe(0);
 }
 
@@ -89,22 +84,20 @@ test('editorconfig-checker leaves indentation to the formatter and checks line e
     });
 
     const commandArguments = ['check', '--only', 'format/editorconfig-checker', '--json', '--'];
-    const environment = {};
-    const accepted = await spawnGspot(root, [...commandArguments, 'indented.txt'], environment);
+    const accepted = await spawnGspot(root, [...commandArguments, 'indented.txt']);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(await readFile(join(root, 'indented.txt'), 'utf8')).toBe('\tcontent\n');
-    for (const { file, broken, corrected } of EDITORCONFIG_SAMPLES) {
+    for (const { file, broken, corrected, findings } of EDITORCONFIG_SAMPLES) {
         await createFileTree(root, { [file]: broken });
-        const rejected = parseCheckReport(await spawnGspot(root, [...commandArguments, file], environment));
+        const rejected = parseCheckReport(await spawnGspot(root, [...commandArguments, file]));
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const report = rejected.report;
-        expect(report.checks).toMatchObject([{ check: 'format/editorconfig-checker', status: 'failed' }]);
-        expect(new Set(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file)))).toStrictEqual(
-            new Set([file]),
-        );
+        expect(rejected.report.checks).toMatchObject([{ check: 'format/editorconfig-checker', status: 'failed' }]);
+        expect(
+            rejected.report.checks[0]!.findings.map(({ file: path, line, message }) => ({ file: path, line, message })),
+        ).toStrictEqual(findings.map((finding) => ({ file, ...finding })));
         expect(await readFile(join(root, file), 'utf8')).toBe(broken);
         await createFileTree(root, { [file]: corrected });
-        const fixed = parseCheckReport(await spawnGspot(root, [...commandArguments, file], environment));
+        const fixed = parseCheckReport(await spawnGspot(root, [...commandArguments, file]));
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(fixed.report.checks).toMatchObject([
             { check: 'format/editorconfig-checker', status: 'passed', findings: [] },

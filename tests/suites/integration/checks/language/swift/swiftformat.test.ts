@@ -15,13 +15,14 @@ import {
     SOURCE_HEADER,
     SWIFT_INLINE_DOCS,
     SWIFT_DOCS_SOURCE,
-    INLINE_COMMENT_POSITIONS,
+    FORMATTED_INLINE_DOCS,
+    INLINE_COMMENT_FINDINGS,
 } from '#tests/config/integration/checks/language/swift/swiftformat.ts';
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
+
 test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header when it fixes spacing', async () => {
     const { root, environment } = installedSandbox();
-
     const path = join(root, 'Sources/App/Greeting.swift');
     await using _change = await changeAppliedSandbox(installedSandbox(), {
         check: 'swift/swiftformat',
@@ -29,13 +30,11 @@ test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header w
             'Sources/App/Greeting.swift': SOURCE_HEADER + CLEAN_SWIFT.replace('func greeting', 'func   greeting'),
         },
     });
-
     const fixed = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--fix'], environment);
-
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-
     expect(await readFile(path, 'utf8')).toBe(SOURCE_HEADER + CLEAN_SWIFT);
 });
+
 test.skipIf(!hasToolBuild('swiftformat'))(
     'at level recommended, SwiftFormat leaves Swift block comments unchecked',
     async () => {
@@ -46,20 +45,24 @@ test.skipIf(!hasToolBuild('swiftformat'))(
 
         const configured = await spawnGspot(sandbox.path, ['apply']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-        expect(await readDocumentationFindings(sandbox.path, 1, '')).toStrictEqual([]);
+        expect(await readFormatFindings(sandbox.path, 1, '')).toStrictEqual(spacedCommentFindings('Value.swift'));
         expect(await readFile(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
     },
 );
-async function readDocumentationFindings(root: string, code: 0 | 1, scope: string) {
+
+// Run SwiftFormat, check its exit code and scope results, and return the file, line, column, and rule of each finding.
+async function readFormatFindings(root: string, code: 0 | 1, scope: string) {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(code);
-    const report = result.report;
-    expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+    expect(result.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
         ...(scope === '' ? [] : [{ scope: '', status: 'skipped' as const }]),
         { scope, status: code === 0 ? 'passed' : 'failed' },
     ]);
-    return report.checks.flatMap(({ findings }) => findings.filter(({ rule }) => rule === 'blockComments'));
+    return result.report.checks.flatMap(({ findings }) =>
+        findings.map(({ file, line, column, rule }) => [file, line, column, rule]),
+    );
 }
+
 test.skipIf(!hasToolBuild('swiftformat'))(
     'at level all, SwiftFormat reports and fixes Swift block comments, and an ignore in gspot.toml stops the finding',
     async () => {
@@ -69,15 +72,11 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         await createFileTree(root, { 'gspot.toml': settings, 'Value.swift': SWIFT_DOCS_SOURCE });
         const configured = await spawnGspot(root, ['apply']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-        const findings = await readDocumentationFindings(root, 1, '');
-        expect(findings.map(({ file, line, column }) => [file, line, column])).toStrictEqual([
-            ['Value.swift', 1, 1],
-            ['Value.swift', 9, 1],
-        ]);
+        expect(await readFormatFindings(root, 1, '')).toStrictEqual(blockCommentFindings('Value.swift'));
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
         const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json', '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(await readDocumentationFindings(root, 0, '')).toStrictEqual([]);
+        expect(await readFormatFindings(root, 0, '')).toStrictEqual([]);
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toContain('"/** not documentation */"');
         await writeFile(join(root, 'Value.swift'), SWIFT_DOCS_SOURCE);
         const ignored = await spawnGspot(root, [
@@ -89,10 +88,11 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             'The imported source retains its documentation layout.',
         ]);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-        expect(await readDocumentationFindings(root, 1, '')).toStrictEqual([]);
+        expect(await readFormatFindings(root, 1, '')).toStrictEqual(spacedCommentFindings('Value.swift'));
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
     },
 );
+
 test.skipIf(!hasToolBuild('swiftformat'))(
     'SwiftFormat reports inline block comments at their positions and keeps the file mode and swiftformat:disable comments',
     async () => {
@@ -105,21 +105,19 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         const configured = await spawnGspot(root, ['apply']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);
         await chmod(join(root, 'Value.swift'), 0o444);
-        const found = await readDocumentationFindings(root, 1, '');
+        const found = await readFormatFindings(root, 1, '');
         const { mode } = await stat(join(root, 'Value.swift'));
         expect(mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
         await chmod(join(root, 'Value.swift'), 0o644);
-        expect(found.map(({ line, column }) => [line, column])).toStrictEqual([...INLINE_COMMENT_POSITIONS]);
+        expect(found).toStrictEqual(INLINE_COMMENT_FINDINGS.map(([line, rule]) => ['Value.swift', line, 1, rule]));
         expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(SWIFT_INLINE_DOCS);
         const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json', '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(await readDocumentationFindings(root, 0, '')).toStrictEqual([]);
-        const correctedText = await readFile(join(root, 'Value.swift'), 'utf8');
-        expect(correctedText).toContain('"/** literal */"');
-        expect(correctedText).toContain('/// An inline /** example */ remains documentation.');
-        expect(correctedText).toContain('/** A retained declaration. */');
+        expect(await readFormatFindings(root, 0, '')).toStrictEqual([]);
+        expect(await readFile(join(root, 'Value.swift'), 'utf8')).toBe(FORMATTED_INLINE_DOCS);
     },
 );
+
 test.skipIf(!hasToolBuild('swiftformat'))(
     'an ignore limited to a scope path stops SwiftFormat block-comment findings until unignore',
     async () => {
@@ -140,7 +138,7 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             'The imported source retains its documentation layout.',
         ]);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-        expect(await readDocumentationFindings(root, 1, 'nested')).toStrictEqual([]);
+        expect(await readFormatFindings(root, 1, 'nested')).toStrictEqual(spacedCommentFindings('nested/Value.swift'));
         const removed = await spawnGspot(root, [
             'unignore',
             'swift/swiftformat',
@@ -150,11 +148,23 @@ test.skipIf(!hasToolBuild('swiftformat'))(
             'nested/**',
         ]);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-        const findings = await readDocumentationFindings(root, 1, 'nested');
-        expect(findings.map(({ file, line, column }) => [file, line, column])).toStrictEqual([
-            ['nested/Value.swift', 1, 1],
-            ['nested/Value.swift', 9, 1],
-        ]);
+        expect(await readFormatFindings(root, 1, 'nested')).toStrictEqual(blockCommentFindings('nested/Value.swift'));
         expect(await readFile(join(root, 'nested/Value.swift'), 'utf8')).toBe(SWIFT_DOCS_SOURCE);
     },
 );
+
+// The block comments at lines 1 and 9 of SWIFT_DOCS_SOURCE, as SwiftFormat reports them at level all.
+function blockCommentFindings(file: string) {
+    return [
+        [file, 1, 1, 'blockComments'],
+        [file, 9, 1, 'blockComments'],
+    ];
+}
+
+// What SwiftFormat reports on line 9 of SWIFT_DOCS_SOURCE when gspot turns the blockComments rule off or ignores it.
+function spacedCommentFindings(file: string) {
+    return [
+        [file, 9, 1, 'docComments'],
+        [file, 9, 1, 'spaceInsideComments'],
+    ];
+}

@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
@@ -18,6 +19,7 @@ import {
     EXPO_SCOPE_SETTINGS,
     UNSTRUCTURED_DOCTOR_RUN,
     DOCTOR_FINDING_MESSAGES,
+    INSTALLED_EXPO_PACKAGE_JSON,
 } from '#tests/config/checks/framework/expo.ts';
 
 test('Expo Doctor reports each failed check once in each app folder', async () => {
@@ -73,14 +75,14 @@ async function prepareExpoApps(
             ...Object.fromEntries(
                 APP_FOLDERS.flatMap((scope) => [
                     [`${scope}/package.json`, EXPO_PACKAGE_JSON],
-                    [`${scope}/node_modules/expo/package.json`, '{"name":"expo","version":"54.0.0"}\n'],
+                    [`${scope}/node_modules/expo/package.json`, INSTALLED_EXPO_PACKAGE_JSON],
                 ]),
             ),
         }),
     );
     const version = getTool(readConfigurations().values(), 'expo-doctor').version;
     await createFileTree(sandbox.path, {
-        '.gspot/node_modules/expo-doctor/package.json': JSON.stringify({ name: 'expo-doctor', version }),
+        [`${GSPOT_PATHS.nodeModules}/expo-doctor/package.json`]: JSON.stringify({ name: 'expo-doctor', version }),
     });
     const folders: string[] = [];
     const runBlocking = processes.spawnProcessBlocking;

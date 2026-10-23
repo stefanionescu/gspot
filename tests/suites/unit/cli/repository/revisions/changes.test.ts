@@ -39,10 +39,10 @@ test('staged and branch comparisons keep both paths of a rename across folders',
 });
 test('staged paths report a broken or missing Git repository instead of an empty list', async () => {
     await using sandbox = await testdir();
-    expect(await captureRejection(readStagedPaths(sandbox.path))).toContain('Git diff failed');
+    expect(await captureRejection(readStagedPaths(sandbox.path))).toStartWith('Git diff failed');
     runGitStep(sandbox.path, ['init']);
     await writeFile(join(sandbox.path, '.git/index'), 'corrupt index');
-    expect(await captureRejection(readStagedPaths(sandbox.path))).toContain('Git diff failed');
+    expect(await captureRejection(readStagedPaths(sandbox.path))).toStartWith('Git diff failed');
 });
 test('a branch comparison refuses invalid references without reading them as options', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
@@ -50,10 +50,10 @@ test('a branch comparison refuses invalid references without reading them as opt
     commitAll(sandbox.path);
     const changed = await readChangedPaths(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual([]);
-    expect(await captureRejection(readChangedPaths(sandbox.path, 'missing-reference'))).toContain(
+    expect(await captureRejection(readChangedPaths(sandbox.path, 'missing-reference'))).toStartWith(
         'Git merge-base failed',
     );
-    expect(await captureRejection(readChangedPaths(sandbox.path, '--output=outside.txt'))).toContain(
+    expect(await captureRejection(readChangedPaths(sandbox.path, '--output=outside.txt'))).toStartWith(
         'Git merge-base failed',
     );
     expect(await isOnDisk(join(sandbox.path, 'outside.txt'))).toBe(false);

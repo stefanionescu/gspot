@@ -1,9 +1,10 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
-import { matchItems } from '#tests/setup/matchers.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test('a jsconfig beside a tsconfig excludes build output and lists only tracked declaration files', async () => {
@@ -30,10 +31,29 @@ test('a jsconfig beside a tsconfig excludes build output and lists only tracked 
     ]);
     const files = generate(await openSession(sandbox.path)).files;
     const jsconfig = JSON.parse(
-        files.find(({ path }) => path === '.gspot/configurations/language/javascript/jsconfig.json')!.content,
+        files.find(({ path }) => path === findFileTarget('javascript', 'jsconfig.json'))!.content,
     ) as { files: string[]; exclude: string[] };
     expect(jsconfig.files).toStrictEqual(['../../../../cloudflare-env.d.ts']);
     expect(jsconfig.exclude).toStrictEqual(
-        matchItems(['../../../../**/.open-next/**', '../../../../**/node_modules/**', '../../../../vendor']),
+        [
+            '**/.next/**',
+            '**/.open-next/**',
+            `${DOT_GSPOT}/**`,
+            'eslint.config.mjs',
+            '.editorconfig',
+            'prettier.config.mjs',
+            '.prettierignore',
+            '**/node_modules/**',
+            '**/bower_components/**',
+            '**/.env',
+            '**/.env.*',
+            '**/.dev.vars',
+            '**/.dev.vars.*',
+            '**/.env*',
+            '**/eslint.config.mjs',
+            '**/eslint.config.js',
+            '**/eslint.config.cjs',
+            'vendor',
+        ].map((pattern) => `../../../../${pattern}`),
     );
 });

@@ -4,13 +4,14 @@ export const VALE_INSTALL_FAILURES = [
     {
         name: 'timeout',
         script: 'setInterval(() => {}, 1000);',
-        message: 'ran longer than tool_timeout_seconds (1s).',
+        message:
+            'sync ran longer than tool_timeout_seconds (1s). Raise it with gspot set tool_timeout_seconds <seconds>.',
         settings: 'tool_timeout_seconds = 1\n',
     },
     {
         name: 'its error',
         script: 'console.error("Registry request failed: https://alex:synthetic-password@example.com/styles.zip"); process.exitCode = 7;',
-        message: 'Registry request failed: https://[redacted]@example.com/styles.zip',
+        message: 'Vale sync failed (exit 7):\nRegistry request failed: https://[redacted]@example.com/styles.zip',
         settings: '',
     },
 ] as const;

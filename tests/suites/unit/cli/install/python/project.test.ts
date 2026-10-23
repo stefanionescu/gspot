@@ -6,6 +6,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { openWriter } from '#cli/ownership/writer.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { fakeCommand } from '#tests/setup/system/fakes.ts';
 import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -31,8 +32,8 @@ const lockfileText = PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_
 function buildPythonProjectFiles(): Record<string, string> {
     return {
         'gspot.toml': buildSandboxSettings([]),
-        '.gspot/pyproject.toml': projectText,
-        '.gspot/uv.lock': lockfileText,
+        [GSPOT_PATHS.pythonProject]: projectText,
+        [GSPOT_PATHS.uvLockfile]: lockfileText,
         'uv.toml': UV_TOML,
     };
 }
@@ -63,9 +64,9 @@ test.each(['venv', 'sync'])('a failed uv %s keeps the tool project files and hid
         message: `uv ${step} failed (exit 7).\nindex password [redacted] [redacted]\ninterpreter unavailable`,
     });
     expect(calls).toHaveLength(step === 'venv' ? 1 : 2);
-    expect(await readFile(join(sandbox.path, '.gspot/uv.lock'), 'utf8')).toBe(lockfileText);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(lockfileText);
     expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/.venv'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
 });
 
 test('a successful uv run refuses a password in its new lockfile and keeps the tool project files', async () => {
@@ -80,17 +81,17 @@ test('a successful uv run refuses a password in its new lockfile and keeps the t
     session.uvPath = 'synthetic-uv';
     const read = writer.files.read.bind(writer.files);
     using _read = spyOn(writer.files, 'read').mockImplementation((path) =>
-        path === '.gspot/uv.lock' ? undefined : read(path),
+        path === GSPOT_PATHS.uvLockfile ? undefined : read(path),
     );
     const lockfileError: unknown = await preparePythonLockfile(buildToolInstall(session, writer), {
-        path: '.gspot/pyproject.toml',
+        path: GSPOT_PATHS.pythonProject,
         content: projectText,
     }).catch((error: unknown) => error);
     expect(lockfileError).toBeInstanceOf(Error);
     expect(lockfileError).toMatchObject(LOCKFILE_PASSWORD_ERROR);
-    expect(await readFile(join(sandbox.path, '.gspot/uv.lock'), 'utf8')).toBe(lockfileText);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toBe(lockfileText);
     expect(await readFile(join(sandbox.path, 'uv.toml'), 'utf8')).toBe(UV_TOML);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/.venv'))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.pythonEnvironment))).toBe(false);
     expect(boundary).toHaveBeenCalledTimes(1);
 });
 

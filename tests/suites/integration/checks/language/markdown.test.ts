@@ -1,19 +1,22 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     MDX_FILES,
     MARKDOWN_FILES,
+    TITLED_DOCUMENT,
     MARKDOWN_SANDBOX,
     MARKDOWNLINT_TABLES,
     MARKDOWNLINT_EXECUTABLE,
@@ -34,14 +37,10 @@ test.each([...LEVELS])(
         });
         const failed = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = failed.report;
-        const findings = report.checks.flatMap((check) => check.findings);
-        expect(findings).toContainEqual(matchFields({ file: 'root.md', line: 7, rule: 'MD045' }));
-        expect(findings.filter(({ rule }) => rule === 'MD041').map(({ file }) => file)).toStrictEqual(
-            level === 'all' ? ['title.md'] : [],
-        );
-        expect(findings.filter(({ rule }) => rule === 'MD044')).toStrictEqual([]);
-        expect(findings.filter(({ rule }) => ['MD013', 'MD033'].includes(rule ?? ''))).toStrictEqual([]);
+        expect(listFindingRows(failed.report)).toStrictEqual([
+            { file: 'root.md', line: 7, rule: 'MD045' },
+            ...(level === 'all' ? [{ file: 'title.md', line: 1, rule: 'MD041' }] : []),
+        ]);
         await writeFile(join(root, 'root.md'), MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'));
         await writeFile(
             join(root, 'app/guide.md'),
@@ -51,10 +50,10 @@ test.each([...LEVELS])(
             await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']),
         );
         expect(changed.code, changed.stdout + changed.stderr).toBe(1);
-        const changedReport = changed.report;
-        expect(changedReport.checks.flatMap(({ findings }) => findings)).toContainEqual(
-            matchFields({ file: 'app/guide.md', line: 5, rule: 'MD044' }),
-        );
+        expect(listFindingRows(changed.report)).toStrictEqual([
+            ...(level === 'all' ? [{ file: 'title.md', line: 1, rule: 'MD041' }] : []),
+            { file: 'app/guide.md', line: 5, rule: 'MD044' },
+        ]);
         const fixed = await spawnGspot(root, [
             'check',
             'app/guide.md',
@@ -82,10 +81,7 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
                 tables: MARKDOWNLINT_TABLES,
             }),
             'root.md': MARKDOWN_FILES['root.md'].replace('![]', '![Request flow]'),
-            'title.md': `# Title
-
-A document with a title.
-`,
+            'title.md': TITLED_DOCUMENT,
         },
     });
     const environment = installedSandbox().environment;
@@ -108,24 +104,26 @@ test('markdownlint honors a lint rule ignore in the root and scope config files'
         check: 'markdown/markdownlint',
         files: {
             ...MARKDOWN_FILES,
-            'title.md': `# Title
-
-A document with a title.
-`,
+            'title.md': TITLED_DOCUMENT,
             'gspot.toml': buildSandboxSettings(['markdown'], {
                 level: 'all',
-                tables: `${MARKDOWNLINT_TABLES}[[ignore]]
-check = "markdown/markdownlint"
-rule = "MD045"
-reason = "The sample demonstrates an empty alternative."
-`,
+                tables:
+                    MARKDOWNLINT_TABLES +
+                    stringify({
+                        ignore: [
+                            {
+                                check: 'markdown/markdownlint',
+                                rule: 'MD045',
+                                reason: 'The sample demonstrates an empty alternative.',
+                            },
+                        ],
+                    }),
             }),
         },
     });
     const ignored = parseCheckReport(await spawnGspot(root, ['check', '--only', 'markdown/markdownlint', '--json']));
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const ignoredReport = ignored.report;
-    expect(ignoredReport.checks).toMatchObject([
+    expect(ignored.report.checks).toMatchObject([
         { check: 'markdown/markdownlint', scope: '', status: 'passed', findings: [] },
         { check: 'markdown/markdownlint', scope: 'app', status: 'passed', findings: [] },
     ]);
@@ -137,24 +135,29 @@ test('markdownlint reports line, column, and fixable for findings in files whose
     await using _change = await applySandboxChanges(installedSandbox(), {
         check: 'markdown/markdownlint',
         files: {
-            'gspot.toml': buildSandboxSettings(['markdown'], {
-                level: 'all',
-            }),
+            'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all' }),
             ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png">   \n'])),
         },
     });
     const environment = installedSandbox().environment;
-    const configuration = '.gspot/configurations/language/markdown/markdownlint-cli2.mjs';
+    const configuration = findFileTarget('markdown', 'markdownlint-cli2.mjs');
     expect(await isOnDisk(join(root, configuration))).toBe(true);
     const command = ['check', ...paths, '--only', 'markdown/markdownlint', '--json'];
     const failed = parseCheckReport(await spawnGspot(root, command, environment));
     expect(failed.code, failed.stderr).toBe(1);
-    const findings = failed.report.checks.flatMap((check) => check.findings);
-    for (const file of paths) {
-        expect(findings).toContainEqual(matchFields({ file, line: 1, column: 6, rule: 'MD045', fixable: false }));
-        expect(findings).toContainEqual(matchFields({ file, line: 1, rule: 'MD009', fixable: true }));
-        expect(findings).toContainEqual(matchFields({ file, line: 1, rule: 'MD041', fixable: false }));
-    }
+    expect(
+        failed.report.checks.flatMap(({ findings }) =>
+            findings.map(({ file, line, column, rule, fixable }) => ({ file, line, column, rule, fixable })),
+        ),
+    ).toStrictEqual(
+        paths
+            .toSorted((left, right) => left.localeCompare(right))
+            .flatMap((file) => [
+                { file, line: 1, column: 29, rule: 'MD009', fixable: true },
+                { file, line: 1, column: undefined, rule: 'MD041', fixable: false },
+                { file, line: 1, column: 6, rule: 'MD045', fixable: false },
+            ]),
+    );
     for (const path of paths) await writeFile(join(root, path), '# Title\n');
     const corrected = parseCheckReport(await spawnGspot(root, command, environment));
     expect(corrected.code, corrected.stderr).toBe(0);

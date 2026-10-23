@@ -1,3 +1,4 @@
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { STYLELINT_FILES } from '#tests/config/checks/language/css.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
 
@@ -74,7 +75,7 @@ export const EDITED_STYLELINT_PACKAGE = `{
 
 /** The tool folders that apply deletes when no configuration needs them. */
 export const TOOL_FOLDERS = [
-    { kind: 'npm', folder: '.gspot/node_modules' },
-    { kind: 'python', folder: '.gspot/.venv' },
-    { kind: 'vale', folder: '.gspot/vale' },
+    { kind: 'npm', folder: GSPOT_PATHS.nodeModules },
+    { kind: 'python', folder: GSPOT_PATHS.pythonEnvironment },
+    { kind: 'vale', folder: GSPOT_PATHS.valePackages },
 ] as const;

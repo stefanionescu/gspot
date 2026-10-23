@@ -1,5 +1,7 @@
 import type { CheckResult } from '#cli/types/runs/check.ts';
+import { SETTING_REASON } from '#tests/config/commands/set.ts';
 
+/** A Bun project whose lockfile disagrees with package.json, and whose react and react-dom differ. */
 export const BUN_PROJECT_FILES = {
     'package.json': JSON.stringify({
         name: 'shop',
@@ -24,6 +26,7 @@ export const BUN_PROJECT_FILES = {
     }),
 } as const;
 
+/** The project that the lockfile samples change. */
 export const DEPENDENCIES_SANDBOX = {
     configurations: ['dependencies'],
 
@@ -32,6 +35,7 @@ export const DEPENDENCIES_SANDBOX = {
     },
 } as const;
 
+/** A lockfile of each format with a download from an unknown host, and its fix. */
 export const LOCKFILE_HOST_CASES = [
     {
         check: 'dependencies/lockfiles',
@@ -109,6 +113,7 @@ packages:
     },
 ] as const;
 
+/** An npm lockfile with downloads from two GitHub hosts. */
 export const HOST_LOCKFILE = {
     packages: {
         'node_modules/first': { resolved: 'https://github.com/example/first/archive/abcdef.tar.gz' },
@@ -134,6 +139,7 @@ export const REGISTRY_SCOPE_RESULTS: { scope: string; status: CheckResult['statu
     },
 ];
 
+/** Each mise file that can pin bun. */
 export const MISE_PIN_FILES = [
     { file: 'mise.toml' },
     { file: '.mise.toml' },
@@ -144,3 +150,11 @@ export const MISE_PIN_FILES = [
     { file: 'mise.local.toml' },
     { file: '.mise.local.toml' },
 ] as const;
+
+/** The setting that allows both GitHub download hosts. */
+export const ALLOWED_GITHUB_REGISTRIES = `allowed_registries = { value = ["github.com", "codeload.github.com"], reason = ${JSON.stringify(SETTING_REASON)} }\n`;
+
+/** The Bun project with react-dom on the version of react. */
+export const MATCHED_REACT_FILES = Object.fromEntries(
+    Object.entries(BUN_PROJECT_FILES).map(([path, text]) => [path, text.replaceAll('19.0.0', '19.1.0')]),
+);

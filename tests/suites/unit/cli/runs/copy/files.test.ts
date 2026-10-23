@@ -4,6 +4,7 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -53,11 +54,11 @@ test('a workspace member that is no scope brings its own dependency store into t
 
     await mkdir(join(sandbox.path, 'tests/node_modules'));
     await symlink('../../node_modules/.bun/vue@3/node_modules/vue', join(sandbox.path, 'tests/node_modules/vue'));
-    const paths = ['package.json', 'tests/package.json', 'tests/app.js', '.gspot/package.json'];
+    const paths = ['package.json', 'tests/package.json', 'tests/app.js', GSPOT_PATHS.npmProject];
     using copy = await createCopy(selectCopyPaths(sandbox.path, paths, ['']));
     const scratch = copy.path;
     expect(await readFile(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
-    expect(await readFile(join(scratch, '.gspot/node_modules/prettier/package.json'), 'utf8')).toBe(
+    expect(await readFile(join(scratch, `${GSPOT_PATHS.nodeModules}/prettier/package.json`), 'utf8')).toBe(
         '{"name":"prettier"}',
     );
 });

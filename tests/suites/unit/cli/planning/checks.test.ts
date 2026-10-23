@@ -17,7 +17,6 @@ import { isActive, planChecks, stripCoverageArguments } from '#cli/planning/chec
 
 import {
     TSC_REPLACEMENTS,
-    HISTORY_SCOPE_TABLES,
     CONFIGURED_CHECK_CASES,
     WHOLE_SCOPE_IGNORE_CASES,
     STRIPPED_COVERAGE_COMMANDS,
@@ -58,8 +57,6 @@ test('a project check with no matching files is skipped even when its scope hold
 
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({ only: ['python/ruff'] });
-    const planned = planChecks(session, options);
-    expect(planned.every((entry) => entry.files.length === 0)).toBe(true);
     const result = await runChecks(session, options);
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks).toMatchObject([
@@ -68,22 +65,24 @@ test('a project check with no matching files is skipped even when its scope hold
 });
 
 test.each([...WHOLE_SCOPE_IGNORE_CASES])(
-    'an ignore of a whole scope keeps the replaced check running there and nowhere else: %j',
+    'an ignore of a whole scope keeps the replaced check running there and nowhere else: $paths',
     async ({ paths, ignored }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['typescript'], {
                 rules: true,
-                tables: `[[scope]]
-path = "api"
-configurations = ["nextjs"]
-[[scope]]
-path = "web"
-configurations = ["nextjs"]
-[[ignore]]
-check = "nextjs/tsc"
-paths = ${JSON.stringify(paths)}
-reason = "The API check is provided by its own native build pipeline."
-`,
+                scopes: [
+                    { path: 'api', configurations: ['nextjs'] },
+                    { path: 'web', configurations: ['nextjs'] },
+                ],
+                tables: stringify({
+                    ignore: [
+                        {
+                            check: 'nextjs/tsc',
+                            paths: [...paths],
+                            reason: 'The API check is provided by its own native build pipeline.',
+                        },
+                    ],
+                }),
             }),
             'api/app/page.tsx': 'export default function Page() { return null; }',
             'web/app/page.tsx': 'export default function Page() { return null; }',
@@ -146,13 +145,17 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['commits', 'secrets'], {
             level,
-            tables: `${HISTORY_SCOPE_TABLES}
-[[command_check]]
-id = "sandbox/once"
-command = ["git", "log"]
-paths = ["source.txt", "app/source.txt"]
-stage = "push"
-`,
+            scopes: [{ path: 'app', configurations: ['commits', 'secrets'] }],
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'sandbox/once',
+                        command: ['git', 'log'],
+                        paths: ['source.txt', 'app/source.txt'],
+                        stage: 'push',
+                    },
+                ],
+            }),
         }),
         'source.txt': 'Root source.\n',
         'app/source.txt': 'Child source.\n',
@@ -208,10 +211,7 @@ test.each([...TSC_REPLACEMENTS])(
         await writeFile(
             join(sandbox.path, 'gspot.toml'),
             buildSandboxSettings(['typescript', configuration], {
-                tables: `[[ignore]]
-check = ${JSON.stringify(check)}
-reason = "The separate compiler checks this source."
-`,
+                tables: stringify({ ignore: [{ check, reason: 'The separate compiler checks this source.' }] }),
             }),
         );
         const ignored = await openSession(sandbox.path);

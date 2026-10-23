@@ -148,7 +148,7 @@ test.each(buildProcessBackends())(
             value: 'selected',
             cwd: sandbox.path,
         });
-        expect(result.stdout.endsWith('\n')).toBe(true);
+        expect(result.stdout).toEndWith('\n');
     },
 );
 

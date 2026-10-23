@@ -80,7 +80,7 @@ test('regex output that names no real file, or nothing, on a failed run is a che
     expect(parseCommandFindings(planned, buildProcessResult(), paths).findings).toStrictEqual([]);
 });
 
-test.each([...FILELESS_CHECKS])('$name accepts a fileless result without classifying it as a crash', async (check) => {
+test.each([...FILELESS_CHECKS])('$id accepts a fileless result without classifying it as a crash', async (check) => {
     await using sandbox = await testdir();
     expect(
         parseCommandFindings({ check }, buildProcessResult(FAILED_RUN), { cwd: sandbox.path, root: sandbox.path })
@@ -172,7 +172,16 @@ test.each(['{file}', '{files}'])(
 test('per-file failures drop only the header lines the tool declares', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
-            tables: `[[command_check]]\nid = "project/native"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', BANNER_FAILURE_SCRIPT, '{file}'])}\n`,
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'project/native',
+                        stage: 'commit',
+                        paths: ['source.txt'],
+                        command: [process.execPath, '-e', BANNER_FAILURE_SCRIPT, '{file}'],
+                    },
+                ],
+            }),
         }),
         'source.txt': 'source\n',
     });

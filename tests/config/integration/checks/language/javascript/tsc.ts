@@ -1,8 +1,10 @@
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
 
 export const JAVASCRIPT_PROJECT_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
-    '.gspot/node_modules/@types/private/index.d.ts': 'declare const privateValue: number;\n',
+    [`${GSPOT_PATHS.nodeModules}/@types/private/index.d.ts`]: 'declare const privateValue: number;\n',
 } as const;
 
 const JSCONFIG_SCOPE_TABLES = `[[scope]]
@@ -170,10 +172,10 @@ export const AUTHORED_JSCONFIG_CASES = [
 ] as const;
 
 export const SCOPE_JSCONFIG_PATHS = [
-    '.gspot/configurations/language/javascript/jsconfig.json',
-    '.gspot/configurations/language/javascript/scopes/app/child/jsconfig.json',
-    '.gspot/configurations/language/javascript/scopes/app/jsconfig.json',
-    '.gspot/configurations/language/javascript/scopes/sibling/jsconfig.json',
+    findFileTarget('javascript', 'jsconfig.json'),
+    `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/child/jsconfig.json`,
+    `${GSPOT_PATHS.configurations}/language/javascript/scopes/app/jsconfig.json`,
+    `${GSPOT_PATHS.configurations}/language/javascript/scopes/sibling/jsconfig.json`,
 ] as const;
 
 /** A project imports a declaration file from outside the folder of its jsconfig. */

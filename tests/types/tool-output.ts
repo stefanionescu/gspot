@@ -30,6 +30,9 @@ export type EslintConfiguration = {
 /** The report fields compared by CLI tests. */
 export type FindingRow = { file: string; line: number | undefined; rule: string | undefined };
 
+/** A finding row with the scope that reported it. */
+export type ScopeFindingRow = FindingRow & { scope: string };
+
 /** Source text and the findings of one rule for an ESLint case. */
 export type SourceRuleCase = { name?: string; source: string; rule: string; count: number };
 

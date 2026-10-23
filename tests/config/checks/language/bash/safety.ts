@@ -24,7 +24,7 @@ export const BASH_SAFETY_CASES = [
             'scripts/unsafe.sh': `${BASH_HEADER}# main: runs the script.
 main() {
     cd "\${HOME}"
-    rm -rf "\${HOME}/x" || true
+    touch "\${HOME}/x" || true
 }
 
 main "$@"

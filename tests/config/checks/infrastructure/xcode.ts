@@ -96,3 +96,17 @@ export const ENTITLEMENT_SCOPE_RESULTS = [
     { scope: 'app/child', status: 'failed' },
     { scope: 'sibling', status: 'passed' },
 ] as const;
+
+const LOGO_CONTENTS = 'App/Assets.xcassets/Logo.imageset/Contents.json';
+const LOGO_IMAGE = 'App/Assets.xcassets/Logo.imageset/logo.png';
+
+/** An image set that a Swift view names, with its image file. */
+export const LOGO_IMAGE_SET = {
+    contents: LOGO_CONTENTS,
+    image: LOGO_IMAGE,
+    files: {
+        [LOGO_CONTENTS]: '{"images":[{"filename":"logo.png"}]}\n',
+        [LOGO_IMAGE]: new Uint8Array([0, 1, 2]),
+        'App/Home.swift': 'let logo = Image("Logo")\n',
+    },
+} as const;

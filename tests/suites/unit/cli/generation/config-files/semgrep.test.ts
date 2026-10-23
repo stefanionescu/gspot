@@ -7,7 +7,8 @@ import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
+import type { SemgrepRuleFile } from '#tests/types/generated-files.ts';
+import { findFileTarget, findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 
 test('a language choice brings its security rules without selecting security', async () => {
     await using sandbox = await testdir({
@@ -15,7 +16,7 @@ test('a language choice brings its security rules without selecting security', a
         'sample.sh': 'echo sample\n',
     });
 
-    const target = '.gspot/configurations/language/bash/semgrep.yml';
+    const target = findFileTarget('bash', 'semgrep.yml');
     const plainSession = await openSession(sandbox.path);
     const plainOutput = generate(plainSession);
     expect(
@@ -52,21 +53,20 @@ test.each([...LEVELS])(
             });
             expect(parseDocument(worker!.content).getIn(['rules', 0, 'paths'])).toBeUndefined();
         }
-        const javascript = output.files.find(
-            ({ path }) => path === '.gspot/configurations/language/javascript/semgrep.yml',
-        )!;
-        const runtimeRules: unknown = expect.arrayContaining([
-            expect.objectContaining({ id: 'gspot.javascript.ssrf-web-request-user-input' }),
-        ]);
-        expect(parseDocument(javascript.content).toJS()).toMatchObject({ rules: runtimeRules });
+        const javascript = output.files.find(({ path }) => path === findFileTarget('javascript', 'semgrep.yml'))!;
+        const { rules: javascriptRules } = parseDocument(javascript.content).toJS() as SemgrepRuleFile;
+        expect(javascriptRules.map(({ id }) => id)).toContain('gspot.javascript.ssrf-web-request-user-input');
         const supabase = output.files.find(({ path }) => path.endsWith('/supabase/semgrep.yml'))!;
-        const expected: unknown = expect.arrayContaining(
-            [
-                { id: 'gspot.supabase.edge-cors-wildcard-with-credentials', paths: { include: ['/api/edge/**'] } },
-                { id: 'gspot.supabase.edge-unvalidated-json-body', paths: { include: ['/api/edge/**'] } },
-            ].map((rule): unknown => expect.objectContaining(rule)),
+        const { rules: supabaseRules } = parseDocument(supabase.content).toJS() as SemgrepRuleFile;
+        expect(
+            supabaseRules
+                .filter(({ id }) => id.startsWith('gspot.supabase.edge-'))
+                .map(({ id, paths }) => ({ id, paths })),
+        ).toStrictEqual(
+            ['gspot.supabase.edge-cors-wildcard-with-credentials', 'gspot.supabase.edge-unvalidated-json-body'].map(
+                (id) => ({ id, paths: { include: ['/api/edge/**'] } }),
+            ),
         );
-        expect(parseDocument(supabase.content).toJS()).toMatchObject({ rules: expected });
     },
 );
 
@@ -90,14 +90,18 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
     for (const scope of ['', 'jwt', 'jwt/child', 'other']) {
         const target = findConfigFilePath(session, 'semgrep', scope);
         const text = output.files.find((file) => file.path === target)!.content;
-        const parsed: unknown = parseDocument(text).toJS();
-        if (scope.startsWith('jwt')) {
-            const jwtRules: unknown = expect.arrayContaining([
-                expect.objectContaining({ id: 'gspot.javascript.jwt-verify-without-algorithms' }),
-                expect.objectContaining({ id: 'gspot.javascript.jwt-decode-without-verify' }),
-            ]);
-            expect(parsed).toMatchObject({ rules: jwtRules });
-        } else expect(text).not.toContain('gspot.javascript.jwt-');
-        expect(text).not.toContain('stack-trace-in-response');
+        const ids = (parseDocument(text).toJS() as SemgrepRuleFile).rules.map(({ id }) => id);
+        expect(
+            ids.filter((id) => id.startsWith('gspot.javascript.jwt-')),
+            scope,
+        ).toStrictEqual(
+            scope.startsWith('jwt')
+                ? ['gspot.javascript.jwt-verify-without-algorithms', 'gspot.javascript.jwt-decode-without-verify']
+                : [],
+        );
+        expect(
+            ids.filter((id) => id.includes('stack-trace-in-response')),
+            scope,
+        ).toStrictEqual([]);
     }
 });

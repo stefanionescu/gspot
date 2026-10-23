@@ -1,14 +1,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { isLinux, hasToolBuild } from '#tests/setup/system/platform.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     NGINX_SERVER,
@@ -82,29 +81,22 @@ test.skipIf(!hasToolBuild('gixy'))(
         await using sandbox = await testdir({ 'proxy/nginx.conf': CLEAN_NGINX_CONF });
 
         commitAll(sandbox.path);
-        const environment = {};
         await initSandbox(
-            { root: sandbox.path, environment, run: spawnGspot },
+            { root: sandbox.path, environment: {}, run: spawnGspot },
             { configurations: ['nginx'], level: 'all' },
         );
-        const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
+        const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy']);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         const result = parseCheckReport(
             await runCheckOnChanges(
                 sandbox.path,
                 { check: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED_NGINX_CONF } },
-                environment,
+                {},
             ),
         );
-        const failed = result.report;
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        expect(failed.checks).toMatchObject([{ check: 'nginx/gixy', status: 'failed' }]);
-        expect(failed.checks[0]?.findings).toContainEqual(
-            matchFields({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 }),
-        );
-        const corrected = parseCheckReport(
-            await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment),
-        );
+        expect(listFindingRows(result.report)).toStrictEqual([{ file: 'proxy/nginx.conf', line: 7, rule: 'ssrf' }]);
+        const corrected = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy', '--json']));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ check: 'nginx/gixy', status: 'passed', findings: [] }]);
     },

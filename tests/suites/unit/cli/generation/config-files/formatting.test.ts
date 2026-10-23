@@ -8,6 +8,7 @@ import { openSession } from '#cli/session.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -36,25 +37,20 @@ test('format.indent_width reaches EditorConfig, Prettier and each config file', 
     const path = join(sandbox.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     expect(editor?.tabWidth).toBe(width);
-    const configuration = JSON.parse(generated.get('.gspot/configurations/general/format/prettier.json')!) as Options;
+    const configuration = JSON.parse(generated.get(findFileTarget('format', 'prettier.json'))!) as Options;
     expect(configuration.tabWidth).toBe(width);
-    expect(parseJsonc(generated.get('.gspot/configurations/language/markdown/markdownlint.jsonc')!)).toMatchObject({
+    expect(parseJsonc(generated.get(findFileTarget('markdown', 'markdownlint.jsonc'))!)).toMatchObject({
         MD007: { indent: width },
     });
-    expect(parseYaml(generated.get('.gspot/configurations/general/data-files/yamllint.yml')!)).toMatchObject({
+    expect(parseYaml(generated.get(findFileTarget('data-files', 'yamllint.yml'))!)).toMatchObject({
         rules: { indentation: { spaces: 'consistent' } },
     });
-    expect(parseToml(generated.get('.gspot/configurations/language/python/ruff.toml')!)).toHaveProperty(
-        'indent-width',
-        width,
-    );
-    expect(parseToml(generated.get('.gspot/configurations/general/data-files/taplo.toml')!)).toMatchObject({
+    expect(parseToml(generated.get(findFileTarget('python', 'ruff.toml'))!)).toHaveProperty('indent-width', width);
+    expect(parseToml(generated.get(findFileTarget('data-files', 'taplo.toml'))!)).toMatchObject({
         formatting: { indent_string: ' '.repeat(width) },
     });
-    expect(generated.get('.gspot/configurations/language/sql/sqlfluff.cfg')).toContain(
-        `tab_space_size = ${String(width)}`,
-    );
-    expect(generated.get('.gspot/configurations/language/swift/swiftformat')).toContain(`--indent ${String(width)}\n`);
+    expect(generated.get(findFileTarget('sql', 'sqlfluff.cfg'))).toContain(`tab_space_size = ${String(width)}`);
+    expect(generated.get(findFileTarget('swift', 'swiftformat'))).toContain(`--indent ${String(width)}\n`);
 });
 test('a YAML indent override gives EditorConfig and Prettier the same width', async () => {
     await using sandbox = await testdir({

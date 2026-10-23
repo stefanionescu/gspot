@@ -1,18 +1,24 @@
 import { parse } from 'yaml';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { dirname } from 'node:path/posix';
 import { openSession } from '#cli/session.ts';
-import { matchItems } from '#tests/setup/matchers.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { VALE_PACKAGES, VALE_MARKUP_FILES } from '#cli/config/generation/configurations/general/prose.ts';
 
 import {
     PRODUCT_WORD_SETTINGS,
     RECOMMENDED_VALE_FILES,
 } from '#tests/config/generation/configurations/general/prose.ts';
+import {
+    VALE_PACKAGES,
+    BANNED_HEADINGS,
+    VALE_MARKUP_FILES,
+} from '#cli/config/generation/configurations/general/prose.ts';
 
 test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (level) => {
     await using sandbox = await testdir({
@@ -23,8 +29,8 @@ test.each([...LEVELS])('Vale styles and packages follow the level (%s)', async (
     runGitStep(sandbox.path, ['init', '-q']);
     const output = generate(await openSession(sandbox.path));
     const paths = new Set(output.files.map((file) => file.path));
-    expect(paths.has('.gspot/configurations/general/prose/styles/gspot/link-text.yml')).toBe(true);
-    const configuration = output.files.find((file) => file.path === '.gspot/configurations/general/prose/vale.ini')!;
+    expect(paths.has(findFileTarget('prose', 'styles/gspot/link-text.yml'))).toBe(true);
+    const configuration = output.files.find((file) => file.path === GSPOT_PATHS.valeConfigFile)!;
     expect(/^Packages = /mu.test(configuration.content)).toBe(level === 'all');
     expect(configuration.content).toContain(
         `BasedOnStyles = ${level === 'all' ? ['gspot', 'Vale', ...VALE_PACKAGES].join(', ') : 'gspot'}`,
@@ -43,7 +49,7 @@ test('at level recommended, gspot writes only the Vale styles that run', async (
     const output = generate(await openSession(sandbox.path));
     const paths = output.files
         .map((file) => file.path)
-        .filter((path) => path.startsWith('.gspot/configurations/general/prose/'));
+        .filter((path) => path.startsWith(`${dirname(GSPOT_PATHS.valeConfigFile)}/`));
     expect(paths.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([...RECOMMENDED_VALE_FILES]);
 });
 
@@ -59,10 +65,10 @@ test('your banned headings and the shipped ones reach the heading style once', a
     const session = await openSession(sandbox.path);
     const output = generate(session);
     const style = output.files.find((file) => file.path.endsWith('/gspot/banned-headings.yml'))!.content;
-    expect(parse(style)).toMatchObject({
-        tokens: matchItems([String.raw`(?:\b|^)Owner: \[module\](?:\b|$)`, String.raw`(?:\b|^)source tree(?:\b|$)`]),
-    });
-    expect(style.toLowerCase()).not.toContain('table of contents');
+    expect((parse(style) as { tokens: string[] }).tokens).toStrictEqual([
+        ...BANNED_HEADINGS.map((heading) => String.raw`(?:\b|^)${heading}(?:\b|$)`),
+        String.raw`(?:\b|^)Owner: \[module\](?:\b|$)`,
+    ]);
 });
 
 test('the Vale vocabulary and heading exceptions hold the products of every scope and your words, once each', async () => {
@@ -75,15 +81,19 @@ test('the Vale vocabulary and heading exceptions hold the products of every scop
     const session = await openSession(sandbox.path);
     const files = generate(session).files;
     const text = files.find(({ path }) => path.endsWith('/vocabularies/words/accept.txt'))!.content;
-    expect(text.endsWith('\n')).toBe(true);
-    const vocabulary = text.trimEnd().split('\n');
-    expect(vocabulary).toContain('Python');
-    expect(vocabulary).toContain('basedpyright');
-    expect(vocabulary).toContain('NebulaProduct');
-    expect(vocabulary).not.toContain('SwiftLint');
-    expect(vocabulary.filter((word) => word === 'Python')).toHaveLength(1);
+    const vocabulary = text.split('\n');
+    expect(vocabulary.at(-1)).toBe('');
+    // Each word appears once; SwiftLint stays out because no scope selects Swift.
+    expect(
+        ['Python', 'basedpyright', 'NebulaProduct', 'SwiftLint'].map(
+            (word) => vocabulary.filter((line) => line === word).length,
+        ),
+    ).toStrictEqual([1, 1, 1, 0]);
     const heading = files.find(({ path }) => path.endsWith('/gspot/heading-case.yml'))!.content;
-    expect(parse(heading)).toMatchObject({
-        exceptions: matchItems(['NebulaProduct', 'Python', 'basedpyright']),
-    });
+    const { exceptions } = parse(heading) as { exceptions: string[] };
+    expect(
+        ['Python', 'basedpyright', 'NebulaProduct', 'SwiftLint'].map(
+            (word) => exceptions.filter((exception) => exception === word).length,
+        ),
+    ).toStrictEqual([1, 1, 1, 0]);
 });

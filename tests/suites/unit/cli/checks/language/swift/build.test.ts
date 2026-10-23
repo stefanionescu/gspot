@@ -8,11 +8,12 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
-import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildPlan, prepareBuild } from '#cli/checks/language/swift/cache.ts';
 import { listSwiftlintConfigFiles } from '#cli/checks/language/swift/build.ts';
+import { rm, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 import {
     runSandboxCheck,
@@ -45,7 +46,7 @@ test.each([...ANALYZER_EXIT_CASES])(
         );
         expect(
             await captureRejection(findBuiltInCheck('swift/swiftlint-analyze')(prepared.session, prepared.planned)),
-        ).toMatch(message);
+        ).toBe(message);
     },
 );
 test('analyzer: swift/swiftlint-analyze removes its own old compiler files and leaves the incremental build of swift/build in place', async () => {
@@ -76,8 +77,8 @@ test('analyzer: swift/swiftlint-analyze removes its own old compiler files and l
     expect(await findBuiltInCheck('swift/swiftlint-analyze')(prepared.session, input)).toStrictEqual([]);
     expect(await readFile(compilerState, 'utf8')).toBe('incremental');
     expect(await isOnDisk(analyzerState)).toBe(false);
-    expect(await readFile(analyzer.log, 'utf8')).toContain('complete compiler log');
-    expect(await readFile(compile.log, 'utf8')).toContain('incremental log');
+    expect(await readFile(analyzer.log, 'utf8')).toBe('complete compiler log\n');
+    expect(await readFile(compile.log, 'utf8')).toBe('incremental log\n');
 });
 test('compiler: a failed Swift build without source errors exits 2, and the next build passes', async () => {
     using resources = new DisposableStack();
@@ -90,7 +91,6 @@ test('compiler: a failed Swift build without source errors exits 2, and the next
     });
 
     const options = buildRunOptions({ only: ['swift/build'] });
-    const initial = prepared.session;
     const corrected = await openSession(sandbox.path);
     const run = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
@@ -98,16 +98,17 @@ test('compiler: a failed Swift build without source errors exits 2, and the next
         ),
     );
 
-    const failed = await runChecks(initial, options);
+    const failed = await runChecks(prepared.session, options);
 
-    expect(failed.report.checks).toContainEqual(
-        matchFields({
+    expect(failed.report.exitCode).toBe(2);
+    expect(failed.report.checks).toMatchObject([
+        {
             check: 'swift/build',
             status: 'error',
             findings: [],
-            note: expect.stringContaining('Permission denied') as string,
-        }),
-    );
+            note: 'The swift/build check failed: The Swift build command failed (exit 7): Compiler startup failed\nPermission denied',
+        },
+    ]);
     run.mockResolvedValue(buildProcessResult());
     const executed = await runChecks(corrected, options);
     expect(executed.report.failed).toStrictEqual([]);
@@ -173,15 +174,15 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
         ),
     );
 
-    expect(await captureRejection(findBuiltInCheck('swift/build')(prepared.session, input))).toContain(
-        'is not a safe repository-relative path',
+    expect(await captureRejection(findBuiltInCheck('swift/build')(prepared.session, input))).toEndWith(
+        '/external-response" is not a safe repository-relative path. Choose a path inside the repository.',
     );
     expect(await isOnDisk(plan.log)).toBe(false);
     const response = join(plan.folder, 'sources');
     await writeFile(response, 'Sources/Main.swift\nSources/Owner.swift\n');
     run.mockResolvedValue(buildProcessResult({ stdout: `swiftc @${response}` }));
     expect(await runSandboxCheck(sandbox.path, 'swift/build')).toStrictEqual([]);
-    expect(await readFile(plan.log, 'utf8')).toContain('swiftc Sources/Main.swift Sources/Owner.swift');
+    expect(await readFile(plan.log, 'utf8')).toBe('swiftc Sources/Main.swift Sources/Owner.swift\n');
 });
 test('compiler: a Swift build whose source file is missing removes its build.lock, so a later build can take it', async () => {
     using resources = new DisposableStack();
@@ -198,14 +199,15 @@ test('compiler: a Swift build whose source file is missing removes its build.loc
     const plan = buildPlan(session, input);
     await rm(join(sandbox.path, 'Main.swift'));
     const run = resources.use(spyOn(processes, 'spawnProcess'));
-    expect(await captureRejection(findBuiltInCheck('swift/build')(session, input))).toContain('ENOENT');
+    expect(await captureRejection(findBuiltInCheck('swift/build')(session, input))).toBe(
+        `ENOENT: no such file or directory, lstat '${join(await realpath(sandbox.path), 'Main.swift')}'`,
+    );
     expect(run).not.toHaveBeenCalled();
     expect(await isOnDisk(join(plan.folder, 'build.lock'))).toBe(false);
     await writeFile(join(sandbox.path, 'Main.swift'), 'let value = 1\n');
-    const prepared = prepareBuild(session.root, input.files, plan.folder);
-    const next = prepared.files;
-    expect(next.read('build.lock')).toBeDefined();
-    next[Symbol.dispose]();
+    const { files } = prepareBuild(session.root, input.files, plan.folder);
+    expect(await isOnDisk(join(plan.folder, 'build.lock'))).toBe(true);
+    files[Symbol.dispose]();
     expect(await isOnDisk(join(plan.folder, 'build.lock'))).toBe(false);
 });
 test('compiler: Swift compiler diagnostics drop the macOS /private prefix from source paths', async () => {
@@ -216,15 +218,11 @@ test('compiler: Swift compiler diagnostics drop the macOS /private prefix from s
     using resources = new DisposableStack();
     resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
-            buildProcessResult({
-                code: 1,
-                stderr: PRIVATE_PREFIX_STDERR,
-            }),
+            buildProcessResult({ code: 1, stderr: PRIVATE_PREFIX_STDERR }),
         ),
     );
     expect(await findBuiltInCheck('swift/build')(prepared.session, input)).toStrictEqual([
         matchFields(PRIVATE_MAIN_FINDING),
-
         matchFields(PRIVATE_OTHER_FINDING),
     ]);
 });
@@ -242,11 +240,8 @@ test('the SwiftLint config files of a nested scope stop at the scope folder and 
     const session = await openSession(sandbox.path);
     const plans = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
     const planned = plans.find((plan) => plan.scope.folder.path === 'app')!;
-    expect(listSwiftlintConfigFiles(session, planned)).toStrictEqual([
-        '.gspot/configurations/language/swift/swiftlint.yml',
-        'app/.swiftlint.yml',
-        'app/Sources/.swiftlint.yml',
-    ]);
+    const shipped = findConfigFilePath(session, 'swiftlint');
+    expect(listSwiftlintConfigFiles(session, planned)).toStrictEqual([shipped, ...NESTED_SWIFTLINT_FILES.slice(0, -1)]);
     await symlink('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
-    expect(listSwiftlintConfigFiles(session, planned)).toStrictEqual([...NESTED_SWIFTLINT_FILES]);
+    expect(listSwiftlintConfigFiles(session, planned)).toStrictEqual([shipped, ...NESTED_SWIFTLINT_FILES]);
 });

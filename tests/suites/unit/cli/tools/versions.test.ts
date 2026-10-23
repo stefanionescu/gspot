@@ -5,6 +5,7 @@ import { openSession } from '#cli/session.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { type Tool } from '#cli/types/configurations.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { VERSION_OUTPUTS } from '#tests/config/tools/versions.ts';
@@ -154,12 +155,12 @@ test.each([
     ['0.8.0', 'outdated'],
 ] as const)('a wrapper with its own version runs program %s and reports %s', async (version, state) => {
     await using sandbox = await testdir({
-        '.gspot/node_modules/wrapper/package.json': '{"name":"wrapper","version":"0.7.0"}',
+        [`${GSPOT_PATHS.nodeModules}/wrapper/package.json`]: '{"name":"wrapper","version":"0.7.0"}',
     });
 
     await writeScriptCommand(
         sandbox.path,
-        '.gspot/node_modules/.bin/wrapped',
+        `${GSPOT_PATHS.nodeModules}/.bin/wrapped`,
         `console.log(${JSON.stringify(version)});\n`,
     );
     const tool = buildProgramPin('wrapped', '0.10.0');

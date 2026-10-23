@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { README, LICENSE } from '#tests/config/checks/samples.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     MDX_GUIDE,
     DOC_TASK_FILES,
-    DOC_TASK_TABLES,
+    DOC_TASK_SCOPES,
     DOC_TASK_FINDINGS,
     MISE_TASK_SOURCES,
     IGNORED_PATH_FILES,
@@ -80,14 +80,7 @@ test('missing-paths: command check names count as present; unknown ones are repo
         },
         { paths: ['a.md'] },
     );
-    expect(
-        findings.map(({ file, line, rule, message }) => ({
-            file,
-            line,
-            rule,
-            message,
-        })),
-    ).toStrictEqual([
+    expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
         { file: 'a.md', line: 1, rule: 'missing-path', message: 'tests/missing names no tracked file or folder.' },
     ]);
 });
@@ -119,9 +112,9 @@ test('missing-paths: paths relative to the document are found, and missing ones 
 
 test.each([...MALFORMED_TASK_FILES])(
     'missing-paths: a malformed $path is a read error, not a missing task',
-    async ({ path, text, document, tables, files, message }) => {
+    async ({ path, text, document, scopes, files, message }) => {
         await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['docs'], { level: 'all', tables }),
+            'gspot.toml': buildSandboxSettings(['docs'], { level: 'all', scopes }),
             ...files,
         });
 
@@ -135,7 +128,7 @@ test.each([...MALFORMED_TASK_FILES])(
 
 test('missing-paths: documented tasks are checked against their task tool and the nearest scope that defines them', async () => {
     const found = await runMissingPathsCheck({
-        'gspot.toml': buildSandboxSettings([], { level: 'recommended', tables: DOC_TASK_TABLES }),
+        'gspot.toml': buildSandboxSettings([], { level: 'recommended', scopes: DOC_TASK_SCOPES }),
         ...DOC_TASK_FILES,
     });
     expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
@@ -145,7 +138,7 @@ test('missing-paths: documented tasks are checked against their task tool and th
 
 test('missing-paths: a document in a child scope does not read unrelated or shadowed package scripts', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: DOC_TASK_TABLES }),
+        'gspot.toml': buildSandboxSettings([], { scopes: DOC_TASK_SCOPES }),
         ...DOC_TASK_FILES,
     });
 
@@ -199,10 +192,6 @@ test('required-files: ignored README.md and LICENSE files in a Git repository ar
         'guide.md': 'Project documentation.\n',
     });
     commitAll(sandbox.path);
-    expect(runGitStep(sandbox.path, ['check-ignore', 'README.md', 'LICENSE'])).toBe('README.md\nLICENSE');
-    expect(await readFile(join(sandbox.path, 'README.md'), 'utf8')).toBe(README);
-    expect(await readFile(join(sandbox.path, 'LICENSE'), 'utf8')).toBe(LICENSE);
-
     const found = await runSandboxCheck(sandbox.path, 'docs/required-files');
     expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
         { file: 'README.md', rule: 'missing-readme', message: 'The scope root has no README.md.' },
@@ -221,13 +210,9 @@ test('required-files: a scope without README.md is reported and passes once READ
         'app/package.json': '{}',
     });
     const found = await runSandboxCheck(sandbox.path, 'docs/required-files', { scope: 'app' });
-    expect(
-        found.map(({ file, rule, message }) => ({
-            file,
-            rule,
-            message,
-        })),
-    ).toStrictEqual([{ file: 'app/README.md', rule: 'missing-readme', message: 'The scope app has no README.md.' }]);
+    expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
+        { file: 'app/README.md', rule: 'missing-readme', message: 'The scope app has no README.md.' },
+    ]);
     await writeFile(join(sandbox.path, 'app/README.md'), README);
     expect(await runSandboxCheck(sandbox.path, 'docs/required-files', { scope: 'app' })).toStrictEqual([]);
 });

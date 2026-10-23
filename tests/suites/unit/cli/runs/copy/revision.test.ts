@@ -131,7 +131,7 @@ test.each([...GIT_HOOK_CASES])(
             );
             if (part === 'index') {
                 expect(actual.indexRetained).toBe(GIT_HOOK_REPORT.indexRetained);
-                expect(await readFile(join(folder, 'index'))).toEqual(standard);
+                expect(await readFile(join(folder, 'index'))).toStrictEqual(standard);
             }
         }
     },

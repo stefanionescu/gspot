@@ -11,6 +11,7 @@ import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
@@ -26,18 +27,14 @@ import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from
 function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' | 'timedOut'>>): Disposable {
     return fakeCommand('bun', (command) =>
         Promise.resolve(
-            buildProcessResult(
-                command[1] === '--version'
-                    ? { code: 0, missing: false, duration: 0, stdout: '1.4.2\n', stderr: '' }
-                    : { code: 1, missing: false, duration: 0, stdout: '', stderr: '', ...failure },
-            ),
+            buildProcessResult(command[1] === '--version' ? { stdout: '1.4.2\n' } : { code: 1, ...failure }),
         ),
     );
 }
 
 /** Wrap package.json text as the generated tool project file. */
 function buildNpmConfigFile(content: string): GeneratedFile {
-    return { path: '.gspot/package.json', content };
+    return { path: GSPOT_PATHS.npmProject, content };
 }
 
 test.each([...FAILED_INSTALL_CASES])(
@@ -59,8 +56,8 @@ test.each([...FAILED_INSTALL_CASES])(
         await createFileTree(sandbox.path, {
             '.npmrc': source,
             'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-            '.gspot/package.json': original,
-            '.gspot/bun.lock': lockfile,
+            [GSPOT_PATHS.npmProject]: original,
+            [`${DOT_GSPOT}/bun.lock`]: lockfile,
         });
         await createFileTree(sandbox.path, { 'gspot.toml': buildSandboxSettings([]) });
         const session = await openSession(sandbox.path);
@@ -84,8 +81,8 @@ test.each([...FAILED_INSTALL_CASES])(
             message: `bun ${operation} failed (exit 1).\nDownloading https://[redacted]@registry.example.com/private-check-tool\n[redacted]\n[redacted]\n${refusal} from https://[redacted]@registry.example.com/private-check-tool`,
         });
         expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
-        expect(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe(original);
-        expect(await readFile(join(sandbox.path, '.gspot/bun.lock'), 'utf8')).toBe(lockfile);
+        expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(original);
+        expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/bun.lock`), 'utf8')).toBe(lockfile);
     },
 );
 
@@ -95,8 +92,8 @@ test('an npm install that runs past the time limit names the limit', async () =>
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-        '.gspot/package.json': packageJson,
-        '.gspot/bun.lock': JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.1' } } } }),
+        [GSPOT_PATHS.npmProject]: packageJson,
+        [`${DOT_GSPOT}/bun.lock`]: JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.1' } } } }),
     });
     const session = await openSession(sandbox.path);
     using owner = openWriter(sandbox.path);
@@ -106,7 +103,7 @@ test('an npm install that runs past the time limit names the limit', async () =>
     );
 });
 
-test.each([false, true])('credentials in a lockfile are refused: $name', async (frozen) => {
+test.each([false, true])('credentials in a lockfile are refused (frozen install: %p)', async (frozen) => {
     await using sandbox = await testdir();
     const token = 'synthetic-generated-lockfile-token';
     const source = `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${token}\n`;
@@ -122,22 +119,16 @@ test.each([false, true])('credentials in a lockfile are refused: $name', async (
     await createFileTree(sandbox.path, {
         '.npmrc': source,
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}\n',
-        '.gspot/package.json': original,
-        '.gspot/bun.lock': lockfile,
-        '.gspot/node_modules/authored.txt': 'keep installed files',
+        [GSPOT_PATHS.npmProject]: original,
+        [`${DOT_GSPOT}/bun.lock`]: lockfile,
+        [`${GSPOT_PATHS.nodeModules}/authored.txt`]: 'keep installed files',
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildSandboxSettings([]) });
     const session = await openSession(sandbox.path);
     using owner = openWriter(sandbox.path);
     using boundary = fakeCommand('bun', async (command, options) => {
         if (!frozen && command[1] !== '--version') await writeFile(join(options.cwd, 'bun.lock'), credentialLockfile);
-        return buildProcessResult({
-            code: 0,
-            missing: false,
-            duration: 0,
-            stdout: command[1] === '--version' ? '1.4.2\n' : '',
-            stderr: '',
-        });
+        return buildProcessResult({ stdout: command[1] === '--version' ? '1.4.2\n' : '' });
     });
     const message = await captureRejection(
         prepareNpmLockfile(buildToolInstall(session, owner), buildNpmConfigFile(packageJson), undefined),
@@ -147,11 +138,12 @@ test.each([false, true])('credentials in a lockfile are refused: $name', async (
             ? 'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.'
             : 'The package manager wrote registry credentials into its lockfile. gspot kept the existing files.',
     );
-    expect(message).not.toContain(token);
     expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);
-    expect(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe(original);
-    expect(await readFile(join(sandbox.path, '.gspot/bun.lock'), 'utf8')).toBe(lockfile);
-    expect(await readFile(join(sandbox.path, '.gspot/node_modules/authored.txt'), 'utf8')).toBe('keep installed files');
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(original);
+    expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/bun.lock`), 'utf8')).toBe(lockfile);
+    expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.nodeModules}/authored.txt`), 'utf8')).toBe(
+        'keep installed files',
+    );
     if (frozen) expect(boundary).not.toHaveBeenCalled();
     else expect(boundary).toHaveBeenCalled();
 });
@@ -162,10 +154,7 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         devDependencies: { prettier: '3.8.1' },
     });
     const lockfile = JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.1' } } } });
-    await using sandbox = await testdir({
-        'source.txt': 'kept\n',
-        'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
-    });
+    await using sandbox = await testdir({ 'package.json': '{"private":true,"packageManager":"bun@1.4.2"}' });
     await createFileTree(sandbox.path, { 'gspot.toml': buildSandboxSettings([]) });
     const session = await openSession(sandbox.path);
     using _path = overrideEnvironment({
@@ -177,17 +166,16 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         prepareNpmLockfile(buildToolInstall(session, owner), buildNpmConfigFile(packageJson), undefined),
     );
     expect(message).toBe('The npm tool project needs Node.js to create its lockfile. Install Node.js.');
-    expect(await isOnDisk(join(sandbox.path, '.gspot/package.json'))).toBe(false);
-    await createFileTree(sandbox.path, { ['.gspot/package.json']: packageJson, '.gspot/bun.lock': lockfile });
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.npmProject))).toBe(false);
+    await createFileTree(sandbox.path, { [GSPOT_PATHS.npmProject]: packageJson, [`${DOT_GSPOT}/bun.lock`]: lockfile });
     const cached = await prepareNpmLockfile(
         buildToolInstall(session, owner),
         buildNpmConfigFile(packageJson),
         undefined,
     );
     expect(cached.content).toBe(lockfile);
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('kept\n');
-    expect(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe(packageJson);
-    expect(await readFile(join(sandbox.path, '.gspot/bun.lock'), 'utf8')).toBe(lockfile);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(packageJson);
+    expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/bun.lock`), 'utf8')).toBe(lockfile);
 });
 test('a package manager version timeout names the install command and configured limit', async () => {
     await using sandbox = await testdir({

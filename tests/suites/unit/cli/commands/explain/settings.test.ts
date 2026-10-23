@@ -13,12 +13,13 @@ import {
 } from '#tests/config/commands/explain/settings.ts';
 
 test.each([...NAMING_SCOPE_LIMITS])(
-    "explain shows each scope's default and current naming limit (%j)",
+    "explain shows each scope's default and current naming limit: $key",
     async ({ key, shipped, child }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['naming'], {
                 level: 'all',
-                tables: `[[scope]]\npath = "app"\n[scope.naming.swift]\nmax_characters = 38\n`,
+                scopes: [{ path: 'app' }],
+                tables: '[scope.naming.swift]\nmax_characters = 38\n',
             }),
             'entry.sh': 'echo example\n',
             'app/entry.sh': 'echo example\n',
@@ -52,10 +53,10 @@ test('a setting explanation lists settings set only in scopes and each inherited
 
 test('explain reads an inherited limits.function_lines value and its reason, and writes nothing', async () => {
     await using sandbox = await testdir();
-    const settings =
-        'configurations = ["structure"]\n[limits]\nfunction_lines = { value = 100, reason = ' +
-        JSON.stringify(SETTING_REASON) +
-        ' }\n[[scope]]\npath = "app"\n';
+    const settings = buildSandboxSettings(['structure'], {
+        scopes: [{ path: 'app' }],
+        tables: `[limits]\nfunction_lines = { value = 100, reason = ${JSON.stringify(SETTING_REASON)} }\n`,
+    });
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'app/source.ts': 'export const active = true;\n' });
     const explained = await runGspot(sandbox.path, ['explain', 'limits.function_lines', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
@@ -75,14 +76,11 @@ test.each([...REASON_VALUES])(
         const separator = row.key.lastIndexOf('.');
         const table = row.key.slice(0, separator);
         const field = row.key.slice(separator + 1);
-        const settings = `configurations = ["naming"]
-[${table}]
-${field} = ${row.root}
-[[scope]]\npath = "app"
-configurations = []
-[scope.${table}]
-${field} = ${row.needsReason[1] ? `{ value = ${row.child}, reason = "${explanation}" }` : row.child}
-`;
+        const child = row.needsReason[1] ? `{ value = ${row.child}, reason = "${explanation}" }` : row.child;
+        const settings = buildSandboxSettings(['naming'], {
+            scopes: [{ path: 'app', configurations: [] }],
+            tables: `[${table}]\n${field} = ${row.root}\n[scope.${table}]\n${field} = ${child}\n`,
+        });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,
             'app/source.js': 'export const active = true;\n',
@@ -113,17 +111,13 @@ ${field} = ${row.needsReason[1] ? `{ value = ${row.child}, reason = "${explanati
     },
 );
 test('a neutral format setting stays settable without a reason', async () => {
-    const level = 'all';
     const key = 'format.indent_style';
-    const value = 'tab';
-    const root = 'space';
-    const child = 'tab';
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['data-files'], { level, rules: true, scopes: [{ path: 'app' }] }),
+        'gspot.toml': buildSandboxSettings(['data-files'], { level: 'all', rules: true, scopes: [{ path: 'app' }] }),
         'app/project.toml': 'name = "Project"\n',
     });
 
-    const changed = await runGspot(sandbox.path, ['set', key, value, '--scope', 'app']);
+    const changed = await runGspot(sandbox.path, ['set', key, 'tab', '--scope', 'app']);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     const human = await runGspot(sandbox.path, ['explain', key]);
     expect(human.code, human.stdout + human.stderr).toBe(0);
@@ -133,8 +127,8 @@ test('a neutral format setting stays settable without a reason', async () => {
     expect(JSON.parse(structured.stdout)).not.toHaveProperty('reason_needed');
     expect(JSON.parse(structured.stdout)).toMatchObject({
         scopes: [
-            { scope: '', current: root },
-            { scope: 'app', current: child },
+            { scope: '', current: 'space' },
+            { scope: 'app', current: 'tab' },
         ],
     });
 });

@@ -1,11 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { ProcessOutput } from '#tests/types/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {
@@ -16,12 +15,24 @@ import {
     SQLFLUFF_DIALECT_SETTINGS,
 } from '#tests/config/integration/checks/language/sql.ts';
 
-/** Whether the report holds a SQLFluff parse error, the rule `PRS`. */
-function hasSqlParseError(output: ProcessOutput): boolean {
-    return parseCheckReport(output)
-        .report.checks.flatMap((check) => check.findings)
-        .some((finding) => finding.rule === 'PRS');
-}
+const installedSandbox = shareInstalledSandbox({
+    ...SQL_SANDBOX,
+    async prepare(root, environment) {
+        const ignored = await spawnGspot(
+            root,
+            [
+                'ignore',
+                'sql/sqlfluff',
+                '--paths',
+                'db/report.sql',
+                '--reason',
+                'A script for psql, which the linter cannot read.',
+            ],
+            environment,
+        );
+        expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+    },
+});
 
 test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL default", async () => {
     const { root, environment } = installedSandbox();
@@ -36,7 +47,9 @@ test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL defau
     });
     const wrong = await spawnGspot(root, ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json'], environment);
     expect(wrong.code, wrong.stdout + wrong.stderr).toBe(1);
-    expect(hasSqlParseError(wrong)).toBe(true);
+    expect(listFindingRows(parseCheckReport(wrong).report)).toStrictEqual([
+        { file: 'query.sql', line: 1, rule: 'PRS' },
+    ]);
     const selected = await spawnGspot(root, ['set', 'tools.sqlfluff.dialect', 'sqlite'], environment);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const corrected = await spawnGspot(root, ['check', 'query.sql', '--only', 'sql/sqlfluff', '--json'], environment);
@@ -59,7 +72,9 @@ test("SQLFluff uses each scope's dialect setting instead of the PostgreSQL defau
         environment,
     );
     expect(wrongChild.code, wrongChild.stdout + wrongChild.stderr).toBe(1);
-    expect(hasSqlParseError(wrongChild)).toBe(true);
+    expect(listFindingRows(parseCheckReport(wrongChild).report)).toStrictEqual([
+        { file: 'warehouse/child/query.sql', line: 1, rule: 'PRS' },
+    ]);
 });
 
 test('SQLFluff reports and fixes uppercase function names', async () => {
@@ -80,39 +95,15 @@ test('SQLFluff reports and fixes uppercase function names', async () => {
     await writeFile(join(root, 'functions.sql'), SQL_FUNCTION_SOURCE.replaceAll('get_user_name', 'GET_USER_NAME'));
     const failed = parseCheckReport(await spawnGspot(root, command, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(
-        failed.report.checks
-            .flatMap((check) => check.findings)
-            .filter((finding) => finding.rule === 'CP03')
-            .map(({ line, column }) => ({ line, column })),
-    ).toStrictEqual([
-        { line: 1, column: 17 },
-        { line: 2, column: 8 },
+    expect(failed.report.checks[0]!.findings.map(({ line, column, rule }) => ({ line, column, rule }))).toStrictEqual([
+        { line: 1, column: 17, rule: 'CP03' },
+        { line: 2, column: 8, rule: 'CP03' },
     ]);
     const fixed = await spawnGspot(root, [...command, '--fix'], environment);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await readFile(join(root, 'functions.sql'), 'utf8')).toBe(SQL_FUNCTION_SOURCE);
     const corrected = await spawnGspot(root, command, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
-const installedSandbox = shareInstalledSandbox({
-    ...SQL_SANDBOX,
-    async prepare(root, environment) {
-        const ignored = await spawnGspot(
-            root,
-            [
-                'ignore',
-                'sql/sqlfluff',
-                '--paths',
-                'db/report.sql',
-                '--reason',
-                'A script for psql, which the linter cannot read.',
-            ],
-            environment,
-        );
-        expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    },
 });
 
 test.each([...SQL_CASES])('$check reports $expected.file and passes after the fix', async (entry) => {

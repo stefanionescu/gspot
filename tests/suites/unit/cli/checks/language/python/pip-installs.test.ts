@@ -27,13 +27,12 @@ test.each([...LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].i
             buildRunOptions({ only: ['python/pip-installs'] }),
         );
 
-        const report = checked.report;
-        expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
+        expect(checked.report.checks.flatMap((check) => check.findings)).toMatchObject([
             { file: 'locked/requirements.txt', rule: 'requirements-file' },
         ]);
-        expect(report.checks.filter((check) => check.status === 'failed').map((check) => check.scope)).toStrictEqual([
-            'locked',
-        ]);
+        expect(
+            checked.report.checks.filter((check) => check.status === 'failed').map((check) => check.scope),
+        ).toStrictEqual(['locked']);
         await rm(join(sandbox.path, 'locked/requirements.txt'));
         const corrected = await runChecks(
             await openSession(sandbox.path),

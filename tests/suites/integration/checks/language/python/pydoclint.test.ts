@@ -1,21 +1,22 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PYPROJECT, GOOGLE_PYPROJECT } from '#tests/config/checks/language/python/project.ts';
 import { PYTHON_SANDBOX, ARITHMETIC_MODULE_PATH } from '#tests/config/integration/checks/language/python/samples.ts';
 
 import {
     DOCSTRING_MODULES,
+    TYPED_DOCSTRING_RULES,
     PYDOCLINT_CHECK_ARGUMENTS,
 } from '#tests/config/integration/checks/language/python/pydoclint.ts';
 
 const installedSandbox = shareInstalledSandbox(PYTHON_SANDBOX);
+
 test('pydoclint finds the docstring style of each file and does not ask for types again', async () => {
     const { root, environment } = installedSandbox();
     const files = Object.fromEntries(
@@ -35,13 +36,16 @@ test('pydoclint finds the docstring style of each file and does not ask for type
     });
     const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const report = failed.report;
-    expect(report.checks.map((check) => [check.scope, check.status])).toStrictEqual([
+    expect(failed.report.checks.map(({ scope, status }) => [scope, status])).toStrictEqual([
         ['', 'failed'],
         ['app', 'failed'],
     ]);
-    for (const file of Object.keys(files))
-        expect(report.checks.flatMap((check) => check.findings)).toContainEqual(matchFields({ file, rule: 'DOC103' }));
+    expect(listFindingRows(failed.report)).toStrictEqual(
+        ['', 'app/'].flatMap((scope) => [
+            { file: `${scope}google.py`, line: 1, rule: 'DOC103' },
+            { file: `${scope}numpy.py`, line: 5, rule: 'DOC103' },
+        ]),
+    );
     for (const [file, text] of Object.entries(files))
         await writeFile(join(root, file), text.replace('amount', 'value'));
     const corrected = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
@@ -51,6 +55,7 @@ test('pydoclint finds the docstring style of each file and does not ask for type
         ['app', 'passed', []],
     ]);
 });
+
 test('pydoclint keeps your settings that ask for types in docstrings', async () => {
     const { root, environment } = installedSandbox();
     const project =
@@ -70,8 +75,8 @@ check-yield-types = true
     });
     const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks[0]!.findings).toContainEqual(
-        matchFields({ file: ARITHMETIC_MODULE_PATH, rule: 'DOC105' }),
+    expect(listFindingRows(failed.report)).toStrictEqual(
+        [3, 15].flatMap((line) => TYPED_DOCSTRING_RULES.map((rule) => ({ file: ARITHMETIC_MODULE_PATH, line, rule }))),
     );
     await writeFile(
         join(root, ARITHMETIC_MODULE_PATH),

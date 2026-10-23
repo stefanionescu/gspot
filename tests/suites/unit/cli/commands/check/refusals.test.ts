@@ -2,9 +2,11 @@ import * as os from 'node:os';
 import { sep, join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { stringify } from '@decimalturn/toml-patch';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
-import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { limitToTestDeadline } from '#tests/setup/system/processes.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
@@ -21,15 +23,15 @@ import {
 /** Create a committed repository with a check whose fixer rewrites the source when it runs. */
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = [process.execPath, '-e', String.raw`require('node:fs').writeFileSync('source.txt', 'fixed\n')`];
-    const check = `[[command_check]]
-id = "sandbox/fixable"
-command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
-fix = ${JSON.stringify(fix)}
-paths = ["source.txt"]
-stage = "commit"
-`;
+    const check = {
+        id: 'sandbox/fixable',
+        command: [process.execPath, '-e', 'process.exitCode = 0'],
+        fix,
+        paths: ['source.txt'],
+        stage: 'commit',
+    };
     const sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: check }),
+        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [check] }) }),
         'source.txt': 'original\n',
     });
 
@@ -51,8 +53,7 @@ test.each(['--changed', '--staged', '--hook'])(
     'check %s outside Git exits 2 with a git error and changes nothing',
     async (flag) => {
         await using sandbox = await testdir();
-        const settings = OUTSIDE_GIT_SETTINGS;
-        await createFileTree(sandbox.path, { 'gspot.toml': settings, 'api/source.txt': 'before' });
+        await createFileTree(sandbox.path, { 'gspot.toml': OUTSIDE_GIT_SETTINGS, 'api/source.txt': 'before' });
         const result = await runGspot(sandbox.path, [
             'check',
             flag,
@@ -60,11 +61,11 @@ test.each(['--changed', '--staged', '--hook'])(
             '--json',
         ]);
         expect(result.code).toBe(2);
-        expect((JSON.parse(result.stdout) as CommandFailureJson).message).toBe(
-            `${flag === '--hook' ? '--hook pre-push' : flag} needs a Git repository.`,
-        );
-        expect((JSON.parse(result.stdout) as CommandFailureJson).error).toBe('git');
-        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+        expect(JSON.parse(result.stdout)).toStrictEqual({
+            error: 'git',
+            message: `${flag === '--hook' ? '--hook pre-push' : flag} needs a Git repository.`,
+        });
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(OUTSIDE_GIT_SETTINGS);
         expect(await readFile(join(sandbox.path, 'api/source.txt'), 'utf8')).toBe('before');
     },
 );
@@ -103,7 +104,7 @@ test('a staged check during a merge conflict exits 2, names the conflict, and le
     runGitStep(sandbox.path, ['checkout', '-q', '-']);
     await writeFile(join(sandbox.path, 'source.txt'), 'main\n');
     runGitStep(sandbox.path, ['commit', '-qam', 'Main']);
-    expect(runGit(sandbox.path, ['merge', '-q', 'other']).code).not.toBe(0);
+    expect(runGit(sandbox.path, ['merge', '-q', 'other']).code).toBe(1);
     await using temporary = await testdir();
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
@@ -174,13 +175,23 @@ test('a linked .gspot folder stops check, and nothing outside changes', async ()
     await using sandbox = await testdir({
         'project/source.txt': 'input\n',
         'project/gspot.toml': buildSandboxSettings([], {
-            tables: `[[command_check]]\nid = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'console.log("Exact finding"); process.exitCode=1'])}\noutput = { format = "lines" }\n`,
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'project/storage',
+                        paths: ['source.txt'],
+                        stage: 'commit',
+                        command: [process.execPath, '-e', 'console.log("Exact finding"); process.exitCode=1'],
+                        output: { format: 'lines' },
+                    },
+                ],
+            }),
         }),
         'outside/sentinel': 'authored outside\n',
     });
     const project = join(sandbox.path, 'project');
     const outside = join(sandbox.path, 'outside');
-    await symlink(outside, join(project, '.gspot'));
+    await symlink(outside, join(project, DOT_GSPOT));
     const refused = parseCheckReport(await runGspot(project, ['check', '--json']));
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.report.checks.find((result) => result.check === 'gspot/generated-files')?.note).toBe(
@@ -188,5 +199,4 @@ test('a linked .gspot folder stops check, and nothing outside changes', async ()
     );
     expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored outside\n');
     expect(await readdir(outside)).toStrictEqual(['sentinel']);
-    expect(await isOnDisk(join(project, 'gspot.toml'))).toBe(true);
 });

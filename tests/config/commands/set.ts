@@ -8,7 +8,8 @@ configurations = ["bash"]
 
 /** The root and a child scope, where set writes banned words. */
 /** Settings with one scope in the layout that set and unset write. */
-export const BANNED_WORD_SETTINGS = `configurations = ["naming", "typescript"]
+export const BANNED_WORD_SETTINGS = `#:schema ./.gspot/gspot.schema.json
+configurations = ["naming", "typescript"]
 
 [rules]
 enabled = false
@@ -21,7 +22,8 @@ export const BANNED_WORD_SCOPES = [
     {
         name: 'root',
         scope: '',
-        written: `configurations = ["naming", "typescript"]
+        written: `#:schema ./.gspot/gspot.schema.json
+configurations = ["naming", "typescript"]
 
 [rules]
 enabled = false
@@ -36,7 +38,8 @@ path = "app"
     {
         name: 'child',
         scope: 'app',
-        written: `configurations = ["naming", "typescript"]
+        written: `#:schema ./.gspot/gspot.schema.json
+configurations = ["naming", "typescript"]
 
 [rules]
 enabled = false
@@ -68,6 +71,12 @@ export const LOOSENED_SETTINGS = [
     } as const,
 ] as const;
 
+/** The records of the restricted_imports value below. */
+export const RESTRICTED_IMPORT_RECORDS = [
+    { name: 'unreviewed-module', message: 'Import the reviewed entrypoint for this dependency.' },
+] as const;
+
+/** One restricted import as a TOML inline value. */
 export const RESTRICTED_IMPORTS = `[{name = "unreviewed-module", message = "Import the reviewed entrypoint for this dependency."}]`;
 
 export const SETTING_REASON = 'The project contract requires this reviewed exception.';

@@ -1,5 +1,6 @@
 import type { ZodError } from 'zod';
 import { test, expect } from 'bun:test';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { buildConfiguration } from '#tests/setup/cli/configurations.ts';
@@ -155,9 +156,9 @@ test('a config file that names no tool and no check goes to the only tool of its
     const configuration = configurations.get('example')!;
 
     expect(configuration.configFiles.map(({ target, tool, check }) => [target, tool, check])).toStrictEqual([
-        ['.gspot/configurations/language/example/semgrep/first.yml', ['semgrep'], []],
-        ['.gspot/configurations/language/example/semgrep/second.yml', [], ['example/scan']],
-        ['.gspot/configurations/language/example/semgrep/not-a-pack.txt', ['semgrep'], []],
+        [`${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`, ['semgrep'], []],
+        [`${GSPOT_PATHS.configurations}/language/example/semgrep/second.yml`, [], ['example/scan']],
+        [`${GSPOT_PATHS.configurations}/language/example/semgrep/not-a-pack.txt`, ['semgrep'], []],
     ]);
 });
 

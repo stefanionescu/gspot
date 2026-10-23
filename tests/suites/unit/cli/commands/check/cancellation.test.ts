@@ -3,6 +3,7 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { stringify } from '@decimalturn/toml-patch';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { type PausedGit } from '#tests/types/processes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
@@ -89,7 +90,16 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
     async (signal) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([], {
-                tables: `[[command_check]]\nid = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', SLOW_TOOL_SCRIPT])}\n`,
+                tables: stringify({
+                    command_check: [
+                        {
+                            id: 'project/slow',
+                            stage: 'commit',
+                            paths: ['source.txt'],
+                            command: [process.execPath, '-e', SLOW_TOOL_SCRIPT],
+                        },
+                    ],
+                }),
             }),
             'source.txt': 'input\n',
         });
@@ -110,9 +120,9 @@ test.skipIf(isWindows).each(['SIGINT', 'SIGTERM'] as const)(
             stderr: await capture.errors,
         }).report;
         expect(report.exitCode).toBe(signal === 'SIGINT' ? 130 : 143);
-        expect(report.checks).toHaveLength(1);
-        expect(report.checks[0]!.status).toBe('error');
-        expect(report.checks[0]!.note).toBe(`${process.execPath} was canceled.`);
+        expect(report.checks).toMatchObject([
+            { check: 'project/slow', status: 'error', note: `${process.execPath} was canceled.` },
+        ]);
         await waitForExit(toolPid);
     },
 );

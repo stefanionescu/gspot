@@ -16,7 +16,8 @@ test('YAML syntax errors name the file and keep the parser failure', () => {
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'filesystem',
-            message: expect.stringContaining('apps/api/compose.yaml is not valid YAML:') as string,
+            message:
+                'apps/api/compose.yaml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 7:. Fix the file.',
             cause: expect.any(Error),
         }),
     );
@@ -26,7 +27,7 @@ test('YAML schema failures name the source file and the field', () => {
     expect(() => parseYamlFile('package.yaml', 'name: 42', packageJsonSchema)).toThrow(
         matchFields<GspotError>({
             code: 'filesystem',
-            message: expect.stringContaining('package.yaml: name:') as string,
+            message: 'package.yaml: name: Invalid input: expected string, received number. Fix the field.',
         }),
     );
     expect(parseYamlFile('package.yaml', 'name: example', packageJsonSchema)).toStrictEqual({ name: 'example' });

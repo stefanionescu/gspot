@@ -4,6 +4,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
@@ -88,22 +89,22 @@ test('a nested revision copy links .gspot/node_modules instead of copying it', a
     const project = join(sandbox.path, 'project');
     // The private tools run in place, so the copy links them instead of copying them.
     using copy = await copyRevision(project, { kind: 'index' });
-    const tools = await lstat(join(copy.root, '.gspot/node_modules'));
+    const tools = await lstat(join(copy.root, GSPOT_PATHS.nodeModules));
     const copied = {
         linked: tools.isSymbolicLink(),
-        source: await readFile(join(copy.root, '.gspot/node_modules/example/index.js'), 'utf8'),
+        source: await readFile(join(copy.root, `${GSPOT_PATHS.nodeModules}/example/index.js`), 'utf8'),
     };
     expect(copied).toStrictEqual({ linked: true, source: 'export const value = 1;' });
 });
 
 test.each(['', 'nested/'])('revision copies reuse the installed Vale packages under %s', async (prefix) => {
     await using sandbox = await testdir();
-    const config = `${prefix}.gspot/configurations/general/prose/vale.ini`;
-    const packagePath = '.gspot/vale/Example/rule.yml';
+    const config = `${prefix}${GSPOT_PATHS.valeConfigFile}`;
+    const packagePath = `${GSPOT_PATHS.valePackages}/Example/rule.yml`;
     await createFileTree(sandbox.path, {
         [config]: 'StylesPath = ../../../vale\nPackages = Example\n',
         [packagePath]: 'extends: existence\n',
-        '.gitignore': '.gspot/vale/\n',
+        '.gitignore': `${GSPOT_PATHS.valePackages}/\n`,
     });
     stageRevision(sandbox.path);
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
@@ -168,7 +169,6 @@ test('cancellation waits for the dependency copies to finish before removing the
         'Canceled dependency copy',
     );
     expect(pending).toBe(0);
-    expect(destination).toBeDefined();
     expect(await isOnDisk(destination!)).toBe(false);
     expect(await readFile(join(sandbox.path, 'node_modules/item-0/value.js'), 'utf8')).toBe(
         'export const value = 2;\n',

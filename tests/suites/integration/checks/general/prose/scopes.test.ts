@@ -1,12 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_STYLE_CASES } from '#tests/config/integration/checks/general/prose/scopes.ts';
 
 const installedSandbox = shareProseSandbox();
@@ -32,20 +31,22 @@ Read [here](only.md).
 
         const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-        const checks = checked.report.checks.filter((check) => check.status !== 'skipped');
-        expect(checks.map((check) => check.scope)).toStrictEqual(['']);
-        const result = checks[0]!;
-        expect(result.status, result.note).toBe('failed');
-        expect(
-            result.findings
-                .filter(({ rule }) => rule === 'gspot.banned-headings')
-                .map(({ file, line }) => ({ file, line })),
-        ).toStrictEqual(level === 'all' ? [{ file: path, line: 1 }] : []);
-        expect(
-            result.findings.filter(({ rule }) => rule === 'gspot.link-text').map(({ file, line }) => ({ file, line })),
-        ).toStrictEqual([{ file: path, line: 3 }]);
+        expect(checked.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+            { scope: '', status: 'failed' },
+        ]);
+        // At level all, the title of the child file breaks the banned-headings and title-case rules too.
+        expect(listFindingRows(checked.report)).toStrictEqual([
+            ...(level === 'all'
+                ? [
+                      { file: path, line: 1, rule: 'gspot.banned-headings' },
+                      { file: path, line: 1, rule: 'gspot.title-case' },
+                  ]
+                : []),
+            { file: path, line: 3, rule: 'gspot.link-text' },
+        ]);
     },
 );
+
 test('a Vale ignore with a lint rule and a path keeps findings in other files', async () => {
     const { root } = installedSandbox();
     const settings = buildSandboxSettings([]);
@@ -57,45 +58,38 @@ test('a Vale ignore with a lint rule and a path keeps findings in other files', 
             'archive.md': '# Schedule\n\nRelease on 03/04/2026.\n',
         },
     });
-    const environment = {};
 
     const command = ['check', '--only', 'prose/vale', '--json'];
-    const before = parseCheckReport(await spawnGspot(root, command, environment));
+    const before = parseCheckReport(await spawnGspot(root, command));
     expect(before.code, before.stdout + before.stderr).toBe(1);
-    expect(
-        before.report.checks[0]?.findings.map(({ file, rule, line }) => ({
-            file,
-            rule,
-            line,
-        })),
-    ).toStrictEqual([
-        { file: 'archive.md', rule: 'gspot.dates', line: 3 },
-        { file: 'guide.md', rule: 'gspot.dates', line: 3 },
+    expect(listFindingRows(before.report)).toStrictEqual([
+        { file: 'archive.md', line: 3, rule: 'gspot.dates' },
+        { file: 'guide.md', line: 3, rule: 'gspot.dates' },
     ]);
-    const ignored = await spawnGspot(
-        root,
-        [
-            'ignore',
-            'prose/vale',
-            '--rule',
-            'gspot.dates',
-            '--paths',
-            'archive.md',
-            '--reason',
-            'Archived dates retain their original notation.',
-        ],
-        environment,
-    );
+    const ignored = await spawnGspot(root, [
+        'ignore',
+        'prose/vale',
+        '--rule',
+        'gspot.dates',
+        '--paths',
+        'archive.md',
+        '--reason',
+        'Archived dates retain their original notation.',
+    ]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const after = parseCheckReport(await spawnGspot(root, command, environment));
+    const after = parseCheckReport(await spawnGspot(root, command));
     expect(after.code, after.stdout + after.stderr).toBe(1);
-    const report = after.report;
-    expect(report.checks[0]?.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
-        { file: 'guide.md', rule: 'gspot.dates' },
+    expect(listFindingRows(after.report)).toStrictEqual([{ file: 'guide.md', line: 3, rule: 'gspot.dates' }]);
+    expect(after.report.ignores).toStrictEqual([
+        {
+            check: 'prose/vale',
+            rule: 'gspot.dates',
+            paths: ['archive.md'],
+            reason: 'Archived dates retain their original notation.',
+        },
     ]);
-    expect(report.ignores).toContainEqual(matchFields({ check: 'prose/vale', rule: 'gspot.dates' }));
     await writeFile(join(root, 'guide.md'), '# Schedule\n\nRelease on March 4, 2026.\n');
-    const corrected = await spawnGspot(root, command, environment);
+    const corrected = await spawnGspot(root, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
@@ -105,7 +99,6 @@ test.each([...LEVELS])(
         const { root } = installedSandbox();
         const sample = PACKAGE_STYLE_CASES.map(({ sample }) => sample).join('\n\n') + '\n';
         const path = 'sample.md';
-        const scope = '';
         const settings = buildSandboxSettings(['prose'], { level });
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
             check: '',
@@ -115,14 +108,16 @@ test.each([...LEVELS])(
         const appliedSettings = await readFile(join(root, 'gspot.toml'), 'utf8');
         const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
         expect(checked.code, checked.stdout + checked.stderr).toBe(level === 'all' ? 1 : 0);
-        const result = checked.report.checks.find((check) => check.scope === scope)!;
-        const rules = result.findings.map(({ rule }) => rule);
-        for (const entry of PACKAGE_STYLE_CASES) {
-            expect(rules.includes(entry.rule), entry.rule).toBe(level === 'all');
-        }
-        expect(
-            rules.some((rule) => rule?.startsWith('Microsoft.') === true || rule?.startsWith('RedHat.') === true),
-        ).toBe(false);
+        // Each sample reports its own gspot rule at its first line unless it lists its findings, and the Microsoft and
+        // Red Hat packages report none.
+        let line = 1;
+        const expected = PACKAGE_STYLE_CASES.flatMap((entry) => {
+            const findings = 'findings' in entry ? entry.findings : [[0, entry.rule] as const];
+            const rows = findings.map(([offset, rule]) => ({ file: path, line: line + offset, rule }));
+            line += entry.sample.split('\n').length + 1;
+            return rows;
+        });
+        expect(listFindingRows(checked.report)).toStrictEqual(level === 'all' ? expected : []);
         expect(await readFile(join(root, path), 'utf8')).toBe(sample);
         expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(appliedSettings);
         await writeFile(
@@ -132,12 +127,8 @@ test.each([...LEVELS])(
 Read the guide.
 `,
         );
-        const correctedCommand = parseCheckReport(
-            await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']),
-        );
-        expect(correctedCommand.code, correctedCommand.stdout + correctedCommand.stderr).toBe(0);
-        const corrected = correctedCommand.report.checks.find((check) => check.scope === scope)!;
-        expect(corrected.status, corrected.note).toBe('passed');
-        expect(corrected.findings).toStrictEqual([]);
+        const corrected = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(corrected.report.checks).toMatchObject([{ scope: '', status: 'passed', findings: [] }]);
     },
 );

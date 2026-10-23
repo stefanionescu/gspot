@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
@@ -98,12 +99,11 @@ test.each(['', 'apps/example'].flatMap((scope) => LICENSE_DEPENDENCY_FILES.map((
     async ({ scope, dependencyFile, text, installedFolder }) => {
         await using sandbox = await testdir();
         const path = scope === '' ? dependencyFile : `${scope}/${dependencyFile}`;
-        const tables =
-            scope === ''
-                ? LICENSE_TABLES
-                : `${LICENSE_TABLES}[[scope]]\npath = "${scope}"\nconfigurations = ["licenses"]\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings(['licenses'], { tables }),
+            'gspot.toml': buildSandboxSettings(['licenses'], {
+                scopes: scope === '' ? [] : [{ path: scope, configurations: ['licenses'] }],
+                tables: LICENSE_TABLES,
+            }),
             [path]: text,
         });
 
@@ -235,7 +235,6 @@ test('scan: the check skips with a note while licenses.allowed is empty', async 
         { check: 'licenses/allowed', status: 'skipped', note: 'Set licenses.allowed to check licenses.' },
     ]);
 });
-/** Write the license settings and a scanner version command before mocking scan output. */
 // The scenario of a monorepo: each scope a Python project with its own environment and license report.
 async function writeScopeLicenseSandbox(
     root: string,
@@ -269,7 +268,7 @@ async function writeLicenseSandbox(
     if (version === undefined) throw new Error('The pip-licenses test requires a pinned version.');
     await writeScriptCommand(
         root,
-        relative(root, join(buildVenvBinPath(join(root, '.gspot/.venv')), 'pip-licenses')),
+        relative(root, join(buildVenvBinPath(join(root, GSPOT_PATHS.pythonEnvironment)), 'pip-licenses')),
         `console.log(${JSON.stringify('pip-licenses ' + version)});`,
     );
 }

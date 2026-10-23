@@ -3,18 +3,18 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { PROSE_GRAMMARS } from '#cli/config/checks/general/prose.ts';
 import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
 import { PROSE_SANDBOX } from '#tests/config/checks/general/prose.ts';
-import { VALE_INI } from '#tests/config/integration/checks/general/prose/samples.ts';
-import { TOKEN_IGNORES } from '#cli/config/generation/configurations/general/prose.ts';
 import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/samples.ts';
 
 import {
     PROSE_CASES,
     CONCRETE_RULE,
+    FORMATS_VALE_INI,
     PROSE_COMMENT_CASES,
     MARKDOWN_COMMENT_CASES,
 } from '#tests/config/integration/checks/general/prose/file-types.ts';
@@ -24,8 +24,8 @@ test('prose/vale reports a finding in a .sh file and passes after the fix', asyn
     const path = 'sample.sh';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['prose', 'bash', 'markdown']),
-        '.gspot/configurations/general/prose/vale.ini': VALE_INI,
-        '.gspot/configurations/general/prose/styles/Example/Concrete.yml': CONCRETE_RULE,
+        [GSPOT_PATHS.valeConfigFile]: VALE_INI,
+        [`${EXAMPLE_STYLE_FOLDER}/Concrete.yml`]: CONCRETE_RULE,
         [path]: '# We delve into the records.\n',
     });
     const failed = await spawnRootCheck(sandbox.path, 'prose/vale');
@@ -43,18 +43,8 @@ test.each([...MARKDOWN_COMMENT_CASES])(
         const path = `source.${extension}`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['prose']),
-            '.gspot/configurations/general/prose/vale.ini': [
-                'StylesPath = styles',
-                '[formats]',
-                ...Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
-                    'format' in grammar ? [`${extension.slice(1)} = ${grammar.format}`] : [],
-                ),
-                '[*]',
-                'BasedOnStyles = Example',
-                `TokenIgnores = ${TOKEN_IGNORES.join(', ')}`,
-                '',
-            ].join('\n'),
-            '.gspot/configurations/general/prose/styles/Example/Concrete.yml': CONCRETE_RULE,
+            [GSPOT_PATHS.valeConfigFile]: FORMATS_VALE_INI,
+            [`${EXAMPLE_STYLE_FOLDER}/Concrete.yml`]: CONCRETE_RULE,
             [path]: [
                 `${marker} Pass \`delve\` to the command.`,
                 `${marker} We delve into records.`,
@@ -84,8 +74,8 @@ test.each([...PROSE_COMMENT_CASES])(
         const source = `${prefix}${marker} We delve into records.\n${code}\n`;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings(['prose', 'bash']),
-            '.gspot/configurations/general/prose/vale.ini': `${VALE_INI}[**/british/**]\nExample.Concrete = NO\n`,
-            '.gspot/configurations/general/prose/styles/Example/Concrete.yml': CONCRETE_RULE,
+            [GSPOT_PATHS.valeConfigFile]: `${VALE_INI}[**/british/**]\nExample.Concrete = NO\n`,
+            [`${EXAMPLE_STYLE_FOLDER}/Concrete.yml`]: CONCRETE_RULE,
             [path]: source,
             [`british/${path}`]: source,
         });

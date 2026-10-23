@@ -4,7 +4,9 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { readdir, symlink, readFile } from 'node:fs/promises';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { WRITER_LOCK_FILE } from '#cli/config/ownership/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 
@@ -82,7 +84,7 @@ test('init without a terminal names --yes once and writes only after --yes', asy
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     const accepted = await runGspot(sandbox.path, [...commandArguments, '--yes']);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    const writtenVersion = await readFile(join(sandbox.path, '.gspot/version'), 'utf8');
+    const writtenVersion = await readFile(join(sandbox.path, GSPOT_PATHS.versionPin), 'utf8');
     expect(accepted.stdout.split('\n')).toContain(`gspot ${writtenVersion.trim()}`);
     expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
     expect(await readFile(join(sandbox.path, 'control.txt'), 'utf8')).toBe('preserve this source\n');
@@ -91,11 +93,11 @@ test('a linked .gspot folder stops init, and nothing outside changes', async () 
     await using sandbox = await testdir({ 'project/entry.sh': 'echo example\n', 'outside/sentinel': 'authored\n' });
     const project = join(sandbox.path, 'project');
     const outside = join(sandbox.path, 'outside');
-    await symlink(outside, join(project, '.gspot'));
+    await symlink(outside, join(project, DOT_GSPOT));
     const refused = await runGspot(project, buildInitArguments(['bash']));
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stderr).toBe(
-        'A parent of .gspot/state/writer.lock is a link or is not a folder. Choose a folder without links.\n',
+        `A parent of ${WRITER_LOCK_FILE} is a link or is not a folder. Choose a folder without links.\n`,
     );
     expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
     expect(await readdir(outside)).toStrictEqual(['sentinel']);

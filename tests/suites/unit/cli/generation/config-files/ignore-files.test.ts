@@ -6,13 +6,13 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { openWriter } from '#cli/ownership/writer.ts';
-import { matchItems } from '#tests/setup/matchers.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { writeGeneratedFiles } from '#cli/apply/write.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { generateFile } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
 
 import {
@@ -108,7 +108,7 @@ test.each([...LANGUAGE_IGNORES])(
         expect(files.has('prettier.config.mjs')).toBe(true);
         expect(files.has('.markdownlint.jsonc')).toBe(true);
         expect(files.has('.prettierignore')).toBe(true);
-        expect(files.has('.gspot/configurations/general/format/.prettierignore')).toBe(false);
+        expect(files.has(`${GSPOT_PATHS.configurations}/general/format/.prettierignore`)).toBe(false);
     },
 );
 
@@ -119,18 +119,18 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     const files = generate(session).files;
     const written = files
         .map(({ path }) => path)
-        .filter((path) => !path.startsWith('.gspot/'))
+        .filter((path) => !path.startsWith(`${DOT_GSPOT}/`))
         .map((path) => `/${path}`);
     const listed = buildIgnoreSections(session)
         .find(({ key }) => key === 'gspot')!
-        .patterns.filter((pattern) => !pattern.startsWith('.gspot/'));
+        .patterns.filter((pattern) => !pattern.startsWith(`${DOT_GSPOT}/`));
     expect(listed.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         written.toSorted((left, right) => left.localeCompare(right)),
     );
-    const ruff = files.find(({ path }) => path.startsWith('.gspot/') && path.endsWith('ruff.toml'))!;
+    const ruff = files.find(({ path }) => path.startsWith(`${DOT_GSPOT}/`) && path.endsWith('ruff.toml'))!;
     const excluded = (parse(ruff.content) as { 'extend-exclude': string[] })['extend-exclude'];
     expect(excluded.length).toBeGreaterThan(0);
-    for (const pattern of excluded) expect(pattern.endsWith('/**') || pattern.endsWith('.py')).toBe(true);
+    for (const pattern of excluded) expect(pattern).toMatch(/(?:\/\*\*|\.py)$/u);
 });
 
 test('a second apply writes the same files when .prettierignore covers every source file', async () => {
@@ -149,7 +149,7 @@ test('a second apply writes the same files when .prettierignore covers every sou
         outputs.push(output.files.map(({ path, content }) => `${path}\n${content}`));
     }
     expect(outputs[1]).toStrictEqual(outputs[0]);
-    expect(outputs[0]!.some((file) => file.startsWith('.prettierignore\n'))).toBe(true);
+    expect(outputs[0]!.map((file) => file.split('\n', 1)[0])).toContain('.prettierignore');
 });
 
 test('config files leave out what the tracked .gitignore files ignore, apart from patterns that match a tracked file', async () => {
@@ -178,11 +178,16 @@ test('config files leave out what the tracked .gitignore files ignore, apart fro
     expect(section.patterns).toStrictEqual(['.open-next/', '/app/**/other/', '/app/generated/types']);
     const pyright = generate(session).files.find(({ path }) => path.endsWith('basedpyright.json'))!;
     const excluded = (JSON.parse(pyright.content) as { exclude: string[] }).exclude;
-    expect(excluded.filter((pattern) => pattern.includes('other') || pattern.includes('.open-next'))).toStrictEqual(
-        matchItems([
-            expect.stringMatching(/\/app\/\*\*\/other\/\*\*$/u),
-            expect.stringMatching(/\/\*\*\/\.open-next\/\*\*$/u),
-        ]),
+    expect(excluded).toStrictEqual(
+        [
+            '**/.open-next/**',
+            'app/**/other/**',
+            `${DOT_GSPOT}/**`,
+            '**/.venv/**',
+            '**/venv/**',
+            '**/node_modules/**',
+            '**/bower_components/**',
+        ].map((pattern) => `../../../../${pattern}`),
     );
 });
 

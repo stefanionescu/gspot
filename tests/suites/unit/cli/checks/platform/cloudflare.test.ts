@@ -20,13 +20,7 @@ test.each(['', 'app'])(
 
         const path = scope === '' ? '_redirects' : `${scope}/_redirects`;
         const findings = await runSandboxCheck(sandbox.path, 'cloudflare/redirects', { scope });
-        expect(
-            findings.map(({ file, line, message }) => ({
-                file,
-                line,
-                message,
-            })),
-        ).toStrictEqual([
+        expect(findings.map(({ file, line, message }) => ({ file, line, message }))).toStrictEqual([
             { file: path, line: 8, message: 'Use a supported Cloudflare redirect status instead of 404.' },
             { file: path, line: 9, message: 'Use a supported Cloudflare redirect status instead of 410.' },
             { file: path, line: 10, message: 'Use a supported Cloudflare redirect status instead of 302!.' },
@@ -47,13 +41,7 @@ test.each(['', 'app'])(
 
         const path = scope === '' ? '_headers' : 'app/_headers';
         const headerFindings = await runSandboxCheck(sandbox.path, 'cloudflare/headers', { scope });
-        expect(
-            headerFindings.map(({ file, line, message }) => ({
-                file,
-                line,
-                message,
-            })),
-        ).toStrictEqual([
+        expect(headerFindings.map(({ file, line, message }) => ({ file, line, message }))).toStrictEqual([
             { file: path, line: 1, message: 'Add a path line before this header.' },
             { file: path, line: 9, message: 'Write this header as Name: value.' },
             { file: path, line: 10, message: 'Start this block with a path beginning with / or an https:// address.' },

@@ -7,9 +7,9 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { COMMAND_PLAYBOOK } from '#tests/config/checks/infrastructure/ansible.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { spawnGspot, listFindingRows, parseCheckReport, listScopeFindingRows } from '#tests/setup/cli/commands.ts';
 
 import {
     ANSIBLE_CONFIG,
@@ -17,53 +17,54 @@ import {
     ANSIBLE_PLAYBOOK,
 } from '#tests/config/integration/checks/infrastructure/ansible.ts';
 
-/** Assert the ansible scopes behavior. */
-async function assertAnsibleScopes(installedSandbox: () => Sandbox): Promise<void> {
-    const level = 'all' as const;
-    const { root } = installedSandbox();
-    await using _sourceChange = await applySandboxChanges(
-        installedSandbox(),
-        buildSandboxChanges(ANSIBLE_SANDBOX.files, {
-            'gspot.toml': buildSandboxSettings(['ansible'], {
-                level,
-                scopes: [{ path: 'app', configurations: ['ansible'] }],
+describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
+    const installedSandbox = shareInstalledSandbox(ANSIBLE_SANDBOX);
+
+    test('ansible-lint reports command-instead-of-module in the root and in a scope without ansible.cfg, and passes after the fix', async () => {
+        const { root } = installedSandbox();
+        await using _sourceChange = await applySandboxChanges(
+            installedSandbox(),
+            buildSandboxChanges(ANSIBLE_SANDBOX.files, {
+                'gspot.toml': buildSandboxSettings(['ansible'], {
+                    level: 'all',
+                    scopes: [{ path: 'app', configurations: ['ansible'] }],
+                }),
+                'requirements.yml': 'collections: []\n',
+                'site.yml': COMMAND_PLAYBOOK,
+                'app/requirements.yml': 'collections: []\n',
+                'app/site.yml': COMMAND_PLAYBOOK,
             }),
-            'requirements.yml': 'collections: []\n',
-            'site.yml': COMMAND_PLAYBOOK,
-            'app/requirements.yml': 'collections: []\n',
-            'app/site.yml': COMMAND_PLAYBOOK,
-        }),
-    );
+        );
 
-    const failedCommand = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
-    );
-    const failed = failedCommand.report;
-    expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
-    expect(
-        failed.checks.map(({ scope, status, findings }) => ({
-            scope,
-            status,
-            findings: findings.map(({ file, rule }) => ({ file, rule })),
-        })),
-    ).toStrictEqual([
-        { scope: '', status: 'failed', findings: [{ file: 'site.yml', rule: 'command-instead-of-module' }] },
-        { scope: 'app', status: 'failed', findings: [{ file: 'app/site.yml', rule: 'command-instead-of-module' }] },
-    ]);
-    await writeFile(join(root, 'site.yml'), ANSIBLE_PLAYBOOK);
-    await writeFile(join(root, 'app/site.yml'), ANSIBLE_PLAYBOOK);
-    const correctedCommand = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
-    );
-    const corrected = correctedCommand.report;
-    expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
-}
+        const failed = parseCheckReport(
+            await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
+        ).report;
+        expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
+        expect(listScopeFindingRows(failed)).toStrictEqual([
+            { scope: '', file: 'site.yml', line: 5, rule: 'command-instead-of-module' },
+            { scope: 'app', file: 'app/site.yml', line: 5, rule: 'command-instead-of-module' },
+        ]);
+        await writeFile(join(root, 'site.yml'), ANSIBLE_PLAYBOOK);
+        await writeFile(join(root, 'app/site.yml'), ANSIBLE_PLAYBOOK);
+        const corrected = parseCheckReport(
+            await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
+        ).report;
+        expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
+    });
 
-/** Assert the ansible levels behavior. */
-async function assertAnsibleLevels(installedSandbox: () => Sandbox, level: Level): Promise<void> {
-    const { root } = installedSandbox();
+    test.each([...LEVELS])(
+        'ansible-lint uses the profile of level %s next to the root and scope ansible.cfg files',
+        async (level) => {
+            await checkLevelProfile(installedSandbox(), level);
+        },
+    );
+});
+
+// Check that ansible-lint uses the profile of one level next to the root and scope ansible.cfg files.
+async function checkLevelProfile(sandbox: Sandbox, level: Level): Promise<void> {
+    const { root } = sandbox;
     const source = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
-    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+    await using _sourceChange = await applySandboxChanges(sandbox, {
         check: '',
         files: {
             'gspot.toml': buildSandboxSettings(['ansible'], {
@@ -77,39 +78,23 @@ async function assertAnsibleLevels(installedSandbox: () => Sandbox, level: Level
         },
     });
 
-    const checkedCommand = parseCheckReport(
+    const checked = parseCheckReport(
         await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
-    );
-    const checked = checkedCommand.report;
+    ).report;
     expect(checked.exitCode, JSON.stringify(checked)).toBe(level === 'all' ? 1 : 0);
-    expect(
-        checked.checks.flatMap(({ findings }) => findings.map(({ file, rule, line }) => ({ file, rule, line }))),
-    ).toStrictEqual(
+    // At level all, ansible-lint asks for the fully qualified module name.
+    expect(listFindingRows(checked)).toStrictEqual(
         level === 'all'
             ? [
-                  { file: 'deploy/site.yml', rule: 'fqcn[action-core]', line: 6 },
-                  { file: 'app/deploy/site.yml', rule: 'fqcn[action-core]', line: 6 },
+                  { file: 'deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
+                  { file: 'app/deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
               ]
             : [],
     );
     await writeFile(join(root, 'deploy/site.yml'), ANSIBLE_PLAYBOOK);
     await writeFile(join(root, 'app/deploy/site.yml'), ANSIBLE_PLAYBOOK);
-    const fixedCommand = parseCheckReport(
+    const fixed = parseCheckReport(
         await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
-    );
-    const fixed = fixedCommand.report;
+    ).report;
     expect(fixed.exitCode, JSON.stringify(fixed)).toBe(0);
 }
-
-describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
-    const installedSandbox = shareInstalledSandbox(ANSIBLE_SANDBOX);
-    test(
-        'ansible-lint reports command-instead-of-module in the root and in a scope without ansible.cfg, and passes after the fix',
-        assertAnsibleScopes.bind(undefined, installedSandbox),
-    );
-
-    test.each([...LEVELS])(
-        'ansible-lint uses the profile of level %s next to the root and scope ansible.cfg files',
-        assertAnsibleLevels.bind(undefined, installedSandbox),
-    );
-});

@@ -1,16 +1,12 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
+/** The checks that replace typescript/tsc, with a source file that each one reads. */
 export const TSC_REPLACEMENTS = [
     { configuration: 'vue', check: 'vue/vue-tsc', source: 'src/App.vue', text: '<template><p>App</p></template>' },
     { configuration: 'svelte', check: 'svelte/svelte-check', source: 'src/App.svelte', text: '<p>App</p>' },
 ] as const;
 
-/** Pushed checks chosen by name still read the Git history. */
-export const HISTORY_SCOPE_TABLES = `[[scope]]
-path = "app"
-configurations = ["commits", "secrets"]
-`;
-
+/** Repositories whose files decide whether gspot configures a check. */
 export const CONFIGURED_CHECK_CASES = [
     {
         name: 'a TypeScript-only scope selects Knip',

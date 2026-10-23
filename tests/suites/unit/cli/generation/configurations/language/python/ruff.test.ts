@@ -1,14 +1,13 @@
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { matchItems } from '#tests/setup/matchers.ts';
-import { generateFile } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type RuffConfigFile } from '#tests/types/generated-files.ts';
-import { PYTEST_FASTAPI_RULES } from '#tests/config/generation/configurations/language/python.ts';
+import { generateFile, findFileTarget } from '#tests/setup/cli/config-files.ts';
 
 test('Ruff selects the pytest and FastAPI families only when selected, and adds no per-file ignores', async () => {
     const plain = parse(
-        await generateFile(buildSandboxSettings(['python']), '.gspot/configurations/language/python/ruff.toml', {
+        await generateFile(buildSandboxSettings(['python']), findFileTarget('python', 'ruff.toml'), {
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
@@ -16,24 +15,19 @@ test('Ruff selects the pytest and FastAPI families only when selected, and adds 
     expect(plain.lint['per-file-ignores']).toBeUndefined();
     expect(plain.lint.pylint['max-statements']).toBe(30);
     const tested = parse(
-        await generateFile(
-            buildSandboxSettings(['python', 'pytest']),
-            '.gspot/configurations/language/python/ruff.toml',
-            {
-                'example.py': 'value = 1\n',
-            },
-        ),
+        await generateFile(buildSandboxSettings(['python', 'pytest']), findFileTarget('python', 'ruff.toml'), {
+            'example.py': 'value = 1\n',
+        }),
     ) as RuffConfigFile;
-    expect(tested.lint.select).toStrictEqual(matchItems([...PYTEST_FASTAPI_RULES]));
+    // At level recommended, pytest adds its recommended Ruff rules and nothing else.
+    expect(tested.lint.select.filter((code) => !plain.lint.select.includes(code))).toStrictEqual(
+        readConfigurations().get('pytest')!.ruff.recommended,
+    );
     expect(tested.lint['per-file-ignores']).toBeUndefined();
     const served = parse(
-        await generateFile(
-            buildSandboxSettings(['python', 'fastapi']),
-            '.gspot/configurations/language/python/ruff.toml',
-            {
-                'example.py': 'value = 1\n',
-            },
-        ),
+        await generateFile(buildSandboxSettings(['python', 'fastapi']), findFileTarget('python', 'ruff.toml'), {
+            'example.py': 'value = 1\n',
+        }),
     ) as RuffConfigFile;
     expect(served.lint.select).toContain('FAST003');
     expect(served.lint['per-file-ignores']).toBeUndefined();
@@ -44,7 +38,7 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
             buildSandboxSettings(['python', 'pytest'], {
                 tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/test_*.py"]\nreason = "The sandbox uses deliberate assertions."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Samples are documented by their names."\n',
             }),
-            '.gspot/configurations/language/python/ruff.toml',
+            findFileTarget('python', 'ruff.toml'),
             { 'example.py': 'value = 1\n' },
         ),
     ) as RuffConfigFile;
@@ -52,13 +46,13 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
 });
 test('Ruff formats with double quotes unless format.quotes is written, while Prettier keeps single quotes', async () => {
     const files = { 'example.py': 'value = 1\n', 'entry.js': 'export const value = 1;\n' };
-    const ruffPath = '.gspot/configurations/language/python/ruff.toml';
+    const ruffPath = findFileTarget('python', 'ruff.toml');
     const unset = parse(await generateFile(buildSandboxSettings(['python']), ruffPath, files)) as RuffConfigFile;
     expect(unset.format['quote-style']).toBe('double');
     const prettier = JSON.parse(
         await generateFile(
             buildSandboxSettings(['python', 'javascript']),
-            '.gspot/configurations/general/format/prettier.json',
+            findFileTarget('format', 'prettier.json'),
             files,
         ),
     ) as Record<string, unknown>;
@@ -76,13 +70,9 @@ test('Ruff takes its style from a format override that names every Python file',
     const tables =
         '[format]\nprint_width = 120\n[[format.override]]\npaths = ["**/*.py"]\nquotes = "single"\nprint_width = 88\n';
     const ruff = parse(
-        await generateFile(
-            buildSandboxSettings(['python'], { tables }),
-            '.gspot/configurations/language/python/ruff.toml',
-            {
-                'example.py': 'value = 1\n',
-            },
-        ),
+        await generateFile(buildSandboxSettings(['python'], { tables }), findFileTarget('python', 'ruff.toml'), {
+            'example.py': 'value = 1\n',
+        }),
     ) as RuffConfigFile & { 'line-length': number };
     expect(ruff.format['quote-style']).toBe('single');
     expect(ruff['line-length']).toBe(88);

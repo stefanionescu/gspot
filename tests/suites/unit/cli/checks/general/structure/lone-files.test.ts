@@ -77,7 +77,7 @@ test('lone-files and shared-prefixes check build, dist and coverage folders and 
     );
 });
 test.each([...FRAMEWORK_COMPONENT_CASES])(
-    'a lone .astro or .svelte component is reported once its framework is selected',
+    'a lone $framework component is reported once its framework is selected',
     async ({ framework, name, folder, content }) => {
         await using sandbox = await testdir();
         const route = `${folder}/users/${name}`;

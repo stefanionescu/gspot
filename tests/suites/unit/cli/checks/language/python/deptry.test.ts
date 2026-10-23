@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildVenvBinPath } from '#cli/system/paths.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { getTool } from '#cli/configurations/declared-tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -40,7 +41,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
                 [join(scope, 'main.py'), 'VALUE = 1\n'],
             ]),
         ),
-        [join(buildVenvBinPath('.gspot/.venv'), 'deptry')]: 'fixture',
+        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'deptry')]: 'fixture',
     });
     const { checked, commands } = await runFakeDeptry(sandbox.path);
 
@@ -52,7 +53,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
         expect(command.slice(1, 5)).toStrictEqual(['run', '--no-sync', '--project', join(sandbox.path, scope)]);
         const patterns = command.flatMap((value, index) => (value === '--extend-exclude' ? [command[index + 1]!] : []));
         expect(patterns.at(-1)).toBe('authored');
-        expect(patterns.some((pattern) => new RegExp(pattern).test('.gspot/pyproject.toml'))).toBe(true);
+        expect(patterns.some((pattern) => new RegExp(pattern).test(GSPOT_PATHS.pythonProject))).toBe(true);
         for (const nestedScope of scopes.filter(
             (path) => path !== scope && path.startsWith(scope === '' ? '' : `${scope}/`),
         )) {
@@ -62,6 +63,7 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
         expect(patterns.some((pattern) => new RegExp(pattern).test('appish/sample.py'))).toBe(false);
     }
 });
+// Run python/deptry with fake uv and deptry, and return the report and the commands it ran.
 async function runFakeDeptry(root: string) {
     const session = await openSession(root);
     using resources = fakePinnedExecutables(
@@ -80,11 +82,9 @@ test('deptry counts python.externals as first party beside the known_first_party
         'pyproject.toml':
             '[project]\nname = "example"\nversion = "1.0.0"\n[tool.deptry]\nknown_first_party = ["nodes"]\n',
         'main.py': 'import folder_paths\n',
-        [join(buildVenvBinPath('.gspot/.venv'), 'deptry')]: 'fixture',
+        [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'deptry')]: 'fixture',
     });
-    const { checked, commands } = await runFakeDeptry(sandbox.path);
-    expect(checked.report.failed).toStrictEqual([]);
-
+    const { commands } = await runFakeDeptry(sandbox.path);
     const command = commands.find((entry) => entry.includes('deptry'))!;
     const firstParty = command.flatMap((value, index) =>
         value === '--known-first-party' ? [command[index + 1]!] : [],

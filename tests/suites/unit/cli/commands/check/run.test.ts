@@ -5,7 +5,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -19,7 +18,16 @@ test('an aborted run stops its command and reports cancellation on every system'
     const program = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); setInterval(() => {}, 1000);`;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {
-            tables: `[[command_check]]\nid = "project/cancel"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\n`,
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'project/cancel',
+                        stage: 'commit',
+                        paths: ['source.txt'],
+                        command: [process.execPath, '-e', program],
+                    },
+                ],
+            }),
         }),
         'source.txt': 'Input.\n',
     });
@@ -31,14 +39,32 @@ test('an aborted run stops its command and reports cancellation on every system'
     expect(await waitForFile(marker)).toBe(true);
     controller.abort();
     const result = await running;
-    expect(result.report.checks).toMatchObject([{ check: 'project/cancel', status: 'error' }]);
-    expect(result.report.checks[0]?.note).toBe(`${process.execPath} was canceled.`);
+    expect(result.report.checks).toMatchObject([
+        { check: 'project/cancel', status: 'error', note: `${process.execPath} was canceled.` },
+    ]);
     await waitForExit(Number(await readFile(marker, 'utf8')));
 });
 test('a path ignore keeps the check and its fixer off those paths, and a run of only ignored paths is skipped', async () => {
     await using sandbox = await testdir();
     const settings = buildSandboxSettings([], {
-        tables: `[[command_check]]\nid = "project/quality"\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\nreason = "The skipped input preserves the sample."\n`,
+        tables: stringify({
+            command_check: [
+                {
+                    id: 'project/quality',
+                    command: QUALITY_COMMAND,
+                    fix: QUALITY_FIX,
+                    paths: ['inputs/**'],
+                    stage: 'commit',
+                },
+            ],
+            ignore: [
+                {
+                    check: 'project/quality',
+                    paths: ['inputs/skip*', '!inputs/skip-keep.txt'],
+                    reason: 'The skipped input preserves the sample.',
+                },
+            ],
+        }),
     });
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
@@ -49,8 +75,7 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
     const commandArguments = ['check', '--only', 'project/quality', '--fix', '--json'];
     const corrected = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const report = corrected.report;
-    expect(report.checks[0]).toMatchObject({ status: 'passed', fileCount: 2, findings: [] });
+    expect(corrected.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 2, findings: [] });
     // A second correction pass reruns the fixer over the files the first pass changed.
     for (const log of ['checked.txt', 'fixed.txt']) {
         const entries = await readFile(join(sandbox.path, log), 'utf8');
@@ -65,15 +90,29 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
     const fixed = await readFile(join(sandbox.path, 'fixed.txt'), 'utf8');
     const skipped = parseCheckReport(await runGspot(sandbox.path, [...commandArguments, '--', 'inputs/skip café.txt']));
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
-    const skippedReport = skipped.report;
-    expect(skippedReport.checks[0]).toMatchObject({ status: 'skipped', cause: 'ignore', findings: [] });
+    expect(skipped.report.checks[0]).toMatchObject({ status: 'skipped', cause: 'ignore', findings: [] });
     expect(await readFile(join(sandbox.path, 'checked.txt'), 'utf8')).toBe(checked);
     expect(await readFile(join(sandbox.path, 'fixed.txt'), 'utf8')).toBe(fixed);
 });
 test('a path ignore covers its own paths, not the scopes below or beside it', async () => {
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['bash'], {
-        tables: '[[ignore]]\ncheck = "bash/safety"\nrule = "recursive-remove"\npaths = ["root.sh"]\nreason = "The root script owns process cleanup."\n[[ignore]]\ncheck = "bash/safety"\nrule = "recursive-remove"\npaths = ["app/cleanup.sh"]\nreason = "The application script owns process cleanup."\n',
+        tables: stringify({
+            ignore: [
+                {
+                    check: 'bash/safety',
+                    rule: 'recursive-remove',
+                    paths: ['root.sh'],
+                    reason: 'The root script owns process cleanup.',
+                },
+                {
+                    check: 'bash/safety',
+                    rule: 'recursive-remove',
+                    paths: ['app/cleanup.sh'],
+                    reason: 'The application script owns process cleanup.',
+                },
+            ],
+        }),
         scopes: [{ path: 'app' }, { path: 'app/child' }, { path: 'sibling' }],
     });
     const source = '#!/usr/bin/env bash\nrm -rf "$target"\n';
@@ -97,34 +136,17 @@ test('a path ignore covers its own paths, not the scopes below or beside it', as
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-test('an ignore with names keeps them in the run report and in the verbose ignore line', async () => {
-    const reason = 'The framework calls this function by name.';
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['python'], {
-            level: 'all',
-            tables: `[[ignore]]\ncheck = "structure/trivial-functions"\nnames = ["use_thing"]\nreason = "${reason}"\n`,
-        }),
-        'hooks.py': 'def use_thing():\n    return 1\n',
-    });
-    commitAll(sandbox.path);
-    const only = ['check', '--only', 'structure/trivial-functions'];
-    const structured = parseCheckReport(await runGspot(sandbox.path, [...only, '--json']));
-    expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-    expect(structured.report.ignores).toStrictEqual([
-        { check: 'structure/trivial-functions', names: ['use_thing'], reason },
-    ]);
-    const text = await runGspot(sandbox.path, [...only, '--verbose']);
-    expect(text.stdout).toContain(`ignore     structure/trivial-functions names use_thing  ${reason}\n`);
-});
-
 test('a check with malformed JSON reports an error, and the other checks keep their results', async () => {
     const reporter = [process.execPath, '-e', 'console.log("source.txt"); process.exitCode = 1;'];
-    const entries = ['broken', 'kept'].map(
-        (name) =>
-            `[[command_check]]\nid = "sandbox/${name}"\ncommand = ${JSON.stringify(reporter)}\npaths = ["source.txt"]\nstage = "commit"\n[command_check.output]\nformat = "${name === 'broken' ? 'json' : 'lines'}"\n`,
-    );
+    const entries = ['broken', 'kept'].map((name) => ({
+        id: `sandbox/${name}`,
+        command: reporter,
+        paths: ['source.txt'],
+        stage: 'commit',
+        output: { format: name === 'broken' ? 'json' : 'lines' },
+    }));
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { tables: entries.join('') }),
+        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: entries }) }),
         'source.txt': 'input\n',
     });
 
@@ -137,7 +159,7 @@ test('a check with malformed JSON reports an error, and the other checks keep th
         {
             check: 'sandbox/broken',
             status: 'error',
-            note: expect.stringContaining('JSON returned no structured findings.') as string,
+            note: 'JSON returned no structured findings.',
         },
         { check: 'sandbox/kept', status: 'failed', findings: [{ message: 'source.txt' }] },
     ]);
@@ -206,7 +228,7 @@ test('an ignore with names keeps them in the run report and in the verbose ignor
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash'], {
             level: 'all',
-            tables: '[[ignore]]\ncheck = "structure/trivial-functions"\nnames = ["useThing"]\nreason = "The public hook serves the script caller."\n',
+            tables: stringify({ ignore: [{ check: 'structure/trivial-functions', names: ['useThing'], reason }] }),
         }),
         'source.sh':
             'useThing() { printf "%s\\n" ready; }\nuseOther() { printf "%s\\n" ready; }\nprintf "%s\\n" complete\n',

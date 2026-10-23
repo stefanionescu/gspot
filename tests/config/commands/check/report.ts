@@ -118,3 +118,35 @@ export const VERBOSITY_FILES = {
     'findings.txt':
         Array.from({ length: FINDINGS_SHOWN + 1 }, (_, index) => `finding ${String(index + 1)}.`).join('\n') + '\n',
 };
+
+/** A duration in a report line, such as `1.2s`. */
+export const DURATION = /\b\d+\.\ds\b/gu;
+
+/**
+ * Build the report of the verbosity run, with every duration written as `0.0s`.
+ *
+ * @param verbose whether the run printed every finding and every command.
+ * @returns the report text.
+ */
+export function buildVerbosityReport(verbose: boolean): string {
+    const total = String(FINDINGS_SHOWN + 1);
+    return [
+        'Checked the files changed since HEAD.',
+        `example/findings  failed  ${total} findings`,
+        ...(verbose ? [`  $ ${process.execPath} findings.ts`] : []),
+        ...Array.from(
+            { length: verbose ? FINDINGS_SHOWN + 1 : FINDINGS_SHOWN },
+            (_, index) => `  finding ${String(index + 1)}.`,
+        ),
+        '  help: Read the command output; this repository declares the check.',
+        ...(verbose ? [] : ['  and 1 more (--verbose prints every finding)']),
+        '  run again: gspot check --only example/findings',
+        '',
+        ...(verbose
+            ? ['example/passing  passed  1 file  0.0s', `  $ ${process.execPath} -e process.exitCode=0;`, '']
+            : []),
+        `Failed: 1 check with ${total} findings. Passed: 1 check. Skipped: 0 checks.`,
+        'Time: 0.0s. Exit code 1.',
+        '',
+    ].join('\n');
+}

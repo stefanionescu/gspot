@@ -2,7 +2,7 @@
 
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript/projects.ts';
 
-export const WEB_PACKAGES = ['react', 'react-dom'] as const;
+export const WEB_PACKAGES = ['@types/react', 'react', 'react-dom'] as const;
 
 // The compiler options of a test React web repository.
 const WEB_TSCONFIG = {
@@ -41,8 +41,7 @@ export const REACT_SANDBOX = {
 } as const;
 
 const COUNTER = `// A test component.
-import { useState } from "react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 /**
  * Counts, some of the time.
@@ -64,7 +63,7 @@ export const REACT_CASES = [
     {
         check: 'javascript/eslint',
         files: { 'src/Counter.tsx': COUNTER },
-        expected: { file: 'src/Counter.tsx', rule: 'react-hooks/rules-of-hooks', line: 14 },
+        expected: { file: 'src/Counter.tsx', rule: 'react-hooks/rules-of-hooks', line: 13 },
         corrected: {
             files: {
                 'src/Counter.tsx': CLEAN_COMPONENT.replace('function Greeting', 'function Counter'),

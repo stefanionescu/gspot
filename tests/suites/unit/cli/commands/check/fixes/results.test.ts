@@ -1,12 +1,14 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { stringify } from '@decimalturn/toml-patch';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runFixers } from '#cli/commands/check/fixes.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { FIXER_RESULTS, FAILING_VERSION_TOOL } from '#tests/config/commands/check/fixes/results.ts';
@@ -66,8 +68,7 @@ test('a fixer that swaps one invalid UTF-8 byte for another reports the file as 
     const {
         results: [result],
     } = await runFixers(session, [planned], { isDryRun: false });
-    expect(result!.status).toBe('changed');
-    expect(result!.changed).toStrictEqual(['source.txt']);
+    expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
     expect(await readFile(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
 });
 
@@ -79,8 +80,7 @@ test('a fixer that deletes an empty file reports it as changed', async () => {
     const {
         results: [result],
     } = await runFixers(session, [planned], { isDryRun: false });
-    expect(result!.status).toBe('changed');
-    expect(result!.changed).toStrictEqual(['source.txt']);
+    expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
     expect(await isOnDisk(join(sandbox.path, 'source.txt'))).toBe(false);
 });
 
@@ -142,9 +142,35 @@ test('a failed version check blocks a check and its fix without changing source 
     const checked = await runCheckCommand(session, planned);
     expect(checked.status).toBe('error');
     expect(checked.note).toBe('The version command of version-teller exited 7: 3.8.1');
-    const fixed = await runFixers(session, [planned], {
-        isDryRun: false,
-    }).then(({ results }) => results[0]!);
+    const fixed = await runFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
     expect(fixed.status).toBe('failed');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+});
+
+test('a fixer that leaves a code file that fails to parse is named in the fix report', async () => {
+    await using sandbox = await testdir();
+    const breaker = String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "import Hls, type { A } from 'hls.js';\n");`;
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: stringify({
+                command_check: [
+                    {
+                        id: 'project/merge-imports',
+                        stage: 'commit',
+                        paths: ['*.ts'],
+                        command: [process.execPath, '-e', 'process.exitCode = 0'],
+                        fix: [process.execPath, 'breaker.cjs', '{files}'],
+                        output: { format: 'none' },
+                    },
+                ],
+            }),
+        }),
+        'client.ts': "import Hls from 'hls.js';\nexport { Hls };\n",
+        'notes.ts': "export const note = 'kept';\n",
+        'breaker.cjs': breaker,
+    });
+    const session = await openSession(sandbox.path);
+    const result = await runChecks(session, { ...buildRunOptions({ only: ['project/merge-imports'] }), fix: true });
+    expect(result.fixes?.broken).toStrictEqual(['client.ts', 'notes.ts']);
 });

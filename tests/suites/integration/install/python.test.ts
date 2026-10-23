@@ -9,12 +9,13 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listMisePins } from '#cli/configurations/declared-tools.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { IndexedPythonProject } from '#tests/types/packages.ts';
 import { PYTHON_VERSION } from '#cli/config/install/python/project.ts';
 import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
-import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { DIGEST_ALGORITHM } from '#cli/config/checks/language/swift/cache.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/python-project.ts';
 import { spawnGspot, installGeneratedTools } from '#tests/setup/cli/commands.ts';
@@ -48,7 +49,7 @@ test.each([...PYTHON_PROJECTS])(
         expect(
             steps.map((step) => (step[0] === 'mise' ? step : ['uv', ...step.slice(1, step.indexOf('--project'))])),
         ).toStrictEqual([
-            ['mise', 'trust', '.gspot/mise.toml'],
+            ['mise', 'trust', GSPOT_PATHS.miseProject],
             ['mise', 'install', ...miseTools],
             ['mise', 'bin-paths', ...miseTools],
             ...PYTHON_INSTALL_STEPS.map((step) =>
@@ -56,11 +57,11 @@ test.each([...PYTHON_PROJECTS])(
             ),
         ]);
         for (const step of steps.filter((entry) => entry[0] !== 'mise')) {
-            expect(step[step.indexOf('--project') + 1]).toBe(join(sandbox.path, '.gspot'));
+            expect(step[step.indexOf('--project') + 1]).toBe(join(sandbox.path, DOT_GSPOT));
         }
         expect(await readFile(join(sandbox.path, 'pyproject.toml'))).toStrictEqual(rootProject);
         expect(await readFile(join(sandbox.path, '.venv/authored.txt'), 'utf8')).toBe('keep the project environment');
-        expect(await readFile(join(sandbox.path, '.gspot/pyproject.toml'))).toStrictEqual(projectFile);
+        expect(await readFile(join(sandbox.path, GSPOT_PATHS.pythonProject))).toStrictEqual(projectFile);
         expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
         expect(await readFile(join(sandbox.path, configuration))).toStrictEqual(rootConfiguration);
     },
@@ -71,36 +72,37 @@ test.each([...PYTHON_PROJECTS])(
     async (configuration) => {
         await using sandbox = await testdir();
         await using artifacts = await testdir();
-        await using prepared = await createPythonProject(sandbox.path, {
-            indexFile: configuration,
-        });
+        await using prepared = await createPythonProject(sandbox.path, { indexFile: configuration });
         await installGeneratedTools(sandbox.path);
         const { projectFile, lockfile } = await readToolProjectFiles(sandbox.path, 'uv');
         const { rootConfiguration } = prepared;
         const clone = join(artifacts.path, 'clone');
         commitAll(sandbox.path);
         runGitStep(sandbox.path, ['clone', '--quiet', '--no-local', sandbox.path, clone]);
-        expect(await isOnDisk(join(clone, '.gspot/.venv'))).toBe(false);
+        expect(await isOnDisk(join(clone, GSPOT_PATHS.pythonEnvironment))).toBe(false);
         for (let attempt = 0; attempt < 2; attempt++) {
             const installed = await spawnGspot(clone, ['install']);
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-            expect(installed.stdout).toContain('installed 1 Python tool in .gspot/.venv');
-            const status = runGit(clone, ['status', '--porcelain']);
-            expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
+            expect(installed.stdout.split('\n')).toContain(
+                `installed 1 Python tool in ${GSPOT_PATHS.pythonEnvironment}`,
+            );
+            expect(runGitStep(clone, ['status', '--porcelain'])).toBe('');
             expect({
-                projectFile: await readFile(join(clone, '.gspot/pyproject.toml')),
-                lockfile: await readFile(join(clone, '.gspot/uv.lock')),
+                projectFile: await readFile(join(clone, GSPOT_PATHS.pythonProject)),
+                lockfile: await readFile(join(clone, GSPOT_PATHS.uvLockfile)),
                 configuration: await readFile(join(clone, configuration)),
             }).toStrictEqual({ projectFile, lockfile, configuration: rootConfiguration });
         }
         const prefix = await runCommand(
-            [buildVenvExecutablePath(join(clone, '.gspot/.venv'), 'python'), '-c', 'import sys; print(sys.prefix)'],
-            {
-                cwd: clone,
-            },
+            [
+                buildVenvExecutablePath(join(clone, GSPOT_PATHS.pythonEnvironment), 'python'),
+                '-c',
+                'import sys; print(sys.prefix)',
+            ],
+            { cwd: clone },
         );
         expect(prefix.code, prefix.stderr).toBe(0);
-        expect(await realpath(prefix.stdout.trim())).toBe(await realpath(join(clone, '.gspot/.venv')));
+        expect(await realpath(prefix.stdout.trim())).toBe(await realpath(join(clone, GSPOT_PATHS.pythonEnvironment)));
     },
 );
 
@@ -122,6 +124,7 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
     expect(await readFile(join(sandbox.path, configuration))).toStrictEqual(rootConfiguration);
 });
+
 /**
  * Serve a wheel with the installed Ruff executable.
  *
@@ -131,7 +134,7 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
 async function createPythonIndex(work: string): Promise<AsyncDisposable & { url: string }> {
     await using source = await createPythonProject(work, { indexFile: 'uv.toml' });
     await installGeneratedTools(source.root);
-    const binary = buildVenvExecutablePath(join(work, '.gspot/.venv'), 'ruff');
+    const binary = buildVenvExecutablePath(join(work, GSPOT_PATHS.pythonEnvironment), 'ruff');
     const inspected = await runCommand([binary, '--version'], { cwd: work });
     if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
     const version = RUFF_VERSION_OUTPUT.exec(inspected.stdout.trim())?.groups?.['version'];

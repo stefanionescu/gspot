@@ -22,8 +22,7 @@ test('xcode/entitlements checks the deepest scope only', async () => {
         [`app/child/${path}`]: broken,
         [`sibling/${path}`]: rootContent,
     });
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-    const report = result.report;
+    const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
     expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([...ENTITLEMENT_SCOPE_RESULTS]);
     expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: `app/child/${path}`, line: 1, rule: 'entitlement' },

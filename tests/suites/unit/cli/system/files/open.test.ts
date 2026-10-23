@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
@@ -124,8 +125,8 @@ test.skipIf(isWindows).each([...OUTSIDE_LINKS])(
             root.deleteFile(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
         }).toThrow(path === 'linked' ? 'changed before removal' : refusal);
         expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
-        root.createFolder('.gspot/state/private', 0o700);
-        const attributes = await stat(join(project, '.gspot/state/private'));
+        root.createFolder(`${GSPOT_PATHS.state}/private`, 0o700);
+        const attributes = await stat(join(project, `${GSPOT_PATHS.state}/private`));
         expect(attributes.mode & 0o777).toBe(0o700);
     },
 );

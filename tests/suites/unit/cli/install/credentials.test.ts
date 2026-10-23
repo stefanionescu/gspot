@@ -37,8 +37,8 @@ test('installation output hides known passwords in raw, URL-encoded, and base64 
         { stdout: 'Earlier output\n'.repeat(INSTALL_OUTPUT_LIMIT), stderr: `Missing tool: ${printed.join(' ')}` },
         [credential],
     );
-    expect(output.startsWith('[Earlier output omitted]\n')).toBe(true);
+    expect(output).toStartWith('[Earlier output omitted]\n');
     expect(output).toHaveLength(INSTALL_OUTPUT_LIMIT + '[Earlier output omitted]\n'.length);
-    expect(output.endsWith('Missing tool: [redacted] [redacted] [redacted]')).toBe(true);
+    expect(output).toEndWith('Missing tool: [redacted] [redacted] [redacted]');
     for (const value of printed) expect(output).not.toContain(value);
 });

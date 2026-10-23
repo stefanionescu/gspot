@@ -3,12 +3,12 @@ import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import { chmod, readFile } from 'node:fs/promises';
 import * as processes from '#cli/system/processes.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { captureRejectedError } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { limitToTestDeadline } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
@@ -58,9 +58,11 @@ test.each([...NON_EXACT_PNPM_VERSIONS])(
             'package.json': packageJson,
         });
 
-        expect(detectPackageManager(sandbox.path, [])).rejects.toThrow(
-            matchFields<GspotError>({ name: 'GspotError', code: 'install', message }),
-        );
+        expect(await captureRejectedError(detectPackageManager(sandbox.path, []))).toMatchObject({
+            name: 'GspotError',
+            code: 'install',
+            message,
+        });
     },
 );
 
@@ -69,7 +71,7 @@ test('install runs the real bun version check when package.json declares bun@0.0
     await using sandbox = await testdir({ ...files, source: 'kept\n', 'gspot.toml': buildSandboxSettings([]) });
 
     await runGspot(sandbox.path, ['apply']);
-    const original = await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8');
+    const original = await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8');
     const identity = await detectPackageManager(sandbox.path, []);
     const installer = readPackageManagerVersion(
         sandbox.path,
@@ -99,7 +101,7 @@ test('install runs the real bun version check when package.json declares bun@0.0
     for (const [path, content] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
     expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('kept\n');
-    expect(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe(original);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/bun.lock'))).toBe(false);
-    expect(await isOnDisk(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(original);
+    expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/bun.lock`))).toBe(false);
+    expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
 });

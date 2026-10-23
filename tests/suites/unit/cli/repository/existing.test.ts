@@ -54,7 +54,7 @@ test('tool discovery reads tool sections through a link inside the repository', 
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
     const existingTools = readExistingTools(createReadCache(sandbox.path), { files: [], dependencyFiles: [] });
-    expect(existingTools.conflictingConfigFiles).toContainEqual(LINKED_RUFF_SECTION);
+    expect(existingTools.conflictingConfigFiles).toStrictEqual([LINKED_RUFF_SECTION]);
 });
 
 test.each([...LINKED_RULE_FOLDERS])(

@@ -90,13 +90,12 @@ test('a plugin prefix with an npm scope must match a plugin that a manifest decl
 
 test('explain finds rule pages from the root and from a child scope', async () => {
     await using sandbox = await testdir();
-    const settings = RULE_PAGE_SETTINGS;
-    await createFileTree(sandbox.path, { 'gspot.toml': settings, 'app/sample.swift': 'let value = 1\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': RULE_PAGE_SETTINGS, 'app/sample.swift': 'let value = 1\n' });
     const root = await runGspot(sandbox.path, ['explain', 'ruff/F401', '--json']);
     expect(root.code, root.stdout + root.stderr).toBe(0);
     expect(JSON.parse(root.stdout)).toMatchObject(ROOT_RULE_PAGE);
     const child = await runGspot(join(sandbox.path, 'app'), ['explain', 'swiftlint/type_body_length', '--json']);
     expect(child.code, child.stdout + child.stderr).toBe(0);
     expect(JSON.parse(child.stdout)).toMatchObject(CHILD_RULE_PAGE);
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(RULE_PAGE_SETTINGS);
 });

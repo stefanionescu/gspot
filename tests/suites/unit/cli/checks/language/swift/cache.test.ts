@@ -6,7 +6,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { captureThrow } from '#tests/setup/matchers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
@@ -87,14 +87,14 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         );
         const executed = await runChecks(session, buildRunOptions({ only: [check] }));
 
-        expect(executed.report.checks).toContainEqual(
-            matchFields({
+        expect(executed.report.checks).toMatchObject([
+            {
                 check,
                 status: 'skipped',
                 findings: [],
-                note: expect.stringContaining('swift.xcode_project') as string,
-            }),
-        );
+                note: 'Set swift.xcode_project or add Package.swift in this scope.',
+            },
+        ]);
         expect(await isOnDisk(getScopeBuildFolder(session.installedRoot, input.scope.folder.path, purpose))).toBe(
             false,
         );
@@ -121,29 +121,32 @@ test('build cache rejects external output links and concurrent writers', async (
     const session = await openSession(sandbox.path);
     const input = planSandboxCheck(session, 'swift/build');
     const folder = buildPlan(session, input).folder;
-    const held = prepareBuild(session.root, input.files, folder);
-    const heldFiles = held.files;
-    expect(heldFiles.read('build.lock')).toBeDefined();
-    expect(() => prepareBuild(session.root, input.files, folder)).toThrow('Another gspot command');
-    heldFiles[Symbol.dispose]();
+    const held = prepareBuild(session.root, input.files, folder).files;
+    expect(await isOnDisk(join(folder, 'build.lock'))).toBe(true);
+    expect(captureThrow(() => prepareBuild(session.root, input.files, folder))).toBe(
+        `Another gspot command, process ${String(process.pid)}, holds build.lock. Retry after it finishes, or delete build.lock when no gspot command is running.`,
+    );
+    held[Symbol.dispose]();
     const authored = join(outside.path, 'authored');
     await writeFile(authored, 'preserved');
     await symlink(outside.path, join(folder, 'package'));
-    const linked = prepareBuild(session.root, input.files, folder);
-    const linkedFiles = linked.files;
-    expect(() => linkedFiles.read('package/authored')).toThrow();
-    expect(() => {
-        linkedFiles.write('package/authored', { bytes: Buffer.from('changed'), mode: 0o600 }, undefined);
-    }).toThrow();
+    const linkedFiles = prepareBuild(session.root, input.files, folder).files;
+    expect(captureThrow(() => linkedFiles.read('package/authored'))).toBe(
+        'A parent of package/authored is a link or is not a folder. Choose a folder without links.',
+    );
+    expect(
+        captureThrow(() => {
+            linkedFiles.write('package/authored', { bytes: Buffer.from('changed'), mode: 0o600 }, undefined);
+        }),
+    ).toBe('A parent of package/authored is a link or is not a folder. Choose a folder without links.');
     linkedFiles[Symbol.dispose]();
     expect(await readFile(authored, 'utf8')).toBe('preserved');
     expect(await isOnDisk(join(folder, 'build.lock'))).toBe(false);
     await rm(join(folder, 'package'));
     await mkdir(join(folder, 'package'));
-    const repaired = prepareBuild(session.root, input.files, folder);
-    const repairedFiles = repaired.files;
-    expect(repairedFiles.read('build.lock')).toBeDefined();
-    repairedFiles[Symbol.dispose]();
+    const repaired = prepareBuild(session.root, input.files, folder).files;
+    expect(await isOnDisk(join(folder, 'build.lock'))).toBe(true);
+    repaired[Symbol.dispose]();
     expect(await isOnDisk(join(folder, 'build.lock'))).toBe(false);
 });
 test('the Swift build folder lives in the gspot cache, the same for one repository and different between repositories', async () => {
@@ -152,14 +155,14 @@ test('the Swift build folder lives in the gspot cache, the same for one reposito
     await using _cache = await redirectCacheFolder();
     for (const root of [first.path, second.path])
         await createFileTree(root, { 'gspot.toml': buildSandboxSettings(['swift']), 'Package.swift': SWIFT_PACKAGE });
-    const session = await openSession(first.path);
-    const firstInput = planSandboxCheck(session, 'swift/build');
-    const checkedSession = await openSession(second.path);
-    const secondInput = planSandboxCheck(checkedSession, 'swift/build');
-    const folder = buildPlan(session, firstInput).folder;
-    expect(folder).toBe(buildPlan(session, firstInput).folder);
-    expect(folder).not.toBe(buildPlan(checkedSession, secondInput).folder);
-    expect(folder.startsWith(readCacheFolder() + sep)).toBe(true);
+    const firstSession = await openSession(first.path);
+    const firstInput = planSandboxCheck(firstSession, 'swift/build');
+    const secondSession = await openSession(second.path);
+    const secondInput = planSandboxCheck(secondSession, 'swift/build');
+    const folder = buildPlan(firstSession, firstInput).folder;
+    expect(folder).toBe(buildPlan(firstSession, firstInput).folder);
+    expect(folder).not.toBe(buildPlan(secondSession, secondInput).folder);
+    expect(folder).toStartWith(readCacheFolder() + sep);
 });
 test('Swift build side effects stay in the source copy and do not reach later runs', async () => {
     using resources = new DisposableStack();
@@ -277,12 +280,12 @@ test('two copies of one repository with the same installed root share one build 
     await using _cache = await redirectCacheFolder();
     const session = await openSession(installed.path);
     const installedInput = planSandboxCheck(session, 'swift/build');
-    const checkedSession = await openSession(first.path, { installedRoot: installed.path });
-    const firstInput = planSandboxCheck(checkedSession, 'swift/build');
-    const correctedSession = await openSession(second.path, { installedRoot: installed.path });
-    const secondInput = planSandboxCheck(correctedSession, 'swift/build');
-    const firstFolder = buildPlan(checkedSession, firstInput).folder;
-    const secondFolder = buildPlan(correctedSession, secondInput).folder;
+    const firstSession = await openSession(first.path, { installedRoot: installed.path });
+    const firstInput = planSandboxCheck(firstSession, 'swift/build');
+    const secondSession = await openSession(second.path, { installedRoot: installed.path });
+    const secondInput = planSandboxCheck(secondSession, 'swift/build');
+    const firstFolder = buildPlan(firstSession, firstInput).folder;
+    const secondFolder = buildPlan(secondSession, secondInput).folder;
     expect(firstFolder).toBe(secondFolder);
     expect(firstFolder).toBe(buildPlan(session, installedInput).folder);
 });

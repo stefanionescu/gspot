@@ -7,6 +7,7 @@ import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import {
     KEYED_TABLES_SQL,
     RECREATED_TABLE_SQL,
+    DROP_SECOND_INDEX_SQL,
     EQUIVALENT_INDEXES_SQL,
     INDEXED_TABLE_DROP_SQL,
     UNNAMED_FOREIGN_KEY_SQL,
@@ -50,16 +51,7 @@ test('removing one equivalent index preserves the other until it is removed, and
     const initial = await parseMigration('1_create.sql', EQUIVALENT_INDEXES_SQL);
     const retained = buildSchema([initial]);
     expect(retained.indexed.get('public.posts')).toStrictEqual(new Set(['author_id']));
-    const removed = buildSchema([
-        initial,
-        await parseMigration(
-            '2_drop.sql',
-            `
-        DROP INDEX second;
-        ALTER TABLE posts DISABLE ROW LEVEL SECURITY;
-    `,
-        ),
-    ]);
+    const removed = buildSchema([initial, await parseMigration('2_drop.sql', DROP_SECOND_INDEX_SQL)]);
     expect([...removed.secured]).toStrictEqual([]);
     expect([...removed.indexed]).toStrictEqual([]);
 });

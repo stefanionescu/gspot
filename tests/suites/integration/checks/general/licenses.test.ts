@@ -2,8 +2,10 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -17,6 +19,7 @@ import {
     installGeneratedTools,
 } from '#tests/setup/cli/commands.ts';
 import {
+    MIT_ONLY,
     LICENSED_PACKAGES,
     FONT_PACKAGE_FILES,
     LICENSES_ROOT_PACKAGE,
@@ -33,24 +36,19 @@ test('licenses/allowed accepts an allowed license choice and reports a disallowe
         ...LICENSED_PACKAGES,
     });
     commitAll(root);
-    const environment = {};
     for (const command of [buildInitArguments(['licenses']), ['set', 'licenses.allowed', '["MIT","Apache-2.0"]']]) {
-        const prepared = await spawnGspot(root, command, environment);
+        const prepared = await spawnGspot(root, command);
         expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
     }
     await installGeneratedTools(root);
-    const baseline = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json'], environment),
-    );
+    const baseline = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));
     expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
     expect(baseline.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
     await writeFile(
         join(root, 'node_modules/strict/package.json'),
         JSON.stringify({ name: 'strict', version: '1.0.0', license: 'GPL-3.0-only' }),
     );
-    const checked = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json'], environment),
-    );
+    const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks[0]?.findings).toStrictEqual([
         matchFields({
@@ -65,13 +63,12 @@ test('licenses/allowed accepts an allowed license choice and reports a disallowe
 test("licenses/allowed reads installed Python packages, ignores the project's pip-licenses settings, and matches an allowed package by its normalized name", async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
-    const files = {
-        'gspot.toml': buildSandboxSettings(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n', level: 'all' }),
+    await createFileTree(root, {
+        'gspot.toml': buildSandboxSettings(['licenses'], { tables: stringify({ licenses: MIT_ONLY }), level: 'all' }),
         'pyproject.toml': PIP_LICENSES_PYPROJECT,
-    };
-    await createFileTree(root, files);
-    const environment = await runCommand(['uv', 'venv', '.venv'], { cwd: root });
-    expect(environment.code, environment.stdout + environment.stderr).toBe(0);
+    });
+    const venv = await runCommand(['uv', 'venv', '.venv'], { cwd: root });
+    expect(venv.code, venv.stdout + venv.stderr).toBe(0);
     await installGeneratedTools(root);
     const location = await runCommand(
         [
@@ -98,7 +95,18 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
     await writeFile(
         join(root, 'gspot.toml'),
         buildSandboxSettings(['licenses'], {
-            tables: '[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "Licensed._Example"\nversion = "1.0.0"\nreason = "GPL-3.0-only. This test checks name normalization."\n',
+            tables: stringify({
+                licenses: {
+                    ...MIT_ONLY,
+                    allowed_package: [
+                        {
+                            name: 'Licensed._Example',
+                            version: '1.0.0',
+                            reason: 'GPL-3.0-only. This test checks name normalization.',
+                        },
+                    ],
+                },
+            }),
             level: 'all',
         }),
     );
@@ -112,7 +120,18 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
 test('an allowed package at the root also covers that package in a child scope without its own package.json', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['licenses'], {
-            tables: '[licenses]\nallowed = ["MIT"]\n[[licenses.allowed_package]]\nname = "@fontsource/inter"\nversion = "5.2.8"\nreason = "OFL-1.1. Documentation distributes the font."\n',
+            tables: stringify({
+                licenses: {
+                    ...MIT_ONLY,
+                    allowed_package: [
+                        {
+                            name: '@fontsource/inter',
+                            version: '5.2.8',
+                            reason: 'OFL-1.1. Documentation distributes the font.',
+                        },
+                    ],
+                },
+            }),
             scopes: [{ path: 'docs' }],
         }),
         ...FONT_PACKAGE_FILES,
@@ -120,7 +139,7 @@ test('an allowed package at the root also covers that package in a child scope w
     await installGeneratedTools(sandbox.path);
     const checked = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'licenses/allowed', '--json'], {
-            PATH: [join(sandbox.path, '.gspot/node_modules/.bin'), readEnvironmentVariable('PATH') ?? ''].join(
+            PATH: [join(sandbox.path, `${GSPOT_PATHS.nodeModules}/.bin`), readEnvironmentVariable('PATH') ?? ''].join(
                 delimiter,
             ),
         }),

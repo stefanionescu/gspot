@@ -6,9 +6,14 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { COVERAGE_ZERO_LIMITS } from '#tests/config/integration/checks/testing/samples.ts';
 import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
-import { PYTEST_CASES, PYTEST_SANDBOX, PYTEST_PYPROJECT } from '#tests/config/integration/checks/testing/pytest.ts';
+
+import {
+    PYTEST_CASES,
+    PYTEST_SANDBOX,
+    PYTEST_PYPROJECT,
+    COVERAGE_LIMIT_CASES,
+} from '#tests/config/integration/checks/testing/pytest.ts';
 
 const installedSandbox = shareInstalledSandbox({
     install: false,
@@ -24,9 +29,9 @@ test.each([...PYTEST_CASES])('$check reports the required coverage and passes af
     expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });
 
-test.each([80, 0])(
-    "pytest/coverage with a %i limit uses the project's Python and needs pytest-cov only above 0",
-    async (limit) => {
+test.each([...COVERAGE_LIMIT_CASES])(
+    "pytest/coverage with a $limit limit uses the project's Python and needs pytest-cov only above 0",
+    async ({ coverage, code, result }) => {
         const { root, environment } = installedSandbox();
         const project = PYTEST_PYPROJECT.replace(', "pytest-cov==7.1.0"', '');
         const change = await changeAppliedSandbox(installedSandbox(), {
@@ -37,14 +42,8 @@ test.each([80, 0])(
                 'app/test_child.py': 'def test_child():\n    assert 3 * 2 == 6\n',
                 'gspot.toml': buildSandboxSettings(['python', 'pytest'], {
                     level: 'all',
-                    tables:
-                        (limit === 0
-                            ? COVERAGE_ZERO_LIMITS
-                            : COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80')) +
-                        `[[scope]]
-path = "app"
-configurations = ["python", "pytest"]
-`,
+                    scopes: [{ path: 'app', configurations: ['python', 'pytest'] }],
+                    tables: coverage,
                 }),
             },
         });
@@ -55,14 +54,15 @@ configurations = ["python", "pytest"]
             const checked = parseCheckReport(
                 await spawnGspot(root, ['check', '--only', 'pytest/coverage', '--json'], environment),
             );
-            expect(checked.code, checked.stdout + checked.stderr).toBe(limit === 0 ? 0 : 2);
-            const checks = checked.report.checks;
-            expect(checks.map((check) => check.scope)).toStrictEqual(['', 'app']);
-            for (const check of checks) {
-                expect(check.status).toBe(limit === 0 ? 'passed' : 'missing');
-                if (limit === 0) expect(check.command?.some((arg) => arg.startsWith('--cov'))).toBe(false);
-                else expect(check.note).toContain('pytest-cov');
-            }
+            expect(checked.code, checked.stdout + checked.stderr).toBe(code);
+            expect(
+                checked.report.checks.map(({ scope, status, note, command }) => ({
+                    scope,
+                    status,
+                    note,
+                    coverage: command?.some((argument) => argument.startsWith('--cov')),
+                })),
+            ).toStrictEqual(['', 'app'].map((scope) => ({ scope, ...result })));
             expect(await readFile(join(root, 'pyproject.toml'), 'utf8')).toBe(project);
             expect(await readFile(join(root, 'uv.lock'), 'utf8')).toBe(lockfile);
         } finally {

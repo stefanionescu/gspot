@@ -4,6 +4,7 @@ import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -20,7 +21,7 @@ test('detection proposes a language from an extension and the always-selected co
         readConfigurations(),
     );
     expect(plans.find((plan) => plan.configuration === 'bash')?.evidence).toBe('1 .sh file');
-    expect(plans.some((plan) => plan.configuration === 'spelling')).toBe(true);
+    expect(plans.map(({ configuration }) => configuration)).toContain('spelling');
 });
 
 test.each(['.d.ts', '.d.mts', '.d.cts'])(
@@ -141,7 +142,9 @@ test('a Prisma read error stops detection, and a session with saved choices does
     expect(String(read.mock.calls[0]?.[0])).toBe(join(sandbox.path, 'prisma/schema.prisma'));
     read.mockClear();
     await openSession(sandbox.path);
-    expect(read.mock.calls.some(([path]) => String(path).endsWith('/prisma/schema.prisma'))).toBe(false);
+    expect(
+        read.mock.calls.map(([path]) => String(path)).filter((path) => path.endsWith('/prisma/schema.prisma')),
+    ).toStrictEqual([]);
 });
 
 test('Testing Library is detected only in the scope that declares it', async () => {
@@ -170,7 +173,7 @@ test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its p
         'package.json': JSON.stringify({ engines: { [entry.runtime]: '>=1' } }),
         'api/package.json': JSON.stringify(entry.package),
         'api/entry.js': entry.source,
-        '.gspot/package.json': JSON.stringify('toolProjectPackageJson' in entry ? entry.toolProjectPackageJson : {}),
+        [GSPOT_PATHS.npmProject]: JSON.stringify('toolProjectPackageJson' in entry ? entry.toolProjectPackageJson : {}),
     });
 
     const repository = await readTestRepository(sandbox.path);

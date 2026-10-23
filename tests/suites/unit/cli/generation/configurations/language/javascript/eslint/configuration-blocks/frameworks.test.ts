@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import type { ESLint } from 'eslint';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import testsPackage from '#tests/package.json' with { type: 'json' };
 import { testModules } from '#tests/setup/sandboxes/node-modules.ts';
 import type { EslintConfiguration } from '#tests/types/tool-output.ts';
 import { NESTJS_SANDBOX } from '#tests/config/checks/framework/nestjs.ts';
@@ -210,19 +210,19 @@ test('Next.js route rules use each project root and stay off in a scope without 
 });
 
 test('the Swagger lint rules apply only when package.json declares @nestjs/swagger', async () => {
-    await using repository = await createSandbox({ ...NESTJS_SANDBOX, level: 'all', dependencies: {} });
+    await using repository = await createSandbox({
+        ...NESTJS_SANDBOX,
+        level: 'all',
+        dependencies: { '@nestjs/common': testsPackage.devDependencies['@nestjs/common'] },
+    });
     const path = join(repository.root, 'src/greeting.controller.ts');
     await createEslint(repository.root);
     const plain = await runCommand([join(testModules, '.bin/eslint'), '--format', 'json', path], {
         cwd: repository.root,
     });
-    expect([0, 1], plain.stdout + plain.stderr).toContain(plain.code);
     const plainResults = JSON.parse(plain.stdout) as ESLint.LintResult[];
-    expect(
-        plainResults
-            .flatMap(({ messages }) => messages)
-            .some(({ ruleId }) => ruleId === '@darraghor/nestjs-typed/controllers-should-supply-api-tags'),
-    ).toBe(false);
+    expect(plain.code, plain.stdout + plain.stderr).toBe(0);
+    expect(plainResults.flatMap(({ messages }) => messages)).toStrictEqual([]);
     const packagePath = join(repository.root, 'package.json');
     const packageJson = JSON.parse(await readFile(packagePath, 'utf8')) as PackageJson;
     await writeFile(
@@ -233,11 +233,14 @@ test('the Swagger lint rules apply only when package.json declares @nestjs/swagg
     const swagger = await runCommand([join(testModules, '.bin/eslint'), '--format', 'json', path], {
         cwd: repository.root,
     });
-    expect([0, 1], swagger.stdout + swagger.stderr).toContain(swagger.code);
     const swaggerResults = JSON.parse(swagger.stdout) as ESLint.LintResult[];
-    expect(swaggerResults.flatMap(({ messages }) => messages)).toContainEqual(
-        matchFields({ ruleId: '@darraghor/nestjs-typed/controllers-should-supply-api-tags', line: 7 }),
-    );
+    expect(swagger.code, swagger.stdout + swagger.stderr).toBe(1);
+    expect(
+        swaggerResults.flatMap(({ messages }) => messages.map(({ ruleId, line }) => ({ ruleId, line }))),
+    ).toStrictEqual([
+        { ruleId: '@darraghor/nestjs-typed/controllers-should-supply-api-tags', line: 7 },
+        { ruleId: '@darraghor/nestjs-typed/api-method-should-specify-api-response', line: 22 },
+    ]);
 });
 
 test('react-refresh knows the catchError wrapper of next/error in a Next.js scope', async () => {

@@ -1,5 +1,3 @@
-/** List every version pin of a tool by installer and package name. */
-
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';

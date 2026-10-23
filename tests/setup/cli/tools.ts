@@ -4,6 +4,7 @@ import { open, readFile } from 'node:fs/promises';
 import type { Session } from '#cli/types/session.ts';
 import type { Writer } from '#cli/types/ownership.ts';
 import { generate } from '#cli/generation/generate.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import type { ToolSearch } from '#cli/types/tools/inspection.ts';
@@ -19,11 +20,11 @@ export async function readToolProjectFiles(
     packageManager: PackageManager['name'] | 'uv',
 ): Promise<ToolProjectFiles> {
     const python = packageManager === 'uv';
-    const lockfilePath = join(root, '.gspot', python ? 'uv.lock' : selectLockfileName(packageManager));
+    const lockfilePath = join(root, DOT_GSPOT, python ? 'uv.lock' : selectLockfileName(packageManager));
     await using lockfile = await open(lockfilePath, 'r');
     const attributes = await lockfile.stat();
     return {
-        projectFile: await readFile(join(root, '.gspot', python ? 'pyproject.toml' : 'package.json')),
+        projectFile: await readFile(join(root, DOT_GSPOT, python ? 'pyproject.toml' : 'package.json')),
         lockfilePath,
         lockfile: await lockfile.readFile(),
         mode: attributes.mode,

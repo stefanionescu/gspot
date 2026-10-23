@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { captureThrow } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
@@ -15,16 +16,16 @@ test('one batch writes the planned binary bytes and removes a stray file', async
     const first = Buffer.from([0, 255, 10]);
     const second = Buffer.from([255, 0, 13]);
     writePlans(writer, [
-        planReplacement(writer, { path: '.gspot/first.bin', next: { bytes: first, mode: 0o644 } }),
-        planReplacement(writer, { path: '.gspot/second.bin', next: { bytes: second, mode: 0o644 } }),
+        planReplacement(writer, { path: `${DOT_GSPOT}/first.bin`, next: { bytes: first, mode: 0o644 } }),
+        planReplacement(writer, { path: `${DOT_GSPOT}/second.bin`, next: { bytes: second, mode: 0o644 } }),
     ]);
-    expect(await readFile(join(sandbox.path, '.gspot/first.bin'))).toStrictEqual(first);
-    expect(await readFile(join(sandbox.path, '.gspot/second.bin'))).toStrictEqual(second);
+    expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/first.bin`))).toStrictEqual(first);
+    expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/second.bin`))).toStrictEqual(second);
     writePlans(writer, [
-        { path: '.gspot/first.bin', before: writer.files.read('.gspot/first.bin'), status: 'changed' },
+        { path: `${DOT_GSPOT}/first.bin`, before: writer.files.read(`${DOT_GSPOT}/first.bin`), status: 'changed' },
     ]);
-    expect(writer.files.readStats('.gspot/first.bin')).toBeUndefined();
-    expect(await readFile(join(sandbox.path, '.gspot/second.bin'))).toStrictEqual(second);
+    expect(writer.files.readStats(`${DOT_GSPOT}/first.bin`)).toBeUndefined();
+    expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/second.bin`))).toStrictEqual(second);
 });
 test.each(['replacement', 'block', 'keys'] as const)(
     '%s plans refuse a file edited after planning and leave the edit in place',
@@ -83,18 +84,18 @@ test('a batch writes the files before an edited one and refuses the edited one',
     expect(await readFile(join(sandbox.path, 'last.txt'), 'utf8')).toBe('authored after plan');
 });
 test('a file gspot does not own refuses the whole batch and leaves every file as it was', async () => {
-    await using sandbox = await testdir({ '.gspot/owned.txt': 'original', 'authored.txt': 'keep authored' });
+    await using sandbox = await testdir({ [`${DOT_GSPOT}/owned.txt`]: 'original', 'authored.txt': 'keep authored' });
 
     using writer = openWriter(sandbox.path);
 
     writePlans(writer, [
         planReplacement(writer, {
-            path: '.gspot/owned.txt',
+            path: `${DOT_GSPOT}/owned.txt`,
             next: { bytes: Buffer.from('installed'), mode: 0o644 },
-            expected: writer.files.read('.gspot/owned.txt'),
+            expected: writer.files.read(`${DOT_GSPOT}/owned.txt`),
         }),
     ]);
-    const plans = ['.gspot/owned.txt', 'authored.txt'].map((path) =>
+    const plans = [`${DOT_GSPOT}/owned.txt`, 'authored.txt'].map((path) =>
         planReplacement(writer, {
             path,
             next: { bytes: Buffer.from('replacement'), mode: 0o644 },
@@ -105,7 +106,7 @@ test('a file gspot does not own refuses the whole batch and leaves every file as
             writePlans(writer, plans);
         }),
     ).toBe('gspot did not overwrite these files: authored.txt. Move them aside, then run the command again.');
-    expect(await readFile(join(sandbox.path, '.gspot/owned.txt'), 'utf8')).toBe('installed');
+    expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/owned.txt`), 'utf8')).toBe('installed');
     expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('keep authored');
 });
 // Windows does not preserve the POSIX permission-bit edit in the mode row.

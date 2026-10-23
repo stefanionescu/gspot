@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/npm/project.ts';
@@ -15,8 +16,7 @@ test('after init and install, apply has nothing to write', async () => {
     await using sandbox = await testdir(INIT_FILES);
 
     commitAll(sandbox.path);
-    const environment = {};
-    const init = await spawnGspot(sandbox.path, buildInitArguments([]), environment);
+    const init = await spawnGspot(sandbox.path, buildInitArguments([]));
     expect(init.code, init.stdout + init.stderr).toBe(0);
     await installGeneratedTools(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
@@ -27,18 +27,18 @@ test('after init and install, apply has nothing to write', async () => {
 test('install refuses an npm tool project edited to run scripts, before it contacts the registry', async () => {
     await using sandbox = await createNpmProject(...PACKAGE_MANAGER_CASES[0]);
     const { root, registry } = sandbox;
-    const packageJsonPath = join(root, '.gspot/package.json');
-    const packageJson = await readFile(packageJsonPath);
+    const packageJsonPath = join(root, GSPOT_PATHS.npmProject);
+    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8')) as object;
     await chmod(packageJsonPath, 0o644);
-    const hasScript = JSON.stringify({
-        ...JSON.parse(Buffer.from(packageJson).toString('utf8')),
-        scripts: { postinstall: 'exit 42' },
-    });
+    const hasScript = JSON.stringify({ ...packageJson, scripts: { postinstall: 'exit 42' } });
     await writeFile(packageJsonPath, hasScript);
     const requests = registry.requests;
     const refused = await spawnGspot(root, ['install', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stdout).toContain('The tool projects in .gspot do not match gspot.toml. Run gspot apply first.');
+    expect(JSON.parse(refused.stdout)).toStrictEqual({
+        error: 'install',
+        message: 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.',
+    });
     expect(registry.requests).toBe(requests);
     expect(await readFile(packageJsonPath, 'utf8')).toBe(hasScript);
 });
@@ -56,23 +56,22 @@ test.each([true, false])(
         await writeFile(join(sandbox.path, 'notes.txt'), 'draft\n');
         const staged = runGitStep(sandbox.path, ['diff', '--cached', '--binary']);
         const head = runGit(sandbox.path, ['rev-parse', '--verify', 'HEAD']);
-        const environment = {};
-        const preview = await spawnGspot(
-            sandbox.path,
-            [...buildInitArguments([]), '--no-configurations', '--dry-run', '--json'],
-            environment,
-        );
+        const preview = await spawnGspot(sandbox.path, [
+            ...buildInitArguments([]),
+            '--no-configurations',
+            '--dry-run',
+            '--json',
+        ]);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(false);
-        const initialized = await spawnGspot(
-            sandbox.path,
-            [...buildInitArguments([], { json: true }), '--no-configurations'],
-            environment,
-        );
+        const initialized = await spawnGspot(sandbox.path, [
+            ...buildInitArguments([], { json: true }),
+            '--no-configurations',
+        ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
         await installGeneratedTools(sandbox.path);
-        const checked = await spawnGspot(sandbox.path, ['check', '--json'], environment);
+        const checked = await spawnGspot(sandbox.path, ['check', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(await readFile(join(sandbox.path, 'scripts/a.sh'), 'utf8')).toBe(CLEAN_BASH_SCRIPT + '\n\n');
         expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('draft\n');

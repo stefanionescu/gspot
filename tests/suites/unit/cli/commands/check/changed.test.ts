@@ -4,11 +4,13 @@ import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
+// Write a command check that reports each path it gets, and these files.
 async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {
     const gspotToml = stringify({
         configurations: [],
@@ -21,7 +23,7 @@ async function prepareChangedRepository(root: string, files: Record<string, stri
 test('--changed compares with the merge base, names its base, and a folder argument stays a path', async () => {
     await using sandbox = await testdir();
     await prepareChangedRepository(sandbox.path, {
-        '.gitignore': '.gspot/\n',
+        '.gitignore': `${DOT_GSPOT}/\n`,
         'api/source.txt': 'before',
         'web/source.txt': 'before',
     });
@@ -36,18 +38,16 @@ test('--changed compares with the merge base, names its base, and a folder argum
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json', '--', 'api']),
     );
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    const report = selected.report;
-    expect(report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
-    expect(report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
+    expect(selected.report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
+    expect(selected.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
     const explicit = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', 'base', '--json']),
     );
     expect(explicit.code, explicit.stdout + explicit.stderr).toBe(1);
-    const all = explicit.report;
     expect(
-        all.checks
+        explicit.report.checks
             .flatMap((check) => check.findings.map((finding) => finding.message))
             .toSorted((a, b) => a.localeCompare(b)),
     ).toStrictEqual(['api/source.txt', 'web/source.txt']);
@@ -55,7 +55,7 @@ test('--changed compares with the merge base, names its base, and a folder argum
 
 test('--changed without an upstream names the fix, and uses the remote default branch', async () => {
     await using sandbox = await testdir();
-    await prepareChangedRepository(sandbox.path, { '.gitignore': '.gspot/\n', 'api/source.txt': 'before' });
+    await prepareChangedRepository(sandbox.path, { '.gitignore': `${DOT_GSPOT}/\n`, 'api/source.txt': 'before' });
     runGitStep(sandbox.path, ['init', '-b', 'topic']);
     commitAll(sandbox.path);
     const absent = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json']);

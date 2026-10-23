@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -38,7 +39,7 @@ test.each([...IMPORT_RULE_CASES])(
         const eslint = await createEslint(sandbox.path);
         const session = await openSession(sandbox.path);
         const packages = parseToolPackageJson(
-            await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'),
+            await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8'),
             assertPackageManager(session.packageManager).name,
         );
         const enabled = level === 'all' || declarations !== 'none';

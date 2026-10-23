@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { normalizeFileMode } from '#cli/system/files/entries.ts';
@@ -62,12 +63,10 @@ test('typescript/tsc checks both projects of a solution and writes no build outp
     commitAll(root);
     const failed = await runTscCheck(root);
     expect(failed.code, failed.output).toBe(1);
-    expect(
-        failed.findings
-            .filter((finding) => finding.rule === 'TS2322')
-            .map((finding) => finding.file)
-            .toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(['orders/order.ts', 'users/user.ts']);
+    expect(failed.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'orders/order.ts', line: 1, rule: 'TS2322' },
+        { file: 'users/user.ts', line: 1, rule: 'TS2322' },
+    ]);
     await writeFile(join(root, 'orders/order.ts'), 'export const total: number = 3;');
     await writeFile(
         join(root, 'users/user.ts'),
@@ -86,17 +85,16 @@ test.each([...LEVELS])(
     async (level) => {
         const { root } = installedSandbox();
         const scope = 'apps/web';
-        const scopeTable = `[[scope]]
-path = "${scope}"
-configurations = ["typescript"]
-`;
         const authored = AUTHORED_TSCONFIG.replace(
             '%BUILD_INFO%',
             JSON.stringify(join(root, scope, 'build/cache.tsbuildinfo')),
         );
         const sourceFiles = {
-            'gspot.toml': buildSandboxSettings(['javascript'], { tables: scopeTable, level }),
-            '.gitignore': 'node_modules/\n.gspot/\n',
+            'gspot.toml': buildSandboxSettings(['javascript'], {
+                level,
+                scopes: [{ path: scope, configurations: ['typescript'] }],
+            }),
+            '.gitignore': `node_modules/\n${DOT_GSPOT}/\n`,
             [`${scope}/tsconfig.json`]: authored,
             [`${scope}/src/main.ts`]: 'export const echo: number = "wrong";\n',
             [`${scope}/build/cache.tsbuildinfo`]: 'authored metadata\n',
@@ -141,7 +139,7 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
     const outsideFiles = await readdir(outside.path);
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        '.gitignore': 'node_modules\n.gspot\n',
+        '.gitignore': `node_modules\n${DOT_GSPOT}\n`,
         'tsconfig.json': '{"files":[],"references":[{"path":"./app"}]}',
         'app/tsconfig.json': JSON.stringify({
             compilerOptions: {
@@ -197,10 +195,17 @@ test('typescript/tsc builds a referenced project with its imported declarations 
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const rootCheck = failed.report.checks.find((check) => check.scope === '')!;
-    expect(rootCheck.status).toBe('failed');
-    expect(rootCheck.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
-        { file: 'app/src/main.ts', rule: 'TS2322' },
+    // The root project references app, so the root and app scopes both report its error.
+    expect(
+        failed.report.checks.map(({ scope, status, findings }) => ({
+            scope,
+            status,
+            findings: findings.map(({ file, rule }) => ({ file, rule })),
+        })),
+    ).toStrictEqual([
+        { scope: '', status: 'failed', findings: [{ file: 'app/src/main.ts', rule: 'TS2322' }] },
+        { scope: 'app', status: 'failed', findings: [{ file: 'app/src/main.ts', rule: 'TS2322' }] },
+        { scope: 'neighbor', status: 'failed', findings: [{ file: 'neighbor/source.ts', rule: 'TS2322' }] },
     ]);
     expect(await readFile(join(sandbox.path, 'app/src/main.ts'), 'utf8')).toBe(
         REFERENCE_BUILD_FILES['app/src/main.ts'],

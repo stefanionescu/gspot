@@ -23,3 +23,20 @@ branches = 80
 functions = 80
 statements = 80
 `;
+
+/** The start of the Jest output for the test that expects 7 from `triple(2)`. */
+export const JEST_FAILED_TEST = `  ● triples an integer
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 7
+    Received: 6
+`;
+
+/** The start of the note when the test file cannot load its import. */
+export const JEST_MISSING_IMPORT = `jest crashed with exit 1.
+FAIL ./math.test.cjs
+  ● Test suite failed to run
+
+    Cannot find module './missing-test-dependency.cjs' from 'math.test.cjs'
+`;

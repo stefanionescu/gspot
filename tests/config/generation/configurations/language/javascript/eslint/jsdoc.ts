@@ -1,3 +1,5 @@
+import { findFileTarget } from '#tests/setup/cli/config-files.ts';
+
 export const JSDOC_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
     'tsconfig.json':
@@ -75,7 +77,7 @@ export const TSC_ARGUMENTS = [
     'node',
     'node_modules/typescript/lib/tsc.js',
     '--project',
-    '.gspot/configurations/language/javascript/jsconfig.json',
+    findFileTarget('javascript', 'jsconfig.json'),
     '--pretty',
     'false',
 ] as const;

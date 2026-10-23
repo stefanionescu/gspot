@@ -42,11 +42,7 @@ export const SWIFT_PACKAGE_CASES = [
         files: {
             'Sources/App/Pair.swift': `${PAIR_SIZE_SOURCE}
 private func neverCalled() -> Int {
-    count(of: 3)
-}
-
-private func count(of size: Int) -> Int {
-    size
+    3
 }
 `,
         },

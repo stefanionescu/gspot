@@ -192,8 +192,8 @@ test('a banned word matches whole words and runs of words only', () => {
 });
 
 test.each([...LINTER_LIMIT_CASES])(
-    '$language $category with a 41-letter name reports $expected, and too many words are still reported',
-    ({ language, category, expected }) => {
+    '$language $category with a 41-letter name reports $expected, and with too many words reports $wordy',
+    ({ language, category, expected, wordy }) => {
         const effective = buildScopeNamingSettings(
             buildSandboxSettings(['naming'], {
                 rules: true,
@@ -214,7 +214,7 @@ test.each([...LINTER_LIMIT_CASES])(
         expect(validateIdentifier(identifier, context).map(({ rule }) => rule)).toStrictEqual([...expected]);
         expect(
             validateIdentifier({ ...identifier, name: NAME_WORDS.join('_') }, context).map(({ rule }) => rule),
-        ).toContain('words');
+        ).toStrictEqual([...wordy]);
     },
 );
 test('an ignored_prefix override strips handle from function and method names in its files', () => {

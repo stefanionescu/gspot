@@ -77,12 +77,8 @@ test('vitest/coverage at a limit above 0 reports @vitest/coverage-v8 as missing 
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['typescript', 'vitest'], {
             level: 'all',
-            tables:
-                COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80') +
-                `[[scope]]
-path = "app"
-configurations = ["typescript", "vitest"]
-`,
+            scopes: [{ path: 'app', configurations: ['typescript', 'vitest'] }],
+            tables: COVERAGE_ZERO_LIMITS.replace(/^lines = .*$/mu, 'lines = 80'),
         }),
     );
     const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'vitest/coverage', '--json']));

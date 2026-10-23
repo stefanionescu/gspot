@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { runCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { COPY_PAGE_BUILD } from '#tests/config/integration/checks/samples.ts';
 import { SITE_SANDBOX, SITE_SETTINGS } from '#tests/config/checks/framework/site/pages.ts';
+import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     SITE_CASES,
@@ -24,18 +24,8 @@ import {
 const installedSandbox = shareInstalledSandbox(SITE_SANDBOX);
 
 test.each([...SITE_CASES])('$check reports its finding and passes after the fix', async (entry) => {
-    const { failed, passed } = await runCheckSample(installedSandbox(), entry, SITE_SANDBOX);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks.filter(({ status }) => status !== 'passed')).toMatchObject([
-        { check: entry.check, status: 'failed' },
-    ]);
-    expect(failed.report.checks.flatMap(({ findings }) => findings)).toContainEqual(
-        matchFields({ check: entry.check, ...entry.expected }),
-    );
-    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    expect(passed.report.checks).toMatchObject(
-        failed.report.checks.map(({ check, scope }) => ({ check, scope, status: 'passed', findings: [] })),
-    );
+    const result = await runCheckSample(installedSandbox(), entry, SITE_SANDBOX);
+    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });
 
 test.each([...OUTPUT_CASES])(

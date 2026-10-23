@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { JSON_INDENT } from '#cli/config/text.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -35,6 +35,7 @@ async function readCheckReport(repository: Sandbox, checks: string[], code: numb
 
 const installedSandbox = shareInstalledSandbox(buildNextjsPlan());
 
+// Pin the Next.js app to the versions that the tests workspace installs.
 function buildNextjsPlan(): InstalledSandboxPlan {
     const dependencies = Object.fromEntries(
         Object.entries({
@@ -52,15 +53,7 @@ function buildNextjsPlan(): InstalledSandboxPlan {
         dependencies,
         files: {
             ...NEXTJS_SANDBOX.files,
-            'package.json':
-                JSON.stringify(
-                    {
-                        ...NEXT_PACKAGE,
-                        dependencies,
-                    },
-                    null,
-                    4,
-                ) + '\n',
+            'package.json': JSON.stringify({ ...NEXT_PACKAGE, dependencies }, null, JSON_INDENT) + '\n',
         },
     };
 }
@@ -78,8 +71,9 @@ test('nextjs/tsc generates types and checks a referenced project without writing
         files: { ...REFERENCE_PROJECT_FILES, 'tsconfig.json': authored },
     });
     const failed = await readCheckReport(installedSandbox(), ['nextjs/tsc'], 1);
-    expect(failed.checks).toMatchObject([{ check: 'nextjs/tsc', status: 'failed' }]);
-    expect(failed.checks[0]!.findings).toContainEqual(matchFields(REFERENCED_PROJECT_FINDING));
+    expect(failed.checks).toMatchObject([
+        { check: 'nextjs/tsc', status: 'failed', findings: [REFERENCED_PROJECT_FINDING] },
+    ]);
     await writeFile(join(root, 'compiler-ref/source.ts'), 'export const value: number = 1;\n');
     const passed = await readCheckReport(installedSandbox(), ['nextjs/tsc'], 0);
     expect(passed.checks).toMatchObject([{ check: 'nextjs/tsc', status: 'passed', findings: [] }]);

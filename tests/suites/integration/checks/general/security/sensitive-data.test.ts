@@ -5,7 +5,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { SEMGREP_CHECK } from '#tests/config/integration/checks/general/security/samples.ts';
-import { spawnGspot, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
 
 import {
     SENSITIVE_FILES,
@@ -24,15 +24,11 @@ test.skipIf(!hasToolBuild('semgrep'))(
         await installGeneratedTools(sandbox.path);
         const failed = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = failed.report;
-        const findings = report.checks.flatMap(({ findings: reports }) =>
-            reports.map(({ file, line, rule }) => ({ file, line, rule })),
+        expect(listFindingRows(failed.report)).toStrictEqual([...SENSITIVE_FINDINGS]);
+        const jwt = failed.report.checks[0]!.findings.find(
+            ({ rule }) => rule === 'gspot.javascript.jwt-verify-without-algorithms',
         );
-        expect(findings).toStrictEqual([...SENSITIVE_FINDINGS]);
-        const jwt = report.checks
-            .flatMap((check) => check.findings)
-            .find((finding) => finding.rule === 'gspot.javascript.jwt-verify-without-algorithms');
-        expect(jwt?.message).toBe(
+        expect(jwt!.message).toBe(
             'Require the expected JWT signing algorithms when verifying a token. Pass an algorithms option that matches the signing contract.',
         );
         expect(

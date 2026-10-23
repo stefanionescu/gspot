@@ -92,6 +92,9 @@ stage = "manual"
 
 /** Subjects that explain cannot explain, with the message of each. */
 export const UNKNOWN_SUBJECT_CASES = [
-    ['./missing.sh', 'missing.sh'],
-    ['unknown-configuration', 'gspot cannot explain unknown-configuration.'],
+    ['./missing.sh', 'missing.sh is not a file in this repository.'],
+    [
+        'unknown-configuration',
+        'gspot cannot explain unknown-configuration. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
+    ],
 ] as const;

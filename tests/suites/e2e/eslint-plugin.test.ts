@@ -9,6 +9,7 @@ import { userEnvironment } from '#tests/setup/sandboxes/user-project.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { PLUGIN_TYPES_SOURCE, PLUGIN_IMPORT_SCRIPT } from '#tests/config/e2e/eslint-plugin.ts';
 
+// Import the plugin from an ES module and type-check a TypeScript consumer of its exports.
 async function assertPluginExports(consumer: string): Promise<void> {
     await writeFile(join(consumer, 'consumer.mjs'), PLUGIN_IMPORT_SCRIPT);
     await writeFile(join(consumer, 'consumer.mts'), PLUGIN_TYPES_SOURCE);
@@ -51,10 +52,7 @@ test('the installed ESLint plugin loads through import and require and enforces 
             ...peerPackages,
             ...NPM_INSTALL_FLAGS,
         ],
-        {
-            cwd: consumer,
-            env: userEnvironment,
-        },
+        { cwd: consumer, env: userEnvironment },
     );
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     const installedPlugin = await lstat(join(consumer, 'node_modules', '@gspothq/eslint-plugin'));

@@ -5,6 +5,7 @@ import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
@@ -57,10 +58,9 @@ test('Python reads through os aliases are reported; shadowed and unrelated names
         await openSession(sandbox.path),
         buildRunOptions({ only: ['structure/environment-readers'] }),
     );
-    const checks = initial.report.checks;
-    expect(
-        checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
-    ).toStrictEqual([3, 4, 5, 6].map((line) => ({ file: 'main.py', line, rule: 'read-outside-reader' })));
+    expect(listFindingRows(initial.report)).toStrictEqual(
+        [3, 4, 5, 6].map((line) => ({ file: 'main.py', line, rule: 'read-outside-reader' })),
+    );
 
     await writeFile(
         `${sandbox.path}/main.py`,
@@ -99,8 +99,7 @@ test('each scope uses its own environment readers', async () => {
 });
 
 test.each([...BASH_ENV_READ_CASES])('$check reports $expected.rule and passes after the fix', async (entry) => {
-    const plan = BASH_SANDBOX;
-    await using sandbox = await createSandbox(plan);
-    const result = await runCheckSample(sandbox, entry, plan);
+    await using sandbox = await createSandbox(BASH_SANDBOX);
+    const result = await runCheckSample(sandbox, entry, BASH_SANDBOX);
     expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(entry));
 });

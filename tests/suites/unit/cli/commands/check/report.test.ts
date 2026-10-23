@@ -14,24 +14,28 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { printProgress, formatRunReport } from '#cli/commands/check/report.ts';
 
 import {
+    DURATION,
     VERBOSITY_FILES,
     NO_COLOR_SETTINGS,
     FAILED_REPORT_TEXT,
     VERBOSITY_ARGUMENTS,
     FAILED_CHECK_REPORT,
+    buildVerbosityReport,
     SKIPPED_REPORT_CHECKS,
     COMPARISON_NOTICE_CASES,
     CHECK_REPORT_COMPARISONS,
 } from '#tests/config/commands/check/report.ts';
 
+// Require --json to keep every finding, then fix the findings and require a clean run.
 async function assertReportRepair(root: string, commandArguments: readonly string[]): Promise<void> {
     const json = parseCheckReport(await runGspot(root, [...commandArguments, '--json']));
     expect(json.code, json.stdout + json.stderr).toBe(1);
-    const report = json.report;
-    expect(report.checks.find((check) => check.check === 'example/findings')?.findings).toHaveLength(
-        FINDINGS_SHOWN + 1,
-    );
-    expect(report.checks.find((check) => check.check === 'example/passing')?.status).toBe('passed');
+    expect(
+        json.report.checks.map(({ check, status, findings }) => ({ check, status, count: findings.length })),
+    ).toStrictEqual([
+        { check: 'example/findings', status: 'failed', count: FINDINGS_SHOWN + 1 },
+        { check: 'example/passing', status: 'passed', count: 0 },
+    ]);
     expect(json.stderr).toBe('');
     await writeFile(join(root, 'findings.ts'), 'process.exitCode=0;');
     const repaired = await runGspot(root, [...commandArguments]);
@@ -46,11 +50,7 @@ test('check prints the first findings and the count of the rest, and --json keep
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS]);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stderr).toBe('');
-    expect(result.stdout.includes('example/passing')).toBe(false);
-    expect(result.stdout.includes('Checked the files changed since HEAD.')).toBe(true);
-    expect(result.stdout.includes(`finding ${String(FINDINGS_SHOWN + 1)}.`)).toBe(false);
-    expect(result.stdout.includes('and 1 more')).toBe(true);
-    expect(result.stdout.includes('$ ')).toBe(false);
+    expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(buildVerbosityReport(false));
     await assertReportRepair(sandbox.path, VERBOSITY_ARGUMENTS);
 });
 
@@ -61,11 +61,7 @@ test('check --verbose prints every finding and the command, and --json keeps eve
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stderr).toBe('');
-    expect(result.stdout.includes('example/passing')).toBe(true);
-    expect(result.stdout.includes('Checked the files changed since HEAD.')).toBe(true);
-    expect(result.stdout.includes(`finding ${String(FINDINGS_SHOWN + 1)}.`)).toBe(true);
-    expect(result.stdout.includes('and 1 more')).toBe(false);
-    expect(result.stdout.includes('$ ')).toBe(true);
+    expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(buildVerbosityReport(true));
     await assertReportRepair(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
 });
 
@@ -145,8 +141,6 @@ test('the report prints planned skips once with their reason only in verbose out
             { ...FAILED_CHECK_REPORT.checks[0], status: 'skipped', cause: 'condition', note: 'disabled', findings: [] },
         ],
     };
-    expect(skipped.checks[0]?.cause).toBe('condition');
-    expect(skipped).not.toHaveProperty('skips');
     expect(formatRunReport(skipped, { verbose: false })).toBe(
         'ignores    1 (printed with --verbose)\nPassed: 0 checks. Skipped: 1 check.\nTime: 0.0s. Exit code 1.\n',
     );

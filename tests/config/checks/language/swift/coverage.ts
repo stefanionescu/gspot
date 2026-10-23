@@ -1,25 +1,21 @@
-export const XCTEST_SETTINGS = `configurations = ["swift", "xcode"]
-[[coverage.swift_target]]
-name = "Example"
-lines = 80
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-[swift]
-xcode_project = "Example.xcodeproj"
-xcode_scheme = "Example"
-`;
+// The Example target needs 80% line coverage.
+const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nlines = 80\n';
 
+/** An Xcode project whose Example target needs 80% line coverage. */
+export const XCTEST_SETTINGS = buildSandboxSettings(['swift', 'xcode'], {
+    tables: `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n`,
+});
+
+/** How each XCTest coverage failure ends: exit code, status, note, and whether xccov wrote its view. */
 export const XCTEST_FAILURES = [
     {
         failure: 'no-project',
-        note: undefined,
-        settings: `configurations = ["swift", "xcode"]
-[[coverage.swift_target]]
-name = "Example"
-lines = 80
-
-[swift]
-xcode_scheme = "Example"
-`,
+        note: 'Set swift.xcode_project or add Package.swift in this scope.',
+        settings: buildSandboxSettings(['swift', 'xcode'], {
+            tables: `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_scheme = "Example"\n`,
+        }),
         build: '',
         coverage: 1,
         code: 0,
@@ -28,7 +24,7 @@ xcode_scheme = "Example"
     },
     {
         failure: 'failed-test',
-        note: 'test run exited 65',
+        note: 'The swift/coverage check failed: Cannot measure coverage because the test run exited 65: The test runner printed no error output.',
         settings: XCTEST_SETTINGS,
         build: 'process.exitCode = 65;',
         coverage: 1,
@@ -38,7 +34,7 @@ xcode_scheme = "Example"
     },
     {
         failure: 'malformed',
-        note: 'xccov printed output that gspot cannot read.',
+        note: 'The swift/coverage check failed: xccov printed output that gspot cannot read.',
         settings: XCTEST_SETTINGS,
         build: '',
         coverage: undefined,
