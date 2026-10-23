@@ -9,7 +9,6 @@ import { userEnvironment } from '#tests/setup/sandboxes/user-project.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { PLUGIN_TYPES_SOURCE, PLUGIN_IMPORT_SCRIPT } from '#tests/config/e2e/eslint-plugin.ts';
 
-// Import the plugin from an ES module and type-check a TypeScript consumer of its exports.
 async function assertPluginExports(consumer: string): Promise<void> {
     await writeFile(join(consumer, 'consumer.mjs'), PLUGIN_IMPORT_SCRIPT);
     await writeFile(join(consumer, 'consumer.mts'), PLUGIN_TYPES_SOURCE);
@@ -38,7 +37,6 @@ test('the installed ESLint plugin loads through import and require and enforces 
     const consumer = join(workspace.path, 'consumer');
     await mkdir(consumer);
     await writeFile(join(consumer, 'package.json'), '{"name":"plugin-consumer","private":true,"type":"module"}\n');
-    // The test project installs tools separately from the runtime dependencies of the plugin.
     const peerPackages = [
         `eslint@${eslintPluginPackage.devDependencies.eslint}`,
         `typescript@${testsPackage.devDependencies.typescript}`,

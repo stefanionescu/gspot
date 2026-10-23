@@ -33,7 +33,6 @@ export type NamingFields<NumberValue, CaseValue> = {
     cases?: CaseValue | undefined;
 };
 
-/** The naming categories that one language's table accepts. */
 type NamingLanguageCategory<Language extends SettingLanguage> = (typeof NAMING_LANGUAGE_CATEGORIES)[Language][number];
 
 export type NamingLanguageFields<

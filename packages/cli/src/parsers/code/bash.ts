@@ -44,13 +44,6 @@ function findHighestParameter(node: Node): number {
     return Math.max(0, ...positions);
 }
 
-/**
- * Read the syntax of each function, without nested function bodies.
- *
- * @param syntaxRoot the parsed Bash root.
- * @param codeText source with comments masked at their original positions.
- * @returns function metrics and source spans.
- */
 function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['functions'] {
     return syntaxRoot.descendantsOfType('function_definition').flatMap((node) => {
         const name = node.childForFieldName('name')?.text;
@@ -101,7 +94,6 @@ function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['f
     });
 }
 
-// Keep code-unit positions and line breaks, and blank out the comment spans of the syntax tree.
 function stripComments(text: string, comments: Node[]): string {
     const pieces: string[] = [];
     let offset = 0;
@@ -118,7 +110,6 @@ function stripComments(text: string, comments: Node[]): string {
     return pieces.join('');
 }
 
-// Only a direct mktemp command substitution owns the path assigned to this variable.
 function isTemporaryValue(assignment: Node): boolean {
     const value = assignment.childForFieldName('value');
     if (value === null) return false;
@@ -130,7 +121,6 @@ function isTemporaryValue(assignment: Node): boolean {
     return substitution?.namedChild(0)?.childForFieldName('name')?.text === TEMPORARY_FILE_COMMAND;
 }
 
-// Bare local declarations can shadow a global temporary even without an assignment.
 function listLocalNames(root: Node): Set<string> {
     const declarations = root
         .descendantsOfType('declaration_command')
@@ -153,7 +143,6 @@ function listLocalNames(root: Node): Set<string> {
     );
 }
 
-// Reassigning the same variable in its function makes the path that a deferred cleanup removes ambiguous.
 function buildScriptTemporaryPaths(root: Node): ScriptTemporaryPaths {
     const assignments = root.descendantsOfType('variable_assignment');
     const locals = listLocalNames(root);
@@ -179,7 +168,6 @@ function buildScriptTemporaryPaths(root: Node): ScriptTemporaryPaths {
     return { paths, variables: targets, assigned: new Set([...counts.keys(), ...locals]) };
 }
 
-// A cleanup argument must contain only the temporary variable.
 function findTemporaryPath(
     argument: Node,
     owner: number | undefined,
@@ -197,7 +185,6 @@ function findTemporaryPath(
     return temporaryPaths.variables.get(target);
 }
 
-// All removals on a source line must remove known temporary paths before that line receives an exemption.
 function addRemovals(removals: Node[], cleanup: TrapCleanup): void {
     const { lineOffset, owner, registry, lines } = cleanup;
     for (const removal of removals) {
@@ -208,7 +195,6 @@ function addRemovals(removals: Node[], cleanup: TrapCleanup): void {
     }
 }
 
-// After --, arguments beginning with a dash also name removed paths.
 function listRemovedPaths(command: Node): Node[] {
     const targets: Node[] = [];
     let isOptions = true;
@@ -223,7 +209,6 @@ function listRemovedPaths(command: Node): Node[] {
     return targets;
 }
 
-// Parse deferred trap bodies with the same grammar before treating any recursive removal as cleanup.
 async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCache): Promise<TemporaryPath[]> {
     const registry = buildScriptTemporaryPaths(root);
     const lines = new Map<number, Array<TemporaryPath | undefined>>(

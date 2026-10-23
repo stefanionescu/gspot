@@ -6,7 +6,6 @@ import type { PushInput, StagedPaths, ChangedPaths, PushedRevisions } from '#cli
 
 type CheckedRevision = { hash: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport };
 
-/** The push report: one run report for every distinct tree that the Git pre-push input names. */
 export type PushReport = {
     canceled?: { pendingRefs: string[] };
     revisions: CheckedRevision[];
@@ -37,7 +36,6 @@ export type CheckOptions = {
     verbose: boolean;
 };
 
-/** What a copy stands for: the staged index or a pushed commit, and the repository whose tools it runs. */
 export type RevisionSource =
     | {
           content: 'index';
@@ -56,7 +54,6 @@ export type RevisionSource =
           changed?: string[];
       };
 
-/** The flags that Commander parses, before check validates their combination. */
 export type CheckFlags = {
     json?: boolean;
     only?: string[];
@@ -68,5 +65,4 @@ export type CheckFlags = {
     verbose?: boolean;
 };
 
-/** A run report, a push report, or the answer that gspot prints when a run stops early. */
 export type CheckCommandJson = RunReport | PushReport | CanceledCommandJson;

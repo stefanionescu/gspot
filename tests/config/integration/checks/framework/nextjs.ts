@@ -14,15 +14,12 @@ export const NEXT_PACKAGE = {
     },
 } as const;
 
-// Next.js projects, outputs, and samples for the Next.js tests.
-// The Next.js configuration enabling Strict Mode.
 const NEXT_CONFIG_SOURCE = `// The framework configuration.
 const config = { reactStrictMode: true };
 
 export default config;
 `;
 
-// The home page of the test application.
 const NEXT_PAGE = `// The home page.
 
 /**
@@ -34,7 +31,6 @@ export default function Page(): string {
 }
 `;
 
-// The root layout.
 const NEXT_LAYOUT = `// The root layout.
 import type { ReactNode } from 'react';
 
@@ -53,7 +49,6 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>):
 }
 `;
 
-/** Locale messages for the Next.js configuration tests. */
 export const NEXT_MESSAGES = {
     'messages/en.json': `{
     "home": { "title": "Home", "greeting": "Hello {name}" }
@@ -95,7 +90,6 @@ export const REFERENCE_PROJECT_FILES = {
     'compiler-ref/source.ts': 'export const value: number = "wrong";\n',
 } as const;
 
-/** The finding of the referenced project. */
 export const REFERENCED_PROJECT_FINDING = {
     file: 'compiler-ref/source.ts',
     rule: 'TS2322',

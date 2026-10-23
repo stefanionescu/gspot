@@ -3,7 +3,6 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GUIDE, README, LICENSE } from '#tests/config/checks/samples.ts';
 
-/** One Vale alert at line 1, columns 3 to 5. */
 export const VALE_ALERT = {
     Line: 1,
     Span: [3, 5],
@@ -11,14 +10,12 @@ export const VALE_ALERT = {
     Message: 'Use a concrete example.',
 } as const;
 
-/** A Markdown sandbox for the tests of valid and refused Vale output. */
 export const VALE_SANDBOX_FILES = {
     'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
     [GSPOT_PATHS.valeConfigFile]: 'Packages =\n',
     'example.md': '# Documentation\n',
 };
 
-/** The Vale finding of a file name with a colon and a newline. */
 const VALE_COLON_PATH_FINDINGS = [
     {
         check: 'prose/vale',
@@ -31,7 +28,6 @@ const VALE_COLON_PATH_FINDINGS = [
     },
 ] as const;
 
-/** The Vale findings with file and stdin locations. */
 const VALE_LOCATION_FINDINGS = [
     {
         check: 'prose/vale',
@@ -53,7 +49,6 @@ const VALE_LOCATION_FINDINGS = [
     },
 ] as const;
 
-/** Vale output cases with the findings that gspot reads from them. */
 export const VALE_OUTPUT_CASES = [
     {
         name: 'file and stdin report locations',

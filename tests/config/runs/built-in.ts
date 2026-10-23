@@ -1,6 +1,5 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-/** A Cloudflare _headers file with every security header that the root scope needs. */
 const HEADERS_FILE = `/*
     X-Content-Type-Options: nosniff
     Referrer-Policy: same-origin
@@ -33,7 +32,6 @@ export const SCOPE_FINDINGS = [
     },
 ] as const;
 
-/** A root and a backend scope, each with files that the site, Supabase, translations, and Cloudflare checks read. */
 export const SCOPE_CHECK_FILES = {
     'gspot.toml': buildSandboxSettings(['site', 'supabase', 'translations', 'cloudflare'], {
         level: 'all',

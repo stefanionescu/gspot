@@ -49,7 +49,6 @@ export const NEXT_INTL_PROJECTS = [
     },
 ] as const;
 
-/** The skip of vue/vue-tsc without the typescript configuration. */
 export const VUE_TSC_SKIP = [
     {
         check: 'vue/vue-tsc',

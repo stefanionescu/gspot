@@ -58,7 +58,6 @@ enum Mode { Fast, Slow = 2 }
 const table = { keyOne: 1 };
 `;
 
-/** Declared names, by the naming categories of each language. */
 const EXPECTED_TYPESCRIPT_NAMES = {
     functions: ['parseHttpUrl'],
     parameters: ['rawInput', 'rest', 'first', 'second', 'event', 'baseUrl', 'body'],
@@ -172,7 +171,6 @@ func \`repeat\`(\`default\`: Int) {}
     },
 ] as const;
 
-/** One sample per parser, the names it declares by category, and names it must leave out. */
 export const DECLARATION_CASES = [
     {
         language: 'typescript',
@@ -197,7 +195,6 @@ export const DECLARATION_CASES = [
     },
 ] as const;
 
-/** The JavaScript functions and parameters, without object keys. */
 export const JAVASCRIPT_PARAMETER_NAMES = [
     { name: 'loadValue', category: 'functions' },
     { name: 'localAccount', category: 'parameters' },
@@ -207,7 +204,6 @@ export const JAVASCRIPT_PARAMETER_NAMES = [
     { name: 'inputValue', category: 'parameters' },
 ] as const;
 
-/** The Bash functions and variables in source order. */
 export const BASH_SOURCE_NAMES = [
     'variables:ROOT',
     'variables:count',
@@ -215,7 +211,6 @@ export const BASH_SOURCE_NAMES = [
     'variables:TARGET',
 ] as const;
 
-/** JavaScript lines that bind names from require, await import, and a call. */
 export const IMPORT_NAME_LINES = [
     "const { existsSync } = require('node:fs');",
     "const { default: lazyWidget } = await import('./widget.js');",
@@ -223,7 +218,6 @@ export const IMPORT_NAME_LINES = [
     'const eagerTotal = computeTotal();',
 ] as const;
 
-/** Settings files of configurations, which declare no identifiers. */
 export const SETTINGS_FILE_CASES = [
     ['pyproject.toml', 'python', '[tool.comfy]\nDisplayName = "Live Shopping"\nPublisherId = "acme"\n'],
     ['setup.cfg', 'python', '[metadata]\nLongName = value\n'],

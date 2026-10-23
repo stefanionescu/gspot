@@ -1,4 +1,3 @@
-/** The conflicting config file findings at each level. */
 export const CONFLICTING_CONFIG_FILE_CASES = [
     ['recommended', []],
     [

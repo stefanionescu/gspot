@@ -16,13 +16,8 @@ import {
     COMMIT_MESSAGE_PATH_LINES,
 } from '#cli/config/generation/hooks.ts';
 
-// The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there becomes
-// absolute first, in the Windows spelling under Git for Windows. In a repository that uses
-// Git Large File Storage (LFS), the hook runs git lfs first, and the pre-push hook saves its input so that both
-// commands read it.
 function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { usesLfs: boolean }): string {
     const program = runner.name;
-    // gspot writes the hooks of the version it pins, so the install line names that version.
     const { missing } = runner;
     const installCommand = runner.installCommand.replace('<version>', cliPackage.version);
     const absolutePath = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];

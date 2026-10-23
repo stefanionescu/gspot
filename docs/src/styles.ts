@@ -20,7 +20,6 @@ import {
     STYLE_FILE_REQUIRED,
 } from './config/styles.ts';
 
-// Keep utility class separators, but drop the trailing colon of a JavaScript property.
 function extractStyleTokens(content: string): string[] {
     return [...content.matchAll(PURGECSS_EXTRACTOR)]
         .map(([token]) => {

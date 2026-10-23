@@ -1,4 +1,3 @@
-/** Source locations for the generated Bash size samples. */
 export const BASH_SIZE_CASES = [
     { file: 'scripts/tall.sh', rule: 'function-lines', line: 9 },
     { file: 'scripts/branchy.sh', rule: 'function-branches', line: 9 },
@@ -6,7 +5,6 @@ export const BASH_SIZE_CASES = [
     { file: 'scripts/mutable.sh', rule: 'function-assignments', line: 9 },
 ] as const;
 
-/** A C-style for loop counts as a branch and a nesting level; its header assignments do not count. */
 export const COUNTED_LOOPS = `main() {
     local declared=0
     for ((i=0; i<2; i=i+1)); do

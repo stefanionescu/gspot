@@ -22,7 +22,6 @@ import {
     SEMGREP_CONFIG_FILE_TABLES,
 } from '#tests/config/configurations/manifests.ts';
 
-/** Read fixture package data in its own process, retaining the production module cache. */
 async function readTestManifests(
     files: Record<string, string>,
     assets: readonly string[] = [],

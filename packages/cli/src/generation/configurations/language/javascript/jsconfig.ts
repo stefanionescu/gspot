@@ -21,8 +21,6 @@ import {
     JAVASCRIPT_BUNDLED_IMPORTS,
 } from '#cli/config/generation/configurations/language/javascript/jsconfig.ts';
 
-// An exclude here replaces the inherited one and the compiler defaults, so it repeats the entries of your own tsconfig.
-// TypeScript takes the exclude of the nearest file in the extends chain, relative to that file.
 function buildExtendedExclude(
     planned: PlannedConfigFile,
     paths: { prefix: string; owner: string; ignoredGlobs: string[] },
@@ -47,7 +45,6 @@ function buildExtendedExclude(
     return [...paths.ignoredGlobs.map((path) => `${paths.prefix}${path}`), ...inherited];
 }
 
-// Only tracked declaration files: a gitignored one, such as a dev server's route types, differs per machine.
 function listTrackedDeclarationFiles(planned: PlannedConfigFile, authored: TypeScriptConfiguration): string[] {
     const { root } = planned.session;
     const tracked = new Set(planned.session.repository.files.map((file) => file.path));

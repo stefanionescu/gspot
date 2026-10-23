@@ -38,8 +38,6 @@ function compileOverride(rule: NamingOverride): CompiledOverride {
 function getNamingLimits(scopeSettings: ScopeSettings, language: string, category: string) {
     const root = getTable(scopeSettings, 'naming');
     const languageKey = SETTING_LANGUAGES.find((name) => name === language);
-    // The language table type lists every category of every language, so a category that this language lacks reads as
-    // undefined.
     const languageTable: ParsedNamingLanguageFields | undefined =
         languageKey === undefined ? undefined : root[languageKey];
     const categoryKey = NAMING_TABLE_CATEGORIES.find((name) => name === category);
@@ -67,13 +65,6 @@ function buildLimitsFor(scopeSettings: ScopeSettings): NamingSettings['limitsFor
     };
 }
 
-/**
- * Splits banned words into parts.
- *
- * @param terms the banned words as written.
- * @param origin the setting and group that the words come from.
- * @returns the split words, without empty ones.
- */
 function compileBannedWords(
     terms: string[],
     origin: Pick<BannedWord, 'setting' | 'group' | 'categories'>,

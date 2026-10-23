@@ -1,4 +1,3 @@
-// Creates a project for one package manager, with an authenticated local npm registry.
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';

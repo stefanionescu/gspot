@@ -12,7 +12,6 @@ import {
     ESCAPED_SCOPE_CONFIGURATIONS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/escaping.ts';
 
-/** Generate, parse, and lint one scope before returning its JavaScript syntax shape. */
 async function parseScopeShape(scope: string): Promise<string> {
     let shape: string;
     await using sandbox = await testdir();

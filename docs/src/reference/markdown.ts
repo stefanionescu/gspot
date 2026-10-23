@@ -8,7 +8,6 @@ import {
     HTML_BRACKET_ENTITIES,
 } from '../config/reference.ts';
 
-// Lists names the way a sentence does, with a serial comma before the last one.
 const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
 
 /**
@@ -20,7 +19,6 @@ const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
  * @returns the page and its escaped Markdown
  */
 export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
-    // A flag outside code goes into a code span, so Markdown does not turn its two hyphens into a dash.
     const escaped = body
         .replaceAll(MARKDOWN_ESCAPES, (text) => HTML_BRACKET_ENTITIES[text] ?? text)
         .replaceAll(FLAGS_OUTSIDE_CODE, (text) => (text.startsWith('`') ? text : `\`${text}\``));
@@ -47,7 +45,6 @@ export function formatSection(title: string, body: string): string {
  */
 export function formatTable(header: string[], rows: string[][]): string {
     if (rows.length === 0) return '';
-    // A cell keeps a pipe as text and holds one line.
     const cells = rows.map((row) => row.map((cell) => cell.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ')));
     return [header, header.map(() => '---'), ...cells].map((line) => `| ${line.join(' | ')} |`).join('\n');
 }

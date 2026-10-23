@@ -1,4 +1,3 @@
-// Creates a Python project with a lockfile, and points the uv variables at it.
 import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';

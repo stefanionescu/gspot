@@ -1,5 +1,3 @@
-/** Runtime guidance keeps Node assumptions out of React Native and Expo applications. */
-/** Scripts by runtime and the runtime rule files that each selects; React Native and Expo packages get no NODE.md. */
 export const RUNTIME_RULE_CASES = [
     { name: 'a Deno script', runtime: 'deno', dependency: undefined, rules: ['DENO.md'] },
     { name: 'a Node.js script', runtime: 'node', dependency: undefined, rules: ['NODE.md'] },

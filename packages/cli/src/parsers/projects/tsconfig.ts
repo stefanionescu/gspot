@@ -1,4 +1,3 @@
-// Reads TypeScript project files and compiler options.
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { hasErrorCode } from '#cli/system/errors.ts';
@@ -16,14 +15,6 @@ import { TSCONFIG_FILE, TSC_NO_FILES_CODE, TS_EMPTY_FILES_CODE } from '#cli/conf
 
 const PARSED_TSCONFIGS = { create: () => new Map<string, TypeScriptConfiguration | undefined>() };
 
-/**
- * Read a project and every project it references, with the run cache.
- *
- * @param repositoryRoot the base folder of the cached readers.
- * @param path the absolute tsconfig file.
- * @param reads the run cache.
- * @returns the parsed projects by absolute path.
- */
 function readReferencedProjects(
     repositoryRoot: string,
     path: string,
@@ -43,16 +34,7 @@ function readReferencedProjects(
     return projects;
 }
 
-/**
- * Parse compiler options and inherited settings with the TypeScript compiler.
- *
- * @param path the absolute tsconfig file.
- * @param text the tsconfig contents.
- * @param host finds and reads files for the compiler.
- * @returns the parsed compiler settings.
- */
 function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): TypeScriptConfiguration {
-    // The compiler compares file names with forward slashes; a Windows path with backslashes fails its assertions.
     const fileName = convertToPosixPath(path);
     const source = ts.parseConfigFileTextToJson(fileName, text);
     if (source.error !== undefined) throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
@@ -74,7 +56,6 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
         undefined,
         fileName,
     );
-    // The option and alias readers also read tsconfig files with no input files.
     const errors = parsed.errors.filter(
         (error) => error.code !== TS_EMPTY_FILES_CODE && error.code !== TSC_NO_FILES_CODE,
     );
@@ -88,15 +69,6 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): Ty
     };
 }
 
-/**
- * Read compiler inputs through the repository cache, and keep the installed library paths.
- *
- * @param repositoryRoot the base folder of the cached readers.
- * @param scope the folder relative to the repository.
- * @param reads the run cache.
- * @param options the parsed compiler settings.
- * @returns a compiler host that reads through the cache.
- */
 function buildCompilerHost(
     repositoryRoot: string,
     scope: string,
@@ -136,14 +108,6 @@ function buildCompilerHost(
     return host;
 }
 
-/**
- * Read a file for the TypeScript compiler, following links into node_modules.
- *
- * @param repositoryRoot the base folder of the cached readers.
- * @param path the absolute input file.
- * @param reads the run cache.
- * @returns source text, or undefined for a missing input.
- */
 function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache): string | undefined {
     const local = convertToPosixPath(relative(repositoryRoot, path));
     try {
@@ -151,7 +115,6 @@ function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache
         const dependency = segments.indexOf(NODE_MODULES);
         if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
             using files = openFiles(repositoryRoot);
-            // Follow linked dependency folders. Refuse links before node_modules.
             if (dependency > 0) files.readStats(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }

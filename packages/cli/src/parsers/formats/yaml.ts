@@ -1,4 +1,3 @@
-// Parses user YAML files with merge keys and file-specific errors.
 import { parse } from 'yaml';
 import type { z } from 'zod';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';

@@ -1,7 +1,5 @@
-/** Scan each listed commit, including both sides of a merge, without walking its ancestors. */
 export const GITLEAKS_LOG_OPTIONS = '--no-walk --diff-merges=separate';
 
-/** A key line in an environment file, trimmed: the key before the equals sign. */
 export const ENV_KEY_LINE = /^(?:export )?(?<key>[A-Z][A-Z0-9_]*)=/u;
 
 export const GITLEAKS_LOG_FLAG = '--log-opts';

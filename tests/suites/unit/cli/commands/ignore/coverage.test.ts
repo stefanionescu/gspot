@@ -116,7 +116,6 @@ test('ignore without a check keeps the paths out of every check and every config
     const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(saved['ignore']).toStrictEqual([{ paths: ['data/**'], reason }]);
     const typos = await readFile(join(sandbox.path, findFileTarget('spelling', 'typos.toml')), 'utf8');
-    // typos reads no gspot ignore, so the generated exclusions list the path under its reason.
     expect(typos).toEndWith(`  # ${reason}\n  "data/**",\n]\n`);
     const removed = await runGspot(sandbox.path, ['unignore', '--paths', 'data/**']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);

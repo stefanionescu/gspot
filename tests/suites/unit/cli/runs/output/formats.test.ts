@@ -32,7 +32,6 @@ import {
     BRACKETED_WORD_FINDINGS,
 } from '#tests/config/runs/output/formats.ts';
 
-/** Run the parser and return its findings, or the message it refuses the output with. */
 function readParseResult(parse: () => Finding[]): { findings: readonly Finding[] } | { error: string } {
     try {
         return { findings: parse() };
@@ -118,7 +117,6 @@ test('grouped output drops line endings and makes absolute paths relative', asyn
     expect(findings[0]).toMatchObject({ file: 'settings/café.toml', line: 1, message: 'Incorrect spacing' });
 });
 
-// Docker Compose prints the resolved path, such as /private/var on macOS for a root under /var.
 test('a message that names a file by its resolved absolute path names it relative to the root', async () => {
     await using sandbox = await testdir();
     const check = getShippedCheck('docker/compose');
@@ -141,7 +139,6 @@ test('EditorConfig output keeps file and line findings', async () => {
     ]);
 });
 
-// Windows and macOS file systems ignore case, so a tool can print the root in another case. Linux file systems do not.
 test.skipIf(isLinux)('an absolute path that names the root in another case is still relative to it', async () => {
     await using sandbox = await testdir({ 'example/math.py': 'answer = 1\n' });
 

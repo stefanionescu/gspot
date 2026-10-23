@@ -1,6 +1,5 @@
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.ts';
 
-/** Only a real provider line in the Prisma schema of the scope marks a project as Postgres. */
 export const PRISMA_SCHEMA_CASES = [
     {
         name: 'Postgres provider',
@@ -39,7 +38,6 @@ export const PRISMA_SCHEMA_CASES = [
     { name: 'migrations without a provider', path: 'migrations/1_initial.sql', source: 'SELECT 1;\n', detected: false },
 ] as const;
 
-/** Each way a package names a JavaScript runtime, for each runtime, and the result that gspot detects. */
 export const RUNTIME_DETECTION_CASES = [
     ...JAVASCRIPT_RUNTIMES.flatMap((runtime) =>
         [

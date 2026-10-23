@@ -1,7 +1,3 @@
-/**
- * A Git hook that copies each revision and reports its files and its own Git folder, with the inherited Git
- * environment.
- */
 export const GIT_HOOK_SCRIPT = String.raw`
 import { join, resolve } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -48,7 +44,6 @@ writeFileSync(process.argv[6], JSON.stringify({
 }));
 `;
 
-/** The hook must keep both revision copies, the explicit Git setting, and the `HEAD` and index of the source. */
 export const GIT_HOOK_REPORT = {
     reports: [
         {

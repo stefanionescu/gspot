@@ -1,4 +1,3 @@
-/** Each unset command that exits 2 and leaves gspot.toml unchanged, with its message. */
 export const UNSET_REFUSALS = [
     {
         commandArguments: ['unset', 'configurations'],

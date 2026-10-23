@@ -34,7 +34,6 @@ test.each([...VALE_INSTALL_FAILURES])(
         await writeScriptCommand(sandbox.path, 'node_modules/.bin/vale', launcher);
         using writer = openWriter(sandbox.path);
         const request = buildToolInstall(session, writer);
-        // The timeout message starts with the command, which names the temporary folder.
         expect(await captureRejection(installValePackages(request))).toEndWith(message);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
             'previous bytes\n',

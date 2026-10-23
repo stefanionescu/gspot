@@ -16,7 +16,6 @@ const isUnwrappable = ASTUtils.isNodeOfTypes(UNWRAPPABLE_NODES.map((type) => AST
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 
-// Walk only the visitor keys of the parser, which leave out metadata and parent links.
 function listChildNodes(
     node: TSESTree.Node,
     visitorKeys: Readonly<Record<string, readonly string[]>>,

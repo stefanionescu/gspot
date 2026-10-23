@@ -1,4 +1,3 @@
-/** A rule match and a partial parse error in the JSON format of the pinned Semgrep. */
 export const SEMGREP_MATCH = {
     check_id: 'gspot.bash.eval',
     path: 'scripts/café build.sh',
@@ -14,13 +13,10 @@ export const SEMGREP_PARSE_ERROR = {
     spans: [{ file: 'scripts/café build.sh', start: { line: 1, col: 1 } }],
 } as const;
 
-// What gspot notes when Semgrep prints a report that it cannot read.
 const UNREADABLE = 'Semgrep printed output that gspot cannot read.';
 
-// What gspot notes when Semgrep reports an error that stops the scan.
 const INCOMPLETE = 'Semgrep could not complete the scan: Syntax error in source.';
 
-/** Semgrep reports that gspot refuses, with the note it gives each. */
 export const SEMGREP_REFUSED_REPORTS = [
     ['no output', '', UNREADABLE],
     ['an empty object', '{}', UNREADABLE],

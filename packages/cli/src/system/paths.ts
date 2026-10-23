@@ -1,4 +1,3 @@
-// Builds, converts, and compares system and repository paths.
 import { sep, join, posix, isAbsolute } from 'node:path';
 import { EXECUTABLE_LAYOUTS, DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 

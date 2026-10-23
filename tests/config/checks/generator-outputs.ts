@@ -41,7 +41,6 @@ export const SUPABASE_VERSION_OUTPUT = '2.75.0\n';
 
 export const SUPABASE_PROJECT_FILE_SOURCE = 'project_id = "types-sample"\n';
 
-/** The finding of an untracked cloudflare-env.d.ts. */
 export const UNTRACKED_CLOUDFLARE_FINDINGS = [
     {
         file: 'cloudflare-env.d.ts',
@@ -50,7 +49,6 @@ export const UNTRACKED_CLOUDFLARE_FINDINGS = [
     },
 ] as const;
 
-/** The finding of a missing OpenAPI document. */
 export const MISSING_OPENAPI_FINDINGS = [
     {
         file: 'openapi.json',

@@ -19,8 +19,6 @@ import {
     DEPTRY_FIRST_PARTY_FLAG,
 } from '#cli/config/checks/language/python/deptry.ts';
 
-// The modules of python.externals count as first party, beside the project's own known_first_party list, which the
-// command-line flag replaces.
 function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
     const externals = planned.scope.settings.values.python?.externals ?? [];
     if (externals.length === 0) return [];

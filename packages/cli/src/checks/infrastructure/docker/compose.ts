@@ -25,7 +25,6 @@ import {
     COMPOSE_FILE_FLAG,
 } from '#cli/config/checks/infrastructure/docker/compose.ts';
 
-// Group each base Compose file before its overrides so they read and validate in order.
 function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     const groups = new Map<string, ComposeFiles>();
     for (const file of files) {

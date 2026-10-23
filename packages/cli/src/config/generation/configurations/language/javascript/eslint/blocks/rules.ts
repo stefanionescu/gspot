@@ -1,11 +1,9 @@
 export const ESLINT_RULES = {
-    // regexp also validates constructor patterns and Unicode set expressions.
     'no-empty-character-class': 'off',
     'no-useless-constructor': 'error',
     'no-useless-return': 'error',
     'no-useless-call': 'error',
     'no-useless-rename': 'error',
-    // import-x/no-duplicates owns duplicate imports and can merge them.
     'no-duplicate-imports': 'off',
     eqeqeq: ['error', 'always'],
     'prefer-const': 'error',
@@ -43,27 +41,19 @@ export const SORTING_RULES = {
 } as const;
 
 export const SONAR_RULES = {
-    // Jest and Vitest expect-expect check assertions in their test files.
     'sonarjs/assertions-in-tests': 'off',
-    // Jest and Vitest valid-expect check await semantics in their test files.
     'sonarjs/async-test-assertions': 'off',
-    // regexp owns exponential and polynomial backtracking, including constructor patterns.
     'sonarjs/slow-regex': 'off',
-    // Core and TypeScript unused-variable rules cover bindings and imports, including intentional ignores.
     'sonarjs/no-unused-vars': 'off',
     'sonarjs/unused-import': 'off',
-    // Other lint rules own these defects, so sonarjs only repeats their reports.
     'sonarjs/no-empty-character-class': 'off',
     'sonarjs/no-control-regex': 'off',
     'sonarjs/no-useless-catch': 'off',
     'sonarjs/no-parameter-reassignment': 'off',
     'sonarjs/for-loop-increment-sign': 'off',
-    // The secrets configuration owns secret detection.
     'sonarjs/no-hardcoded-passwords': 'off',
     'sonarjs/no-hardcoded-secrets': 'off',
 
-    // sonarjs counts only the test calls in the file, so it reports a test file whose tests come from a shared
-    // function.
     'sonarjs/no-empty-test-file': 'off',
     'sonarjs/no-collapsible-if': 'error',
 
@@ -74,20 +64,12 @@ export const SONAR_RULES = {
 } as const;
 
 export const UNICORN_RULES = {
-    // sonarjs/no-collapsible-if owns nested conditions at both levels.
     'unicorn/no-lonely-if': 'off',
-    // The naming check owns abbreviations and filename case; two owners give conflicting answers.
     'unicorn/prevent-abbreviations': 'off',
     'unicorn/filename-case': 'off',
-    // Platform APIs and syntax trees return null; replacing every null creates changes without fixing a defect.
     'unicorn/no-null': 'off',
-    // An explicit undefined satisfies noImplicitReturns and a required parameter typed with undefined; its fixer
-    // removes both.
     'unicorn/no-useless-undefined': 'off',
-    // unicorn/import-style asks for a default import of node:path; gspot uses a default import only when a package
-    // requires one.
     'unicorn/import-style': 'off',
-    // unicorn/prefer-export-from asks for re-exports, and gspot imports each name from the module that declares it.
     'unicorn/prefer-export-from': 'off',
 
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
@@ -96,17 +78,12 @@ export const UNICORN_RULES = {
 
 export const SECURITY_RULES = {
     'security/detect-disable-mustache-escape': 'error',
-    // Sonar covers dynamic code; Node covers deprecated constructors without matching local names.
     'security/detect-eval-with-expression': 'off',
     'security/detect-new-buffer': 'off',
-    // detect-non-literal-regexp flags constructors without examining their input.
     'security/detect-non-literal-regexp': 'off',
     'security/detect-non-literal-require': 'error',
     'security/detect-pseudoRandomBytes': 'error',
-    // regexp analyzes backtracking instead of treating nested repetition as an unsafe pattern.
     'security/detect-unsafe-regex': 'off',
-    // detect-object-injection fires on every bracket access and detect-non-literal-fs-filename on every path
-    // variable; those operations alone do not show that the input causes a defect.
     'security/detect-object-injection': 'off',
     'security/detect-non-literal-fs-filename': 'off',
 
@@ -123,7 +100,6 @@ export const JSDOC_RULES = {
     'jsdoc/require-jsdoc': [
         'error',
         {
-            // The fixer writes an empty /** */ block, which documents nothing.
             enableFixer: false,
             publicOnly: true,
             require: {
@@ -150,7 +126,6 @@ export const JSDOC_RULES = {
     ],
     'jsdoc/informative-docs': 'error',
     'jsdoc/require-param-description': 'error',
-    // A blank line before the tags makes them their own paragraph, so Vale reads the description alone.
     'jsdoc/tag-lines': ['error', 'any', { startLines: 1 }],
 } as const;
 

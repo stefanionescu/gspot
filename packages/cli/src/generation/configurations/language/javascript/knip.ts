@@ -1,4 +1,3 @@
-// Builds knip.json: the workspaces, their entry files, and what Knip leaves out.
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
@@ -29,15 +28,6 @@ import {
     KNIP_JAVASCRIPT_ENTRY_FILES,
 } from '#cli/config/generation/configurations/language/javascript/knip.ts';
 
-/**
- * Select your own and the declared entry files for each scope.
- *
- * @param settings the parsed gspot.toml.
- * @param scopes every scope.
- * @param scope the folder to select for.
- *
- * @returns entry patterns for each scope.
- */
 function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): string[] {
     const authored = listApplicableTables(settings, scope).flatMap(({ table }) => {
         const patterns = table.tools?.['knip']?.[KNIP_ENTRY_SETTING];
@@ -64,14 +54,6 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): s
     });
 }
 
-/**
- * Build Knip workspace entries and scoped dependency exclusions.
- *
- * @param repositoryRoot the folder whose package.json files declare the workspaces.
- * @param settings the validated gspot.toml.
- * @param scopes every project scope.
- * @returns the workspace settings.
- */
 function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Scope[]) {
     const selected = scopes.filter(({ settings: scopeSettings }) =>
         scopeSettings.configurations.includes(JAVASCRIPT_CONFIGURATION),
@@ -109,8 +91,6 @@ function listRunPackages(text: string): string[] {
     });
 }
 
-// Knip reads the [tasks] of mise.toml but not mise file tasks, so a package that only a file task runs, such as bunx
-// wrangler, reads as unused. Knip keeps each package that a project declares and a file task runs.
 function listFileTaskPackages(planned: PlannedConfigFile): string[] {
     const { files, dependencyFiles } = planned.session.repository;
     const isFileTask = buildPathMatcher([...MISE_FILE_TASK_GLOBS]);

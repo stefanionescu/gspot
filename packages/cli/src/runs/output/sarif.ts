@@ -16,7 +16,6 @@ function getArtifactLocation(artifact: SarifArtifactLocation, run: SarifRun): Sa
     return location;
 }
 
-// A finding must point inside the source folder, so [[ignore]] paths and path arguments can match it.
 function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, source: string): string {
     if (artifact.uri === undefined) return '';
     const root = pathToFileURL(`${source}${sep}`);
@@ -39,14 +38,6 @@ function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, sour
     return fileURLToPath(uri);
 }
 
-/**
- * Resolve a validated physical location into a source path and coordinates.
- *
- * @param location the first physical place of the result.
- * @param run its source metadata.
- * @param source the folder that the report paths start from.
- * @returns the repository-relative location.
- */
 function buildFindingPlace(location: SarifPhysicalLocation, run: SarifRun, source: string): FindingPlace {
     if (location === undefined) return { file: '' };
     const { artifactLocation: reference = {}, region } = location;

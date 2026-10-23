@@ -1,4 +1,3 @@
-/** What kind of failure a GspotError reports; the command layer maps it to output and an exit code. */
 export type ErrorCode =
     | 'filesystem'
     | 'settings'

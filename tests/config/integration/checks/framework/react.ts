@@ -1,10 +1,7 @@
-/** The packages of a test React web repository. */
-
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
 export const WEB_PACKAGES = ['@types/react', 'react', 'react-dom'] as const;
 
-// The compiler options of a test React web repository.
 const WEB_TSCONFIG = {
     compilerOptions: {
         ...STRICT_COMPILER_OPTIONS,
@@ -16,7 +13,6 @@ const WEB_TSCONFIG = {
     include: ['src'],
 } as const;
 
-// A component that the configured React rules accept.
 const CLEAN_COMPONENT =
     `// A test component.
 import type { ReactNode } from 'react';

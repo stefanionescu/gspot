@@ -1,4 +1,3 @@
-// Lists Markdown code blocks for prose and syntax checks.
 import { visit } from 'unist-util-visit';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { CodeFence } from '#cli/types/parsers/formats/markdown.ts';

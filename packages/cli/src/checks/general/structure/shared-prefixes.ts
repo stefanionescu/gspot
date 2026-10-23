@@ -16,8 +16,6 @@ import {
     INDEX_BASE_NAMES,
 } from '#cli/config/checks/general/structure/shared-prefixes.ts';
 
-// NestJS names files <name>.<kind>.ts, so these do not count as a shared prefix. Its kind suffixes apply to .ts and .js
-// files, never to .tsx or .jsx.
 function hasKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);
     if (extension.endsWith('x') || !listTaggedExtensions('javascript', 'typescript').includes(extension)) return false;
@@ -26,12 +24,6 @@ function hasKindSuffix(name: string, kinds: Set<string>): boolean {
     return segments.length > 1 && kind !== undefined && kinds.has(kind);
 }
 
-/**
- * Extracts the grouping prefix: the file name up to its first dash or dot.
- *
- * @param baseName the file name without its extension.
- * @returns the part before the first dash or dot, or all of it.
- */
 function extractPrefix(baseName: string): string {
     const cuts = [baseName.indexOf('-'), baseName.indexOf('.')].filter((index) => index >= 0);
     return cuts.length === 0 ? baseName : baseName.slice(0, Math.min(...cuts));
@@ -77,7 +69,6 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
             const peerStem = extractBaseName(child.name);
             return !INDEX_BASE_NAMES.has(peerStem) && extractPrefix(peerStem) === prefix;
         });
-        // A file and its companions, such as button.tsx, button.module.css, and button.test.tsx, count as one name.
         if (
             new Set(
                 peers.map((peer) =>

@@ -1,4 +1,3 @@
-/** Globals that each runtime has and lacks, to catch merged globals and a serviceworker mixed up with a worker. */
 export const RUNTIME_CASES = [
     {
         runtime: 'browser',
@@ -22,7 +21,6 @@ export const RUNTIME_CASES = [
     },
 ] as const;
 
-/** Presets with their own globals must still follow an authored runtime. */
 export const FRAMEWORK_RUNTIME_CASES = [
     {
         configuration: 'vue',
@@ -36,7 +34,6 @@ export const FRAMEWORK_RUNTIME_CASES = [
     },
 ] as const;
 
-/** ESLint overrides that set a runtime. */
 export const RUNTIME_OVERRIDE_TABLES = {
     tools: {
         eslint: {
@@ -48,7 +45,6 @@ export const RUNTIME_OVERRIDE_TABLES = {
     },
 } as const;
 
-/** Settings with runtime overrides in a scope. */
 export const RUNTIME_OVERRIDE_SETTINGS = {
     rules: true,
     tables: '[[tools.eslint.override]]\npaths = [ "native/src/browser.js" ]\nruntime = "browser"\n\n[[tools.eslint.override]]\npaths = [ "native/scripts/worker.js" ]\nruntime = "worker"\n\n[[tools.eslint.override]]\npaths = [ "native/server/**/*" ]\nruntime = "node"\n',

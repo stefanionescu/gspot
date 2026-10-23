@@ -34,13 +34,6 @@ function assertArgumentList(value: unknown, name: string): string[] {
     return value;
 }
 
-/**
- * Expand {each:<flag>:<setting>}: the flag before each item of the list setting.
- *
- * @param planned the check, whose scope holds the settings.
- * @param argument one argument of the manifest command.
- * @returns the expanded arguments, or undefined for another part kind.
- */
 function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[] | undefined {
     const groups = EACH_PLACEHOLDER.exec(argument)?.groups;
     if (groups === undefined) return undefined;
@@ -50,13 +43,6 @@ function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[
     return assertArgumentList(values, name).flatMap((value) => [groups['flag'] ?? '', convertToSystemPath(value)]);
 }
 
-/**
- * Expands {existing:<flag>:<path>}: the flag and the absolute path when the file exists, and nothing when it does not.
- *
- * @param repositoryRoot the folder that manifest paths start from.
- * @param argument one argument of the manifest command.
- * @returns the arguments, or undefined for another part kind.
- */
 function expandExistingPlaceholder(repositoryRoot: string, argument: string): string[] | undefined {
     const groups = EXISTING_PLACEHOLDER.exec(argument)?.groups;
     if (groups === undefined) return undefined;
@@ -67,7 +53,6 @@ function expandExistingPlaceholder(repositoryRoot: string, argument: string): st
 }
 
 function listConfigFiles(session: Session, planned: PlannedCheck): ConfigFile[] {
-    // The config files of the configurations of the check come first, because the lookup takes the first match.
     const own = planned.scope.configurations
         .filter((configuration) => configuration.checks.some((check) => check.id === planned.check.id))
         .flatMap((configuration) => configuration.configFiles);

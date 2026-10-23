@@ -1,4 +1,3 @@
-/** An installed package.json whose name or version holds no string. */
 export const PACKAGE_METADATA_FAILURES = [
     { field: 'name', packageJson: { name: false, version: '5.0.1' } },
     { field: 'version', packageJson: { name: 'teller', version: false } },

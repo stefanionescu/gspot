@@ -1,4 +1,3 @@
-// Reads and shapes plain values: tables and nested keys.
 import type { Defined } from '#cli/types/shapes.ts';
 
 /**

@@ -5,7 +5,6 @@ export const ENCODED_CREDENTIAL_KEY = /(?:_auth|_password)$/u;
 export const CONNECTION_URL_KEY = /registry$|(?:^|_)(?:https-)?proxy$/iu;
 
 export const NPM_SETTING_VARIABLE_PREFIX = 'GSPOT_PACKAGE_SETTING_';
-// The npm settings that route registry and proxy connections; the isolated install receives them.
 
 export const CONNECTION_KEYS = new Set([
     'registry',

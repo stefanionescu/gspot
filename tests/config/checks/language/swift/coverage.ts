@@ -1,14 +1,11 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-// The Example target needs 80% line coverage.
 const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nlines = 80\n';
 
-/** An Xcode project whose Example target needs 80% line coverage. */
 export const XCTEST_SETTINGS = buildSandboxSettings(['swift', 'xcode'], {
     tables: `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n`,
 });
 
-/** How each XCTest coverage failure ends: exit code, status, note, and whether xccov wrote its view. */
 export const XCTEST_FAILURES = [
     {
         failure: 'no-project',
@@ -80,7 +77,6 @@ export const SWIFT_PACKAGE_COVERAGE_FILES = [
     { filename: 'Tests/CoreTests/CoreTests.swift', summary: { lines: { count: 2, covered: 2 } } },
 ] as const;
 
-/** One coverage report for the app and library targets, checked against different limits. */
 const SWIFT_TARGET_COVERAGE_REPORT = {
     targets: [
         { name: 'App', lineCoverage: 0.6 },
@@ -88,7 +84,6 @@ const SWIFT_TARGET_COVERAGE_REPORT = {
     ],
 } as const;
 
-/** Shared and per-target coverage limits, written as the TOML each run reads. */
 export const COVERAGE_LIMIT_CASES = [
     {
         name: 'a named target passes its limit',
@@ -128,7 +123,6 @@ export const COVERAGE_LIMIT_CASES = [
     },
 ] as const;
 
-/** The swift/coverage results of a scope without Swift tests. */
 export const UNTESTED_COVERAGE_RESULTS = [
     {
         check: 'swift/coverage',

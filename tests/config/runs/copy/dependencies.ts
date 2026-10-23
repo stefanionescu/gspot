@@ -1,4 +1,3 @@
-/** A Bun project whose package.json has CRLF line ends. */
 export const CRLF_PACKAGE_FILES = {
     'package.json': '{\n    "name": "crlf"\n}\n',
     'bun.lock': '{}\n',
@@ -6,7 +5,6 @@ export const CRLF_PACKAGE_FILES = {
     'node_modules/example/index.js': 'export const value = 1;',
 } as const;
 
-/** An npm project with a lockfile. */
 export const LOCKED_NPM_PROJECT_FILES = {
     '.gitignore': 'node_modules/\n',
     'package.json': '{"name":"fixture","version":"1.0.0"}\n',
@@ -15,7 +13,6 @@ export const LOCKED_NPM_PROJECT_FILES = {
     'node_modules/item-0/value.js': 'export const value = 2;\n',
 } as const;
 
-/** A gspot tool project with installed packages. */
 export const TOOL_PROJECT_FILES = {
     'project/.gspot/package.json': '{}',
     'project/.gspot/bun.lock': '{}',
@@ -23,7 +20,6 @@ export const TOOL_PROJECT_FILES = {
     '.gitignore': 'node_modules/\n.gspot/state/\n',
 } as const;
 
-/** A project with external dependencies. */
 export const EXTERNAL_DEPENDENCY_FILES = {
     'package.json': '{}',
     'bun.lock': '{}',
@@ -31,7 +27,6 @@ export const EXTERNAL_DEPENDENCY_FILES = {
     'node_modules/example/index.js': 'export const value = 1;',
 } as const;
 
-/** A Bun workspace whose package has a bin. */
 export const BIN_WORKSPACE_FILES = {
     'package.json': '{"workspaces":["packages/*"]}',
     'bun.lock': '{}',
@@ -40,7 +35,6 @@ export const BIN_WORKSPACE_FILES = {
     '.gitignore': 'node_modules/\ndist/\n',
 } as const;
 
-/** A Bun workspace with two packages. */
 export const WORKSPACE_LOCK_FILES = {
     'package.json': '{"workspaces":["packages/*"]}',
     'bun.lock': '{}',

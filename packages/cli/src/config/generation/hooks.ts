@@ -1,16 +1,13 @@
-/** Hooks that run the check command. */
 export const CHECK_HOOKS = ['pre-commit', 'pre-push', 'commit-msg'] as const;
 
 export const LFS_HOOKS = ['pre-push', 'post-checkout', 'post-commit', 'post-merge'] as const;
 
-/** Saves the pre-push input, so that git lfs and gspot both read it. */
 export const PUSH_INPUT_SAVE = 'input=$(cat)';
 
 export const PUSH_INPUT_REPLAY = String.raw`printf '%s\n' "$input" | `;
 
 export const LFS_GUARD_PREFIX = 'command -v git-lfs >/dev/null 2>&1 || ';
 
-/** The gspot arguments of each hook, and the stages of the checks that it runs. */
 export const HOOK_CHECKS = {
     'pre-commit': { arguments: 'check --hook pre-commit', stages: ['commit'] },
     'pre-push': { arguments: 'check --hook pre-push -- "$@"', stages: ['commit', 'push'] },

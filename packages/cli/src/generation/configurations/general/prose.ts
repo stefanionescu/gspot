@@ -98,7 +98,6 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
     const packages = VALE_PACKAGES.map(
         (name) => `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name]}/${name}.zip`,
     );
-    // The gspot style holds only the files of this level, so no line turns a gspot rule off.
     const lines = [
         ...(isAll ? ['# Vale reads both StylesPath lines in order and installs packages in the last folder.'] : []),
         ...styles.map((path) => `StylesPath = ${path}`),
@@ -245,23 +244,11 @@ export function buildAcceptedWordsFile(planned: PlannedConfigFile): string {
     return words.toSorted((left, right) => left.localeCompare(right)).join('\n');
 }
 
-/**
- * List the shared Vale vocabulary.
- *
- * @param session the repository and its selected scopes.
- * @returns each allowed product name or word once.
- */
 function listAllowedWords(session: Session): string[] {
     const words = session.scopes.flatMap((scope) => Object.keys(getTable(scope.settings, 'spelling').allowed_words));
     return [...new Set([...listProductNames(session), ...words])];
 }
 
-/**
- * List the product names of the tools and configurations.
- *
- * @param session the repository and its tools.
- * @returns each tool name and allowed product word once, for the Vale vocabulary.
- */
 function listProductNames(session: Session): string[] {
     return [
         ...new Set(

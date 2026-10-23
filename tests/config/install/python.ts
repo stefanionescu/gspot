@@ -40,7 +40,6 @@ export const UV_LOCKFILE_MISMATCHES = [
     ['virtual root', 'virtual = "."', 'virtual = "elsewhere"'],
 ] as const;
 
-/** The install error of a password in a new uv lockfile. */
 export const LOCKFILE_PASSWORD_ERROR = {
     name: 'GspotError',
     code: 'install',

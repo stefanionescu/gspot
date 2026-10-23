@@ -77,7 +77,6 @@ test.each([true, false])('apply writes the .gitignore block only once Git exists
     });
     await applyGeneratedFiles(sandbox.path);
     const path = join(sandbox.path, '.gitignore');
-    // Generation keeps any existing file outside Git. It creates no new file.
     expect((await isOnDisk(path)) ? await readFile(path, 'utf8') : undefined).toBe(authored ? original : undefined);
     const initialized = runGit(sandbox.path, ['init', '--quiet']);
     expect(initialized.code, initialized.stderr).toBe(0);

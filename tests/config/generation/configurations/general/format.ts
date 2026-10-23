@@ -1,4 +1,3 @@
-/** Selectors that EditorConfig cannot express in a section. */
 export const EDITORCONFIG_SELECTOR_ERRORS = [
     {
         pattern: 'src/*.+(ts|js)',

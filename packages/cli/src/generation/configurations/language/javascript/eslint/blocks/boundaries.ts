@@ -32,9 +32,6 @@ import {
     BOUNDARY_DEPENDENCY_SELECTORS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
 
-// Your import rules precede the fixed test and server-value restrictions. The last policy that matches decides. Each
-// rule first refuses every file, with a message that names what it may import. Then it allows the rules from
-// listAllowedRules.
 function buildDependencyPolicies({
     importRules,
     enforceTests,
@@ -87,7 +84,6 @@ function buildDependencyPolicies({
     return policies;
 }
 
-// Test files win over module categories. The elements also cover unknown endpoints.
 function buildBoundarySettings({
     importRules,
     enforceTests,
@@ -146,7 +142,6 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
     const serverFiles = [
         ...new Set(trpcScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.values.trpc?.server_files ?? [])),
     ];
-    // Other files of a tRPC scope import the server files only as types.
     const trpcPaths =
         serverFiles.length === 0
             ? []

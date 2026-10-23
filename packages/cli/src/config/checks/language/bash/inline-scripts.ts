@@ -1,6 +1,3 @@
-/**
- * Commands that run code of another language inline, such as python -c, and the words that name each one in a finding.
- */
 export const RUNTIME_EMBEDS = [
     [/\bpython[0-9.]*\s+-c\b/u, 'an inline Python command'],
     [/\bpython[0-9.]*\s+<</u, 'an inline Python heredoc'],

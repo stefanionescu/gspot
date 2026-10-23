@@ -11,12 +11,6 @@ import {
     PACKAGE_FOLDER_FILES,
 } from '#tests/config/system/assets.ts';
 
-/**
- * Write a copy of the checkout whose asset reader both tests run.
- *
- * @param folder where the copy goes.
- * @returns the copied checkout folder.
- */
 async function writePackageFolder(folder: string): Promise<string> {
     const root = join(import.meta.dir, '../../../../..');
     await createFileTree(folder, {
@@ -34,7 +28,6 @@ async function writePackageFolder(folder: string): Promise<string> {
         ),
     });
     const cwd = join(folder, PACKAGE_FOLDER);
-    // The whole source tree, so the copy follows every import the asset reader makes.
     await cp(join(root, 'packages/cli/src'), join(cwd, 'packages/cli/src'), { recursive: true });
     await symlink(join(root, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
     await symlink(join(root, 'node_modules'), join(cwd, 'node_modules'), 'junction');

@@ -1,4 +1,3 @@
-/** Storage policy statements, and whether each one names a bucket in a real policy and not in other text. */
 export const STORAGE_POLICIES = [
     {
         name: 'comment only',
@@ -49,7 +48,6 @@ export const SERVICE_KEY_READERS = {
     'apps/web/client.ts': 'export const key = process.env.SUPABASE_SERVICE_ROLE_KEY;\n',
 } as const;
 
-/** Ways a client file can read the Supabase secret key. */
 export const SECRET_KEY_READS = [
     'process.env.SUPABASE_SECRET_KEY',
     'settings.supabase_secret_key',
@@ -57,14 +55,12 @@ export const SECRET_KEY_READS = [
     '"sb_secret_example"',
 ] as const;
 
-/** A Deno handler for the Supabase configuration tests. */
 export const HELLO_EDGE_FUNCTION = 'Deno.serve(() => new Response("hello"));\n';
 
 export const INVALID_BUCKETS_CONFIG = '[storage]\nbuckets = "avatars"\n';
 
 export const AVATARS_BUCKET_CONFIG = '[storage.buckets.avatars]\npublic = false\n';
 
-/** The client files that the service-role-key rule reports. */
 export const SERVICE_ROLE_CLIENT_FILES = [
     'client.astro',
     'client.cjs',
@@ -74,7 +70,6 @@ export const SERVICE_ROLE_CLIENT_FILES = [
     'client.vue',
 ] as const;
 
-/** Client sources in each component and module kind that read the service role key. */
 export const SERVICE_ROLE_CLIENTS = {
     'client.vue': '<script setup>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
     'client.svelte': '<script>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',

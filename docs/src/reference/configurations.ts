@@ -10,7 +10,6 @@ import { formatList, formatTable, formatSection, buildReferencePage, formatRefer
 
 const DETECTION_LIST_FORMAT = new Intl.ListFormat('en', { type: 'disjunction' });
 
-// The conditions that select a configuration: every kind with patterns, apart from the dependencies that rule it out.
 function formatDetectionConditions(detect: Configuration['detect']): string[] {
     return Object.entries(detect).flatMap(([kind, patterns]) => {
         if (kind === 'absent_dependencies') return [];
@@ -28,7 +27,6 @@ function formatAbsentDependencies(detect: Configuration['detect']): string {
     return names.length === 0 ? '' : `, unless the repository depends on ${DETECTION_LIST_FORMAT.format(names)}`;
 }
 
-// Rule files of a configuration, with the conditions that install each one.
 function formatRules(configuration: Configuration, paths: string[]): string {
     const rows = paths.map((path) => {
         const condition = configuration.rules[posix.basename(path)];
@@ -48,7 +46,6 @@ function formatLintRulesOff(configuration: Configuration): string {
     return formatTable(['Lint rules', 'Files', 'Why'], rows);
 }
 
-// How gspot selects a configuration: always, by its files and dependencies, or by another configuration.
 function formatSelection(configuration: Configuration, facts: CliReference): string {
     if (configuration.always_selected)
         return configuration.when?.git === true ? 'Always selected in a Git repository.' : 'Always selected.';
@@ -68,14 +65,12 @@ function formatSelection(configuration: Configuration, facts: CliReference): str
     );
 }
 
-// What gspot installs and writes for a configuration, and the folders it keeps out of Git.
 function listInstalledSections(configuration: Configuration): [string, string][] {
     const tools = configuration.tools.map((tool) => [
         tool.name,
         (tool.version === undefined ? 'Any' : `\`${tool.version}\``) +
             (isInstalledByGspot(tool) ? '' : ', install it yourself'),
     ]);
-    // Two config files can share one target, so each target appears once.
     const targets = [...new Set(configuration.configFiles.map((configFile) => `\`${configFile.target}\``))];
     const ignored = configuration.ignored_paths.map((path) => `\`${path}\``);
     return [
@@ -85,7 +80,6 @@ function listInstalledSections(configuration: Configuration): [string, string][]
     ];
 }
 
-// The authored guide owns its link title; a missing registered title stops the build.
 function formatConfigurationGuide(name: string, guideTitles: Map<string, string>): string {
     const slug = CONFIGURATION_GUIDES[name];
     if (slug === undefined) return '';
@@ -94,14 +88,6 @@ function formatConfigurationGuide(name: string, guideTitles: Map<string, string>
     return `The [${title} guide](/${slug}/) explains the setup.`;
 }
 
-/**
- * Build the reference page of a shipped configuration: how gspot selects it, its settings, and its checks.
- *
- * @param configuration the parsed configuration
- * @param facts the CLI reference facts
- * @param guideTitles the authored guide titles keyed by slug.
- * @returns the title, summary, and Markdown body
- */
 function buildConfigurationPage(
     configuration: Configuration,
     facts: CliReference,

@@ -7,7 +7,6 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { readBlobs, listHeadFiles } from '#cli/repository/revisions/files.ts';
 
-// Windows file names cannot hold a newline or a quote.
 test.skipIf(isWindows)('committed blobs keep unusual file names and bytes', async () => {
     await using sandbox = await testdir();
     runGitStep(sandbox.path, ['init']);

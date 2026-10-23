@@ -24,7 +24,6 @@ function getSchemaNode(
     let node = subschema;
     while (node.$ref !== undefined) {
         const { $ref: reference, ...local } = node;
-        // buildJsonSchema writes every local reference into $defs.
         const schemas = schema.$defs as Record<string, JSONSchema.JSONSchema>;
         const definition = schemas[reference.slice('#/$defs/'.length)] as JSONSchema.JSONSchema;
         node = { ...definition, ...local };
@@ -32,7 +31,6 @@ function getSchemaNode(
     return node;
 }
 
-// A reasoned value holds exactly a value and the reason for it.
 function isReasonedValue(node: JSONSchema.JSONSchema): boolean {
     return (
         node.type === 'object' &&
@@ -55,7 +53,6 @@ function formatAcceptedValue(schema: JSONSchema.JSONSchema, subschema: JSONSchem
             : node.enum.map((value) => `\`${JSON.stringify(value)}\``).join(', ');
     if (node.anyOf !== undefined) {
         const branches = node.anyOf.map((option) => getSchemaNode(schema, option));
-        // Values that each carry their own meaning read better as a table than as one long sentence.
         if (branches.every((branch) => branch.const !== undefined && branch.description !== undefined)) {
             const rows = branches.map((branch) => [`\`${JSON.stringify(branch.const)}\``, branch.description ?? '']);
             return `One of these values:\n\n${formatTable(['Value', 'Meaning'], rows)}\n\n`;
@@ -69,7 +66,6 @@ function formatAcceptedValue(schema: JSONSchema.JSONSchema, subschema: JSONSchem
         .join(' or ');
 }
 
-// The keys under a table or a record: its fixed keys, then the keys of each map entry under a <name> placeholder.
 function listSchemaProperties(
     schema: JSONSchema.JSONSchema,
     subschema: JSONSchema.JSONSchema | boolean,
@@ -105,7 +101,6 @@ function formatDefaults(variants: CliReference['settings']): string {
         .join('; ');
 }
 
-// The languages whose default differs from the default of the key.
 function formatLanguageDefaults(variants: CliReference['settings']): string {
     const defaults = variants.flatMap(({ setting }) =>
         setting.language_defaults === undefined ? [] : Object.entries(setting.language_defaults),
@@ -127,7 +122,6 @@ function formatSetting(
     ];
     const accepted = formatAcceptedValue(facts.schema, node);
     const sentence = accepted.charAt(0).toUpperCase() + accepted.slice(1) + (/[.\n]$/u.test(accepted) ? '' : '.');
-    // A record field without a declared default takes the default of its schema.
     const schemaDefault = node.default === undefined ? 'unset' : `\`${JSON.stringify(node.default)}\``;
     const presence = required ? 'Required.' : `Default: ${formatDefaults(variants) || schemaDefault}.`;
     return (
@@ -138,12 +132,10 @@ function formatSetting(
     );
 }
 
-// A key holds a value; a table or a record holds keys.
 function isSettingValue(schema: JSONSchema.JSONSchema, node: JSONSchema.JSONSchema): boolean {
     return isReasonedValue(node) || listSchemaProperties(schema, node).length === 0;
 }
 
-// Each key of a table or a record under its own heading, one level below the table, with the full key as its anchor.
 function formatSettingKeys(
     facts: CliReference,
     prefix: string,
@@ -159,7 +151,6 @@ function formatSettingKeys(
         .join('\n');
 }
 
-// A table whose keys all repeat keys of the table around it sets those keys for one language or one category.
 function listVariantTables(
     schema: JSONSchema.JSONSchema,
     node: JSONSchema.JSONSchema,
@@ -174,7 +165,6 @@ function listVariantTables(
     });
 }
 
-// One section for all the language tables of a table, and the categories of names each language takes.
 function formatVariantSection(schema: JSONSchema.JSONSchema, key: string, node: JSONSchema.JSONSchema, level: number) {
     const languages = listVariantTables(schema, node);
     if (languages.length === 0) return '';
@@ -198,7 +188,6 @@ function formatVariantSection(schema: JSONSchema.JSONSchema, key: string, node: 
     );
 }
 
-// A table or a record: its description and its keys, then the tables and records inside it, one heading level down.
 function formatSettingTable(
     facts: CliReference,
     key: string,
@@ -226,7 +215,6 @@ function formatSettingTable(
     );
 }
 
-// A scope takes its own keys and every root table, apart from the keys that only the root takes.
 function formatScopeSection(facts: CliReference, subschema: JSONSchema.JSONSchema | boolean): string {
     const { schema } = facts;
     const node = getSchemaNode(schema, subschema);
@@ -250,7 +238,6 @@ function formatScopeSection(facts: CliReference, subschema: JSONSchema.JSONSchem
     );
 }
 
-// The schema names of a dotted key; a map key, such as a language, reads as the map placeholder.
 function findSettingPath(schema: JSONSchema.JSONSchema, key: string): { path: string[]; node: JSONSchema.JSONSchema } {
     let node = schema;
     const path: string[] = [];
@@ -275,7 +262,6 @@ function findSettingPath(schema: JSONSchema.JSONSchema, key: string): { path: st
 export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string {
     const { path, node } = findSettingPath(schema, key);
     const name = path.join('.');
-    // A key anchors its row; a table or a record anchors its heading, by the ID that Starlight gives the heading.
     const header = node.type === 'array' ? `[[${name}]]` : `[${name}]`;
     const anchor = isSettingValue(schema, node)
         ? name.replaceAll(ANGLE_BRACKETS, '')
@@ -315,7 +301,6 @@ export function buildSettingsPage(facts: CliReference): ReferencePage {
             ) +
             sections.join(''),
     );
-    // Every key has a heading, so the table of contents lists the tables only.
     page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };
     return page;
 }

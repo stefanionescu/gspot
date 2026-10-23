@@ -35,7 +35,6 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
     return `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).${similar}`;
 }
 
-// A check ID wins. A tracked path wins over a lint rule with the same first folder.
 function explainSlashed(
     session: Session | undefined,
     subject: string,
@@ -60,13 +59,6 @@ function explainNamed(session: Session | undefined, subject: string): Explanatio
     return explainLintRule(ESLINT_MANIFEST_TOOL, subject);
 }
 
-/**
- * Explain a subject, and read the settings of the repository when it has gspot.toml.
- *
- * @param cwd the folder where the command starts.
- * @param subject the check, rule, configuration, setting, or path to explain.
- * @returns the explanation and its command exit code.
- */
 async function runExplainCommand(cwd: string, subject: string): Promise<CommandResult> {
     const root = findRoot(cwd);
 
@@ -80,14 +72,6 @@ async function runExplainCommand(cwd: string, subject: string): Promise<CommandR
     };
 }
 
-/**
- * Explain what the subject names.
- *
- * @param session the repository, or undefined outside one.
- * @param subject a check ID, a tool/rule pair, a configuration name, a setting key, or a file path.
- * @returns the explanation.
- * @throws GspotError when no subject or file matches, with the closest known names
- */
 function explain(session: Session | undefined, subject: string): Explanation {
     const file = explainPath(session, subject);
     if (file !== undefined && subject.startsWith('./')) return file;

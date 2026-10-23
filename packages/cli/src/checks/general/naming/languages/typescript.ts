@@ -45,8 +45,6 @@ function addParameters(found: FileIdentifiers, node: Node): void {
     addPattern(found, node.childForFieldName('parameter'), 'parameters');
 }
 
-// `const { existsSync } = require('node:fs')` and `const { default: X } = await import('x')` bind names another module
-// declared. Check the name of any other awaited value as a local declaration.
 function isImportedName(node: Node): boolean {
     const value = node.childForFieldName('value');
     if (value === null) return false;

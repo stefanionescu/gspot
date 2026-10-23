@@ -1,6 +1,5 @@
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
-/** The compiler options of a test React Native repository. */
 export const REACT_NATIVE_TSCONFIG = {
     compilerOptions: { ...STRICT_COMPILER_OPTIONS, module: 'ESNext', moduleResolution: 'Bundler', jsx: 'react-jsx' },
     include: ['src'],
@@ -48,7 +47,6 @@ export const YARN_CLIENTS = [
     },
 ] as const;
 
-/** Settings with a Next.js and a JavaScript scope. */
 export const NEXTJS_API_SETTINGS = {
     scopes: [
         { path: 'web', configurations: ['nextjs'] },
@@ -56,10 +54,8 @@ export const NEXTJS_API_SETTINGS = {
     ],
 } as const;
 
-/** Root allowed packages that install the license tool for a child scope. */
 export const LICENSE_TOOL_CASES = [{ configurations: ['licenses'] }, { configurations: [] }] as const;
 
-/** Component files need the HTML parser package only when Stylelint checks their styles. */
 export const STYLESHEET_CASES = [
     { name: 'plain CSS', configurations: ['css'], files: { 'site.css': 'a { color: red; }' }, needsHtmlParser: false },
     {

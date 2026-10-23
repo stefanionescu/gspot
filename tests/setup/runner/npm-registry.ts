@@ -1,4 +1,3 @@
-// Packs the npm packages of this checkout and serves them from a local npm registry.
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -36,15 +35,6 @@ export async function runNpmPack(work: string, declarations: readonly RegistryPa
     return packagesFile;
 }
 
-/**
- * Answer one request of the test registry: a packed package, its tarball, or a redirect to the upstream registry.
- *
- * @param request what npm or the package manager asked for.
- * @param registry the packages that the registry serves, and who may read them.
- * @param registry.packages the packed packages by name.
- * @param registry.token the token that each request must carry; without one, every request passes.
- * @returns the package document, the tarball, an error, or the redirect.
- */
 async function answerRegistryRequest(
     request: Request,
     registry: { packages: Map<string, PackedPackage>; token: string | undefined },
@@ -67,8 +57,6 @@ async function answerRegistryRequest(
     return Response.json(buildPackageDocument(packed, `${url.origin}/${tarball}`));
 }
 
-// The registry document of one packed package. The registry dates a gspot package now, as on release day, so the
-// release hold must let it through.
 function buildPackageDocument(packed: PackedPackage, tarball: string): Record<string, unknown> {
     const { filename: _filename, integrity, ...packageFields } = packed;
     const publishedAt = packed.name.startsWith(GSPOT_PACKAGE_SCOPE) ? new Date().toISOString() : PACKED_PUBLISH_TIME;

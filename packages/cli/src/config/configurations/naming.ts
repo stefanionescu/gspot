@@ -26,7 +26,6 @@ export const NAMED_CATEGORIES = [
     'path_parameters',
 ] as const;
 
-/** The names that case validation accepts, in their display order. */
 export const CASE_NAMES = [
     'camel',
     'pascal',

@@ -1,4 +1,3 @@
-/** The line and rule of each SwiftFormat finding in SWIFT_INLINE_DOCS at level all. */
 export const INLINE_COMMENT_FINDINGS = [
     [4, 'blockComments'],
     [4, 'docComments'],
@@ -10,7 +9,6 @@ export const INLINE_COMMENT_FINDINGS = [
     [11, 'blockComments'],
 ] as const;
 
-/** SWIFT_INLINE_DOCS after SwiftFormat fixes it at level all. */
 export const FORMATTED_INLINE_DOCS = `/// A choice.
 public enum Choice {
     /// The first choice.

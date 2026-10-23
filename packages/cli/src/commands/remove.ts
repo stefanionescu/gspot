@@ -23,12 +23,6 @@ function assertNotRequired(names: string[], kept: string[], configurations: Map<
     }
 }
 
-/**
- * Remove configurations from the root list or from the list of one scope.
- *
- * @param options the parsed flags.
- * @returns the command result.
- */
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
     const { root, input, scopeSettings, selected, configurations } = prepareConfigurationEdit(options);
     const kept = selected.filter((name) => !options.configurations.includes(name));
@@ -62,14 +56,6 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     });
 }
 
-/**
- * Find the chain of requirements from one configuration to another, and visit each one once.
- *
- * @param required the required configuration.
- * @param from the configuration where the chain starts.
- * @param configurations every configuration.
- * @returns the names along the chain, or undefined when no chain exists.
- */
 function findRequirementChain(
     required: string,
     from: string,

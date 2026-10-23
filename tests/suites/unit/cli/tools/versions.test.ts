@@ -14,7 +14,6 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeNpmPackage, writeScriptCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
-/** Build one release below the declared minimum version, so the test does not copy its value. */
 function buildVersionBelow(minimum: string): string {
     const segments = minimum.split('.').map(Number);
     const index = segments.findLastIndex((number) => number > 0);

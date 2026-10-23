@@ -21,7 +21,6 @@ test('the generated GitHub workflow passes actionlint', async () => {
     await using sandbox = await testdir({ 'README.md': '# Workflow test\n' });
 
     commitAll(sandbox.path);
-    // The sandbox needs no tool project, because mise pins actionlint.
     await initSandbox(
         { root: sandbox.path, environment: {}, run: spawnGspot },
         { configurations: ['github-actions'], install: false },
@@ -54,7 +53,6 @@ test('the generated GitHub workflow passes actionlint', async () => {
     ]);
 });
 
-// GitHub self-repository references use $/. The pinned Actionlint needs their local spelling.
 test('actionlint reports a missing required input of a same-repository reusable workflow and keeps your files', async () => {
     await using sandbox = await testdir();
     const workflow = `on: workflow_dispatch

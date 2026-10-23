@@ -175,13 +175,6 @@ export function getWrittenValue(written: unknown): unknown {
     return written;
 }
 
-/**
- * Replace a written value, and keep the reason of its reasoned value.
- *
- * @param written the original setting.
- * @param value the new setting.
- * @returns the replacement in the same written form.
- */
 function replaceWrittenValue(written: unknown, value: unknown): unknown {
     if (isReasonedValue(written)) return { ...written, value };
     return value;

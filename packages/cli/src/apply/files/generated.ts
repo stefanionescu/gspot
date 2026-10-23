@@ -114,7 +114,6 @@ export function writeGeneratedFiles(
     const replacements = buildReplacementPlans(generated, writer, reviewedOriginals);
     const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.block, block.style));
     const generatedPlans = [...replacements, ...blocks, ...managedKeyPlans];
-    // Remove generated files that no configuration needs.
     const pruning = listStrayPaths(session, paths).map((path) => planRemoval(writer, path));
     const plans = [...generatedPlans, ...pruning];
     writePlans(writer, plans);

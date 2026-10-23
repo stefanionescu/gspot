@@ -60,7 +60,6 @@ import {
     GENERATOR_OUTPUT_BANNERS,
 } from '#cli/config/repository/files/classify.ts';
 
-// A Git attribute wins over a configuration declaration.
 function findConfiguredKind(path: string, rules: FileKindRules): FileClassification | undefined {
     const attribute = findAttributeKind(rules.attributes.get(path));
     if (attribute !== undefined) return attribute;
@@ -78,14 +77,12 @@ function findAttributeKind(attributes: Record<string, string> | undefined): File
     return isBinary ? { kind: 'binary', origin: GITATTRIBUTES_FILE } : undefined;
 }
 
-// License texts belong to another party. A code file whose name looks like a license stays source.
 function isLicenseFile(path: string): boolean {
     const name = posix.basename(path);
     const tags = EXTENSION_TAGS[extractExtension(name)] ?? [];
     return (LICENSE_FILE.test(name) || NOTICE_FILE.test(name)) && tags.every((tag) => LICENSE_TAGS.has(tag));
 }
 
-// Tool paths and banners identify generated files; downloaded Vale styles belong to another party.
 function findGeneratedKind(path: string, prefix: Buffer): FileClassification | undefined {
     if (path.startsWith(`${GSPOT_PATHS.valePackages}/`)) return { kind: 'vendored', origin: KIND_ORIGINS.gspot };
     if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
@@ -96,7 +93,6 @@ function findGeneratedKind(path: string, prefix: Buffer): FileClassification | u
     return undefined;
 }
 
-// A Markdown file that holds only a managed block counts as generated; any authored text keeps it source.
 function classifyManagedDocument(root: string, file: ListedFile, prefix: Buffer): FileClassification {
     if (file.symlink || !file.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
@@ -106,18 +102,6 @@ function classifyManagedDocument(root: string, file: ListedFile, prefix: Buffer)
     return { kind: 'generated', origin: KIND_ORIGINS.gspot };
 }
 
-/**
- * Classify a file by these sources, in order: attributes, the paths that configurations declare, binary content, license
- * files, gspot paths, generated paths, banners, vendored folders, and managed documents.
- *
- * @param file what to classify.
- * @param file.root the repository folder.
- * @param file.listed the file as Git or the folder walk lists it.
- * @param file.prefix the first bytes of the file.
- * @param file.isBinary whether those bytes hold binary data.
- * @param rules the generated and vendored paths that configurations declare, and the captured Git attributes.
- * @returns the kind and where it came from.
- */
 function classifyKind(
     file: { root: string; listed: ListedFile; prefix: Buffer; isBinary: boolean },
     rules: FileKindRules,
@@ -126,7 +110,6 @@ function classifyKind(
     const { path } = listed;
     const configured = findConfiguredKind(path, rules);
     if (configured) return configured;
-    // Explicit text attributes override binary content and what the extension suggests.
     if (isBinary && rules.attributes.get(path)?.[TEXT_ATTRIBUTE] !== ATTRIBUTE_SET)
         return { kind: 'binary', origin: KIND_ORIGINS.content };
     if (isLicenseFile(path)) return { kind: 'vendored', origin: KIND_ORIGINS.license };
@@ -165,13 +148,6 @@ function tagTextFile(tags: Set<string>, firstLine: string): FileTags {
     return { tags: [...tags], isBinary: false };
 }
 
-/**
- * Resolve the pointer paths that config files generate outside the tool project.
- *
- * @param path the scope folder.
- * @param files the config files.
- * @returns the pointer paths and declared folder patterns.
- */
 function listPointers(path: string, files: ConfigFile[]): string[] {
     return files.flatMap((file) => {
         const pointer = file.pointer;
@@ -192,12 +168,6 @@ export function hasGeneratedHeader(text: string): boolean {
     return lines.some((line) => GENERATED_HEADER_LINE.test(line));
 }
 
-/**
- * Read the first executable, skipping env and its -S argument when present.
- *
- * @param firstLine the first line, which can hold a shebang.
- * @returns the executable basename, or undefined without an executable shebang.
- */
 function parseShebang(firstLine: string): string | undefined {
     if (!firstLine.startsWith(SHEBANG_PREFIX)) return undefined;
     const tokens = firstLine.slice(SHEBANG_PREFIX.length).trim().split(/\s+/u);
@@ -235,13 +205,6 @@ export function classifyFile(
     };
 }
 
-/**
- * Tag one file. A binary file keeps its path tags and gets no content tags.
- *
- * @param file the tracked listing item.
- * @param prefix the captured first bytes.
- * @returns the path and content tags, and whether the file contains binary bytes.
- */
 function tagFile(file: ListedFile, prefix: Buffer): FileTags {
     const extension = extractExtension(file.path);
     const base = posix.basename(file.path);

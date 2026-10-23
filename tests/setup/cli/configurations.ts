@@ -1,4 +1,3 @@
-// Builds configurations for tests and reads the shipped ones and their checks.
 import { parse } from '@decimalturn/toml-patch';
 import { getTool } from '#cli/configurations/tools.ts';
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';

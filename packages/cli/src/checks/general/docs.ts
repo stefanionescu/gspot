@@ -67,7 +67,6 @@ function listRepositoryPaths(session: Session, planned: PlannedCheck): Set<strin
     for (const configFile of planned.scope.configurations.flatMap((configuration) => configuration.configFiles))
         repositoryPaths.add(configFile.target);
     for (const path of listGeneratorPaths(planned)) repositoryPaths.add(path);
-    // A check ID such as postgres/migration-order looks like a path, so count it as known.
     for (const check of session.configurations.values().flatMap((configuration) => configuration.checks))
         repositoryPaths.add(check.id);
     for (const check of Object.values(session.settingsFile.settings.commandChecks)) repositoryPaths.add(check.id);
@@ -157,12 +156,6 @@ function readTaskNames(session: Session, scope: string): TaskNames {
     };
 }
 
-/**
- * Lists prose lines and the lines of untitled command blocks, with line numbers.
- *
- * @param text the Markdown source.
- * @returns the lines a path check reads.
- */
 function extractProseLines(text: string): NumberedLine[] {
     const ignored = new Set<number>();
     for (const fence of listCodeFences(text)) {
@@ -176,12 +169,6 @@ function extractProseLines(text: string): NumberedLine[] {
         .flatMap((line, index) => (ignored.has(index + 1) ? [] : [{ number: index + 1, text: line }]));
 }
 
-/**
- * Lists the words of a line that look like paths.
- *
- * @param line the prose to scan.
- * @returns the path-like words without trailing punctuation and emphasis marks.
- */
 function extractPathTokens(line: string): string[] {
     return line
         .split(TOKEN_SEPARATORS)

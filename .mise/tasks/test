@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Run one test suite: unit, integration, or e2e. With no suite, run unit."
 #MISE depends=["build"]
-# To run one integration or e2e file: bun `tests/setup/runner/prepare.ts`, then
-# bun test --preload `./tests/setup/runner/installed-tools.ts` <file>. Prepare again after a change under `packages/`.
 set -euo pipefail
 
 suite=${1:-unit}

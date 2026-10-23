@@ -200,7 +200,6 @@ createRuleTester().run<
     ],
 });
 
-// Windows paths can use backslashes and a different drive-letter case.
 createRuleTester({ root: String.raw`c:\repo` }).run<
     keyof (typeof plugin.rules)['import-boundaries']['meta']['messages'],
     [Partial<ImportBoundariesOptions[0]>]

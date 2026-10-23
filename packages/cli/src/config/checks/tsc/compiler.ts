@@ -20,7 +20,6 @@ export const TSC_PROJECT_COMMAND = ['tsc', '--noEmit', '-p'] as const;
 
 export const TSC_CONFIGURATION_REQUIRED = 'A captured TypeScript configuration is missing.';
 
-/** Where a compiler run writes the project file of each scope, below the run folder. */
 export const TSCONFIG_COPY_FOLDER = `${GSPOT_PATHS.configurations}/language/typescript`;
 
 export const TSC_UNFORMATTED_OUTPUT = ['--pretty', 'false'] as const;

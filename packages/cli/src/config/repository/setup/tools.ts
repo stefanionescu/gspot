@@ -4,7 +4,6 @@ export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules
 
 export const RULE_FOLDERS = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'] as const;
 
-// The words in a CI job name that say it lints.
 export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
 
 export const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
@@ -17,7 +16,6 @@ export const FOREIGN_CI_FILES = new Set([
     '.buildkite/pipeline.yml',
 ]);
 
-// In "<runner> run <task>", the task sits two words after the runner.
 export const TASK_AFTER_RUN = 2;
 
 export const RUNNER_NAMES: readonly string[] = [...PACKAGE_MANAGERS, 'mise'];
@@ -50,10 +48,8 @@ export const LEFTHOOK_PREFIXES = ['', '.', '.config/'] as const;
 
 export const PRE_COMMIT_FILE = '.pre-commit-config.yaml';
 
-/** Folders of hook scripts, whose names the hook manager fixes; nested scripts count too. */
 export const FOREIGN_HOOK_FOLDERS = ['.githooks', HUSKY_PATH, '.git-hooks'] as const;
 
-/** The Git setting that names the hooks folder. */
 export const HOOKS_PATH_SETTING = 'core.hooksPath';
 
 export const LINT_FOLDERS = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;

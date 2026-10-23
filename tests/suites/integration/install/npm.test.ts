@@ -21,7 +21,6 @@ import { TOOL_PROJECT_BYTE_ATTRIBUTES } from '#tests/config/integration/install/
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
 import { REGISTRY_HOST, PNPM_WORKSPACE, NPM_REGISTRY_TOKEN } from '#tests/config/setup/sandboxes.ts';
 
-/** Serve an authenticated registry for a real package manager and count its requests. */
 function createAuthenticatedRegistry(token: string) {
     const requests = { rejected: 0, authenticated: 0 };
     const server = Bun.serve({
@@ -62,7 +61,6 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
             expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
         }
-        // Yarn 1 writes resolved package addresses into its lockfile; these must exclude the private registry.
         if (packageManager === 'yarn') expect(Buffer.from(lockfile).toString('utf8')).not.toContain(registry.url);
         const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierPackage.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
@@ -77,7 +75,6 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         });
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        // The install checks the package manager version among its other steps.
         expect(JSON.parse(installed.stdout)).toStrictEqual({
             steps: expect.arrayContaining([[packageManager, '--version']]) as unknown,
         });
@@ -110,7 +107,6 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         const appliedPackageJson = await readFile(join(root, GSPOT_PATHS.npmProject));
         const refused = await spawnGspot(root, ['install', '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        // pnpm installs the pinned version itself to answer --version, so its message carries the pnpm error.
         const { message } = JSON.parse(refused.stdout) as CommandFailureJson;
         expect(message).toStartWith(`The tool project requires ${packageManager}@99.x, and `);
         expect(message).toEndWith(
@@ -126,7 +122,6 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        // The install checks the package manager version among its other steps.
         expect(JSON.parse(installed.stdout)).toStrictEqual({
             steps: expect.arrayContaining([[packageManager, '--version']]) as unknown,
         });
@@ -165,10 +160,8 @@ test.each([...PACKAGE_MANAGER_CASES])(
             mode,
             projectFile: Buffer.from(projectFile),
         });
-        // A reinstall replaces an edited installed file with the locked one, and the tool stays ready.
         const readmePath = join(root, `${GSPOT_PATHS.nodeModules}/prettier/README.md`);
         const readme = await readFile(readmePath);
-        // Replace the file so that the edit does not reach the shared cache through package manager hardlinks.
         await unlink(readmePath);
         await writeFile(readmePath, 'authored later');
         const reinstalled = await spawnGspot(root, ['install']);
@@ -197,7 +190,6 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         await installGeneratedTools(root);
         const { projectFile, lockfile, lockfilePath } = await readToolProjectFiles(root, packageManager);
         const clone = join(artifacts, 'clone');
-        // Keep the line endings of the package manager through Git, so the install test can compare bytes.
         await appendFile(join(root, '.gitattributes'), TOOL_PROJECT_BYTE_ATTRIBUTES);
         commitAll(root);
         runGitStep(root, ['clone', '--quiet', '--no-local', root, clone]);
@@ -252,7 +244,6 @@ test('registry settings from the repository .npmrc authenticate an isolated proj
     });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(JSON.parse(corrected.stdout)).toBe('1.0.0');
-    // Every request of the second run carries the token.
     expect(requests).toStrictEqual({ rejected, authenticated: 1 });
     expect(corrected.stdout + corrected.stderr).not.toContain(token);
     expect(await readFile(join(sandbox.path, '.npmrc'), 'utf8')).toBe(source);

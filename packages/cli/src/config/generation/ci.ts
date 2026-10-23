@@ -1,7 +1,6 @@
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
-// The paths the job caches between runs: the package caches and the installed tools.
 export const CACHED_PATHS = [
     '~/.npm/_cacache',
     '~/.bun/install/cache',
@@ -16,7 +15,6 @@ export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
 
 export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
 
-/** The actions, mise release, and machines of the generated GitHub workflow. */
 export const CI_PINS = {
     mise: { version: '2026.10.7' },
     actions: {
@@ -43,16 +41,13 @@ export const CI_PINS = {
     },
 } as const;
 
-/** Generated CI jobs use one provider-independent time limit. */
 export const CI_TIMEOUT_MINUTES = 60;
 
-/** Git sends these all-zero object names for new branches. */
 export const ZERO_SHAS = [
     '0000000000000000000000000000000000000000',
     '0000000000000000000000000000000000000000000000000000000000000000',
 ] as const;
 
-// mise reads this token to download release builds from GitHub above the anonymous rate limit.
 export const MISE_TOKEN_ENVIRONMENT = { MISE_GITHUB_TOKEN: '${{ github.token }}' } as const;
 
 export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
@@ -115,5 +110,4 @@ export const FROZEN_INSTALLS: Readonly<Record<string, readonly string[]>> = {
 
 export const YARN_BERRY_INSTALL = ['yarn', 'install', '--immutable'] as const;
 
-/** Next.js writes its route types, which a fresh clone lacks, without building the app. */
 export const NEXT_TYPEGEN_LINE = 'npx --no -- next typegen';

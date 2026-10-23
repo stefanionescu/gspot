@@ -17,7 +17,6 @@ test('gspot install restores deleted Vale dictionaries, and prose/vale passes ag
     const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'prose/vale', '--json'], environment));
     expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
     expect(broken.report.checks).toMatchObject([{ check: 'prose/vale', status: 'missing' }]);
-    // The install command that the finding names gets the missing dictionaries again.
     const installed = await spawnGspot(root, ['install'], environment);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     const corrected = parseCheckReport(
@@ -50,7 +49,6 @@ test('Vale package install replaces an edited package and keeps your files', asy
     await assertAuthoredFilesKept(sandbox.root);
 });
 
-/** Assert the authored files kept by a Vale package install. */
 async function assertAuthoredFilesKept(root: string): Promise<void> {
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe('keep\n');
     expect(await readFile(join(root, AUTHORED_STYLE_PATH), 'utf8')).toBe('authored legacy bytes\n');

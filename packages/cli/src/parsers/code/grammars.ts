@@ -1,4 +1,3 @@
-// Reads grammars and shares source parses within a run.
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { findWasmPath } from '#cli/system/assets.ts';
@@ -36,12 +35,6 @@ async function buildParser(name: GrammarName): Promise<Parser> {
     return parser;
 }
 
-/**
- * Get the parser for a grammar, and build it on first use.
- *
- * @param name the grammar.
- * @returns the shared promise, which may still load the grammar.
- */
 function getParser(name: GrammarName): Promise<Parser> {
     let parser = grammars.parsers.get(name);
     if (parser === undefined) {
@@ -122,7 +115,6 @@ export async function visitParsedSources(
 export function selectGrammar(path: string, language: string): GrammarName | undefined {
     if (!GRAMMAR_CONFIGURATIONS.has(language)) return undefined;
     if (language === 'bash' && posix.extname(path) === '') return 'bash';
-    // A configuration also owns settings files, such as pyproject.toml; only its code files have a grammar.
     const found = findGrammarByExtension(path);
     return found === language || (language === 'typescript' && found === 'tsx') ? found : undefined;
 }

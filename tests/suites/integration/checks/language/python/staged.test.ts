@@ -11,9 +11,7 @@ test('Ruff from the installed environment reports a staged Python finding while 
     await using sandbox = await testdir();
     await using project = await createPythonProject(sandbox.path, { indexFile: 'pyproject.toml' });
     expect(await spawnGspot(project.root, ['install'])).toMatchObject({ code: 0 });
-    // createPythonProject ran apply after its commit, so this commit adds the generated Ruff config file.
     commitAll(sandbox.path);
-    // The index holds a second sample beside the committed one; the working tree has the correction.
     await writeFile(join(sandbox.path, 'source.py'), 'import os\nimport sys\n');
     runGitStep(sandbox.path, ['add', 'source.py']);
     await writeFile(join(sandbox.path, 'source.py'), 'VALUE = 1\n');

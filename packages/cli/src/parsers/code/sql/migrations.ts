@@ -1,4 +1,3 @@
-// Reads migration versions and frozen migration paths.
 import { basename } from 'node:path/posix';
 
 import {

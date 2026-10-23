@@ -1,4 +1,3 @@
-/** The pinned linter packages that the task installs, and the name list that each one gives. */
 export const LINTER_PACKAGES = {
     eslint: {
         module: 'eslint/use-at-your-own-risk',
@@ -16,7 +15,6 @@ export const LINTER_PACKAGES = {
     prettier: { module: 'prettier' },
 } as const;
 
-/** The temporary folder where the task installs the pinned linters. */
 export const LINTER_INSTALL_FOLDER = {
     manifest: 'package.json',
     install: ['bun', 'install', '--ignore-scripts'],
@@ -24,5 +22,4 @@ export const LINTER_INSTALL_FOLDER = {
     testsManifest: '../../../../tests/package.json',
 } as const;
 
-/** The fields of a preset block that the task copies; parser and plugin objects stay out. */
 export const PRESET_BLOCK_KEYS = ['files', 'ignores', 'basePath', 'rules'] as const;

@@ -48,7 +48,6 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['default', 8] as const)(
     },
 );
 
-/** Write the parameter-limit setting and source before invoking each native tool. */
 async function prepareParameterProject(
     root: string,
     scenario: (typeof PARAMETER_LIMIT_TOOLS)[number],

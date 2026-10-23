@@ -12,21 +12,17 @@ import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/configurations/manifest
 import { CONFIGURATIONS_FOLDER, SHIPPED_CONFIG_FILES_FOLDER } from '#cli/config/configurations/names.ts';
 import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/configurations.ts';
 
-// Every run shares the immutable declarations shipped with the package.
 let CONFIGURATIONS: Map<string, Configuration> | undefined;
 
-// A configuration with exactly one tool gives that tool to each config file that names none.
 function findOnlyToolName(tools: unknown): string | undefined {
     if (!Array.isArray(tools) || tools.length !== 1) return undefined;
     const tool: unknown = tools.at(0);
     return isTable(tool) && typeof tool['name'] === 'string' ? tool['name'] : undefined;
 }
 
-// Add a config file for each file in the config-files folder that no [[config_file]] record names.
 function readConfigFiles(configurationFolder: string, configFiles: unknown, tools: unknown): unknown {
     if (configFiles !== undefined && !Array.isArray(configFiles)) return configFiles;
     const records: unknown[] = configFiles === undefined ? [] : configFiles;
-    // A record names its file by target, or by source when gspot transpiles it.
     const recordTargets = new Set(
         records.flatMap((record) => (isTable(record) ? [record['target'], record['source']] : [])),
     );
@@ -42,12 +38,6 @@ function readConfigFiles(configurationFolder: string, configFiles: unknown, tool
     );
 }
 
-/**
- * Link each named tool to the [[tool]] table that declares it.
- *
- * @param manifests the parsed configurations.
- * @returns the configurations by name, with each tool in full.
- */
 function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
     const toolsByName = listManifestTools(manifests);
     return new Map(
@@ -68,13 +58,6 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
     );
 }
 
-/**
- * Parse one manifest.toml text into a validated configuration; invalid text throws GspotError with code configuration.
- *
- * @param text the `manifest.toml` content.
- * @param configurationFolder the asset path that gives the name and group.
- * @returns the configuration, with qualified check IDs and the config files found in its folder.
- */
 function parseManifest(text: string, configurationFolder: string): ParsedManifest {
     const parsed = parseToml(text) as Record<string, unknown>;
     const configFiles = parsed['config_file'];
@@ -96,8 +79,6 @@ function parseManifest(text: string, configurationFolder: string): ParsedManifes
     return result.data;
 }
 
-// Parse every shipped manifest, and link each tool name to the [[tool]] table that declares it. MANIFESTS keeps the
-// result for the read cache.
 function readShippedConfigurations(): Map<string, Configuration> {
     const manifests = new Map<string, ParsedManifest>();
     const paths = listAssets(`${CONFIGURATIONS_FOLDER}/`).filter((path) => path.endsWith(`/${MANIFEST_FILE}`));
@@ -181,12 +162,6 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
     return checks;
 }
 
-/**
- * Index the tools by name, and refuse a tool that two configurations declare.
- *
- * @param manifests the parsed configurations.
- * @returns the tools by name.
- */
 function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
     const tools = new Map<string, Tool>();
     for (const manifest of manifests)

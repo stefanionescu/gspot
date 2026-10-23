@@ -32,7 +32,6 @@ import {
     UNTRACKED_CLOUDFLARE_FINDINGS,
 } from '#tests/config/checks/generator-outputs.ts';
 
-// Commit a generator project, then leave its output and an untracked file changed.
 async function prepareGeneratorCheck(root: string, row: (typeof GENERATOR_CASES)[number]) {
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings([row.configuration], { tables: row.tables }),
@@ -51,7 +50,6 @@ async function prepareGeneratorCheck(root: string, row: (typeof GENERATOR_CASES)
     return { session, planned: { ...input, check: { ...input.check, command: ['bun', 'generate.ts', row.output] } } };
 }
 
-// Put a wrangler launcher in node_modules/.bin and fake its pinned version.
 async function mockWrangler(root: string): Promise<DisposableStack> {
     const pin = getTool(readConfigurations().values(), 'wrangler');
     const path = join(root, 'node_modules', '.bin', pin.name);
@@ -61,7 +59,6 @@ async function mockWrangler(root: string): Promise<DisposableStack> {
     return fakeToolExecutables([pin]);
 }
 
-// Fake wrangler types so that it writes this source in its working folder.
 function spyOnWranglerTypes(source: string) {
     return spyOn(processes, 'spawnProcess').mockImplementation(async (_commandArguments, options) => {
         await writeFile(join(options.cwd, 'cloudflare-env.d.ts'), source);
@@ -69,7 +66,6 @@ function spyOnWranglerTypes(source: string) {
     });
 }
 
-// Write a Supabase project in the scope, and fake the supabase and docker commands with this types result.
 async function prepareSupabaseCheck(
     root: string,
     scope: string,

@@ -6,5 +6,4 @@ export const CONSTRAINT_SUFFIXES: Readonly<Record<string, string>> = {
     CONSTR_FOREIGN: 'fkey',
 } as const;
 
-/** The position of the schema in a qualified name, directly before the relation name. */
 export const SCHEMA_NAME_INDEX = -2;

@@ -1,6 +1,5 @@
 import { BASH_HEADER } from '#tests/config/checks/samples.ts';
 
-/** The Bash sandbox script, and the fix of each Bash sample. Its main holds several statements. */
 export const CLEAN_BASH_SCRIPT = `${BASH_HEADER}# main: runs the script.
 main() {
     local name="world"

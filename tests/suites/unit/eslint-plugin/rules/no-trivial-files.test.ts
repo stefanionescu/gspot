@@ -49,7 +49,6 @@ createRuleTester().run<
         },
     ],
     invalid: [
-        // allowIndex keeps only a file named index.
         {
             code: 'export * from "./owner";',
             filename: '/repo/src/owner-list.ts',

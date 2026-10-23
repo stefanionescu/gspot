@@ -3,8 +3,6 @@ import { buildBaseResult } from '#cli/runs/report.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding, CheckResult, BuiltInCheck, BuiltInCheckResult } from '#cli/types/runs/check.ts';
 
-// Build the check result, with its check ID and run time, from built-in findings. A finding without help gets the help
-// of the check.
 function buildBuiltInResult(
     planned: PlannedCheck,
     session: Pick<Session, 'scopes'>,

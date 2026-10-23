@@ -1,4 +1,3 @@
-/** Three scopes, for Vue, for Svelte, and for both, each with its own component syntax. */
 export const STYLELINT_SCOPE_TABLES = `[[scope]]\npath = "vue"\nconfigurations = ["css", "vue"]\n[[scope]]\npath = "svelte"\n\nconfigurations = ["css", "svelte"]\n[[scope]]\npath = "mixed"\n\nconfigurations = ["css", "vue", "svelte"]\n`;
 
 export const STYLELINT_SCOPE_FILES = {

@@ -26,7 +26,6 @@ export const TEST_PATH_FILES = {
     'apps/api/verification/entry.js': 'export const testcaseCount = 1;\n',
 } as const;
 
-/** React components, contexts, and styled components that the naming check reads. */
 export const REACT_COMPONENT_SOURCE = [
     "import { createContext, memo } from 'react';",
     "import styled from 'styled-components';",
@@ -39,7 +38,6 @@ export const REACT_COMPONENT_SOURCE = [
     '',
 ] as const;
 
-/** Python type aliases and literals that the naming check reads. */
 export const PYTHON_TYPE_SOURCE = [
     'from typing import Literal, Optional, TypeAlias',
     'Mode = Literal["read", "write"]',
@@ -57,7 +55,6 @@ export const PYTHON_TYPE_SOURCE = [
     '',
 ] as const;
 
-/** The banned-word findings outside the test files of each scope. */
 export const TEST_FILE_FINDINGS = [
     { file: 'Sources/Service.swift', rule: 'banned-word' },
     { file: 'src/entry.js', rule: 'banned-word' },

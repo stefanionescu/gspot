@@ -1,4 +1,3 @@
-/** Settings with a British spelling scope. */
 export const BRITISH_SCOPE_SETTINGS = {
     level: 'all',
     tables: `[[scope]]

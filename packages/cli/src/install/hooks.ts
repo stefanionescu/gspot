@@ -14,8 +14,6 @@ import { readGitSetting, runGitBlocking, readHooksFolder } from '#cli/system/git
 import { LFS_HOOKS, HOOK_CHECKS, HOOK_SHEBANG, LFS_GUARD_PREFIX } from '#cli/config/generation/hooks.ts';
 import { LFS_PUSH_CALLS, SET_HOOKS_PATH, UNSET_HOOKS_PATH, SAMPLE_HOOK_SUFFIX } from '#cli/config/install/hooks.ts';
 
-// Check whether git lfs install wrote a hook: a shebang, an optional git-lfs guard, and the git lfs call.
-// The hooks of gspot run Git Large File Storage (LFS) themselves.
 function isLfsHookScript(folder: string, name: string): boolean {
     if (!(LFS_HOOKS as readonly string[]).includes(name)) return false;
     const lines = readFileSync(join(folder, name), 'utf8').trim().split(/\r?\n/u);
@@ -24,8 +22,6 @@ function isLfsHookScript(folder: string, name: string): boolean {
     return lines[0] === HOOK_SHEBANG && isCall && lines.slice(1, -1).every((line) => line.startsWith(LFS_GUARD_PREFIX));
 }
 
-// Find the hooks that another setup in this clone runs: another hooks folder, a hook tool,
-// or scripts in the default Git hooks folder.
 function readForeignHooks(root: string, own: string): RepositorySetup['hooks'] {
     const found = readHooks(root).filter((hook) => !(hook.kind === 'hooksPath' && hook.path === own));
     const folder = readHooksFolder(root);
@@ -49,7 +45,6 @@ function readForeignHooks(root: string, own: string): RepositorySetup['hooks'] {
           ];
 }
 
-// List the commands that another hook setup must run. Install and the status line share this text.
 function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): string {
     const runner = session.startRunner;
     const names = listHookNames(session.configuredChecks);
@@ -57,13 +52,6 @@ function formatForeignHooks(hooks: RepositorySetup['hooks'], session: Session): 
     return `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
 }
 
-/**
- * Plan the Git setting, or the instructions for existing hooks, and change no hooks.
- *
- * @param session the settings, repository, runner, and configured checks.
- *
- * @returns the command and a note, or instructions for existing hooks.
- */
 function planHooks(session: Session): HookPlan {
     const { repository } = session;
     const { settings } = session.settingsFile;

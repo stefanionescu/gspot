@@ -1,4 +1,3 @@
-/** A README that links an asset of a scope's assets folder. */
 export const SCOPE_ASSET_FILES = {
     'README.md': '![Logo](docs/assets/logo.svg#light)\n![Other logo](other/assets/unused.svg)\n',
     'docs/assets/logo.svg': '<svg/>',
@@ -6,7 +5,6 @@ export const SCOPE_ASSET_FILES = {
     'other/assets/unused.svg': '<svg/>',
 } as const;
 
-/** Files that name an asset in a site without Git. */
 export const ASSET_REFERENCE_CASES = [
     ['index.html', '<img src="assets/logo.svg">'],
     ['Logo.tsx', '<img src="assets/logo.svg" />'],

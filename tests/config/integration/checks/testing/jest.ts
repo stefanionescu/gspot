@@ -7,10 +7,8 @@ export const MATH_TEST_SOURCE = `const { total, triple } = require("./math.cjs")
 test("adds positive values", () => { expect(total([2, -1, 3])).toBe(5); });
 `;
 
-/** MATH_TEST_SOURCE with a second test that covers `triple`. */
 export const CORRECTED_MATH_TEST_SOURCE = `${MATH_TEST_SOURCE}test("triples an integer", () => { expect(triple(2)).toBe(6); });\n`;
 
-/** Project files for the coverage and load-failure cases, with files that must stay unchanged. */
 export const JEST_PROJECT_FILES = {
     'math.cjs': MATH_SOURCE,
     'authored.txt': 'preserved source\n',
@@ -24,7 +22,6 @@ functions = 80
 statements = 80
 `;
 
-/** The start of the note when the test file cannot load its import. */
 export const JEST_MISSING_IMPORT = `jest failed with exit 1:
 FAIL ./math.test.cjs
   ● Test suite failed to run

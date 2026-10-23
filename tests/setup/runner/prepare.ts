@@ -1,5 +1,3 @@
-// The task mise run test runs this file before the integration and e2e tests. It packs the npm packages and
-// installs the pinned tools once.
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { CLI_MAIN } from '#tests/setup/cli/commands.ts';
@@ -41,7 +39,6 @@ await writeScriptCommand(
 const paths = await installTools(folder, controller.signal);
 await writeFile(join(folder, TOOL_PATHS_FILE), paths.join('\n') + '\n');
 
-/** Install the program pins once for integration and end-to-end suites. */
 async function installTools(folder: string, cancelSignal: AbortSignal): Promise<string[]> {
     const config = join(folder, TOOL_PINS_FILE);
     const configurations = [...readConfigurations().values()];

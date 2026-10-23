@@ -9,7 +9,6 @@ import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.
 import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { deleteKey, getScopeTable, removeFromList, getWrittenValue } from '#cli/settings/edit.ts';
 
-// Remove entries from a written table, and drop the setting when no entries remain.
 function removeTableKeys(scopeTable: TomlTable, key: string, keys: string[]): void {
     const table = getWrittenValue(getValueAt(scopeTable, key.split('.')));
     if (!isTable(table)) return;
@@ -17,12 +16,6 @@ function removeTableKeys(scopeTable: TomlTable, key: string, keys: string[]): vo
     if (Object.keys(table).length === 0) deleteKey(scopeTable, key);
 }
 
-/**
- * Remove your value of a setting, or remove items from a list or table setting, and write the generated files.
- *
- * @param options the flags and the settings edit choices.
- * @returns the edit result and the generated file changes.
- */
 async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { key, keys } = options;
 

@@ -36,7 +36,6 @@ function buildComment(text: string, start: number, end: number, line: number): S
     };
 }
 
-// Read only token-leading trivia: string, template, regular-expression, and JavaScript XML text stay source values.
 function parseJavascriptComments(text: string, path: string): SourceComment[] {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest);
     const comments = new Map<number, ts.CommentRange>();
@@ -73,7 +72,6 @@ function findCommentStart(line: string, openers: readonly string[]): number | un
     return undefined;
 }
 
-// Read SCSS comments outside quoted values.
 function parseScssComments(text: string): SourceComment[] {
     return text.split('\n').flatMap((line, index) => {
         const start = findCommentStart(line, SCSS_COMMENT_OPENERS);
@@ -82,7 +80,6 @@ function parseScssComments(text: string): SourceComment[] {
     });
 }
 
-// YAML scalar tokens own their whole value, including directive-shaped lines in block and quoted scalars.
 function parseYamlComments(text: string): SourceComment[] {
     const comments: SourceComment[] = [];
     let offset = 0;
@@ -113,7 +110,6 @@ function parseSqlComments(text: string): SourceComment[] {
     return comments;
 }
 
-// Only Markdown HTML nodes can contain HTML comments. Keep offsets while hiding code examples and prose.
 function extractMarkdownHtml(text: string): string {
     const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
     const pieces: string[] = [];
@@ -127,7 +123,6 @@ function extractMarkdownHtml(text: string): string {
     return pieces.join('');
 }
 
-// Read TOML comments from the syntax tree, so a # inside a string or a multiline value never counts as a comment.
 function parseTomlComments(text: string, path: string): SourceComment[] {
     return parseTomlSyntax(text, parseTomlFile(path, text)).comments.map((comment) => {
         const [start, end] = getTomlRange(comment);
@@ -135,7 +130,6 @@ function parseTomlComments(text: string, path: string): SourceComment[] {
     });
 }
 
-// The HTML parse of Markdown keeps original prose for standalone-comment classification.
 async function parseMarkdownComments(text: string): Promise<SourceComment[]> {
     const source = extractMarkdownHtml(text).replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->');
     return parseSyntaxComments('html', source, text);
@@ -156,7 +150,6 @@ const COMMENT_PARSERS = new Map<string, CommentParser>([
     ['.css', parseGrammarComments.bind(undefined, 'css')],
 ]);
 
-// Parse the prepared source, which keeps every offset, and read each comment from the original text.
 async function parseSyntaxComments(grammar: GrammarName, source: string, text: string): Promise<SourceComment[]> {
     const tree = await parseSource(grammar, source);
     try {
@@ -176,7 +169,6 @@ async function parseSyntaxComments(grammar: GrammarName, source: string, text: s
  * @returns comments in source order.
  */
 export async function parseGrammarComments(grammar: GrammarName, text: string): Promise<SourceComment[]> {
-    // Preserve offsets when the HTML grammar reads the alternate comment terminator.
     const parsed = grammar === 'html' ? text.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : text;
     return parseSyntaxComments(grammar, parsed, text);
 }

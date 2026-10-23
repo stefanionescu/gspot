@@ -22,7 +22,6 @@ import {
     TRIVIAL_ENTRYPOINT_FILES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/structure.ts';
 
-/** List the files and rules that the generated ESLint config file reports for the trivial-code rules. */
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
     await writeFile(join(root, 'gspot.toml'), settings);
     const eslint = await createEslint(root);
@@ -30,13 +29,11 @@ async function listTrivialFindings(root: string, settings: string): Promise<Pick
     return findings.map(({ file, rule }) => ({ file, rule }));
 }
 
-/** List the files that the trivial-file rule reports, sorted. */
 function listTrivialFiles(findings: Pick<LintFinding, 'file' | 'rule'>[]): string[] {
     const files = findings.filter(({ rule }) => rule === 'gspot/no-trivial-files').map(({ file }) => file);
     return [...new Set(files)].toSorted((left, right) => left.localeCompare(right));
 }
 
-/** Check each rule case against these source files. */
 async function assertSourceRules(
     eslint: ESLint,
     root: string,
@@ -71,7 +68,6 @@ test.each([...LEVELS])('Knip entry files still get the trivial-file rules at %s,
         join(sandbox.path, 'src/main.js'),
         "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
     );
-    // A file with a function does more than forward. The function rule reports the function, even when exported.
     const mainFindings = level === 'all' ? [{ file: 'src/main.js', rule: 'gspot/no-trivial-functions' }] : [];
     const findings = await listTrivialFindings(sandbox.path, settings);
     expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(mainFindings);

@@ -43,7 +43,6 @@ export function listScopeFormats(settings: Settings): ScopeFormat[] {
     return [...base, ...overrides];
 }
 
-// Format overrides for each project and path, relative to the root.
 function listFormatOverrides(settings: Settings): FormatOverride[] {
     return listScopeFormats(settings).map(({ scope, paths, format }) => {
         const expanded = includeFolderContents(paths);
@@ -54,19 +53,12 @@ function listFormatOverrides(settings: Settings): FormatOverride[] {
     });
 }
 
-// Prettier loads shipped plugins by paths relative to the root pointer.
 function buildPluginsOption(plugins: PrettierPlugin[]): { plugins?: string[] } {
     if (plugins.length === 0) return {};
     const shipped = plugins.map((plugin) => `./${GSPOT_PATHS.nodeModules}/${plugin.name}/${plugin.module}`);
     return { plugins: shipped };
 }
 
-/**
- * Convert format settings to Prettier options.
- *
- * @param format the format settings, each optional.
- * @returns the Prettier options for each format setting that has a value.
- */
 function convertFormatSettings(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
         ...(format.indent_width === undefined ? {} : { tabWidth: format.indent_width }),

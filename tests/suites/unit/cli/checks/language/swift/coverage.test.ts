@@ -45,7 +45,6 @@ test.each([...XCTEST_FAILURES])(
             }).folder,
             'source/viewed.txt',
         );
-        // The build folder keeps the coverage view after the run produces it.
         expect((await isOnDisk(viewed)) ? await readFile(viewed, 'utf8') : undefined).toBe(
             produced ? 'viewed' : undefined,
         );
@@ -59,7 +58,6 @@ test.each([...XCTEST_FAILURES])(
     },
 );
 
-/** Run Xcode coverage with the settings and fake process outputs of one scenario. */
 async function runXcodeCoverage(
     sandbox: TestdirResult,
     files: { settings: string; xcodebuild: string; xcrun: string },

@@ -1,4 +1,3 @@
-// Reads file trees and checks whether paths exist.
 import { join } from 'node:path';
 import { open, lstat, access, readdir, readlink } from 'node:fs/promises';
 

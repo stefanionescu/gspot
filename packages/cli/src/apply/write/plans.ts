@@ -17,32 +17,16 @@ import type { Writer, WritePlan, ReplacementRequest } from '#cli/types/apply.ts'
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 
-/**
- * Remove only the marked block and its separating blank line.
- *
- * @param path the block file.
- * @param onDisk its bytes on disk.
- * @returns the remaining file contents, or undefined when nothing remains.
- */
 function removeBlock(path: string, onDisk: FileContents): FileContents | undefined {
     const text = decodeUtf8Text(path, onDisk.bytes);
     const span = findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' });
     if (span === undefined) return onDisk;
     const before = text.slice(0, span.start).replace(/(\r?\n)\r?\n$/u, '$1');
     const after = text.slice(span.end);
-    // When the block opened the file, drop the blank line that followed it too.
     const next = before === '' ? after.replace(/^\r?\n/u, '') : before + after;
     return next === '' ? undefined : { bytes: Buffer.from(next), mode: onDisk.mode };
 }
 
-/**
- * Check whether gspot owns the whole file: it sits in .gspot, starts with the gspot header, or matches a
- * linguist-generated pattern in the managed block of .gitattributes.
- *
- * @param path the repository-relative file.
- * @param disk the repository reader.
- * @returns whether gspot owns the whole file.
- */
 function isOwned(path: string, disk: Files): boolean {
     if (!isInside(path)) return false;
     if (path.startsWith(`${DOT_GSPOT}/`)) return true;

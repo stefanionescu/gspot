@@ -29,18 +29,11 @@ function hasInstalledExpo(scopeRoot: string): boolean {
     }
 }
 
-// A blank line, advice, another check, or the summary ends the details of a failed check.
 function isBlockEnd(line: string): boolean {
     if (line === '' || BLOCK_END_PREFIXES.some((prefix) => line.startsWith(prefix))) return true;
     return PASSED_CHECKS.test(line);
 }
 
-/**
- * Turns each failed Expo Doctor check into one message with its details.
- *
- * @param stdout what Doctor printed.
- * @returns one message per failed Doctor check, with its details.
- */
 function parseExpoDoctor(stdout: string): string[] {
     const lines = stripVTControlCharacters(stdout)
         .split('\n')
@@ -64,7 +57,6 @@ function parseExpoDoctor(stdout: string): string[] {
  */
 export async function checkExpoDoctor(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const path = joinScope(planned.scope.folder.path, PACKAGE_JSON);
-    // Doctor exits 0 without reading a project whose expo package does not exist, so check the project first.
     if (!hasInstalledExpo(join(session.root, planned.scope.folder.path)))
         throw new GspotError(
             'tool',

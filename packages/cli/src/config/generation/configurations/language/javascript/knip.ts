@@ -15,7 +15,6 @@ export const PACKAGE_RUNNERS: Readonly<Record<string, readonly string[]>> = {
     yarn: ['exec', 'dlx'],
 };
 
-/** The folders of mise file tasks, which Knip does not read. */
 export const MISE_FILE_TASK_GLOBS = [
     '**/mise-tasks/**',
     '**/.mise-tasks/**',

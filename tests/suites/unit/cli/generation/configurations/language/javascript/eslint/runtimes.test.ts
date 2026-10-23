@@ -34,7 +34,6 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
         'n/file-extension-in-import',
     ]);
     const [result] = await eslint.lintFiles(['application/source.js']);
-    // No runtime of this table defines the Node.js global Buffer.
     expect(result!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
         ...(globals.includes('process') ? [] : [{ ruleId: 'no-undef', line: 1, message: "'process' is not defined." }]),
         {
@@ -45,7 +44,6 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
         { ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." },
     ]);
     const [server] = await eslint.lintFiles(['server.js']);
-    // In Node.js code the Node.js rule reports the exit, in place of the browser rule.
     expect(server!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
         { ruleId: 'n/no-process-exit', line: 1, message: "Don't use process.exit(); throw an error instead." },
     ]);

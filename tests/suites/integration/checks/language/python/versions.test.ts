@@ -54,7 +54,6 @@ requires-python = "${requires}"
     expect(sources).toStrictEqual(RUFF_VERSION_CASES.map(({ fixed: source }) => source));
 });
 
-/** Map each scope of a report to its status and the rules of its findings. */
 function listScopeRules(report: RunReport): Record<string, { status: string; rules: readonly (string | undefined)[] }> {
     return Object.fromEntries(
         report.checks.map(({ scope, status, findings }) => [

@@ -1,4 +1,3 @@
-/** Where comments start and end in different source forms. */
 export const COMMENT_BOUNDARIES = [
     [
         'Bats quoted hash',

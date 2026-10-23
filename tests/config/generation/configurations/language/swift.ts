@@ -1,6 +1,5 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-/** The swift-tools-version header of each package sets the Swift version its formatter uses. */
 export const SWIFT_VERSION_FILES = {
     'gspot.toml': buildSandboxSettings(['swift'], {
         rules: true,

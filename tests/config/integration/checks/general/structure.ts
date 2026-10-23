@@ -1,6 +1,5 @@
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 
-/** The source, command, and failure exit code of each parameter-limit tool. */
 export const PARAMETER_LIMIT_TOOLS = [
     {
         language: 'python',

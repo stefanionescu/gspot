@@ -5,7 +5,6 @@ import type { ToolOutput } from '#cli/types/runs/output.ts';
 import { JSON_START } from '#cli/config/runs/output/json.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 
-// Get the list at a dotted path of the report, or the whole report for an empty path.
 function listAt(value: unknown, path: string | undefined): unknown[] {
     const found = path === undefined || path === '' ? value : getValueAt(value, path.split('.'));
     if (!Array.isArray(found))
@@ -13,14 +12,12 @@ function listAt(value: unknown, path: string | undefined): unknown[] {
     return found;
 }
 
-// List every chain of nodes under one node, nearest first: each key of the path names a list one level further down.
 function listChains(chain: unknown[], keys: string[]): unknown[][] {
     const [key, ...rest] = keys;
     if (key === undefined) return [chain];
     return listAt(chain[0], key).flatMap((child) => listChains([child, ...chain], rest));
 }
 
-// A tool that counts from zero names its base, and the finding counts from one.
 function setPosition(finding: Finding, base: number, line: string | undefined, column: string | undefined): void {
     if (line !== undefined && Number(line) >= base) finding.line = Number(line) - base + 1;
     if (column !== undefined && Number(column) >= base) finding.column = Number(column) - base + 1;
@@ -31,7 +28,6 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
     if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
         throw new GspotError('output', 'The JSON report contains an invalid finding object.');
     const fields: Record<string, string | undefined> | undefined = format.fields;
-    // A field may name several paths with spaces between them; the values join in that order.
     const getFieldValues = (name: string) =>
         (fields?.[name] ?? '')
             .split(' ')

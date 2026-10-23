@@ -1,4 +1,3 @@
-/** Your own package.json, whose Stylelint field hides the generated pointer. */
 export const STYLELINT_PACKAGE_JSON = `{
   "name": "native-project",
   "private": true,
@@ -7,7 +6,6 @@ export const STYLELINT_PACKAGE_JSON = `{
 }
 `;
 
-/** Authored files that must stay unchanged when gspot changes the Stylelint config file. */
 export const STYLELINT_FILES = {
     'package.json': STYLELINT_PACKAGE_JSON,
     'source.css': 'a { opacity: 1; }\n',

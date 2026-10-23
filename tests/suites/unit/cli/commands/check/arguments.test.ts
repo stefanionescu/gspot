@@ -194,7 +194,6 @@ test('a staged change to gspot.toml alone rechecks every file a configuration ch
     expect(checked.report.checks[0]?.findings).toMatchObject([{ file: 'db/report.sql', rule: 'file-lines' }]);
 });
 
-// A command check of this stage that passes on source.txt.
 function buildPassingCheck(stage: 'commit' | 'push' | 'manual') {
     return {
         id: `sandbox/${stage}`,

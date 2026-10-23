@@ -1,6 +1,5 @@
 import { NEXT_MESSAGES } from '#tests/config/integration/checks/framework/nextjs.ts';
 
-/** The translations settings that name the message folder and base locale. */
 export const TRANSLATION_TABLES = `[translations]
 messages_folder = "messages"
 base_locale = "en"
@@ -77,7 +76,6 @@ export const MESSAGE_ARGUMENTS = {
     },
 } as const;
 
-/** The findings of a translation that changes its arguments, tags, and select keys. */
 export const TRANSLATION_FINDINGS = [
     {
         file: 'messages/fr.json',

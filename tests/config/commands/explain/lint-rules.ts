@@ -1,4 +1,3 @@
-/** Bare and plugin-prefixed ESLint names resolve to the page declared for their rule. */
 export const RULE_PAGES = [
     ['no-undef', 'https://eslint.org/docs/latest/rules/no-undef'],
     ['no-var', 'https://eslint.org/docs/latest/rules/no-var'],
@@ -17,7 +16,6 @@ export const RULE_PAGES = [
     ['eslint/sonarjs/no-identical-functions', null],
 ] as const;
 
-/** The explanation of a SwiftLint rule from a child scope. */
 export const CHILD_RULE_PAGE = {
     tool: 'swiftlint',
     rule: 'type_body_length',
@@ -25,7 +23,6 @@ export const CHILD_RULE_PAGE = {
     page: 'https://realm.github.io/SwiftLint/type_body_length.html',
 } as const;
 
-/** The explanation of a Ruff rule from the root. */
 export const ROOT_RULE_PAGE = {
     tool: 'ruff',
     rule: 'F401',
@@ -33,7 +30,6 @@ export const ROOT_RULE_PAGE = {
     page: 'https://docs.astral.sh/ruff/rules/F401/',
 } as const;
 
-/** Settings with a Python root and a Swift scope. */
 export const RULE_PAGE_SETTINGS = `level = "all"
 configurations = ["python"]
 [[scope]]
@@ -41,7 +37,6 @@ path = "app"
 configurations = ["swift"]
 `;
 
-/** The explanation of a rule of a plugin with an npm scope. */
 export const NPM_SCOPE_RULE_PAGE = {
     subject: 'eslint/@next/next/no-html-link-for-pages',
     tool: 'eslint',
@@ -49,7 +44,6 @@ export const NPM_SCOPE_RULE_PAGE = {
     page: null,
 } as const;
 
-/** The explanation of an ESLint rule with an unknown prefix. */
 export const UNKNOWN_RULE_PREFIX = {
     kind: 'lint-rule',
     tool: 'eslint',
@@ -57,7 +51,6 @@ export const UNKNOWN_RULE_PREFIX = {
     page: null,
 } as const;
 
-/** The explanation of a ShellCheck rule. */
 export const SHELLCHECK_RULE_PAGE = {
     kind: 'lint-rule',
     tool: 'shellcheck',

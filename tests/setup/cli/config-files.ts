@@ -1,4 +1,3 @@
-// Generates the config files of a sandbox and finds the one of a tool.
 import { testdir } from 'testdirs';
 import { join, posix } from 'node:path';
 import { readFile } from 'node:fs/promises';

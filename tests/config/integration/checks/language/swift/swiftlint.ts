@@ -14,7 +14,6 @@ export const XCTEST_SCOPES = [
     { name: 'in a scope whose path has a space and #', scope: 'ios # app' },
 ] as const;
 
-/** A force cast SwiftLint reports. */
 export const CAST_SWIFT = `import Foundation
 
 /// Reads a value as text.

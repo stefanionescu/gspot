@@ -22,8 +22,6 @@ import {
     LOCAL_ENVIRONMENT_PATTERNS,
 } from '#cli/config/generation/config-files/ignore-files.ts';
 
-// Config files leave out what Git ignores, unless a tracked file matches the pattern, such as a force-added file. The
-// managed block names .gspot/ paths, which the section of generated files already holds.
 function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
     return listGitignorePatterns(session.reads, tracked).filter((pattern) => {
         if (pattern.replace(LEADING_SLASH, '').startsWith(`${DOT_GSPOT}/`)) return false;
@@ -32,8 +30,6 @@ function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
     });
 }
 
-// List every generated file and pointer outside .gspot that a declaration can write, including inherited pointers that
-// a scope skips, because the exact set depends on the built text.
 function listGeneratedPaths(session: Session): string[] {
     const paths = listOwnedConfigFiles(session).flatMap(({ configFile, owner }) => {
         const sourceTargets =
@@ -53,7 +49,6 @@ function listGeneratedPaths(session: Session): string[] {
  */
 export function buildIgnoreSections(session: Session): IgnoreSection[] {
     const { reads, repository, scopes } = session;
-    // The config files and pointers have their own section. Keep only the files that project generators write.
     const generatorOutputs = scopes.flatMap(({ folder, configurations }) =>
         configurations.flatMap((configuration) => configuration.generated.map((file) => join(folder.path, file))),
     );
@@ -156,12 +151,6 @@ export function formatReasonLines(reason: string, indent: string): string[] {
         .map((line) => `${indent}# ${line}`);
 }
 
-/**
- * Build the ignore sections for a tool that reads them from the root.
- *
- * @param sections the ordered exclusion groups and their reasons.
- * @returns the ignore file text.
- */
 function formatIgnoreFile(sections: IgnoreSection[]): string {
     const ordered = sections.map((section) => ({
         ...section,
@@ -175,12 +164,6 @@ function formatIgnoreFile(sections: IgnoreSection[]): string {
     return [`# ${PRETTIERIGNORE_PURPOSE}`, ...lines, ''].join('\n');
 }
 
-/**
- * Convert an ignore pattern to the glob a tool uses.
- *
- * @param pattern the ignore pattern.
- * @returns its equivalent glob.
- */
 function convertToGlob(pattern: string): string {
     const negative = pattern.startsWith('!') ? '!' : '';
     let path = negative === '' ? pattern : pattern.slice(1);

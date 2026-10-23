@@ -1,5 +1,3 @@
-// Bun installs the pinned linter packages in a temporary folder and copies their rule names, global names, and presets
-// into packages/cli/configurations.
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { isTable } from '#cli/system/tables.ts';
@@ -30,15 +28,6 @@ import {
     stylelintSettingsSchema,
 } from '#cli/schemas/configurations/linter-lists.ts';
 
-/**
- * Find the identity of the package owning a resolved module and require its declared pin.
- *
- * @param folder the installation folder.
- * @param packageName the owning package.
- * @param moduleName the public module export to resolve.
- * @param version the exact declared version.
- * @returns the validated package identity and entry path.
- */
 function findInstalledPackage(
     folder: string,
     packageName: string,
@@ -52,13 +41,6 @@ function findInstalledPackage(
     return { ...document, modulePath: modulePath };
 }
 
-/**
- * Find the package identity above one public module entry.
- *
- * @param modulePath the resolved module path.
- * @param packageName the expected owning package.
- * @returns the package document's name and version.
- */
 function readInstalledIdentity(modulePath: string, packageName: string): PackageIdentity {
     for (let path = dirname(modulePath); path !== dirname(path); path = dirname(path)) {
         let text: string;
@@ -74,14 +56,6 @@ function readInstalledIdentity(modulePath: string, packageName: string): Package
     throw new Error(`No installed package named ${packageName} owns ${modulePath}.`);
 }
 
-/**
- * Capture the ordered JSON fields of a public ESLint preset without executable parser or plugin values.
- *
- * @param installed the package that exports the preset.
- * @param source the dotted export path, retaining slashes within keys.
- * @param module the package's default export.
- * @returns the validated copied preset.
- */
 function capturePreset(installed: InstalledPackage, source: string, module: unknown): EslintPreset {
     let value = module;
     for (const key of source === '' ? [] : source.split('.')) {
@@ -105,13 +79,6 @@ function capturePreset(installed: InstalledPackage, source: string, module: unkn
     return eslintPresetSchema.parse({ package: installed.name, version: installed.version, source, blocks });
 }
 
-/**
- * Install only the packages used by copied exports, then resolve each at its declared version.
- *
- * @param folder the disposable installation folder.
- * @param dependencies the exact selected package versions.
- * @returns the installed packages keyed by name.
- */
 async function installPackages(
     folder: string,
     dependencies: Record<string, string>,
@@ -131,13 +98,6 @@ async function installPackages(
     );
 }
 
-/**
- * Resolve the linter pins and their existing capture-workspace peer pins before loading package code.
- *
- * @param folder the disposable installation folder.
- * @param names the owners of the copied exports and formatter.
- * @returns the completed package installation.
- */
 async function preparePackages(folder: string, names: Set<string>): Promise<Map<string, InstalledPackage>> {
     const versions = listToolProjectPins([...readConfigurations().values()]).npm;
     const dependencies = Object.fromEntries(
@@ -163,26 +123,12 @@ async function preparePackages(folder: string, names: Set<string>): Promise<Map<
     return Object.keys(peers).length === 0 ? installed : installPackages(folder, { ...dependencies, ...peers });
 }
 
-/**
- * Require the identity of a package selected for the installation.
- *
- * @param installed the completed installation's package identities.
- * @param name the selected package name.
- * @returns the installed entry.
- */
 function getInstalledPackage(installed: Map<string, InstalledPackage>, name: string): InstalledPackage {
     const value = installed.get(name);
     if (value === undefined) throw new Error(`No installed entry was captured for ${name}.`);
     return value;
 }
 
-/**
- * Capture all three public name lists from the installed packages.
- *
- * @param installed the exact package identities and public entries.
- * @param folder the disposable installation folder.
- * @returns the copied documents by package-relative destination path.
- */
 async function captureNames(installed: Map<string, InstalledPackage>, folder: string): Promise<Map<string, unknown>> {
     const eslint = getInstalledPackage(installed, 'eslint');
     const builtins = eslintRuleModuleSchema.parse(await import(pathToFileURL(eslint.modulePath).href));
@@ -229,9 +175,6 @@ async function captureNames(installed: Map<string, InstalledPackage>, folder: st
     ]);
 }
 
-/**
- * Rewrite the copied exports after every import and schema check has succeeded.
- */
 async function copyLinterLists(): Promise<void> {
     const recipes = listAssets('configurations/')
         .filter((path) => path.endsWith(`/${ESLINT_PRESETS_FILE}`))

@@ -29,7 +29,6 @@ body
     },
 ] as const;
 
-/** The two managed block formats. */
 export const BLOCK_FORMATS = [
     {
         path: 'AGENTS.md',

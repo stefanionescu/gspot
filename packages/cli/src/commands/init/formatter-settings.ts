@@ -62,7 +62,6 @@ function buildFormatOverrides(
             quotes: convertQuotes(override.options.singleQuote),
         }),
     );
-    // Python files get their own quotes when Ruff reads quotes that differ from the rest.
     const python = scope.hasPython ? (readPythonQuotes(scope.root) ?? DEFAULT_QUOTES.ruff) : undefined;
     const pythonOverride =
         python === undefined || python === (scope.quotes ?? DEFAULT_QUOTES.ruff)
@@ -71,7 +70,6 @@ function buildFormatOverrides(
     return [...prettier, ...pythonOverride].filter((override) => Object.keys(override).length > 1);
 }
 
-// Resolve tab indentation and numeric widths from the selected EditorConfig fields.
 function parseEditorWidths(fields: Record<string, string>): PrettierOptions {
     const width = fields['indent_size'] === 'tab' ? fields['tab_width'] : fields['indent_size'];
     const tabWidth = width === undefined || !DIGITS_ONLY.test(width) ? undefined : Number(width);
@@ -80,12 +78,6 @@ function parseEditorWidths(fields: Record<string, string>): PrettierOptions {
     return stripUndefined({ tabWidth, printWidth });
 }
 
-/**
- * Read the project-wide EditorConfig options and the sections that override them, without running project code.
- *
- * @param folder the project folder.
- * @returns the formatting options, or null when the project has no EditorConfig.
- */
 function readEditorconfig(folder: string): PrettierOptions | null {
     const text = findText(folder, EDITORCONFIG_FILE);
     if (text === undefined) return null;
@@ -113,14 +105,6 @@ function readEditorconfig(folder: string): PrettierOptions | null {
     };
 }
 
-/**
- * Read JSON Prettier settings or the matching EditorConfig section, and run no code from the repository.
- *
- * @param file the path of the project package.json.
- * @param dependencies what the project package.json declares.
- * @param prettierFiles the Prettier settings that init found.
- * @returns the three formatting options, or null when neither formatter has settings.
- */
 function readFormatOptions(
     file: string,
     dependencies: Record<string, string>,

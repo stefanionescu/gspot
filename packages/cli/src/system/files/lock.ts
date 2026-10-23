@@ -1,4 +1,3 @@
-// Lock managed writes and release their locks.
 import { randomUUID } from 'node:crypto';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/files/modes.ts';
@@ -8,7 +7,6 @@ import { linkSync, mkdirSync, rmdirSync, unlinkSync, writeFileSync } from 'node:
 import { readBounded, preparePath, buildContainedPath } from '#cli/system/files/bounded.ts';
 import { LOCK_RECOVERY_SUFFIX, LOCK_TOKEN_SEPARATOR } from '#cli/config/system/files/lock.ts';
 
-// Creates the lock file with the token, or returns false when another holder already owns the file.
 function writeLockFile(absolutePath: string, token: string): boolean {
     const temporary = `${absolutePath}.${randomUUID()}${TEMPORARY_FILE_SUFFIX}`;
     writeFileSync(temporary, token, { flag: 'wx', mode: PRIVATE_FILE });
@@ -23,7 +21,6 @@ function writeLockFile(absolutePath: string, token: string): boolean {
     }
 }
 
-// Refuse a lock unless its holder has exited.
 function assertAbandonedLock(lockContents: FileContents, path: string): void {
     const pid = Number(lockContents.bytes.toString('utf8').split(LOCK_TOKEN_SEPARATOR, 1)[0]);
     if (!Number.isSafeInteger(pid) || pid <= 0)
@@ -43,7 +40,6 @@ function assertAbandonedLock(lockContents: FileContents, path: string): void {
     );
 }
 
-// A separate lease stops two reclaimers from deleting the lock of a new writer.
 function removeStaleLock(bounds: FileBounds, path: string, absolutePath: string): void {
     const reclaim = `${absolutePath}${LOCK_RECOVERY_SUFFIX}`;
     try {

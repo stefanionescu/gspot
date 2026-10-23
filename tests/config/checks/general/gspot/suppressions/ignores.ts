@@ -17,7 +17,6 @@ until = 2099-01-01
 enabled = false
 `;
 
-/** The gspot/suppressions findings of an ignore past its until date. */
 export const EXPIRED_IGNORE_FINDINGS = [
     {
         check: 'gspot/suppressions',

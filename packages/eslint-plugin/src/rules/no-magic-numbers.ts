@@ -17,8 +17,6 @@ function isModuleConstant(declaration: TSESTree.VariableDeclaration): boolean {
     return holder.type === AST_NODE_TYPES.Program;
 }
 
-// A number in the initializer of a module-level const, such as an array of sizes or a product of time units, already
-// has a name. A number inside a function of that initializer still counts.
 function isConstantValue(node: TSESTree.Node): boolean {
     for (let ancestor: TSESTree.Node = node; ancestor.type !== AST_NODE_TYPES.Program; ancestor = ancestor.parent) {
         if (FUNCTION_TYPES.has(ancestor.type)) return false;
@@ -48,8 +46,6 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
         },
     },
     create(context) {
-        // @typescript-eslint/eslint-plugin stays an optional peer, so the rule requires it only when ESLint runs this
-        // rule.
         const upstream = requireModule(UPSTREAM_PACKAGE) as {
             rules: Record<typeof UPSTREAM_RULE, TSESLint.RuleModule<string, unknown[]>>;
         };

@@ -1,4 +1,3 @@
-// Run tools with the configured timeout and shared process options.
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
 import { readGitEnvironment } from '#cli/system/git.ts';
 import { spawnProcess } from '#cli/system/processes.ts';

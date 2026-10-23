@@ -8,7 +8,6 @@ export const GRAMMAR_CONFIGURATIONS: ReadonlySet<string> = new Set([
     'typescript',
 ] satisfies readonly (typeof GRAMMAR_NAMES)[number][]);
 
-/** The file extensions that each code grammar reads. Shell scripts without an extension use bash too. */
 export const GRAMMAR_EXTENSIONS: Readonly<Record<string, readonly string[]>> = {
     javascript: ['.js', '.mjs', '.cjs', '.jsx'],
     typescript: ['.ts', '.mts', '.cts'],

@@ -183,7 +183,6 @@ test.each([...PACKAGE_MANAGER_LEVELS])(
     },
 );
 
-/** List the findings each source sample expects at this level, in report order. */
 function listScriptFindings(cases: readonly ScriptFindingCase[], level: Level): LintFinding[] {
     return cases
         .flatMap((cas) =>

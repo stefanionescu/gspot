@@ -1,4 +1,3 @@
-// Read npm registry settings and write isolated package manager settings.
 import which from 'which';
 import Config from '@npmcli/config';
 import { isTable } from '#cli/system/tables.ts';
@@ -24,7 +23,6 @@ import {
     NPM_SETTING_VARIABLE_PREFIX,
 } from '#cli/config/install/npm/registry.ts';
 
-// Read and validate the npm settings before returning the registry settings that apply.
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {
     const inherited = buildSpawnEnvironment();
     const npm = which.sync(NPM_TOOL, { nothrow: true });

@@ -11,13 +11,6 @@ import type { FileNames } from '#cli/types/checks/general/naming.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';
 
-/**
- * Reads the declared names and path names of each source file, by its language.
- *
- * @param session the repository and its tools.
- * @param planned the files and scopes to read.
- * @returns the names of each file.
- */
 async function readSourceNames(session: Session, planned: PlannedCheck): Promise<FileNames[]> {
     const files: FileNames[] = [];
     const containers = readNamingDefaults().path_containers;
@@ -39,7 +32,6 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
                 language,
                 session,
             );
-            // A syntax failure leaves folder allowances usable while the language linter owns its declarations.
             if (error !== undefined) {
                 files.push({ path: file.path, stem: stem.name, declarations: undefined, folders, names: [] });
                 continue;

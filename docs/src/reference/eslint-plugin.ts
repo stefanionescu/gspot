@@ -24,14 +24,12 @@ function formatRuleOptions(schemas: unknown, defaults: unknown): string {
     return formatTable(['Option', 'Type', 'Default', 'What it does'], rows) || 'This rule has no options.';
 }
 
-// The plugin configs that turn a rule on, in the order the plugin declares them.
 function listRuleConfigs(name: string): string[] {
     return Object.entries(plugin.configs)
         .filter(([, configuration]) => configuration.rules[`${PLUGIN_PREFIX}/${name}`] !== undefined)
         .map(([config]) => config);
 }
 
-// The sentence that names the configs that turn a rule on.
 function formatRuleConfigs(configs: string[]): string {
     if (configs.length === 0) return 'No config turns it on; turn it on in your ESLint config.';
     const names = formatList(configs.map((config) => `\`${config}\``));
@@ -50,7 +48,6 @@ export function listPluginRules(): PluginRule[] {
             name: `${PLUGIN_PREFIX}/${name}`,
             link: formatReferencePath('eslintPlugin', name),
             configs: listRuleConfigs(name),
-            // The table shows the first sentence; the rule page holds the rest.
             summary: (FIRST_SENTENCE.exec(rule.meta.docs.description)?.[0] ?? rule.meta.docs.description).trim(),
         }));
 }

@@ -47,8 +47,6 @@ import {
     PRESETS_BEFORE_CONFIGURATIONS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
-// One ESLint config file for each configuration that adds blocks, in the folder of that configuration. The main file
-// imports each one under its own name and spreads its blocks.
 function buildConfigurationFiles(
     planned: PlannedConfigFile,
     blocks: Map<Configuration, PlannedEslintBlock[]>,
@@ -147,7 +145,6 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
     };
 }
 
-// The rule names of every pinned preset, which name the plugins that the presets bring.
 function listPresetRules(presets: Map<string, EslintPresets>): string[] {
     const blocks = [...presets.values()].flatMap((presetGroup) =>
         Object.values(presetGroup).flatMap((preset) => preset.blocks),
@@ -155,8 +152,6 @@ function listPresetRules(presets: Map<string, EslintPresets>): string[] {
     return blocks.flatMap((block) => (block.rules === undefined ? [] : Object.keys(block.rules)));
 }
 
-// gspot writes rule options only for the rules that run at the level of the repository. The refusal names its case:
-// a rule of level all, a rule that gspot has and runs at no level, or a rule of no plugin that gspot has.
 function assertRulesRun(writer: BlockWriter, ruleNames: string[]): void {
     const unapplied = listUnappliedRules(writer);
     if (unapplied.length === 0) return;

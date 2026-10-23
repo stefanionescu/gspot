@@ -1,23 +1,17 @@
 export const BASH_COMMAND_NODES: ReadonlySet<string> = new Set(['command', 'declaration_command']);
 
-/** The Python list of the names that a module re-exports. */
 export const PYTHON_EXPORT_LIST = '__all__';
 
 export const BARE_NAME_NODES = new Set(['identifier', 'simple_identifier', 'attribute', 'navigation_expression']);
 
 export const BASH_SOURCE_COMMANDS: ReadonlySet<string> = new Set(['source', '.']);
 
-/** The statements that only forward code, besides imports: a Python future import and a shebang line. */
 export const FORWARDING_NODES: ReadonlySet<string> = new Set(['future_import_statement', 'hash_bang_line']);
 
 export const TYPE_ALIAS_NODES = new Set(['type_alias_statement', 'typealias_declaration']);
 
 export const TYPE_REFERENCE_NODES = new Set(['type', 'user_type', 'identifier', 'type_identifier']);
 
-/**
- * Nested function nodes in Python, Swift, and Bash: their body statements count toward the function around them, and a
- * lambda counts as one statement itself.
- */
 export const COUNTED_FUNCTION_NODES = new Set([
     'function_definition',
     'function_declaration',

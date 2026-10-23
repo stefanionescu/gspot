@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import type { CloneReport } from '#cli/types/checks/general/duplication.ts';
 
-/** The jscpd findings of the files that the scope covers. */
 export const JSCPD_SCOPE_FINDINGS = [
     {
         check: 'duplication/jscpd',

@@ -16,7 +16,6 @@ import { MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/locate.ts';
 import { MISE_TRUST_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/install/mise.ts';
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
-// Keep only the programs that hooks need for checks that can run on this system.
 function selectHookTools(session: Session, tools: Tool[]) {
     const configurations = session.toolConfigurations;
     const host = { platform: getOperatingSystem(), arch: process.arch };

@@ -50,7 +50,6 @@ test.each([...XCTEST_POINTER_CASES])(
         const testsPointer = readConfigurations()
             .get('swift')!
             .configFiles.find(({ pointer }) => pointer?.folders !== undefined)!.pointer!;
-        // A pointer in an XCTest folder carries the body that the Swift manifest declares for those folders.
         expect(Object.fromEntries(written.map(({ path, content }) => [path, parse(content) as unknown]))).toStrictEqual(
             Object.fromEntries(
                 pointers.map(([path, climb, inTests]) => [
@@ -75,7 +74,6 @@ test('JavaScript pointers import modules from folders with URI characters and Un
     const configFile = configuration.configFiles
         .filter((file): file is WholeConfigFile => file.source !== undefined)
         .find((file) => file.pointer?.body.includes('{target_module}') === true)!;
-    // Windows file names cannot contain a question mark.
     const components = MODULE_PATHS.filter((component) => !isWindows || !component.includes('?'));
     const paths = [];
     for (const [index, component] of components.entries()) {

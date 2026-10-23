@@ -153,7 +153,6 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
     )!.content;
     const { workspaces } = JSON.parse(content) as KnipConfigFile;
     const globsByWorkspace = Object.fromEntries(Object.entries(workspaces).map(([name, { entry }]) => [name, entry]));
-    // app/deep sets test_files to nothing, so it keeps only the entries that every workspace shares.
     const shared = globsByWorkspace['app/deep']!;
     expect(shared).toContain('**/*.test.*');
     expect(globsByWorkspace).toStrictEqual({
@@ -176,7 +175,6 @@ test('Knip workspaces come from package workspaces, your entries and the configu
     const globsByWorkspace = Object.fromEntries(
         Object.entries(knip.workspaces).map(([name, { entry }]) => [name, entry]),
     );
-    // A package outside every scope takes the root configurations; scopes without packages stay out.
     const shared = globsByWorkspace['web']!;
     expect(shared.slice(0, 2)).toStrictEqual(['src/main.{ts,js}', 'src/index.{ts,js}']);
     expect(globsByWorkspace).toStrictEqual({ '.': ['cli.js', ...shared], api: ['serve.js', ...shared], web: shared });

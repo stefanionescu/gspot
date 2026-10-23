@@ -34,7 +34,6 @@ export const JEST_CASES = [
     { scope: 'app', tests: [], expected: ['app/jest.config.js'] },
 ] as const;
 
-/** The covered files of each configuration selection. */
 export const PRETTIER_PLUGIN_CASES = [
     [['format', 'typescript'], ['src/index.ts']],
     [

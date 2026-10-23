@@ -32,7 +32,6 @@ export type FileTags = { tags: string[]; isBinary: boolean };
 
 export type FileKind = (typeof FILE_KINDS)[number];
 
-/** A generated path that a shipped configuration declares. */
 export type GeneratedPaths = { paths: string[]; kind: 'generated'; configuration: string };
 
 export type FileClassification = { kind: FileKind; origin: string };
@@ -43,11 +42,8 @@ export type ScopeFolder = {
     origin: 'root' | typeof SETTINGS_FILE | 'project';
 };
 
-/** Folder entries and the ignore rules they inherit or author. */
 export type FolderListing = { children: Dirent[]; ignores: PathIgnore[] };
 
-/** A folder waiting for a read, with its inherited ignore rules. */
 export type PendingFolder = { folder: string; ignores: PathIgnore[] };
 
-/** The generated paths that the selected configurations declare, and the Git attributes of each path. */
 export type FileKindRules = { generatedPaths: GeneratedPaths[]; attributes: Repository['attributes'] };

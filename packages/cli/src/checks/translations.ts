@@ -13,7 +13,6 @@ import type { MessageFiles } from '#cli/types/checks/translations.ts';
 import { ARGUMENT_FORMATS, MESSAGE_FILE_SUFFIX } from '#cli/config/checks/translations.ts';
 import { TYPE, parse, type MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 
-// Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     if (value === null || typeof value !== 'object') return new Map();
     const pairs = Object.entries(value).flatMap(([key, child]): [string, string][] => {
@@ -33,8 +32,6 @@ function validateMessage(text: string): string | undefined {
     }
 }
 
-// The base-locale file that a message file compares with. In a folder of locale files, that file sits beside it. In a
-// folder per locale, it has the same path under the folder of the base locale.
 function findBaseFile(path: string, messageFiles: MessageFiles): string {
     const { folder, base, paths } = messageFiles;
     const sibling = posix.join(posix.dirname(path), `${base}${MESSAGE_FILE_SUFFIX}`);
@@ -78,8 +75,6 @@ function compareMessages(
     return [...broken, ...missing, ...changed];
 }
 
-// The parts of a message that every locale keeps: each argument with its format, each tag, and the keys of each select.
-// Plural categories differ between languages, so a plural keeps only its argument.
 function listArgumentNames(elements: MessageFormatElement[]): string[] {
     return elements.flatMap((element): string[] => {
         if (element.type === TYPE.literal || element.type === TYPE.pound) return [];

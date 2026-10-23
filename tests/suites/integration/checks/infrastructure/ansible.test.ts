@@ -60,7 +60,6 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
     );
 });
 
-// Check that ansible-lint uses the profile of one level next to the root and scope ansible.cfg files.
 async function checkLevelProfile(sandbox: Sandbox, level: Level): Promise<void> {
     const { root } = sandbox;
     const source = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
@@ -82,7 +81,6 @@ async function checkLevelProfile(sandbox: Sandbox, level: Level): Promise<void> 
         await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
     ).report;
     expect(checked.exitCode, JSON.stringify(checked)).toBe(level === 'all' ? 1 : 0);
-    // At level all, ansible-lint asks for the fully qualified module name.
     expect(listFindingRows(checked)).toStrictEqual(
         level === 'all'
             ? [

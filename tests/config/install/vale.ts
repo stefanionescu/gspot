@@ -1,5 +1,3 @@
-// Only the row that tests the time limit gets a short one; a slow start under load must not fail the other row.
-
 export const VALE_INSTALL_FAILURES = [
     {
         name: 'timeout',

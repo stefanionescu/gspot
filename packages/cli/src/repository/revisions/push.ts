@@ -1,4 +1,3 @@
-// Select pushed revisions and the commit ranges their checks read.
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
@@ -31,13 +30,11 @@ import {
     MISSING_PUSH_REVISION_MESSAGE,
 } from '#cli/config/repository/revisions/push.ts';
 
-// Check whether a pre-push field pair holds two object IDs of the same hash length.
 function isHashPair(localHash: string, remoteHash: string): boolean {
     if (!HASH_PATTERN.test(localHash) || !HASH_PATTERN.test(remoteHash)) return false;
     return localHash.length === remoteHash.length;
 }
 
-// Parse one line of pre-push input: two refs and two objects of the same hash length.
 function parseLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(/\s+/u);
     const hasRefs = verbatim.length === 0 && localRef !== undefined && remoteRef !== undefined;
@@ -46,7 +43,6 @@ function parseLine(line: string): PushLine {
     return { localRef, localHash, remoteRef, remoteHash };
 }
 
-// Peel every live local and comparison object in one Git operation, including annotated tags.
 async function readPeeledCommits(
     root: string,
     lines: PushLine[],
@@ -73,14 +69,12 @@ async function readPeeledCommits(
     );
 }
 
-// Read the commits where the history of a shallow clone stops.
 async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): Promise<Set<string>> {
     const path = await readGitText(root, GIT_SHALLOW_FILE_ARGUMENTS, { cancelSignal });
     const text = await readFile(resolve(root, path.trim()), 'utf8');
     return new Set(text.trim().split('\n'));
 }
 
-// Compare an update with its previous commit, or a new ref with the Git remote-tracking namespace.
 async function readComparison(search: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
     const { root, cancelSignal } = search;
     if (!ABSENT_HASH.test(remoteHash)) {
@@ -97,7 +91,6 @@ async function readComparison(search: PushSearch, hash: string, remoteHash: stri
     return { base: await readPushBase(root, cancelSignal), changed, range };
 }
 
-// Build the revision that a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
 async function buildRevision(search: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = search;
     const { base, changed, range } = await readComparison(search, hash, line.remoteHash);
@@ -115,7 +108,6 @@ async function buildRevision(search: PushSearch, line: PushLine, hash: string): 
     };
 }
 
-// Share a check only for matching commits, comparison bases, and changed paths.
 function addRevision(pushed: PushedRevisions, revision: PushRevision): void {
     const duplicate = pushed.revisions.find(
         (each) =>
@@ -130,7 +122,6 @@ function addRevision(pushed: PushedRevisions, revision: PushRevision): void {
     duplicate.commits = [...new Set([...duplicate.commits, ...revision.commits])];
 }
 
-// Records what one pre-push line pushes: a deleted ref, a non-commit object, or a revision.
 async function selectLine(search: PushSearch, pushed: PushedRevisions, line: PushLine): Promise<void> {
     if (ABSENT_HASH.test(line.localHash)) {
         pushed.skipped.push({ ref: line.remoteRef, hash: line.localHash, reason: 'deleted ref' });
@@ -146,13 +137,6 @@ async function selectLine(search: PushSearch, pushed: PushedRevisions, line: Pus
     addRevision(pushed, await buildRevision(search, line, commit));
 }
 
-/**
- * Compare a push with its upstream or remote default. Without either, start at the root commit.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param cancelSignal stops the Git commands.
- * @returns the commit the pushed range starts after.
- */
 async function readPushBase(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string> {
     const compared = await readDefaultRef(repositoryRoot, cancelSignal);
     if (compared !== '') return readMergeBase(repositoryRoot, compared, cancelSignal);

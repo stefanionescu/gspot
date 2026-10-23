@@ -9,7 +9,6 @@ export const RECOMMENDED_VALE_FILES = [
     GSPOT_PATHS.valeConfigFile,
 ] as const;
 
-/** Settings with a reviewed product word in a scope. */
 export const PRODUCT_WORD_SETTINGS = {
     level: 'all',
     tables: '[spelling.allowed_words]\nNebulaProduct = "The project uses this reviewed product name."\nPython = "The project uses this reviewed language name."\n',

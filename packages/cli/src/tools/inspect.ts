@@ -1,4 +1,3 @@
-// Inspect tool versions and report installation guidance.
 import which from 'which';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
@@ -17,12 +16,6 @@ import type { InstalledDependency } from '#cli/types/repository/npm/installed-pa
 import type { ToolSearch, InspectedTool, ToolInspection } from '#cli/types/tools/inspection.ts';
 import { readToolProjectPackage, findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 
-/**
- * Build the install command for managed tools, or the install advice for a system tool.
- *
- * @param tool the tool to install.
- * @returns the next install step.
- */
 function buildInstallHelp(tool: Tool): string {
     const toolProjectPackage = findToolProjectPackage(tool);
     if (toolProjectPackage !== undefined || tool.system !== true) {
@@ -33,7 +26,6 @@ function buildInstallHelp(tool: Tool): string {
     return tool.install_help ?? `Install ${tool.name}.`;
 }
 
-// Build the inspection of a library whose tool-project package.json declares a version.
 function buildLibraryInspection(inspected: InspectedTool, path: string, found: string): ToolInspection {
     const { tool, help, want } = inspected;
     const minimum = tool.min_version ?? tool.version ?? found;
@@ -41,7 +33,6 @@ function buildLibraryInspection(inspected: InspectedTool, path: string, found: s
     return { name: tool.name, state, path, found, help, minimumVersion: minimum, ...stripUndefined({ want }) };
 }
 
-// Query a system library through the declared executable and its complete argument list.
 function inspectLibraryCommand(inspected: InspectedTool, command: string[]): ToolInspection {
     const { root, cwd, tool, timeoutSeconds } = inspected;
     const program = command[0] as string;
@@ -52,7 +43,6 @@ function inspectLibraryCommand(inspected: InspectedTool, command: string[]): Too
         : inspectExecutablePath({ ...inspected, tool: { ...tool, version_command: commandArguments } }, path);
 }
 
-// Read library versions from the tool project installation that generated config files use.
 function inspectLibrary(inspected: InspectedTool): ToolInspection {
     const { root, cwd, tool } = inspected;
     if (tool.system === true && tool.version_command !== undefined)
@@ -71,13 +61,11 @@ function inspectLibrary(inspected: InspectedTool): ToolInspection {
         : buildLibraryInspection(inspected, installed.path, installed.version);
 }
 
-// Build the inspection of a tool without an installation in the search folders.
 function buildMissingInspection(inspected: InspectedTool): ToolInspection {
     const { tool, help, want } = inspected;
     return { name: tool.name, state: 'missing', help, ...stripUndefined({ want }) };
 }
 
-// Query an executable once, and build its system or pinned-version inspection.
 function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInspection {
     const { tool, help, want } = inspected;
     if (want === undefined && tool.version_command === undefined && tool.min_version === undefined)
@@ -98,7 +86,6 @@ function inspectExecutablePath(inspected: InspectedTool, path: string): ToolInsp
     };
 }
 
-// A system tool from the project runs first; the tool project supplies it when the project has none.
 function inspectProjectExecutable(inspected: InspectedTool): ToolInspection | undefined {
     const { root, cwd, tool, timeoutSeconds } = inspected;
     if (tool.system !== true) return undefined;

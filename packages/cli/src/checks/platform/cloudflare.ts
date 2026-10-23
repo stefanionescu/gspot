@@ -26,12 +26,6 @@ function splitContentLines(text: string): NumberedLine[] {
         .filter((line) => line.text.trim() !== '' && !line.text.trimStart().startsWith('#'));
 }
 
-/**
- * Parses a _headers file into path blocks and syntax errors, with line numbers.
- *
- * @param text the _headers file.
- * @returns the blocks and syntax errors.
- */
 function parseHeadersFile(text: string): ParsedHeadersFile {
     const blocks: HeaderBlock[] = [];
     const errors = splitContentLines(text).flatMap((line): NumberedLine[] => {
@@ -61,7 +55,6 @@ function parseHeadersFile(text: string): ParsedHeadersFile {
     return { blocks, errors };
 }
 
-// The required security headers that the block for every path does not set.
 function listMissingHeaders(blocks: HeaderBlock[]): string[] {
     const held = new Map(
         blocks
@@ -76,12 +69,6 @@ function listMissingHeaders(blocks: HeaderBlock[]): string[] {
         .map(([name]) => name);
 }
 
-/**
- * Checks that each redirect holds a source, a destination, and an optional Cloudflare status.
- *
- * @param text the _redirects file.
- * @returns the errors, each with its line.
- */
 function validateRedirects(text: string): NumberedLine[] {
     const contentLines = splitContentLines(text);
     return contentLines.flatMap((line) => {

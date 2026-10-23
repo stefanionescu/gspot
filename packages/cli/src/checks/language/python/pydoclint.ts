@@ -49,14 +49,6 @@ async function groupByDocstringStyle(
     }
     return groups;
 }
-/**
- * Builds the pydoclint command: keeps written options, takes the Ruff style, and stops docstrings from repeating signature types.
- *
- * @param path the pyproject.toml path.
- * @param text the pyproject.toml of the scope.
- * @param convention the Ruff docstring style from the settings.
- * @returns the command, and the style when known.
- */
 function parsePydoclintOptions(path: string, text: string, convention: unknown): PydoclintOptions {
     const { tool } = parseTomlFile(path, text, docstringStyleSchema);
     const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;

@@ -12,7 +12,6 @@ import type {
     EslintRuleExpression,
 } from '#cli/types/generation/eslint.ts';
 
-// Your own options apply only to rules that this block already enables. Each applied rule joins the applied set.
 function buildOptionBlocks(
     block: EslintBlockFields & { rules: Record<string, unknown> },
     writer: BlockWriter,
@@ -36,7 +35,6 @@ function buildOptionBlocks(
     });
 }
 
-// Preset syntax belongs to the first block; option blocks retain only their own rules.
 function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, level: BlockWriter['level']): string {
     return blocks
         .map((block, index) => {

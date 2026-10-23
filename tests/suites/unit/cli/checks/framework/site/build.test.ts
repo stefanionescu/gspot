@@ -51,7 +51,6 @@ ${SITE_BUILD_SCRIPT}`,
     const request = planSandboxCheck(session, 'site/build', { paths: ['build.js'] });
     const findings = await findBuiltInCheck('site/build')(session, request);
     expect(findings).toMatchObject([{ rule: 'build', line: 1 }]);
-    // The message ends with the stack frame in the build folder and the Bun version.
     expect(findings[0]!.message).toStartWith(
         `bun build.js did not build the site.\n1 | import { readFileSync } from 'node:fs';\n2 | readFileSync('local-input.txt');`,
     );

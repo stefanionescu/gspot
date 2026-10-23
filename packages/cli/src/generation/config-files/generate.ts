@@ -1,4 +1,3 @@
-// Build each distinct config file text once, and give its path to every scope that uses it.
 import { join } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
 import { type CacheKey } from '#cli/types/system/files.ts';
@@ -29,7 +28,6 @@ export function getConfigFiles(session: Session): ConfigFileGeneration {
     return getCachedMapValue(session.reads, configFilesKey, session, () => buildConfigFiles(session));
 }
 
-// Root outputs win the shared path; other equal-content groups prefer the most scopes.
 function groupToolOutputs(
     ownedFiles: (OwnedConfigFile & { configFile: WholeConfigFile })[],
     generated: GeneratedConfigFiles,
@@ -54,7 +52,6 @@ function groupToolOutputs(
     );
 }
 
-// Record one text group at its chosen path and map every participating scope to it.
 function addToolOutput(target: string, group: BuiltConfigFile[], index: number, generated: GeneratedConfigFiles): void {
     const [first] = group as [BuiltConfigFile, ...BuiltConfigFile[]];
     const chosen = index === 0 ? target : buildPerScopeTarget(first.configFile, first.owner.scope.folder.path);
@@ -79,7 +76,6 @@ function addToolOutput(target: string, group: BuiltConfigFile[], index: number, 
     }
 }
 
-// Build the config files that have their own text first, so that the pointers can name their paths.
 function buildSourceFiles(configFiles: OwnedConfigFile[], generated: GeneratedConfigFiles): void {
     const sourced = configFiles.filter(
         (each): each is OwnedConfigFile & { configFile: WholeConfigFile } => each.configFile.source !== undefined,
@@ -90,7 +86,6 @@ function buildSourceFiles(configFiles: OwnedConfigFile[], generated: GeneratedCo
     }
 }
 
-// A pointer-only config file replaces the generic one for the same scope and target.
 function listPointerOnlyPaths(configFiles: OwnedConfigFile[], selected: OwnedConfigFile): Set<string> {
     return new Set(
         configFiles
@@ -123,7 +118,6 @@ function addPointerFiles(
     }
 }
 
-// A scope that uses the same config file as the root needs no pointer of its own when the pointer inherits.
 function isRootPointerShared(selected: OwnedConfigFile, configFiles: OwnedConfigFile[], target: string): boolean {
     const { configFile, owner } = selected;
     if (configFile.pointer?.inherit !== true || owner.scope.folder.path === '' || target !== configFile.target)
@@ -133,12 +127,6 @@ function isRootPointerShared(selected: OwnedConfigFile, configFiles: OwnedConfig
     );
 }
 
-/**
- * Build the config files. Scopes with the same text share one file, and every pointer resolves to its path.
- *
- * @param session the repository to build for.
- * @returns the config files, and the path that each scope uses.
- */
 function buildConfigFiles(session: Session): ConfigFileGeneration {
     const configFiles = listOwnedConfigFiles(session);
     const state: GeneratedConfigFiles = { targets: new Map(), files: new Map() };

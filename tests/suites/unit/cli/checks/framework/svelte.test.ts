@@ -15,7 +15,6 @@ import { textSchema, pathsSchema, fieldsSchema } from '#tests/schemas/checks/typ
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT, SVELTE_CHECK_FINDINGS } from '#tests/config/checks/framework/svelte.ts';
 
-/** Run svelte-check against one fake output in the selected scope. */
 async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<Finding[]> {
     const scope = options.scope ?? '';
     await using sandbox = await testdir({
@@ -82,7 +81,6 @@ test('svelte-check errors and warnings become findings at one-based positions wi
     );
 });
 
-// POSIX treats a backslash as a file-name character; Windows treats it as a directory separator.
 test('file-name separators follow the current platform', async () => {
     const findings = await runSvelteCheck(
         SVELTE_CHECK_OUTPUT.replace('src/Count.svelte', String.raw`src\\Count.svelte`),

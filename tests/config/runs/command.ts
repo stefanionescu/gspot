@@ -18,7 +18,6 @@ export const LOCATED_CHECK = {
     output: { format: 'regex', pattern: '^(?<file>[^:]+): (?<message>.*)$' },
 } as const;
 
-/** A command check that runs `bash -n` on each shell script at the commit stage. */
 export const BASH_SYNTAX_CHECK = String.raw`[[command_check]]
 id = "project/bash-syntax"
 command = ["bash", "-n", "{file}"]
@@ -27,10 +26,8 @@ stage = "commit"
 output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
 `;
 
-/** A Node program that reports each SQL file that holds `CREATE FUNCTION`. */
 export const SQL_CHECK_SCRIPT = `const fs = require('node:fs'); for (const path of process.argv.slice(1)) { if (fs.readFileSync(path, 'utf8').includes('CREATE FUNCTION')) { console.log(path + ':1: Replace the sample function.'); process.exitCode = 1; } }`;
 
-/** Settings with an API and a web scope. */
 export const CHILD_SCOPE_SETTINGS = {
     rules: true,
     scopes: [
@@ -40,7 +37,6 @@ export const CHILD_SCOPE_SETTINGS = {
     tables: '\n[[command_check]]\nid = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\noutput.format = "none"\npaths = ["**/*.sh"]\nstage = "push"\n',
 } as const;
 
-/** The result of a command check that reports a file and line. */
 export const PENDING_NOTE_RESULTS = [
     {
         check: 'notes/no-pending',
@@ -49,7 +45,6 @@ export const PENDING_NOTE_RESULTS = [
     },
 ] as const;
 
-/** Prints each line of the listed files that holds PENDING as file:line:text, the way grep -n -H does. */
 export const PENDING_NOTES_SCRIPT = String.raw`let found = false;
 for (const file of process.argv.slice(1)) {
     for (const [index, line] of (await Bun.file(file).text()).split('\n').entries())
@@ -57,7 +52,6 @@ for (const file of process.argv.slice(1)) {
 }
 process.exit(found ? 1 : 0);`;
 
-/** Command output that names a missing file. */
 export const MISSING_LOCATED_FILE = {
     code: 1,
     stdout: 'notes/reported.txt:1:A defect.',
@@ -107,16 +101,13 @@ export const SCOPE_PATH_CHECK = {
     },
 } as const;
 
-/** Each format indent style with the shfmt indent argument. */
 export const SHFMT_INDENT_CASES = [
     { style: 'space', width: 6, expected: '6' },
     { style: 'tab', width: 6, expected: '0' },
 ] as const;
 
-/** An openapi.generate_command list with an empty and a multiword argument. */
 export const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two words'];
 
-/** A program that passes only when its last four arguments equal GENERATE_ARGUMENTS. */
 export const ARGUMENT_RUNNER = [
     process.execPath,
     '-e',

@@ -1,4 +1,3 @@
-// svelte-check writes each finding on its own line: a timestamp, then the finding as JSON.
 export const FINDING_LINE = /^\d+ (?<message>\{.*\})$/u;
 
 export const FAILURE_LINE = /^\d+ FAILURE (?<message>".*")$/u;

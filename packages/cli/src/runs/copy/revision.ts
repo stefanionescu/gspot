@@ -33,8 +33,6 @@ import {
     GIT_SHARED_CLONE_ARGUMENTS,
 } from '#cli/config/runs/copy/revision.ts';
 
-// Python environments stay in place: UV_PROJECT_ENVIRONMENT and the interpreter flag point the tools at them while
-// they check the files of the copy.
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
@@ -58,8 +56,6 @@ function assertDependencyReady(copyRoot: string, folder: string): void {
         );
 }
 
-// Refuses a copy whose dependency files or lockfiles differ from the working tree, the source of the install.
-// The comparison runs through the Git clean filters, so a dependency file checked out with CRLF matches its LF blob.
 async function assertDependencyFilesUnchanged(
     root: string,
     installed: Files,
@@ -72,7 +68,6 @@ async function assertDependencyFilesUnchanged(
     );
     if (indexFiles.some((indexFile) => statSync(join(root, indexFile.path), { throwIfNoEntry: false }) === undefined))
         throw mismatch;
-    // The confined read refuses a dependency file link that leaves the repository, before Git follows it.
     for (const indexFile of indexFiles) installed.readCanonicalPath(indexFile.path);
     const hashed = await runGit(root, GIT_HASH_ARGUMENTS, {
         stdin: indexFiles.map((indexFile) => `${indexFile.path}\n`).join(''),
@@ -87,15 +82,6 @@ async function assertDependencyFilesUnchanged(
     if (indexFiles.some((indexFile, index) => hashes[index] !== indexFile.hash)) throw mismatch;
 }
 
-/**
- * Selects installed dependencies to copy, after checking that the dependency files match.
- *
- * @param repositoryRoot the working tree with installed dependencies.
- * @param copyRoot the private copy.
- * @param indexFiles the tracked files of the revision.
- * @param cancelSignal stops the copy.
- * @returns the dependencies to clone or link.
- */
 async function selectRevisionDependencies(
     repositoryRoot: string,
     copyRoot: string,
@@ -156,7 +142,6 @@ async function selectRevisionDependencies(
     ];
 }
 
-// Two tracked paths that differ only by letter case, or undefined when every path folds to its own spelling.
 function findCaseCollision(indexFiles: GitFile[]): [string, string] | undefined {
     const seen = new Map<string, string>();
     for (const { path } of indexFiles) {
@@ -174,7 +159,6 @@ async function writeRevisionFiles(
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const collision = findCaseCollision(indexFiles);
-    // Only a file system that ignores letter case finds the upper-case spelling of the copy path.
     const upper = copyRoot.toUpperCase();
     if (collision !== undefined && upper !== copyRoot && statSync(upper, { throwIfNoEntry: false }) !== undefined)
         throw new GspotError(
@@ -186,7 +170,6 @@ async function writeRevisionFiles(
         mkdirSync(target, { recursive: true, mode: OWNER_WRITABLE_FOLDER });
         chmodSync(target, OWNER_WRITABLE_FOLDER);
     }
-    // Write links last, so that no link in the repository can redirect the write of another tracked file.
     for (const linked of [false, true]) {
         const selected = Map.groupBy(
             indexFiles.flatMap<Exclude<CopyFile, string>['indexFile']>((indexFile) =>
@@ -241,7 +224,6 @@ export async function copyRevision(
         await readGitText(toplevel, [...GIT_SHARED_CLONE_ARGUMENTS, toplevel, copy.path], {
             cancelSignal,
         });
-        // The clone shares its object store for reads; the copy owns its index and working tree.
         if (source.kind === 'commit')
             await readGitText(copy.path, [...GIT_SET_HEAD_ARGUMENTS, source.hash], { cancelSignal });
         await readGitText(copy.path, GIT_EMPTY_INDEX_ARGUMENTS, { cancelSignal });

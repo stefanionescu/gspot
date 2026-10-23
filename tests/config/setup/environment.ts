@@ -1,6 +1,5 @@
 export const GSPOT_ENVIRONMENT = { NO_COLOR: '1', CI: '1' } as const;
 
-/** One deadline bounds each test and its child processes. */
 export const TEST_TIMEOUT_MILLISECONDS = 900_000;
 
 export const PACKED_PACKAGES_FILE = 'packages.json';

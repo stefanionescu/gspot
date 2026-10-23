@@ -62,7 +62,6 @@ test.each([false, true])(
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
         expect(await readFile(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
         expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
-        // A preview shows the correction as a diff instead of writing it.
         expect(result.diffs).toStrictEqual(preview ? [buildSourceDiff('corrected')] : []);
     },
 );
@@ -138,7 +137,6 @@ test.each([...COPY_FAILURES])('a failed $operation removes the copy', async ({ o
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
     expect(await captureRejection(runFixers(session, [planned], { isDryRun: true }))).toContain(message);
     expect(await readdir(temporary)).toStrictEqual([]);
-    // The copy row replaces the source with a folder before the run.
     if (operation === 'copy') {
         const attributes = await stat(join(sandbox.path, 'source.txt'));
         expect(attributes.isDirectory()).toBe(true);

@@ -31,7 +31,6 @@ export type ProcessTermination = {
     drainTimer: ReturnType<typeof setTimeout> | undefined;
 };
 
-/** What Execa reports about a finished or unstarted process, before this package classifies it. */
 export type SpawnCompletion = Pick<
     Result<{ encoding: 'utf8'; reject: false }>,
     'code' | 'exitCode' | 'failed' | 'shortMessage' | 'stderr' | 'timedOut' | 'isCanceled'
@@ -39,12 +38,10 @@ export type SpawnCompletion = Pick<
 
 export type StdoutReader = (chunks: AsyncIterable<Buffer>) => Promise<void>;
 
-/** How a process tree ended, and its stop and disposal steps. */
 export type ProcessTreeControl = {
     state: { timedOut: boolean; canceled: boolean };
     stop: () => void;
     release: (executionFailure: unknown) => Promise<void>;
 };
 
-/** A running process: its completion and its stdout stream. */
 export type RunningProcess = PromiseLike<SpawnCompletion> & { stdout: Readable };

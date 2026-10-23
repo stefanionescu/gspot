@@ -1,4 +1,3 @@
-/** The mise tasks and package scripts of each scope, and documents that run them. */
 export const DOC_TASK_FILES = {
     'root.md': `Run \`mise run root-mise\`, \`npm run root-js\`, \`pnpm run root-js\`, \`yarn run root-js\`, and \`bun run root-js\`.
 Run \`mise run root-js\`, \`bun run root-mise\`, and \`npm run child-js\`.
@@ -17,13 +16,11 @@ Run \`npm run root-js\` and \`bun run sibling-js\`.
     'sibling/package.json': '{"private":true,"scripts":{"sibling-js":"true"}}\n',
 } as const;
 
-/** One scope for each project folder. */
 export const DOC_TASK_SCOPES = ['app', 'app/nested', 'app/empty', 'sibling'].map((path) => ({
     path,
     configurations: [],
 }));
 
-/** Each rejected command and the document line that holds it. */
 export const DOC_TASK_FINDINGS = [
     { file: 'app/empty/guide.md', line: 1, rule: 'missing-task', message: 'npm run child-js names no task or script.' },
     { file: 'app/guide.md', line: 2, rule: 'missing-task', message: 'npm run root-js names no task or script.' },
@@ -40,7 +37,6 @@ export const DOC_TASK_FINDINGS = [
     },
 ] as const;
 
-/** Only command blocks without a title report paths. */
 export const DOC_FENCE_PATH_CASES = [
     { info: 'title="example.sh"', language: 'sh', reported: false },
     { info: 'title="example.sql"', language: 'sql', reported: false },
@@ -52,7 +48,6 @@ export const DOC_FENCE_PATH_CASES = [
     { info: 'description="title=example.sh"', language: 'console', reported: true },
 ] as const;
 
-/** The places mise reads tasks from, and the tasks that each one defines. */
 export const MISE_TASK_SOURCES = [
     {
         name: 'task aliases in mise.toml',
@@ -82,7 +77,6 @@ export const MISE_TASK_SOURCES = [
     },
 ] as const;
 
-/** Task files that gspot cannot parse. Each row names the document that reads them. */
 export const MALFORMED_TASK_FILES = [
     {
         path: 'package.json',
@@ -118,7 +112,6 @@ export const MALFORMED_TASK_FILES = [
     },
 ] as const;
 
-/** Root files that count as a license, and one that does not. */
 export const LICENSE_FILE_CASES = [
     { name: 'LICENSE', findings: [] },
     { name: 'COPYING', findings: [] },
@@ -140,7 +133,6 @@ Read \`./missing.ts\`.
 <Example />
 `;
 
-/** The line and message of each relative path that names no file. */
 export const RELATIVE_PATH_FINDINGS: (string | number)[][] = [
     [2, './examples/gone.ts names no tracked file or folder.'],
     [2, '../src/gone.ts names no tracked file or folder.'],
@@ -148,7 +140,6 @@ export const RELATIVE_PATH_FINDINGS: (string | number)[][] = [
     [3, './missing/ names no tracked file or folder.'],
 ];
 
-/** A document that names paths relative to itself. */
 export const RELATIVE_PATH_FILES = {
     'docs/guide.md':
         'See `./examples/good.ts`, `../src/here.ts`, and `src/here.ts`.\nSee `./examples/gone.ts` and `../src/gone.ts`.\nSee `./src/here.ts` and `./missing/`.\n',
@@ -156,7 +147,6 @@ export const RELATIVE_PATH_FILES = {
     'src/here.ts': '',
 } as const;
 
-/** A document that names gitignored paths, with the ignore files. */
 export const IGNORED_PATH_FILES = {
     'a.md': 'Build `output/report.json` and `app/cache`.\nSee `app/absent.ts`, `app/private.ts`, `.next/types/routes.d.ts`, and `src/gone.ts`.\n',
     '.gitignore': '/output/report.json\n.next/\n',
@@ -164,7 +154,6 @@ export const IGNORED_PATH_FILES = {
     'src/here.ts': '',
 } as const;
 
-/** The missing-paths finding of an .mdx page. */
 export const MDX_MISSING_PATH_FINDINGS = [
     {
         file: 'docs/guide.mdx',
@@ -174,7 +163,6 @@ export const MDX_MISSING_PATH_FINDINGS = [
     },
 ] as const;
 
-/** A command check whose ID a document names. */
 export const COVERAGE_CHECK_TABLES = `[[command_check]]
 id = "tests/coverage"
 command = ["true"]

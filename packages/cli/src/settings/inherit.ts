@@ -177,13 +177,6 @@ export function getWrittenSetting(settings: Pick<Settings, 'written'>, key: stri
         : { value };
 }
 
-/**
- * List the keys whose written values apply to a language or category key, from the broadest setting to the key itself.
- *
- * @param match the setting and the written selector.
- * @param key the dotted name as written.
- * @returns the key as written; for a language key, the setting name, the category key, and the key, broadest first.
- */
 function listPossibleKeys(match: SettingMatch, key: string): string[] {
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
     const parent = match.category === undefined ? undefined : parents[match.category];
@@ -277,7 +270,6 @@ export function getSettingValue(
     };
 }
 
-// Check whether a written tool table groups exposed keys instead of exposing one key.
 function isKeyGroup(
     availableSettings: AvailableSettings,
     key: string,

@@ -43,13 +43,6 @@ function checkMainFunction(file: ScriptFile, code: NumberedLine[]): LayoutIssue[
     return issues;
 }
 
-/**
- * Finds the innermost function that holds a line.
- *
- * @param functions the parsed definitions.
- * @param line the number, counted from one.
- * @returns the function, or undefined at the top level.
- */
 function findFunctionAtLine(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
     return functions
         .filter((scriptFunction) => scriptFunction.start <= line && line <= scriptFunction.end)
@@ -71,7 +64,6 @@ function checkLibraryLine(
     return checkTopLevelLine(line, { isEnvironmentReader });
 }
 
-// A top-level line of a sourced library may only declare: source a file, mark a value readonly, or assign a value.
 function checkTopLevelLine(
     line: NumberedLine,
     { isEnvironmentReader }: { isEnvironmentReader: boolean },
@@ -139,12 +131,6 @@ function checkScriptFile(
     return issues.map(({ line, rule, text }) => buildFinding(planned, { file: file.path, line }, rule, text));
 }
 
-/**
- * Removes a leading declaration word and its flags, and keeps the assignment or command.
- *
- * @param code a line without comments.
- * @returns the value after export, readonly, local, declare, or typeset.
- */
 function stripDeclaration(code: string): string {
     const words = code.split(/\s+/u);
     if (!DECLARATION_WORDS.has(words[0] ?? '')) return code;

@@ -1,4 +1,3 @@
-// Reads repository dependency files and selects project dependencies.
 import { posix } from 'node:path';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
@@ -17,7 +16,6 @@ import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/track
 import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies/package-json.ts';
 import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
-// Keep each parser failure tied to the dependency file that caused it.
 async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<DependencyFile | undefined> {
     const parse = REQUIREMENTS_FILE.test(file.path) ? parseRequirements : PARSERS[posix.basename(file.path)];
     if (parse === undefined) return undefined;

@@ -1,4 +1,3 @@
-/** Repository-relative paths that a write refuses, and an ordinary Unicode name that it keeps. */
 export const PORTABLE_PATHS = [
     { path: '../outside', refused: true },
     { path: '/outside', refused: true },

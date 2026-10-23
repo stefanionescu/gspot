@@ -8,7 +8,6 @@ import { SKILLS_FOLDER, SKILLS_INDEX_FILE, MARKDOWN_COPY_FILE } from './agents.t
 import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/generation/ci.ts';
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
 
-/** The name of each package manager as the docs show it, and the lockfile that a clone installs from. */
 const PACKAGE_MANAGER_DOCS = {
     npm: { label: 'npm', lockfile: 'package-lock.json' },
     pnpm: { label: 'pnpm', lockfile: 'pnpm-lock.yaml' },
@@ -17,12 +16,8 @@ const PACKAGE_MANAGER_DOCS = {
     mise: { label: 'mise', lockfile: undefined },
 } as const;
 
-// Two ways to start with gspot: the commands for each package manager, or a prompt that sends a coding agent to the
-// steps in /llms.txt. The home page, the Quickstart, Installation, and Upgrade read these values. The hooks and AGENTS.md run the
-// ones that the Git hooks and AGENTS.md run.
 export const SETUP_COMMANDS = Object.entries(START_RUNNERS).map(([name, { command, installCommand }]) => {
     const { label, lockfile } = PACKAGE_MANAGER_DOCS[name as keyof typeof START_RUNNERS];
-    // A clone installs from its lockfile first, as the generated CI job does; Yarn 2 and newer take --immutable.
     const frozen = lockfile === 'yarn.lock' ? YARN_BERRY_INSTALL : lockfile && FROZEN_INSTALLS[lockfile];
     return {
         label,
@@ -36,10 +31,8 @@ export const SETUP_COMMANDS = Object.entries(START_RUNNERS).map(([name, { comman
     };
 });
 
-/** The Yarn 1 command of a clone, which the Yarn tab names beside the Yarn 2 command. */
 export const YARN_CLASSIC_INSTALL = FROZEN_INSTALLS['yarn.lock']?.join(' ');
 
-/** The command that the generated CI job runs for each lockfile, in the order of the CI page. */
 export const LOCKFILE_INSTALLS = [
     { lockfile: 'yarn.lock', note: 'Yarn 2 on', command: YARN_BERRY_INSTALL.join(' ') },
     ...Object.entries(FROZEN_INSTALLS).map(([lockfile, command]) => ({
@@ -49,23 +42,19 @@ export const LOCKFILE_INSTALLS = [
     })),
 ];
 
-/** The comparison operators in front of a version in a package range, such as `>=` in `>=24.15.0`. */
 const RANGE_OPERATOR = /^[<>=^~]+/u;
 
-/** The oldest runtimes that run gspot, from the engines of the CLI package. */
 export const RUNTIME_MINIMUMS = {
     node: cliPackage.engines.node.replace(RANGE_OPERATOR, ''),
     bun: cliPackage.engines.bun.replace(RANGE_OPERATOR, ''),
 } as const;
 
-/** The versions that the ESLint plugin needs. Its engines and peer dependencies give them. */
 export const PLUGIN_REQUIREMENTS = {
     node: pluginPackage.engines.node.replace(RANGE_OPERATOR, ''),
     eslint: pluginPackage.peerDependencies.eslint.replace(RANGE_OPERATOR, ''),
     typescriptEslint: pluginPackage.peerDependencies['@typescript-eslint/eslint-plugin'].replace(RANGE_OPERATOR, ''),
 } as const;
 
-/** The package managers that hold back new releases, and the setting that exempts the gspot packages. */
 export const RELEASE_AGE_EXCLUSIONS = [
     { label: 'pnpm', key: 'minimumReleaseAgeExclude', file: 'pnpm-workspace.yaml' },
     { label: 'Bun', key: 'install.minimumReleaseAgeExcludes', file: 'bunfig.toml' },
@@ -132,10 +121,6 @@ ${SETUP_COMMANDS.map(({ label, lines }) => `   - ${label}: \`${lines[0]}\``).joi
 - Commit with the hooks on. Never use \`--no-verify\`.
 `;
 
-/**
- * Page order and contents of llms-full.txt and llms-small.txt. The guides come first and the generated reference pages
- * last. llms-small.txt holds the guides only, and the reference gets its own set.
- */
 export const LLMS_PAGES = {
     promote: SIDEBAR.flatMap(({ items }) => items.map(({ slug }) => slug.replace(/\/index$/u, ''))),
     demote: ['404', 'reference/**'],
@@ -147,7 +132,6 @@ export const LLMS_PAGES = {
             description: 'every command, gspot.toml setting, configuration, check, and ESLint plugin rule',
         },
     ],
-    // The hidden "Section titled" link text of each heading.
     customSelectors: { all: ['.sl-anchor-link'] },
     optionalLinks: [
         {

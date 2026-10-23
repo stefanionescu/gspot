@@ -1,7 +1,6 @@
 import { dirname } from 'node:path';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
-/** The folder of a style that a test writes beside the generated vale.ini. */
 export const EXAMPLE_STYLE_FOLDER = `${dirname(GSPOT_PATHS.valeConfigFile)}/styles/Example`;
 
 export const VALE_INI = `StylesPath = styles

@@ -46,7 +46,6 @@ export const ROUTE_FILE_CASES = [
     },
 ] as const;
 
-/** The lone code files that the check reports. */
 export const LONE_CODE_FILES = [
     'dist/pkg/lone.ts',
     'lone/only.ts',

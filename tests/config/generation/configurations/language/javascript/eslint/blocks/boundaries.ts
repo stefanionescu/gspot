@@ -69,7 +69,6 @@ can_import = ["storage"]
 
 export const IMPORT_RULE_CORRECTED_SOURCE = "import { value } from './value.js';\nexport const result = value;\n";
 
-/** Production files cannot import test files; test files may import production files. */
 export const TEST_IMPORT_CASES = [
     { folder: 'src', source: "import { value } from '../tests/value.js';", rejected: true },
     { folder: 'src', source: "import type { Value } from '../tests/value.js';", rejected: true },
@@ -78,7 +77,6 @@ export const TEST_IMPORT_CASES = [
     { folder: 'tests', source: "import type { Value } from '../src/value.js';", rejected: false },
 ] as const;
 
-/** The fixed test-import rule applies in root and child scopes. */
 export const TEST_IMPORT_TABLES = `[[scope]]
 path = "app"
 configurations = ["typescript"]
@@ -122,7 +120,6 @@ export const ENVIRONMENT_CASES = [
 
 export const ENVIRONMENT_COMPOSED = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";
 
-/** Authored test globs add to the defaults and scope exclusions; production imports stay checked. */
 export const TEST_IMPORT_RULE_TABLES = `test_files = ["app/qa/**"]
 
 [[import_rule]]
@@ -158,7 +155,6 @@ export const TEST_IMPORT_RULE_CASES = [
     { path: 'apps/api/app/example.spec.js', importPath: '../storage/value.js', count: 0 },
 ] as const;
 
-/** The message of a refused import. */
 export const REFUSED_IMPORT_MESSAGES = [
     {
         line: 2,
@@ -167,7 +163,6 @@ export const REFUSED_IMPORT_MESSAGES = [
     },
 ] as const;
 
-/** The files of each scope that read the environment. */
 export const ENVIRONMENT_READER_PATHS = [
     'src/source.js',
     'config/env.js',

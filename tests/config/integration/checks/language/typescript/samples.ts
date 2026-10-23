@@ -101,7 +101,6 @@ export const receiptOptions = { style: 'currency', currency: 'EUR' } as const;
     },
 } as const;
 
-/** The orders may import the types, and the entry may import the orders. */
 export const ARCHITECTURE_SETTINGS = `
 [[import_rule]]
 name = "types"

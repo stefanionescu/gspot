@@ -64,7 +64,6 @@ paths = ["absent/**"]
 reason = "This path belongs to an external generated project."
 `;
 
-/** Arguments that run only the failing and the passing check of the output sandbox. */
 export const VERBOSITY_ARGUMENTS = [
     'check',
     '--only',
@@ -73,7 +72,6 @@ export const VERBOSITY_ARGUMENTS = [
     'HEAD',
 ] as const;
 
-/** A skipped check and a canceled check of the report. */
 export const SKIPPED_REPORT_CHECKS = [
     {
         check: 'example/skipped',
@@ -86,7 +84,6 @@ export const SKIPPED_REPORT_CHECKS = [
     },
 ] as const;
 
-/** Each staged comparison with the notice that the report prints. */
 export const COMPARISON_NOTICE_CASES = [
     { count: 1, notice: '1 file has unstaged changes that were not checked.' },
     { count: 2, notice: '2 files have unstaged changes that were not checked.' },
@@ -119,7 +116,6 @@ export const VERBOSITY_FILES = {
         Array.from({ length: FINDINGS_SHOWN + 1 }, (_, index) => `finding ${String(index + 1)}.`).join('\n') + '\n',
 };
 
-/** A duration in a report line, such as `1.2s`. */
 export const DURATION = /\b\d+\.\ds\b/gu;
 
 /**

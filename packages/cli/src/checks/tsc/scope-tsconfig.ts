@@ -20,12 +20,6 @@ import {
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/checks/tsc/scope-tsconfig.ts';
 
-/**
- * Builds a tsconfig that extends the tsconfig of the scope, or a standalone one when the scope has none.
- *
- * @param planned the scope and target path.
- * @returns the compiler settings to write as JSON.
- */
 function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
     const { root, typeRootsFolder, reads, target, scope, files, scopes, options } = planned;
     const authored = readTsconfigProject(
@@ -65,7 +59,6 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
             (file.tags.includes('typescript') || DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
             findScopeFolder(file.path, scopes).path === scope,
     );
-    // Svelte reads these extra extensions through include; tsc ignores them as unsupported sources.
     const components = files.filter(
         (file) =>
             file.kind === 'source' && file.tags.includes('svelte') && findScopeFolder(file.path, scopes).path === scope,

@@ -36,8 +36,6 @@ function listMissingOutputs(
         );
 }
 
-// A pattern from a setting names one file, such as the Worker types file. A copy on disk that Git does not track hides
-// it from the type checks and from this check, which compare tracked files.
 function listUntrackedOutputs(session: Session, planned: PlannedCheck, named: string[], excluded: string[]): Finding[] {
     const scope = planned.scope.folder.path;
     const tracked = new Set(session.repository.index.map(({ path }) => path));
@@ -57,7 +55,6 @@ function listUntrackedOutputs(session: Session, planned: PlannedCheck, named: st
               );
 }
 
-// The before and after snapshots read the same paths, so a difference means the generator changed a file.
 function readOutputContents({
     root,
     scope,
@@ -81,7 +78,6 @@ function readOutputContents({
     ]);
 }
 
-// A pattern from a setting holds a repository path; the scan of a scope reads it from the scope folder.
 function stripScopePrefix(path: string, scope: string): string {
     const prefix = path.startsWith('**/') ? '**/' : '';
     const scopePath = path.slice(prefix.length);

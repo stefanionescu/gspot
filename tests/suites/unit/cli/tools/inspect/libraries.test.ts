@@ -154,7 +154,6 @@ test.each([...PACKAGE_METADATA_FAILURES])(
     },
 );
 
-/** A library pin installed from the npm package with the same name. */
 function buildLibraryPin(name: string, version: string): Tool {
     return { name, kind: 'library', version, installers: { npm: { name, version } } };
 }

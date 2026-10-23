@@ -142,7 +142,6 @@ export const SCOPE_READER_PROJECT = {
     'gspot.toml': buildSandboxSettings([], { tables: SCOPE_FUNCTION_TABLES }),
 };
 
-/** The missing-key findings of component and module files. */
 export const COMPONENT_ENVIRONMENT_FINDINGS = [
     { file: 'app.astro', line: 2, rule: 'missing-key' },
     { file: 'app.svelte', line: 1, rule: 'missing-key' },
@@ -153,7 +152,6 @@ export const COMPONENT_ENVIRONMENT_FINDINGS = [
     { file: 'worker.ts', line: 1, rule: 'missing-key' },
 ] as const;
 
-/** The env-examples result for Bun.env reads. */
 export const BUN_ENVIRONMENT_RESULTS = [
     {
         check: 'secrets/env-examples',
@@ -162,7 +160,6 @@ export const BUN_ENVIRONMENT_RESULTS = [
     },
 ] as const;
 
-/** The env-examples result of each scope. */
 export const ENVIRONMENT_SCOPE_RESULTS = [
     { scope: '', status: 'failed', findings: [{ file: 'source.ts', line: 1, rule: 'missing-key' }] },
     { scope: 'app', status: 'failed', findings: [{ file: 'app/source.ts', line: 1, rule: 'missing-key' }] },

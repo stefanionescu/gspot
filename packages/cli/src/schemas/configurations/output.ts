@@ -1,4 +1,3 @@
-// Validates how a check declares the output format of its tool.
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { DEFAULT_PATTERN } from '#cli/config/configurations/names.ts';

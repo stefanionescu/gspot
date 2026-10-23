@@ -19,7 +19,6 @@ import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.
 import { copyCheckFiles, prepareCommand, prepareCommandIn, prepareToolEnvironment } from '#cli/runs/command/check.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
-    // A code the check declares for findings means findings remain after the fix.
     const { check } = planned;
     if (!isReportedCrash(check, planned.tool, result) && (result.code === 0 || check.exit_codes !== undefined))
         return undefined;
@@ -78,7 +77,6 @@ async function runFixInCopy(
     return result;
 }
 
-// Merges the passes of one fixer: a failure stands, and the changed files add up.
 function mergeResults(first: FixResult | undefined, next: FixResult): FixResult {
     if (first === undefined) return next;
     const changed = [...new Set([...first.changed, ...next.changed])];
@@ -87,7 +85,6 @@ function mergeResults(first: FixResult | undefined, next: FixResult): FixResult 
     return { check: next.check, status: changed.length === 0 ? next.status : 'changed', changed };
 }
 
-// A canceled or skipped fix returns before it finds the tool or writes files.
 async function runFixer(session: Session, planned: PlannedCheck, root: string): Promise<FixResult> {
     const check = planned.check.id;
     if (session.cancelSignal?.aborted === true)
@@ -95,7 +92,6 @@ async function runFixer(session: Session, planned: PlannedCheck, root: string): 
     if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
     const options: CheckRunOptions = { ...findCheckCode(planned.check) };
-    // runFixers selects only checks with a validated, nonempty fixer command.
     const command = planned.check.fix as string[];
     const name = command[0] as string;
     const { tool, setup } = prepareToolEnvironment(session, planned, name, options);
@@ -111,13 +107,6 @@ async function runFixer(session: Session, planned: PlannedCheck, root: string): 
     return runFixCommands(planned, fixSetup, session.cancelSignal);
 }
 
-/**
- * Reads the bytes of each path, with undefined for a missing file.
- *
- * @param sourceRoot the folder the paths start from.
- * @param paths the repository-relative files to read.
- * @returns the bytes of each file, or undefined.
- */
 function readContents(sourceRoot: string, paths: string[]): Map<string, Buffer | undefined> {
     const contents = new Map<string, Buffer | undefined>();
     for (const path of paths) {
@@ -131,13 +120,6 @@ function readContents(sourceRoot: string, paths: string[]): Map<string, Buffer |
     return contents;
 }
 
-/**
- * Lists the paths whose bytes changed, appeared, or disappeared.
- *
- * @param before the earlier bytes.
- * @param after the later bytes.
- * @returns each path whose bytes differ.
- */
 function listChangedPaths(before: Map<string, Buffer | undefined>, after: Map<string, Buffer | undefined>): string[] {
     return before
         .keys()
@@ -149,15 +131,6 @@ function listChangedPaths(before: Map<string, Buffer | undefined>, after: Map<st
         .toArray();
 }
 
-/**
- * Runs the fixers again on changed files, so a formatter handles the changes of a later codemod.
- *
- * @param session the repository and its tools.
- * @param checks the fixers to run.
- * @param sourceRoot the folder that the fixers change.
- * @param paths the files to compare between rounds.
- * @returns each fixer result, and the file bytes before and after.
- */
 async function runFixerRounds(
     session: Session,
     checks: PlannedCheck[],

@@ -1,4 +1,3 @@
-// Record an install command and stop on cancellation or timeout.
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';

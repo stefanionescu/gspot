@@ -12,7 +12,6 @@ import {
     EDITORCONFIG_FIXED_SECTIONS,
 } from '#cli/config/generation/configurations/general/format/editorconfig.ts';
 
-// Convert a Prettier selector to an EditorConfig section path, under its scope when it has one.
 function buildSectionPath(pattern: string, scope: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))
         throw new GspotError(

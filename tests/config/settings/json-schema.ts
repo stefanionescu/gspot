@@ -1,4 +1,3 @@
-/** Values with refinements that the published schema must keep. */
 export const PUBLISHED_SCHEMA_CASES = [
     {
         name: 'GitHub CI with systems',

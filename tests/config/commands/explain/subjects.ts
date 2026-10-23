@@ -64,7 +64,6 @@ export const CHECK_TOOL_MINIMUMS = [
     { check: 'python/ruff', tools: ['ruff'] },
 ] as const;
 
-/** The ignores that apply to a file path. */
 export const PATH_IGNORES = [
     {
         check: 'bash/shellcheck',
@@ -73,7 +72,6 @@ export const PATH_IGNORES = [
     },
 ] as const;
 
-/** The explanation of the command check. */
 export const SYNTAX_CHECK_EXPLANATION = {
     kind: 'check',
     check: 'project/syntax',
@@ -82,7 +80,6 @@ export const SYNTAX_CHECK_EXPLANATION = {
     paths: ['**/*.sh'],
 } as const;
 
-/** A command check and its ignore for the path explanation. */
 export const SYNTAX_CHECK_TABLES = `[[command_check]]
 id = "project/syntax"
 command = ["bash", "-n", "{files}"]
@@ -90,7 +87,6 @@ paths = ["**/*.sh"]
 stage = "manual"
 `;
 
-/** Subjects that explain cannot explain, with the message of each. */
 export const UNKNOWN_SUBJECT_CASES = [
     ['./missing.sh', 'missing.sh is not a file in this repository.'],
     [

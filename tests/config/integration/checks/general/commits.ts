@@ -3,7 +3,6 @@ import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts
 
 export const COMMITLINT_EXECUTABLE = '.bin/commitlint';
 
-/** Commit messages and the Commitlint rule each one breaks, if any. */
 export const COMMIT_MESSAGES = [
     { message: 'fix(Core): repair the parser', rule: undefined },
     { message: 'fix: repair the parser', rule: undefined },

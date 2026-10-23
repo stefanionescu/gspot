@@ -73,13 +73,6 @@ function buildConfigurationsResult(session: Session): CommandResult {
     };
 }
 
-/**
- * List every setting for each scope.
- *
- * @param settings the parsed gspot.toml.
- * @param scopes the settings that apply in each scope.
- * @returns values and their inheritance sources for every selected scope.
- */
 function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson {
     const rows = scopes.flatMap((scope) => {
         const scopePath = scope.folder.path;
@@ -104,13 +97,6 @@ function formatCheckState(check: PlannedCheck | undefined): string {
     return isActive(check) ? 'on' : 'no matching files';
 }
 
-/**
- * List the selected configurations with the state of each check, or every setting with its value and source.
- *
- * @param cwd the folder where the command starts.
- * @param kind whether to list configurations or settings.
- * @returns the list and its exit code.
- */
 async function runListCommand(cwd: string, kind: ListKind): Promise<CommandResult> {
     const root = findRoot(cwd);
 

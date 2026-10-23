@@ -11,13 +11,11 @@ type SettingRow = {
     scope: string;
 };
 
-/** The JSON response of selected and available configurations. */
 export type ConfigurationsListJson = {
     selected: { name: string; checks: { name: string; scope: string; state: string }[] }[];
     available: { name: string; description: string }[];
 };
 
-/** The settings and their values that gspot list settings prints. */
 export type SettingsListJson = { settings: SettingRow[] };
 
 export type ListKind = (typeof LIST_KINDS)[number];

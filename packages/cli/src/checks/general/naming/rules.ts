@@ -196,12 +196,6 @@ function checkBannedWords(checked: CheckedIdentifier, nameWords: string[]): Find
     return findings;
 }
 
-/**
- * Finds the first part that appears twice.
- *
- * @param words ordered words and digit groups from one declared name.
- * @returns the repeated part, or undefined.
- */
 function findRepeatedWord(words: string[]): string | undefined {
     const seen = new Set<string>();
     for (const segment of words) {
@@ -211,13 +205,6 @@ function findRepeatedWord(words: string[]): string | undefined {
     return undefined;
 }
 
-/**
- * Selects the path overrides that apply to an identifier.
- *
- * @param settings what the scope allows and bans.
- * @param identifier the name to match.
- * @returns the overrides, in settings order.
- */
 function selectOverrides(settings: NamingSettings, identifier: Identifier): CompiledOverride[] {
     const path = identifier.folder ?? identifier.file;
     return settings.overrides.filter(
@@ -228,14 +215,6 @@ function selectOverrides(settings: NamingSettings, identifier: Identifier): Comp
     );
 }
 
-/**
- * Builds the limits and cases for an identifier after its path overrides.
- *
- * @param settings what the scope allows and bans.
- * @param identifier the name to check.
- * @param overrides the matching `[[naming.override]]` records.
- * @returns the length limits and allowed cases.
- */
 function buildIdentifierLimits(
     settings: NamingSettings,
     identifier: Identifier,
@@ -244,8 +223,6 @@ function buildIdentifierLimits(
     const base = settings.limitsFor(identifier.language, identifier.category);
     const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
     const parent = parents[identifier.category] ?? identifier.category;
-    // Ruff checks the case of these Python names, and SwiftLint checks the case and length
-    // of these Swift names.
     if (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category)) return { ...base, caseNames: [] };
     if (identifier.language === 'swift' && SWIFTLINT_PARENTS.has(parent))
         return { ...base, caseNames: [], maxChars: 0 };

@@ -22,7 +22,6 @@ import {
 
 const bashSandbox = shareBashSandbox();
 
-/** Check one source at the configured statement limit and dispose its compiler resources. */
 async function runTrivialFunctionsCheck(
     language: 'python' | 'bash' | 'swift',
     file: string,

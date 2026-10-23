@@ -89,20 +89,17 @@ export function listJavascriptEnvironmentReads(
     });
 }
 
-// Bindings inside a function or class belong to that lexical scope.
 function findDeclarationScope(node: Node): Node {
     let scope = node.parent ?? node;
     while (scope.parent !== null && !PYTHON_SCOPE_NODES.has(scope.type)) scope = scope.parent;
     return scope;
 }
 
-// An import alias keeps the module or member that it names.
 function getImportAlias(node: Node) {
     if (node.type !== 'aliased_import') return { name: node.text, target: node.text };
     return { name: node.childForFieldName('alias')?.text, target: node.childForFieldName('name')?.text };
 }
 
-// Parameters declare their own names, not the names that their default expressions use.
 function listBoundNames(node: Node): string[] {
     if (node.type === 'parameters')
         return node.namedChildren.flatMap((parameter) => {
@@ -120,7 +117,6 @@ function listBoundNames(node: Node): string[] {
         : declaration.descendantsOfType('identifier').map((identifier) => identifier.text);
 }
 
-// Only os imports supply environment objects or getters.
 function listEnvironmentImports(node: Node): EnvironmentScope {
     const imported: EnvironmentScope = new Map();
     let members: Record<string, EnvironmentKind> = {};
@@ -133,7 +129,6 @@ function listEnvironmentImports(node: Node): EnvironmentScope {
     return imported;
 }
 
-// Map each scope of a file to the names it declares, and to what each import of os names, once for each file.
 function listPythonNames(root: Node): EnvironmentNames {
     const scopeNames: EnvironmentNames = new Map();
     const nodes = [
@@ -158,7 +153,6 @@ function listPythonNames(root: Node): EnvironmentNames {
     return scopeNames;
 }
 
-// Find what a name refers to: look for its declaration in each enclosing scope, from the innermost out.
 function findEnvironmentKind(node: Node, name: string, scopeNames: EnvironmentNames): EnvironmentKind {
     for (
         let scope: Node | null = findDeclarationScope(node);
@@ -171,7 +165,6 @@ function findEnvironmentKind(node: Node, name: string, scopeNames: EnvironmentNa
     return undefined;
 }
 
-// Reads name an object or the function called, never the text inside a string.
 function findReceiver(node: Node): Node | null {
     if (node.type === 'attribute') return node.childForFieldName('object');
     if (node.type === 'call') {

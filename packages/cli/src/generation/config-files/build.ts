@@ -157,15 +157,12 @@ export function buildConfigFile(
     targets: ConfigFileGeneration['targets'],
 ): Pick<BuiltConfigFile, 'file' | 'companions'> {
     const { configFile, targetPath } = planned;
-    // Every semgrep.yml config file has the same builder; any other config file has its own, keyed by configuration and
-    // file.
     const builder =
         configFile.file === SEMGREP_RULE_PACK_FILE
             ? buildSemgrepFile
             : CONFIG_FILE_BUILDERS[`${planned.configuration.name}/${configFile.file}`];
     let built: ReturnType<ConfigFileBuilder>;
     if (builder === undefined) {
-        // A shipped TypeScript source becomes the JavaScript module that the target names.
         const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${configFile.source}`), 'utf8');
         built = configFile.source.endsWith('.ts')
             ? ts.transpileModule(shipped, { compilerOptions: TRANSPILE_OPTIONS }).outputText

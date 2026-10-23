@@ -1,4 +1,3 @@
-// Validate npm tool projects and choose their lockfiles.
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';

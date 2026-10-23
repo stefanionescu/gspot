@@ -21,13 +21,6 @@ import {
     SVELTE_TSCONFIG_FLAG,
 } from '#cli/config/checks/framework/svelte.ts';
 
-/**
- * Turns each error and warning line of the svelte-check machine-verbose output into a finding.
- *
- * @param planned the scope that ran the check.
- * @param stdout what svelte-check printed.
- * @returns one finding for each error and warning.
- */
 function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): Finding[] {
     const lines = stdout.split('\n');
     const failure = lines

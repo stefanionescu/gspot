@@ -3,7 +3,6 @@ import { HUSKY_STUBS } from '#tests/config/repository/setup.ts';
 const NPM_PROJECT_PACKAGE =
     '{"private":true,"packageManager":"npm@11.10.1","devDependencies":{"@gspothq/cli":"0.1.0"}}';
 
-/** The hook setups and the local Git hook script that install must keep. */
 export const HOOK_REPOSITORIES = [
     {
         name: 'another hooks folder',
@@ -64,7 +63,6 @@ command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository i
 git lfs pre-push "$@"
 `;
 
-/** Hook managers whose configuration file holds the hook commands. */
 export const HOOK_CONFIGURATION_CASES = [
     {
         path: '.pre-commit-config.yaml',

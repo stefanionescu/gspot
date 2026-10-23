@@ -1,4 +1,3 @@
-/** Import and export forms, with the line of each finding. */
 export const TRPC_IMPORTS = [
     { source: 'import { router } from "./private/router.js";', line: 2 },
     { source: 'import {\n router\n} from "./private/router.js";', line: 4 },
@@ -22,7 +21,6 @@ export { type router as SpecifierExport } from "./private/router.js";
 export type * from "./private/router.js";
 `;
 
-/** The server files hold the router and adapter paths; the authored import rules still apply. */
 export const TRPC_MODULES = `[trpc]
 server_files = ["private/**", "app/api/trpc/**", "app/private/**", "app/child/private/**", "flat/router.ts"]
 
@@ -45,7 +43,6 @@ export const TRPC_FAILURES = {
     'flat/client.ts': 1,
 } as const;
 
-/** Sources and project files that the generated rule reads. */
 export const TRPC_FILES = {
     'tsconfig.json':
         '{"compilerOptions":{"allowJs":true,"paths":{"@private/*":["./private/*"]}},"include":["**/*.ts"]}',
@@ -68,7 +65,6 @@ export const TRPC_FILES = {
     'app/child/client.ts': 'import { router } from "./private/router.js";\n',
 } as const;
 
-/** Authored import restrictions and the store convention both use the same ESLint rule. */
 export const ZUSTAND_FILES = {
     'package.json': '{"name":"restricted-imports","private":true,"type":"module","dependencies":{"zustand":"5.0.8"}}',
     'src/widget.js': `import { create } from "zustand";
@@ -87,10 +83,8 @@ restricted_imports = [{ name = "node:fs", message = "Use the storage service." }
 store_files = ["**/store.js"]
 `;
 
-/** Literal interface text outside the test files, which the translation rule reports. */
 export const TRANSLATION_SOURCE = 'export const element = <p>Hello there</p>;\n';
 
-/** The files outside the router roles. */
 export const UNCHECKED_ROUTER_FILES: string[] = [
     'outside/action.ts',
     'child/custom/action.ts',
@@ -98,7 +92,6 @@ export const UNCHECKED_ROUTER_FILES: string[] = [
     'plain/routers/action.ts',
 ];
 
-/** The router role files that need an input schema. */
 export const ROUTER_ROLE_FILES: string[] = [
     'custom/action.ts',
     'routers/default.ts',
@@ -106,7 +99,6 @@ export const ROUTER_ROLE_FILES: string[] = [
     'inherited/routers/action.ts',
 ];
 
-/** Settings with a Drizzle scope. */
 export const DRIZZLE_SCOPE_SETTINGS = {
     level: 'all',
     rules: true,

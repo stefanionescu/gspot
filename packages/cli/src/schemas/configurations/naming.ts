@@ -5,7 +5,6 @@ import { regexSchema } from '#cli/schemas/configurations/fields.ts';
 import { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/configurations/naming.ts';
 import type { PathContainer, NamingDefaults, NamingOverride } from '#cli/types/checks/general/naming.ts';
 
-/** Framework punctuation around a named path segment. */
 const pathContainerSchema = z.strictObject({
     open: z.string().min(1),
     close: z.string(),
@@ -23,7 +22,6 @@ const namingGroupSchema = z.strictObject({ terms: z.array(z.string()) } satisfie
     NamingDefaults['groups'][string]
 >);
 
-/** A path-specific naming override that settings, manifests, and the shipped naming lists share. */
 export const namingOverrideSchema = z.strictObject({
     paths: z
         .array(z.string().min(1).meta({ pathRole: 'source' }))
@@ -46,12 +44,10 @@ export const namingOverrideSchema = z.strictObject({
     reason: z.string().optional().meta({ description: 'Why these names may break the rules.' }),
 } satisfies SchemaShape<NamingOverride>);
 
-/** Naming exceptions shipped by a configuration or the default naming data always state their reason. */
 export const writtenNamingOverrideSchema = namingOverrideSchema.extend({
     reason: z.string().min(1),
 }) satisfies z.ZodType<NamingOverride>;
 
-/** Shipped naming defaults for validation and source checks. */
 export const namingDefaultsSchema = z.strictObject({
     path_containers: z.array(pathContainerSchema),
     allow_digits: z.boolean(),

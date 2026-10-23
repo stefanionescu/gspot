@@ -9,7 +9,6 @@ export const TYPO_REPORT = {
     corrections: ['the'],
 } as const;
 
-/** Typos output that gspot refuses, with the error it gives. */
 export const TYPOS_REPORT_ERRORS = [
     {
         name: 'unfinished JSON',

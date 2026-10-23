@@ -58,7 +58,6 @@ export async function checkDuplicationJscpd(session: Session, planned: PlannedCh
     const generated = files.read(generatedPath);
     if (generated === undefined) throw new GspotError('check', `Missing ${generatedPath}. Run gspot apply.`);
     const shipped = parseJsonFile(generatedPath, generated.bytes.toString('utf8'));
-    // A long file list overflows a command line, so the paths go into a config file of their own.
     const configFile = join(work, JSCPD_CONFIG_FILE);
     writeFileSync(configFile, JSON.stringify({ ...shipped, path: owned.map((path) => join(session.root, path)) }));
     const commandArguments = [JSCPD, '--config', configFile, ...JSCPD_ARGUMENTS, '--output', work];

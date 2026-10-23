@@ -14,7 +14,6 @@ import {
     INVALID_FINDING_REPORTS,
 } from '#tests/config/runs/output/json.ts';
 
-/** Parse a JSON report with the paths and help text that these cases share. */
 function parseJsonReport(check: string, output: unknown, stdout: string): Finding[] {
     return parseJsonFindings({
         check,

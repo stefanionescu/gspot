@@ -27,21 +27,12 @@ import { buildJsconfigFile } from '#cli/generation/configurations/language/javas
 import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/language/javascript.ts';
 import { listCompilerFiles, restoreCommandPaths, appendTsbuildinfoFlag } from '#cli/checks/tsc/compiler.ts';
 
-/**
- * Selects the source files and type roots of a scope.
- *
- * @param session the source repository or its copy.
- * @param scope the folder whose files to keep.
- * @param config the parsed jsconfig.json.
- * @returns the file names and compiler options.
- */
 function buildScopeCompilerProject(
     session: Session,
     scope: string,
     config: TypeScriptConfiguration,
 ): Pick<TypeScriptConfiguration, 'fileNames' | 'options'> {
     const { root, repository } = session;
-    // The compiler names its files with forward slashes on every system.
     const files = new Set(
         repository.files
             .filter(
@@ -62,13 +53,6 @@ function buildScopeCompilerProject(
     };
 }
 
-/**
- * Finds the generated jsconfig of a scope, and parses no tsconfig or jsconfig of another scope.
- *
- * @param session the repository and settings.
- * @param planned the JavaScript check and its scope.
- * @returns the path of the matching jsconfig.
- */
 function findJavascriptProject(session: Session, planned: PlannedCheck): string {
     const configFile = getConfigFile(session, planned, extractConfigFileName(JSCONFIG_FILE)) as WholeConfigFile;
     const paths = new Set([
@@ -79,8 +63,6 @@ function findJavascriptProject(session: Session, planned: PlannedCheck): string 
     for (const path of paths) {
         const written = files.read(path);
         if (written === undefined) continue;
-        // The check builds the jsconfig of this scope only, so an unreadable jsconfig of another scope leaves it alone.
-        // The comparison adds the header and final newline that gspot writes.
         const built = buildJsconfigFile({
             session,
             scope: planned.scope,

@@ -32,7 +32,6 @@ export const AUTHORED_TSCONFIG = `{
     "include": ["src"],
 }\n`;
 
-/** outDir settings that point outside the project, and what each one writes. */
 export const OUTDIR_CASES = [
     { name: 'an absolute outDir outside the project writes no output', kind: 'absolute' },
     { name: 'an outDir through a linked node_modules writes nothing outside the repository', kind: 'symlink' },
@@ -73,7 +72,6 @@ export const SOLUTION_PROJECT_TREE = {
     'users/user.ts': 'import { total } from "../orders/order.js"; export const active: boolean = total;',
 };
 
-/** Settings with a TypeScript scope for the referenced project. */
 export const REFERENCE_BUILD_SETTINGS = {
     level: 'all',
     scopes: [

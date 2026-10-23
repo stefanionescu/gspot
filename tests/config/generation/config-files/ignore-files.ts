@@ -1,4 +1,3 @@
-/** Declared file kinds and check path ignores must reach the Prettier ignore patterns. */
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
@@ -13,7 +12,6 @@ export const PRETTIER_IGNORE_SETTINGS = {
     ],
 } as const;
 
-/** Build folders, generated and vendored files, a path ignore, and lockfiles stay ignored; Prettier formats the rest. */
 export const PRETTIER_IGNORE_CASES = [
     { file: 'tests/build/Scenario.ts', ignored: true },
     { file: 'src/dist/source.ts', ignored: true },
@@ -64,7 +62,6 @@ export const LANGUAGE_IGNORES = [
     },
 ] as const;
 
-/** Path ignores for one check reach the config file that the tool reads. */
 export const PATH_IGNORE_CASES = [
     {
         configuration: 'spelling',
@@ -88,7 +85,6 @@ export const PATH_IGNORE_CASES = [
 
 export const PRETTIER_IGNORE_ATTRIBUTES = '/generated/** linguist-generated\n/vendored/** linguist-vendored\n';
 
-/** A repository whose scopes select different tools, so each scope writes different pointers. */
 export const IGNORE_LIST_REPOSITORY = {
     'gspot.toml': buildSandboxSettings(['javascript', 'python', 'markdown'], {
         level: 'all',

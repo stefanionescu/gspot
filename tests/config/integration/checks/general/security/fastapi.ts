@@ -1,4 +1,3 @@
-/** An exception response whose correction keeps its cause private. */
 export const FASTAPI_SOURCE = `from fastapi import HTTPException
 
 def lookup():

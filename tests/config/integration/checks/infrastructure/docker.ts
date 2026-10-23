@@ -1,4 +1,3 @@
-/** Trivy uses this configured exit code when an image report contains findings. */
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 
@@ -78,7 +77,6 @@ paths = ["app/**"]
 reason = "This test exercises scoped advisory exceptions."
 `;
 
-/** The Trivy result of each scope when only the root Dockerfile has a finding. */
 export const TRIVY_SCOPE_RESULTS: { scope: string; status: CheckResult['status']; files: string[] }[] = [
     { scope: '', status: 'failed', files: ['Dockerfile'] },
     { scope: 'app', status: 'passed', files: [] },

@@ -20,7 +20,6 @@ export type TrivialFilesOptions = [{ allowIndex: boolean }];
 export type MagicNumbersOptions = [Record<string, unknown>];
 export type RuleContext = Readonly<TSESLint.RuleContext<string, unknown[]>>;
 
-/** Keeps the required docs of each rule in the type that RuleCreator returns. */
 export type DocumentedRuleCreator = <Options extends readonly unknown[], MessageIds extends string>(
     rule: Readonly<ESLintUtils.RuleWithMetaAndName<Options, MessageIds, RuleDocs>>,
 ) => TSESLint.RuleModule<MessageIds, Options, RuleDocs> & {

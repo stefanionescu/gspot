@@ -31,13 +31,6 @@ import {
     TYPESCRIPT_VERSION_OUTPUT,
 } from '#tests/config/checks/framework/nextjs.ts';
 
-/**
- * Create a Next.js project with tracked source and untracked build output, for the checks that build in a copy.
- *
- * @param sandboxRoot folder for the project.
- * @param scope folder of the Next.js project.
- * @returns the session after apply and commit.
- */
 async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<Session> {
     await createFileTree(sandboxRoot, {
         'gspot.toml': buildSandboxSettings(['nextjs'], { level: 'all', scopes: scope === '' ? [] : [{ path: scope }] }),
@@ -63,12 +56,6 @@ async function prepareNextjsBuild(sandboxRoot: string, scope: string): Promise<S
     return session;
 }
 
-/**
- * Fake executable lookup and both process functions until disposal. The fakes return the output and files that Next.js writes.
- *
- * @param fakeRun the process behavior supplied by the caller.
- * @returns the recorded commands and a disposer that removes the fakes.
- */
 function fakeNextjsCommands(fakeRun: (command: readonly string[], options: AsyncSpawnOptions) => Promise<SpawnResult>) {
     using resources = new DisposableStack();
 

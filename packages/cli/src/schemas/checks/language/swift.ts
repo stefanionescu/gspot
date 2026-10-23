@@ -7,7 +7,6 @@ import {
     type SwiftPackageCoverage,
 } from '#cli/types/checks/language/swift.ts';
 
-/** The source targets and source paths that Swift Package Manager reports. */
 export const packageDescriptionSchema = z.object({
     targets: z.array(
         z.object({
@@ -20,7 +19,6 @@ export const packageDescriptionSchema = z.object({
     ),
 } satisfies SchemaShape<SwiftPackageCoverage>);
 
-/** The compiler's coverage export with source line counts. */
 export const swiftCoverageSchema = z.object({
     data: z.array(
         z.object({

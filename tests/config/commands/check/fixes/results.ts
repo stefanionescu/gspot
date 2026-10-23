@@ -1,6 +1,5 @@
 import type { Tool } from '#cli/types/configurations.ts';
 
-/** Each fixer result: its exit code, the file bytes it leaves, and the note of a failure. */
 export const FIXER_RESULTS = [
     {
         name: 'finding exit with original bytes',
@@ -44,7 +43,6 @@ export const FIXER_RESULTS = [
     },
 ] as const;
 
-/** A program pin whose version check fails. */
 export const FAILING_VERSION_TOOL: Tool = {
     name: 'version-teller',
     version: '3.8.1',

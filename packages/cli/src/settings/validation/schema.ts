@@ -47,14 +47,12 @@ export function formatSettingsIssue(issue: z.core.$ZodIssue): string[] {
     return issue.keys.map((key) => `${SETTINGS_FILE}: ${formatUnknownKey(segments, key)}`);
 }
 
-// Step from a table or record list to the schema of one key or record.
 function selectChildSchema(schema: z.ZodType | undefined, segment: KeyPath[number]): z.ZodType | undefined {
     const table = schema === undefined ? undefined : unwrapSettingSchema(schema);
     if (table instanceof z.ZodArray && typeof segment === 'number') return table.element as z.ZodType;
     return table instanceof z.ZodObject ? (table.shape[String(segment)] as z.ZodType | undefined) : undefined;
 }
 
-// Suggest the keys of the same table that look like an unknown key. The path starts at the root, or at a scope.
 function formatSimilarKeys(segments: KeyPath, key: string): string {
     const [record, , ...scopeFields] = segments;
     let schema: z.ZodType | undefined = record === 'scope' ? scopeSchema : settingsSchema;
@@ -63,7 +61,6 @@ function formatSimilarKeys(segments: KeyPath, key: string): string {
     return table instanceof z.ZodObject ? formatSimilarNames(key, Object.keys(table.shape)) : '';
 }
 
-// Name one key that a table does not accept. Say where it belongs, or which keys the table has.
 function formatUnknownKey(segments: KeyPath, key: string): string {
     const [record, , ...scopeFields] = segments;
     const [table, language] = record === 'scope' ? scopeFields : segments;
@@ -83,7 +80,6 @@ function formatKeyPlace(segments: KeyPath): string {
     return `[[scope]] record ${String(Number(scopeIndex) + 1)}${section}`;
 }
 
-// Each error names gspot.toml, then its key path when it has one.
 function throwErrors(errors: SettingsError[]): never {
     const lines = errors.map((error) =>
         [SETTINGS_FILE, error.path.map(String).join('.'), error.message].filter((text) => text !== '').join(': '),

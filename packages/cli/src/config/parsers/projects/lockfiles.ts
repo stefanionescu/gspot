@@ -1,9 +1,5 @@
 import { PYTHON_LOCKFILES } from '#cli/config/checks/general/licenses.ts';
 
-/**
- * Every lockfile gspot knows: its configuration, the package manager that writes it, and how gspot tool projects use
- * it.
- */
 export const LOCKFILES = [
     {
         file: 'bun.lock',
@@ -64,7 +60,6 @@ export const LOCKED_PACKAGE_LOCKFILES = [...JAVASCRIPT_LOCKFILES, ...PYTHON_LOCK
 
 export const NPM_PACKAGE_FOLDER = 'node_modules/';
 
-/** pnpm adds the peer dependencies of a package to its key, in parentheses after its version. */
 export const PNPM_PEER_START = '(';
 
 export const IMPORTER_LOCKFILES = ['bun.lock', 'package-lock.json', 'pnpm-lock.yaml'] as const;

@@ -25,7 +25,6 @@ import {
     FAKE_GSPOT_SCRIPT,
 } from '#tests/config/generation/ci.ts';
 
-/** Build the CI pipeline in a new sandbox that lives until the test ends. */
 async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline> {
     const sandbox = resources.use(
         await testdir({

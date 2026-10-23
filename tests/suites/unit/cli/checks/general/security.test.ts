@@ -11,7 +11,6 @@ test('security/semgrep without rule files is skipped with a note that names tool
         'gspot.toml': buildSandboxSettings(['python']),
         'source.py': 'PORT = 8080\n',
     });
-    // On Windows, the missing semgrep build skips the check first.
     using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('linux');
     const session = await openSession(sandbox.path);
     using _resources = session.resources;

@@ -1,16 +1,12 @@
 import type { Linter } from 'eslint';
 import type { Finding } from '#cli/types/runs/check.ts';
 
-/** An ESLint finding with its path from the repository root. */
 export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; line: Linter.LintMessage['line'] };
 
-/** A link failure that one scope must report. */
 export type LinkFailure = { scope: string; file: string; rule: string };
 
-/** The exit code, the output, and the findings of one TypeScript project check. */
 export type TypecheckResult = { code: number; output: string; findings: Finding[] };
 
-/** A Ruff or SwiftLint finding of a function that takes too many parameters. */
 export type ParameterFinding = {
     code?: string;
     rule_id?: string;
@@ -18,7 +14,6 @@ export type ParameterFinding = {
     location?: { row: number };
 };
 
-/** The parts of a calculated ESLint configuration that generation tests read. */
 export type EslintConfiguration = {
     rules: Record<string, [Linter.Severity, ...unknown[]]>;
     languageOptions: { globals: Record<string, string | boolean>; sourceType: string };
@@ -27,16 +22,12 @@ export type EslintConfiguration = {
     linterOptions: { reportUnusedDisableDirectives: Linter.Severity };
 };
 
-/** The report fields compared by CLI tests. */
 export type FindingRow = { file: string; line: number | undefined; rule: string | undefined };
 
-/** A finding row with the scope that reported it. */
 export type ScopeFindingRow = FindingRow & { scope: string };
 
-/** Source text and the findings of one rule for an ESLint case. */
 export type SourceRuleCase = { name?: string; source: string; rule: string; count: number };
 
-/** The findings a source sample must give at each level. */
 export type ScriptFindingCase = {
     file: string;
     recommended: readonly { ruleId: string | null; line: number }[];

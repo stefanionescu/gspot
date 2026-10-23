@@ -6,8 +6,6 @@ path = "api"
 configurations = ["bash"]
 `;
 
-/** The root and a child scope, where set writes banned words. */
-/** Settings with one scope in the layout that set and unset write. */
 export const BANNED_WORD_SETTINGS = `#:schema ./.gspot/gspot.schema.json
 configurations = ["naming", "typescript"]
 
@@ -51,7 +49,6 @@ naming.banned_words = ["discardedword"]
     },
 ] as const;
 
-/** List settings that loosen a check; each needs a reason, and set and unset edit them the same way. */
 export const LOOSENED_SETTINGS = [
     {
         key: 'site.allowed_unlisted_pages',
@@ -71,20 +68,16 @@ export const LOOSENED_SETTINGS = [
     } as const,
 ] as const;
 
-/** The records of the restricted_imports value below. */
 export const RESTRICTED_IMPORT_RECORDS = [
     { name: 'unreviewed-module', message: 'Import the reviewed entrypoint for this dependency.' },
 ] as const;
 
-/** One restricted import as a TOML inline value. */
 export const RESTRICTED_IMPORTS = `[{name = "unreviewed-module", message = "Import the reviewed entrypoint for this dependency."}]`;
 
 export const SETTING_REASON = 'The project contract requires this reviewed exception.';
 
-/** The banned word written by the set command tests. */
 export const SCOPE_BANNED_WORDS = ['discardedword'] as const;
 
-/** Each set command that exits 2, with the message that names the fix. */
 export const SET_REFUSALS = [
     [
         'a rule turned off',
@@ -110,7 +103,6 @@ export const SET_REFUSALS = [
     ],
 ] as const;
 
-/** A set and an ignore whose change gspot.toml keeps when the apply after it stops. Each row holds the text it writes and the line it prints. */
 export const KEPT_SETTING_CHANGES = [
     [
         'set',
@@ -126,7 +118,6 @@ export const KEPT_SETTING_CHANGES = [
     ],
 ] as const;
 
-/** A sandbox whose apply stops after a set or an ignore. */
 export const STOPPED_APPLY_FILES = {
     'gspot.toml': `configurations = ["bash", "structure"]
 [rules]
@@ -135,13 +126,11 @@ enabled = false
     'entry.sh': 'echo example\n',
 } as const;
 
-/** Commands that leave gspot.toml with the value it already has. */
 export const NO_CHANGE_COMMANDS = [
     ['unset level', ['unset', 'level']],
     ['set level recommended', ['set', 'level', 'recommended']],
 ] as const;
 
-/** Keys that set refuses, with the start of each message. */
 export const UNKNOWN_SETTING_KEYS = [
     {
         key: 'tools.eslint.extra',

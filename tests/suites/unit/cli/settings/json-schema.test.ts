@@ -11,7 +11,6 @@ test.each([...PUBLISHED_SCHEMA_CASES])('runtime and published schemas agree on $
     expect(publishedSettingsValidator(input)).toBe(valid);
 });
 
-// The docs build reads the schema in memory, so a key that JSON drops must not hide a description there.
 test('the schema in memory matches its published JSON', () => {
     const schema = buildJsonSchema();
     const published = JSON.stringify(schema);

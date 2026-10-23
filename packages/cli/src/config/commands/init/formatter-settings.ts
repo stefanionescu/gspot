@@ -1,4 +1,3 @@
-/** The settings files where Ruff keeps its quote style, in the order Ruff reads them. */
 export const RUFF_SETTINGS_FILES = ['.ruff.toml', 'ruff.toml', 'pyproject.toml'] as const;
 
 export const EDITORCONFIG_FILE = '.editorconfig';

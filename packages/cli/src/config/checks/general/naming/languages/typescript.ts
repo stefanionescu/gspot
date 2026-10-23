@@ -4,8 +4,6 @@ export const TYPESCRIPT_PATTERN_FIELDS = {
     assignment_pattern: 'left',
 } as const;
 
-// A shorthand pattern such as const { handleSubmit } = useForm() takes the name that the destructured value declares.
-
 export const TYPESCRIPT_NAME_NODES = new Set([
     'identifier',
     'property_identifier',

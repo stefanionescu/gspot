@@ -1,4 +1,3 @@
-// Lints sandbox files with the ESLint config that gspot generates, and reads its findings and rules.
 import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
 import { openSession } from '#cli/session.ts';

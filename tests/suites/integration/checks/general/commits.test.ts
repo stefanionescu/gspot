@@ -29,7 +29,6 @@ import {
     buildUntypedMessageFindings,
 } from '#tests/config/integration/checks/general/commits.ts';
 
-// Check a draft commit message, and expect the commitlint rules it breaks.
 async function assertDraftCheck(root: string, draft: string, rules: string[] = []): Promise<void> {
     const checked = parseCheckReport(
         await spawnGspot(root, [
@@ -50,7 +49,6 @@ async function assertDraftCheck(root: string, draft: string, rules: string[] = [
     expect(checked.report.checks[0]!.findings.map(({ rule }) => rule)).toStrictEqual(rules);
 }
 
-/** Commit the installed hooks and tag the commit that each hook case starts from. */
 function prepareHookRepository(): void {
     const { root } = installedSandbox();
     runGitStep(root, ['add', '-A']);
@@ -216,7 +214,6 @@ test.each(['', 'app'])(
     },
 );
 
-/** Check that the authored Commitlint rules pass, then run init at level all. */
 async function replaceCommitlint(
     root: string,
     command: string[],

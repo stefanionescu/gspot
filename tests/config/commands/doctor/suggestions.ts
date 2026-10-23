@@ -1,6 +1,5 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-/** For a Stylelint section that gspot does not own, the suggestion deletes the section, not its package. */
 export const STYLELINT_SUGGESTIONS = [
     {
         path: 'app/child/package.json',
@@ -53,7 +52,6 @@ export const REMOVED_CONFIGURATION_SUGGESTIONS = [
     },
 ] as const;
 
-/** The remove suggestion of each scope after its detection evidence goes. */
 export const REMOVE_SUGGESTIONS = [
     {
         configuration: 'bash',

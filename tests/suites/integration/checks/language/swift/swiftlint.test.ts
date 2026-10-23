@@ -41,7 +41,6 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
     },
 );
 
-/** Create a sandbox with the SwiftLint sources and the generated test config file for one scope. */
 async function prepareSwiftScope(scope: string) {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(await testdir());

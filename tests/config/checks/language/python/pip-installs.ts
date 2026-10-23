@@ -1,4 +1,3 @@
-/** Settings with a locked and an unlocked Python scope. */
 export const LOCKED_SCOPE_SETTINGS = {
     level: 'all',
     scopes: [

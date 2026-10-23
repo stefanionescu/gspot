@@ -25,10 +25,8 @@ export type GenerationResult = {
     managedKeys: ManagedKeys[];
 };
 
-/** The configuration that declares the config file, and its scope. */
 export type ConfigFileOwner = { session: Session; scope: Scope; configuration: Configuration };
 
-/** Generated config files and the chosen target for each scope and config file. */
 export type ConfigFileGeneration = {
     files: GeneratedFile[];
     targets: ReadonlyMap<string, ReadonlyMap<string, string>>;
@@ -42,22 +40,17 @@ export type PlannedNpmProject = {
     root: string;
     scopes: Scope[];
     configurations: Configuration[];
-    /** Yarn 2 or later, which needs the settings that keep a node_modules folder. */
     isYarnBerry: boolean;
 };
 
 export type WholeConfigFile = Extract<ConfigFile, { source: string }>;
 
-/** The repository, scope, config file, and destination of one whole config file. */
 export type PlannedConfigFile = ConfigFileOwner & { targetPath: string; level: Level; configFile: WholeConfigFile };
 
-/** The text of a config file, and the files that it imports, such as the ESLint config file of each configuration. */
 export type ConfigFileOutput = { content: string; companions: GeneratedFile[] };
 
-/** Build the text of one config file; buildConfigFile adds the header and the final newline to each file. */
 export type ConfigFileBuilder = (planned: PlannedConfigFile) => string | ConfigFileOutput;
 
-/** A tool and the generated destinations that can replace its package fields. */
 export type PlannedPointerField = {
     scope: Scope;
     configuration: Configuration;
@@ -68,26 +61,20 @@ export type PlannedPointerField = {
     scopePaths: string[];
 };
 
-/** One ignore group and the reason shown above its paths. */
 export type IgnoreSection = { key: keyof typeof IGNORE_SECTION_TITLES | 'settings'; title: string; patterns: string[] };
 
-/** A config file paired with the repository and scope that own it. */
 export type OwnedConfigFile = { configFile: ConfigFile; owner: ConfigFileOwner };
 
-/** A whole config file with the text built for one scope. */
 export type BuiltConfigFile = OwnedConfigFile & {
     configFile: WholeConfigFile;
     file: GeneratedFile;
     companions: GeneratedFile[];
 };
 
-/** The mutable destinations and output files collected during one generation. */
 export type GeneratedConfigFiles = { targets: Map<string, Map<string, string>>; files: Map<string, GeneratedFile> };
 
-/** The check and program names that make a config file apply. */
 export type UsedNames = { tools: Set<string>; checks: Set<string> };
 
-/** A component file dialect, its parser, and the syntax it allows. */
 export type StylelintComponent = {
     files: readonly string[];
     customSyntax: string;

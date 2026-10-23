@@ -2,7 +2,6 @@ import { SETTINGS_COMMANDS } from '#cli/config/generation/rules.ts';
 
 export const OPENAPI_CONFIGURATION = 'openapi';
 
-/** Each SDK root picks its xcodebuild destination during init. */
 export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
     ['iphoneos', 'generic/platform=iOS Simulator'],
     ['iphonesimulator', 'generic/platform=iOS Simulator'],

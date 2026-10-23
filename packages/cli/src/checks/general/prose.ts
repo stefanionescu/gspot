@@ -25,12 +25,6 @@ import {
     VALE_ERROR_LINE,
 } from '#cli/config/checks/general/prose.ts';
 
-/**
- * Reads the alerts of each file from the Vale JSON output.
- *
- * @param stdout what Vale printed.
- * @returns the alerts of every file.
- */
 function parseValeAlerts(stdout: string): ValeAlert[] {
     return Object.entries(parseToolReport('Vale', stdout, valeReportSchema)).flatMap(([file, alerts]) =>
         alerts.map((alert) => ({
@@ -43,8 +37,6 @@ function parseValeAlerts(stdout: string): ValeAlert[] {
     );
 }
 
-// Vale runs with --no-exit, so alerts leave the exit code at 0. Any other code means Vale itself failed, which never
-// counts as a pass.
 function assertValeRan(result: SpawnResult): void {
     if (result.code === 0 && !result.missing) return;
     const lines = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
@@ -109,12 +101,6 @@ async function runValeOnStdin(
     }));
 }
 
-/**
- * Selects how Vale reads a file, or undefined when Vale has nothing to read in it.
- *
- * @param file a tracked source.
- * @returns the grammar and input mode, or undefined.
- */
 function selectRoute(file: TrackedFile): ProseRoute | undefined {
     const extension = extractExtension(file.path);
     const grammars: Readonly<Record<string, Omit<ProseRoute, 'path'>>> = PROSE_GRAMMARS;
@@ -123,16 +109,9 @@ function selectRoute(file: TrackedFile): ProseRoute | undefined {
     return grammar === undefined ? undefined : { path: file.path, mode: grammar.mode, extension: grammar.extension };
 }
 
-/**
- * Groups routes by shared arguments: path-read files by extension, and each stdin file alone.
- *
- * @param files the scope sources.
- * @returns the groups, path-read first.
- */
 function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
     const routes = files.map((file) => selectRoute(file)).filter((route) => route !== undefined);
     const pathRoutes = routes.filter((each) => each.mode === 'path');
-    // Map.groupBy creates a group only when its first route exists.
     const byExtension = [...Map.groupBy(pathRoutes, (route) => route.extension).values()].map(
         (group) => group as ProseRouteGroup,
     );

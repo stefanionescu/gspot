@@ -21,7 +21,6 @@ export function buildLycheeFile(planned: PlannedConfigFile): string {
     const { configurations, settings } = planned.scope;
 
     const exclude = [...getTable(settings, 'docs').allowed_urls, LYCHEE_MDX_EXPRESSION];
-    // site/lychee checks the routes in the built site, so lychee skips them.
     const document = configurations.some((configuration) => configuration.name === SITE_CONFIGURATION)
         ? { exclude: [...exclude, LYCHEE_ROOT_LINKS] }
         : { exclude, remap: [`${LYCHEE_ROOT_LINKS} ${LYCHEE_REPOSITORY_LINKS}`] };

@@ -1,4 +1,3 @@
-// Reads, compares, and replaces one contained file or link.
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
@@ -29,7 +28,6 @@ import {
     writeFileSync,
 } from 'node:fs';
 
-// Create a missing parent. A competing creator may finish first.
 function prepareParentFolder(folder: string): Stats {
     try {
         return lstatSync(folder);
@@ -44,7 +42,6 @@ function prepareParentFolder(folder: string): Stats {
     return lstatSync(folder);
 }
 
-// Read the bytes and mode of a regular file with one link.
 function readRegularFile(absolutePath: string, stat: Stats, path: string): FileContents {
     if (!stat.isFile() || stat.nlink !== 1)
         throw new GspotError(
@@ -55,7 +52,6 @@ function readRegularFile(absolutePath: string, stat: Stats, path: string): FileC
     return { bytes, mode: normalizeFileMode({ mode: stat.mode & MODE_BITS }) };
 }
 
-// Check the same parent folders before a read or a prepared write.
 function walkParentFolders(bounds: FileBounds, path: string, statParent: (path: string) => Stats): string {
     const segments = splitSystemPath(path);
     let folder = bounds.root;
@@ -71,7 +67,6 @@ function walkParentFolders(bounds: FileBounds, path: string, statParent: (path: 
     return join(bounds.root, ...segments);
 }
 
-// A synchronous replacement must finish its flush before the caller continues.
 function writeStagedFile(temporary: string, contents: FileContents): void {
     const file = openSync(temporary, 'wx', PRIVATE_FILE);
     try {
@@ -86,8 +81,6 @@ function writeStagedFile(temporary: string, contents: FileContents): void {
     closeSync(file);
 }
 
-// Windows cannot rename over a read-only file, so that file goes first. Recovery after an interrupted replacement
-// treats an absent destination as not written.
 function isRenameBlocked(expected: FileContents | undefined): boolean {
     if (process.platform !== 'win32' || expected === undefined || expected.isLink === true) return false;
     return (expected.mode & OWNER_WRITE_BIT) === 0;
@@ -170,7 +163,6 @@ export function readBoundedKeepingLinks(bounds: FileBounds, path: string): FileC
     try {
         const target = buildContainedPath(bounds, path);
         const stat = lstatSync(target);
-        // Read the file contents of a symbolic link: the path it points to, and its own mode.
         return stat.isSymbolicLink()
             ? { bytes: Buffer.from(readlinkSync(target)), mode: PERMISSION_BITS, isLink: true }
             : readRegularFile(target, stat, path);

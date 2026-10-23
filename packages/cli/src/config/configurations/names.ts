@@ -5,7 +5,6 @@ export const ESLINT_MANIFEST_TOOL = 'eslint';
 
 export const CONFIGURATIONS_FOLDER = 'configurations';
 
-/** The configuration groups that a manifest folder may name. */
 export const GROUPS = [
     'language',
     'framework',
@@ -17,7 +16,6 @@ export const GROUPS = [
     'general',
 ] as const;
 
-/** The title of each configuration group. init and the docs list the groups in this order. */
 export const GROUP_LABELS = {
     language: 'Languages',
     framework: 'Frameworks',
@@ -31,7 +29,6 @@ export const GROUP_LABELS = {
 
 export const MAX_EXIT_CODE = 255;
 
-/** The levels, from the fewest checks to the most. */
 export const LEVELS = ['recommended', 'all'] as const;
 
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
@@ -56,7 +53,6 @@ export const SWIFT_CONFIGURATION = 'swift';
 
 export const JAVASCRIPT_CONFIGURATION = 'javascript';
 
-/** Tool folders replaced as complete installations. */
 export const TOOL_FOLDER_KINDS = ['npm', 'python', 'vale'] as const;
 
 export const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;

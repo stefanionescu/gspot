@@ -1,7 +1,6 @@
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { SITE_SETTINGS } from '#tests/config/checks/framework/site/pages.ts';
 
-// Lychee prints a local file URL with a third slash on Windows.
 const FILE_URL = isWindows ? 'file:///' : 'file://';
 
 export const SITE_CASES = [
@@ -12,7 +11,6 @@ export const SITE_CASES = [
     },
 ] as const;
 
-/** The root checks HTML; two site scopes run their own builds, and one accessibility ignore covers the app scope. */
 export const TWO_SITE_TABLES = `[[ignore]]
 check = "site/html-validate"
 rule = "wcag/h37"
@@ -42,7 +40,6 @@ export const ALT_TEXT_PAGE = `<!doctype html>
 </html>
 `;
 
-/** Rule ignores stay inside their site, with or without an HTML configuration at the root. */
 export const BUILT_HTML_SITES = [
     { name: 'a root HTML configuration', configurations: ['html'], files: { 'index.html': ALT_TEXT_PAGE } },
     { name: 'site-only child configurations', configurations: [], files: {} },
@@ -181,7 +178,6 @@ export const OUTPUT_CASES = [
     },
 ] as const;
 
-/** Built pages with one located accessibility finding and its fix. */
 export const MISSING_ALT_PAGE = `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Example</title></head>

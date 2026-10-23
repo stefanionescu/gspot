@@ -11,5 +11,4 @@ name = "example"
 version = "1.0.0"
 ${PYTHON_PROJECT_OPTIONS}`;
 
-/** The shared Python project with Google-style pydoclint settings. */
 export const GOOGLE_PYPROJECT = `${PYPROJECT}\n${PYDOCLINT_GOOGLE}`;

@@ -70,7 +70,6 @@ export const PACKAGE_STYLE_CASES = [
     {
         rule: 'gspot.straight-quotes',
         sample: 'Use \u2018native\u2019 text.',
-        // One finding for each curly quote.
         findings: [
             [0, 'gspot.straight-quotes'],
             [0, 'gspot.straight-quotes'],
@@ -83,7 +82,6 @@ One native branch.
 =======
 The other native branch.
 >>>>>>> native`,
-        // The ======= line makes the two lines above it a heading, which the heading and acronym rules read.
         findings: [
             [0, 'gspot.title-case'],
             [0, 'gspot.merge-conflict-markers'],

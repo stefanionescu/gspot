@@ -34,7 +34,6 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
     expect(parsed['default']).toMatchObject({ 'extend-words': Object.fromEntries(words.map((word) => [word, word])) });
     const { 'extend-exclude': excluded, ...otherFiles } = parsed['files'] as { 'extend-exclude': string[] };
     expect(otherFiles).toStrictEqual({});
-    // Your paths follow the generated ones, and the reason text adds no exclusion of its own.
     expect(excluded.slice(-paths.length)).toStrictEqual(paths);
     expect(excluded).not.toContain('**');
 });

@@ -23,7 +23,6 @@ import {
     COUNTED_FUNCTION_NODES,
 } from '#cli/config/checks/general/structure/trivial-functions.ts';
 
-// Executable bodies exclude Python docstrings and Swift declarations without bodies.
 function extractFunctionBody(node: Node, language: ParsedLanguage): Node[] {
     const body = node.childForFieldName('body') ?? node;
     const siblings =
@@ -41,7 +40,6 @@ function isBashStatement(node: Node): boolean {
     return node.type.endsWith('_statement') && node.type !== 'compound_statement';
 }
 
-// How many executable statements one node counts as in each language, before counting its children.
 const STATEMENT_COUNTS: Record<ParsedLanguage, (node: Node) => number> = {
     swift: (node) => (node.parent?.type === 'statements' ? 1 : 0),
     python: (node) => {
@@ -52,7 +50,6 @@ const STATEMENT_COUNTS: Record<ParsedLanguage, (node: Node) => number> = {
     bash: (node) => (isBashStatement(node) ? 1 : 0),
 };
 
-// A Python alias assigns a bare name or attribute, and `__all__` lists the names that the module re-exports.
 function isPythonAlias(node: Node): boolean {
     const assignment = node.namedChildren[0];
     if (node.type !== 'expression_statement' || assignment?.type !== 'assignment') return false;
@@ -64,29 +61,19 @@ function isPythonAlias(node: Node): boolean {
     );
 }
 
-// The statements that forward code in one language: a Python alias, or a Bash command that sources another script.
 const LANGUAGE_FORWARDING: Record<ParsedLanguage, (node: Node) => boolean> = {
     python: isPythonAlias,
     swift: () => false,
     bash: (node) => node.type === 'command' && BASH_SOURCE_COMMANDS.has(node.childForFieldName('name')?.text ?? ''),
 };
 
-// Imports, re-exports, and aliases forward code that another module owns.
 function isForwarding(node: Node, language: ParsedLanguage): boolean {
     if (FORWARDING_NODES.has(node.type) || node.type.startsWith('import')) return true;
-    // A type alias forwards when it names an existing type and declares nothing of its own.
     if (TYPE_ALIAS_NODES.has(node.type))
         return TYPE_REFERENCE_NODES.has((node.childForFieldName('value') ?? node.namedChildren.at(-1))?.type ?? '');
     return LANGUAGE_FORWARDING[language](node);
 }
 
-/**
- * Count executable statements, including nested function and callback bodies, without type-only declarations.
- *
- * @param nodes the body to count.
- * @param language the grammar of the file.
- * @returns the count, including one for each expression-bodied lambda.
- */
 function countExecutableStatements(nodes: Node[], language: ParsedLanguage): number {
     let count = 0;
     for (const node of nodes) {
@@ -101,13 +88,6 @@ function countExecutableStatements(nodes: Node[], language: ParsedLanguage): num
     return count;
 }
 
-/**
- * Checks whether a file only forwards code: each statement imports, re-exports, or renames.
- *
- * @param syntaxRoot the parsed file.
- * @param language the grammar of the file.
- * @returns whether the file holds nothing but forwarding statements.
- */
 function isTrivialFile(syntaxRoot: Node, language: ParsedLanguage): boolean {
     const siblings = syntaxRoot.namedChildren;
     const statements = siblings.filter(
@@ -129,12 +109,6 @@ function formatAccessorName(node: Node, label: string): string {
     return name === undefined ? label : `${label} of ${name}`;
 }
 
-/**
- * Names a Swift function, or an accessor or observer with its declaration.
- *
- * @param node the Swift function or accessor.
- * @returns the label for the finding.
- */
 function formatSwiftFunctionName(node: Node): string {
     const name = node.childForFieldName('name')?.text ?? SWIFT_FUNCTION_LABELS[node.type] ?? 'function';
     return SWIFT_ACCESSOR_NODES.has(node.type) ? formatAccessorName(node, name) : name;

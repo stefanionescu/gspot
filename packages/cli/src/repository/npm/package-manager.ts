@@ -42,12 +42,6 @@ export function assertPackageManager(pin: PackageManagerPin | undefined): Packag
     return pin;
 }
 
-/**
- * Split a packageManager field such as `npm@11.17.0+sha512.abc` into a name and a version.
- *
- * @param field the text of the field in package.json.
- * @returns the name and the version, without the hash.
- */
 function parsePackageManagerField(field: string): PackageManagerPin {
     const [name, requested, ...verbatim] = field.split('@');
     if (verbatim.length > 0) throw new Error('The packageManager field of package.json is not valid.');
@@ -55,7 +49,6 @@ function parsePackageManagerField(field: string): PackageManagerPin {
     return packageManagerPinSchema.parse({ name, version });
 }
 
-// Read the package manager from the packageManager fields and the lockfiles.
 async function readFirstPackageManager(
     root: string,
     packageJsonPaths: string[],
@@ -81,12 +74,6 @@ export function isYarnBerry(packageManager: PackageManager): boolean {
     return semver.major(packageManager.version) >= YARN_BERRY_MAJOR;
 }
 
-/**
- * Read the package manager pin of a package.json; install validates its version later.
- *
- * @param packageJson the validated package.json.
- * @returns the packageManager field first, then the first devEngines entry, or nothing.
- */
 function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
     if (packageJson.packageManager !== undefined)
         return {
@@ -113,8 +100,6 @@ function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | 
  * @returns the manager name and its declared or detected version, when present.
  */
 export async function detectPackageManager(repositoryRoot: string, trackedPaths: string[]): Promise<PackageManagerPin> {
-    // The package manager of the root package.json wins. Without it, the first nested package.json gives one stable
-    // package manager for the tools.
     const packageJsonPaths = [
         PACKAGE_JSON,
         ...trackedPaths

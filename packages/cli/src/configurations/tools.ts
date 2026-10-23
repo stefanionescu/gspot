@@ -17,12 +17,6 @@ import type {
     ToolProjectPackage,
 } from '#cli/types/configurations.ts';
 
-/**
- * Find the mise package and version, with the backend that the manifest names.
- *
- * @param tool the tool to read.
- * @returns the installer pin with its backend prefix, or undefined for a system tool.
- */
 function findMiseInstaller(tool: Tool): InstallerPin | undefined {
     if (tool.system === true) return undefined;
     return tool.installers['mise'];
@@ -200,7 +194,6 @@ export function findMissingBuild(tool: Tool, host: Host): string | undefined {
     const named: readonly string[] = tool.builds;
     if (named.includes(platform) || named.includes(`${platform}-${arch}`)) return undefined;
     const label = OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform;
-    // A pin that names the system with another architecture lacks only this architecture.
     return named.some((systemName) => systemName.startsWith(`${platform}-`)) ? `${arch} ${label}` : label;
 }
 

@@ -10,7 +10,6 @@ export type SetOptions = {
 
 export type ParsedSettingValue = { type: 'list'; value: unknown[] } | { type: 'scalar'; value: unknown };
 
-/** A proposed setting value and the reason rules that apply to it. */
 export type SettingReasonContext = {
     options: SetOptions;
     setting: Setting;

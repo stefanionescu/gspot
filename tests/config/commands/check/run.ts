@@ -1,4 +1,3 @@
-/** A check that records the files it gets and passes corrected ones. */
 export const QUALITY_COMMAND = [
     'node',
     '-e',
@@ -7,7 +6,6 @@ export const QUALITY_COMMAND = [
     '{files}',
 ] as const;
 
-/** A fixer that records the files it gets and writes the corrected text into each. */
 export const QUALITY_FIX = [
     'node',
     '-e',

@@ -17,7 +17,6 @@ import {
     FIXED_SECRET_FILES,
 } from '#tests/config/integration/checks/general/secrets/gitleaks.ts';
 
-// Start a Git repository with the secrets configuration applied.
 async function prepareSecrets(root: string): Promise<void> {
     runGitStep(root, ['init', '-q']);
     await createFileTree(root, { 'gspot.toml': buildSandboxSettings(['secrets']) });
@@ -25,7 +24,6 @@ async function prepareSecrets(root: string): Promise<void> {
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 }
 
-// Commit a clean base, then the secrets, then their removal, and return the three revisions.
 async function prepareHistory(root: string): Promise<GitleaksHistory> {
     await prepareSecrets(root);
     await createFileTree(root, FIXED_SECRET_FILES);
@@ -42,7 +40,6 @@ async function prepareHistory(root: string): Promise<GitleaksHistory> {
     return { base, leaked, removed };
 }
 
-/** The staged and pushed scans must keep both findings, real columns, and redaction. */
 function assertSecretFindings(check: CheckResult | undefined, output: string, prefix: string): void {
     expect(check?.status).toBe('failed');
     expect(

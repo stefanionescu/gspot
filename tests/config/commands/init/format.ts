@@ -94,7 +94,6 @@ export const SCOPE_FORMAT_CASES = [
     },
 ] as const;
 
-/** The format options that init writes from Prettier overrides and the Ruff quote style. */
 export const PRETTIER_FORMAT_OPTIONS = {
     quotes: 'double',
     override: [
@@ -103,7 +102,6 @@ export const PRETTIER_FORMAT_OPTIONS = {
     ],
 } as const;
 
-/** Workspaces whose format settings init reads. */
 export const FORMAT_WORKSPACE_FILES = {
     'package.json': '{"private":true,"workspaces":["app","app/deep","sibling"]}',
     'app/package.json': '{"private":true}',

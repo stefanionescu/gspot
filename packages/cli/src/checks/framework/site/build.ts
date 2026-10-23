@@ -32,13 +32,6 @@ async function runSiteBuild(session: Session, planned: PlannedCheck, copyRoot: s
     return { cwd, command, folder, isBuilt, failure };
 }
 
-/**
- * Builds the site once per scope and shares the build with later checks.
- *
- * @param session the repository and its tools.
- * @param planned the scope to build.
- * @returns the build that every caller shares.
- */
 function getSiteBuild(session: Session, planned: PlannedCheck): Promise<SiteBuild> {
     const key = join(session.root, planned.scope.folder.path);
     const scopeBuilds = getCachedValue(session.reads, SITE_BUILDS);

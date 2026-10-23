@@ -1,4 +1,3 @@
-/** Settings with scopes for the stage arguments. */
 export const STAGE_SCOPE_SETTINGS = {
     level: 'all',
     rules: true,

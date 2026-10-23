@@ -22,8 +22,6 @@ import {
     GIT_UNTRACKED_FILES_ARGUMENTS,
 } from '#cli/config/repository/files/tracked.ts';
 
-// A link to a folder, or one that leaves the repository, stays out of the inventory, so checks cannot read past it. A
-// dangling link remains listed with no size.
 function readSymlinkFile(root: string, path: string): ListedFile | undefined {
     const link = { path, size: 0, executable: false, symlink: true };
     let target: string;
@@ -48,7 +46,6 @@ function readListedFile(
     if (stat === undefined) return undefined;
     if (stat.isSymbolicLink()) {
         if (INSTALLED_DEPENDENCY_FOLDERS.has(posix.basename(path))) return undefined;
-        // Inventory installed links without reading the dependencies they point to outside this root.
         if (
             path
                 .split('/')
@@ -96,7 +93,6 @@ function walkPaths(root: string): string[] {
     return paths;
 }
 
-// Run a Git listing and return its text, or throw with the Git error.
 async function listGitFiles(
     root: string,
     gitArguments: readonly string[],
@@ -160,7 +156,6 @@ export async function listTrackedFiles(
             ? walkPaths(repositoryRoot)
             : [...index.map((indexFile) => indexFile.path), ...listed.split('\0').filter(Boolean)];
     const submodules = listSubmodulePaths(index);
-    // Windows file systems keep no executable bit, so the same index listing supplies it.
     const executables =
         process.platform === 'win32'
             ? new Set(

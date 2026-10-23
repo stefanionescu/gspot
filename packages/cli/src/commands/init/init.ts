@@ -49,12 +49,6 @@ import type {
     DetectionSummary,
 } from '#cli/types/commands/init.ts';
 
-/**
- * Detect configurations, show the plan, and write the files after you accept it.
- *
- * @param options the flags and the settings edit choices.
- * @returns the command result.
- */
 async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJson>> {
     const root = findRoot(options.cwd);
     if (findText(root, SETTINGS_FILE) !== undefined)
@@ -127,13 +121,6 @@ export function registerInit(program: Command, onResult: CommandCompletion): voi
         });
 }
 
-/**
- * Read the repository and build the plan that init shows before it writes.
- *
- * @param root the folder whose files decide detection and tool replacement.
- * @param options the flags.
- * @returns the plan, the settings text, and the files it read.
- */
 async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
     const reads = createReadCache(root);
     const configurations = readConfigurations();
@@ -186,7 +173,6 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     };
 }
 
-// The plan has one confirmation; --yes accepts it without a terminal.
 async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
     if (yes) return true;
     if (!(process.stdin.isTTY && process.stdout.isTTY && !isCI))
@@ -196,7 +182,6 @@ async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
     return answer;
 }
 
-// Delete a conflicting config file only when its bytes still match the plan.
 function deleteConflictingConfigFiles(
     writer: Writer,
     deleted: InitPlanning['deleted'],
@@ -213,13 +198,6 @@ function deleteConflictingConfigFiles(
     return kept;
 }
 
-/**
- * Write the settings and generated files, and delete the conflicting config files.
- *
- * @param root the folder where init writes the accepted changes.
- * @param initPlan the plan and file reads from planInit.
- * @returns the lines to print.
- */
 function writeInitFiles(root: string, initPlan: InitPlanning): string[] {
     using writer = openWriter(root);
     const { session, generated } = initPlan;
@@ -236,13 +214,6 @@ function writeInitFiles(root: string, initPlan: InitPlanning): string[] {
     ];
 }
 
-/**
- * Choose the CI provider from the existing files and the origin host.
- *
- * @param root the folder whose origin remote gives the host when no CI files exist.
- * @param repositorySetup the tool and CI files that init found.
- * @returns the provider to propose, or none when the repository needs no workflow.
- */
 function detectCiProvider(root: string, repositorySetup: RepositorySetup): InitAnswers['ci'] {
     if (readLintJobs(root, repositorySetup.ci).length > 0) return 'none';
     let previous: InitAnswers['ci'] | undefined;

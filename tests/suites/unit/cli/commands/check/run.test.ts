@@ -76,7 +76,6 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
     const corrected = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 2, findings: [] });
-    // A second correction pass reruns the fixer over the files the first pass changed.
     for (const log of ['checked.txt', 'fixed.txt']) {
         const logText = await readFile(join(sandbox.path, log), 'utf8');
         for (const line of logText.trim().split('\n'))

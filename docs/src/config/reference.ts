@@ -1,6 +1,4 @@
-/** A code span, which generated reference text keeps as written. */
 const CODE_SPAN = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)/u;
-/** A tag that generated reference text writes on purpose: a heading with its anchor, or code. */
 const KEPT_TAG = /<\/?(?:h[2-6]|code)(?:\s[^<>]*)?>/u;
 
 export const INLINE_CODE_SPAN = /(`[^`]+`)/u;
@@ -16,7 +14,6 @@ export const GUIDES = {
     prose: 'checks/prose',
 } as const;
 
-/** Labels for the conditions that select configurations and rules. */
 export const DETECTION_LABELS = {
     extensions: 'file extensions',
     filenames: 'filenames',
@@ -28,7 +25,6 @@ export const DETECTION_LABELS = {
     project_files: 'project files',
 } as const;
 
-/** Plain labels for JSON Schema types in the settings and rule option tables. */
 export const SCHEMA_TYPE_LABELS = {
     string: 'Text',
     integer: 'Whole number',
@@ -38,7 +34,6 @@ export const SCHEMA_TYPE_LABELS = {
     object: 'Table',
 } as const;
 
-/** Labels for how often a check runs. */
 export const CHECK_RUN_LABELS = {
     once: 'once for the repository',
     scope: 'once per scope',
@@ -46,14 +41,12 @@ export const CHECK_RUN_LABELS = {
     history: 'once for pushed history',
 } as const;
 
-/** What each need of a check asks for. */
 export const CHECK_NEEDS_LABELS = {
     build: 'a build of the project',
     docker: 'Docker, running',
     network: 'network access',
 } as const;
 
-/** When to choose each level. */
 export const LEVEL_ADVICE = {
     recommended: 'Choose it for an existing codebase or a first run.',
     all: 'Choose it for a new repository or one that coding agents write.',
@@ -68,39 +61,28 @@ export const REFERENCE_FOLDERS = {
     checks: 'checks',
     eslintPlugin: 'eslint-plugin',
 } as const;
-/** The first sentence of a text: everything up to the first period that ends a sentence. */
 export const FIRST_SENTENCE = /^[\s\S]*?\.(?=\s|$)/u;
 export const DOCS_SOURCE_NAME = 'gspot-docs';
 export const REFERENCE_IDS_KEY = 'reference-ids';
 export const PAGES_FOLDER = 'src/content/docs';
-/** Matches code spans and kept tags to keep, and markup to escape, in generated reference text. */
 export const MARKDOWN_ESCAPES = new RegExp(`${CODE_SPAN.source}|${KEPT_TAG.source}|[<>]`, 'gu');
 
-/** Matches code blocks and code spans to keep, and command flags outside them to put in code. */
 export const FLAGS_OUTSIDE_CODE = /```[\s\S]*?```|`[^`]*`|(?<![\w-])--[a-z][a-z-]*/gu;
 
 export const HTML_BRACKET_ENTITIES: Readonly<Record<string, string>> = { '<': '&lt;', '>': '&gt;' };
 
 export const SECTION_HEADING = /^## /mu;
-/** A list of allowed values longer than this prints as a count; editors read the full list from the schema. */
 export const LISTED_VALUES_LIMIT = 12;
-/** The check that reads the suppression comments of every tool. */
 export const SUPPRESSIONS_CHECK = 'gspot/suppressions';
 
-/** The name of the keys of a map table, such as the language under limits. */
 export const MAP_KEY_NAME = '<name>';
 export const ANGLE_BRACKETS = /[<>]/gu;
-/** The heading level of a gspot.toml table on the settings page; its keys sit one level below. */
 export const TABLE_HEADING_LEVEL = 2;
-/** How a reasoned value reads in the accepted values of a setting. */
 export const REASONED_VALUE_LABEL = 'a reasoned value `{ value = …, reason = "…" }`';
-/** The characters that a heading ID leaves out of the heading text, as Starlight writes it. */
 export const HEADING_ID_DROPPED = /[^\p{L}\p{N} _-]/gu;
-/** The placeholders of the language and the category of names in a language table key. */
 export const LANGUAGE_PLACEHOLDER = '<language>';
 export const CATEGORY_PLACEHOLDER = '<category>';
 
-/** The guide page of each configuration that has one. */
 export const CONFIGURATION_GUIDES: Readonly<Record<string, string>> = {
     javascript: GUIDES.javascript,
     typescript: GUIDES.javascript,
@@ -121,7 +103,6 @@ export const CONFIGURATION_GUIDES: Readonly<Record<string, string>> = {
     spelling: GUIDES.prose,
 };
 
-/** The environment variables that change what gspot does, and what each one does. */
 export const ENVIRONMENT_VARIABLES: readonly [name: string, meaning: string][] = [
     ['`NO_COLOR`', 'Any nonempty value turns color off.'],
 ];

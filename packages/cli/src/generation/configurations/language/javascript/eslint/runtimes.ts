@@ -56,7 +56,6 @@ export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
     return blocks;
 }
 
-// The runtime of the framework of a scope covers its code files, apart from CommonJS files, scripts, and child scopes.
 function buildFrameworkRuntime(scope: Scope, escaped: string, children: string[]): EslintRuntime | undefined {
     const runtime = selectFrameworkRuntime(scope.settings.configurations);
     if (runtime === undefined) return undefined;

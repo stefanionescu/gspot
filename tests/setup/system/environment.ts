@@ -1,14 +1,6 @@
-// Change environment variables and the terminal for a test, and restore them when its scope ends.
-
 import { mock } from 'bun:test';
 import * as systemEnvironment from 'std-env';
 
-/**
- * Set or clears one environment variable for this process and the tools it spawns.
- *
- * @param name the key in process.env to set or remove.
- * @param value text to set, or undefined to clear.
- */
 function setEnvironmentVariable(name: string, value: string | undefined): void {
     if (value === undefined) Reflect.deleteProperty(process.env, name);
     else process.env[name] = value;

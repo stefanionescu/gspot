@@ -1,4 +1,3 @@
-// Writes fake executables and npm packages, and fakes child commands and executable lookup.
 import executables from 'which';
 import { spyOn, type Mock } from 'bun:test';
 import { quoteArgument } from '#cli/system/text.ts';

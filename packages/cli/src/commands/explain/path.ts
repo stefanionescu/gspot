@@ -15,13 +15,6 @@ function formatUncheckedKind(file: TrackedFile): string | undefined {
     return undefined;
 }
 
-/**
- * Find the scope, kind, configurations, checks, and ignores of one tracked file, and say why no check reads it.
- *
- * @param session the configurations, files, and ignores of this run.
- * @param file the tracked path to explain.
- * @returns the report for the file.
- */
 function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
     const folder = findScopeFolder(path, session.repository.scopeFolders);
@@ -29,7 +22,6 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
     const checks = session.configuredChecks.filter((check) =>
         listCheckedFiles(session.scopes, check).some((checkedFile) => checkedFile.path === file.path),
     );
-    // A configuration applies to the file when one of its checks reads it, so the two lists agree.
     const covering = new Set(
         checks.flatMap(({ configuration }) => (configuration === undefined ? [] : [configuration.name])),
     );

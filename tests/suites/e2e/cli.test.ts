@@ -15,7 +15,6 @@ import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
 import { createUserProject } from '#tests/setup/sandboxes/user-project.ts';
 import { STARTING_FILES, SHELLCHECK_SYNTAX_FINDINGS } from '#tests/config/e2e/cli.ts';
 
-/** Check which conflicting config files init replaced and kept, before the test reads the check report. */
 async function assertConflictingConfigFiles(root: string, output: string): Promise<void> {
     const { plan } = JSON.parse(output) as InitJson;
     expect(plan.delete).toStrictEqual([]);
@@ -54,7 +53,6 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     expect(checks.map(({ check, status }) => ({ check, status }))).toStrictEqual(
         ['bash/shellcheck', 'dependencies/lockfiles', 'format/prettier'].map((check) => ({ check, status: 'failed' })),
     );
-    // The throwaway registry serves HTTP archives, which the lockfile of the test project must report.
     const lockfileHosts = checks.find(({ check }) => check === 'dependencies/lockfiles')!.findings;
     expect(lockfileHosts.length).toBeGreaterThan(0);
     for (const finding of lockfileHosts) {
@@ -82,10 +80,6 @@ test('init replaces formatter files, keeps your notes and CLAUDE.md, and check r
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe(STARTING_FILES['authored.txt']);
 });
 
-/**
- * Install the format configuration in a Bun project. The fake mise prints the pinned mise version and does nothing else,
- * so install skips the mise programs that format/prettier does not need.
- */
 async function prepareFormatterSandbox(installation: UserProject) {
     const toolConsumer = join(installation.workspace, 'tool-consumer');
     const systemTools = join(installation.workspace, 'system-tools');

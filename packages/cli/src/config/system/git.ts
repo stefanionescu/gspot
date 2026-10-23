@@ -1,6 +1,5 @@
 export const TRAILING_NEWLINE = /\n$/u;
 
-/** Git resolves these single-path variables relative to the original hook folder. */
 export const GIT_PATH_VARIABLES = [
     'GIT_DIR',
     'GIT_WORK_TREE',
@@ -12,18 +11,14 @@ export const GIT_PATH_VARIABLES = [
     'GIT_CONFIG',
 ] as const;
 
-/** Git settings from the command line may carry credentials, and apply to both repositories. */
 export const GIT_COMMAND_CONFIGURATION: ReadonlySet<string> = new Set(['GIT_CONFIG_COUNT', 'GIT_CONFIG_PARAMETERS']);
 
-/** This command creates a new repository and does not read the .git folder of the calling one. */
 export const GIT_CLONE_COMMAND = 'clone';
 
 export const GIT_EXECUTABLE = 'git';
 
-/** Git reports this exit code when repository discovery fails. */
 export const NOT_REPOSITORY_CODE = 128;
 
-/** The pager and command configuration do not point Git at another repository. */
 export const GIT_NONLOCAL_ENVIRONMENT_NAME = /^GIT_(?:PAGER|CONFIG_(?:COUNT|PARAMETERS|KEY_\d+|VALUE_\d+))$/u;
 
 export const GIT_WORK_TREE_ARGUMENTS = ['rev-parse', '--is-inside-work-tree'] as const;

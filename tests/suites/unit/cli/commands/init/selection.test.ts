@@ -28,7 +28,6 @@ import {
     PLATFORM_PROJECT_FILES,
 } from '#tests/config/commands/init/selection.ts';
 
-// List the configurations that init plans, without writing.
 async function listPlannedConfigurations(root: string): Promise<string[]> {
     const result = await runGspot(root, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);

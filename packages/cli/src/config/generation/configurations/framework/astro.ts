@@ -11,7 +11,6 @@ export const ASTRO_RULES = {
     'astro/prefer-split-class-list': 'error',
 } as const;
 
-/** Astro's processor exposes component return values without the typed service's return contract. */
 export const ASTRO_TYPED_RULES = { '@typescript-eslint/no-unsafe-return': 'off' } as const;
 
 export const ASTRO_SCRIPT_FILES = ['**/*.astro/*.ts', '**/*.astro/*.js'] as const;

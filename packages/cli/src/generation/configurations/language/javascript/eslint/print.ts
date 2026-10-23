@@ -1,4 +1,3 @@
-// Print JavaScript imports, selectors, and readable ESLint configuration objects.
 import ts from 'typescript';
 import { isDeepStrictEqual } from 'node:util';
 import type { Level } from '#cli/types/configurations.ts';
@@ -84,7 +83,6 @@ export function serializeBlock(
     return printConfiguration(`{${members.join(', ')}}`);
 }
 
-// Rebuild objects and arrays as multiline syntax without changing their expressions.
 function formatSyntaxNode(node: ts.Node, context: ts.TransformationContext): ts.VisitResult<ts.Node> {
     const child = ts.visitEachChild(node, (childNode) => formatSyntaxNode(childNode, context), context);
     if (ts.isObjectLiteralExpression(child)) {
@@ -105,7 +103,6 @@ function formatSyntaxNode(node: ts.Node, context: ts.TransformationContext): ts.
     return child;
 }
 
-// The constructed export always contains one expression and the transformer preserves it.
 function printConfiguration(literal: string): string {
     const source = ts.createSourceFile(
         'eslint-block.js',
@@ -147,7 +144,6 @@ export function serializePresetAccess(importName: string, source: string): strin
     );
 }
 
-// The names that a generated module reads: every identifier except object keys and the names after a dot.
 function listReadNames(text: string): Set<string> {
     const names = new Set<string>();
     const visit = (node: ts.Node): void => {

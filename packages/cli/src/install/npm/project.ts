@@ -1,4 +1,3 @@
-// Prepare and install the npm tool project.
 import which from 'which';
 import semver from 'semver';
 import { join } from 'node:path';
@@ -40,7 +39,6 @@ import {
     YARN_SETTINGS_FILE_VARIABLE,
 } from '#cli/config/install/npm/project.ts';
 
-// Resolve in a temporary folder, and keep repository credentials out of the portable result.
 async function createNpmLockfile(
     install: ToolInstall,
     toolProjectFile: GeneratedFile,
@@ -65,8 +63,6 @@ async function createNpmLockfile(
         writeFileSync(join(runFolder, project.lockfile), recorded);
     const lockfileArguments = selectPackageManagerArguments(packageManager).lockfile;
     const days = getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days;
-    // The minimum release age applies where npm chooses versions. A frozen install takes them from the lockfile, and
-    // npm ci ignores min-release-age-exclude for lockfile entries without a URL.
     const run = await runPackageManager(install, {
         runFolder,
         packageManager,
@@ -89,27 +85,12 @@ async function createNpmLockfile(
     return lockfile;
 }
 
-/**
- * Select the lockfile and frozen-install arguments for the package manager.
- *
- * @param packageManager the declared name and major version.
- *
- * @returns the arguments of both operations.
- */
 function selectPackageManagerArguments(packageManager: PackageManager): PackageManagerArguments {
     const yarn = isYarnBerry(packageManager) ? YARN_ARGUMENTS.berry : YARN_ARGUMENTS.classic;
     const commandArguments = packageManager.name === 'yarn' ? yarn : PACKAGE_MANAGER_ARGUMENTS[packageManager.name];
     return { lockfile: [...commandArguments.lockfile], install: [...commandArguments.install] };
 }
 
-/**
- * Run a package manager operation with private registry routing.
- *
- * @param install what install needs for this step.
- * @param request the package-manager operation and routing.
- *
- * @returns the private routing environment and credentials to keep out of lockfiles.
- */
 async function runPackageManager(install: ToolInstall, request: PackageManagerCommand): Promise<PackageManagerRun> {
     const { root } = install.session;
     const { runFolder, packageManager, commandArguments, failure } = request;

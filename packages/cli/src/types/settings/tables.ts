@@ -1,10 +1,8 @@
 import type { SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
 import type { COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
 
-/** One package version allowed under a license that the list does not allow. */
 type AllowedPackage = { name: string; version: string; reason: string };
 
-/** The parsed table of each configuration in gspot.toml, by table name. */
 export type ConfigurationTables = {
     cloudflare: { types_file: string; types_interface: string };
     coverage: Record<(typeof COVERAGE_DIMENSIONS)[number], number> & {

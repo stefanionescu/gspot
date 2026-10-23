@@ -91,7 +91,6 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     expect(parseCommandFindings(planned, corrected, paths).findings).toStrictEqual([]);
 });
 
-// Windows has no Zsh; Linux and macOS run the check.
 test.skipIf(isWindows).each([...SYNTAX_CASES])(
     '$check accepts clean files and reports a syntax error in $path',
     async (row) => {
@@ -111,7 +110,6 @@ test.skipIf(isWindows).each([...SYNTAX_CASES])(
             await writeFile(path, row.broken);
             const broken = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', row.check, '--json']));
             expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-            // The shell writes the message, and its wording differs between shell versions.
             expect(broken.report.checks).toMatchObject([
                 {
                     check: row.check,

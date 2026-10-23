@@ -78,7 +78,6 @@ export const CONFLICTING_LOCAL_PLUGIN_FILES = {
     'tools/lint/second.mjs': LOCAL_PLUGIN,
 };
 
-/** The settings error of one plugin name with two modules. */
 export const DUPLICATE_PLUGIN_ERROR = {
     name: 'GspotError',
     code: 'settings',

@@ -20,7 +20,6 @@ export const GROUPED_PBXPROJ = `// !$*UTF8*$!
 }
 `;
 
-/** Build settings need no main group or source paths. */
 export const BUILD_SETTINGS_PBXPROJ =
     '{rootObject=P;objects={P={isa=PBXProject;};D={isa=XCBuildConfiguration;buildSettings={SDKROOT=macosx;SWIFT_VERSION=6.0;};};};}';
 
@@ -56,7 +55,6 @@ export const ASSET_SETTING_CASES = [
     },
 ] as const;
 
-/** Invalid resource files give source findings, not run errors. */
 export const INVALID_RESOURCE_DOCUMENTS = [
     { check: 'xcode/xcstrings', path: 'Localizable.xcstrings', text: 'null' },
     { check: 'xcode/assets', path: 'Assets.xcassets/Logo.imageset/Contents.json', text: '{"images":"invalid"}' },
@@ -73,7 +71,6 @@ export const UNREADABLE_RESOURCES = [
     },
 ] as const;
 
-/** A string catalog whose second string has no French translation. */
 export const PARTLY_TRANSLATED_STRINGS = {
     sourceLanguage: 'en',
     version: '1.0',
@@ -89,7 +86,6 @@ export const ENTITLEMENT_DOCUMENTS = {
     allowed: '<plist><dict><key>nested-capability</key><true/></dict></plist>',
 } as const;
 
-/** The xcode/entitlements result of each scope. */
 export const ENTITLEMENT_SCOPE_RESULTS = [
     { scope: '', status: 'passed' },
     { scope: 'app', status: 'passed' },
@@ -100,7 +96,6 @@ export const ENTITLEMENT_SCOPE_RESULTS = [
 const LOGO_CONTENTS = 'App/Assets.xcassets/Logo.imageset/Contents.json';
 const LOGO_IMAGE = 'App/Assets.xcassets/Logo.imageset/logo.png';
 
-/** An image set that a Swift view names, with its image file and the finding when the repository lacks the image. */
 export const LOGO_IMAGE_SET = {
     contents: LOGO_CONTENTS,
     image: LOGO_IMAGE,

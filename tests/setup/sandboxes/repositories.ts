@@ -1,4 +1,3 @@
-// Creates the Git repositories of the push, nested repository, and Git Large File Storage (LFS) tests.
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { HOOKS_SETTINGS } from '#tests/config/setup/cli.ts';

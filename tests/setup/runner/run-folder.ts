@@ -1,4 +1,3 @@
-// Names the test-run folder of this checkout, and reads the Bun and Node versions that it pins.
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
@@ -8,7 +7,6 @@ import { DIGEST_ALGORITHM } from '#cli/config/files/hashes.ts';
 import { runtimeSettingsSchema } from '#tests/schemas/preparation.ts';
 import { TOOL_PINS_FILE, TEST_RUN_HASH_LENGTH, TEST_RUN_FOLDER_NAME } from '#tests/config/setup/runner.ts';
 
-/** The packages and tool paths of the test run for this checkout, named after the checkout folder. */
 export const TEST_RUN_FOLDER = join(
     tmpdir(),
     `${TEST_RUN_FOLDER_NAME}-${createHash(DIGEST_ALGORITHM)

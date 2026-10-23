@@ -1,4 +1,3 @@
-// Proposes configurations from repository files and dependencies; it never selects them.
 import { findText } from '#cli/system/files/reads.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { extractExtension } from '#cli/system/paths.ts';
@@ -100,7 +99,6 @@ function findFilenameEvidence(detect: Configuration['detect'], contents: ScopeCo
     return file === undefined ? undefined : { evidence: file.path };
 }
 
-// A project file names the project it marks, so use the file as evidence and its folder as a scope.
 function findProjectEvidence(detect: Configuration['detect'], contents: ScopeContents): DetectionEvidence | undefined {
     for (const pattern of detect.project_files) {
         const found = contents.files.find((file) => findProjectFolder(file.path, pattern) !== undefined);

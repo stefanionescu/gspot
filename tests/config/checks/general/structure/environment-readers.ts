@@ -36,14 +36,12 @@ main "$@"
     },
 ] as const;
 
-/** Source lines distinguish member reads from comments and string literals. */
 export const SWIFT_ENVIRONMENT_SOURCE = `let live = ProcessInfo.processInfo.environment["KEY"]
 // ProcessInfo.processInfo.environment
 let literal = "ProcessInfo.processInfo.environment"
 let spaced = ProcessInfo . processInfo . environment
 `;
 
-/** Python imports with aliases, to tell environment reads from shadowed and unrelated names. */
 export const PYTHON_ENVIRONMENT_SOURCE = `import os as system
 from os import environ as values, getenv as read
 first = system.environ["KEY"]

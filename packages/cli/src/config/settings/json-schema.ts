@@ -9,7 +9,6 @@ export const INTERNAL_FACT_KEYS = [
     'path_role',
     'default_all',
 ] as const;
-/** What each top-level table of gspot.toml holds, for editors that show the schema on hover. */
 export const TABLE_DESCRIPTIONS: Readonly<Record<string, string>> = {
     scope: 'Settings for one folder: its configurations and the tables that differ from the root.',
     import_rule:

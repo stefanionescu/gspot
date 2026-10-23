@@ -34,7 +34,6 @@ tool = "semgrep"
 per_scope = true
 `;
 
-/** One tool, a config file that names no tool or check, and one that names a check. */
 export const SINGLE_CONFIG_FILES = `
 [[tool]]
 name = "semgrep"
@@ -57,7 +56,6 @@ file = "package.json"
 
 export const EXAMPLE_MANIFEST_PATH = 'configurations/language/example/manifest.toml';
 
-/** The public reader runs once in a separate process for each package fixture. */
 export const MANIFEST_READER_SCRIPT = `
 import { spyOn } from 'bun:test';
 import { tmpdir } from 'node:os';
@@ -90,7 +88,6 @@ try {
 }
 `;
 
-/** The source and target of each discovered config file. */
 export const SEMGREP_CONFIG_FILE_PATHS: string[][] = [
     ['config-files/other.yml', `${GSPOT_PATHS.configurations}/language/example/other.yml`],
     ['config-files/semgrep/first.yml', `${GSPOT_PATHS.configurations}/language/example/semgrep/first.yml`],
@@ -98,12 +95,9 @@ export const SEMGREP_CONFIG_FILE_PATHS: string[][] = [
     ['config-files/semgrep/not-a-pack.txt', `${GSPOT_PATHS.configurations}/language/example/semgrep/not-a-pack.txt`],
 ];
 
-/** Replacement items that a manifest refuses. */
-/** A tool that replaces two of your files and one key of package.json. */
 export const REPLACEMENT_TABLES =
     '[[tool]]\nname = "native"\nversion = "1.0.0"\nreplace = [".native", "native.json"]\n[[tool.replace_key]]\nfile = "package.json"\nkey = "native"\n';
 
-/** [[tool]] tables that a manifest refuses, with the path and message of the refusal inside the tool. */
 export const TOOL_TABLE_REFUSALS = [
     {
         name: 'a rule page without {rule}',

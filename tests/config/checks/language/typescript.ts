@@ -2,7 +2,6 @@ export const ROOT_PORT_SOURCE = 'export const port = 8080;\n';
 
 export const CHILD_PORT_SOURCE = 'export const port = 3000;\n';
 
-/** A tsconfig.json that TypeScript cannot read, the error that names the file, and the file to fix. */
 export const TSCONFIG_READ_ERRORS = [
     {
         name: 'an invalid property',
@@ -32,13 +31,11 @@ export const TSCONFIG_READ_ERRORS = [
     {
         name: 'a missing inherited configuration',
         tsconfig: '{"extends":"./missing.json","compilerOptions":{"strict":true}}',
-        // TypeScript prints the inherited path with forward slashes on every system.
         error: /Cannot read file '.*\/missing\.json'/u,
         fixed: 'missing.json',
     },
 ] as const;
 
-/** Compiler options that level recommended accepts. */
 export const RECOMMENDED_COMPILER_OPTIONS = {
     compilerOptions: {
         strict: true,
@@ -49,7 +46,6 @@ export const RECOMMENDED_COMPILER_OPTIONS = {
     },
 } as const;
 
-/** The typescript/tsconfig finding of a scope that adds a tsconfig. */
 export const MISSING_TSCONFIG_FINDINGS = [
     {
         check: 'typescript/tsconfig',
@@ -61,7 +57,6 @@ export const MISSING_TSCONFIG_FINDINGS = [
     },
 ] as const;
 
-/** The two compiler options that level all requires and level recommended does not. */
 export const ALL_LEVEL_OPTION_FINDINGS = [
     { file: 'tsconfig.json', rule: 'noImplicitReturns', message: 'noImplicitReturns is not on in this tsconfig.' },
     {
@@ -71,7 +66,6 @@ export const ALL_LEVEL_OPTION_FINDINGS = [
     },
 ] as const;
 
-/** The type-check flags that the all-level TypeScript policy requires. */
 const STRICT_TYPE_FLAGS = {
     strict: true,
     noFallthroughCasesInSwitch: true,
@@ -82,7 +76,6 @@ const STRICT_TYPE_FLAGS = {
     noPropertyAccessFromIndexSignature: true,
 } as const;
 
-/** Compiler options that the all-level TypeScript policy requires. */
 export const STRICT_COMPILER_OPTIONS = {
     ...STRICT_TYPE_FLAGS,
     target: 'ES2022',
@@ -96,6 +89,5 @@ export const STRICT_TSCONFIG_TEXT = JSON.stringify({ compilerOptions: STRICT_TYP
 
 export const COMPILER_SOURCE = 'export const value = missing;\n';
 
-/** An ignore of the noImplicitReturns option of typescript/tsconfig. */
 export const IMPLICIT_RETURNS_IGNORE =
     '[[ignore]]\ncheck = "typescript/tsconfig"\nrule = "noImplicitReturns"\nreason = "Returns are checked separately."\n';

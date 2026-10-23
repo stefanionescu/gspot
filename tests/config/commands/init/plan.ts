@@ -1,6 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
-/** Git-dependent plan rows belong only to a repository with a Git index. */
 export const GIT_PLAN_CASES = [
     { name: 'a folder outside Git', hasGit: false, changes: [GSPOT_PATHS.miseProject, GSPOT_PATHS.npmProject] },
     {
@@ -10,7 +9,6 @@ export const GIT_PLAN_CASES = [
     },
 ] as const;
 
-/** The write row of a conflicting .editorconfig. */
 export const EDITORCONFIG_WRITE = [
     {
         path: '.editorconfig',
@@ -18,7 +16,6 @@ export const EDITORCONFIG_WRITE = [
     },
 ] as const;
 
-/** A React app with a quality package that installs ts-morph. */
 export const QUALITY_PACKAGE_FILES = {
     'package.json': '{"name":"shop","private":true,"type":"module","dependencies":{"react":"19.0.0"}}\n',
     'src/app.tsx': 'export const App = () => null;\n',
@@ -27,7 +24,6 @@ export const QUALITY_PACKAGE_FILES = {
     '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n',
 } as const;
 
-/** A setup.cfg with flake8 and SQLFluff sections. */
 export const SHARED_SETUP_FILES = {
     'setup.cfg': `[flake8]
 ignore = E501

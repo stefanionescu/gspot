@@ -9,13 +9,6 @@ import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
 import type { Writer, WritePlan, ManagedKeys } from '#cli/types/apply.ts';
 import { TOML_EXTENSION, EMPTY_JSON_TEXT, JSON_SETTINGS_EXTENSIONS } from '#cli/config/apply/write/managed-keys.ts';
 
-/**
- * Open a shared settings file after checking its encoding.
- *
- * @param path the file, which also picks the format.
- * @param onDisk the existing file, or undefined when generation creates it.
- * @returns the editable document.
- */
 function openSettingsDocument(path: string, onDisk: FileContents | undefined): EditableFile {
     const text = onDisk === undefined ? undefined : decodeUtf8Text(path, onDisk.bytes);
     const source = text ?? '';

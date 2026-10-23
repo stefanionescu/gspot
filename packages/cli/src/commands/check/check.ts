@@ -20,7 +20,6 @@ import { Option, type Command, InvalidArgumentError } from '@commander-js/extra-
 import { PROGRESS_CLEAR, CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
 import type { CheckFlags, CheckOptions, CheckCommandJson } from '#cli/types/commands/check.ts';
 
-// Read the lines that Git writes to the pre-push hook; the signal stops the read.
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
     cancelSignal.throwIfAborted();
     const decoder = new TextDecoder('utf-8', { fatal: true });
@@ -98,7 +97,6 @@ function assertPushFlags(flags: CheckFlags): void {
         );
 }
 
-// The staged selector has one spelling in argument and Git refusals.
 function formatStagedFlag(hook: CheckFlags['hook']): string {
     if (hook === 'pre-commit') return '--hook pre-commit';
     return '--staged';
@@ -152,7 +150,6 @@ function assertReadableMessageFile(options: CheckOptions): void {
     }
 }
 
-// Validate the flags before reading the Git pre-push input or starting a check.
 function parseCheckFlags(paths: string[], flags: CheckFlags, cwd: string): { root: string; options: CheckOptions } {
     if (flags.dryRun === true && flags.fix !== true)
         throw new GspotError('arguments', '--dry-run previews the fixes. Add --fix.');
@@ -165,7 +162,6 @@ function parseCheckFlags(paths: string[], flags: CheckFlags, cwd: string): { roo
     return { root, options };
 }
 
-// Check a copy of the staged index, and write the report in the working tree.
 async function checkStaged(
     root: string,
     options: CheckOptions,
@@ -183,7 +179,6 @@ async function checkStaged(
     });
 }
 
-// Check the pushed revisions, a copy of the staged index, or the working tree.
 async function runCheckCommand(
     root: string,
     options: CheckOptions,
@@ -197,7 +192,6 @@ async function runCheckCommand(
     return await (options.staged ? checkStaged(root, options, cancelSignal) : checkTree(root, options, cancelSignal));
 }
 
-// Run check with an abort signal that the termination signals trigger.
 async function runCheck(paths: string[], flags: CheckFlags, cwd: string): Promise<CommandResult<CheckCommandJson>> {
     try {
         return await runCancelableCommand(async (cancelSignal) => {

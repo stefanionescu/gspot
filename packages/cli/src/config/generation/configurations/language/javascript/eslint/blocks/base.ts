@@ -16,7 +16,6 @@ export const IMPORT_LAYOUT_RULES = {
 
 export const BARREL_FILES_RULE = 'barrel-files/avoid-barrel-files';
 
-/** Plugins that the shared JavaScript rule tables use. */
 export const ESLINT_PLUGIN_IMPORTS = {
     gspot: ['gspot', '@gspothq/eslint-plugin'],
     'import-x': ['importX', 'eslint-plugin-import-x'],
@@ -44,13 +43,11 @@ export const RUNTIME_GLOBALS: Readonly<Record<string, string>> = { node: 'nodeBu
 
 export const NODE_RUNTIMES: readonly string[] = ['node', 'nodeBuiltin', 'commonjs'] as const;
 
-/** Plugins loaded by the all level and its permitted barrel exports. */
 export const LEVEL_ALL_PLUGIN_IMPORTS = {
     perfectionist: ['perfectionist', 'eslint-plugin-perfectionist'],
     'barrel-files': ['barrelFiles', 'eslint-plugin-barrel-files'],
 } as const;
 
-/** The boundaries plugin accompanies emitted dependency policies. */
 export const BOUNDARIES_PLUGIN_IMPORT = { boundaries: ['boundaries', 'eslint-plugin-boundaries'] } as const;
 
 export const JAVASCRIPT_RULES = {
@@ -81,7 +78,6 @@ export const TEST_RULES = {
     'n/no-unpublished-require': 'off',
 } as const;
 
-/** The root package.json names its package manager, at level all. */
 export const ROOT_PACKAGE_JSON_RULES = { 'package-json/require-packageManager': 'error' } as const;
 
 export const BASE_RULES = {
@@ -100,16 +96,13 @@ export const NODE_RULES = {
     'n/no-unsupported-features/es-builtins': 'error',
     'n/no-deprecated-api': 'error',
     'unicorn/no-process-exit': 'off',
-    // TypeScript owns syntax support.
     'n/no-unsupported-features/es-syntax': 'off',
     'n/no-sync': 'off',
     'n/no-callback-literal': 'error',
     'n/no-new-require': 'error',
     'n/no-path-concat': 'error',
-    // TypeScript and import-x resolve imports; a second resolver disagrees on aliases.
     'n/no-missing-import': 'off',
     'n/no-missing-require': 'off',
-    // A type-only import never reaches runtime, so its package may stay unpublished.
     'n/no-unpublished-import': ['error', { ignoreTypeImport: true }],
     'n/no-unpublished-require': 'error',
     'n/no-extraneous-import': 'error',

@@ -67,7 +67,6 @@ function listOutdatedBlocks(files: Files, generated: GenerationResult): Outdated
     return outdated;
 }
 
-// List the shared files that went missing or lack a managed key.
 function listOutdatedManagedKeys(files: Files, generated: GenerationResult): OutdatedFile[] {
     return generated.managedKeys.flatMap((output): OutdatedFile[] => {
         const onDisk = files.read(output.path);

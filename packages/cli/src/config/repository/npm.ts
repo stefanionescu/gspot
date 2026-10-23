@@ -5,14 +5,12 @@ export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 
 export const NYPM_DETECTION_OPTIONS = { ignoreArgv: true, ignorePackageJSON: true, includeParentDirs: false } as const;
 
-/** The first Yarn major that reads .yarnrc.yml and drops the Classic flags. */
 export const YARN_BERRY_MAJOR = 2;
 
 export const NPM_TOOL = 'npm';
 export const LOCAL_PATH_PREFIX = './';
 export const PATHS_BASE_OPTION = 'pathsBasePath';
 export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm', 'yarn'] as const;
-/** The runner, the install help, and the exact pin command of each package manager. */
 export const START_RUNNERS = {
     npm: {
         command: 'npm exec --no -- gspot',

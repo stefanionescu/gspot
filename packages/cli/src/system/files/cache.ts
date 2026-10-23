@@ -1,4 +1,3 @@
-// Caches source bytes and computed values for one run.
 import { realpathSync } from 'node:fs';
 import { type CacheKey, type ParseKey, type ReadCache, type CachedSourceFiles } from '#cli/types/system/files.ts';
 
@@ -11,7 +10,6 @@ import { type CacheKey, type ParseKey, type ReadCache, type CachedSourceFiles } 
  */
 export function getCachedValue<Value extends object>(reads: ReadCache, key: CacheKey<Value>): Value {
     const held = reads.values.get(key);
-    // Only the producer of this key writes its entry, so its return type matches the stored value.
     if (held !== undefined) return held as Value;
     const value = key.create();
     reads.values.set(key, value);
@@ -61,7 +59,6 @@ export async function parseCached<Sources extends CachedSourceFiles, Value exten
     sources: Sources,
     key: ParseKey<Sources, Value>,
 ): Promise<Value> {
-    // This key decides both the result type of the reader and its entries for each path list.
     const promises =
         (sources.reads.values.get(key) as Map<string, Promise<Value>> | undefined) ?? new Map<string, Promise<Value>>();
     sources.reads.values.set(key, promises);

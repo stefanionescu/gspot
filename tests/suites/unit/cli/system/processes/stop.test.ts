@@ -12,14 +12,12 @@ import { isWindows, simulateOperatingSystem } from '#tests/setup/system/platform
 import { CHILD_TIMEOUT_SECONDS, DESCENDANT_TIMEOUT_MILLISECONDS } from '#tests/config/system/processes.ts';
 import { waitForExit, waitForFile, startCommand, limitToTestDeadline } from '#tests/setup/system/processes.ts';
 
-/** Whether the supervisor stopped the child: a signal on a POSIX host, an exit code on Windows. */
 function isStopped(child: childProcess.ChildProcess | undefined): boolean {
     if (child === undefined) return false;
     if (isWindows) return child.exitCode !== null;
     return child.signalCode !== null;
 }
 
-/** Start a capture of an idle child, then fail the stdout stream of that child. */
 function startFailedCapture(capture: 'text' | 'bytes', root: string) {
     using children = spyOn(childProcess, 'spawn');
     const running = captureProcess(capture, [process.execPath, '-e', 'setInterval(() => {}, 1000)'], { cwd: root });
@@ -34,7 +32,6 @@ test('a failed text stream read stops the child and returns a failed result that
     const { running, child } = startFailedCapture('text', sandbox.path);
     try {
         const result = await running;
-        // The line before it names the stop, which differs between POSIX signals and Windows exit codes.
         expect({
             timedOut: result.timedOut,
             canceled: result.canceled,
@@ -172,7 +169,6 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
 
     await using sandbox = await testdir();
     const signal = process.kill.bind(process);
-    // macOS refuses to signal a group after its members exit, before their parent collects them.
     resources.use(
         spyOn(process, 'kill').mockImplementation((pid, kind) => {
             if (pid < 0) throw Object.assign(new Error('Operation not permitted'), { code: 'EPERM' });
@@ -275,7 +271,6 @@ test('a finished stream keeps the reader error after cleanup', async () => {
     ).toBe(refusal);
 });
 
-/** Capture a command as text or bytes through the same test process timeout. */
 async function captureProcess(
     capture: 'text' | 'bytes',
     command: string[],

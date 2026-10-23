@@ -16,7 +16,6 @@ http {
 }
 `;
 
-/** An nginx file with dynamic and local targets, which names no host. */
 const DYNAMIC_TARGET_CASE = {
     name: 'dynamic and local targets',
     source: 'events {} http { server { server localhost; server unix:/tmp/socket; server ${upstream}; proxy_pass $url; unrelated api; ssl_certificate $cert; ssl_certificate_key /etc/nginx/key.pem; ssl_trusted_certificate /etc/nginx/cert.pem; ssl_certificate /etc/nginx/cert.pem; } }',
@@ -24,7 +23,6 @@ const DYNAMIC_TARGET_CASE = {
     certificates: ['/etc/nginx/key.pem', '/etc/nginx/cert.pem'],
 } as const;
 
-/** The mount cases: configuration text, the hosts it names, and the certificate paths it reads. */
 export const NGINX_MOUNT_CASES = [
     {
         name: 'certificate paths and upstream hosts',

@@ -30,7 +30,6 @@ import {
     INHERITED_CONFIGURATION_SETTINGS,
 } from '#tests/config/commands/samples.ts';
 
-// Remove bash from the scope, and return the result and the saved settings.
 async function removeBashSelection(root: string, scope: string) {
     const result = await runGspot(root, [
         'remove',

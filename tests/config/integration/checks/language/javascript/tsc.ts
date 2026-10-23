@@ -178,7 +178,6 @@ export const SCOPE_JSCONFIG_PATHS = [
     `${GSPOT_PATHS.configurations}/language/javascript/scopes/sibling/jsconfig.json`,
 ] as const;
 
-/** A project imports a declaration file from outside the folder of its jsconfig. */
 export const IMPORTED_AMBIENT_FILES = {
     'base.json':
         '{"compilerOptions":{"strict":true,"types":[],"allowJs":true,"checkJs":true,"noEmit":true,"baseUrl":".","paths":{"shared-api":["types/api.d.ts"]}}}',
@@ -190,7 +189,6 @@ export const IMPORTED_AMBIENT_FILES = {
 
 export const JSCONFIG_SANDBOX = { configurations: ['javascript'], level: 'all', files: BASE_INSTALLED_FILES } as const;
 
-/** The javascript/tsc results when the project has no TypeScript of its own. */
 export const OWN_TYPESCRIPT_RESULTS = [
     {
         check: 'javascript/tsc',

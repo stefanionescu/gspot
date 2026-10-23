@@ -32,13 +32,11 @@ export const REASON_VALUES = [
     },
 ] as const;
 
-/** Naming limits with distinct language defaults and one stricter child value. */
 export const NAMING_SCOPE_LIMITS = [
     { key: 'naming.swift.max_characters', shipped: 40, child: 38 },
     { key: 'naming.sql.max_words', shipped: 7, child: 7 },
 ] as const;
 
-/** The scope values of a setting explanation. */
 export const SCOPE_SETTING_EXPLANATION = {
     scopes: [
         { scope: 'api', current: 90, source: '[scope "api"]' },

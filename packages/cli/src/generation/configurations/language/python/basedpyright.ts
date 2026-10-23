@@ -22,7 +22,6 @@ export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
         posix.relative(posix.dirname(planned.targetPath), '.'),
         planned.scope.folder.path,
     );
-    // uv records the environment beside its tracked lockfile, even before the environment exists locally.
     const pythonVenv = planned.session.repository.files.some(
         (file) => file.path === joinScope(planned.scope.folder.path, PROJECT_UV_LOCKFILE),
     )

@@ -290,12 +290,6 @@ export function listKeptComments(syntax: TomlSyntax, destination: TomlTable, wri
     return comments;
 }
 
-/**
- * Identify nonempty arrays of parsed tables for section layout.
- *
- * @param value the parsed input.
- * @returns whether every array item holds a plain table.
- */
 function isRecordArray(value: unknown): value is Record<string, unknown>[] {
     return Array.isArray(value) && value.length > 0 && value.every(isTable);
 }

@@ -50,7 +50,6 @@ function buildToolProjectRows(configurations: Configuration[]): InitPlan['change
     return rows;
 }
 
-// Name the dependencies that the generated tool project pins. Keep your own dependency file.
 function buildToolDependencyRows(
     { repository, repositorySetup }: InitScan,
     requirements: Configuration[],
@@ -83,8 +82,6 @@ function buildToolDependencyRows(
     });
 }
 
-// List the CI files that init leaves alone: every CI file when init writes no workflow and finds no lint job, and every
-// lint job.
 function buildKeptCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: string[]): InitPlan['retained'] {
     const untouched =
         ci === 'none' && lintJobs.length === 0

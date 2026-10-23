@@ -14,7 +14,6 @@ import {
     PYTHON_TYPE_ALIAS_ANNOTATION,
 } from '#cli/config/checks/general/naming/languages/python.ts';
 
-// The block that holds a definition: the body of a class, the body of a function, or the module.
 function getHolderType(node: Node): string {
     const block = node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent;
     return block?.type === 'block' ? (block.parent?.type ?? 'module') : 'module';
@@ -28,7 +27,6 @@ function addClasses(found: FileIdentifiers, root: Node): void {
     }
 }
 
-// The identifier inside a splat such as *verbatim or **flags, or the node itself.
 function unwrapSplat(node: Node | null): Node | null {
     if (node === null || !PYTHON_SPLAT_NODES.has(node.type)) return node;
     return node.namedChildren[0] ?? null;

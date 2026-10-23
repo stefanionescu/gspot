@@ -1,10 +1,8 @@
 import type { SettingDefinition } from '#cli/types/settings/definitions.ts';
 
-/** What both levels check. The level setting, the docs, and the agent steps show this text. */
 export const LEVEL_SUMMARY =
     "Correctness, security, accessibility, type safety, routine formatting, and the project's own declared checks apply at both levels.";
 
-/** What level all adds. The level setting, the docs, and the agent steps show this text. */
 export const ALL_LEVEL_SUMMARY =
     'Level `all` adds checks and rules for word choice, architecture, naming, doc comments, declaration order, duplication, API style, and complexity.';
 

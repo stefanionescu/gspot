@@ -1,4 +1,3 @@
-/** Syncpack filenames for replacement checks. */
 export const SYNCPACK_FILES = [
     {
         file: '.syncpackrc.yaml',

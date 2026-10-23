@@ -1,4 +1,3 @@
-// Builds tracked files and reads the files of a sandbox repository.
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';

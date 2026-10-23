@@ -50,7 +50,6 @@ test.skipIf(!hasToolBuild('swiftformat'))(
     },
 );
 
-// Run SwiftFormat, check its exit code and scope results, and return the file, line, column, and rule of each finding.
 async function readFormatFindings(root: string, code: 0 | 1, scope: string) {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(code);
@@ -153,7 +152,6 @@ test.skipIf(!hasToolBuild('swiftformat'))(
     },
 );
 
-// The block comments at lines 1 and 9 of SWIFT_DOCS_SOURCE, as SwiftFormat reports them at level all.
 function blockCommentFindings(file: string) {
     return [
         [file, 1, 1, 'blockComments'],
@@ -161,7 +159,6 @@ function blockCommentFindings(file: string) {
     ];
 }
 
-// What SwiftFormat reports on line 9 of SWIFT_DOCS_SOURCE when gspot turns the blockComments rule off or ignores it.
 function spacedCommentFindings(file: string) {
     return [
         [file, 9, 1, 'docComments'],

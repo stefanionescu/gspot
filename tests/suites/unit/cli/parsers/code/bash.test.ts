@@ -62,7 +62,6 @@ test('one-line Bash functions count only their own parameters, not those of nest
         { name: 'inner', highestRead: 9 },
         { name: 'main', highestRead: 0 },
     ]);
-    // count holds the number of arguments of each call.
     expect(parsed.calls).toStrictEqual([
         { name: 'printf', count: 2, line: 1, forwards: false },
         { name: 'printf', count: 2, line: 1, forwards: false },

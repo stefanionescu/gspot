@@ -1,5 +1,3 @@
-/** The paths that each spelling exclusion leaves checked. Both generated config files must report them. */
-
 import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
 
 export const SPELLING_IGNORE_CASES = [
@@ -34,7 +32,6 @@ export const SPELLING_SANDBOX = {
 
 export const SPELLING_CHECK_ARGUMENTS = ['check', '--only', 'spelling/typos', '--json'] as const;
 
-/** Settings with a root and a scope spelling locale. */
 export const SPELLING_LOCALE_SETTINGS = {
     level: 'all',
     tables: `[spelling]

@@ -1,4 +1,3 @@
-// Build readable GitHub workflows and GitLab includes from the checks.
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
@@ -43,14 +42,12 @@ import {
     GITLAB_MANUAL_CONDITION,
 } from '#cli/config/generation/ci.ts';
 
-// Build an action pinned to a commit, with the version that the pin stands for as its comment.
 function buildActionPin({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);
     node.comment = ` ${version}`;
     return node;
 }
 
-// A first push has no base, so the job checks everything; otherwise it checks what changed after the base commit.
 function buildCheckScript(command: string): string {
     return [
         `base="\${${CI_BASE_VARIABLE}:-}"`,
@@ -63,7 +60,6 @@ function buildCheckScript(command: string): string {
     ].join('\n');
 }
 
-// The package manager runs through the same mise command as Node.js and the published gspot package.
 function buildGspotCommand(pipeline: Pipeline): string {
     const { packageManager } = pipeline;
     const tools = [CI_NODE, `npm:${cliPackage.name}@${pipeline.version}`];
@@ -72,7 +68,6 @@ function buildGspotCommand(pipeline: Pipeline): string {
     return `mise exec ${tools.map((tool) => quoteArgument(tool)).join(' ')} -- gspot`;
 }
 
-// Both providers select manual checks and their program builds for the machine that runs them.
 function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSystems'][number], arch: string) {
     const checks = pipeline.manualChecks.filter(
         (planned) => findSystemSkip(planned.check, planned.tool, { platform, arch }) === undefined,
@@ -137,7 +132,6 @@ function buildJob(
     };
 }
 
-// Keep provider job and step groups visually separate without changing their YAML values.
 function spaceWorkflowGroups(workflow: Document): void {
     const root = workflow.contents as YAMLMap<Scalar, Node>;
     for (const { key } of root.items.slice(1)) key.spaceBefore = true;
@@ -264,7 +258,6 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
 }
 
-// uv runs at the version that the gspot tools pin, through mise, which every CI job of gspot has.
 function buildFrozenInstall(session: Session, lockfile: string): readonly string[] | undefined {
     if (lockfile === PROJECT_UV_LOCKFILE) {
         const { version } = getTool(session.configurations.values(), UV_TOOL);

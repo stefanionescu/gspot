@@ -47,8 +47,6 @@ function addDefault(availableSettings: AvailableSettings, configuration: Configu
     });
 }
 
-// Add the settings of one configuration and their defaults, then its [defaults] for settings that other configurations
-// declare. Those apply only while the repository selects that configuration.
 function addConfigurationSettings(
     availableSettings: AvailableSettings,
     configuration: Configuration,
@@ -78,7 +76,6 @@ function addConfigurationSettings(
         addDefault(availableSettings, configuration, { ...setting, default: value });
 }
 
-// Map a JSON Schema type to the setting type that gspot list settings shows.
 function convertSchemaType(type: z.core.JSONSchema.JSONSchema['type']): Setting['type'] {
     if (type === 'array') return 'list';
     if (type === 'object') return 'table';

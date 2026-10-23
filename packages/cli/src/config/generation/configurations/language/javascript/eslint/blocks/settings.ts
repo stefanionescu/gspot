@@ -13,7 +13,6 @@ export const RESTRICTED_IMPORT_RULES: ReadonlySet<string> = new Set([
     '@typescript-eslint/no-restricted-imports',
 ]);
 
-/** Restrict environment reads to the environment readers. */
 export const ENVIRONMENT_RULES = {
     'n/no-process-env': ['error', { allowedVariables: ['NODE_ENV'] }],
     'no-restricted-properties': ['error', { object: 'Bun', property: 'env' }, { object: 'Deno', property: 'env' }],

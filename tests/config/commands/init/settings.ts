@@ -1,4 +1,3 @@
-/** Authored lint jobs that stop init from adding CI by itself, but not when a provider flag asks for it. */
 export const LINT_JOBS = [
     { name: 'a GitLab lint job', path: '.gitlab-ci.yml', content: 'quality:\n  script: npm run lint\n' },
     {
@@ -14,7 +13,6 @@ jobs:
     },
 ] as const;
 
-/** Repository CI signals and the provider each signal selects. */
 export const CI_PREFERENCE_CASES = [
     {
         name: 'a GitHub workflow before a GitLab remote',
@@ -89,7 +87,6 @@ export const IMPORT_STYLE_CASES = [
     },
 ] as const;
 
-/** A root and a site workspace. */
 export const WORKSPACE_SITE_FILES = {
     'package.json': '{"name":"root","private":true,"workspaces":["apps/*"]}',
     'source.ts': 'export const root = true;\n',

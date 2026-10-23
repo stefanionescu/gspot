@@ -1,4 +1,3 @@
-// Select the rules and build their managed block.
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { visit } from 'unist-util-visit';
@@ -28,7 +27,6 @@ import {
     RULE_OPENING_PREFIX,
 } from '#cli/config/generation/rules.ts';
 
-// List the rules of the configurations; a file with a condition installs only when the repository meets it.
 function listConfigurationRules(configurations: Configuration[], repository: Repository): ShippedRule[] {
     const conditions = configurations.flatMap((configuration) => Object.values(configuration.rules));
     const matched = detectConditions(conditions, repository.files, repository.dependencyFiles);
@@ -40,21 +38,11 @@ function listConfigurationRules(configurations: Configuration[], repository: Rep
     );
 }
 
-/**
- * Build the text of a rule file for a level: at recommended without its level-all sections, at all without the level
- * markers, which mean nothing to the reader.
- *
- * @param text the rule as written, with Markdown level markers.
- * @param level recommended or all.
- * @returns the original bytes outside the dropped sections or markers.
- */
 function buildLevelRuleText(text: string, level: Level): string {
     let through = 0;
     const output: string[] = [];
     for (const { start, end, marker } of parseHeadingSections(text)) {
         if (marker === undefined || start < through) continue;
-        // At level all, cut the marker line and one of the line breaks around it; at recommended, cut the whole
-        // section.
         const markerEnd =
             text.startsWith(BLANK_LINE, marker.end) && text.endsWith(BLANK_LINE, marker.start) ? BLANK_LINE.length : 1;
         const cut = level === 'all' ? { start: marker.start, end: marker.end + markerEnd } : { start, end };
@@ -100,18 +88,11 @@ function formatRulesIndex(files: RuleFile[]): string[] {
     ];
 }
 
-// The first command carries the start command; the others read as its subcommands.
 function formatSettingsCommands(startCommand: string): string {
     const commands = SETTINGS_COMMANDS.map((command, index) => (index === 0 ? `${startCommand} ${command}` : command));
     return new Intl.ListFormat('en', { type: 'disjunction' }).format(commands.map((command) => '`' + command + '`'));
 }
 
-/**
- * Find heading sections and their level markers, and skip headings inside code fences.
- *
- * @param text the Markdown rule as written.
- * @returns the source range and depth of each heading, and the source range of its level marker.
- */
 function parseHeadingSections(text: string): RuleSection[] {
     const nodes = fromMarkdown(text).children;
     const headings = nodes.flatMap((node, index) => {
@@ -133,7 +114,6 @@ function parseHeadingSections(text: string): RuleSection[] {
     }));
 }
 
-// List the rule file paths of the configurations that one scope selects.
 function listScopeRules(scope: Scope): Set<string> {
     return new Set(
         scope.configurations.flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path)),
@@ -228,7 +208,6 @@ export function buildAgentsBlock({
             'You can edit the other keys of that file.',
         ]),
     ];
-    // A file with its own title keeps one top heading, which markdownlint asks for.
     return (hasOwnTitle ? lines.map((line) => line.replace(MARKDOWN_HEADING, '#$1 ')) : lines).join('\n');
 }
 

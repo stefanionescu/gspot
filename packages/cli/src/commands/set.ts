@@ -15,7 +15,6 @@ import { setKey, addToList, getScopeTable, getWrittenValue } from '#cli/settings
 import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { type SetOptions, type ParsedSettingValue, type SettingReasonContext } from '#cli/types/commands/set.ts';
 
-// Structured values use the inline syntax of gspot.toml.
 function parseStructured(text: string): unknown {
     try {
         return parseTomlText(`value = ${text}`, 'value')['value'];
@@ -77,7 +76,6 @@ function editSetting(table: TomlTable, change: ParsedSettingValue, setting: Sett
     }
 }
 
-// gspot keeps reasons for values that loosen a check, so set refuses a reason on any other value before it writes.
 function assertReasonPresent({
     options,
     setting,
@@ -104,7 +102,6 @@ function formatSettingChange(
     if (isReasonTable) return `Added ${options.values.join(' and ')} to ${displayKey}.${was}`;
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
     if (!Array.isArray(change.value)) return `Set ${displayKey} to ${JSON.stringify(change.value)}.${reason}${was}`;
-    // A list value may hold a command, so each item keeps its quotes.
     const description =
         change.type === 'list'
             ? `Added ${change.value.map((value) => JSON.stringify(value)).join(', ')} to ${displayKey}.`
@@ -112,7 +109,6 @@ function formatSettingChange(
     return `${description}${reason}${was}`;
 }
 
-// A list change that drops the reason keeps the old reason only when the new reason covers every item.
 function assertReasonCoversList({ options, setting, change, previous, shippedDefault }: SettingReasonContext): void {
     if (
         change.type === 'list' &&
@@ -126,12 +122,6 @@ function assertReasonCoversList({ options, setting, change, previous, shippedDef
         );
 }
 
-/**
- * Write a setting, add list items, or change the keys of a table.
- *
- * @param options the parsed flags.
- * @returns the command result.
- */
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     if (Object.hasOwn(listRecordFields(), options.key))
         throw new GspotError(

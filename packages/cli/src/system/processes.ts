@@ -1,4 +1,3 @@
-// Runs programs with cancellation, timeout, and output collection.
 import { statSync } from 'node:fs';
 import { onExit } from 'signal-exit';
 import { execa, execaSync } from 'execa';
@@ -33,8 +32,6 @@ import {
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env = buildSpawnEnvironment(options.env);
-    // The launcher of a tool must find its sibling runtime and commands before unrelated tools on the executable search
-    // path.
     const path = Object.keys(env).find((name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH');
     if (isAbsolute(executable) && path !== undefined)
         env[path] = [dirname(executable), env[path]].filter((value) => value !== '').join(delimiter);
@@ -61,12 +58,9 @@ function buildAsyncExecaOptions(options: AsyncSpawnOptions, executable: string) 
     };
 }
 
-// Check whether a command names a file that does not exist. Bare names resolve through the executable search path at
-// spawn.
 function isExecutableAbsent(executable: string, cwd: string): boolean {
     if (!PATH_SEPARATORS.test(executable)) return false;
     const path = resolve(cwd, executable);
-    // Windows names an executable without its extension; the spawn shim tries each PATHEXT entry in turn.
     const extensions =
         process.platform === 'win32' ? (readEnvironmentVariable('PATHEXT') ?? PATHEXT_DEFAULT).split(';') : [];
     return [path, ...extensions.map((extension) => path + extension.toLowerCase())].every(
@@ -74,7 +68,6 @@ function isExecutableAbsent(executable: string, cwd: string): boolean {
     );
 }
 
-// A process that never ran, or stopped by a launch or stream error, reports a process failure, not a result.
 function isUnfinished(result: SpawnCompletion): boolean {
     if (result.exitCode === undefined) return true;
     if (result.code !== undefined) return true;
@@ -89,7 +82,6 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
     const messages: (string | undefined)[] = [result.stderr];
     if (unfinished) messages.push(result.shortMessage);
     return {
-        // A run that errored can still report exit 0; report it as failed.
         code: errored && code === 0 ? FAILED_CODE : code,
         stdout: result.stdout ?? '',
         stderr: messages.filter(Boolean).join('\n'),
@@ -101,11 +93,8 @@ function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult
     };
 }
 
-// The group has no process left to signal. macOS refuses the signal as not permitted, instead of reporting no such
-// process, when every member has exited but still waits for system cleanup.
 function isGroupGone(error: Error, child: ChildProcess): boolean {
     const hasExited = child.exitCode !== null || child.signalCode !== null;
-    // taskkill exits nonzero for each tree member that ended while it ran; once the root has exited, the tree has too.
     if (error instanceof GspotError) return process.platform === 'win32' && hasExited;
     if (!('code' in error)) return false;
     if (error.code === 'ESRCH') return true;
@@ -137,13 +126,6 @@ function stopProcessTree(child: ChildProcess, termination: ProcessTermination): 
     }, OUTPUT_CLOSE_MILLISECONDS);
 }
 
-/**
- * Watch a spawned process tree until its output and descendants finish.
- *
- * @param child the spawned process.
- * @param options the cancellation and timeout controls.
- * @returns how the process tree ended, and the cleanup step.
- */
 function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): ProcessTreeControl {
     const state = { timedOut: false, canceled: false };
     const termination: ProcessTermination = { stopped: false, failure: undefined, drainTimer: undefined };
@@ -197,7 +179,6 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
     };
 }
 
-// Wait for a process, build its result, and stop its process tree. spawnProcess and streamProcess both end here.
 async function finishProcess(
     child: RunningProcess,
     supervision: ProcessTreeControl,
@@ -220,7 +201,6 @@ async function finishProcess(
     }
 }
 
-// The reader owns standard output bytes and checks cancellation after the stream ends.
 async function readProcessOutput(
     child: RunningProcess,
     options: AsyncSpawnOptions,
@@ -239,8 +219,7 @@ function splitCommand(command: readonly string[], cwd: string, started: number):
     const [executable, ...commandArguments] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
     return isExecutableAbsent(executable, cwd)
-        ? // The executable file does not exist, so no process starts.
-          buildSpawnResult(
+        ? buildSpawnResult(
               {
                   code: 'ENOENT',
                   failed: true,

@@ -23,18 +23,11 @@ test.skipIf(!hasToolBuild('swiftlint') || Bun.which('swift') === null)(
     },
 );
 
-/**
- * Create the tutorial project, set up gspot as the quickstart says, and check that the hook rejects the invalid source.
- *
- * @param row the tutorial.
- */
 async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL): Promise<void> {
     await using sandbox = await testdir();
     const root = join(sandbox.path, row.folder);
     await mkdir(root);
     const environment = {
-        // uv init writes the author of the global Git settings into pyproject.toml. Without them, each machine starts the
-        // same project.
         ...GIT_ISOLATION_ENVIRONMENT,
         MISE_CONFIG_DIR: join(sandbox.path, 'config'),
         MISE_DATA_DIR: join(sandbox.path, 'data'),
@@ -53,7 +46,6 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
     }
     await createFileTree(root, row.files);
     commitAll(root);
-    // The tutorial commands. The first check fails on what the fixers then correct, unless the project starts clean.
     for (const { command, code } of [
         { command: ['mise', 'exec', '--', 'gspot', 'init', '--yes'], code: 0 },
         { command: ['mise', 'exec', '--', 'gspot', 'install'], code: 0 },
@@ -81,12 +73,6 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 }
 
-/**
- * Link the installed tool pins into the mise folders of the tutorial.
- *
- * @param tutorialRoot repository that the quickstart test creates.
- * @param environment mise folder variables for that repository.
- */
 async function linkQuickstartTools(tutorialRoot: string, environment: Record<string, string>): Promise<void> {
     for (const pin of listMisePins([...readConfigurations().values()]).filter((pin) => hasToolBuild(pin.name))) {
         const requirement = `${pin.name}@${pin.version}`;
@@ -96,15 +82,12 @@ async function linkQuickstartTools(tutorialRoot: string, environment: Record<str
         );
         expect(installed.code, `Quickstart tool lookup failed: ${installed.stdout}${installed.stderr}`).toBe(0);
         const location = installed.stdout.trim();
-        // The uv archive keeps its program in a subfolder of its install folder, so link the folder that holds the
-        // program.
         const folder = pin.name === 'uv' ? dirname(location) : location;
         const linked = await runCommand(['mise', 'link', requirement, folder], { cwd: tutorialRoot, env: environment });
         expect(linked.code, `Quickstart tool linking failed: ${linked.stdout}${linked.stderr}`).toBe(0);
     }
 }
 
-/** Check that the installed hook rejects the invalid staged source. */
 function assertCommitRejected(repositoryRoot: string, rule: string, environment: Record<string, string>): void {
     runGitStep(repositoryRoot, ['add', '-A']);
     const refused = runGit(repositoryRoot, ['commit', '-qm', 'feat: Add invalid source'], environment);

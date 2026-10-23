@@ -1,4 +1,3 @@
-// Reads staged paths and compares branches.
 import { GspotError } from '#cli/system/errors.ts';
 import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
@@ -16,7 +15,6 @@ import {
     GIT_CHANGED_COMMITS_ARGUMENTS,
 } from '#cli/config/repository/revisions/changes.ts';
 
-// List the remote branch refs, as pairs of the ref name and the branch it points to.
 async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
     const lines = await readGitLines(root, GIT_REMOTE_HEADS_ARGUMENTS, {
         cancelSignal,

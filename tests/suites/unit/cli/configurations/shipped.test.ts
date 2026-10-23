@@ -15,7 +15,6 @@ import { EACH_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import { readPresets } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import { ESLINT_PRESETS_FILE } from '#cli/config/generation/configurations/language/javascript/eslint/presets.ts';
 
-/** Find settings expanded by normal and repeated command placeholders. */
 function listCommandSettings(check: Check): string[] {
     return [...(check.command ?? []), ...(check.fix ?? [])].flatMap((argument) => {
         const repeated = EACH_PLACEHOLDER.exec(argument)?.groups?.['setting'];
@@ -25,7 +24,6 @@ function listCommandSettings(check: Check): string[] {
     });
 }
 
-/** Check whether a setting has no default or an empty one. */
 function hasEmptyDefault(setting: Setting | undefined): boolean {
     const value = setting?.default;
     return (
@@ -37,7 +35,6 @@ function hasEmptyDefault(setting: Setting | undefined): boolean {
     );
 }
 
-/** Report settings that no configuration declares, and empty settings that a check expands without waiting. */
 function listSettingMismatches(check: Check, declarations: ReadonlyMap<string, Setting>): string[] {
     const awaited = check.when?.setting;
     const mismatches = awaited !== undefined && !declarations.has(awaited) ? [`${check.id}: ${awaited}`] : [];

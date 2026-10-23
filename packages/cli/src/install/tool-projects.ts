@@ -19,7 +19,6 @@ import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
 import { installPythonTools, preparePythonLockfile, isPythonLockfileFresh } from '#cli/install/python/project.ts';
 
-// Preparation may replace a lockfile in the command's generated files.
 function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
     const index = files.findIndex((file) => file.path === lockfile.path);
     if (index === -1) files.push(lockfile);
@@ -63,12 +62,6 @@ export function listStaleLockfiles(
         });
 }
 
-/**
- * Add the npm and Python lockfiles before install writes the generated files.
- *
- * @param install what install needs for this step.
- * @param files the generated list to add to.
- */
 async function prepareLockfiles(install: ToolInstall, files: GeneratedFile[]): Promise<void> {
     const packages = files.find((file) => file.path === GSPOT_PATHS.npmProject);
     const python = files.find((file) => file.path === GSPOT_PATHS.pythonProject);

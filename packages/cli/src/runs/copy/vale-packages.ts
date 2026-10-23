@@ -4,7 +4,6 @@ import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 
-// Refuses a copy whose Vale configuration differs from the one the installed packages came from.
 function assertValeMatches(installed: Files, destination: Files, config: string): void {
     const onDisk = installed.read(config);
     const selected = destination.read(config);
@@ -23,13 +22,6 @@ function copyValePackageFile(installed: Files, destination: Files, path: string)
     destination.write(path, content, undefined);
 }
 
-/**
- * List every file under the styles folder: the Vale packages and the gspot style.
- *
- * @param files the source root of the styles folder.
- * @param folder the styles path to walk.
- * @returns the files, relative to the root.
- */
 function listStyleFiles(files: Files, folder: string): string[] {
     const found: string[] = [];
     walkFiles(files, folder, (path) => {

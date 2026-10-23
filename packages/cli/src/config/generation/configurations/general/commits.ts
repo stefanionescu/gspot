@@ -15,10 +15,6 @@ export const COMMITLINT_RULES = {
     'footer-leading-blank': [COMMITLINT_ERROR_SEVERITY, 'always'],
 } as const;
 
-/**
- * The header patterns of a Conventional Commits message, written as strings so commitlint.json can hold them. The
- * default commitlint parser has no pattern for the `!` that marks a breaking change.
- */
 export const COMMITLINT_PARSER_PRESET = {
     parserOpts: {
         headerPattern: String.raw`^(\w*)(?:\((.*)\))?!?: (.*)$`,

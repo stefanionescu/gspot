@@ -24,7 +24,6 @@ import {
     REFERENCED_PROJECT_FINDING,
 } from '#tests/config/integration/checks/framework/nextjs.ts';
 
-/** Run the named checks alone, check the exit code, and return the report. */
 async function readCheckReport(repository: Sandbox, checks: string[], code: number): Promise<RunReport> {
     const result = parseCheckReport(
         await spawnGspot(repository.root, ['check', '--only', checks.join(','), '--json'], repository.environment),
@@ -35,7 +34,6 @@ async function readCheckReport(repository: Sandbox, checks: string[], code: numb
 
 const installedSandbox = shareInstalledSandbox(buildNextjsPlan());
 
-// Pin the Next.js app to the versions that the tests workspace installs.
 function buildNextjsPlan(): InstalledSandboxPlan {
     const dependencies = Object.fromEntries(
         Object.entries({

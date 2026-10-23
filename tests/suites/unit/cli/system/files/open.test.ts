@@ -10,7 +10,6 @@ import { link, stat, symlink, readFile } from 'node:fs/promises';
 import { matchFields, captureThrow } from '#tests/setup/matchers.ts';
 import { OUTSIDE_LINKS, MODE_REPLACEMENTS } from '#tests/config/system/files/open.ts';
 
-// Windows file names cannot contain a newline, quote, or colon.
 test.skipIf(isWindows)(
     'the system path format keeps POSIX names the portable rules refuse, and refuses links to gspot state',
     async () => {
@@ -106,7 +105,6 @@ test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(
         expect(root.read('config/input')).toBeUndefined();
     },
 );
-// Windows symbolic links require privileges these tests do not request.
 test.skipIf(isWindows).each([...OUTSIDE_LINKS])(
     'path $path cannot change a file outside the folder',
     async ({ path, refusal }) => {

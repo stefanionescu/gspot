@@ -63,7 +63,6 @@ test.each(buildProcessBackends())(
     },
 );
 
-// Windows does not enforce the executable permission bits used for this refusal.
 test.skipIf(isWindows).each(buildProcessBackends())(
     '$name: a program without permission to run is not a missing program',
     async (backend) => {
@@ -89,7 +88,6 @@ test.each(buildProcessBackends())('$name: a timeout stops the process and report
     expect(result.code).not.toBe(0);
 });
 
-// Windows has no signals: a process that kills itself exits with a code.
 test.skipIf(isWindows).each(buildProcessBackends())(
     '$name: a signal before the timeout is not a timeout',
     async (backend) => {
@@ -152,7 +150,6 @@ test.each(buildProcessBackends())(
     },
 );
 
-// Windows names environment variables without case and supplies Path itself.
 test.skipIf(isWindows).each(buildProcessBackends())(
     '$name: an environment variable set to undefined is removed',
     async (backend) => {
@@ -170,7 +167,6 @@ test.skipIf(isWindows).each(buildProcessBackends())(
     },
 );
 
-/** Both process functions, asynchronous and blocking, with the shared test timeout. */
 function buildProcessBackends(): ProcessBackend[] {
     return [
         {

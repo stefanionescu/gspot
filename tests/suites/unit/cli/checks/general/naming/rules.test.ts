@@ -240,7 +240,6 @@ test('an ignored_prefix override strips handle from function and method names in
     ]);
 });
 
-/** Read the naming context of a root file from the shipped settings and these gspot.toml tables. */
 function readNaming(tables: string): FileNaming {
     return buildFileNaming(
         buildScopeNamingSettings(
@@ -249,7 +248,6 @@ function readNaming(tables: string): FileNaming {
     );
 }
 
-/** List the rule and message of each finding of one name. */
 function listRuleMessages(identifier: Identifier, naming: FileNaming): { rule: string | undefined; message: string }[] {
     return validateIdentifier(identifier, naming).map(({ rule, message }) => ({ rule, message }));
 }

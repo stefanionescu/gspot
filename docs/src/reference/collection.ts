@@ -19,7 +19,6 @@ import {
     REFERENCE_IDS_KEY,
 } from '../config/reference.ts';
 
-// Read authored frontmatter only after the content loader has populated its store.
 function readGuideTitles(store: DataStore): Map<string, string> {
     const titles = new Map<string, string>();
     for (const slug of Object.values(GUIDES)) {
@@ -30,13 +29,6 @@ function readGuideTitles(store: DataStore): Map<string, string> {
     return titles;
 }
 
-/**
- * Assemble generated pages from one read of the CLI reference facts.
- *
- * @param guideTitles the authored guide titles keyed by slug.
- *
- * @returns pages keyed by their Markdown path
- */
 function buildReferencePages(guideTitles: Map<string, string>): Map<string, ReferencePage> {
     const facts = CLI_REFERENCE;
     const pages = new Map([
@@ -83,7 +75,6 @@ export function createDocsSource(): Loader {
                     filePath,
                     data: metadata,
                     body,
-                    // Starlight adds heading links only to Markdown with a path inside the docs collection.
                     rendered: await context.renderMarkdown(body, { fileURL: new URL(filePath, context.config.root) }),
                     digest: context.generateDigest(JSON.stringify(page)),
                 });

@@ -46,7 +46,6 @@ test.each([...OUTSIDE_LINK_CASES])('the repository file list leaves out the outs
         'symlink',
     ]);
 });
-// Windows does not provide the POSIX named pipe that mkfifo creates.
 test.skipIf(isWindows)('a walk without Git leaves out named pipes', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
@@ -121,7 +120,6 @@ test('on Windows the executable bit comes from the Git index', async () => {
         ['update-index', '--chmod=+x', 'indexed.sh'],
     ])
         runGitStep(sandbox.path, commandArguments);
-    // Only the file system holds this bit, and Windows file systems keep none.
     await chmod(join(sandbox.path, 'local.sh'), 0o700);
     using resources = new DisposableStack();
     resources.use(simulateOperatingSystem('win32'));
@@ -164,7 +162,6 @@ test('the index keeps deleted tracked paths and encoded names and leaves out unt
     const files = await readIndexFiles(sandbox.path);
     expect(files.map((file) => file.path)).toStrictEqual([path]);
 });
-// Windows file names cannot hold a newline.
 test.each(
     [
         { name: 'a nested folder', folder: 'nested' },

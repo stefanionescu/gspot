@@ -49,7 +49,6 @@ export const KEY_PATH_CASES = [
     },
 ] as const;
 
-/** Unknown keys name their table; the corrected text then passes. */
 export const UNKNOWN_KEY_CASES = [
     {
         name: 'an unknown key names its table',
@@ -105,7 +104,6 @@ export const RULE_FILE_ERRORS = [
     'gspot.toml: scope.0.tools.semgrep.rule_files.0: `missing-scope.yml` names no file. Point rule_files at a file, relative to the repository root.',
 ] as const;
 
-/** Reasons for an allowed word that say nothing, and how the refusal names each. */
 export const EMPTY_REASONS = [
     { reason: '', refused: 'an empty reason' },
     { reason: 'because', refused: '"because"' },

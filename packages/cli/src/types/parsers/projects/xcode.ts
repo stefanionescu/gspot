@@ -36,8 +36,6 @@ export type ProjectSources = {
     targets: { name: string; sources: string[]; folders: Folder[] }[];
 };
 
-/** The SDK and Swift version that the Xcode build configurations set. */
 export type ProjectBuildSettings = { sdkRoot: string | undefined; swiftVersion: string | undefined };
 
-/** Token stream for the UTF-8 project property-list reader. */
 export type ProjectTokens = { tokens: string[]; index: number };

@@ -43,7 +43,6 @@ test('shared-prefixes groups files and folders once, and honors an ignore and a 
     expect(raised.report.failed).toStrictEqual([]);
 });
 
-// Windows file names cannot contain line breaks.
 test.skipIf(isWindows)('prefix groups stay apart when folder and file names contain line breaks', async () => {
     await using sandbox = await testdir();
     const paths = ['a\nb/c-one.ts', 'a\nb/c-two.ts', 'a/b\nc-one.ts', 'a/b\nc-two.ts'];

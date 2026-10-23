@@ -26,11 +26,6 @@ import {
     LOCKFILE_TRIGGER_NAMES,
 } from '#tests/config/planning/files.ts';
 
-/**
- * Put fake project and file checks into the child scopes of the session.
- *
- * @param session sandbox whose checks to replace.
- */
 async function replaceChildScopeChecks(session: Session): Promise<void> {
     await writeScriptCommand(
         session.root,

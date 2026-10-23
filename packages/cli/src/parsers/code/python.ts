@@ -5,12 +5,6 @@ import type { ParseCache, SourceFiles } from '#cli/types/parsers/code/grammars.t
 import { PYTHON_EXTENSION, PYTHON_FUNCTION_NODES } from '#cli/config/parsers/code/python.ts';
 import type { PythonFiles, PythonModule, PythonFunction } from '#cli/types/parsers/code/python.ts';
 
-/**
- * List every function of a module, nested ones too.
- *
- * @param module the parsed Python file.
- * @returns declarations and lambdas with source nodes and executable body statements.
- */
 function listFunctions(module: PythonModule): PythonFunction[] {
     return module.tree.rootNode
         .descendantsOfType([...PYTHON_FUNCTION_NODES])
@@ -41,12 +35,6 @@ export function isDocstring(node: Node, siblings: Node[]): boolean {
     );
 }
 
-/**
- * Read the Python sources and their function declarations.
- *
- * @param sources the files to read.
- * @returns parsed modules with trees to dispose of after use.
- */
 async function readPython(sources: SourceFiles): Promise<PythonFiles> {
     const modules: PythonModule[] = [];
     try {
@@ -97,14 +85,8 @@ export function findDocstring(definition: Node): string | undefined {
     return content?.text.trim() ?? '';
 }
 
-/**
- * Release the trees that parsed Python modules hold.
- *
- * @param parsed the modules whose readers have finished.
- */
 function deletePythonTrees(parsed: PythonFiles): void {
     for (const source of parsed.modules) source.tree.delete();
 }
 
-/** Each run shares Python source trees through this reader identity. */
 export const PYTHON_SOURCES = { read: readPython, dispose: deletePythonTrees };

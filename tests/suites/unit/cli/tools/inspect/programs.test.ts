@@ -77,13 +77,6 @@ test('a program on PATH wins over an unrelated mise shim', async () => {
     expect(inspection.path).toBe(active);
 });
 
-/**
- * Install a fake tsc under mise, whose lookup works only from the work folder and exits with this status.
- *
- * @param root the sandbox.
- * @param status the exit code of mise which.
- * @returns the installed program and the disposers of the environment fakes.
- */
 async function installMiseTsc(root: string, status: number) {
     const executable = join(root, 'mise/installs/tsc/5.9.3', isWindows ? 'tsc.cmd' : 'tsc');
     await writeScriptCommand(root, 'mise/shims/tsc', "throw new Error('The shim must not run in a source copy.');\n");

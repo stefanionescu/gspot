@@ -1,4 +1,3 @@
-/** Starting files that the packed launcher test replaces or reads. */
 export const STARTING_FILES = {
     '.editorconfig': `root = true
 [*]
@@ -18,7 +17,6 @@ Run the tests.
 `,
 } as const;
 
-/** The exact ShellCheck findings for the syntax sample of the launcher test. */
 export const SHELLCHECK_SYNTAX_FINDINGS = [
     {
         check: 'bash/shellcheck',

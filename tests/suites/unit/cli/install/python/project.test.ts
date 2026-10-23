@@ -28,7 +28,6 @@ const projectText = PYTHON_TOOL_PROJECT.replaceAll('{python-version}', PYTHON_VE
 const pythonProject = toolPyprojectSchema.parse(parse(projectText));
 const lockfileText = PYTHON_TOOL_LOCKFILE.replaceAll('{python-version}', PYTHON_VERSION);
 
-/** The Python tool project files with the Python version filled in. */
 function buildPythonProjectFiles(): Record<string, string> {
     return {
         'gspot.toml': buildSandboxSettings([]),

@@ -71,7 +71,6 @@ const PACKAGE_PARSERS: Readonly<
         ),
 };
 
-// The specifier of each dependency in one workspace entry. pnpm records { specifier, version } for each.
 function listSpecifiers(workspace: unknown): Map<string, string> {
     const parsed = dependencySectionsSchema.safeParse(workspace);
     if (!parsed.success) return new Map();

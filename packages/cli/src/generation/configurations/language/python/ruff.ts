@@ -15,7 +15,6 @@ import {
     RUFF_ALWAYS_OFF,
 } from '#cli/config/generation/configurations/language/python/ruff.ts';
 
-// Ruff takes one style for every Python file, so a format override that names every Python file sets it.
 function selectPythonFormat(scopeSettings: PlannedConfigFile['scope']['settings']): FormatSettings {
     const override = scopeSettings.values.format.override.find(({ paths }) =>
         paths.every((path) => (PYTHON_FILES as readonly string[]).includes(path)),

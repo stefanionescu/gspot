@@ -18,7 +18,6 @@ import {
     UNKNOWN_IGNORE_ARGUMENTS,
 } from '#tests/config/commands/ignore.ts';
 
-/** Read saved ignore records with their dates serialized for the assertions. */
 async function readIgnoreRecords(
     root: string,
 ): Promise<Array<Omit<IgnoreRecord, 'until'> & { until: string | undefined }>> {
@@ -55,7 +54,6 @@ test('ignore merges paths into one record and prints them, and unignore removes 
     expect(first.code, first.stdout + first.stderr).toBe(0);
     const added = await runGspot(sandbox.path, [...PATH_IGNORE_ARGUMENTS, 'b.sh']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
-    // The command prints the merged record before the files it wrote.
     expect(added.stdout).toStartWith(
         '[[ignore]]\ncheck = "bash/shellcheck"\npaths = [ "a.sh", "b.sh" ]\nreason = "The inputs demonstrate word splitting."\nIgnored bash/shellcheck for b.sh.\n',
     );

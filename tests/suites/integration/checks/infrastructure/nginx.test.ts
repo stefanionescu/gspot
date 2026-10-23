@@ -17,7 +17,6 @@ import {
     NGINX_INCLUDE_FILES,
 } from '#tests/config/integration/checks/infrastructure/nginx.ts';
 
-// These Docker checks need the Linux Docker engine.
 test.skipIf(!isLinux)(
     'nginx/syntax follows include globs to the source line and tells invalid configuration from an unavailable image',
     async () => {

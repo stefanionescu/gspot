@@ -23,7 +23,6 @@ export type ToolInspection = {
 export type ToolSearch = {
     timeoutSeconds: number;
     root: string;
-    /** The working tree whose installed Python tools run, when root points to a copy. */
     installedRoot?: string;
     cwd?: string;
     inspections: Map<string, ToolInspection>;
@@ -35,5 +34,4 @@ export type ExecutableSearch = {
     toolFolderKind?: ToolFolderKind | undefined;
 };
 
-/** The classified version or failure of a completed version command. */
 export type ParsedToolVersion = { version: string } | { state: 'missing' | 'error'; note: string };

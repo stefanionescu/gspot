@@ -12,25 +12,12 @@ import {
     LEADING_COMMENT_LINE_BREAKS,
 } from '../config/rules/no-comments-in-imports.ts';
 
-/**
- * Check whether a comment holds a tool directive, such as a suppression, a global declaration, or a coverage mark.
- *
- * @param value the comment text without its markers
- * @returns whether a tool reads the comment
- */
 function isToolDirective(value: string): boolean {
     const text = value.replace(LEADING_STAR, '').trim();
     if (TYPESCRIPT_DIRECTIVE.test(text)) return true;
     return TOOL_DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
 }
 
-/**
- * Check for an import declaration or a CommonJS `require` statement.
- *
- * @param node the statement
- * @param sourceType the source type of the file
- * @returns whether the statement belongs to the import block
- */
 function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languageOptions']['sourceType']): boolean {
     if (node.type === AST_NODE_TYPES.ImportDeclaration) return true;
     if (sourceType !== 'commonjs') return false;
@@ -42,12 +29,6 @@ function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languag
     );
 }
 
-/**
- * Check whether an expression calls `require` with one argument.
- *
- * @param node the expression, or nothing
- * @returns whether it calls `require`
- */
 function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
     return (
         node?.type === AST_NODE_TYPES.CallExpression &&
@@ -74,8 +55,6 @@ function groupImportBlocks(
     }
     return blocks;
 }
-// Merge adjacent own-line comments that hold no tool directive into one comment. The fix then moves them as one block,
-// and a comment of several lines can lead a declaration.
 function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
     const text = source.getText();
     const blocks: TSESTree.Comment[] = [];
@@ -110,7 +89,6 @@ function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
     return blocks;
 }
 
-// The parser starts an exported decorated class at `export`, but its leading comment sits above the first decorator.
 function getStatementOffset(node: TSESTree.Node): number {
     const declaration =
         node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration
@@ -123,8 +101,6 @@ function getStatementOffset(node: TSESTree.Node): number {
     return decorator !== undefined && decorator.range[0] < node.range[0] ? decorator.range[0] : node.range[0];
 }
 
-// A leading comment may sit up to LEADING_COMMENT_LINE_BREAKS line breaks and some tool directives above its
-// declaration.
 function isLeading(
     source: TSESLint.SourceCode,
     comment: TSESTree.Comment,
@@ -154,7 +130,6 @@ function isLeading(
     return BLANK.test(between) && between.split('\n').length - 1 <= LEADING_COMMENT_LINE_BREAKS;
 }
 
-// Remove the whole line for a comment that stands alone; otherwise remove only the comment and the spaces before it.
 function buildRemovalRange(source: TSESLint.SourceCode, comment: TSESTree.Comment): [number, number] {
     const text = source.getText();
     const lineStart = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });

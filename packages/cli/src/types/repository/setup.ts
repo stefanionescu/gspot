@@ -20,7 +20,6 @@ export type ConflictingConfigFile = {
     key?: string;
 };
 
-/** The continuous integration fields for lint job discovery. */
 export type CiJob = {
     script?: string | string[] | undefined;
     steps?: { run?: string | undefined }[] | undefined;

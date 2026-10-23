@@ -64,7 +64,6 @@ export type SarifRun = {
     invocations?: SarifAnalysis[] | undefined;
 };
 
-/** The rule matches and scanner errors that Semgrep reports. */
 export type SemgrepReport = {
     results: { check_id: string; path: string; start: { line: number; col: number }; extra: { message: string } }[];
     errors: {
@@ -76,7 +75,6 @@ export type SemgrepReport = {
     }[];
 };
 
-/** A reported Knip symbol and its source location. */
 export type KnipSymbol = {
     name: string;
     namespace?: string | undefined;
@@ -84,5 +82,4 @@ export type KnipSymbol = {
     col?: number | undefined;
 };
 
-/** The Static Analysis Results Interchange Format (SARIF) version and reports from its runs. */
 export type SarifLog = { version: '2.1.0'; runs: SarifRun[] };

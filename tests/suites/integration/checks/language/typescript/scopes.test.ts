@@ -35,7 +35,6 @@ test.each([...LEVELS])(
             check: '',
             files: {
                 ...STANDALONE_TYPESCRIPT_FILES,
-                // The ignored folders keep the tool declarations out of the source changes.
                 '.gitignore': `${DOT_GSPOT}/\nnode_modules/\n`,
                 'gspot.toml': buildSandboxSettings(['typescript'], { level, tables: STANDALONE_TYPESCRIPT_TABLES }),
             },

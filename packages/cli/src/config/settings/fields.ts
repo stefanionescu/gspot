@@ -4,12 +4,10 @@ export const PRINT_WIDTH_MIN = 40;
 
 export const PRINT_WIDTH_MAX = 400;
 
-/** A formatting override includes paths and at least one option. */
 export const FORMAT_OVERRIDE_MIN_FIELDS = 2;
 
 export const FORMAT_INDENT_STYLES = ['space', 'tab'] as const;
 
-/** The description of the reason of a reasoned value, by the change that needs a reason. */
 export const REASON_DESCRIPTIONS = {
     raising: 'Why this code needs more than the default; required when you raise the value.',
     lowering: 'Why this code needs less than the default; required when you lower the value.',

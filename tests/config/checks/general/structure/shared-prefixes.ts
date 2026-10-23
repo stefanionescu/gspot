@@ -37,7 +37,6 @@ export const NEST_SUFFIX_FILES = {
     'app/custom.three.ts': '',
 };
 
-/** The shared-prefixes result of each scope with NestJS suffixes. */
 export const NESTJS_PREFIX_RESULTS: { scope: string; paths: string[] }[] = [
     { scope: '', paths: ['feature.controller.spec.ts'] },
     { scope: 'app', paths: ['app/custom.one.ts', 'app/jsx.controller.tsx'] },

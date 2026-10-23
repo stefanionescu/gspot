@@ -1,4 +1,3 @@
-// Creates temporary folders and lists files without following links.
 import { tmpdir } from 'node:os';
 import picomatch from 'picomatch';
 import { join, relative } from 'node:path';
@@ -10,10 +9,8 @@ import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
 import { DRIVE_LETTER, GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
 
-// Refuses a pattern that climbs out of the folder it scans, in plain form, or hidden in a brace alternative.
 function assertInsideFolder(pattern: string): void {
     const bare = pattern.startsWith(GLOB_EXCLUDE) ? pattern.slice(1) : pattern;
-    // An absolute path starts with a slash, or on Windows with a drive letter.
     const climbs = bare.startsWith('/') || DRIVE_LETTER.test(bare) || PARENT_SEGMENT.test(bare);
     if (climbs) throw new Error(`A path pattern cannot leave its folder: ${pattern}`);
 }

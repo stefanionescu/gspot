@@ -1,4 +1,3 @@
-/** SCSS has slash line comments and CSS block comment openers. */
 export const SCSS_COMMENT_OPENERS = ['//', '/*'] as const;
 
 export const QUOTE_CHARACTERS: ReadonlySet<string> = new Set(["'", '"', '`']);

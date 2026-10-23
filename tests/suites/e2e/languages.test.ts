@@ -12,13 +12,11 @@ import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e/languages.ts';
 import { createUserProject } from '#tests/setup/sandboxes/user-project.ts';
 import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
-/** Run a sample of a check: it fails with the expected finding, and passes after its fix. */
 async function assertSample(installation: UserProject, check: typeof PROSE_CHECK | typeof SWIFT_CHECK): Promise<void> {
     const result = await runCheckSample(installation.offline, check, { configurations: [], files: {} });
     expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(check));
 }
 
-/** Install the configurations with the packed CLI, and add the project name to allowed_words. */
 async function prepareLanguages(installation: UserProject): Promise<void> {
     const { online } = installation;
     await createFileTree(installation.root, {
@@ -45,7 +43,6 @@ test('gspot installed from npm runs Vale and the built-in Swift naming check, re
     await using installation = await createUserProject();
     await prepareLanguages(installation);
     await assertSample(installation, PROSE_CHECK);
-    // The Swift naming check and the Vale word list run at level all.
     const level = await installation.online.run(
         installation.root,
         ['set', 'level', 'all'],

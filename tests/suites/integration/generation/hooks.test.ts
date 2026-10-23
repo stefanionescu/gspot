@@ -16,7 +16,6 @@ import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/sett
 import { runGspot, spawnGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { INDEX_COMMAND, SAMPLE_COMMAND, UNQUOTED_FINDING_LINE } from '#tests/config/integration/generation/hooks.ts';
 
-/** Check that a fresh clone installs the locked tools, then rejects and accepts a real staged commit. */
 async function assertCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
     await using cloneRoot = await testdir();
     const clone = join(cloneRoot.path, 'clone');
@@ -153,7 +152,6 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-/** Give a hook repository the Bun and Node pins of this repository; a clone keeps its committed file. */
 async function writeRuntimePins(root: string): Promise<void> {
     if (!(await isOnDisk(join(root, TOOL_PINS_FILE)))) {
         const tools = await readRuntimePins();

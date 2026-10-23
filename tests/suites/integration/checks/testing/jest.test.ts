@@ -15,13 +15,11 @@ import {
     CORRECTED_MATH_TEST_SOURCE,
 } from '#tests/config/integration/checks/testing/jest.ts';
 
-/** The Jest project, with the pinned Jest version in its package.json. */
 function buildJestFiles(): Record<string, string> {
     const packageJson = { name: 'jest-acceptance', private: true, devDependencies: { jest: jestPackage.version } };
     return { ...JEST_PROJECT_FILES, 'package.json': JSON.stringify(packageJson) + '\n' };
 }
 
-/** Write the Jest project and its settings, which the coverage and load-failure tests share. */
 function prepareJest(root: string, testSource: string) {
     return createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['jest'], { tables: JEST_COVERAGE_TABLES, level: 'all' }),
@@ -112,7 +110,6 @@ test('jest/coverage reports a test file with a missing import as an error and pa
     await assertJestFilesKept(sandbox.path);
 });
 
-/** Assert the source and authored coverage files that a Jest run must keep. */
 async function assertJestFilesKept(root: string): Promise<void> {
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe('preserved source\n');
     expect(await readFile(join(root, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');

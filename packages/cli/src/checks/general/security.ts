@@ -9,13 +9,6 @@ import { SEMGREP_TOOL } from '#cli/config/checks/general/security.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
-/**
- * List the Semgrep rule files that the configurations and settings of a scope name.
- *
- * @param session the level and config files.
- * @param planned the check for one scope.
- * @returns the repository-relative paths.
- */
 function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[] {
     const { configurations, folder, settings } = planned.scope;
     const ruleFiles = configurations.flatMap((configuration) =>

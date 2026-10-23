@@ -1,4 +1,3 @@
-/** The digits of a migration timestamp, YYYYMMDDHHMMSS. */
 export const MIGRATION_DIGITS = 14;
 
 export const LOWER_WORD = /^[a-z]+$/u;

@@ -106,8 +106,6 @@ export function buildPythonProject(configurations: Configuration[], days: number
             path: GSPOT_PATHS.pythonProject,
             content:
                 stringify({ project: { ...PYTHON_TOOL_PROJECT, dependencies } }, CONFIG_FILE_TOML_FORMAT) +
-                // toml-patch writes an empty [tool] table before [tool.uv], so this code writes the table header
-                // itself.
                 `\n${UV_PROJECT_TABLE}\n` +
                 stringify({ package: false, 'exclude-newer': `${String(days)} days` }, CONFIG_FILE_TOML_FORMAT),
         },

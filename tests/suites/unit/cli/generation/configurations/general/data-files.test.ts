@@ -22,7 +22,6 @@ test.each([true, false])(
 
         const session = await openSession(sandbox.path);
         const v8rFile = generate(session).files.find((file) => file.path === findConfigFilePath(session, 'v8r'))!;
-        // v8r checks gspot.toml against the schema of the gspot version that wrote it, never the newest one.
         expect(parse(v8rFile.content)).toStrictEqual({
             ignoreErrors: true,
             customCatalog: { schemas: [MISE_SCHEMA, SETTINGS_SCHEMA, ...(hasSchemas ? MAPPED_SCHEMA_RECORDS : [])] },

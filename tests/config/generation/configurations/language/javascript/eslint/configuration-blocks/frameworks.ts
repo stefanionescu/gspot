@@ -13,7 +13,6 @@ export const SERVER_FILES = {
     'app/server/data.js': 'export const value = 1;\n',
 } as const;
 
-/** Component sources for each framework parser. */
 export const COMPONENT_FILES = {
     'Card.vue': '<template><p>{{ count }}</p></template>\n<script setup lang="ts">const count: number = 1;</script>\n',
     'Card.svelte': '<script lang="ts">const count: number = 1;</script>\n<p>{count}</p>\n',
@@ -26,7 +25,6 @@ const count: number = 1;
     'source.js': 'export const count = 1;\n',
 } as const;
 
-/** Each framework exposes the same security finding through its own markup syntax. */
 export const HTML_INJECTION_CASES = [
     {
         configuration: 'react',
@@ -58,7 +56,6 @@ export const HTML_INJECTION_CASES = [
     },
 ] as const;
 
-/** React Native and Expo scopes that share no framework configuration. */
 const MOBILE_SETTINGS = `configurations = [ "javascript" ]
 
 [[scope]]
@@ -84,16 +81,13 @@ export const RESPONSE_MESSAGES =
 
 export const ALIAS_IMPORT = 'import value from "#lib/owner";\n';
 
-/** The lines of the Express sample: the alias import, then the template message of a response and of a log call. */
 export const EXPRESS_SAMPLE_LINES = { aliasImport: 1, responseMessage: 2, logMessage: 3 } as const;
 
-/** The packages of a test Expo repository. */
 const EXPO_DEPENDENCIES = {
     expo: '54.0.0',
     'react-native': '0.81.4',
 } as const;
 
-/** Sibling Expo and bare React Native packages with the installed test React version. */
 export const MOBILE_FILES: Record<string, string> = {
     ...MOBILE_SOURCE_FILES,
     'bare/package.json': JSON.stringify({
@@ -106,7 +100,6 @@ export const MOBILE_FILES: Record<string, string> = {
     }),
 };
 
-/** Two Next.js projects with pages in different folders, and a Next.js scope without pages. */
 export const NEXTJS_ROUTE_PROJECTS = {
     'gspot.toml': buildSandboxSettings(['javascript'], {
         level: 'all',

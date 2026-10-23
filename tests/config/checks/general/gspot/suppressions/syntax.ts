@@ -1,4 +1,3 @@
-/** ESLint comments, and whether ESLint reads each one as a suppression. */
 const ESLINT_SUPPRESSIONS = [
     ['// Example eslint-disable-next-line no-console', false],
     ['// eslint-disable no-console', false],
@@ -13,7 +12,6 @@ const ESLINT_SUPPRESSIONS = [
     ['/*eslint-disable-unknown*/', false],
 ] as const;
 
-/** Stylelint comments, and whether Stylelint reads each one as a suppression. */
 const STYLELINT_SUPPRESSIONS = [
     ['/* stylelint-disable color-no-invalid-hex */', true],
     ['/*stylelint-disable*/', true],
@@ -25,7 +23,6 @@ const STYLELINT_SUPPRESSIONS = [
     ['/* STYLELINT-DISABLE color-no-invalid-hex */', false],
 ] as const;
 
-/** HTML Validate comments, and whether HTML Validate reads each one as a suppression. */
 const HTML_VALIDATE_SUPPRESSIONS = [
     ['<!-- html-validate-disable wcag/h37 -->', true],
     ['<!-- html-validate-disable-next wcag/h37 -->', true],
@@ -112,7 +109,6 @@ export const LIMIT_SUPPRESSION_CASES = [
     },
 ] as const;
 
-/** Each comment syntax with its suppression comments and whether gspot reads each one. */
 export const SUPPRESSION_SYNTAX_CASES = [
     {
         name: 'ESLint',

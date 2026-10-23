@@ -18,7 +18,6 @@ import {
     listCheckIgnoreSections,
 } from '#cli/generation/config-files/ignore-files.ts';
 
-// Convert each shared ignore section once, and keep the first reason for a repeated path.
 function buildTyposSections(planned: PlannedConfigFile): IgnoreSection[] {
     const excludedLockfiles = TYPOS_IGNORED_GLOBS.filter(
         (path) => path === '*.lock' || LOCKFILES.some((lockfile) => lockfile.file === posix.basename(path)),
@@ -47,7 +46,6 @@ function buildTyposSections(planned: PlannedConfigFile): IgnoreSection[] {
     );
 }
 
-// Keep the exclusion-array comments beside their original ordered groups.
 function serializeIgnoredGlobs(grouped: IgnoreSection[]): string {
     return [
         'extend-exclude = [',

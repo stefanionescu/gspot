@@ -13,7 +13,6 @@ import {
     JAVASCRIPT_PARAMETER_NAMES,
 } from '#tests/config/checks/general/naming/source-names.ts';
 
-/** Parse one source and dispose its parser resources. */
 async function listIdentifiers(file: string, source: string, language: string): Promise<Identifier[]> {
     using resources = new DisposableStack();
     const { identifiers } = await parseIdentifiers(file, source, language, {

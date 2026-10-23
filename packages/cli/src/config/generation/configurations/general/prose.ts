@@ -1,10 +1,8 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { PROSE_GRAMMARS } from '#cli/config/checks/general/prose.ts';
 
-/** The Vale packages that gspot installs at level all. */
 export const VALE_PACKAGES = ['Google', 'write-good', 'proselint', 'alex', 'Harper'] as const;
 
-/** The release of each Vale package that gspot installs, so every clone checks prose with the same rules. */
 export const VALE_PACKAGE_RELEASES = {
     Google: 'v0.7.1',
     'write-good': 'v0.4.1',
@@ -13,15 +11,12 @@ export const VALE_PACKAGE_RELEASES = {
     Harper: 'v0.1.0',
 } as const;
 
-/** Where the Vale packages download from: this prefix, then `<name>/releases/download/<release>/<name>.zip`. */
 export const VALE_PACKAGE_REPOSITORY = 'https://github.com/vale-cli/';
 
-/** Comment extensions and their Vale format. */
 export const PROSE_FORMATS = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
     'format' in grammar ? [[extension.slice(1), grammar.format] as const] : [],
 );
 
-/** Punctuation escaped in human-readable Go regular-expression word lists. */
 export const VALE_REGEX_SYMBOLS = /[.*+?^${}()|[\]\\/-]/gu;
 
 export const VALE_MARKUP_FILES = '*.{md,mdx}';
@@ -41,15 +36,8 @@ export const ALT_TEXT_TOKENS = [
     String.raw`!\[(?:Image|Graphic|Picture) of`,
 ] as const;
 
-/** Skip front matter. */
 export const BLOCK_IGNORES = [String.raw`(?s)^---\n.*?\n---\n`] as const;
 
-/**
- * Skip the `#MISE` headers of mise tasks, URLs, documentation-tag syntax, snake_case identifiers, and upper-case file
- * names; check tag descriptions and suppression reasons as prose. A name starts a line or follows a space or tab. Vale
- * wraps each match in backticks: a match inside a code span breaks the span, and a match that holds a line break breaks
- * a code fence.
- */
 export const TOKEN_IGNORES = [
     String.raw`(?m)(^MISE[ \t]+[a-z_][a-z0-9_-]*[ \t]*=[^\r\n]*)`,
     String.raw`(eslint-(?:disable|enable)(?:-next-line|-line)?\s+[^\n]*?--\s*(?:reason:\s*)?)`,
@@ -96,7 +84,6 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'Harper.NumericRangeEnDash': 'gspot.en-dashes owns ranges',
 } as const;
 
-/** Technical abbreviations that Vale accepts as words in every repository. */
 export const ACRONYMS = [
     'API',
     'CLI',
@@ -115,7 +102,6 @@ export const ACRONYMS = [
     'CRLF',
     'CSV',
     'ESM',
-    // The currency codes that the currency rule asks for.
     'EUR',
     'GBP',
     'GNU',
@@ -132,7 +118,6 @@ export const ACRONYMS = [
     'SSH',
     'SVG',
     'TLS',
-    // The code-comment marker.
     'TODO',
     'TSX',
     'USD',
@@ -154,5 +139,4 @@ export const BANNED_HEADINGS = [
     'source tree',
 ] as const;
 
-/** The styles folder that Vale reads for the gspot style. */
 export const VALE_STYLES_PATH = `${GSPOT_PATHS.configurations}/general/prose/styles`;

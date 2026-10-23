@@ -17,7 +17,6 @@ export type PushedRevisions = {
 
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };
 
-/** The Git pre-push input, and the remote name that the hook gets. */
 export type PushInput = { stdin: string; remote?: string };
 
 export type Comparison = { base: string; changed: string[] | undefined; range: string[] };

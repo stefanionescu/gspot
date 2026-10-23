@@ -1,4 +1,3 @@
-/** A failed npm version lookup. */
 export const FAILED_NPM_VERSION = {
     code: 7,
     missing: false,

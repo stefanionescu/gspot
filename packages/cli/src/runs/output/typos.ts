@@ -9,7 +9,6 @@ import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { reportedTypoSchema } from '#cli/schemas/runs/typos.ts';
 import type { ReportedTypo } from '#cli/types/runs/tool-reports.ts';
 
-// Read the lines of a source file as bytes, once per file, so byte offsets map to columns.
 function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]>): Buffer[] {
     const held = cache.get(path);
     if (held !== undefined) return held;
@@ -31,7 +30,6 @@ function readSourceLines(root: string, path: string, cache: Map<string, Buffer[]
     return lines;
 }
 
-// Get the line and character column of a typo from the byte offset that typos reports.
 function getTypoPosition(
     root: string,
     path: string,
@@ -49,7 +47,6 @@ function getTypoPosition(
     };
 }
 
-// Turn one typos entry into a finding: a filename typo when it has no line, otherwise a positioned one.
 function buildTypoFinding(
     output: ToolOutput,
     typo: ReportedTypo,

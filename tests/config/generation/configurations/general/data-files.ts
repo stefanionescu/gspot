@@ -1,4 +1,3 @@
-/** The catalog entry of the custom schema. */
 export const MAPPED_SCHEMA_RECORDS = [
     {
         name: 'https://example.com/schema.json',
@@ -7,7 +6,6 @@ export const MAPPED_SCHEMA_RECORDS = [
     },
 ] as const;
 
-/** A custom v8r schema. */
 export const MAPPED_SCHEMAS = [
     {
         paths: ['custom.json'],

@@ -12,7 +12,6 @@ import { TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files/selection.t
 import type { FileMatch, CoveredFilesOptions } from '#cli/types/repository/detect.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/files/matchers.ts';
 
-// Add the file types of the Prettier or ESLint plugins in use to the owners, when the table takes them.
 function addPluginExtensions(owners: FileMatch, configurations: Configuration[]): FileMatch {
     if (!owners.prettier_plugins && !owners.eslint_plugins) return owners;
     const extensions = configurations

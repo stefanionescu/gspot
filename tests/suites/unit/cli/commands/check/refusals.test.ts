@@ -20,7 +20,6 @@ import {
     OUTSIDE_GIT_SETTINGS,
 } from '#tests/config/commands/check/refusals.ts';
 
-/** Create a committed repository with a check whose fixer rewrites the source when it runs. */
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = [process.execPath, '-e', String.raw`require('node:fs').writeFileSync('source.txt', 'fixed\n')`];
     const check = {
@@ -118,7 +117,6 @@ test('a staged check during a merge conflict exits 2, names the conflict, and le
 test('a staged check over a file name that is not UTF-8 exits 2 and leaves no copy behind', async () => {
     await using sandbox = await createFixableSandbox();
     const hash = runGitStep(sandbox.path, ['rev-parse', 'HEAD:source.txt']);
-    // The index takes the raw name on standard input; most file systems refuse to hold it.
     const name = Buffer.concat([Buffer.from('bad-'), Buffer.from([0xff]), Buffer.from('.txt')]);
     const line = Buffer.concat([Buffer.from(`100644 ${hash}\t`), name, Buffer.from('\n')]);
     const command = ['git', 'update-index', '--index-info'];

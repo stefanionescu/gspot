@@ -1,4 +1,3 @@
-// Reads and edits TOML while preserving comments.
 import type { z } from 'zod';
 import { PATCH_FORMAT } from '#cli/config/parsers/formats/toml.ts';
 import { patch, parse as parseToml } from '@decimalturn/toml-patch';
@@ -15,7 +14,6 @@ import {
     listAnchoredComments,
 } from '#cli/parsers/formats/toml/syntax.ts';
 
-// Find the TOML table that the parent of a key path names, and create missing parents first.
 function findTomlTable(
     document: Record<string, unknown>,
     options: TomlTableOptions,
@@ -42,14 +40,6 @@ function findTomlTable(
     return table;
 }
 
-/**
- * Patch managed tool values, and keep comments on their syntax entries.
- * Text edits keep the order and formatting.
- *
- * @param original indexed source before edits.
- * @param values the table after the edits.
- * @returns the edited document with its comments.
- */
 function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>): string {
     const patched = patch(original.document.toTomlString, values, PATCH_FORMAT);
     const reparsed = parseTomlSyntax(patched, values);

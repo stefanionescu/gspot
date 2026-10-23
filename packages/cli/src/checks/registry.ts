@@ -99,7 +99,6 @@ import {
     checkSiteHtmlValidate,
 } from '#cli/checks/framework/site/pages.ts';
 
-/** The code of each check, keyed by check ID. */
 const CHECK_CODE: Record<string, CheckCode> = {
     'ansible/ansible-lint': { check: checkAnsibleLint },
     'bash/doc-comments': { check: checkBashDocComments },

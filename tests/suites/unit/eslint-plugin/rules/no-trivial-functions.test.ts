@@ -9,7 +9,6 @@ createRuleTester().run<
 >('no-trivial-functions', plugin.rules['no-trivial-functions'], {
     valid: [
         'export function sort(items, compare = (a, b) => a - b) { items.sort(compare); return items; }',
-        // A function value in a slot that takes a function stays inline.
         'consume({ onValue: value => write(value) });',
         'handlers.onValue = value => write(value);',
         'items.map((item) => item.value);',
@@ -27,18 +26,15 @@ createRuleTester().run<
         'function factory() { setup(); configure(); return () => release(); }',
         'const element = <Button onClick={() => submit()} />;',
 
-        // A function includes its callback statements.
         'function process(items) { return items.map(item => { inspect(item); validate(item); return item; }); }',
         'function process(groups) { return groups.map(items => items.map(item => { inspect(item); validate(item); return item; })); }',
         'function process(items) { function visit(item) { inspect(item); validate(item); return item; } return items.map(visit); }',
         'const process = (items) => items.map(item => { inspect(item); validate(item); return item; });',
 
-        // Over the limit.
         'function work() { first(); second(); third(); }',
         'function work() { if (ready) { first(); second(); } }',
         { code: 'function work() { first(); second(); }', options: [{ trivialFunctionStatements: 1 }] },
 
-        // A declaration without a body has nothing to inline.
         'declare function required(): void;',
     ],
     invalid: [
@@ -84,7 +80,6 @@ createRuleTester().run<
                 { messageId: 'trivial', column: 88 },
             ],
         },
-        // An export, a second caller, a passed value, or a type predicate does not exempt a function.
         ...[
             'export class Settings { isEnabled() { return this.enabled; } }',
             'export class Panel { onClick = () => this.open(); }',
@@ -129,13 +124,11 @@ createRuleTester().run<
             'const multiline = () => (\n first +\n second\n);',
             'function typed() { type Value = number; return 1; }',
 
-            // Inline a local function at its only use.
             'function forward(value) { return owner(value); } forward(first);',
             'function callback(value) { return value.active; } items.filter(callback);',
             'const callback = (value) => value.active; items.filter(callback);',
             'function callback(a, b) { return a; } consume(callback.length);',
         ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }] })),
-        // Methods, accessors, constructors, and recursive functions have names too.
         ...[
             'items.filter(function named(item) { return item.active; });',
             "export class NotFound extends Error { constructor() { super('Not found'); } }",
@@ -169,7 +162,6 @@ createRuleTester().run<
     ],
 });
 
-// The rule reports a method that an interface or a base class declares like any other method.
 createRuleTester({
     languageOptions: {
         parserOptions: {

@@ -109,7 +109,6 @@ test('a file gspot does not own refuses the whole batch and leaves every file as
     expect(await readFile(join(sandbox.path, `${DOT_GSPOT}/owned.txt`), 'utf8')).toBe('installed');
     expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('keep authored');
 });
-// Windows does not preserve the POSIX permission-bit edit in the mode row.
 test.each(
     [
         { name: 'bytes', change: (path: string) => writeFile(path, '{"semi":true}\n') },

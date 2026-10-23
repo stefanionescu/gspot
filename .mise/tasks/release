@@ -20,7 +20,6 @@ for workflow in tests.yml gspot.yml; do
     fi
 done
 
-# The plugin goes first, because the CLI pins its version. npm pkg get prints JSON strings, so the quotes go.
 tags=()
 for package in packages/eslint-plugin packages/cli; do
     name=$(npm pkg get name --prefix "${package}")
@@ -41,7 +40,6 @@ for package in packages/eslint-plugin packages/cli; do
     fi
 done
 
-# The site shows the commit of this release. Wrangler uses the login of `wrangler login` on this machine.
 bun run --cwd docs wrangler deploy
 
 for tag in "${tags[@]}"; do

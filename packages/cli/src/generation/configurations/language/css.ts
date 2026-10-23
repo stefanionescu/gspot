@@ -27,15 +27,6 @@ function dropChosenRules(
     );
 }
 
-/**
- * Build the component parser overrides, which need their own pseudo-class and function rules.
- *
- * @param configurations the configuration names in use.
- * @param tailwindFunctions the Tailwind helpers that component styles may call.
- * @param chosen your own rule options.
- * @param off the disabled lint rule names.
- * @returns the component parser overrides.
- */
 function buildComponentOverrides(
     configurations: string[],
     tailwindFunctions: string[],
@@ -68,7 +59,6 @@ function buildComponentOverrides(
         });
 }
 
-// A scope with CSS Modules files accepts their syntax in those files. The override keeps the Tailwind at-rules.
 function buildCssModulesOverrides(
     planned: PlannedConfigFile,
     tailwindAtRules: readonly string[],
@@ -92,8 +82,6 @@ function buildCssModulesOverrides(
     ];
 }
 
-// gspot sets options only for the Stylelint rules that run at the level. The refusal names its case: a rule of level
-// all, a Stylelint rule that runs at no level, or a rule that Stylelint does not have.
 function assertStylelintRulesRun(rules: string[], activeRules: Set<string>, ruleNames: string[]): void {
     const refused = rules.filter((rule) => !activeRules.has(rule));
     if (refused.length === 0) return;

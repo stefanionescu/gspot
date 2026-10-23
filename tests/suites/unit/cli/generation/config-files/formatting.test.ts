@@ -32,7 +32,6 @@ test('format.indent_width reaches EditorConfig, Prettier and each config file', 
 
     const session = await openSession(sandbox.path);
     const generated = new Map(generate(session).files.map((file) => [file.path, file.content]));
-    // Write only .editorconfig, so Prettier resolves its options from EditorConfig alone.
     await writeFile(join(sandbox.path, '.editorconfig'), generated.get('.editorconfig')!);
     const path = join(sandbox.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });

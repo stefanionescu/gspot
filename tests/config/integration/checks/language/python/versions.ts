@@ -1,4 +1,3 @@
-/** Annotations must remain valid for the project's minimum Python version. */
 export const VERSION_SOURCE = `"""Annotation examples."""
 
 from typing import List, Optional
@@ -9,10 +8,6 @@ def retain(values: Optional[List[int]]) -> Optional[List[int]]:
     return values
 `;
 
-/**
- * Python versions whose annotations need different runtime syntax: the rules Ruff reports for the version, and the
- * source after its fixes.
- */
 export const RUFF_VERSION_CASES = [
     { scope: '', requires: '>=3.8,<4', rules: ['FA100', 'FA100', 'FA100', 'FA100'], fixed: VERSION_SOURCE },
     {

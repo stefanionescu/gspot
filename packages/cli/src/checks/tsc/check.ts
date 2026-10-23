@@ -60,7 +60,6 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
     return references === undefined ? result : leaveChildScopeFindings(session, planned, result);
 }
 
-// A solution build also compiles the projects it references; a child scope that runs this check reports their errors.
 function leaveChildScopeFindings(session: Session, planned: PlannedCheck, result: CheckResult): CheckResult {
     const checked = new Set(
         session.configuredChecks

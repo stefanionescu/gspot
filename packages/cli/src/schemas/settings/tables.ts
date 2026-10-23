@@ -272,7 +272,6 @@ export const tableValuesSchema = z
     })
     .transform(stripUndefined) satisfies z.ZodType<TableValues>;
 
-/** The [hooks], [ci], and [rules] fields as dotted settings; fields without defaults allow omission. */
 export const tableSettingSchemas = Object.fromEntries(
     Object.entries({ hooks: hooksSchema.shape, ci: ciFields, rules: rulesSchema.shape }).flatMap(([section, fields]) =>
         Object.entries<z.ZodType>(fields).map(

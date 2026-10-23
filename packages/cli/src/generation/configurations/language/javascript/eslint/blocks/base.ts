@@ -58,7 +58,6 @@ import {
     LEVEL_ALL_PLUGIN_IMPORTS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
 
-// Project settings preserve their runtime expressions while rule data stays serializable.
 function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks['blocks'] {
     const { session, projects } = planned;
     return [
@@ -72,7 +71,6 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
                 fields,
                 properties: '',
             };
-        // Each TypeScript project resolves against the repository root of the generated config file.
         const projectPaths = projects.map((project) => 'join(root, ' + JSON.stringify(project) + ')').join(', ');
         const runtime =
             settings['boundaries/files'] === undefined
@@ -213,13 +211,6 @@ export function buildClosingBlocks(
     ];
 }
 
-/**
- * Keep test and script console exemptions inside their project scope.
- *
- * @param planned every scope and the generated code selectors.
- * @param rules the console restrictions at the selected level.
- * @returns one console block per JavaScript scope.
- */
 function buildConsoleBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
     rules: EslintLevelRules['console'],
@@ -263,7 +254,6 @@ export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: Eslint
     };
 }
 
-// A language block uses its own index-export limit whenever the repository permits barrels.
 function buildBarrelRule(planned: PlannedEslintFile, language: 'typescript' | 'javascript'): Record<string, unknown> {
     return planned.session.settingsFile.settings.structure.reexports === 'index-only'
         ? {
@@ -281,7 +271,6 @@ function buildBarrelRule(planned: PlannedEslintFile, language: 'typescript' | 'j
         : {};
 }
 
-// Base presets use their first block as an object; framework presets preserve their complete block arrays.
 function buildBasePresetBlocks(
     presets: EslintPresets | undefined,
     sources: readonly (readonly [string, string])[],
@@ -299,7 +288,6 @@ function buildBasePresetBlocks(
     });
 }
 
-// The size and complexity rules with the limits of one language.
 function buildLimitRules(settings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
     return Object.fromEntries(
         Object.entries(ESLINT_LIMIT_RULES).map(([rule, limitRule]) => {

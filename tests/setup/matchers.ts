@@ -1,4 +1,3 @@
-// Reads error and rejection messages and builds typed partial assertions.
 import { expect } from 'bun:test';
 
 /**

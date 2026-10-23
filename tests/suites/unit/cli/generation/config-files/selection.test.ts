@@ -138,13 +138,11 @@ test('an ignore whose reason equals a built-in section title keeps its paths in 
     const jsconfig: unknown = JSON.parse(content);
     expect(getValueAt(jsconfig, ['exclude'])).toContain('../../../../legacy/**');
 });
-// Parse JSON with comments and trailing commas, and throw at the first error.
 function parseJson(text: string, path: string): void {
     const errors: ParseError[] = [];
     parseJsonc(text, errors, { allowTrailingComma: true });
     if (errors.length > 0) throw new Error(`${path}: JSON error at offset ${String((errors[0] as ParseError).offset)}`);
 }
-// Transpile a JavaScript or TypeScript module, and throw its syntax errors.
 function parseModule(text: string, path: string): void {
     const result = ts.transpileModule(text, { reportDiagnostics: true, fileName: path });
     const errors = (result.diagnostics ?? []).map((message) =>
@@ -153,7 +151,6 @@ function parseModule(text: string, path: string): void {
     if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
 }
 
-/** Parse a generated config file with the parser for its extension. */
 function parseConfigFile(text: string, path: string): void {
     const parsers: Record<string, (text: string, path: string) => void> = {
         '.cfg': (text) => {

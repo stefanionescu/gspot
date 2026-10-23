@@ -1,4 +1,3 @@
-// Locate repository executables and mise programs.
 import which from 'which';
 import { statSync } from 'node:fs';
 import { TOOL_ENV } from '#cli/config/tools/run.ts';
@@ -24,8 +23,6 @@ import {
     MISE_BIN_PATHS_ARGUMENTS,
 } from '#cli/config/tools/locate.ts';
 
-// Search folders for tool-project and system executables. A copy has no tool projects or virtual
-// environments of its own: they run from the working tree that the copy stands for.
 function listSearchFolders(root: string, options: ExecutableSearch): string[] {
     const { searchFolders, toolFolderKind } = options;
     if (toolFolderKind === 'npm') return [join(root, DOT_GSPOT, NPM_BIN_FOLDER)];
@@ -36,8 +33,6 @@ function listSearchFolders(root: string, options: ExecutableSearch): string[] {
     ]);
 }
 
-// Check whether a possible executable path exists. A managed path must resolve inside the root; read other paths from
-// disk.
 function isExecutablePresent(files: Files, root: string, path: string): boolean {
     const local = convertToPosixPath(relative(root, path));
     if (!local.startsWith(`${DOT_GSPOT}/`)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
@@ -50,14 +45,6 @@ function isExecutablePresent(files: Files, root: string, path: string): boolean 
     }
 }
 
-/**
- * Locate executables on `PATH`, and replace each mise shim with the program that it runs.
- *
- * @param workingFolder the repository root.
- * @param name the executable to find.
- * @param timeoutSeconds the limit for the mise query.
- * @returns the executable paths in preference order.
- */
 function listMiseExecutablePaths(workingFolder: string, name: string, timeoutSeconds: number): string[] {
     const paths = which.sync(name, { nothrow: true, all: true }) ?? [];
     const mise = which.sync(MISE_TOOL, { nothrow: true });

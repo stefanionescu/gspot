@@ -49,7 +49,6 @@ test.each([['a live process', undefined], ...(isWindows ? [] : [['process 1', '1
     'apply refuses a writer lock held by %s and names the process and the lock',
     async (_, holder) => {
         await using sandbox = await testdir();
-        // A process that outlives the run stands for the holder; disposing it kills it.
         const command = [process.execPath, '-e', 'await Bun.sleep(60_000)'];
         await using sleeper = holder === undefined ? startCommand(command, { cwd: sandbox.path }) : undefined;
         const lock = holder ?? `${String(sleeper!.child.pid)}:held`;

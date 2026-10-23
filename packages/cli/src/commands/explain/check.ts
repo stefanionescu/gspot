@@ -1,4 +1,3 @@
-// Explain a check, or one lint rule of the tool that a check runs.
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
@@ -20,7 +19,6 @@ function findRulePlugin(prefix: string, configurations: Map<string, Configuratio
         .find((pin) => pin.rule_prefix === prefix);
 }
 
-// Find the page for a lint rule: the tool page, or the page of the plugin that the rule prefix names.
 function findRulePage(tool: string, rule: string, configurations: Map<string, Configuration>): string | undefined {
     const prefix = extractRulePrefix(rule);
     if (prefix === undefined) {
@@ -31,7 +29,6 @@ function findRulePage(tool: string, rule: string, configurations: Map<string, Co
     return plugin?.rule_url?.replace(RULE_PLACEHOLDER, rule.slice(prefix.length + 1));
 }
 
-// List the settings that change the check, and the rules and crash pattern of its configuration.
 function buildCheckFacts(
     check: Check,
     configuration: ScopeCheck['configuration'],
@@ -63,8 +60,6 @@ function buildCheckFacts(
     };
 }
 
-// Describe use in this repository: the command and paths of a [[command_check]] record, or whether the configuration
-// runs here.
 function formatRepositoryUse(
     session: Session | undefined,
     commandCheck: CommandCheck | undefined,

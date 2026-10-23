@@ -1,4 +1,3 @@
-// Writes sample changes into a sandbox, and restores the files when the test ends.
 import { join, dirname } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
@@ -26,12 +25,6 @@ import {
     appendFile,
 } from 'node:fs/promises';
 
-/**
- * Reset the index entries of these paths to the last commit, which undoes what markExecutable staged on Windows.
- *
- * @param cwd the sandbox.
- * @param paths the repository-relative files.
- */
 function resetIndex(cwd: string, paths: readonly string[]): void {
     if (!isWindows || paths.length === 0) return;
     const result = runGit(cwd, ['reset', '-q', '--', ...paths]);
@@ -76,7 +69,6 @@ async function removeParents(parents: string[]): Promise<void> {
         try {
             await rmdir(path);
         } catch (error) {
-            // Keep a folder that still holds generated or config files; their owners remove them after the restore.
             const code = (error as NodeJS.ErrnoException).code;
             if (code !== 'ENOENT' && code !== 'ENOTEMPTY') throw error;
         }
@@ -141,7 +133,6 @@ export async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): P
                 .filter(Boolean))
                 if (!untracked.has(path)) await rm(join(cwd, path), { force: true });
             await restore();
-            // A sandbox outside Git, such as a new user project, has only its files to restore.
             if (head.code !== 0) return;
             const reset = runGit(cwd, ['reset', '--soft', head.stdout.trim()]);
             if (reset.code !== 0) throw new Error(reset.stderr);

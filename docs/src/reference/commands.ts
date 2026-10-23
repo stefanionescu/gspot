@@ -14,13 +14,11 @@ function formatOptionValues(option: { choices?: string[]; default?: unknown }): 
     );
 }
 
-// One section per command: what it does, how to call it, its arguments and options, and how it exits.
 function formatCommand(command: Command): string {
     const argumentRows = command.arguments.map((argument) => [
         `\`${argument.name}\``,
         `${argument.description}. ${argument.required ? 'Required.' : 'Optional.'}` + formatOptionValues(argument),
     ]);
-    // The global options list --help once for every command.
     const optionRows = command.options
         .filter((option) => !(option.flags in GLOBAL_OPTIONS))
         .map((option) => [`\`${option.flags}\``, `${option.description}.` + formatOptionValues(option)]);

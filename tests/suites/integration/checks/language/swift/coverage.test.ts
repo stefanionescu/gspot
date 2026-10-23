@@ -17,7 +17,6 @@ import {
     COVERAGE_TARGET_SETTINGS,
 } from '#tests/config/integration/checks/language/swift/coverage.ts';
 
-// This check needs the Xcode toolchain supplied by macOS.
 test.skipIf(!isMacos)(
     'swift/coverage reports a target under its coverage limit and passes after testing the uncovered function',
     async () => {

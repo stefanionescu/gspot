@@ -19,7 +19,6 @@ import {
     TRIVY_FINDINGS_EXIT_CODE,
 } from '#cli/config/checks/infrastructure/docker/trivy-image.ts';
 
-// The tool's exit status and parsed findings must agree before a scan can count as clean.
 async function scanImage(session: Session, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
     const result = await runCheckTool(
         session,
@@ -39,7 +38,6 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
         { cwd: session.root },
     );
     if (result.code !== 0 && result.code !== TRIVY_FINDINGS_EXIT_CODE) {
-        // Trivy writes its error to stderr and may still print a report; the report says nothing about the failure.
         const output = result.stderr.trim() === '' ? result : { stdout: '', stderr: result.stderr };
         const detail = formatOutputTail(output, `exit ${String(result.code)}`);
         throw new Error(`Trivy could not scan ${image}: ${detail}`);

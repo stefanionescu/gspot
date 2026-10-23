@@ -1,4 +1,3 @@
-// Reads committed Git entries and blob contents.
 import { GspotError } from '#cli/system/errors.ts';
 import type { GitFile } from '#cli/types/parsers/git.ts';
 import { readIndexFiles } from '#cli/repository/files/tracked.ts';

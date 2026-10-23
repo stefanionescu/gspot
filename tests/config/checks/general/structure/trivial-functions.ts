@@ -99,7 +99,6 @@ func isNew(_ name: String) -> Bool {
     { name: 'substantial function bodies', source: CLEAN_SWIFT, lines: [] },
 ] as const;
 
-/** Interface code at a two-statement limit: the check reports each of its eight named functions, stubs included. */
 export const PYTHON_INTERFACES = `from abc import ABC, abstractmethod
 from typing import Protocol, overload
 
@@ -207,7 +206,6 @@ def wrapper():
     },
 ] as const;
 
-/** Declarations, accessors, nested functions, and closures, each on its own line. */
 export const ACCESSOR_DECLARATIONS = `class A {
     init() {}
     var value: Int {
@@ -234,13 +232,9 @@ export const STATEMENT_COUNT_CASES = [
     ['bash', 'example() { # comment\necho value; echo value\n}'],
 ] as const;
 
-/** Implicit and explicit property readers with separate observer and subscript locations. */
-
-/** The message of a two-statement function named example. */
 export const TRIVIAL_EXAMPLE_MESSAGE =
     'example has 2 statements. Functions with 2 or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.';
 
-/** A decorated method, a function with a nested function and a lambda, and a function with a branch. */
 export const NESTED_PYTHON_FUNCTIONS = `class A:
     @decorator
     def method(self):

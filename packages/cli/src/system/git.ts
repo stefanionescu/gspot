@@ -1,4 +1,3 @@
-// Runs Git commands with repository environment isolation.
 import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
@@ -36,7 +35,6 @@ import {
 
 let inheritedGit: { localVariables: string[]; repository?: GitLookup } | undefined;
 
-// The original working folder of the hook decides relative paths and the implicit Git worktree root.
 function readInheritedGitEnvironment(origin: string): GitLookup {
     const env = Object.fromEntries(
         GIT_PATH_VARIABLES.flatMap((name) => {
@@ -67,14 +65,12 @@ function readInheritedGitEnvironment(origin: string): GitLookup {
     return { folder, env };
 }
 
-// The Git folder of the repository that Git runs in decides whether inherited repository-local variables stay valid.
 function readFolderGitEnvironment(root: string, source: GitRepository, environment: GitVariableGroups): GitEnvironment {
     const { isolated, overrides, explicit } = environment;
     const target = spawnProcessBlocking([GIT_EXECUTABLE, ...GIT_FOLDER_ARGUMENTS], {
         cwd: root,
         env: { ...isolated, ...overrides, ...GIT_LOCALE },
     });
-    // Git reports that no repository holds the folder.
     if (target.code === NOT_REPOSITORY_CODE && target.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
         return { env: { ...isolated, ...explicit } };
     if (target.code !== 0) return { failure: target };
@@ -110,7 +106,6 @@ export function readGitEnvironment(
             env: {},
         });
         if (listed.code !== 0) return { failure: listed };
-        // The installed Git version lists its own local variable names.
         const localVariables = listed.stdout
             .replace(TRAILING_NEWLINE, '')
             .split('\n')

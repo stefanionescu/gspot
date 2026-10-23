@@ -84,7 +84,6 @@ export const POSITIONLESS_RESULTS = [
     { name: 'no location, so it concerns the repository', file: '', locations: undefined },
 ] as const;
 
-/** Static Analysis Results Interchange Format (SARIF) source locations and the repository paths they become. */
 export const SARIF_LOCATION_CASES = [
     { uri: 'api/some%20file.ts', uriBaseId: '%SRCROOT%' },
     { uri: new URL('api/some%20file.ts', pathToFileURL(`${resolve('selected-source')}${sep}`).href).href },

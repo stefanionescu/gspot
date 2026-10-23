@@ -75,13 +75,6 @@ async function measureXcodeCoverage(
     return parseToolReport('xccov', viewed.stdout, xccovSchema);
 }
 
-/**
- * Measures the coverage of source targets in the Swift package or Xcode project.
- *
- * @param session the repository and its tools.
- * @param planned the scope to test.
- * @returns coverage for source targets.
- */
 async function measureCoverage(session: Session, planned: PlannedCheck): Promise<CoverageReport> {
     const plan = buildPlan(session, planned, { purpose: 'coverage' });
     const setup = prepareBuild(session.root, planned.files, plan.folder);
@@ -93,13 +86,6 @@ async function measureCoverage(session: Session, planned: PlannedCheck): Promise
         : await measureXcodeCoverage(session, planned, plan, cwd);
 }
 
-/**
- * Lists the targets under their coverage limit.
- *
- * @param report the line coverage of each target that xccov or swift test reports.
- * @param settings the line limit and per-target limits.
- * @returns one message per short or missing target.
- */
 function listCoverageShortfalls(
     report: CoverageReport,
     settings: Pick<TableSettings<'coverage'>, 'lines' | 'swift_target'>,
@@ -127,14 +113,6 @@ function listCoverageShortfalls(
     });
 }
 
-/**
- * Sums the covered lines of each source target that Swift Package Manager declares.
- *
- * @param text the coverage JSON from the compiler.
- * @param packageText the package description, including custom target paths.
- * @param folder the package path in the source copy.
- * @returns the coverage of each source target.
- */
 function parseSwiftCoverage(text: string, packageText: string, folder: string): CoverageReport {
     const report = parseToolReport('swift test', text, swiftCoverageSchema);
     const description = parseToolReport('swift package', packageText, packageDescriptionSchema);

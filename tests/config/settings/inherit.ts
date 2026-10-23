@@ -3,7 +3,6 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
-/** The error of two configurations with different defaults. */
 export const CONFLICTING_DEFAULT_ERRORS = [
     {
         path: ['configurations'],
@@ -12,7 +11,6 @@ export const CONFLICTING_DEFAULT_ERRORS = [
     },
 ] as const;
 
-/** Settings with an empty PurgeCSS safelist in the root. */
 export const PURGECSS_SAFELIST_TABLES = `[tools.purgecss]
 safelist = []
 [[scope]]
@@ -28,7 +26,6 @@ removed_configurations = { value = ["site"], reason = "This scope does not use t
 
 const sqlConfiguration = readConfigurations().get('sql') as Configuration;
 
-/** Two configuration defaults that disagree on the SQL dialect. */
 export const CONFLICTING_SETTINGS: AvailableSettings = buildAvailableSettings(
     [
         sqlConfiguration,
@@ -41,7 +38,6 @@ export const CONFLICTING_SETTINGS: AvailableSettings = buildAvailableSettings(
     'recommended',
 );
 
-/** CSS and HTML naming fields accepted by the published settings schema. */
 export const CSS_HTML_NAMING_SETTINGS = `configurations = ["css", "html"]
 [naming.css]
 max_words = 3

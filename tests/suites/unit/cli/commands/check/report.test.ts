@@ -26,7 +26,6 @@ import {
     CHECK_REPORT_COMPARISONS,
 } from '#tests/config/commands/check/report.ts';
 
-// Require --json to keep every finding, then fix the findings and require a clean run.
 async function assertReportRepair(root: string, commandArguments: readonly string[]): Promise<void> {
     const json = parseCheckReport(await runGspot(root, [...commandArguments, '--json']));
     expect(json.code, json.stdout + json.stderr).toBe(1);

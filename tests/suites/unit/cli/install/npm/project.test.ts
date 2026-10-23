@@ -18,12 +18,6 @@ import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
 import { FAILED_INSTALL_CASES, PACKAGE_MANAGER_TIMEOUT } from '#tests/config/install/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from '#cli/install/npm/project.ts';
 
-/**
- * Fake bun 1.4.2, and fail every other bun run.
- *
- * @param failure what a failed run prints, or that it ran out of time.
- * @returns the mock, which restores bun when disposed.
- */
 function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' | 'timedOut'>>): Disposable {
     return fakeCommand('bun', (command) =>
         Promise.resolve(
@@ -32,7 +26,6 @@ function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' |
     );
 }
 
-/** Wrap package.json text as the generated tool project file. */
 function buildNpmConfigFile(content: string): GeneratedFile {
     return { path: GSPOT_PATHS.npmProject, content };
 }

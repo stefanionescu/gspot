@@ -1,5 +1,3 @@
-// Bun loads this file before each integration and e2e test file. It starts a local npm registry, and puts the
-// prepared gspot and the pinned tools on `PATH`.
 import { testdir } from 'testdirs';
 import { afterAll } from 'bun:test';
 import { readFile } from 'node:fs/promises';

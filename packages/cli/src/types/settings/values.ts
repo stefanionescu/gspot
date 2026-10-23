@@ -20,10 +20,8 @@ export type LimitFields<NumberValue> = Partial<Record<keyof ParsedLimitFields, N
 
 type LimitDefinition = (typeof LIMIT_DEFINITIONS)[keyof typeof LIMIT_DEFINITIONS];
 
-/** The languages that at least one limit reads. */
 export type LimitLanguage = Extract<LimitDefinition, { languages: readonly string[] }>['languages'][number];
 
-/** The limits that some code reads for one language. */
 export type LanguageLimitField<Language extends LimitLanguage> = {
     [Key in keyof typeof LIMIT_DEFINITIONS]: (typeof LIMIT_DEFINITIONS)[Key] extends {
         languages: readonly (infer Languages)[];
@@ -36,7 +34,6 @@ export type LanguageLimitField<Language extends LimitLanguage> = {
         : never;
 }[keyof typeof LIMIT_DEFINITIONS];
 
-/** One language's limit table: only the limits that the language reads, each inherited from the root when unset. */
 export type LanguageLimitFields<Language extends LimitLanguage, NumberValue> = Partial<
     Record<LanguageLimitField<Language>, NumberValue | undefined>
 >;

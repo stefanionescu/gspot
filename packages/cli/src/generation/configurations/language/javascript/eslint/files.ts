@@ -15,7 +15,6 @@ import {
     type EslintBlockFields,
 } from '#cli/types/generation/eslint.ts';
 
-// Component selectors carry the parser discriminator for the declared component configurations.
 function isComponentConfiguration(name: string): name is (typeof COMPONENT_CONFIGURATIONS)[number] {
     const names: readonly string[] = COMPONENT_CONFIGURATIONS;
     return names.includes(name);

@@ -20,8 +20,6 @@ export function getConfigFileTarget(
     return configFile.per_scope ? (targets.get(scope)?.get(configFile.target) ?? configFile.target) : configFile.target;
 }
 
-// gspot writes a config file when its level applies and its configuration condition holds. A check must also use one of
-// its tools or count among its checks; an empty list asks for nothing.
 function isConfigFileNeeded(session: Session, file: ConfigFile, used: UsedNames): boolean {
     if (file.level === 'all' && session.settingsFile.settings.level !== 'all') return false;
     const constraints = [
@@ -33,7 +31,6 @@ function isConfigFileNeeded(session: Session, file: ConfigFile, used: UsedNames)
     return true;
 }
 
-// Each scope uses its own checks for its own config files and the repository programs for shared config files.
 function listScopeConfigFiles(session: Session, scope: Scope, repositoryNames: UsedNames): OwnedConfigFile[] {
     const checks = listScopeChecks(session, scope);
     const used = {

@@ -8,14 +8,12 @@ import PackageDescription
 let package = Package(name: "Example", targets: [.target(name: "Example", path: ".")])
 `;
 
-/** The SwiftLint config files of a nested scope after the generated one, the last through a link. */
 export const NESTED_SWIFTLINT_FILES = [
     'app/.swiftlint.yml',
     'app/Sources/.swiftlint.yml',
     'app/Sources/Feature/.swiftlint.yml',
 ] as const;
 
-/** The Other.swift diagnostic without the /private prefix. */
 export const PRIVATE_OTHER_FINDING = {
     file: '/var/folders/project/Other.swift',
     line: 5,
@@ -24,7 +22,6 @@ export const PRIVATE_OTHER_FINDING = {
     message: 'Unknown name',
 } as const;
 
-/** The Main.swift diagnostic without the /private prefix. */
 export const PRIVATE_MAIN_FINDING = {
     file: '/var/folders/project/Main.swift',
     line: 4,
@@ -33,7 +30,6 @@ export const PRIVATE_MAIN_FINDING = {
     message: 'Missing value',
 } as const;
 
-/** The swift/build finding after a failed build. */
 export const FAILED_BUILD_FINDINGS = [
     {
         check: 'swift/build',
@@ -47,7 +43,6 @@ export const FAILED_BUILD_FINDINGS = [
     },
 ] as const;
 
-/** The two analyzer exits, with the exact message of each. */
 export const ANALYZER_EXIT_CASES = [
     { buildCode: 7, analyzerCode: 0, message: 'Cannot analyze Swift because the build exited 7.' },
     {
@@ -57,6 +52,5 @@ export const ANALYZER_EXIT_CASES = [
     },
 ] as const;
 
-/** Compiler stderr that names one source under /private/var/folders and one under /var/folders. */
 export const PRIVATE_PREFIX_STDERR =
     '/private/var/folders/project/Main.swift:4:2: error: Missing value\n/var/folders/project/Other.swift:5:3: error: Unknown name';

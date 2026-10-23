@@ -30,13 +30,6 @@ import {
     SUGGESTION_SECTIONS,
 } from '#cli/config/commands/doctor.ts';
 
-/**
- * Check whether a tool runs at a supported version.
- *
- * @param inspection what doctor found for the tool.
- *
- * @returns true when the tool can run.
- */
 function isToolAvailable(inspection: ToolInspection): inspection is ToolInspection & { path: string } {
     return AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined;
 }
@@ -66,7 +59,6 @@ function formatSuggestions(suggestions: Suggestions): string[] {
             detail: 'evidence' in suggestion ? suggestion.evidence : suggestion.note,
             command: suggestion.command,
         }));
-        // Each column takes the width of its longest entry, so a long scope path keeps the rows aligned.
         const nameWidth = Math.max(COLUMN_WIDTHS.name, ...cells.map(({ name }) => name.length));
         const detailWidth = Math.max(COLUMN_WIDTHS.note, ...cells.map(({ detail }) => detail.length));
         const rows = cells.map(({ name, detail, command }) =>
@@ -86,16 +78,8 @@ function formatGspotVersion(report: DoctorReport): string {
     return `gspot      ${pin}`;
 }
 
-/**
- * Inspect the tools, the Git hooks, the version pin, and the setup suggestions.
- *
- * @param session the tools and scopes to inspect.
- * @param versionPin the version that `.gspot/version` pins, if any.
- * @returns the report. Its exit code becomes EXIT_FINDINGS when a tool or the Git hooks need changes.
- */
 function buildDoctorReport(session: Session, versionPin: string | undefined): DoctorReport {
     const platform = getOperatingSystem();
-    // Leave out each tool with no build for this system; its checks skip here.
     const inspections = new Map<string, ToolInspection>();
     const pins = listDistinctTools(session.toolConfigurations).filter(
         (tool) => findMissingBuild(tool, { platform, arch: process.arch }) === undefined,
@@ -109,7 +93,6 @@ function buildDoctorReport(session: Session, versionPin: string | undefined): Do
                 { ...session, cwd: join(session.root, folder.path), miseBinPaths: getMiseBinPaths(session) },
                 tool,
             );
-            // Scopes that find the same tool in the same place share one row.
             inspections.set(JSON.stringify(inspection), inspection);
         }
     }
@@ -132,12 +115,6 @@ function buildDoctorReport(session: Session, versionPin: string | undefined): Do
     };
 }
 
-/**
- * Format the report: one line per tool that cannot run, the count of ready tools, then the other sections.
- *
- * @param report what doctor found.
- * @returns the text for stdout.
- */
 function formatDoctorReport(report: DoctorReport): string {
     const lines = [
         ...formatTools(report.tools.filter((tool) => !isToolAvailable(tool))),
@@ -153,12 +130,6 @@ function formatDoctorReport(report: DoctorReport): string {
     return `${lines.join('\n')}\n`;
 }
 
-/**
- * Report the tools, Git hooks, setup suggestions, and version pin of the repository around a folder.
- *
- * @param cwd where to look for the repository.
- * @returns the command result.
- */
 async function runDoctorCommand(cwd: string): Promise<CommandResult> {
     const root = findRoot(cwd);
     const session = await openSession(root);

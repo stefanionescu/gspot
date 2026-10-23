@@ -1,5 +1,3 @@
-/** Project files that keep each security configuration active after apply. */
-
 import { BASE_INSTALLED_FILES } from '#tests/config/setup/sandboxes.ts';
 
 export const SEMGREP_PROJECT_FILES = {
@@ -17,7 +15,6 @@ dependencies = ["fastapi"]
     'supabase/config.toml': 'project_id = "example"\n',
 } as const;
 
-/** The Semgrep check command for the Semgrep rule and output parser cases. */
 export const SEMGREP_CHECK = ['check', '--only', 'security/semgrep', '--json'] as const;
 
 export const SEMGREP_SANDBOX = {

@@ -19,7 +19,6 @@ export async function checkNamingIdentifiers(session: Session, planned: PlannedC
     for (const { file, language } of listNamedFiles(planned)) {
         const text = readCachedText(session.reads, file.path);
         const { identifiers, error } = await parseIdentifiers(file.path, text, language, session);
-        // The language's own linter reports a file that does not parse.
         if (error !== undefined) continue;
         findings.push(...validateIdentifiers(planned, settings, identifiers));
     }

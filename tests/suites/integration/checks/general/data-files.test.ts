@@ -22,7 +22,6 @@ import {
     UNQUOTED_UNTIL_CHANGE,
 } from '#tests/config/integration/checks/general/data-files.ts';
 
-/** Check the root and child scopes separately with yamllint. */
 async function assertYamlFiles(root: string, rule?: string): Promise<void> {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'data-files/yamllint', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);
@@ -68,7 +67,6 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
             }),
         }),
     );
-    // An authored .v8rrc.yml must not replace the generated config file.
     await writeFile(join(root, '.v8rrc.yml'), 'invalid: [\n');
     const path = join(root, 'settings/café.json');
     await writeFile(path, JSON.stringify({ count: 'invalid' }));
@@ -161,7 +159,6 @@ test('v8r checks gspot.toml against the schema in .gspot, which accepts an unquo
     expect(accepted.report.checks).toMatchObject([
         { check: 'data-files/v8r', status: 'passed', command: matchElements([SETTINGS_FILE]) },
     ]);
-    // A schema that rejects every document shows that v8r read this file. Disposal applies the generated schema again.
     await writeFile(join(root, GSPOT_PATHS.settingsSchema), REJECTING_SCHEMA);
     const rejected = await checkSettings();
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);

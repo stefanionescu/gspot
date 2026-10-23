@@ -1,6 +1,3 @@
-/**
- * A check that fails while a file holds its first argument, and a correction that replaces that text with its second.
- */
 export const TEXT_CHECK_SCRIPT =
     'const [, text, ...paths] = process.argv; const bodies = await Promise.all(paths.map((path) => Bun.file(path).text())); process.exitCode = bodies.some((body) => body.includes(text)) ? 1 : 0;';
 
@@ -36,7 +33,6 @@ export const FIX_LINTER_CASES = [
     },
 ] as const;
 
-/** The generated type files that a fix run keeps. */
 export const GENERATED_TYPE_FILES = [
     'app/next-env.d.ts',
     'app/worker-configuration.d.ts',

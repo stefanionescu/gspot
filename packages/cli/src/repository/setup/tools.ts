@@ -1,4 +1,3 @@
-// Find existing lint commands, hooks, and config files.
 import { findText } from '#cli/system/files/reads.ts';
 import type { ManagedKeys } from '#cli/types/apply.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -46,7 +45,6 @@ import {
     GITHUB_WORKFLOWS_FOLDER,
 } from '#cli/config/repository/setup/tools.ts';
 
-// Check whether a CI command line runs a linter: eslint, a two-word lint command, or a lint task.
 function isLintCommand(command: string): boolean {
     const words = command.split(COMMAND_SEPARATORS).filter((word) => word !== '');
     return words.some((word, index) => {
@@ -59,7 +57,6 @@ function isLintCommand(command: string): boolean {
     });
 }
 
-// List the files in a folder under a root, without dot files; none when the folder does not exist.
 function listFolder(root: string, folder: string): string[] {
     const path = join(root, folder);
     if (statSync(path, { throwIfNoEntry: false }) === undefined) return [];
@@ -72,7 +69,6 @@ function listFolder(root: string, folder: string): string[] {
         .filter((name) => !name.startsWith('.') || name === KEPT_DOT_FILE);
 }
 
-// List the hook scripts in a folder: its files, without the folders that a hook manager keeps there.
 function listHookFiles(root: string, folder: string): string[] {
     return listFolder(root, folder).filter(
         (name) => statSync(join(root, folder, name), { throwIfNoEntry: false })?.isFile() === true,
@@ -106,7 +102,6 @@ function isLintJob(name: string, job: CiJob): boolean {
     );
 }
 
-// Find the lint commands in the jobs of a CI file.
 function listLintCommands(path: string, document: unknown): string[] {
     const parsed = ciDocumentSchema.safeParse(document);
     if (!parsed.success) return [];
@@ -119,8 +114,6 @@ function listLintCommands(path: string, document: unknown): string[] {
     });
 }
 
-// Read the folder that core.hooksPath names. Husky points it at its stubs in .husky/_, or at .husky in Husky 8, and
-// keeps the hooks of the user in .husky, which the Husky entry lists.
 function readHooksPathSetup(root: string, hooksPath: string): RepositorySetup['hooks'] {
     if (hooksPath === '') return [];
     const location = readHooksFolder(root);
@@ -137,7 +130,6 @@ export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
     const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
     const packageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
     const written = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
-    // core.hooksPath can name an absolute path or start with ./; compare it with the hook folders as a repository path.
     const hooksPath = convertToPosixPath(relative(repositoryRoot, resolve(repositoryRoot, written))).replace(
         TRAILING_SLASH,
         '',

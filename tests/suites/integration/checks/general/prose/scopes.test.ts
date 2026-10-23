@@ -34,7 +34,6 @@ Read [here](only.md).
         expect(checked.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
             { scope: '', status: 'failed' },
         ]);
-        // At level all, the title of the child file breaks the banned-headings and title-case rules too.
         expect(listFindingRows(checked.report)).toStrictEqual([
             ...(level === 'all'
                 ? [
@@ -108,8 +107,6 @@ test.each([...LEVELS])(
         const appliedSettings = await readFile(join(root, 'gspot.toml'), 'utf8');
         const checked = parseCheckReport(await spawnGspot(root, ['check', path, '--only', 'prose/vale', '--json']));
         expect(checked.code, checked.stdout + checked.stderr).toBe(level === 'all' ? 1 : 0);
-        // Each sample reports its own gspot rule at its first line unless it lists its findings, and the Microsoft and
-        // Red Hat packages report none.
         let line = 1;
         const expected = PACKAGE_STYLE_CASES.flatMap((row) => {
             const findings = 'findings' in row ? row.findings : [[0, row.rule] as const];

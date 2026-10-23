@@ -1,4 +1,3 @@
-/** EditorConfig findings that formatters do not replace. */
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -27,7 +26,6 @@ export const EDITORCONFIG_SAMPLES = [
     },
 ] as const;
 
-/** A staged format check uses the root config file until a later apply writes the scope config file. */
 export const STAGED_FORMAT_FILES = {
     'gspot.toml': buildSandboxSettings(['format'], {
         tables: '[format]\nindent_width = 2\n[rules]\nenabled = false\n',

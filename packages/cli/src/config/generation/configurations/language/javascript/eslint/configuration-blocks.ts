@@ -41,7 +41,6 @@ const ZOD_RULES = [
 
 const JEST_GLOBAL_PACKAGE = '@jest/globals';
 
-/** Imported bindings for the blocks of each configuration. */
 export const CONFIGURATION_PLUGINS = {
     expo: { expoPlugin: ['expoPlugin', 'eslint-plugin-expo'] },
     'react-native': {
@@ -86,7 +85,6 @@ export const CONFIGURATION_PLUGINS = {
     jest: { jest: ['jest', 'eslint-plugin-jest'] },
 } as const satisfies Record<string, EslintPlugins>;
 
-/** Test correctness rules that the two test plugins share, without their namespace. */
 export const TEST_RULE_NAMES = [
     'no-focused-tests',
     'no-disabled-tests',
@@ -100,7 +98,6 @@ export const TEST_RULE_NAMES = [
     'prefer-strict-equal',
 ] as const;
 
-/** The imports, plugins, files, and rules of the configuration blocks that need no code of their own. */
 export const PLUGIN_RULE_BLOCKS: Readonly<
     Record<
         string,

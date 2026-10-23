@@ -40,7 +40,6 @@ import {
     PACKAGE_SCRATCH_FOLDER,
 } from '#cli/config/checks/language/swift/cache.ts';
 
-// Maps each source to the file contents it needs under source/ in the build folder.
 function readBuildSources(root: string, paths: string[]): Map<string, FileContents> {
     using source = openFiles(root);
     const wantedFiles = new Map<string, FileContents>();
@@ -82,12 +81,6 @@ function pruneSources(folder: string, files: Files, wantedFiles: Map<string, Fil
         files.deleteFolder(emptyFolder);
 }
 
-/**
- * Creates and locks a build folder without following links in it.
- *
- * @param folder the private cache path.
- * @returns the locked root, which the caller disposes.
- */
 function openBuildCache(folder: string): Files {
     const home = readCacheFolder();
     mkdirSync(home, { recursive: true, mode: PRIVATE_FOLDER });
@@ -109,7 +102,6 @@ function openBuildCache(folder: string): Files {
  * @returns the cache folder path.
  */
 export function getScopeBuildFolder(root: string, scope: string, purpose: SwiftBuildPurpose): string {
-    // The real path of the installed checkout names its private build cache.
     return join(
         readCacheFolder(),
         createHash(DIGEST_ALGORITHM).update(realpathSync(root)).digest('hex'),

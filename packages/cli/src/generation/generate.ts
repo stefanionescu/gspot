@@ -35,7 +35,6 @@ import {
     ATTRIBUTE_QUOTED_CHARACTERS,
 } from '#cli/config/generation/generate.ts';
 
-// CI includes the manual checks and adds macOS when a scope selects Swift.
 function buildWorkflow(session: Session, generated: GenerationResult): void {
     const {
         settingsFile: { settings },
@@ -66,8 +65,6 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
     );
 }
 
-// A path as a Git attributes pattern that matches only that file: anchored, with glob characters escaped, and quoted
-// when it holds a space or a quote.
 function buildAttributePattern(path: string): string {
     const escaped = path.replaceAll(ATTRIBUTE_GLOB_CHARACTERS, (character) => `\\${character}`);
     const pattern = `/${escaped}`;
@@ -76,7 +73,6 @@ function buildAttributePattern(path: string): string {
     return `"${quoted}"`;
 }
 
-// Each whole file gspot writes outside its folder keeps LF too, so a CRLF checkout does not read as an edit.
 function buildAttributesBlock(outsidePaths: string[], authored: string): string {
     const inheritsLineEndings = parseAttributePatterns(authored, '.').some(
         ({ pattern, attributes }) =>
@@ -94,11 +90,6 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
     return [block, ...lines].join('\n');
 }
 
-/**
- * Build the managed .gitignore block for tool projects and generated files.
- *
- * @returns the paths that Git must leave untracked.
- */
 function buildGitignoreBlock(): string {
     const toolProjectPaths = [...Object.values(INSTALLED_TOOL_FOLDERS), GSPOT_PATHS.state].map((path) => `${path}/`);
     return [...toolProjectPaths, `${DOT_GSPOT}/${YARN_INSTALL_SETTINGS_FILE}`].join('\n');
@@ -189,8 +180,6 @@ export function generate(session: Session): GenerationResult {
             names: listHookNames(session.configuredChecks),
             usesLfs: session.repository.attributes.values().some((values) => values[FILTER_ATTRIBUTE] === LFS_FILTER),
         }),
-        // Only Yarn needs the package manager version; reading it can start the package manager when package.json
-        // declares no version.
         ...(packageManager === undefined
             ? []
             : buildNpmProject({

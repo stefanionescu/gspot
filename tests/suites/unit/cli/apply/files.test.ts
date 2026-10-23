@@ -57,7 +57,6 @@ test('leaving level all removes the managed commitlint field from every package.
     }
 });
 
-/** Write selected package fields and retain the complete installed bytes for the removal checks. */
 async function writePackageFields(
     root: string,
     scenario: typeof COMMITLINT_PACKAGE_FIELDS | typeof STYLELINT_PACKAGE_FIELDS,

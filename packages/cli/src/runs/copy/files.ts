@@ -17,7 +17,6 @@ import type { CopyFile, CopyPlan, CopyPaths, DependencyCopy } from '#cli/types/r
 import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/runs/copy/files.ts';
 import { statSync, chmodSync, constants, mkdirSync, symlinkSync, copyFileSync, writeFileSync } from 'node:fs';
 
-// Source reads go through the confined reader, so they stay inside the repository.
 function writeCopyFile(files: Files, copyRoot: string, file: CopyFile): void {
     const target = join(copyRoot, ...splitSystemPath(typeof file === 'string' ? file : file.indexFile.path));
     mkdirSync(dirname(target), { recursive: true });

@@ -1,4 +1,3 @@
-/** pip-licenses prints every license field it finds: the license expression, the metadata text, and the classifiers. */
 export const PIP_LICENSES_COMMAND = ['pip-licenses', '--format=json', '--from=all', '--python'] as const;
 
 export const LICENSE_CHECKER_COMMAND = [
@@ -12,7 +11,6 @@ export const UNKNOWN_LICENSE = 'UNKNOWN';
 
 export const LICENSE_CHOICE = ' OR ';
 
-/** pip-licenses joins several classifiers of one package with this text. */
 export const CLASSIFIER_SEPARATOR = '; ';
 
 export const TROVE_LICENSES: Readonly<Record<string, string>> = {

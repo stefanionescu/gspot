@@ -58,15 +58,6 @@ function throwCrash(planned: OutputCheck, result: SpawnResult): never {
     throw new GspotError('output', detail === '' ? `${failure} and printed nothing.` : `${failure}:\n${detail}`);
 }
 
-/**
- * Checks whether a command crashed: it exited nonzero, its format names files, it runs on many files, and no finding names a real file.
- *
- * @param check the output format and command.
- * @param result what the command returned.
- * @param parsed the findings read from its output.
- * @param paths the working folder and repository root.
- * @returns true for a crash.
- */
 function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], paths: OutputPaths): boolean {
     if (check.runs === 'history' || result.code === 0 || (check.command?.includes(FILE_PLACEHOLDER) ?? false))
         return false;
@@ -75,14 +66,6 @@ function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], pat
     return parsed.every((finding) => !isOnDisk(finding.file, [paths.cwd, paths.root]));
 }
 
-/**
- * Parses findings and fails on a crash.
- *
- * @param planned the check that ran.
- * @param result what the command printed.
- * @param paths the working folder and repository root.
- * @returns the parsed tool results.
- */
 function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
     const { check } = planned;
     if (isReportedCrash(check, planned.tool, result)) throwCrash(planned, result);
@@ -110,7 +93,6 @@ export function buildCheckResult(
     const output = check.output;
     const descriptor = outputFormats[output.format];
     const isEveryFindingKept = state.failed || (check.runs !== 'history' && descriptor.namesFiles(output));
-    // A tool that succeeds may print progress that names no file; when the run fails, keep that output.
     const findings = isEveryFindingKept
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);

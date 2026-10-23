@@ -1,4 +1,3 @@
-// Runs one check on a bad sample, then on its fix, and puts the files back.
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { afterAll, beforeAll } from 'bun:test';
@@ -61,7 +60,6 @@ export async function runCheckOnChanges(
     run: GspotCall = spawnGspot,
 ): Promise<ProcessOutput> {
     await using resources = new AsyncDisposableStack();
-    // A check writes no generated file, so the restored sandbox needs no apply.
     resources.use(await changeSandbox({ root: cwd, environment, run }, changes));
     const commandArguments = ['check', '--only', changes.check, '--json'];
     return await run(cwd, commandArguments, environment);
@@ -102,7 +100,6 @@ export function buildSampleSummary(result: SampleResult): SampleSummary {
     };
 }
 
-// The check results of a report that failed or hold a finding.
 function listReportedChecks(report: RunReport): CheckResult[] {
     return report.checks.filter(({ status, findings }) => status !== 'passed' || findings.length > 0);
 }

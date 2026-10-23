@@ -85,7 +85,6 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
         expect(setup.substitutions.files).toStrictEqual(['Sources/Main.swift']);
     }
 });
-// Windows keeps no permission bits to read back.
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {
     await using sandbox = await testdir();
     const executable = join(sandbox.path, 'checker');
@@ -147,7 +146,6 @@ test('per-file failures name the selected file when expanded arguments follow it
     expect(failed.status).toBe('failed');
     expect(failed.findings.map((finding) => finding.file)).toStrictEqual(['inputs/café source.txt']);
 });
-// Windows has no signals: a process that kills itself exits with a code.
 test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a finding', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
@@ -208,7 +206,6 @@ test('a command run in a copy finds the other tools beside its program before a 
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
 });
-// Windows forbids a colon or a newline in a file or folder name.
 test.skipIf(isWindows)('a command check reports files whose folder names hold a colon or a newline', async () => {
     await using sandbox = await testdir();
     const paths = ['source\nfiles/greet.sh', 'source:files/greet.sh'];

@@ -11,7 +11,6 @@ test.each(['linux', 'win32'] as const)('a relative cache folder setting is refus
     expect(() => readCacheFolder()).toThrow('must be an absolute path');
 });
 
-// Only the Windows process environment folds names; a plain object does not.
 test.if(process.platform === 'win32')('environment reads ignore name case in Bun and Node', () => {
     using _environment = overrideEnvironment({ GSPOT_TEST_NAME: 'native-case-folding' });
     expect(readEnvironmentVariable('gspot_test_name')).toBe('native-case-folding');

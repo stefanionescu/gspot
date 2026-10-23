@@ -3,7 +3,6 @@ import { ESLintUtils } from '@typescript-eslint/utils';
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 import type { RuleDocs, DocumentedRuleCreator } from '../../types/rules.ts';
 
-/** Create rule modules with their public documentation URL. */
 export const createRule = ESLintUtils.RuleCreator<RuleDocs>((name) =>
     RULE_URL.replace('{rule}', name),
 ) as DocumentedRuleCreator;

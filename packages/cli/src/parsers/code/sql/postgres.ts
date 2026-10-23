@@ -14,12 +14,6 @@ function buildStatements(bytes: Buffer, statement: RawStmt): SqlStatement[] {
     return Object.entries(statement.stmt).map(([kind, fields]) => ({ kind, fields, start }) as SqlStatement);
 }
 
-/**
- * Parses a file as Postgres reads it.
- *
- * @param text the original source before replacing psql commands and variables.
- * @returns the statements, or the parse error with its position.
- */
 async function parseSqlText(text: string): Promise<SqlFile> {
     const { text: source, variables } = replacePsqlSyntax(text);
     if (source.trim() === '') return { source, variables, statements: [], error: undefined };
@@ -49,12 +43,6 @@ async function parseSqlText(text: string): Promise<SqlFile> {
     };
 }
 
-/**
- * Parse SQL text, and keep syntax errors without hiding parser load failures.
- *
- * @param text the SQL.
- * @returns the tree, or the error with its zero-based Unicode offset.
- */
 async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
     const { SqlError, parse: parseSql } = await import('libpg-query');
     try {

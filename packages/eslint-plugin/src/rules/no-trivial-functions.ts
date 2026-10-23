@@ -6,21 +6,12 @@ import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { trivialFunctionsOptionsSchema } from '../schemas/rules/no/trivial.ts';
 import { FUNCTION_SELECTOR, INLINE_VALUE_PARENTS, TRIVIAL_FUNCTION_STATEMENTS } from '../config/syntax.ts';
 
-/**
- * Check whether a function fills a slot that takes a callback: an argument, a return value, an array element, a
- * property, an assigned member, or JSX. Such a function has no name, so the rule leaves it out.
- *
- * @param node the function
- * @returns whether the slot needs an inline function
- */
 function isInlineValue(node: ImplementedFunction): boolean {
     if (node.type === AST_NODE_TYPES.FunctionDeclaration || node.id !== null) return false;
     const value = findOutermostValue(node);
     return INLINE_VALUE_PARENTS.has(value.parent.type) || isValueSlot(value);
 }
 
-// A property value, an assigned member, or an argument takes a function value. A method shorthand or an accessor in an
-// object literal counts as a named method, and a function assigned to a variable takes its name.
 function isValueSlot(value: TSESTree.Expression): boolean {
     const parent = value.parent;
     switch (parent.type) {

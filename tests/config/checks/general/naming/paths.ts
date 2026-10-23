@@ -17,7 +17,6 @@ export const NUMBERED_FILES = {
     'scripts/steps/01-build.sh': 'echo example\n',
 } as const;
 
-/** File names that naming/paths reports, the names it allows beside them, and the rename that fixes each. */
 export const FILE_NAME_CASES = [
     {
         name: '__init__.ts is reported; Python __init__.py and __main__.py are allowed',
@@ -67,7 +66,6 @@ export const FILE_NAME_CASES = [
     },
 ] as const;
 
-/** The folder and path parameter names of the Next.js routes. */
 export const NEXTJS_FOLDER_NAMES = [
     'folders:app',
     'folders:marketing',
@@ -76,7 +74,6 @@ export const NEXTJS_FOLDER_NAMES = [
     'folders:lib',
 ] as const;
 
-/** The naming findings of numbered file names. */
 export const NUMBERED_FILE_FINDINGS = [
     { file: '.mise/tasks/01-build.sh', rule: 'case' },
     { file: '.mise/tasks/01-build.sh', rule: 'digits' },

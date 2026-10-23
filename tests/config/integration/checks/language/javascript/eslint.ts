@@ -1,4 +1,3 @@
-// A documented JavaScript module that passes ESLint.
 const JAVASCRIPT_MODULE = `// Doubles numbers.
 
 /**
@@ -14,7 +13,6 @@ export function twice(value) {
 }
 `;
 
-/** A JavaScript repository with no TypeScript source or tsconfig.json. */
 export const ESLINT_SANDBOX = {
     configurations: ['javascript'],
     files: {
@@ -24,7 +22,6 @@ export const ESLINT_SANDBOX = {
     },
 } as const;
 
-/** A debugger statement in a JavaScript module, and the module without it. */
 export const DEBUGGER_SAMPLE = {
     check: 'javascript/eslint',
     files: {

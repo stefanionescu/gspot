@@ -1,4 +1,3 @@
-/** The safety pattern that only level `all` reports: a failure that `|| true` discards. */
 export const ALL_LEVEL_SAFETY_PATTERNS = [
     [
         /\|\|\s*true(?:\s|$)/u,
@@ -7,7 +6,6 @@ export const ALL_LEVEL_SAFETY_PATTERNS = [
     ],
 ] as const;
 
-/** Patterns that need an ignore with a reason. */
 export const SAFETY_PATTERNS = [
     [
         /\bpkill\s+-f\b/u,

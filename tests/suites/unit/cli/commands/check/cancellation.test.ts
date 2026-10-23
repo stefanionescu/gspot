@@ -1,5 +1,3 @@
-// Windows does not deliver process signals like POSIX systems, so each signal test skips it.
-
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
@@ -26,7 +24,6 @@ import {
     limitToTestDeadline,
 } from '#tests/setup/system/processes.ts';
 
-/** Start a staged check with indexed input, an authored edit, and a paused Git command. */
 async function prepareStagedCancellation(root: string, operation: 'diff' | 'clone' | 'cat-file') {
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
@@ -54,7 +51,6 @@ async function prepareStagedCancellation(root: string, operation: 'diff' | 'clon
     return { ...capture, indexed, scratch, started, [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned) };
 }
 
-/** Stop the paused check and verify its public cancellation response before waiting for Git to exit. */
 async function stopStagedCancellation(
     paused: Awaited<ReturnType<typeof prepareStagedCancellation>>,
     signal: 'SIGINT' | 'SIGTERM',
@@ -70,7 +66,6 @@ async function stopStagedCancellation(
     await waitForExit(paused.started.pid);
 }
 
-/** Verify the retained working tree and index, then run the same staged check successfully. */
 async function assertStagedRetry(
     root: string,
     paused: Pick<Awaited<ReturnType<typeof prepareStagedCancellation>>, 'scratch' | 'indexed'>,
@@ -268,16 +263,6 @@ process.exitCode = await runProgram(process.argv.slice(2));
     },
 );
 
-/**
- * Pause the selected Git operation and forward every other call to Git.
- *
- * @param folder the launcher and call counter folder.
- * @param options the operation, marker path, and call number to pause.
- * @param options.operation the Git operation to pause.
- * @param options.marker the path that records the paused process.
- * @param options.pauseOnCall the call number to pause.
- * @returns an environment that finds the pausing launcher first.
- */
 async function fakePausingGit(
     folder: string,
     options: { operation: 'diff' | 'clone' | 'cat-file'; marker: string; pauseOnCall: number },

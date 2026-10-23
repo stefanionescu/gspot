@@ -34,8 +34,6 @@ function assertIgnoreOptions(options: IgnoreOptions, settings: Settings): void {
         );
 }
 
-// A path through a route group or a dynamic segment holds parentheses or brackets that read as glob syntax. Escape the
-// existing part of each path, so the pattern matches that folder.
 function escapeLiteralPaths(root: string, paths: string[] | undefined): string[] | undefined {
     return paths?.map((path) => {
         const segments = path.split('/');
@@ -52,12 +50,6 @@ function escapeLiteralPaths(root: string, paths: string[] | undefined): string[]
     });
 }
 
-/**
- * Write an ignore with its reason.
- *
- * @param options the parsed flags.
- * @returns the command result.
- */
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     const { root, input, settings } = prepareSettingsEdit(options.cwd);
     assertIgnoreOptions(options, settings);
@@ -86,12 +78,6 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
     return result.json.changed ? { ...result, text: `${record}\n${result.text}` } : result;
 }
 
-/**
- * Validate the --until date before writing it.
- *
- * @param text the date from --until.
- * @returns the same calendar date as a TOML value.
- */
 function parseExpiryDate(text: string): LocalDate {
     const result = calendarDateSchema.safeParse(text);
     if (!result.success)

@@ -1,4 +1,3 @@
-// Reads tool messages with declared text patterns.
 import type { Finding } from '#cli/types/runs/check.ts';
 import { type ToolOutput } from '#cli/types/runs/output.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/runs/output/text.ts';

@@ -1,4 +1,3 @@
-/** Source path patterns, which must match a file, and output paths, which need not. */
 export const UNMATCHED_PATH_CASES = [
     {
         name: 'primitive lists and nested record paths',
@@ -85,7 +84,6 @@ export const UNMATCHED_PATH_CASES = [
     },
 ] as const;
 
-/** The fields of each unmatched-paths finding. */
 export const UNMATCHED_PATH_FINDING = {
     check: 'gspot/unmatched-paths',
     file: 'gspot.toml',

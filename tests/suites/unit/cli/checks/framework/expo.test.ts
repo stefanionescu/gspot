@@ -58,12 +58,6 @@ test('Expo Doctor reports an uninstalled Expo project instead of accepting its e
     );
 });
 
-/**
- * Write two installed Expo apps, and fake Expo Doctor so that each run returns this result.
- *
- * @param result what each Expo Doctor run returns.
- * @returns the sandbox folder and the folders Expo Doctor ran in, which the disposal removes.
- */
 async function prepareExpoApps(
     result: Partial<SpawnResult>,
 ): Promise<AsyncDisposable & { path: string; folders: string[] }> {

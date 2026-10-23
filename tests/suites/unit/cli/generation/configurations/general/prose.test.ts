@@ -83,7 +83,6 @@ test('the Vale vocabulary and heading exceptions hold the products of every scop
     const text = files.find(({ path }) => path.endsWith('/vocabularies/words/accept.txt'))!.content;
     const vocabulary = text.split('\n');
     expect(vocabulary.at(-1)).toBe('');
-    // Each word appears once; SwiftLint stays out because no scope selects Swift.
     expect(
         ['Python', 'basedpyright', 'NebulaProduct', 'SwiftLint'].map(
             (word) => vocabulary.filter((line) => line === word).length,

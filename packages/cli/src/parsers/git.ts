@@ -1,4 +1,3 @@
-// Parses .gitattributes text and the index, tree, and blob output of Git.
 import { posix } from 'node:path';
 import { LINE_FEED } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -32,7 +31,6 @@ function parseIndexLine(match: RegExpExecArray | null): GitFile {
     return parsed.data;
 }
 
-// Ignore empty transport chunks. A missing required byte marks an incomplete Git response.
 async function readNextChunk(stream: GitStream): Promise<boolean> {
     while (stream.cursor === stream.chunk.length) {
         const next = await stream.chunks.next();
@@ -74,7 +72,6 @@ function parseBlobSize(header: string, hash: string): number {
     return size;
 }
 
-// Octal escapes name bytes, so decode UTF-8 only after joining them with the literal text.
 function decodeQuotedPattern(pattern: string): string | undefined {
     if (!QUOTED_ATTRIBUTE_PATTERN.test(pattern)) return undefined;
     const bytes: Buffer[] = [];

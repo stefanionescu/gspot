@@ -34,7 +34,6 @@ function formatLocation(finding: Finding): string {
     return `${finding.file}${line}${column}  `;
 }
 
-// Shared help follows the last finding that needs it.
 function formatFinding(finding: Finding, next?: Finding): string[] {
     const rule =
         finding.rule === undefined || finding.rule === finding.check ? '' : `${getColors().cyan(finding.rule)}  `;

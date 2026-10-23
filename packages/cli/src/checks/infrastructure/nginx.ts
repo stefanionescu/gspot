@@ -41,7 +41,6 @@ import {
     OPENSSL_CERTIFICATE_FLAG,
 } from '#cli/config/checks/infrastructure/nginx.ts';
 
-// nginx resolves include paths from the folder of the main configuration file.
 function listIncludedFiles(planned: PlannedCheck, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
     const included: Pick<Mount, 'path' | 'target'>[] = [];
     for (const [name, value] of parseNginxDirectives(text)) {
@@ -127,18 +126,6 @@ async function testNginxFile(
     return buildSyntaxResult(planned, path, copies, errorLine);
 }
 
-/**
- * Builds the Docker arguments that run `nginx -T` on one nginx configuration. `nginx -T` tests the configuration and
- * prints every file it read.
- *
- * @param text the nginx configuration, with its includes.
- * @param mounts the host paths to mount.
- * @param mounts.configs the copied nginx files and their container paths.
- * @param mounts.certificate a self-signed file to mount.
- * @param mounts.key a throwaway secret to mount.
- * @param image the nginx container tag.
- * @returns the command arguments after docker.
- */
 function buildNginxTestArguments(text: string, mounts: NginxMounts, image: string): string[] {
     const parsed = parseNginxDirectives(text);
     const hosts = new Set(

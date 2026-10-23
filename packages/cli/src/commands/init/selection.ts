@@ -45,8 +45,6 @@ function selectScopeConfigurations(init: InitRepository, scopeFolder: ScopeFolde
             return configuration !== undefined && configuration.group !== 'general';
         })
         .map((evidence) => evidence.configuration);
-    // A language stays out of a scope only while the root keeps it: some source of the language sits outside every
-    // scope.
     const atRoot = new Set(rootNames);
     return names.filter((name) => !atRoot.has(name) || init.configurations.get(name)?.group !== 'language');
 }
@@ -75,7 +73,6 @@ function expandSuggestions(
             ...names,
             ...suggestions.filter((name) => {
                 const configuration = configurations.get(name);
-                // A suggestion without detection rules needs no source match.
                 const hasDetection =
                     configuration !== undefined &&
                     Object.values(configuration.detect).some((patterns) => Object.keys(patterns).length > 0);

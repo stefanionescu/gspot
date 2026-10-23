@@ -49,7 +49,6 @@ function isWithinFolder(path: string, folder: string): boolean {
     return path === folder || path.startsWith(`${folder}/`);
 }
 
-// Match ancestors rather than import filenames: a boundary can contain files directly or deeper folders.
 function findBoundary(parentFolder: string, folders: readonly string[]): string | undefined {
     if (!isWithinFolder(parentFolder, '.')) return undefined;
     const segments = parentFolder.split('/');

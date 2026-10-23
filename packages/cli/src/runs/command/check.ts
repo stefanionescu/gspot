@@ -98,7 +98,6 @@ function findMissingConfigFile(
     };
 }
 
-// Run the command in the working tree or in a copy, and report the command as it reads in the repository.
 async function runInCopy(run: CopyRun): Promise<CheckResult> {
     const { session, planned, tool, command, toolPath, setup, base, options } = run;
     using copy =

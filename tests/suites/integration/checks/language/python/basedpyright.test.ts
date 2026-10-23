@@ -18,7 +18,6 @@ test('init replaces your pyrightconfig.json with a pointer, and basedpyright rep
         check: 'python/basedpyright',
         files: { [ARITHMETIC_MODULE_PATH]: typed },
     });
-    // The pointer replaces the file; gspot.toml keeps none of the old settings.
     const pointer = { extends: `./${findFileTarget('python', 'basedpyright.json')}` };
     expect(await readFile(join(root, 'pyrightconfig.json'), 'utf8')).toBe(
         `${JSON.stringify(pointer, null, JSON_INDENT)}\n`,

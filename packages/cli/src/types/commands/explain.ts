@@ -12,10 +12,6 @@ export type Explanation = {
 export type PathExplanation = {
     path: string;
     scope: string;
-    /**
-     * The kind of the file: source, generated, vendored, or binary. Named fileKind because the explanation JSON uses
-     * kind for the subject.
-     */
     fileKind: FileKind;
     fileKindOrigin?: string;
     tags: string[];

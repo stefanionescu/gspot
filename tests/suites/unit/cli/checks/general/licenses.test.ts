@@ -235,7 +235,6 @@ test('scan: the check skips with a note while licenses.allowed is empty', async 
         { check: 'licenses/allowed', status: 'skipped', note: 'Set licenses.allowed to check licenses.' },
     ]);
 });
-// The scenario of a monorepo: each scope a Python project with its own environment and license report.
 async function writeScopeLicenseSandbox(
     root: string,
     scenario: (typeof ALLOWED_PACKAGE_SCOPE_CASES)[number],
@@ -257,7 +256,6 @@ async function writeScopeLicenseSandbox(
     });
 }
 
-// Write the settings and project files, and a pip-licenses of the pinned version in the tool environment.
 async function writeLicenseSandbox(
     root: string,
     settings: string,

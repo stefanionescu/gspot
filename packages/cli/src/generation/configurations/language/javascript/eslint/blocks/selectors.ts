@@ -15,7 +15,6 @@ import {
     ALIAS_IMPORT_SELECTORS,
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 
-// Keep each distinct path list once, in the order written.
 function filterDistinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();
     return lists.filter((list) => {
@@ -26,15 +25,6 @@ function filterDistinctLists(lists: string[][]): string[][] {
     });
 }
 
-/**
- * Group the syntax selectors that the configurations and settings add, so each file set gets one no-restricted-syntax
- * rule. A selector without files applies to every code file. The except paths of a selector leave it out of the groups
- * for those paths. Each intersection of files and except paths makes its own block, with every selector that applies
- * there, in first-mention order.
- *
- * @param selectors the syntax patterns with their covered and skipped paths.
- * @returns the groups, where an absent files list means every code file.
- */
 function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
     const boundaries = filterDistinctLists(
         selectors.flatMap((each) => [each.files ?? [], each.except ?? []]).filter((paths) => paths.length > 0),
@@ -68,7 +58,6 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
     }));
 }
 
-// The selectors that settings turn on: environment reads outside the readers at level all, and alias suffixes.
 function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];
     const owners = scope.settings.values.structure?.environment_readers ?? [];
@@ -79,7 +68,6 @@ function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
     return selectors;
 }
 
-// A selector covers the files that its setting lists in the scope, or every source file when it names no setting.
 function buildSelectorPaths(scope: Scope, declaration: Configuration['eslint']['selectors'][number]): SelectorPaths {
     const listed =
         declaration.paths_setting === undefined ? undefined : scope.settings.settings[declaration.paths_setting];

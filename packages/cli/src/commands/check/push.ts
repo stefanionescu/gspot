@@ -1,5 +1,3 @@
-// Check each revision of a push in its own copy, and build one report for the push.
-
 import { checkTree } from '#cli/commands/check/tree.ts';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
@@ -8,7 +6,6 @@ import { selectPush } from '#cli/repository/revisions/push.ts';
 import { type PushReport, type CheckOptions } from '#cli/types/commands/check.ts';
 import { type PushRevision, type PushedRevisions } from '#cli/types/repository/revisions.ts';
 
-// Check one pushed commit in a copy. Return undefined when the signal stops the run.
 async function checkRevision(
     root: string,
     options: CheckOptions,
@@ -32,8 +29,6 @@ async function checkRevision(
     }
 }
 
-// Build the push report: the checked revisions, the updates that no check covers, and the refs that a cancellation
-// left.
 function buildPushReport(
     selected: PushedRevisions,
     revisions: PushReport['revisions'],

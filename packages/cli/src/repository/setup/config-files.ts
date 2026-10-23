@@ -15,9 +15,6 @@ import { YAML_EXTENSIONS } from '#cli/config/repository/setup/tools.ts';
 import type { ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 import { INI_EXTENSIONS } from '#cli/config/repository/setup/config-files.ts';
 
-// List the root and every folder that a project file marks. A plain config file name such as knip.ts counts only in these
-// folders, because a source file deeper in the code can share it. A dotfile such as .prettierrc.json counts in any
-// folder.
 function listProjectFolders(inventory: Set<string>, configurations: Configuration[]): Set<string> {
     const patterns = configurations.flatMap((configuration) => configuration.detect.project_files);
     const folders = new Set(['']);

@@ -39,7 +39,6 @@ export const INVALID_COMPOSE_SOURCES = [
     { name: 'an empty service value', source: 'services: {app: null}', message: 'compose.yaml: services.app:' },
 ] as const;
 
-/** The Trivy finding of a service image. */
 export const TRIVY_IMAGE_FINDINGS = [
     {
         check: 'docker/trivy-image',

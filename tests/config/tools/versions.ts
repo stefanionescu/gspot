@@ -1,4 +1,3 @@
-/** Version command output, with the state, the version found, and the note of the inspection. */
 export const VERSION_OUTPUTS = [
     {
         name: 'a version with an undeclared exit code',

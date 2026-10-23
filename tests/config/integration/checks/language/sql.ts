@@ -29,7 +29,6 @@ export const SQL_FUNCTION_SOURCE = `CREATE FUNCTION get_user_name() RETURNS TEXT
 SELECT get_user_name();
 `;
 
-/** Settings with a root and a scope SQLFluff dialect. */
 export const SQLFLUFF_DIALECT_SETTINGS = {
     tables: `[tools.sqlfluff]
 dialect = "postgres"

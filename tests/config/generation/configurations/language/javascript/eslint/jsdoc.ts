@@ -82,7 +82,6 @@ export const TSC_ARGUMENTS = [
     'false',
 ] as const;
 
-/** A parameter named root, and the root0 placeholder that JSDoc gives an unnamed object parameter. */
 export const ROOT_PARAMETERS = `/**
  * Join a path to the folder.
  * @param root the folder to start from.

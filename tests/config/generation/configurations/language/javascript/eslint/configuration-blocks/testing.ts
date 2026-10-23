@@ -8,7 +8,6 @@ export const VITEST_FILES = {
     'tests/unit/example.test.js': '',
 } as const;
 
-/** Each test runner with the Testing Library package it pairs with. */
 export const TESTING_LIBRARY_CASES = [
     ['react', '@testing-library/react'],
     ['vue', '@testing-library/vue'],

@@ -1,9 +1,7 @@
-/** These reads consume or examine the whole positional-argument list. */
 export const ALL_POSITIONAL_PARAMETERS = new Set(['@', '*', '#']);
 
 export const FORWARDED_ARGUMENTS: ReadonlySet<string> = new Set(['"$@"', '"$*"']);
 
-/** These declarations introduce local variables inside Bash functions unless they request global scope. */
 export const LOCAL_DECLARATION_WORDS = new Set(['local', 'declare', 'typeset']);
 
 export const POSITIONAL_PARAMETER = /^[1-9]\d*$/u;

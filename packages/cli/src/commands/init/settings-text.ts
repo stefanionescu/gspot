@@ -42,7 +42,6 @@ function buildOpenApiTables(
     );
 }
 
-// Swift seeds come from the Xcode project owned by each selected scope.
 function buildSwiftTables(
     scopes: { scope: string; selected: Configuration[] }[],
     draft: SettingsDraft,

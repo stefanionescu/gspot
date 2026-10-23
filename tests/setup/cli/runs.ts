@@ -1,4 +1,3 @@
-// Builds run options, and a fixer check whose command each test sets.
 import { planChecks } from '#cli/planning/checks.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { RunOptions } from '#cli/types/runs/run.ts';

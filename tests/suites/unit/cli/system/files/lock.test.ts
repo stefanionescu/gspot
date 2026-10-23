@@ -73,7 +73,6 @@ test('a live lock written during the dead-holder check survives', async () => {
     expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('kept');
 });
 
-/** Read a child process ID after the child has exited. */
 function readExitedProcessId(): string {
     const child = runCommandBlocking([process.execPath, '-e', 'console.log(process.pid)'], { cwd: process.cwd() });
     if (child.code !== 0) throw new Error(child.stderr);

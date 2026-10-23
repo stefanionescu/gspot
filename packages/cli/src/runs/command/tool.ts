@@ -25,14 +25,6 @@ function getCheckTool(session: Session, planned: PlannedCheck, name: string, opt
     return { name: tool.name, path: availability.path, env };
 }
 
-/**
- * Classifies a process failure for command checks and built-in checks.
- *
- * @param result what the process returned.
- * @param name the tool that the note mentions.
- * @param timeoutSeconds the process time limit, in seconds.
- * @returns the failure, or undefined for readable output.
- */
 function findProcessFailure(result: SpawnResult, name: string, timeoutSeconds: number): ProcessFailure | undefined {
     if (result.canceled) return { status: 'error', note: `${name} was canceled.` };
     if (result.timedOut)

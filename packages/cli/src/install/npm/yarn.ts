@@ -26,7 +26,6 @@ import {
     YARN_SETTING_VARIABLE_PREFIX,
 } from '#cli/config/install/npm/yarn.ts';
 
-// Convert connection settings recursively while retaining secrets for redaction.
 function convertToReference(value: unknown, key: string, env: Record<string, string>, secrets: string[]): unknown {
     if (typeof value === 'string') {
         if (YARN_SECRET_KEYS.has(key)) secrets.push(value);
@@ -40,7 +39,6 @@ function convertToReference(value: unknown, key: string, env: Record<string, str
     return value;
 }
 
-// Read each Yarn environment setting and replace credential values with references.
 function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]): Record<string, unknown> {
     const environmentSettings = YARN_ENVIRONMENT_SETTINGS.flatMap<[string, unknown]>((source) => {
         const pairs = Object.entries(env).flatMap<[string, unknown]>(([key, value]) => {

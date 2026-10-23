@@ -1,4 +1,3 @@
-/** Scripts with dialect findings and temporary-folder cleanup in the root and a nested scope. */
 export const DIALECT_SOURCES = {
     'posix.sh': String.raw`#!/bin/sh
 if [[ -n "$1" ]]; then
@@ -63,7 +62,6 @@ fi
 `,
 } as const;
 
-/** The ShellCheck findings of the dialect samples, by file. */
 export const SHELLCHECK_DIALECT_FINDINGS = [
     { file: 'app/posix.sh', rule: 'SC3010' },
     { file: 'dash.sh', rule: 'SC3010' },
@@ -71,9 +69,7 @@ export const SHELLCHECK_DIALECT_FINDINGS = [
     { file: 'unchecked.sh', rule: 'SC2164' },
 ] as const;
 
-/** The zsh syntax case. */
 export const SYNTAX_CASES = [
-    // Zsh reports a parse error at the end of this one-line script, on line 2.
     {
         check: 'bash/zsh-syntax',
         path: 'script.zsh',

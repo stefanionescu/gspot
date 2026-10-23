@@ -1,4 +1,3 @@
-// Check pinned dependencies and remove registry URLs from tool-project lockfiles.
 import semver from 'semver';
 import { posix } from 'node:path';
 import { parseSyml } from '@yarnpkg/parsers';
@@ -27,7 +26,6 @@ import {
     YARN_DESCRIPTOR_SEPARATOR,
 } from '#cli/config/install/npm/lockfiles.ts';
 
-// Check whether a parsed Yarn lockfile resolves each requested descriptor to its pinned version.
 function isYarnLockfileFresh(
     yarnPackages: Record<string, { version?: string | undefined }>,
     dependencies: DependencyMap,
@@ -43,15 +41,12 @@ function isYarnLockfileFresh(
     );
 }
 
-// Find the registry of a package: the registry of its scope, or the default.
 function findPackageRegistry(name: string, env: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;
     const scopeRegistry = scope === undefined ? undefined : env[`${NPM_SETTING_PREFIX}${scope}:registry`];
     return scopeRegistry ?? env[`${NPM_SETTING_PREFIX}registry`];
 }
 
-// Check whether a Bun lockfile entry resolved the standard tarball of a valid npm version through the configured
-// registry.
 function isStandardTarball(bunPackage: BunPackage, env: Record<string, string>): boolean {
     const [identity, address, , integrity] = bunPackage;
     const separator = identity.lastIndexOf('@');
@@ -65,7 +60,6 @@ function isStandardTarball(bunPackage: BunPackage, env: Record<string, string>):
     return address === new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
 }
 
-// Strip the registry prefix from a resolved URL, or return undefined when the URL lies elsewhere.
 function stripRegistryPrefix(address: string, base: URL): string | undefined {
     if (!HTTP_URL.test(address)) return undefined;
     const url = new URL(address);
@@ -73,15 +67,6 @@ function stripRegistryPrefix(address: string, base: URL): string | undefined {
     return `${url.pathname.slice(base.pathname.length)}${url.search}${url.hash}`;
 }
 
-/**
- * Rewrite resolved URLs under the registry as relative paths, and keep the Yarn formatting.
- * Throw if any other entry changes.
- *
- * @param content the lockfile text Yarn wrote.
- * @param registry the URL that resolved references start with.
- *
- * @returns the lockfile text with registry-relative references.
- */
 function stripYarnRegistryUrls(content: string, registry: string): string {
     const yarnPackages = yarnLockSchema.parse(parseSyml(content));
     const expected = Object.fromEntries(
@@ -104,14 +89,6 @@ function stripYarnRegistryUrls(content: string, registry: string): string {
     return edited;
 }
 
-/**
- * Blank each standard registry tarball URL through a targeted JSON edit.
- *
- * @param content the lockfile text Bun wrote.
- * @param env the registry settings the resolution ran with.
- *
- * @returns the lockfile text without the registry tarball URLs.
- */
 function stripBunRegistryUrls(content: string, env: Record<string, string>): string {
     const parsed = parseJsonFile('bun.lock', content, bunLockSchema);
     let edited = content;
@@ -123,7 +100,6 @@ function stripBunRegistryUrls(content: string, env: Record<string, string>): str
     return edited;
 }
 
-// Validate the tool project's development pins over the shared loose lockfile shape.
 function parseDevelopmentDependencies(
     name: Exclude<PackageManager['name'], 'yarn'>,
     workspace: unknown,
@@ -141,7 +117,6 @@ function parseDevelopmentDependencies(
     return pins;
 }
 
-// Select the workspace entries after validating the package manager's lockfile shape.
 function parseWorkspaces(
     name: Exclude<PackageManager['name'], 'yarn'>,
     content: string,
@@ -156,7 +131,6 @@ function parseWorkspaces(
     return isTable(workspaces) ? workspaces : undefined;
 }
 
-// Require valid package entries before checking Yarn's requested descriptors.
 function parseYarnPackages(content: string): Record<string, YarnPackage> | undefined {
     const parsed = yarnLockSchema.safeParse(parseSyml(content));
     if (!parsed.success) return undefined;
@@ -167,14 +141,6 @@ function parseYarnPackages(content: string): Record<string, YarnPackage> | undef
     return Object.fromEntries(yarnPackages.flatMap(([key, result]) => (result.success ? [[key, result.data]] : [])));
 }
 
-/**
- * Read the root dependencies of a lockfile.
- *
- * @param name the package manager that wrote the lockfile.
- * @param content the lockfile text.
- *
- * @returns the dependencies recorded for the root project.
- */
 function parseRootDependencies(
     name: Exclude<PackageManager['name'], 'yarn'>,
     content: string,
@@ -190,7 +156,6 @@ function parseRootDependencies(
     return root;
 }
 
-// Treat malformed stored lockfiles as stale, while preserving unrelated process failures.
 function isInvalidLockfile(error: unknown): boolean {
     if (error instanceof GspotError) return error.code === 'filesystem';
     return (

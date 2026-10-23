@@ -31,7 +31,6 @@ export const TAILWIND_AT_RULES = [
     'reference',
 ] as const;
 
-/** CSS Modules syntax, as stylelint-config-css-modules 4.6.0 accepts it: composes, :global and :export, and @value. */
 export const CSS_MODULES_OVERRIDE = {
     files: ['**/*.module.css'],
     suffix: '.module.css',

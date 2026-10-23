@@ -1,4 +1,3 @@
-/** Vue component files share one selector across captured and authored rule blocks. */
 export const VUE_FILES = ['**/*.vue'] as const;
 
 export const VUE_RULES = {

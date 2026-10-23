@@ -1,6 +1,5 @@
 import { LocalDate } from '@decimalturn/toml-patch';
 
-/** Settings with a Supabase scope and an authored scope. */
 export const POSTGRES_SCOPE_SETTINGS = {
     level: 'recommended',
     rules: true,
@@ -8,7 +7,6 @@ export const POSTGRES_SCOPE_SETTINGS = {
     tables: 'postgres.client_schemas = ["client"]\n',
 } as const;
 
-/** Settings with an OpenAPI scope. */
 export const OPENAPI_SCOPE_SETTINGS = {
     level: 'recommended',
     rules: true,
@@ -16,7 +14,6 @@ export const OPENAPI_SCOPE_SETTINGS = {
     tables: 'removed_configurations = { value = ["openapi"], reason = "This scope does not publish an OpenAPI document." }\n',
 } as const;
 
-/** The limit, version, and frameworks of each scope. */
 export const SCOPE_LIMIT_VALUES = {
     '': [100, '5.0', ['Foundation']],
     api: [80, '6.0', ['Foundation', 'UIKit']],
@@ -56,7 +53,6 @@ configurations = ["bash"]
 xcode_scheme = "5.0"
 `;
 
-/** The nearest configuration choices apply to child folders, and siblings stay apart. */
 export const PROJECT_CHOICES = {
     configurations: ['nextjs', 'javascript'],
     removed_configurations: [],
@@ -67,7 +63,6 @@ export const PROJECT_CHOICES = {
     ],
 } as const;
 
-/** Inheritance from the root, removal, restoring in a deeper scope, separate siblings, and required dependencies. */
 export const PROJECT_SCOPE_CASES = [
     ['', 'nextjs', true],
     ['app', 'nextjs', false],
@@ -77,7 +72,6 @@ export const PROJECT_SCOPE_CASES = [
     ['required', 'javascript', true],
 ] as const;
 
-/** Package manager files, and the package manager that the default site build uses. */
 export const SITE_PACKAGE_MANAGER_CASES = [
     ['npm fallback', {}, 'npm'],
     ['declared Bun', { 'package.json': '{"packageManager":"bun@1.4.2"}' }, 'bun'],

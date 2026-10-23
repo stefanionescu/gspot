@@ -1,4 +1,3 @@
-// Finds and reads repository roots, file attributes, dependency files, and scopes.
 import { statSync, realpathSync } from 'node:fs';
 import { openFiles } from '#cli/system/files/open.ts';
 import { join, posix, dirname, resolve } from 'node:path';
@@ -29,13 +28,6 @@ import {
     GIT_WORK_TREE_ARGUMENTS,
 } from '#cli/config/system/git.ts';
 
-/**
- * Read the Git attributes of each tracked path.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param paths every tracked path.
- * @returns the attributes by path.
- */
 function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Record<string, string>> {
     if (paths.length === 0) return new Map();
     const result = runGitBlocking(repositoryRoot, GIT_CHECK_ATTRIBUTES_ARGUMENTS, {
@@ -150,7 +142,6 @@ export function findRoot(start: string): string {
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS);
     const gitRoot = top.code === 0 ? resolve(top.stdout.replace(TRAILING_NEWLINE, '')) : undefined;
     if (gitRoot !== undefined) return gitRoot;
-    // A broken .git stops the search; a folder outside any repository does not.
     const inspection = runGitBlocking(folder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
     if (inspection.code !== NOT_REPOSITORY_CODE || !inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
         throw new Error(

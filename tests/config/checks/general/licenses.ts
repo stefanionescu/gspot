@@ -32,7 +32,6 @@ export const ALLOWED_PACKAGE_SCOPE_CASES = [
     },
 ] as const;
 
-/** Every scanning sandbox declares its license choice. */
 export const LICENSE_TABLES = '[licenses]\nallowed = ["MIT"]\n';
 
 export const SCANNER_FAILURES = [
@@ -87,7 +86,6 @@ export const ALLOWED_PACKAGE_CASES = [
     },
 ] as const;
 
-/** JavaScript package names stay as written; their own reports normalize Python package names. */
 export const EXPECTED_SCAN_FINDINGS = [
     { file: 'package.json', message: 'unknown@1.0.0 uses UNKNOWN, which is not allowed.' },
     { file: 'package.json', message: 'python.package@2.0.0 uses GPL-3.0-only, which is not allowed.' },
@@ -99,7 +97,6 @@ name = "sample"
 version = "0.0.0"
 `;
 
-/** The root Python project of a license sandbox, with an installed environment. */
 export const LICENSE_PROJECT_FILES = { 'pyproject.toml': SAMPLE_PYPROJECT, '.venv/installed': 'sample' };
 
 export const SCAN_ALLOWED_PACKAGES = `[[licenses.allowed_package]]
@@ -138,7 +135,6 @@ version = "0.0.0"
     [`${DOT_GSPOT}/probe/.venv/installed`]: 'Absent_Package@2.0.0',
 } as const;
 
-/** pip-licenses entries with a Software Package Data Exchange (SPDX) expression, metadata, and trove classifiers. */
 export const PYTHON_LICENSE_SOURCES = [
     { Name: 'expression', Version: '1.0.0', 'License-Expression': 'MIT', 'License-Metadata': 'GPL' },
     {

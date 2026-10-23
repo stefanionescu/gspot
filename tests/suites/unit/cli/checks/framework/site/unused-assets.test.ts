@@ -9,7 +9,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { SCOPE_ASSET_FILES, ASSET_REFERENCE_CASES } from '#tests/config/checks/framework/site/unused-assets.ts';
 
-/** Commit the asset files of one test in the docs site scope. */
 async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
     const sandbox = resources.use(
         await testdir({

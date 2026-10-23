@@ -15,7 +15,6 @@ function readPatternLines(reads: ReadCache, file: string): string[] {
         .filter((line) => line !== '' && !line.startsWith(GITIGNORE_COMMENT));
 }
 
-// A pattern with a slash before its end starts at its .gitignore folder; any other pattern matches at any depth.
 function anchorLine(folder: string, line: string): string {
     if (folder === '') return line;
     const body = line.replace(/^\//u, '');

@@ -1,4 +1,3 @@
-/** JSON output without findings, and the error of each. */
 export const EMPTY_JSON_CASES = [
     ['', 'JSON returned no structured findings.'],
     ['noise only', 'JSON returned no structured findings.'],
@@ -6,7 +5,6 @@ export const EMPTY_JSON_CASES = [
     ['{"items":null}', 'Required JSON report array items is missing or invalid.'],
 ] as const;
 
-/** A JSON format with nested children. */
 export const TWO_LEVEL_FORMAT = {
     format: 'json' as const,
     list: 'results',
@@ -14,7 +12,6 @@ export const TWO_LEVEL_FORMAT = {
     fields: { file: 'source.path', rule: 'id', message: 'package.name package.version summary' },
 } as const;
 
-/** JSON output with lists two levels down. */
 export const NESTED_LIST_OUTPUT = {
     results: [
         {
@@ -29,7 +26,6 @@ export const NESTED_LIST_OUTPUT = {
     ],
 } as const;
 
-/** Each fix field and whether it marks the finding fixable. */
 export const FIX_FIELD_CASES = [
     ['absent', {}, false],
     ['object', { fix: { range: [0, 1], text: '' } }, true],
@@ -37,7 +33,6 @@ export const FIX_FIELD_CASES = [
     ['false', { fix: false }, true],
 ] as const;
 
-/** A JSON format with list and children. */
 export const NESTED_LIST_FORMAT = {
     format: 'json' as const,
     list: 'files',
@@ -45,7 +40,6 @@ export const NESTED_LIST_FORMAT = {
     fields: { file: 'filepath', line: 'start_line_no', rule: 'code', message: 'description' },
 } as const;
 
-/** The findings of a flat JSON list. */
 export const FLAT_JSON_FINDINGS = [
     {
         check: 'nginx/gixy',
@@ -58,7 +52,6 @@ export const FLAT_JSON_FINDINGS = [
     },
 ] as const;
 
-/** JSON reports with a finding that gspot cannot read, and the message of each refusal. */
 export const INVALID_FINDING_REPORTS = [
     {
         name: 'a null finding',

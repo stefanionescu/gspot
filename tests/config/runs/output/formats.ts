@@ -1,5 +1,3 @@
-/** One output setting per format. Each carries the patterns or fields its format needs. */
-
 import { win32 } from 'node:path';
 
 export const CHECK_OUTPUTS = [
@@ -21,7 +19,6 @@ export const CHECK_OUTPUTS = [
 
 export const FOREIGN_OUTPUT = 'not the output of any tool {\n';
 
-/** What each format makes of empty output and of output that no tool printed: its findings, or the refusal message. */
 export const OUTPUT_PARSE_RESULTS = {
     regex: {
         empty: { findings: [] },
@@ -83,7 +80,6 @@ export const EDITORCONFIG_REPORT = `source.js:
 2 errors found
 `;
 
-/** The findings of a regex without a rule group. */
 export const BRACKETED_WORD_FINDINGS = [
     {
         check: 'sandbox/diagnostic',
@@ -103,7 +99,6 @@ export const BRACKETED_WORD_FINDINGS = [
     },
 ] as const;
 
-/** Taplo output with a Windows root. */
 export const WINDOWS_ROOT_CASES = [
     {
         root: 'C:/work',
@@ -115,17 +110,14 @@ export const WINDOWS_ROOT_CASES = [
     { root: '/repository', stdout: '', stderr: '  ┌─ settings.toml:2:1\n', line: 2, column: 1 },
 ] as const;
 
-/** Each formatter with whether its output supports fixing. */
 export const FIXABLE_FORMAT_CASES = [
     ['format/prettier', '[warn] source.ts', 'source.ts'],
     ['python/ruff-format', 'source.py:1:1: unformatted: different spacing', 'source.py'],
 ] as const;
 
-/** ESLint paths inside and outside the root, with the path that gspot reports. */
 export const ESLINT_PATH_CASES: [root: string, path: string, expected: string][] = [
     ['/repo', '/repo/a.js', 'a.js'],
     ['/repo', '/repository/a.js', '/repository/a.js'],
-    // Bun escapes Unicode inside String.raw; create the Windows path from slashes.
     [
         win32.normalize('C:/repo'),
         win32.normalize('C:/repo/café file.js'),
@@ -133,7 +125,6 @@ export const ESLINT_PATH_CASES: [root: string, path: string, expected: string][]
     ],
 ];
 
-/** ShellCheck output with each line ending. */
 export const LINE_ENDING_CASES = [
     ['LF', '\n'],
     ['CRLF', '\r\n'],

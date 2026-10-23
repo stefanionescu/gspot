@@ -8,7 +8,6 @@ export const ATTRIBUTE_GLOB_CHARACTERS = /[\\*?[]/gu;
 
 export const LF_ATTRIBUTES = 'text eol=lf';
 
-// Every file gspot writes keeps LF, so a CRLF checkout does not mark generated files and hooks as changed.
 export const GIT_ATTRIBUTES_BLOCK = `${DOT_GSPOT}/** linguist-generated
 ${DOT_GSPOT}/** ${LF_ATTRIBUTES}
 .gitignore ${LF_ATTRIBUTES}

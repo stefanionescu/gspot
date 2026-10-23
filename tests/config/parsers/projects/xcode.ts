@@ -26,7 +26,6 @@ export const XCODE_PROJECT_REFUSALS = [
     },
 ] as const;
 
-/** Project file syntax that the property-list reader must keep. */
 export const PROJECT_SYNTAX_CASES = [
     { name: 'quoted keys', source: GROUPED_PBXPROJ.replace('rootObject = P;', '"rootObject" = P;') },
     {

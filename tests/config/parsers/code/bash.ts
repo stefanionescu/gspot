@@ -1,6 +1,5 @@
 import { type TemporaryPath, type ScriptFunction } from '#cli/types/parsers/code/bash.ts';
 
-/** Quotes, parameter modifiers, and escaped hashes remain code. */
 export const BASH_COMMENT_CASES = [
     ['echo "a # b" # c', 'echo "a # b"'],
     ["printf '#'", "printf '#'"],
@@ -10,7 +9,6 @@ export const BASH_COMMENT_CASES = [
     [String.raw`x=1 \# y`, String.raw`x=1 \# y`],
 ] as const;
 
-/** Only a trap that removes the same mktemp path counts; other paths, reassignment, and compound values do not. */
 export const MKTEMP_CLEANUP_CASES = [
     {
         name: 'a trap that changes the path before it removes it',
@@ -120,7 +118,6 @@ export const FORWARDING_CALL_CASES = [
     { source: 'consume\n', count: 0, forwards: false },
 ] as const;
 
-/** The calls of plain, quoted, and expanded trap handlers. */
 export const TRAP_CALLS = [
     { name: 'trap', count: 2, line: 1, forwards: false },
     { name: '_cleanup', count: 0, line: 1, forwards: false },
@@ -128,7 +125,6 @@ export const TRAP_CALLS = [
     { name: 'trap', count: 2, line: 3, forwards: false },
 ] as const;
 
-/** The lines, bodies, and highest positional parameter of each Bash function. */
 export const BASH_FUNCTIONS: ScriptFunction = {
     name: '_one',
     start: 2,

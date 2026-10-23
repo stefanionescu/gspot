@@ -1,11 +1,9 @@
-/** The Swift name limits that apply in each scope of the settings below. */
 export const SCOPE_LIMITS = [
     { scope: '', characters: 38, functions: 37, words: 4 },
     { scope: 'app', characters: 36, functions: 35, words: 3 },
     { scope: 'sibling', characters: 38, functions: 37, words: 4 },
 ] as const;
 
-/** Swift name limits at the root and in the app scope, with a function limit in each. */
 export const SWIFT_NAMING_LIMITS = `[naming.swift]
 max_characters = 38
 max_words = 4
@@ -22,7 +20,6 @@ max_characters = 35
 path = "sibling"
 `;
 
-/** Names and the words that splitParts finds in them. */
 export const NAME_WORD_CASES = [
     ['HTMLParser', ['html', 'parser']],
     ['user_id', ['user', 'id']],

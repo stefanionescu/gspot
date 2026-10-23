@@ -17,7 +17,6 @@ import {
     TRANSLATION_FINDINGS,
 } from '#tests/config/checks/translations.ts';
 
-// Run translations/messages on these message files with the next-intl dependencies.
 async function runMessagesCheck(files: Record<string, string>): Promise<readonly Finding[]> {
     await using sandbox = await testdir({
         ...files,

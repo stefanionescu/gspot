@@ -1,9 +1,5 @@
 export const LANGUAGE_BY_EXTENSION = { '.py': 'python', '.swift': 'swift' } as const;
 
-/**
- * The syntax tree queries that the trivial-function, environment-reader, and bare-block checks run on Bash, Python,
- * and Swift files.
- */
 export const SOURCE_QUERIES = {
     bash: `(function_definition) @function
 (variable_assignment) @assignment`,

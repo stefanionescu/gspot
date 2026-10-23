@@ -15,7 +15,6 @@ import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
 import type { ToolIgnore, PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
 
-// Read the ignore syntax from your own ignore file of the check, or from the generated one.
 function readToolIgnore(session: Session, check: PlannedCheck): ToolIgnore | undefined {
     const argument = check.check.command?.indexOf(TOOL_IGNORE_ARGUMENT) ?? -1;
     const file = argument < 0 ? undefined : check.check.command?.[argument + 1];
@@ -24,7 +23,6 @@ function readToolIgnore(session: Session, check: PlannedCheck): ToolIgnore | und
     return { file, matches: matcher.ignores.bind(matcher) };
 }
 
-// A scope check leaves out the files of child scopes.
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');
     return planned.session.repository.files.filter(
@@ -34,7 +32,6 @@ function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['r
     );
 }
 
-// List the files of a project-wide check: the scope tree, when the check files match anything in it.
 function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
     const { check, configuration } = scopeCheck;
     const { scope } = planned;
@@ -55,8 +52,6 @@ function listProjectCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, sc
     return check.runs === 'scope' ? scopeFiles : scopeFiles.filter((file) => file.kind !== 'binary');
 }
 
-// A per-file check reads the files that its owners cover. A project check reads every file of the scope once one of its
-// files matches.
 function listCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): TrackedFile[] {
     const { session, scope } = planned;
     const { check, configuration } = scopeCheck;
@@ -72,8 +67,6 @@ function listCheckFiles(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath
     });
 }
 
-// Drop the paths that an [[ignore]] of the check names, for tracked files and deleted trigger paths alike, and skip the
-// check when none remain.
 function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pick<PlannedCheck, 'files' | 'skip'> {
     const paths = listIgnores(scope.settings, check.id).flatMap((ignore) =>
         ignore.rule === undefined && ignore.names === undefined ? ignore.paths : [],
@@ -88,8 +81,6 @@ function stripIgnoredFiles(files: TrackedFile[], check: Check, scope: Scope): Pi
     };
 }
 
-// Keep the narrowed paths. A project check keeps every file when the selection touches one of its files, and every
-// check keeps every file when gspot.toml or .gspot changed.
 function filterNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, files: TrackedFile[]): TrackedFile[] {
     const { narrowedPaths } = planned;
     if (!narrowedPaths) return files;
@@ -101,7 +92,6 @@ function filterNarrowedFiles(planned: PlannedScope, scopeCheck: ScopeCheck, file
     return scopeCheck.check.runs === 'files' ? inNarrowed : files;
 }
 
-// List the paths deleted from the tree that still trigger a project check.
 function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scopePath: string): string[] {
     const { check, configuration } = scopeCheck;
     if (check.runs === 'files' || planned.narrowedPaths === undefined) return [];

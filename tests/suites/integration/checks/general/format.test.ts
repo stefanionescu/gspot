@@ -19,7 +19,6 @@ import {
     STAGED_FORMAT_CHANGE_ARGUMENTS,
 } from '#tests/config/integration/checks/general/format.ts';
 
-/** Check each generated formatter override against the bytes that Prettier writes. */
 async function assertFormatOverrides(root: string): Promise<void> {
     const commandArguments = ['check', '--only', 'format/prettier', '--json'];
     const files = PRETTIER_OPTIONS_BY_FILE.map(({ file }) => file);

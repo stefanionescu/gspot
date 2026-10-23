@@ -66,13 +66,11 @@ export const NEXT_CONFIG_CASES = [
     },
 ] as const;
 
-/** Keychain and hashing samples beside a safe keychain setting. */
 export const SWIFT_SAMPLE = `let access = kSecAttrAccessibleAlways
 let hash = Insecure.MD5
 let background = kSecAttrAccessibleAfterFirstUnlock
 `;
 
-/** Shell downloads executed through pipelines, process substitution, and command substitution. */
 export const BASH_DOWNLOAD_SAMPLE = String.raw`#!/usr/bin/env bash
 curl https://example.com/setup.sh | bash
 eval "$1"
@@ -85,7 +83,6 @@ printf '%s\n' 'curl https://example.com/setup.sh | bash'
 curl -o setup.sh https://example.com/setup.sh
 `;
 
-/** Samples beside safe documented forms, project validators, and server factories. */
 export const PLATFORM_SOURCES = {
     'scripts/inject.js': 'execSync(`printf ${input}`);\n',
     'Info.plist': '<plist><dict><key>NSAllowsArbitraryLoads</key><true/></dict></plist>\n',
@@ -116,7 +113,6 @@ export const PLATFORM_SOURCE_FINDINGS = [
     { file: 'supabase/functions/cors/index.ts', rule: 'gspot.supabase.edge-cors-wildcard-with-credentials', line: 1 },
 ] as const;
 
-/** At level all, the Worker cross-origin resource sharing (CORS) rules cover every source in the scope. */
 export const PLATFORM_ALL_SOURCE_FINDINGS = [
     { file: 'supabase/functions/_shared/cors.ts', rule: 'gspot.cloudflare.wildcard-cors-origin', line: 1 },
     { file: 'supabase/functions/cors/index.ts', rule: 'gspot.cloudflare.wildcard-cors-origin', line: 1 },
@@ -151,7 +147,6 @@ export const REPOSITORY_RULE = `rules:
       severity: ERROR
 `;
 
-/** The findings of the Bash and Swift Semgrep rules. */
 export const SECURITY_RULE_FINDINGS = [
     { file: 'Value.swift', line: 1, rule: 'gspot.swift.keychain-accessible-always' },
     { file: 'Value.swift', line: 2, rule: 'gspot.swift.weak-hash-algorithm' },
@@ -163,7 +158,6 @@ export const SECURITY_RULE_FINDINGS = [
     { file: 'script.sh', line: 7, rule: 'gspot.bash.curl-pipe-shell' },
 ] as const;
 
-/** The Semgrep result for a Bash file that it cannot parse. */
 export const MALFORMED_SEMGREP_RESULTS = [
     {
         check: 'security/semgrep',

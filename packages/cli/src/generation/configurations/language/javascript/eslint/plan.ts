@@ -37,22 +37,12 @@ const PRESETS_BY_CONFIGURATION = new Map<Configuration, EslintPresets>();
 
 const PRESET_ASSET_PATHS = new Set(listAssets(CONFIGURATIONS_FOLDER));
 
-/**
- * Select the configurations that may add blocks to this config file. A config file per scope takes those of the scope; a
- * config file written once takes those of every scope.
- *
- * @param scopes every project and its settings.
- * @param scope the scope that gets the config file.
- * @param configFile the config file declaration and its scope requirements.
- * @returns each of those configurations, once.
- */
 function listConfigFileConfigurations(scopes: Scope[], scope: Scope, configFile: ConfigFile): Configuration[] {
     if (configFile.per_scope) return scope.configurations;
     const every = [scope, ...scopes].flatMap((each) => each.configurations);
     return new Map(every.map((configuration) => [configuration.name, configuration])).values().toArray();
 }
 
-// Read each shipped configuration preset once per process.
 function readEslintPresets(session: PlannedConfigFile['session']): Map<string, EslintPresets> {
     return new Map(
         [...session.configurations.values()]
@@ -68,7 +58,6 @@ function readEslintPresets(session: PlannedConfigFile['session']): Map<string, E
     );
 }
 
-// The blocks that gspot.toml writes: runtime environments, trivial-code limits, rules turned off, and ignored rules.
 function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session } = planned;
     const ignored = session.settingsFile.settings.ignore.flatMap((ignore): EslintRuleBlock[] =>

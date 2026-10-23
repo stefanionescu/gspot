@@ -35,7 +35,6 @@ test('basedpyright reads the uv environment of a project with a tracked uv.lock,
         }),
     ) as { venv?: string; venvPath?: string };
     expect(locked.venv).toBe('.venv');
-    // The config file sits four folders below the root, which holds .venv.
     expect(locked.venvPath).toBe('../../../..');
     const unlocked = JSON.parse(
         await generateFile(buildSandboxSettings(['python']), basedpyrightPath, {

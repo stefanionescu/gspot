@@ -5,5 +5,4 @@ export const EDITORCONFIG_FIXED_SECTIONS = {
     Makefile: { indent_style: 'tab' },
 } as const;
 
-// Line breaks and extglob groups, which EditorConfig sections cannot express.
 export const UNREPRESENTABLE_SELECTOR = /[\r\n]|[!+?*@]\(/u;

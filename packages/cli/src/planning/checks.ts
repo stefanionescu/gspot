@@ -55,7 +55,6 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
     };
     const skip = findFirstSkip(plannedCheck, planned);
     const result = skip === undefined ? plannedCheck : { ...plannedCheck, skip };
-    // gspot writes the tool ignore files from the configured checks, so the configuration cannot depend on them.
     return options.forConfiguration === true ? result : stripToolIgnoredFiles(session, result);
 }
 
@@ -65,7 +64,6 @@ function buildNarrowedPaths(options: PlanOptions): Set<string> | undefined {
     return new Set(options.paths.filter((path) => changed === undefined || changed.includes(path)));
 }
 
-// Only an active replacement in this plan can take over the work of another check.
 function skipReplacedChecks(planned: PlannedCheck[]): PlannedCheck[] {
     const replacers = new Map(
         planned.flatMap((check): [string, string][] =>

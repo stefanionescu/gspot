@@ -1,4 +1,3 @@
-/** A web scope and a worker scope that each fix one external name. */
 const ALLOWED_NAME_LAYOUT = {
     configurations: ['naming', 'bash'],
     naming: {

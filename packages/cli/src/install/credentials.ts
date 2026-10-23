@@ -1,4 +1,3 @@
-// Check lockfiles for credentials and redact package manager output.
 import { GspotError } from '#cli/system/errors.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 

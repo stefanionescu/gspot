@@ -15,7 +15,6 @@ import { findConfigFilePath } from '#tests/setup/cli/config-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 
-/** Apply the sandbox and read the generated version pin that its dry runs compare. */
 async function prepareVersionPin(root: string): Promise<string> {
     const applied = await runGspot(root, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -23,7 +22,6 @@ async function prepareVersionPin(root: string): Promise<string> {
     return versionContents.trim();
 }
 
-// Windows reports the same mode for files writable by the owner or by everyone.
 test.skipIf(isWindows)(
     'apply --dry-run lists a generated file whose mode changed, and gspot/generated-files reports it',
     async () => {
@@ -125,7 +123,6 @@ test('turning rules off lists the same rule files as stray in apply --dry-run as
         .map(({ path }) => path)
         .toSorted((first, second) => first.localeCompare(second));
     const ownedPaths = owned.map(({ path }) => path).toSorted((first, second) => first.localeCompare(second));
-    // The rules created AGENTS.md, so the whole file goes with them.
     expect(strays).toStrictEqual([...ownedPaths, 'AGENTS.md'].toSorted((first, second) => first.localeCompare(second)));
     for (const path of ownedPaths) expect(await isOnDisk(join(sandbox.path, path))).toBe(true);
     const written = await runGspot(sandbox.path, ['apply', '--json']);
@@ -260,7 +257,6 @@ ${text}=======
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const { outdated } = JSON.parse(preview.stdout) as DryRunJson;
-    // The preview lists the edited and stray files with their diffs, and leaves out the files gspot does not own.
     expect(outdated).toContainEqual(
         matchFields({ path: shellcheckrc, kind: 'changed', diff: expect.stringContaining('-# Edited.') as string }),
     );

@@ -63,7 +63,6 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
         expect(patterns.some((pattern) => new RegExp(pattern).test('appish/sample.py'))).toBe(false);
     }
 });
-// Run python/deptry with fake uv and deptry, and return the report and the commands it ran.
 async function runFakeDeptry(root: string) {
     const session = await openSession(root);
     using resources = fakeToolExecutables(

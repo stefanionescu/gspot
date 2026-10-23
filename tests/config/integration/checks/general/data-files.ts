@@ -31,7 +31,6 @@ export const FILES_CASES = [
     },
 ] as const;
 
-/** The truthy setting of each scope must reach the yamllint config file of that scope. */
 export const YAML_SCOPE_TABLES = `[format]
 indent_width = 4
 [[format.override]]
@@ -46,7 +45,6 @@ configurations = []
 truthy = { allowed-values = ["no"] }
 `;
 
-/** Two-space indents and `on` keys pass in each project. */
 export const YAML_SCOPE_FILES = {
     'settings/project.yaml': `parent:
   enabled: yes
@@ -60,19 +58,16 @@ on:
 `,
 } as const;
 
-/** A child value that only the root accepts, to catch root options that leak into the child. */
 export const YAML_SCOPE_SAMPLE = `parent:
   enabled: yes
 on:
   enabled: no
 `;
 
-/** A gspot.toml whose ignore has an unquoted until date, which v8r must accept. */
 export const UNQUOTED_UNTIL_CHANGE = {
     check: 'data-files/v8r',
     files: {},
     settings: '\n[[ignore]]\ncheck = "data-files/yamllint"\nreason = "The sample holds no YAML."\nuntil = 2099-01-01\n',
 } as const;
 
-/** A JSON Schema that rejects every document. */
 export const REJECTING_SCHEMA = '{ "not": {} }\n';

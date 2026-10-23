@@ -1,4 +1,3 @@
-/** pyproject.toml tables that init leaves in place while a generated config file takes over. */
 import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
@@ -31,7 +30,6 @@ export const REPLACED_PYPROJECT_TABLES = [
     },
 ] as const;
 
-/** Existing config files that checks for level all must leave alone at level recommended. */
 export const INACTIVE_CONFIGURATIONS = {
     '.commitlintrc.json': '{"rules":{}}\n',
     '.commitlintrc.mts': 'export default { rules: {} };\n',
@@ -40,7 +38,6 @@ export const INACTIVE_CONFIGURATIONS = {
     'package.json': COMMITLINT_PACKAGE,
 } as const;
 
-/** A script that runs Stylelint without a path to a config file, so Stylelint finds one itself. */
 export const STYLELINT_LOOKUP_SCRIPT = `
 import stylelint from './.gspot/node_modules/stylelint/lib/index.mjs';
 const result = await stylelint.lint({ files: [process.argv[1]], cwd: process.cwd() });
@@ -71,7 +68,6 @@ export const INIT_FILES = {
     'quality/lint.sh': CLEAN_BASH_SCRIPT,
 } as const;
 
-/** Native Stylelint lookup before and after replacing an authored standalone file. */
 export const STYLELINT_REPLACEMENT_CASES = [
     {
         name: 'a root package field',
@@ -99,7 +95,6 @@ export const STYLELINT_REPLACEMENT_CASES = [
     },
 ] as const;
 
-/** A shared setup.cfg that a link points to. */
 export const LINKED_SETUP_CONFIG = `[flake8]
 ignore = E501
 
@@ -107,7 +102,6 @@ ignore = E501
 exclude_rules = LT01
 `;
 
-/** A SQL project in a package folder. */
 export const SQL_PACKAGE_FILES = {
     'README.md': '# test\n',
     'db/accounts.sql': 'SELECT 1;\n',
@@ -115,7 +109,6 @@ export const SQL_PACKAGE_FILES = {
     'db/.sqlfluffignore': '# Templates\ntemplates/\n',
 } as const;
 
-/** A shared setup.cfg with a SQLFluff section. */
 export const SHARED_SETUP_CONFIG = `[flake8]
 ignore = E501
 
@@ -128,7 +121,6 @@ export const VALID_CSS = `a {
 }
 `;
 
-/** What init plans for the replaced config files, apart from .markdownlint.jsonc, which it rewrites. */
 export const REPLACED_CONFIG_DELETIONS = [
     { path: '.shellcheckrc', note: 'replaced by the generated shellcheck config file' },
     { path: '.prettierrc', note: 'replaced by the generated prettier config file' },
@@ -136,18 +128,15 @@ export const REPLACED_CONFIG_DELETIONS = [
     { path: 'typos.toml', note: 'replaced by the generated typos config file' },
 ] as const;
 
-/** The lint folder that init leaves in place. */
 export const LINT_FOLDER_NOTE = {
     path: 'quality/',
     note: 'a folder of lint scripts; check remaining references before deleting it',
 } as const;
 
-/** The two hook folders and the hooks line of the init plan for each. */
 export const HOOKS_PATH_CASES = [
     { hooksPath: '', line: 'hooks                none' },
     { hooksPath: 'hooks', line: 'hooks                hooks/  pre-commit, use-thing.ts (your own)' },
     { hooksPath: '.husky', line: 'hooks                .husky/  pre-commit (husky)' },
 ] as const;
 
-/** A source file that sits in a hooks/ folder but holds no hook. */
 export const HOOK_NAMED_SOURCE = 'export function useThing() { return true; }\n';

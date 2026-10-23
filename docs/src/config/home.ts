@@ -9,7 +9,6 @@ export const TOOLS = [
     { name: 'Knip', icon: '/tools/knip.svg' },
     { name: 'Trivy', icon: '/tools/trivy.svg' },
 ] as const;
-/** The tiles of "What gspot does": one use case each, with the stroke paths of its icon. */
 export const USE_CASES = [
     {
         title: 'Blocks bad code',
@@ -45,5 +44,4 @@ export const USE_CASES = [
 export const CODE_TOKENS =
     /(?<string>'[^']*')|(?<keyword>\b(?:import type|import|from|export async function|try|catch|await)\b)|(?<type>\bCart\b)|(?<function>\b(?:pay|charge)\b)/gu;
 export const SUMMARY_SENTENCE_BREAK = /(?<=\.) /u;
-/** The places a long URL may wrap: after each slash that ends a part of the address. */
 export const URL_BREAK = /(?<=\/)(?!\/)/u;

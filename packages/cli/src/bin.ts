@@ -1,4 +1,3 @@
-// Check the Node.js or Bun version before loading the gspot modules, because they call newer runtime APIs as they load.
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { PROCESS_ARGUMENTS_START } from '#cli/config/bin.ts';

@@ -7,7 +7,6 @@ import type { Setting } from '#cli/types/settings/inheritance.ts';
 import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
 import { findSetting, getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 
-// Describe one scope: the default, the value and where it comes from, and how to change it.
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     const { scope, shipped, effective } = scopeSetting;
     const { value, source } = effective ?? { value: undefined, source: 'unset' };
@@ -20,7 +19,6 @@ function formatSettingScope(key: string, setting: Setting, scopeSetting: Setting
     ];
 }
 
-// How to change the value of one scope: records by hand for a record list, or gspot set and unset.
 function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     if (Object.hasOwn(listRecordFields(), key))
         return [`Change it: write [[${key}]] records by hand in gspot.toml, then run gspot apply.`];
@@ -49,7 +47,6 @@ function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingS
 export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const { settings } = session.settingsFile;
-    // A record list lives in the root table only, so only the root scope can change it.
     const recordList = Object.hasOwn(listRecordFields(), key);
     const scopes = session.scopes.flatMap((scope) => {
         const match = findSetting(scope.availableSettings, key);

@@ -56,11 +56,6 @@ test('history: edited-migrations fails when it cannot read the committed Git his
     );
 });
 
-/**
- * Commit one frozen teams migration.
- *
- * @returns the sandbox, which deletes itself.
- */
 async function prepareTeamsHistory(): Promise<AsyncDisposable & { path: string }> {
     const sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' }),

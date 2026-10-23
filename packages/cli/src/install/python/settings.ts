@@ -1,4 +1,3 @@
-// Read Python index settings for an isolated install.
 import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
@@ -18,7 +17,6 @@ import {
     uvProjectSettingsSchema,
 } from '#cli/schemas/install/python/settings.ts';
 
-// Keep absolute URLs and paths; resolve a relative local index path against the repository.
 function normalizeIndexLocation(root: string, location: string): string {
     if (URL_SCHEME.test(location)) return location;
     return resolve(root, location);

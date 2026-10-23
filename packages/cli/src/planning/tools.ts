@@ -31,7 +31,6 @@ function isToolConditionMet(scope: Scope, conditions: Tool['when']): boolean {
     );
 }
 
-// Add the packages that each tool package requires. A Set visits the names that the loop adds, too.
 function addPeerPackages(names: Set<string>, configurations: readonly Configuration[]): void {
     for (const name of names)
         for (const required of findToolProjectPackage(getTool(configurations, name))?.requires ?? [])
@@ -59,7 +58,6 @@ export function listOtherTools(scope: Scope, check: Check, command?: string[]): 
         ),
         ...otherTools,
     ]);
-    // ESLint loads the packages of every configuration that adds a block to its config file.
     const plugins = tools.has(ESLINT_MANIFEST_TOOL)
         ? scope.configurations.flatMap((configuration) => configuration.eslint.required_tools)
         : [];

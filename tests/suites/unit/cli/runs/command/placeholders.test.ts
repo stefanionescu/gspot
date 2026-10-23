@@ -20,7 +20,6 @@ import {
     WORKSPACE_SCOPE_CASES,
 } from '#tests/config/runs/command.ts';
 
-/** Write gspot.toml with an openapi.generate_command list and a check that runs this command. */
 async function writeListSetting(root: string, command: readonly string[], generate: readonly string[]): Promise<void> {
     const tables = stringify({
         openapi: { document: 'openapi.json', generate_command: [...generate] },

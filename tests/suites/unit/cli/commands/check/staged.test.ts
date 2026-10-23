@@ -17,7 +17,6 @@ import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { STAGED_PACKAGE_JSON } from '#tests/config/commands/check/staged.ts';
 import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
 
-/** Create two index entries that differ only by letter case. */
 async function createCaseClashingSandbox(): Promise<TestdirResult> {
     const sandbox = await testdir();
     try {
@@ -163,7 +162,6 @@ test('a staged check keeps the generated basedpyright.json of each Python scope 
     const original = await readFile(join(sandbox.path, findFileTarget('python', 'basedpyright.json')));
     const commandArguments = ['check', '--staged', '--only', 'gspot/generated-files', '--json'];
     const checked = parseCheckReport(await runGspot(sandbox.path, commandArguments));
-    // gspot install writes the lockfiles, and unit tests do not install.
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(
         checked.report.checks.flatMap((check) => check.findings).map(({ file, rule }) => ({ file, rule })),
@@ -270,7 +268,6 @@ test('staged checks read an indexed file when its working file is missing', asyn
     expect(await isOnDisk(join(sandbox.path, 'script with spaces.sh'))).toBe(false);
 });
 
-/** Check whether this system treats differently cased path names as the same file. */
 function isCaseFolding(): boolean {
     const root = mkdtempSync(join(tmpdir(), 'gspot-case-'));
     try {

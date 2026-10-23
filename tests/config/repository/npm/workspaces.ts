@@ -1,4 +1,3 @@
-/** Each workspace file with the file error that gspot reports. */
 export const INVALID_WORKSPACE_FILES = [
     {
         path: 'pnpm-workspace.yaml',
@@ -15,7 +14,6 @@ export const INVALID_WORKSPACE_FILES = [
     },
 ] as const;
 
-/** A pnpm workspace beside a malformed lerna.json. */
 export const INACTIVE_LERNA_FILES = {
     'package.json': '{}',
     'pnpm-workspace.yaml': 'packages: ["packages/*"]\n',
@@ -23,7 +21,6 @@ export const INACTIVE_LERNA_FILES = {
     'packages/app/package.json': '{"name":"inside"}',
 } as const;
 
-/** npm and pnpm workspaces with nested packages. */
 export const NESTED_WORKSPACE_FILES = {
     'package.json': '{"workspaces":["packages/*"]}',
     'pnpm-workspace.yaml': 'packages: ["packages/*"]',
@@ -32,7 +29,6 @@ export const NESTED_WORKSPACE_FILES = {
     'empty/source.py': '',
 } as const;
 
-/** Two workspace files that name a package folder outside the repository, with the folder each names. */
 export const OUTSIDE_WORKSPACE_FILES = [
     ['pnpm-workspace.yaml', 'packages: ["../outside"]\n', '../outside'],
     ['rush.json', '{"projects":[{"packageName":"outside","projectFolder":"packages/linked"}]}', 'packages/linked'],

@@ -9,7 +9,6 @@ export type RunReportOptions = PlanOptions & {
     onProgress?: (progress: CheckProgress) => void;
     isDryRun: boolean;
     comparison?: NonNullable<RunReport['comparison']>;
-    /** Working-tree changes omitted when this run reads staged content. */
     unstagedChanges?: number;
 };
 
@@ -25,7 +24,6 @@ export type RunOptions = RunReportOptions & {
 
 export type RunResult = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };
 
-/** The run report as check --json prints it. */
 export type RunReport = {
     comparison?: { content: 'working-tree' | 'index' | 'commit'; reference: string };
     version: string;
@@ -40,17 +38,12 @@ export type RunReport = {
         names?: readonly string[];
         reason: string;
     }[];
-    /** How many changed files the run left out: the unstaged ones when it read the index. */
     unstagedChanges: number;
-    /** Whether the run read only part of the repository: the staged files, a change set, or named paths. */
     partial: boolean;
-    /** The checks that failed or stopped with an error, and the checks whose fixer failed although the check passed. */
     failed: readonly string[];
     exitCode: number;
 };
 
-/** The checks and fixer results for the run after the fixes. */
 export type PlanAfterFixes = { planned: PlannedCheck[]; fixes: FixReport | undefined };
 
-/** The finished check count and the comparison, for terminal progress. */
 export type CheckProgress = { finished: number; total: number; comparison: RunReport['comparison'] };

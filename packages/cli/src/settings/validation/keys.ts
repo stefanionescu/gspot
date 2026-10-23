@@ -28,8 +28,6 @@ function formatLooseningError(
     return `\`${key} = ${value}\` is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(argument)}${scopeFlag} --reason "<why>"`;
 }
 
-// Check the reason of a written list: a list that loosens the default needs a reason, and gspot must accept each written
-// reason.
 function validateWrittenList(
     key: string,
     written: WrittenSetting,
@@ -44,7 +42,6 @@ function validateWrittenList(
     return message === undefined ? [] : [{ path: [...key.split('.'), 'reason'], message }];
 }
 
-// Find the error of a written single value that loosens the shipped default without an accepted reason.
 function validateWrittenScalar(
     key: string,
     written: WrittenSetting,
@@ -84,8 +81,6 @@ function validateWrittenKey(
     return validateWrittenScalar(key, written, match, scope, shipped);
 }
 
-// List the conflicts between configuration defaults that no written table settles. The root table and every scope table
-// get their own list.
 function listUnsettledConflicts(
     availableSettings: AvailableSettings,
     settings: Settings,
@@ -122,7 +117,6 @@ export function formatUnknownSetting(availableSettings: AvailableSettings, key: 
         const limits = all.filter((name) => name.startsWith('limits.'));
         return `\`${key}\` is not a limit any check reads. The limits that exist are ${formatCodeList(limits.map((name) => name.slice('limits.'.length)))}.`;
     }
-    // A key without a table compares with the top-level settings.
     const prefix = key.includes('.') ? getSettingTable(key) : '';
     const keys = all
         .filter((name) => (prefix === '' ? !name.includes('.') : name.startsWith(`${prefix}.`)))
@@ -154,7 +148,6 @@ export function validateKeys(
     everyConfiguration: AvailableSettings,
 ): SettingsError[] {
     const errors = listUnsettledConflicts(availableSettings, settings, scopeAvailable);
-    // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
     const later = [availableSettings, ...scopeAvailable.values(), everyConfiguration].toReversed();
     const everywhere: AvailableSettings = {
         settings: new Map(later.flatMap((scopeSettings) => scopeSettings.settings.entries().toArray())),

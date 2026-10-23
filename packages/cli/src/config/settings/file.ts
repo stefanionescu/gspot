@@ -1,20 +1,12 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
-/** The settings file of a repository. */
 export const SETTINGS_FILE = 'gspot.toml';
 
-/** The first line of gspot.toml: editors validate the file with the schema of the pinned gspot. */
 export const SCHEMA_DIRECTIVE = `#:schema ./${GSPOT_PATHS.settingsSchema}`;
 
-/** A schema directive on the first line, with its line break. */
 export const SCHEMA_DIRECTIVE_LINE = /^#:schema [^\n]*\n?/u;
 
-/**
- * toml-patch starts a parse error with its location, the source line, and a caret; gspot drops these lines and names
- * the location itself.
- */
 export const PARSE_CONTEXT_LINES = 3;
-/** Complete written examples for the editor schema and the settings reference. */
 export const SETTINGS_EXAMPLES = [
     { level: 'recommended' },
     { configurations: ['typescript', 'nextjs', 'markdown'] },

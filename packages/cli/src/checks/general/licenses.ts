@@ -45,7 +45,6 @@ import {
     LICENSE_CHECKER_COMMAND,
 } from '#cli/config/checks/general/licenses.ts';
 
-// An expression passes when every part of an `AND`, or one part of an `OR`, has an allowed license.
 function isAllowed(license: string, allowed: readonly string[]): boolean {
     if (!isSpdxExpression(license)) return false;
     return satisfies(license, allowed);
@@ -100,8 +99,6 @@ async function scanJavascriptLicenses(
     }));
 }
 
-// A package states its license as an expression, as free text, or as trove classifiers; take the first that names
-// license IDs. Several classifiers mean a choice of licenses.
 function selectPythonLicense(report: PythonLicenseReport): string {
     const expression = [report['License-Expression'], report['License-Metadata']].find(
         (field) => field !== undefined && field !== UNKNOWN_LICENSE && isSpdxExpression(field),
@@ -114,7 +111,6 @@ function selectPythonLicense(report: PythonLicenseReport): string {
     return report['License-Metadata'] ?? report['License-Classifier'] ?? UNKNOWN_LICENSE;
 }
 
-// Run outside the project so project-owned scanner settings cannot hide installed dependencies.
 async function scanPythonLicenses(session: Session, planned: PlannedCheck, start: string): Promise<LicensedPackage[]> {
     assertInstalled(planned, PYTHON_ENVIRONMENT_FOLDER, start);
     const installed = join(start, PYTHON_ENVIRONMENT_FOLDER);
@@ -144,12 +140,8 @@ function normalizeIdentity(identity: string): string {
         : `${split[0].toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${split[1]}`;
 }
 
-// The scan keeps the packages that the lockfile holds, so a package left behind in node_modules or a host
-// environment stays out.
 async function scanProject(session: Session, planned: PlannedCheck, project: LicenseProject): Promise<ProjectLicenses> {
     const { dependencyFile, scope } = project;
-    // The hook checks a pushed revision in a copy without a Python environment, so the scan reads the working tree's.
-    // The node_modules folders reach the copy through links.
     const folder = dirname(dependencyFile);
     const { scan, start, lockfiles, ecosystem } =
         basename(dependencyFile) === PACKAGE_JSON
@@ -179,8 +171,6 @@ async function scanProject(session: Session, planned: PlannedCheck, project: Lic
     return { dependencyFile, packages, locked: [...(lockedKeys ?? [])], ecosystem, settings };
 }
 
-// Scan each project that has dependencies with the licenses settings of the deepest scope that holds it, and list the
-// projects that a skip setting leaves out.
 async function scanLicenses(session: Session, planned: PlannedCheck) {
     const projects = listLicenseProjects(planned.files, session.scopes, session.settingsFile.settings, planned.check);
     if (projects.length === 0) throw new GspotError('skip', 'Set licenses.allowed to check licenses.');
@@ -215,8 +205,6 @@ function isRecordInUse(record: AllowedPackage, project: ProjectLicenses): boolea
     return identities.some((identity) => matchesRecord(record, identity, ecosystem));
 }
 
-// A record that no installed package matches has gone stale, unless the lockfile holds a matching package for another
-// platform, such as an optional native build.
 function listStaleRecords(
     session: Session,
     planned: PlannedCheck,

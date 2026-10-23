@@ -1,5 +1,3 @@
-/** Each scope copies its own authored page into its built output. */
-
 import { HELLO_EDGE_FUNCTION } from '#tests/config/checks/platform/supabase.ts';
 
 export const COPY_PAGE_BUILD = `import { mkdirSync, copyFileSync } from 'node:fs';

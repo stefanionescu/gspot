@@ -38,12 +38,6 @@ import {
     SERVICE_ROLE_KEY_EXTENSIONS,
 } from '#cli/config/checks/platform/supabase.ts';
 
-/**
- * Visit every named field in an SQL parse tree.
- *
- * @param value the parse tree to walk.
- * @param visit the callback for each field and its value.
- */
 function walkSqlTree(value: unknown, visit: (key: string, child: unknown) => void): void {
     if (Array.isArray(value)) {
         for (const child of value) walkSqlTree(child, visit);
@@ -76,13 +70,6 @@ function parseDenoCheckError(session: Session, planned: PlannedCheck, folder: st
     return buildFinding(planned, { file, line: Number(place?.['line'] ?? 1) }, 'type-error', first.trim());
 }
 
-/**
- * Parses the Supabase config.toml of a scope.
- *
- * @param session the repository and its tools.
- * @param planned the scope to read.
- * @returns the parsed file, or undefined when no file exists or the TOML has a syntax error.
- */
 function readSupabaseProjectFile(session: Session, planned: PlannedCheck): SupabaseProjectFile | undefined {
     const local = joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE);
     const text = findCachedText(session.reads, local);
@@ -97,13 +84,6 @@ function readSupabaseProjectFile(session: Session, planned: PlannedCheck): Supab
     return parseFileFields(local, value, supabaseProjectFileSchema);
 }
 
-/**
- * Lists the entry file of each edge function: the first index file in each folder right under the functions folder,
- * except shared folders.
- *
- * @param planned the scope files and settings.
- * @returns the entry file paths, repository-relative.
- */
 function listFunctionEntrypoints(planned: PlannedCheck): string[] {
     const base = getTable(planned.scope.settings, 'supabase').functions_folder;
     const entrypoints = new Map<string, string>();
@@ -121,7 +101,6 @@ function listFunctionEntrypoints(planned: PlannedCheck): string[] {
     return [...entrypoints.values()];
 }
 
-// Both Deno commands end with their target; the config file flags belong before that target.
 async function runDenoCommand(
     session: Session,
     planned: PlannedCheck,
@@ -195,7 +174,6 @@ export async function checkSupabaseDenoLint(session: Session, planned: PlannedCh
             [...DENO_LINT_COMMAND, join(session.root, folder)],
             folder,
         );
-        // deno lint exits 1 with a JSON report when it finds problems, and prints only its error when it cannot run.
         if (result.code !== 0 && result.stdout.trim() === '')
             throw new Error(
                 formatOutputTail(result, `deno lint stopped with exit ${String(result.code)} and no report.`),

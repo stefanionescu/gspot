@@ -123,7 +123,6 @@ test('set writes a TOML list of tables as tables and refuses a value that is not
     expect(unreadable.stdout + unreadable.stderr).toBe(
         'The value [{name =  is not a TOML inline value. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.\n',
     );
-    // A person can still type the quotes by hand; gspot refuses those settings when it loads them.
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
         buildSandboxSettings(['docs', 'javascript'], {
@@ -149,11 +148,6 @@ test('set level all works in a fresh clone', async () => {
     expect(readSettings(checkout).settings.level).toBe('all');
 });
 
-/**
- * Create a Bash repository, apply, and commit the generated files for the fresh-clone tests.
- *
- * @param sourceRoot folder to initialize.
- */
 async function prepareAppliedBashRepository(sourceRoot: string): Promise<void> {
     await createFileTree(sourceRoot, {
         'gspot.toml': buildSandboxSettings(['bash']),

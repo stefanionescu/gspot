@@ -1,4 +1,3 @@
-// Builds the naming settings, file naming, and identifiers of the naming tests.
 import { parseSettings } from '#cli/settings/read.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';

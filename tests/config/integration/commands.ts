@@ -1,6 +1,5 @@
 import { TYPO } from '#tests/config/checks/general/spelling.ts';
 
-/** Tool fixes that leave one finding for the second fix pass and a manual fix. */
 export const PARTIAL_FIX_CASES = [
     {
         configuration: 'sql',
@@ -22,7 +21,6 @@ export const PARTIAL_FIX_CASES = [
     },
 ] as const;
 
-/** Settings that indent with tabs of width 4. */
 export const TAB_FORMAT_SETTINGS = {
     tables: `[format]
 indent_style = "tab"

@@ -1,6 +1,5 @@
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 
-/** Files that link outside the repository, and the error that refuses each one. */
 export const LINKED_FILE_CASES = [
     {
         path: 'gspot.toml',

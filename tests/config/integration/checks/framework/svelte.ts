@@ -29,7 +29,6 @@ export const SVELTE_CASES = [
 `,
         },
         expected: { file: 'src/Binding.svelte', rule: 'function-no-unknown', line: 4 },
-        // Stylelint reports the Vue function twice: as an unknown value and as an unknown function.
         findings: [
             { file: 'src/Binding.svelte', rule: 'declaration-property-value-no-unknown', line: 4 },
             { file: 'src/Binding.svelte', rule: 'function-no-unknown', line: 4 },
@@ -47,7 +46,6 @@ export const SVELTE_CASES = [
         },
     },
     {
-        // The shared TypeScript rules reach the component script.
         check: 'javascript/eslint',
         files: {
             'src/SharedPolicy.svelte': `<script lang="ts">
@@ -112,7 +110,6 @@ const answer = 42;
         },
     },
     {
-        // Stylelint reads the style block and accepts the scoping pseudo-class of Svelte.
         check: 'css/stylelint',
         files: {
             'src/Card.svelte': `<p class="card">card</p>

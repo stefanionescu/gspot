@@ -1,6 +1,5 @@
 import { VALE_PACKAGES } from '#cli/config/generation/configurations/general/prose.ts';
 
-/** Every folder that the Vale packages need. */
 export const VALE_PACKAGE_FOLDERS = [...VALE_PACKAGES, 'config/dictionaries'] as const;
 
 export const VALE_INSTALL_ARGUMENTS = ['sync'] as const;

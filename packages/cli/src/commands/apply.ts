@@ -42,19 +42,12 @@ function buildDryRunResult(session: Session): CommandResult {
     return { text: `${version}${summary}${DRY_RUN_NOTE}\n`, json, exitCode: 0 };
 }
 
-/**
- * Write the generated files, or show the planned changes and write nothing.
- *
- * @param options the parsed flags.
- * @returns the command result.
- */
 async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     const session = await openSession(root);
     if (options.isDryRun) return buildDryRunResult(session);
     using log = openWriter(root);
     const report = writeGeneratedFiles(session, generate(session), log);
-    // Editors read the schema of the pinned version through the directive on the first line of gspot.toml.
     const settingsFile = readSettingsFile(root);
     if (!SCHEMA_DIRECTIVE_LINE.test(settingsFile.text)) {
         writeSettings(log, `${SCHEMA_DIRECTIVE}\n${settingsFile.text}`, settingsFile.original);

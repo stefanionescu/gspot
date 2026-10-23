@@ -19,12 +19,6 @@ import {
     DOCUMENT_URL_ATTRIBUTES,
 } from '#cli/config/checks/language/html.ts';
 
-/**
- * Read the tag attributes while the source tree still exists.
- *
- * @param element the parsed tag.
- * @returns the attributes, with their source nodes.
- */
 function listElementAttributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');
     const name = tag?.namedChildren.find((child) => child.type === 'tag_name')?.text.toLowerCase() ?? '';
@@ -38,7 +32,6 @@ function listElementAttributes(element: Node): MarkupAttribute[] {
         }));
 }
 
-// Script and active-document contexts can execute data URLs. Image and text resources remain inert.
 function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: string): boolean {
     if (attribute.element === 'script') return !INERT_SCRIPT_TYPES.has(scriptType);
     const attributes = DOCUMENT_URL_ATTRIBUTES[attribute.element];
@@ -47,7 +40,6 @@ function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: stri
     return ACTIVE_DOCUMENT_TYPES.has(mediaType);
 }
 
-// Decode HTML character references before URL parsing removes embedded tabs and newlines.
 function findScriptScheme(attribute: MarkupAttribute, scriptType: string): string | undefined {
     if (!URL_ATTRIBUTES.has(attribute.name)) return undefined;
     const url = URL.parse(decodeHTMLAttribute(attribute.value), RELATIVE_URL_BASE);

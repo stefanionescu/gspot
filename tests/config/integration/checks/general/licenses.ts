@@ -36,5 +36,4 @@ export const FONT_PACKAGE_FILES = {
         '{"name":"@fontsource/inter","version":"5.2.8","license":"OFL-1.1"}',
 } as const;
 
-/** The licenses table that allows only the MIT license. */
 export const MIT_ONLY = { allowed: ['MIT'] } as const;

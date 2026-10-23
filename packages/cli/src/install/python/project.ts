@@ -34,8 +34,6 @@ import {
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/install/python/project.ts';
 
-// Read the uv lockfile of the temporary project, and refuse it when it holds an index credential or does not match the
-// tool project.
 function readPythonLockfile(runFolder: string, credentials: string[], project: ToolPyproject): string {
     const lockfile = readFileSync(join(runFolder, PROJECT_UV_LOCKFILE), 'utf8');
     assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
@@ -63,7 +61,6 @@ async function runUv(
     ];
     const result = await runInstallStep(install, command, {
         cwd: runFolder,
-        // The repository's interpreter choice belongs to its own project, not to the tool project of gspot.
         env: { [UV_ENVIRONMENT_VARIABLE]: join(runFolder, PYTHON_ENVIRONMENT_FOLDER), UV_PYTHON: undefined },
     });
     if (result.missing)
@@ -82,7 +79,6 @@ async function runUv(
     return result;
 }
 
-// Require pinned specifiers and normalize the requirement names before comparing them.
 function parseExactRequirements(lockedPackage: UvLockfile['package'][number]): string[] | undefined {
     const requirements = lockedPackage.metadata?.['requires-dist'] ?? [];
     const pins: string[] = [];
@@ -93,7 +89,6 @@ function parseExactRequirements(lockedPackage: UvLockfile['package'][number]): s
     return pins;
 }
 
-// Validate the fields installation needs without making the shared uv schema stricter.
 function parsePythonToolLockfile(lockfile: string): UvLockfile | undefined {
     let parsed;
     try {

@@ -27,7 +27,6 @@ test('list shows selected settings and available configurations', async () => {
         { name: 'bash/shfmt', scope: '', state: 'off (ignore)' },
         { name: 'structure/shared-prefixes', scope: '', state: 'off (level)' },
     ]);
-    // Each configuration appears once: either selected or available.
     expect(
         [...result.selected, ...result.available]
             .map(({ name }) => name)

@@ -25,7 +25,6 @@ test.each(['', 'app/'])('install from %s points core.hooksPath at .gspot/hooks',
     expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(GSPOT_PATHS.hooks);
 });
 test('doctor reports hooks this clone has not installed and accepts them after install', async () => {
-    // hooks.enabled turns on the default Git hooks.
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }) });
 
     runGitStep(sandbox.path, ['init', '-q']);

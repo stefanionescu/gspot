@@ -12,7 +12,6 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CI_SETTINGS, GITHUB_PIPELINE, GITLAB_PIPELINE } from '#tests/config/integration/generation/ci.ts';
 
-/** Create the CI jobs of one provider and their check settings, before the shared tool install. */
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     runGitStep(root, ['init', '-q']);
     const pipelinePath = provider === 'gitlab' ? '.gitlab-ci.yml' : '.github/workflows/application.yml';
@@ -38,7 +37,6 @@ async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 }
 
-/** Commit the installed project, then a change with a shell syntax error. */
 async function commitCiChanges(root: string, provider: 'gitlab' | 'github') {
     const base = commitAll(root, 'base');
     await writeFile(join(root, 'changed.sh'), 'if then\n');
@@ -48,7 +46,6 @@ async function commitCiChanges(root: string, provider: 'gitlab' | 'github') {
     return { base, generated };
 }
 
-/** A fake mise that runs the source CLI and can refuse to install the npm package. */
 async function fakeCiMise(folder: string) {
     const nativeMise = Bun.which('mise')!;
     const failure = join(folder, 'mise-fails');
@@ -77,7 +74,6 @@ process.exit(child.exitCode);
     return failure;
 }
 
-/** Run the generated CI script with the comparison and artifact variables that the provider documents. */
 async function runCiJob(
     root: string,
     generated: CiDocument,
@@ -88,7 +84,6 @@ async function runCiJob(
         'gspot' in generated
             ? generated.gspot.script
             : generated.jobs['check-linux']!.steps.flatMap((step) => (step.run === undefined ? [] : [step.run]));
-    // bash comes from `PATH`: an absolute path puts its folder before the fake mise.
     return await runCommand(['bash', '-e', '-c', script.join('\n')], {
         cwd: root,
         env: {
@@ -112,7 +107,6 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
         await fakeCiMise(executables.path);
         const invalid = await runCiJob(sandbox.path, generated, executables.path, base);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-        // The job checks only the changed file, so the report leaves out the other broken script.
         const lines = invalid.stdout.split('\n');
         const start = lines.indexOf('project/syntax  failed  1 finding');
         expect(lines.slice(start, start + 4)).toStrictEqual([
@@ -122,8 +116,6 @@ describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
             '  run again: gspot check --only project/syntax',
         ]);
         await writeFile(join(sandbox.path, 'changed.sh'), 'echo corrected\n');
-        // The fix commits changed.sh alone: a commit of the tool lockfiles that the job installed makes it check every
-        // file.
         runGitStep(sandbox.path, ['add', 'changed.sh']);
         runGitStep(sandbox.path, ['commit', '-qm', 'correct syntax']);
         const valid = await runCiJob(sandbox.path, generated, executables.path, base);

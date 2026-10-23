@@ -1,5 +1,3 @@
-// The PurgeCSS command imports its config file by a bare path, which Node refuses on Windows. Import it by URL instead.
-
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { text } from 'node:stream/consumers';

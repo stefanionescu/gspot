@@ -1,4 +1,3 @@
-// Reads Xcode projects, source groups, and build settings.
 import { posix } from 'node:path';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { SWIFT_EXTENSION } from '#cli/config/files/names.ts';
@@ -86,14 +85,12 @@ function parseProjectDocument(text: string): unknown {
     return value;
 }
 
-// Get the object that an ID names, which must exist.
 function getElement(project: Pick<XcodeProject, 'objects'>, id: string): PbxElement {
     const found = project.objects[id];
     if (found === undefined) throw new Error(`The Xcode project references an unknown object: ${id}.`);
     return found;
 }
 
-// Find the parent group of each object. Refuse an object that two groups claim.
 function buildParentGroups(elements: Record<string, PbxElement>): Map<string, string> {
     const parents = new Map<string, string>();
     for (const [id, element] of Object.entries(elements))
@@ -105,7 +102,6 @@ function buildParentGroups(elements: Record<string, PbxElement>): Map<string, st
     return parents;
 }
 
-// Find the folder of a group-relative object: the project folder for the main group, else the folder of its parent.
 function findGroupBase(project: XcodeProject, id: string): string {
     if (id === project.root.mainGroup) return posix.join(project.folder, project.root.projectDirPath ?? '');
     const parent = project.parents.get(id);
@@ -113,7 +109,6 @@ function findGroupBase(project: XcodeProject, id: string): string {
     return findElementPath(project, parent);
 }
 
-// Find the folder where the source tree of an object starts.
 function findTreeBase(project: XcodeProject, id: string, tree: string): string {
     if (tree === 'SOURCE_ROOT') return project.folder;
     if (tree === '<absolute>') return '/';
@@ -121,7 +116,6 @@ function findTreeBase(project: XcodeProject, id: string, tree: string): string {
     throw new Error(`Cannot find the folder of Xcode source tree ${tree} without build settings.`);
 }
 
-// Find the repository-relative path of an object, following its groups up to the main group.
 function findElementPath(project: XcodeProject, id: string): string {
     if (project.visiting.has(id)) throw new Error('The Xcode project contains a group cycle.');
     project.visiting.add(id);
@@ -133,7 +127,6 @@ function findElementPath(project: XcodeProject, id: string): string {
     return posix.normalize(posix.isAbsolute(path) ? path : posix.join(base, path));
 }
 
-// List the Swift files that a target compiles, from its sources build phases.
 function listTargetSources(project: XcodeProject, target: PbxElement): string[] {
     const phases = (target.buildPhases ?? []).map((phaseId) => getElement(project, phaseId));
     return phases
@@ -147,7 +140,6 @@ function listTargetSources(project: XcodeProject, target: PbxElement): string[] 
         });
 }
 
-// List the folders whose source files Xcode manages, each with the files its exceptions leave out.
 function listTargetFolders(project: XcodeProject, id: string, target: PbxElement): Folder[] {
     return (target.fileSystemSynchronizedGroups ?? []).map((groupId) => {
         const group = getElement(project, groupId);
@@ -160,7 +152,6 @@ function listTargetFolders(project: XcodeProject, id: string, target: PbxElement
     });
 }
 
-// Validate the project objects without requiring source paths or a main group.
 function parsePbxproj(text: string): ParsedPbxproj {
     const project = pbxprojSchema.parse(parseProjectDocument(text));
     const root = project.objects[project.rootObject];

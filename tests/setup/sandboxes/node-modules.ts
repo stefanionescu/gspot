@@ -1,4 +1,3 @@
-// Links installed npm packages into the node_modules folder of a sandbox.
 import { join, dirname, delimiter } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { FOLDER_LINK_TYPE } from '#tests/setup/system/platform.ts';
@@ -6,18 +5,10 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { mkdir, readdir, symlink, readFile, realpath } from 'node:fs/promises';
 
-/** The node_modules folder of the repository root, where each package sits beside its dependencies. */
 export const workspaceModules = join(import.meta.dir, '../../../node_modules');
 
-/** The node_modules folder of the tests package. It holds the package programs and links. */
 export const testModules = join(import.meta.dir, '../../node_modules');
 
-/**
- * List installed packages, including names in scoped folders.
- *
- * @param store the installed module folder.
- * @returns package names in filesystem order.
- */
 async function listPackageNames(store: string): Promise<string[]> {
     const listed = await readdir(store);
     const names = await Promise.all(
@@ -77,7 +68,6 @@ export async function linkPackages(modulesFolder: string, names: readonly string
         const canonical = await realpath(path);
         found.set(name, canonical);
         const packageJson = JSON.parse(await readFile(join(canonical, 'package.json'), 'utf8')) as PackageJson;
-        // The store keeps each dependency of a package beside it, in the same node_modules folder.
         const folder = join(canonical, ...name.split('/').map(() => '..'));
         const dependencies = {
             ...packageJson.dependencies,

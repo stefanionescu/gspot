@@ -18,7 +18,6 @@ test.each([...OUTSIDE_PATTERNS])('a pattern that leaves the folder is refused: %
     expect(() => listMatchingPaths(sandbox.path, ['src/**', pattern])).toThrow('cannot leave its folder');
 });
 
-// Windows symbolic links require privileges these tests do not request.
 test.skipIf(isWindows).each([...LINKED_CONFIG_FOLDERS])(
     'a glob does not walk through the link $link to reach $pattern',
     async ({ link, target, pattern }) => {
@@ -53,7 +52,6 @@ test('a glob includes dot files and honors exclusions and brace patterns', async
     ).toStrictEqual(['src/a.ts', 'src/nested/.inner/b.ts']);
 });
 
-// Windows symbolic links require privileges these tests do not request.
 test.skipIf(isWindows)('a glob lists links as files and never enters them', async () => {
     await using sandbox = await testdir({ 'src/a.ts': '', 'src/deep/b.ts': '', 'src/.hidden/c.ts': '' });
 

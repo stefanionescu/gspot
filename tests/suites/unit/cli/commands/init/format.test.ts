@@ -17,7 +17,6 @@ import {
     PRETTIER_FORMAT_OPTIONS,
 } from '#tests/config/commands/init/format.ts';
 
-/** Read the proposed format settings in scope order through the init command. */
 async function readInitFormatOptions(root: string, commandArguments: string[]): Promise<FormatSettings[]> {
     const result = await runGspot(root, [...commandArguments, '--dry-run', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);

@@ -124,7 +124,6 @@ Release on 03/04/2026.
         const selected = new Set(
             session.scopes.flatMap((scope) => scope.configurations.map((configuration) => configuration.name)),
         );
-        // Detection adds licenses for the dependency file of the app folder.
         expect([...selected].toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
             [...listAlwaysSelected(), 'licenses'].toSorted((left, right) => left.localeCompare(right)),
         );

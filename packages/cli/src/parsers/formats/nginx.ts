@@ -1,4 +1,3 @@
-// Reads nginx configuration text into directives.
 import { findQuotedEnd } from '#cli/system/text.ts';
 import type { DirectiveScan } from '#cli/types/parsers/formats/nginx.ts';
 
@@ -12,7 +11,6 @@ import {
     NGINX_PUNCTUATION,
 } from '#cli/config/parsers/formats/nginx.ts';
 
-// The index past an escape pair or a braced variable that starts at at, or `-1` when neither starts there.
 function findProtectedUnitEnd(text: string, at: number): number {
     const char = text[at];
     if (char === '\\') return at + 1 < text.length ? at + ESCAPE_LENGTH : -1;
@@ -21,14 +19,12 @@ function findProtectedUnitEnd(text: string, at: number): number {
     return close === -1 ? -1 : close + 1;
 }
 
-// The index past one unit of a bare word: an escape pair, a braced variable, or one plain character.
 function findUnitEnd(text: string, at: number, stops: RegExp): number {
     const special = findProtectedUnitEnd(text, at);
     if (special !== -1) return special;
     return stops.test(text[at] ?? '') ? at : at + 1;
 }
 
-// The index past the bare word that starts at at, or at itself when no word starts there.
 function findWordEnd(text: string, at: number): number {
     let end = findUnitEnd(text, at, WORD_START_STOPS);
     if (end === at) return at;
@@ -46,7 +42,6 @@ function scanComment(text: string, at: number): DirectiveScan {
     return { token: undefined, end: stop };
 }
 
-// The comment, punctuation, quoted argument, or bare word at at; skip a character that starts none.
 function scanAt(text: string, at: number): DirectiveScan {
     const char = text[at] ?? '';
     if (/\s/u.test(char)) return { token: undefined, end: at + 1 };
@@ -56,7 +51,6 @@ function scanAt(text: string, at: number): DirectiveScan {
     return end <= at ? { token: undefined, end: at + 1 } : { token: text.slice(at, end), end };
 }
 
-// The tokens of an nginx configuration: punctuation, quoted arguments, and bare words. Comments give no token.
 function splitTokens(text: string): string[] {
     const found: string[] = [];
     let at = 0;

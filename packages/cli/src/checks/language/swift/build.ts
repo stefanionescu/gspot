@@ -51,7 +51,6 @@ function parseOutputFindings(
             return [groups];
         })
         .map((groups): Finding => {
-            // SwiftLint appends the rule ID in parentheses; compiler messages do not.
             const text = groups['text'] ?? '';
             const suffix = RULE_SUFFIX.exec(text)?.groups;
             const { rule = defaultRule, text: message = text } = suffix === undefined ? {} : suffix;
@@ -70,8 +69,6 @@ function parseOutputFindings(
         });
 }
 
-// The build tool hands the compiler its sources in a response file, written as @path. The analyzer reads the
-// file names from the log and opens no response file, so the log spells out each one.
 function expandResponseFiles(line: string, folder: string, files: Files): string {
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
@@ -101,8 +98,6 @@ async function runSwiftBuild(
             files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
         const cwd = join(source, planned.scope.folder.path);
         const result = await runCheckTool(session, planned, plan.commandArguments, { cwd });
-        // Drop the macOS /private prefix so the paths match those of SwiftLint, and list the files of each response
-        // file in the compiler log.
         const output = `${result.stdout}\n${result.stderr}`
             .split('\n')
             .map((line) =>

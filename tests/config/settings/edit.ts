@@ -1,6 +1,5 @@
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
 
-/** An ignore of a Semgrep rule for one file. */
 export const SEMGREP_IGNORE: IgnoreRecord = {
     check: 'security/semgrep',
     rule: 'js/file-system-race',
@@ -8,7 +7,6 @@ export const SEMGREP_IGNORE: IgnoreRecord = {
     reason: 'The sandbox owns its temporary files.',
 };
 
-/** Scope settings written into a settings file that already holds settings. */
 export const SCOPE_SETTING_WRITES = [
     ['a dotted key', 'limits.file_lines = 100'],
     ['an inline table', 'limits = { file_lines = 100 }'],

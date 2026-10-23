@@ -30,7 +30,6 @@ export const LIST_SCOPE_ROWS = [
     'limits.file_lines                        200                          raising             [scope "api"]  [scope api]',
 ] as const;
 
-/** Settings with a shfmt ignore. */
 export const SHFMT_IGNORE_SETTINGS = {
     tables: `[[ignore]]
 check = "bash/shfmt"

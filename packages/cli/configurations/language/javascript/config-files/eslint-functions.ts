@@ -1,5 +1,3 @@
-// The functions that the generated ESLint config files call. gspot transpiles this file to functions.mjs beside the main
-// ESLint config file.
 import picomatch from 'picomatch';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -7,7 +5,6 @@ import { sep, relative } from 'node:path';
 import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
 import type { EslintGlobals, ComponentParser, JavascriptBlock } from '#cli/types/generation/eslint-functions.ts';
 
-/** The repository root, without a closing separator, so that TypeScript finds the project service from it. */
 export const root = fileURLToPath(new URL('../../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 
 const componentParserOptions = { tsconfigRootDir: root, ecmaVersion: 'latest', sourceType: 'module' };

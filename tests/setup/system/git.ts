@@ -1,4 +1,3 @@
-// Run Git in test sandboxes, and prepare repositories with commits, pushes, nested scopes, and Git Large File Storage.
 import { join } from 'node:path';
 import { stat, chmod } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';

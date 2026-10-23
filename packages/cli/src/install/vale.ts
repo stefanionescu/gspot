@@ -1,4 +1,3 @@
-// Install and check the Vale packages.
 import { GspotError } from '#cli/system/errors.ts';
 import { join, dirname, resolve } from 'node:path';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -60,8 +59,6 @@ export async function installValePackages(install: ToolInstall): Promise<string>
     try {
         const config = join(temporary, GSPOT_PATHS.valeConfigFile);
         const text = readText(root, GSPOT_PATHS.valeConfigFile);
-        // Vale downloads into the last StylesPath, so that one stays relative to the temporary folder; the others point
-        // back to the repository.
         const last = [...text.matchAll(VALE_STYLES_PATH_PATTERN)].at(-1);
         const content = text.replaceAll(VALE_STYLES_PATH_PATTERN, (line, path: string, offset: number) =>
             offset === last?.index

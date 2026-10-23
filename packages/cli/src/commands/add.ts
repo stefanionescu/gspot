@@ -20,12 +20,6 @@ function restoreConfigurations(table: TomlTable, removed: string[], configuratio
         };
 }
 
-/**
- * Add configurations to the root list or to the list of one scope.
- *
- * @param options the parsed flags.
- * @returns the command result.
- */
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input, scopeSettings, selected } = prepareConfigurationEdit(options);
     const scopeConfigurations = scopeSettings.configurations;

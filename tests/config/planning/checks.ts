@@ -1,12 +1,10 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-/** The checks that replace typescript/tsc, with a source file that each one reads. */
 export const TSC_REPLACEMENTS = [
     { configuration: 'vue', check: 'vue/vue-tsc', source: 'src/App.vue', text: '<template><p>App</p></template>' },
     { configuration: 'svelte', check: 'svelte/svelte-check', source: 'src/App.svelte', text: '<p>App</p>' },
 ] as const;
 
-/** Repositories whose files decide whether gspot configures a check. */
 export const CONFIGURED_CHECK_CASES = [
     {
         name: 'a TypeScript-only scope selects Knip',
@@ -29,14 +27,12 @@ export const CONFIGURED_CHECK_CASES = [
     },
 ] as const;
 
-/** The coverage commands without their coverage arguments. */
 export const STRIPPED_COVERAGE_COMMANDS: Record<string, string[]> = {
     'jest/coverage': ['jest', '--ci', '--rootDir={root}/{scope}'],
     'vitest/coverage': ['vitest', 'run'],
     'pytest/coverage': ['pytest', '-q', '--strict-markers', '--strict-config', '--no-header', '-p', 'no:cacheprovider'],
 };
 
-/** Ignores of a whole scope and the scopes where the replaced check still runs. */
 export const SCOPE_WIDE_IGNORE_CASES = [
     { paths: ['api/**'], ignored: true },
     { paths: ['api'], ignored: true },

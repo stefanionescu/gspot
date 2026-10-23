@@ -23,7 +23,6 @@ export const WORKSPACE_SOURCE_FILES = {
     'packages/aliased/value.js': 'export const aliasValue = "alias source";',
 } as const;
 
-/** A tests workspace that imports Vue. */
 export const TEST_WORKSPACE_FILES = {
     'package.json': '{"private":true,"workspaces":["tests"]}',
     'tests/package.json': '{"name":"tests"}',

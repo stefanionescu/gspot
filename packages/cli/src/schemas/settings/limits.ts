@@ -16,10 +16,8 @@ const limitFields = Object.fromEntries(
     ]),
 ) as LimitSchemas;
 
-// A language table holds only the limits that some code reads for that language, and inherits unset ones from the root.
 const languageLimitFields = z.strictObject(limitFields).partial();
 
-// The limit fields that some code reads for one language, as a mask for pick.
 function buildLanguageMask<Language extends LimitLanguage>(
     language: Language,
 ): Record<LanguageLimitField<Language>, true> {

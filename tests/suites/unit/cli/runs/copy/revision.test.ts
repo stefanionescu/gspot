@@ -16,7 +16,6 @@ import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settin
 import { chmod, mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
 import { GIT_HOOK_CASES, GIT_HOOK_FIELDS, GIT_HOOK_REPORT, GIT_HOOK_SCRIPT } from '#tests/config/runs/copy/revision.ts';
 
-/** Run the hook with the real module entry points and the inherited Git environment. */
 function runGitHook(worktree: string, index: string, folder: string, report: string): ProcessOutput {
     const revision = pathToFileURL(Bun.resolveSync('#cli/runs/copy/revision.ts', import.meta.dir)).href;
     const owner = pathToFileURL(Bun.resolveSync('#cli/system/git.ts', import.meta.dir)).href;
@@ -137,7 +136,6 @@ test.each([...GIT_HOOK_CASES])(
     },
 );
 
-// Windows filenames cannot contain a newline or a double quote.
 test.skipIf(isWindows)('an index copy keeps unusual filename bytes and contents', async () => {
     await using sandbox = await testdir();
     const path = 'a\n"é.sql';

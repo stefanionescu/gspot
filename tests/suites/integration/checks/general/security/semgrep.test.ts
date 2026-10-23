@@ -54,7 +54,6 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
         await checkAuthoredRules(installedSandbox());
     });
 
-    // The Next.js configuration rules run through the same Semgrep command as the other shipped Semgrep rules.
     test.each([...NEXT_CONFIG_CASES])(
         'the Next.js Semgrep rules report exactly the expected lines of next.config: $name',
         async (row) => {
@@ -63,7 +62,6 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     );
 });
 
-// Stage a Bash file that Semgrep cannot parse, check the finding at its position, and pass after the repair.
 async function checkUnparsableBash(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['bash', 'security']),
@@ -82,7 +80,6 @@ async function checkUnparsableBash(sandbox: Sandbox): Promise<void> {
     expect(corrected.report.checks).toMatchObject([{ check: 'security/semgrep', status: 'passed', findings: [] }]);
 }
 
-// Check the Bash and Swift rules on their samples, then on the fixed sources.
 async function checkLanguageRules(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['bash', 'swift', 'security'], { level: 'all' }),
@@ -108,7 +105,6 @@ async function checkLanguageRules(sandbox: Sandbox): Promise<void> {
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
 }
 
-// Check the platform rules at one level on their samples, then on the fixed sources.
 async function checkPlatformRules(sandbox: Sandbox, level: Level): Promise<void> {
     const sourceFiles = {
         'package.json': SEMGREP_PROJECT_FILES['package.json'],
@@ -140,7 +136,6 @@ async function checkPlatformRules(sandbox: Sandbox, level: Level): Promise<void>
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 }
 
-// Check that a rule file of your own reports through security/semgrep, then passes after the fix.
 async function checkAuthoredRules(sandbox: Sandbox): Promise<void> {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['typescript', 'security'], {
@@ -164,7 +159,6 @@ async function checkAuthoredRules(sandbox: Sandbox): Promise<void> {
     expect(corrected.report.checks).toMatchObject([{ check: 'security/semgrep', status: 'passed', findings: [] }]);
 }
 
-// Check the Next.js configuration rules on one next.config source.
 async function checkNextjsOptions(
     sandbox: Sandbox,
     { source, expected }: (typeof NEXT_CONFIG_CASES)[number],
@@ -184,7 +178,6 @@ async function checkNextjsOptions(
     ).toStrictEqual(expected.map(({ file, line, rule }) => ({ file, line, rule })));
 }
 
-/** Write and stage the sample files, then run apply; disposal restores the index and files. */
 async function applyStagedSandboxChanges(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     resources.use(await changeAppliedSandbox(sandbox, changes));

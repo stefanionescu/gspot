@@ -1,4 +1,3 @@
-/** Markup with URLs that run code, at the column of each attribute, and scheme text in places that do not run it. */
 export const URL_MARKUP_CASES = [
     { markup: '<a href="javascript:alert(1)">Link</a>', columns: [4] },
     { markup: '<a href="jav&#x61;script&colon;alert(1)">Link</a>', columns: [4] },
@@ -16,7 +15,6 @@ export const URL_MARKUP_CASES = [
     { markup: '<script type="application/ld+json">{"name":"example"}</script>', columns: [] },
 ] as const;
 
-/** A page with an inline script, a click handler, an inert JSON script, and a linked script. */
 export const INLINE_SCRIPT_PAGE = `<!doctype html>
 <html lang="en">
 <head><title>Shop</title></head>

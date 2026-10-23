@@ -6,5 +6,4 @@ export const FILES_BETWEEN_PAUSES = 64;
 
 export const COPY_ROOT_FILES = [SETTINGS_FILE, PACKAGE_JSON, TSCONFIG_FILE, PYPROJECT_TOML] as const;
 
-/** A project file marks a folder whose installed dependencies a copy carries. */
 export const DEPENDENCY_FILES: ReadonlySet<string> = new Set([PACKAGE_JSON, PYPROJECT_TOML]);

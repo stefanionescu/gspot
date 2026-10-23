@@ -1,4 +1,3 @@
-/** Each Python dependency file form: its text and the dependencies it gives. */
 export const PYTHON_DEPENDENCY_CASES = [
     {
         name: 'PEP 621 table',

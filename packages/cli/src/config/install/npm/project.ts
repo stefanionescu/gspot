@@ -1,13 +1,8 @@
-/** Yarn Classic and Berry declare different lockfile operations. */
 export const YARN_ARGUMENTS = {
     classic: { lockfile: ['yarn', 'install'], install: ['yarn', 'install', '--frozen-lockfile'] },
     berry: { lockfile: ['yarn', 'install', '--mode=update-lockfile'], install: ['yarn', 'install', '--immutable'] },
 } as const;
 
-/**
- * The arguments of each package manager: lockfile resolves the lockfile and installs nothing into the tool project, and
- * install refuses any change to the recorded lockfile.
- */
 export const PACKAGE_MANAGER_ARGUMENTS = {
     npm: {
         lockfile: [

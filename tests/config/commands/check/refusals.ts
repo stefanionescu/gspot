@@ -4,7 +4,6 @@ const UTF16_MARKER_BYTE = 0xfe;
 
 const LINE_FEED_BYTE = 0x0a;
 
-/** Options that the check command refuses, with each error; the working tree must stay unchanged. */
 export const FIX_REFUSALS = [
     [
         ['--staged', '--fix'],
@@ -29,7 +28,6 @@ export const PUSH_INPUT_REFUSALS = [
     },
 ] as const;
 
-/** Arguments that the check command refuses, with each message; <root>/ stands for the sandbox folder and separator. */
 export const ARGUMENT_REFUSALS = [
     [
         'a path outside the repository',
@@ -49,7 +47,6 @@ export const ARGUMENT_REFUSALS = [
     ],
 ] as const;
 
-/** A command check that the paths test runs outside Git. */
 export const OUTSIDE_GIT_SETTINGS = `configurations = []
 [[command_check]]
 id = "sandbox/paths"

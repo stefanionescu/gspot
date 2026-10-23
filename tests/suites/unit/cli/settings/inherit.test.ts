@@ -263,7 +263,6 @@ test('a naming category takes its shipped cases as its default, so gspot.toml ma
     expect(buildScopeNamingSettings(text).limitsFor('typescript', 'files').caseNames).toStrictEqual(['kebab']);
 });
 
-/** Read the defaults and declarations of the selected configurations at one level. */
 function buildSelectedAvailableSettings(configurations: string[], level: Level = 'recommended'): AvailableSettings {
     return buildAvailableSettings(selectConfigurations(configurations, readConfigurations()), level);
 }

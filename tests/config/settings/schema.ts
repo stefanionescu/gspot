@@ -1,4 +1,3 @@
-/** Scope paths that the settings refuse. */
 export const UNSAFE_SCOPE_PATHS = [
     '../outside',
     '/outside',
@@ -10,7 +9,6 @@ export const UNSAFE_SCOPE_PATHS = [
     '',
 ] as const;
 
-/** Expiry values, and whether each one holds a valid TOML date. */
 export const UNTIL_DATE_CASES = [
     { name: 'ordinary date', literal: '2026-12-31', valid: true, date: '2026-12-31' },
     { name: 'quoted date', literal: '"2026-12-31"', valid: false },
@@ -145,7 +143,6 @@ export const REFUSED_RULE_OPTIONS = [
     },
 ] as const;
 
-/** Import rules with can_import lists. */
 export const CAN_IMPORT_RULES = `[[import_rule]]
 name = "storage"
 paths = ["storage/**"]
@@ -156,7 +153,6 @@ paths = ["app/**"]
 can_import = ["storage"]
 `;
 
-/** Import rules that may import the rules above them. */
 export const ORDERED_IMPORT_RULES = `[[import_rule]]
 name = "storage"
 paths = ["storage/**"]

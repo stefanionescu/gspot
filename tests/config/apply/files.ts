@@ -2,7 +2,6 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { STYLELINT_FILES } from '#tests/config/checks/language/css.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
 
-/** Commit rules come from nested packages too; a package without the field stays unchanged. */
 const COMMITLINT_PROJECT = {
     'package.json': COMMITLINT_PACKAGE,
     'app/package.json': COMMITLINT_PACKAGE,
@@ -60,11 +59,9 @@ export const STYLELINT_PACKAGE_FIELDS = {
     ],
 } as const;
 
-/** An authored name edit that keeps the generated commitlint field. */
 export const EDITED_COMMITLINT_PACKAGE =
     '{"name":"edited-project","private":true,"commitlint":{"extends":"../.gspot/configurations/general/commits/commitlint.json"},"kept":[0,false,""]}\n';
 
-/** A file that changes between the init plan and the write: an edited package.json field. */
 export const EDITED_STYLELINT_PACKAGE = `{
   "name": "edited-project",
   "private": true,
@@ -73,7 +70,6 @@ export const EDITED_STYLELINT_PACKAGE = `{
 }
 `;
 
-/** The tool folders that apply deletes when no configuration needs them. */
 export const TOOL_FOLDERS = [
     { kind: 'npm', folder: GSPOT_PATHS.nodeModules },
     { kind: 'python', folder: GSPOT_PATHS.pythonEnvironment },

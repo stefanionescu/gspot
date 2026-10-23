@@ -32,7 +32,6 @@ import type {
     ConfigurationBlocks,
 } from '#cli/types/generation/eslint.ts';
 
-// Scope inputs determine block data before the builder attaches labels and inclusion masks.
 function buildConfigurationBlocks(
     session: Session,
     configuration: Configuration,
@@ -69,7 +68,6 @@ function buildConfigurationBlocks(
     );
 }
 
-// A scope can share only its immediate parent's configuration data, including when that parent has no fragment.
 function listMatchingScopes(
     scopeBlocks: { path: string; blocks: ConfigurationBlocks }[],
     scopes: Scope[],
@@ -87,7 +85,6 @@ function listMatchingScopes(
     );
 }
 
-// Keep one set of block data for matching nested scopes, with differing scopes excluded from their parent.
 function buildScopeConfigurationBlocks(
     session: Session,
     configurations: {

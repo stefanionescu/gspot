@@ -88,29 +88,16 @@ test.each(buildSizeCases())(
         expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     },
 );
-/**
- * Read the shipped default of a Bash size limit.
- *
- * @param name the Bash size setting.
- * @returns its declared numeric default.
- */
 function getDefaultLimit(name: string): number {
     const setting = listSettings('structure').find(({ name: key }) => key === `limits.${name}`)!;
     return Number(setting.language_defaults?.['bash'] ?? setting.default);
 }
-/**
- * Produce exactly this many nested Bash blocks.
- *
- * @param depth the count of nested conditions.
- * @returns the function body.
- */
 function buildNestedConditions(depth: number): string {
     const opening = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (index + 1))}${NESTED_CONDITION}`);
     const closing = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (depth - index))}fi`);
     return [...opening, `${' '.repeat(4 * (depth + 1))}echo "$1"`, ...closing].join('\n');
 }
 
-/** Build each function-size sample together with its location, fix, and diagnostic. */
 function buildSizeCases(): SizeCase[] {
     return BASH_SIZE_CASES.map(({ file, rule, line }) => {
         const limit = getDefaultLimit(rule.replaceAll('-', '_'));

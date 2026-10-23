@@ -35,7 +35,6 @@ function listWorkflowReferences(document: Document): unknown[] {
     return references;
 }
 
-// Change only the self-repository marker. Later dollar signs belong to the referenced path.
 function replaceReference(text: string, reference: Scalar): string {
     const token = reference.srcToken;
     if (token === undefined || !('source' in token)) return text;
@@ -54,12 +53,6 @@ function replaceReference(text: string, reference: Scalar): string {
     return text.slice(0, start) + replaced + text.slice(start + source.length);
 }
 
-/**
- * Converts self-repository references to local paths for the pinned actionlint parser, preserving offsets.
- *
- * @param text a workflow or action file.
- * @returns the text with local paths, at the same offsets.
- */
 function prepareActionlintText(text: string): string {
     const document = parseDocument(text, { keepSourceTokens: true });
     if (document.errors.length > 0 || !isMap(document.contents)) return text;
@@ -99,7 +92,6 @@ export async function checkGithubActionsActionlint(session: Session, planned: Pl
         dependencies: [],
         cancelSignal: session.cancelSignal,
     });
-    // Actionlint discovers local reusable workflows only inside a Git project.
     mkdirSync(join(scratch.path, GIT_FOLDER));
     for (const [path, source] of replacements) {
         const target = join(scratch.path, path);

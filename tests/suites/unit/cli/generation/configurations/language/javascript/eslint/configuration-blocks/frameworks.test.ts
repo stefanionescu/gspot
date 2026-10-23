@@ -158,7 +158,6 @@ configurations = ["nextjs"]
                     : [],
             );
         }
-        // The rule skips a small component and checks a plain module in the same scope.
         expect(rules['app/format.ts']!['gspot/no-trivial-files']![0]).toBe(2);
         expect(rules['library/page.tsx']!['gspot/no-trivial-files']![0]).toBe(2);
     },

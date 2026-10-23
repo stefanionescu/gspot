@@ -1,4 +1,3 @@
-// Runs gspot in a sandbox, in this process or as a child process, and reads its JSON report.
 import { spyOn } from 'bun:test';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
@@ -14,13 +13,10 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import type { StdinOptions, ProcessOutput } from '#tests/types/processes.ts';
 import type { FindingRow, ScopeFindingRow } from '#tests/types/tool-output.ts';
 
-/** The gspot source folder in this checkout. */
 export const CLI_SOURCE_PATH = join(import.meta.dir, '../../../packages/cli/src');
 
-/** The CLI entry file in this checkout. */
 export const CLI_MAIN = join(CLI_SOURCE_PATH, 'main.ts');
 
-/** The shipped CLI entry file, including its runtime check. */
 export const CLI_BIN = join(CLI_SOURCE_PATH, 'bin.ts');
 
 /** List the file, line, and rule of every finding in the report. */
@@ -82,7 +78,6 @@ export async function runGspot(
     } finally {
         process.chdir(previousFolder);
         Object.defineProperty(process, 'stdin', stdin);
-        // Assigning undefined keeps the last Bun exit code; restore an unset code as 0.
         process.exitCode = exitCode ?? 0;
     }
 }

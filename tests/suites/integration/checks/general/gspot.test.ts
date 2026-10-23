@@ -39,7 +39,6 @@ test('suppression detection agrees with Ruff on every noqa comment form and plac
     );
 });
 
-/** For each path: whether the tool suppressed it, and the suppression findings that gspot reports. */
 async function readSuppressionResults(root: string, paths: string[], reported: Set<string>) {
     const checked = parseCheckReport(await spawnGspot(root, ['check', '--only', 'gspot/suppressions', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);

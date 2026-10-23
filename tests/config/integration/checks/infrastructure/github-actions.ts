@@ -21,7 +21,6 @@ jobs:
           persist-credentials: false
 `;
 
-/** A reusable workflow that requires the greeting input. */
 export const REQUIRED_INPUT_WORKFLOW = `on:
   workflow_call:
     inputs:

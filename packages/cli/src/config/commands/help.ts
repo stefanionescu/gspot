@@ -1,6 +1,5 @@
 import { NAMED_FINDING_CHECKS } from '#cli/config/settings/file.ts';
 
-/** Command registration and reference pages share this help text. */
 export const COMMAND_HELP = {
     init: {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',

@@ -36,7 +36,6 @@ function listImportedNames(node: Node): (string | undefined)[] {
     return names.length === 0 ? [undefined] : names;
 }
 
-// from a.b import c loads the module a.b.c when it exists, and the module a.b otherwise.
 function listAbsoluteImports(node: Node, module: string, search: PythonSearch): LocatedImport[] {
     return listImportedNames(node).flatMap((name) => {
         const inner = name === undefined ? undefined : [module, name].join('.');
@@ -47,13 +46,11 @@ function listAbsoluteImports(node: Node, module: string, search: PythonSearch): 
     });
 }
 
-// The module of a relative import as written: from .pkg import y names .pkg.y, and from . import y names .y.
 function joinRelativeName(prefix: string, name: string | undefined): string {
     if (name === undefined) return prefix;
     return prefix.endsWith('.') ? prefix + name : [prefix, name].join('.');
 }
 
-// A relative import starts at the package of the file, and each dot after the first climbs one package.
 function listRelativeImports(node: Node, prefix: Node, file: string, search: PythonSearch): LocatedImport[] {
     const dots = prefix.namedChildren.find((child) => child.type === 'import_prefix')?.text.length ?? 1;
     const dotted = prefix.namedChildren.find((child) => child.type === 'dotted_name')?.text ?? '';

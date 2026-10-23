@@ -1,4 +1,3 @@
-// Read and write contained files through verified folder paths.
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { Files, FileBounds } from '#cli/types/system/files.ts';

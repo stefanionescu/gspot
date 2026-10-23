@@ -125,12 +125,6 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     expect(await readFile(join(sandbox.path, configuration))).toStrictEqual(rootConfiguration);
 });
 
-/**
- * Serve a wheel with the installed Ruff executable.
- *
- * @param work the temporary folder receiving the wheel.
- * @returns an authenticated registry serving the wheel.
- */
 async function createPythonIndex(work: string): Promise<AsyncDisposable & { url: string }> {
     await using source = await createPythonProject(work, { indexFile: 'uv.toml' });
     await installGeneratedTools(source.root);
@@ -173,7 +167,6 @@ async function createPythonIndex(work: string): Promise<AsyncDisposable & { url:
     };
 }
 
-/** Build the wheel metadata and executable entries, including their integrity record. */
 async function buildWheelFiles(binary: string, version: string): Promise<Array<[string, Buffer]>> {
     const metadata = `ruff-${version}.dist-info`;
     const files: Array<[string, Buffer]> = [
@@ -204,7 +197,6 @@ Tag: py3-none-any
     return files;
 }
 
-/** Create a local package index and a Python project, then install its tools and read the tool project files. */
 async function createIndexedPythonProject(
     root: string,
     work: string,

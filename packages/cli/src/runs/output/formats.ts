@@ -1,4 +1,3 @@
-// Defines tool-output formats and reads findings from tool output.
 import { realpathSync } from 'node:fs';
 import { sep, posix, isAbsolute } from 'node:path';
 import { hasErrorCode } from '#cli/system/errors.ts';
@@ -16,15 +15,8 @@ import { FILE_GROUP, MISSING_PATH_CODES } from '#cli/config/runs/output/formats.
 import type { CheckOutput, OutputPaths, ParsingCheck, OutputParser } from '#cli/types/runs/output.ts';
 import { parseLineFindings, parseRegexFindings, parseGroupedFindings } from '#cli/runs/output/text.ts';
 
-/**
- * Resolve a path the way tools print it after they follow links.
- *
- * @param path the file or folder.
- * @returns the resolved path with POSIX separators, or undefined when nothing exists at the path.
- */
 function readCanonicalPath(path: string): string | undefined {
     try {
-        // The call gives Windows paths one drive letter case and their long folder names.
         return convertToPosixPath(realpathSync.native(path));
     } catch (error) {
         if ([...MISSING_PATH_CODES].some((code) => hasErrorCode(error, code))) return undefined;
@@ -42,20 +34,12 @@ function stripRoot(root: string, file: string): string {
     return canonicalFile.startsWith(`${canonicalRoot}/`) ? canonicalFile.slice(canonicalRoot.length + 1) : file;
 }
 
-/**
- * List the forms of the root that a tool can print in a message.
- * The longest form comes first, so that a shorter form never cuts a longer one.
- *
- * @param root the repository folder with POSIX separators.
- * @returns the root and its resolved form in POSIX and in system separators.
- */
 function listRootPrefixes(root: string): string[] {
     const roots = [root, readCanonicalPath(root) ?? root];
     const prefixes = new Set(roots.flatMap((form) => [`${form}/`, `${form.replaceAll('/', sep)}${sep}`]));
     return [...prefixes].toSorted((first, second) => second.length - first.length);
 }
 
-/** The reader and process-result rules for every supported output format. */
 export const outputFormats = {
     none: { parse: () => [], namesFiles: () => false },
     json: {
@@ -85,7 +69,6 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     const { root, cwd } = paths;
     const rootPath = convertToPosixPath(root);
     const output = check.output;
-    // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`);
     const findings = outputFormats[output.format].parse({
         check: check.id,

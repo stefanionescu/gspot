@@ -10,7 +10,6 @@ path = "sibling"
 
 `;
 
-/** An Express package and sources inside and outside its folder, for the scoped security test. */
 export const EXPRESS_SCOPE_FILES = {
     'app/package.json': '{"name":"security-app","private":true,"dependencies":{"express":"0.0.0-test"}}',
     'source.js': 'res.send(req.body.message);\n',
@@ -19,7 +18,6 @@ export const EXPRESS_SCOPE_FILES = {
     'sibling/source.js': 'res.send(req.body.message);\n',
 } as const;
 
-/** Samples and sources with findings, run together under the shipped Express rules. */
 export const EXPRESS_SOURCES = {
     'logger.js': 'logger.info(`User ${req.query.name}`);\n',
     'json.js': 'res.json({ name: req.query.name });\n',
@@ -38,7 +36,6 @@ export const EXPRESS_SOURCE_FINDINGS = [
     { file: 'response-template.js', rule: 'gspot.express.res-send-raw-input', line: 1 },
 ] as const;
 
-/** The scope and file of each finding in the scopes that inherit Express. */
 export const EXPRESS_SCOPE_FINDINGS = [
     { scope: 'app', file: 'app/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },
     { scope: 'app/child', file: 'app/child/source.js', line: 1, rule: 'gspot.express.res-send-raw-input' },

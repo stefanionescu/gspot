@@ -1,4 +1,3 @@
-// Checks the files of one working tree: the repository, or a copy of the staged index or of a pushed commit.
 import { openSession } from '#cli/session.ts';
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
@@ -44,7 +43,6 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
             paths,
             messageFile: options.messageFile,
             push: options.push,
-            // A --changed run checks the commit messages and history after the merge base, not the whole history.
             commits,
             base,
             historyComplete,
@@ -62,7 +60,6 @@ function buildComparison(
     return undefined;
 }
 
-// List the files that a path names: the file itself, or every file in a folder.
 function listMatchingFiles(session: Session, cwd: string, path: string, files: string[]): string[] {
     const selector = convertToPosixPath(relative(session.root, resolve(cwd, path)));
     if (!isInside(selector)) throw new GspotError('arguments', `Path ${path} is outside this repository.`);
@@ -71,14 +68,6 @@ function listMatchingFiles(session: Session, cwd: string, path: string, files: s
     return matches;
 }
 
-/**
- * Select the files that the path arguments name.
- *
- * @param session the repository files.
- * @param options the parsed flags.
- * @param changed the staged or modified paths, which can name deleted files.
- * @returns the matching paths, or none without path arguments.
- */
 function selectArgumentPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
     if (options.paths.length === 0) return [];
     const repositoryPaths = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
@@ -88,12 +77,6 @@ function selectArgumentPaths(session: Session, options: CheckOptions, changed: s
     return [...selected];
 }
 
-/**
- * Refuse an --only check that no configuration here runs.
- *
- * @param session the configurations that run here.
- * @param only the check IDs that the flag names.
- */
 function assertChecksExist(session: Session, only: string[] | undefined): void {
     const checkIds = new Set([
         ...session.scopes.flatMap((scope) =>
@@ -109,7 +92,6 @@ function assertChecksExist(session: Session, only: string[] | undefined): void {
         );
 }
 
-// Warns when the clone receiving the report lacks the configured hooks.
 function warnAboutHooks(session: Session, revision: RevisionSource | undefined): void {
     if (revision?.content === 'commit') return;
     const hooks = readHookStatus(session, {
@@ -122,7 +104,6 @@ function warnAboutHooks(session: Session, revision: RevisionSource | undefined):
         );
 }
 
-// Read the changed paths: from the revision, from the --changed ref, or none for a whole push.
 async function readChangedFilter(
     session: Session,
     options: CheckOptions,
@@ -134,7 +115,6 @@ async function readChangedFilter(
     return options.base === undefined ? undefined : readChangedPaths(session.root, options.base, cancelSignal);
 }
 
-// Collect the run filters: the changed paths, the staged paths, and the stage.
 async function readRunFilters(
     session: Session,
     options: CheckOptions,

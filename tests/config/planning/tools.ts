@@ -8,7 +8,6 @@ version = "1.0.0"
 `,
 } as const;
 
-/** Projects with the tools that each needs and must not need: Node follows the npm checks that apply, not the language of the repository. */
 export const NODE_REQUIREMENTS = [
     {
         name: 'Python with npm schema peers under mise',
@@ -53,7 +52,6 @@ reason = "This sandbox exercises native tools without the license scanner."
     },
 ] as const;
 
-/** Modules apply at both levels. Roles and test paths apply at level all. */
 export const ARCHITECTURE_REQUIREMENTS = [
     {
         name: 'root modules',

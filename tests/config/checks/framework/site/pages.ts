@@ -83,7 +83,6 @@ export const SITE_SANDBOX = {
     files: STATIC_SITE_FILES,
 } as const;
 
-/** Built-output checks run without installing tools. */
 export const BUILT_PAGE_CASES = [
     {
         check: 'site/size',
@@ -116,7 +115,6 @@ kilobytes = 10
     },
 ] as const;
 
-/** Settings that select the site build checks at level all. */
 export const SITE_SETTINGS = `level = "all"
 configurations = ["site"]
 [site]

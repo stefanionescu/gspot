@@ -1,4 +1,3 @@
-/** Argument errors that stop gspot before it reads gspot.toml, with the message of each. */
 export const ARGUMENT_ERRORS = [
     { name: 'an unknown option', arguments: ['check', '--unknown'], message: "Unknown option '--unknown'" },
     {
@@ -8,7 +7,6 @@ export const ARGUMENT_ERRORS = [
     },
 ] as const;
 
-/** The same argument errors with --json after them, and the message that each prints. */
 export const JSON_ARGUMENT_ERRORS = [
     { name: 'no command', arguments: ['--json'], message: "Unknown option '--json'" },
     { name: 'an unknown option', arguments: ['check', '--unknown', '--json'], message: "Unknown option '--unknown'" },

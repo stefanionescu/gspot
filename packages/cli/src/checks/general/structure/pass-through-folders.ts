@@ -19,7 +19,6 @@ export function checkPassThroughFolders(session: Session, planned: PlannedCheck)
         (configuration) => configuration.files.extensions,
     );
     const code = listCodeFiles(planned).filter((file) => extensions.some((extension) => file.path.endsWith(extension)));
-    // The whole repository decides what a folder holds, so a child scope or another file kind counts as an entry.
     const tree = buildFolderTree(session.repository.files);
     const scope = planned.scope.folder.path;
     const folders = new Set(code.flatMap((file) => listEnclosingFolders(extractParentFolder(file.path))));

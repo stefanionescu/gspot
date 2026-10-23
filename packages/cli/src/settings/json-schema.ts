@@ -17,7 +17,6 @@ import {
  */
 export function buildJsonSchema(): Record<string, unknown> {
     const converted = convertToJsonSchema(settingsSchema);
-    // The tables carry no description of their own; editors show this one on hover.
     const properties = Object.entries(converted.properties as Record<string, z.core.JSONSchema.JSONSchema>).map(
         ([name, node]) => {
             const description = node.description ?? TABLE_DESCRIPTIONS[name];
@@ -33,8 +32,6 @@ export function buildJsonSchema(): Record<string, unknown> {
         properties: Object.fromEntries(properties),
     };
 }
-// Convert a settings schema to JSON Schema, keep the written defaults and the setting definitions, and write TOML dates
-// as calendar strings.
 function convertToJsonSchema(schema: z.ZodType): z.core.JSONSchema.JSONSchema {
     return z.toJSONSchema(schema, {
         io: 'input',

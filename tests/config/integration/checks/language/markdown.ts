@@ -3,7 +3,6 @@ import { GUIDE, README, LICENSE } from '#tests/config/checks/samples.ts';
 
 export const MARKDOWNLINT_EXECUTABLE = `${GSPOT_PATHS.nodeModules}/.bin/markdownlint-cli2`;
 
-/** Markdown files in the root and a scope, to test which config file applies, with no extra tools to install. */
 export const MARKDOWN_FILES = {
     'root.md': `# Root
 
@@ -50,7 +49,6 @@ The page has no heading.
 `,
 } as const;
 
-/** Options of an inactive rule do not turn it on; scope options replace only the values of their own rule. */
 export const MARKDOWNLINT_TABLES = `[format]\nindent_width = 6\n[tools.markdownlint.rules]\nMD044 = { names = ["Root label"], code_blocks = false }\nMD041 = {}\nMD013 = { line_length = 10 }\nMD033 = {}\nMD060 = { style = "aligned" }\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.markdownlint.rules]\nMD044 = { names = ["Nested label"] }\n`;
 
 export const MARKDOWN_SANDBOX = {
@@ -58,5 +56,4 @@ export const MARKDOWN_SANDBOX = {
     files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
 } as const;
 
-/** A Markdown document that starts with its title. */
 export const TITLED_DOCUMENT = '# Title\n\nA document with a title.\n';

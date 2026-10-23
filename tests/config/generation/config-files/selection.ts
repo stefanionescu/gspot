@@ -3,7 +3,6 @@ import { findFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/setup/sandboxes.ts';
 
-/** Sibling Python projects with different enabled tools. */
 export const NESTED_PYTHON_GSPOT_TOML = buildSandboxSettings([], {
     scopes: [
         { path: 'linted', configurations: ['python'] },
@@ -46,7 +45,6 @@ export const UNPARSED_CONFIG_FILES = [
     'trivyignore',
 ] as const;
 
-/** The format configuration with Prettier ignored, so only editorconfig-checker runs. */
 const EDITORCONFIG_SETTINGS = `configurations = ["format"]
 [[ignore]]
 check = "format/prettier"
@@ -55,7 +53,6 @@ reason = "This sandbox uses EditorConfig without Prettier."
 enabled = false
 `;
 
-/** SwiftFormat stays active when an ignore skips both other external Swift checks. */
 const SWIFT_FORMAT_SETTINGS = `configurations = ["swift"]
 ${NPM_CHECK_IGNORES}[[ignore]]
 check = "swift/swiftlint"
@@ -70,7 +67,6 @@ reason = "This sandbox has no Xcode project."
 enabled = false
 `;
 
-/** A whole-check ignore drops the files of that check and keeps those of the other checks of its configuration. */
 export const IGNORED_CHECK_FILES = [
     {
         name: 'ignoring SwiftLint and Periphery keeps SwiftFormat',

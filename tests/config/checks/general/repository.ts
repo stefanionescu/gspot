@@ -1,4 +1,3 @@
-/** Paths that `repository/local-files` reports, allows, or reads only from the Git index. */
 export const LOCAL_FILE_PATHS = {
     indexOnly: ['.env.'],
     refused: [

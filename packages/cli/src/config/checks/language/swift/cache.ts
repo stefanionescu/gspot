@@ -12,7 +12,6 @@ export const PACKAGE_SCRATCH_FOLDER = 'package';
 
 export const SWIFT_PROGRAM = 'swift';
 
-/** The SwiftPM arguments and the xcodebuild actions of each Swift build task. */
 export const SWIFT_BUILD_COMMANDS = {
     compile: { package: ['build', '-v'], xcode: ['build-for-testing'] },
     analyze: { package: ['build', '-v'], xcode: ['clean', 'build-for-testing'] },
@@ -37,7 +36,6 @@ export const DERIVED_DATA_FOLDER = 'derived';
 
 export const CODE_SIGNING_OFF = 'CODE_SIGNING_ALLOWED=NO';
 
-/** The folder of source copies that the compiler, analyzer, Periphery, and coverage share. */
 export const BUILD_SOURCE_FOLDER = 'source';
 
 export const SCRATCH_PATH_FLAG = '--scratch-path';

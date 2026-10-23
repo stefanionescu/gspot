@@ -7,7 +7,6 @@ import type { TrivialFilesOptions } from '../types/rules.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { trivialFilesOptionsSchema } from '../schemas/rules/no/trivial.ts';
 
-// The values that a statement binds or exports. An alias names each of them with an identifier or a member.
 function listBoundValues(statement: TSESTree.Node): (TSESTree.Node | null)[] {
     switch (statement.type) {
         case AST_NODE_TYPES.ExportDefaultDeclaration: {
@@ -25,7 +24,6 @@ function listBoundValues(statement: TSESTree.Node): (TSESTree.Node | null)[] {
     }
 }
 
-// A type alias names another type, such as `type Alias<T> = Owner<T>`.
 function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {
     const type = node.typeAnnotation;
     if (type.type !== AST_NODE_TYPES.TSTypeReference) return false;
@@ -35,7 +33,6 @@ function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {
     );
 }
 
-// Imports, re-exports, and aliases forward code that another module owns.
 function isForwarding(statement: TSESTree.Node): boolean {
     switch (statement.type) {
         case AST_NODE_TYPES.ImportDeclaration:

@@ -1,4 +1,3 @@
-/** Paths keep literal Unicode, punctuation, and empty root or scope prefixes. */
 export const SCOPE_PATHS = [
     { scope: '', path: '', repositoryPath: '' },
     { scope: '', path: 'README.md', repositoryPath: 'README.md' },
@@ -32,7 +31,6 @@ export const WORKSPACE_FILE_CASES = [
     },
 ] as const;
 
-/** pyproject.toml files, to tell declared scopes from uv workspace members. */
 export const PYTHON_WORKSPACE_FILES = {
     'pyproject.toml': `[project]
 dependencies = ["fastapi>=1"]
@@ -47,10 +45,8 @@ dependencies = ["fastapi>=1"]
     'member-only/main.py': 'print("not a project file")\n',
 } as const;
 
-/** The workspace folders of those packages. */
 export const TOOL_ONLY_FOLDERS = ['packages/custom', 'packages/hooks', 'packages/next', 'packages/process'] as const;
 
-/** Packages that hold only gspot npm tools or a hook manager. */
 export const TOOL_ONLY_PACKAGES = {
     'packages/process/package.json': '{"devDependencies":{"concurrently":"9.0.0"}}',
     'packages/custom/package.json': '{"devDependencies":{"eslint-plugin-custom":"1.0.0"}}',
@@ -58,7 +54,6 @@ export const TOOL_ONLY_PACKAGES = {
     'packages/hooks/package.json': '{"devDependencies":{"husky":"9.0.0"}}',
 } as const;
 
-/** The scope of each project folder. */
 export const PROJECT_SCOPES: string[][] = [
     ['api', 'project'],
     ['apps/web', 'project'],
@@ -66,7 +61,6 @@ export const PROJECT_SCOPES: string[][] = [
     ['services/billing', 'project'],
 ];
 
-/** Project files in several folders. */
 export const PROJECT_SCOPE_FILES = {
     'package.json': '{"private":true}',
     'supabase/config.toml': 'project_id = "example"\n',
@@ -79,7 +73,6 @@ export const PROJECT_SCOPE_FILES = {
     'apps/web/supabase/config.toml': 'project_id = "web"\n',
 } as const;
 
-/** A workspace beside the private gspot tool package. */
 export const PRIVATE_TOOL_PACKAGES = {
     'project/package.json': '{"workspaces":["**"]}',
     'project/packages/app/package.json': '{"name":"application"}',

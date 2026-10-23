@@ -1,4 +1,3 @@
-/** The message of each Knip issue type. */
 export const KNIP_ISSUE_MESSAGES = {
     binaries: 'Unlisted binary',
     catalog: 'Unused catalog entry',
@@ -19,7 +18,6 @@ export const KNIP_ISSUE_MESSAGES = {
     unresolved: 'Unresolved import',
 } as const;
 
-/** The Knip JSON issue types. */
 export const KNIP_ISSUE_TYPES = [
     'binaries',
     'catalog',

@@ -7,7 +7,6 @@ export const PACKAGE_FIELDS = {
     customSettings: { enabled: true },
 } as const;
 
-/** Each package.json gives its own framework dependencies. */
 export const PROJECT_DEPENDENCY_FILES = {
     'package.json': '{"dependencies":{"@nestjs/swagger":"11.2.3"}}',
     'app/package.json': '{"devDependencies":{"tailwindcss":"4.1.13"}}',
@@ -26,7 +25,6 @@ export const PROJECT_DEPENDENCY_SCOPES = [
     { scope: 'empty/src', names: [] },
 ] as const;
 
-/** Invalid dependency file fields stay errors of the dependency file reader. */
 export const INVALID_DEPENDENCY_FILES = [
     [
         'package.json',
@@ -66,7 +64,6 @@ export const INVALID_DEPENDENCY_FILES = [
     ],
 ] as const;
 
-/** Root and child packages with different dependencies, read in one repository scan. */
 export const REACT_VUE_PACKAGES = {
     'package.json': '{"name":"root-sandbox","private":true,"dependencies":{"react":"19.0.0"}}',
     'app/package.json': '{"name":"child-sandbox","private":true,"dependencies":{"vue":"3.5.0"}}',

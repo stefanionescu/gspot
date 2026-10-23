@@ -6,7 +6,6 @@ export const TSC_PUSH_OPTIONS = { stage: 'push', only: ['typescript/tsc'] } sati
     'stage' | 'only'
 >;
 
-/** Source files outside the Prettier extension set still receive EditorConfig checks. */
 export const EDITORCONFIG_FILES = {
     'source.py': 'VALUE = 1\n',
     'task.sh': '#!/bin/sh\nprintf hello\n',
@@ -17,7 +16,6 @@ export const EDITORCONFIG_FILES = {
     Dockerfile: 'FROM scratch\n',
 } as const;
 
-/** A path ignore removes the ignored file from its own check; a rule ignore or another check's ignore keeps it. */
 export const PROJECT_PATH_IGNORES = [
     {
         name: 'a deleted ignored input',
@@ -52,7 +50,7 @@ export const PROJECT_PATH_IGNORES = [
         files: ['api/ignored.ts', 'api/kept.ts'],
     },
     {
-        name: 'another check’s path ignore',
+        name: 'another check\u2019s path ignore',
         changed: ['api/ignored.ts'],
         present: true,
         check: 'data-files/v8r',
@@ -93,7 +91,6 @@ export const PROJECT_TRIGGERS = [
     ['rename', 'changed'],
 ] as const;
 
-/** Lockfile changes start the dependency advisory scan. Other files only feed the analysis. */
 export const LOCKFILE_TRIGGER_NAMES = [
     'bun.lock',
     'package-lock.json',

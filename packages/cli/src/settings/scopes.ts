@@ -189,14 +189,6 @@ export function listIgnoredRules(scope: Scope, check: string): string[] {
         .filter((rule) => rule !== undefined);
 }
 
-/**
- * Resolve the known settings once into validated table values and numeric limits.
- *
- * @param availableSettings the declarations and defaults.
- * @param settings the written gspot.toml.
- * @param scope the folder to resolve for.
- * @returns typed values for the run without adding defaults to written tables.
- */
 function buildScopeValues(availableSettings: AvailableSettings, settings: Settings, scope: string): ScopeValues {
     const listed = listEffectiveSettings(availableSettings, settings, scope);
     const valuesByKey = Object.fromEntries(listed.map((row) => [row.key, row.value]));
@@ -212,12 +204,6 @@ function buildScopeValues(availableSettings: AvailableSettings, settings: Settin
     };
 }
 
-/**
- * Fill settings tables from direct settings and their declared naming variants.
- *
- * @param tables the run tables of the scope.
- * @param rows the values already resolved.
- */
 function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting[]): void {
     const valueRows = rows
         .filter(

@@ -18,7 +18,6 @@ import {
     POSITIONLESS_RESULTS,
 } from '#tests/config/runs/output/sarif.ts';
 
-/** Parse a Static Analysis Results Interchange Format (SARIF) report with the same check and paths for each case. */
 function parseSarifReport(report: unknown, root: string): Finding[] {
     return parseOutput(
         {
@@ -33,7 +32,6 @@ function parseSarifReport(report: unknown, root: string): Finding[] {
     );
 }
 
-/** Build a report with one result at the given artifact location. */
 function buildLocationReport(artifactLocation: Record<string, unknown>): SarifLog {
     return { version: '2.1.0', runs: [{ results: [{ locations: [{ physicalLocation: { artifactLocation } }] }] }] };
 }

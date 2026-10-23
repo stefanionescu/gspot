@@ -1,8 +1,6 @@
-/** The Python quickstart: uv starts a clean library, and Ruff reports the syntax error. */
 export const PYTHON_TUTORIAL = {
     configuration: 'python',
     folder: 'orders-python',
-    // uv init writes double quotes, which Ruff keeps, so the new project starts clean.
     firstCheckCode: 0,
     projectCommands: [
         ['uv', 'init', '--lib'],
@@ -16,7 +14,6 @@ export const PYTHON_TUTORIAL = {
     message: 'unexpected EOF while parsing',
 } as const;
 
-/** The Swift quickstart: SwiftPM starts a library, and SwiftLint reports the force cast. */
 export const SWIFT_TUTORIAL = {
     configuration: 'swift',
     folder: 'orders-swift',

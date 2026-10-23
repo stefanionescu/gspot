@@ -122,7 +122,6 @@ test('init names disable comments for rules that the new setup does not load', a
     const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-    // no-console and unicorn/no-null belong to plugins that the new setup loads.
     expect(plan.retained).toStrictEqual([
         { path: 'src/old.js', note: 'local-rules/no-legacy: gspot does not load these rules; delete the comments' },
     ]);

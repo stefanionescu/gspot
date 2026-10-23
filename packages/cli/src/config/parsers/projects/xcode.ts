@@ -2,10 +2,6 @@ export const SETTING_REFERENCE = /\$[({]/u;
 
 export const PBXPROJ = '.xcodeproj/project.pbxproj';
 
-/**
- * One token of a project.pbxproj file. The parser matches each token right where the last one ended, so it stops at an
- * unclosed string or comment and at text that no branch matches.
- */
 export const PROJECT_TOKENS = [
     /\s+/y,
     /\/\*[\s\S]*?\*\//y,

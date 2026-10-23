@@ -22,7 +22,6 @@ CREATE FUNCTION named.named() RETURNS TABLE (
 ) LANGUAGE sql AS $$SELECT 1, 2$$;
 `;
 
-/** The positions of qualified SQL function and parameter names. */
 export const QUALIFIED_SQL_NAMES = [
     { category: 'functions', name: 'same', line: 1, column: 22 },
     { category: 'parameters', name: 'same', line: 1, column: 39 },
@@ -33,7 +32,6 @@ export const QUALIFIED_SQL_NAMES = [
     { category: 'parameters', name: 'out', line: 5, column: 6 },
 ] as const;
 
-/** Each SQL name with its category and line. */
 export const SQL_SOURCE_NAMES: (string | number)[][] = [
     ['schemas', 'app', 2],
     ['tables', 'user_accounts', 4],

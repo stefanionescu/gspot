@@ -6,7 +6,6 @@ import type { SETTING_TYPES } from '#cli/config/settings/inheritance.ts';
 import type { ReasonRequirement } from '#cli/types/settings/definitions.ts';
 import type { Settings, TableValues, IgnoreRecord, SettingsTable } from '#cli/types/settings/file.ts';
 
-/** Configuration choices declared at the root and in project scopes. */
 export type SelectedConfigurations = {
     configurations: string[];
     scopes: Record<string, { configurations: string[]; removed_configurations: string[] }>;
@@ -34,7 +33,6 @@ export type Scope = {
     settings: ScopeSettings;
 };
 
-/** Values that gspot validates once for one scope, and that checks and generators then read. */
 export type ScopeValues = {
     settings: Record<string, unknown>;
     values: TableValues;
@@ -60,7 +58,6 @@ export type EffectiveSetting = {
     scope?: string;
 };
 
-/** Where a resolved value stands after the reader applies some tables. */
 export type EffectiveValue = Pick<EffectiveSetting, 'value' | 'source' | 'origin' | 'originScope'> & {
     reason: string | undefined;
 };
@@ -71,15 +68,12 @@ export type AvailableSettings = {
     errors: { key: string; message: string }[];
 };
 
-/** A written key matched to its setting, language, and category. */
 export type SettingMatch = { setting: Setting; language?: string; category?: string };
 
 export type WrittenSetting = Pick<EffectiveSetting, 'value' | 'reason'>;
 
 export type WrittenScopeTable = { table: SettingsTable; scope?: string; path: KeyPath };
 
-/** A setting default and the configuration that sets it. */
 export type SettingDefault = { value: unknown; configuration: string };
 
-/** Transform or observe one declared path without changing its role. */
 export type PathVisitor = (path: string, keys: KeyPath, role: NonNullable<Setting['path_role']>) => string;

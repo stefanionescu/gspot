@@ -92,12 +92,10 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-/** The finding of the misspelling after "café " in a nested file. */
 function buildTypoFinding(path: string) {
     return { file: `nested/${path}`, line: 1, column: 6, fixable: true, message: `\`${TYPO.the}\` should be \`the\`` };
 }
 
-/** Run typos against these files and list the reported paths in order. */
 async function runTyposCheck(sourceFiles: Record<string, string>) {
     const sandbox = installedSandbox();
     await using _sourceChange = await applySandboxChanges(
@@ -114,7 +112,6 @@ async function runTyposCheck(sourceFiles: Record<string, string>) {
     };
 }
 
-// typos needs an explicit option to keep exclusions for paths from the command line.
 test('typos keeps its excluded paths for a file named on the command line', async () => {
     const { root, environment } = installedSandbox();
     await using _change = await changeAppliedSandbox(installedSandbox(), {

@@ -40,7 +40,6 @@ function listUntrackedDeclarations(root: string, tracked: ReadonlySet<string>, p
     });
 }
 
-// Copying collects links without a second filesystem walk, then repairs only those links.
 async function copyTree(
     copy: DependencyTreeCopy,
     source: string,
@@ -73,7 +72,6 @@ async function copyTree(
     chmodSync(target, statSync(source).mode & MODE_BITS);
 }
 
-// Where a path inside a copied tree lives in the copy, or undefined when no copy holds it.
 function findCopiedPath(copies: Map<string, string>, source: string): string | undefined {
     for (const [original, copied] of [...copies].toSorted(([left], [right]) => right.length - left.length)) {
         const local = relative(original, source);
@@ -140,7 +138,6 @@ export async function copyDependencies(
         mkdirSync(dirname(target), { recursive: true });
         await copyTree(context, source, target, dependency.operation);
     }
-    // Clone the folders that links point into before the links, including trees found through another link.
     while (context.links.length > 0) {
         context.links = context.links.toSorted((left, right) => left.source.length - right.source.length);
         const link = context.links.shift();

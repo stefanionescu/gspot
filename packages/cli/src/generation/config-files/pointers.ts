@@ -1,5 +1,3 @@
-// A pointer, such as eslint.config.mjs, sits where a tool or editor looks by default, and loads the real
-// config file in .gspot.
 import { isDeepStrictEqual } from 'node:util';
 import type { Session } from '#cli/types/session.ts';
 import { posix, dirname, relative } from 'node:path';
@@ -22,15 +20,6 @@ import {
     TARGET_MODULE_PLACEHOLDER,
 } from '#cli/config/generation/config-files/pointers.ts';
 
-/**
- * Resolve target placeholders in pointer text.
- *
- * @param body the body text.
- * @param pointerPath the pointer file.
- * @param targetPath the generated config file.
- *
- * @returns the text with quoted module and JSON paths preserved.
- */
 function fillTarget(body: string, pointerPath: string, targetPath: string): string {
     const target = buildRelativeTarget(pointerPath, targetPath);
     return body.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
@@ -46,26 +35,11 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
     });
 }
 
-/**
- * Name the config file relative to its pointer, with the local-module prefix.
- *
- * @param pointerPath the path of the pointer file.
- * @param targetPath the generated config file.
- * @returns a relative path that tool loaders read on every system.
- */
 function buildRelativeTarget(pointerPath: string, targetPath: string): string {
     const relativePath = convertToPosixPath(relative(dirname(pointerPath), targetPath));
     return relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
 }
 
-/**
- * Build a pointer: the header, then the body with the target placeholder filled.
- *
- * @param pointer the pointer that the manifest declares.
- * @param pointerPath where the pointer goes.
- * @param targetPath the generated config file.
- * @returns the path and text of the pointer.
- */
 function buildPointerFile(
     pointer: NonNullable<ConfigFile['pointer']>,
     pointerPath: string,

@@ -1,4 +1,3 @@
-// Reads the dependencies that each supported package format declares.
 import { posix } from 'node:path';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseGrammarComments } from '#cli/parsers/code/comments.ts';
@@ -30,7 +29,6 @@ import {
     PYTHON_NAME_SEPARATORS,
 } from '#cli/config/parsers/projects/dependencies.ts';
 
-// A requirement names a distribution: letters or digits at both ends, dots, dashes, and underscores between.
 function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();
     const end = trimmed.search(REQUIREMENT_NAME_END);
@@ -79,7 +77,6 @@ function listPythonDependencies(parsed: Pyproject): DependencyMap {
     const poetry = parsed.tool?.poetry;
     const maps = [poetry?.dependencies];
     if (poetry?.group !== undefined) for (const group of Object.values(poetry.group)) maps.push(group.dependencies);
-    // A tool.pytest table declares pytest use even when another installer supplies the package.
     return Object.assign(
         parsed.tool?.pytest === undefined ? {} : { pytest: 'tool.pytest' },
         listPythonRequirements(parsed),

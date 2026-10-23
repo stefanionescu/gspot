@@ -13,7 +13,6 @@ export const CHILD_MIGRATIONS = {
     'other/migrations/V1_other.sql': 'SELECT 1;\n',
 } as const;
 
-/** Migrations with small and large versions. */
 export const SQUAWK_MIGRATION_FILES = {
     'migrations/2_initial.sql': 'SELECT 1;\n',
     'migrations/10_next.sql': 'SELECT 1;\n',
@@ -24,7 +23,6 @@ export const SQUAWK_MIGRATION_FILES = {
     'migrations/V9007199254740993_later.sql': 'SELECT 1;\n',
 } as const;
 
-/** Each migration version with the paths Squawk skips through it. */
 export const SQUAWK_VERSION_CASES = [
     ['2', ['migrations/2_initial.sql', 'migrations/V2_initial.sql']],
     [

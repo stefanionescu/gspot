@@ -1,4 +1,3 @@
-/** One package manager declared in the package.json development engine table. */
 export type PackageManagerEngine = { name?: string | undefined; version?: string | undefined };
 
 export type PackageDevEngines = {
@@ -7,7 +6,6 @@ export type PackageDevEngines = {
 
 export type PackageWorkspaces = { packages: string[] };
 
-/** The package.json fields used for dependency and runtime detection. */
 export type PackageJsonFields = {
     name?: string | undefined;
     version?: string | undefined;
@@ -30,7 +28,6 @@ export type PackageJson = PackageJsonFields & Record<string, unknown>;
 
 export type DependencyMap = Record<string, string>;
 
-/** The packages and runtimes that one supported dependency file declares. */
 export type DependencyFile = {
     path: string;
     kind: 'package.json' | 'pyproject.toml' | 'Package.swift' | 'Pipfile' | 'requirements.txt';
@@ -39,17 +36,14 @@ export type DependencyFile = {
     runtimes?: Record<string, string>;
 };
 
-/** A pure parser that the name of a dependency file selects. */
 export type DependencyFileParser = (path: string, text: string) => DependencyFile | Promise<DependencyFile>;
 
-/** A Python dependency version or its package-manager options. */
 export type PythonDependency = string | Record<string, unknown> | Record<string, unknown>[];
 
 export type PythonGroupInclude = { 'include-group': string };
 
 export type PythonDependencyGroup = (string | PythonGroupInclude)[];
 
-/** The standard Python project table used for declared dependencies and runtime detection. */
 export type PythonProject = {
     dependencies?: string[] | undefined;
     'optional-dependencies'?: Record<string, string[]> | undefined;

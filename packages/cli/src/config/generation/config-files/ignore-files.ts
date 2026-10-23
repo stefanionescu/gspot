@@ -2,7 +2,6 @@ import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 
 export const LOCAL_ENVIRONMENT_PATTERNS = ['.env*'] as const;
 
-/** Ignored folders of a configuration that hold build output. */
 export const BUILD_OUTPUT_FOLDERS: ReadonlySet<string> = new Set(['.build', 'DerivedData']);
 
 export const BUILD_OUTPUT_PATTERNS = ['dist/', 'build/', 'coverage/'] as const;

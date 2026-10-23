@@ -22,7 +22,6 @@ import {
     SWIFT_PACKAGE_SANDBOX,
 } from '#tests/config/integration/checks/language/swift/build.ts';
 
-// The manifest assigns compiler-backed Swift checks to macOS.
 test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
     await using sandbox = await testdir();
     await using _cache = await redirectCacheFolder();
@@ -53,7 +52,6 @@ test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports
     expect(repairedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
 
-// This check needs the Xcode toolchain supplied by macOS.
 test.skipIf(!isMacos)(
     'swift/build reuses the compiled objects of an Xcode project and reports source errors without changing the project',
     async () => {
@@ -71,7 +69,6 @@ test.skipIf(!isMacos)(
         const first = await runGspot(sandbox.path, command);
         expect(first.code, first.stdout + first.stderr).toBe(0);
         const compiledFiles = await Array.fromAsync(new Bun.Glob('**/main.o').scan({ cwd: readCacheFolder() }));
-        // The project builds both Mac architectures, one object each.
         expect(
             compiledFiles.map((file) => basename(dirname(file))).toSorted((left, right) => left.localeCompare(right)),
         ).toStrictEqual(['arm64', 'x86_64']);

@@ -46,7 +46,6 @@ test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting,
     }).toStrictEqual({ style: expected, typeFlags: [...typeFlags] });
 });
 
-/** Prepare the Python project, pinned executable, and planned pydoclint check together. */
 async function preparePydoclintCheck(
     root: string,
     files: Record<string, string>,

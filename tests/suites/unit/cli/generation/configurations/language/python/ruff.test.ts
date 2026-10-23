@@ -19,7 +19,6 @@ test('Ruff selects the pytest and FastAPI families only when selected, and adds 
             'example.py': 'value = 1\n',
         }),
     ) as RuffConfigFile;
-    // At level recommended, pytest adds its recommended Ruff rules and nothing else.
     expect(tested.lint.select.filter((code) => !defaults.lint.select.includes(code))).toStrictEqual(
         readConfigurations().get('pytest')!.ruff.recommended,
     );

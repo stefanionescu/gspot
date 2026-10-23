@@ -34,16 +34,8 @@ import {
     COMMANDER_ERROR_PREFIX,
 } from '#cli/config/main.ts';
 
-/**
- * Format Commander argument errors with the command suggestions.
- *
- * @param error the refused command arguments.
- * @param programHelp the help that gspot prints when the arguments name no command.
- * @returns the message and any available correction.
- */
 function formatArgumentError(error: CommanderError, programHelp: string): string {
     const { message } = error;
-    // With no command, Commander raises a help error after writing the help to the silent error stream.
     if (error.code === 'commander.help') return programHelp;
     if (error.code === 'commander.unknownCommand') {
         const [, name] = UNKNOWN_COMMAND_NAME.exec(message) as RegExpExecArray & { 1: string };
@@ -87,23 +79,11 @@ function formatArgumentTerm(argument: Argument): string {
     return argument.required ? `<${shown}>` : `[${shown}]`;
 }
 
-/**
- * Align exit code rows for terminal help.
- *
- * @param rows the codes and their meanings
- * @returns one aligned line for each row
- */
 function formatExitCodes(rows: readonly (readonly [codes: string, meaning: string])[]): string {
     const width = Math.max(...rows.map(([codes]) => codes.length)) + EXIT_CODE_SPACING;
     return rows.map(([codes, meaning]) => `  ${codes.padEnd(width)}${meaning}`).join('\n');
 }
 
-/**
- * Build the help of gspot from its commands: their groups, arguments, and summaries, then the fixed footer.
- *
- * @param program the gspot program with every command.
- * @returns the help text.
- */
 function formatProgramHelp(program: Command): string {
     const groups = new Map<string, string[]>();
     for (const command of program.commands) {
@@ -164,7 +144,6 @@ export function buildProgram(onResult: CommandCompletion): Command {
             'after',
             `\nExit codes:\n${formatExitCodes(help.exitCodes)}\n\nExample:\n  ${help.example}\n`,
         );
-        // The help text marks code for the reference pages; the terminal prints it without the marks.
         command.configureHelp({ styleDescriptionText: (text) => text.replaceAll(CODE_MARK, '') });
     }
     program.configureHelp({ formatHelp: () => formatProgramHelp(program) });

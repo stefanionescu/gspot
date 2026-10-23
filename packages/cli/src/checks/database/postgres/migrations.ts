@@ -24,7 +24,6 @@ async function parseMigrations(session: Session, paths: Pick<Migration, 'path' |
     const migrations: Migration[] = [];
     for (const { path, version } of paths) {
         const original = readCachedText(session.reads, path);
-        // Checks read the forward SQL, without the down section.
         const text = original.split(MIGRATION_DOWN, 1)[0] ?? '';
         const name = posix.basename(path);
         const parsed = await parseSqlFile(text, session.reads);
@@ -77,12 +76,6 @@ export async function readMigrations(session: Session, planned: PlannedCheck): P
     };
 }
 
-/**
- * Lists the forward SQL migrations that the postgres/squawk check covers.
- *
- * @param planned the scope whose files to search.
- * @returns the root-relative paths.
- */
 function listMigrationPaths(planned: PlannedCheck): string[] {
     const migrations = listCheckFiles(planned, SQUAWK_CHECK);
     return migrations

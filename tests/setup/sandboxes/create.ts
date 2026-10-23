@@ -1,4 +1,3 @@
-// Creates sandboxes: temporary repositories with gspot settings for one test or one test file.
 import { join } from 'node:path';
 import { format } from 'prettier';
 import { strToU8, zipSync } from 'fflate';
@@ -45,7 +44,6 @@ export async function pinSandboxNpm(root: string): Promise<void> {
     );
 }
 
-/** Write the files, package.json, and tsconfig.json of a sandbox. */
 async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     await createFileTree(root, {
         '.gitignore': SANDBOX_GITIGNORE,
@@ -56,7 +54,6 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
                       JSON.stringify({ ...SANDBOX_PACKAGE_JSON, dependencies: plan.dependencies }, null, JSON_INDENT) +
                       '\n',
               }),
-        // The format configuration checks every tracked file, so the tsconfig.json has the layout Prettier writes.
         ...(plan.tsconfig === undefined
             ? {}
             : {

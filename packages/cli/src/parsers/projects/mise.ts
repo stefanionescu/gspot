@@ -1,4 +1,3 @@
-// Reads mise task names and their aliases.
 import { isTable } from '#cli/system/tables.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import { miseTasksSchema, miseTaskAliasSchema } from '#cli/schemas/parsers/projects/mise.ts';

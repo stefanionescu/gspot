@@ -1,4 +1,3 @@
-// Builds tool pins, tool searches, and install states, and reads the tool project files that gspot install writes.
 import { join } from 'node:path';
 import type { Writer } from '#cli/types/apply.ts';
 import { open, readFile } from 'node:fs/promises';

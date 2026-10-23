@@ -2,7 +2,6 @@ import type { z } from 'zod';
 
 type IsOptional<Value, Key extends keyof Value> = Pick<Value, Key> extends Required<Pick<Value, Key>> ? false : true;
 
-/** A parsed value, or the error from its source. */
 export type Parsed<T, E = string> = { value: T } | { error: E };
 
 export type Optional<T> = { [K in keyof T]?: T[K] | undefined };
@@ -24,5 +23,4 @@ export type SchemaShape<Value, Input = never> = {
               : unknown);
 };
 
-/** A value JSON can encode without conversion. */
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };

@@ -42,15 +42,11 @@ const filesSchema = z.strictObject({
     tags: optionalStringList,
     paths: optionalStringList,
     languages: z.boolean().default(false),
-    // The file types that the Prettier plugins of the configurations in use format, such as .astro, join the owned
-    // ones.
     prettier_plugins: z.boolean().default(false),
-    // The file types that the ESLint plugins of the configurations in use lint, such as .vue, join the owned ones.
     eslint_plugins: z.boolean().default(false),
     kinds: z.array(fileKindSchema).default(['source']),
 } satisfies SchemaShape<ParsedManifest['files']>);
 
-// A syntax selector applies to every source file, or to the files that a setting lists.
 const selectorSchema = z.strictObject({
     selector: z.string().min(1),
     message: z.string().min(1),
@@ -65,7 +61,6 @@ const pointerSchema = z.strictObject({
     inherit: z.boolean().optional(),
 } satisfies SchemaShape<NonNullable<ConfigFile['pointer']>>);
 
-// The tool and check fields of a config file take one name or a nonempty list of names.
 const consumerNamesSchema = z
     .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
     .transform((names) => (typeof names === 'string' ? [names] : names))
@@ -75,12 +70,8 @@ const configFileSchema = z
     .strictObject({
         level: levelSchema.optional(),
         target: z.string(),
-        // The shipped file in config-files when its name differs from the target: gspot transpiles a TypeScript source
-        // to the JavaScript module that the target names.
         source: z.string().min(1).optional(),
-        // A root file sits in the scope folder; every other config file sits in the folder of its configuration.
         root: z.boolean().default(false),
-        // Generate the file when a check in its scope runs any named tool.
         tool: consumerNamesSchema,
         check: consumerNamesSchema,
         pointer: pointerSchema.optional(),
@@ -105,8 +96,6 @@ const configFileSchema = z
 
 const checkFields = z.strictObject({
     ...commandCheckFields,
-    // The name inside the configuration; the check ID joins the configuration name, a slash, and this name, as
-    // python/ruff.
     name: z.string().regex(NAME_PATTERN),
     level: levelSchema,
     runs: z.enum(CHECK_RUNS).default('files'),
@@ -154,8 +143,6 @@ const checkFields = z.strictObject({
     help: nonemptyString,
 } satisfies SchemaShape<Omit<ParsedCheck, 'tool' | 'other_tools'> & { tool?: string | string[] | undefined }>);
 
-// A check runs its command, or gspot runs it itself when gspot has check code for its ID. A list of tools names the
-// tool the check runs, then the tools its command starts, such as the bash that runs Bats; each must work.
 const checkSchema = checkFields.transform(({ tool, ...check }) => {
     const [first, ...others] = Array.isArray(tool) ? tool : [];
     const executable = Array.isArray(tool) ? first : tool;
@@ -176,7 +163,6 @@ const detectionSchema = z.strictObject({
     runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).default([]),
     tags: optionalStringList,
     paths: optionalStringList,
-    // A file, or a folder such as *.xcodeproj, whose folder contains a project: init proposes a scope there.
     project_files: optionalStringList,
 } satisfies SchemaShape<ParsedManifest['detect']>);
 
@@ -184,7 +170,6 @@ const allLevelRulesSchema = z.array(z.string().min(1)).transform((rules) => new 
     Set<string>
 >;
 
-// The shape of a configuration manifest.toml after validation.
 export const manifestSchema = z
     .strictObject({
         folder: z.string(),
@@ -221,27 +206,19 @@ export const manifestSchema = z
             requires: optionalStringList,
             suggests: optionalStringList,
             always_selected: z.boolean().default(false),
-            // init omits a configuration whose checks all read Git when the folder has no .git.
             when: (conditionSchema.pick({ git: true }) satisfies z.ZodType<Pick<ConditionFields, 'git'>>).optional(),
             description: nonemptyString,
         } satisfies SchemaShape<ParsedManifest['configuration']>),
         detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
         tool: z.array(manifestToolSchema).default([]),
-        // Each file in the config-files folder becomes a config file. A [[config_file]] record adds the tools and checks that
-        // read it, and its generation settings.
         config_file: z.array(configFileSchema).default([]),
         check: z.array(checkSchema).default([]),
-        // The naming rules of the framework or platform, merged after the shipped settings and before the repository's
-        // own.
         naming: z
             .strictObject({
                 override: z.array(writtenNamingOverrideSchema).default([]),
             } satisfies SchemaShape<NonNullable<ParsedManifest['naming']>>)
             .optional(),
-        // Rule files, by name, that install only when their condition holds. Every other file in the rules folder
-        // installs with the configuration. Detection reads each condition as it reads a detection table, with the other
-        // lists empty.
         rules: z
             .record(
                 z.string().regex(RULE_FILE_PATTERN),
@@ -272,7 +249,6 @@ export const manifestSchema = z
     // A manifest writes one [[tool]], [[config_file]], or [[check]] record for each item; the code reads them as lists.
     .transform(({ tool, config_file: configFiles, check, detect, ...rest }) => ({
         ...rest,
-        // An absent detection table inherits only the matcher fields of the validated [files] table.
         detect: detect ?? detectionSchema.strip().parse(rest.files),
         tools: tool,
         configFiles: configFiles.map((configFile) => ({

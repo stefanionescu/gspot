@@ -100,7 +100,6 @@ test.each(['setup.cfg', 'tox.ini'])('init leaves a shared %s in place and names 
     expect(plan.retained).toStrictEqual([{ path, note: buildRetainedNote('sqlfluff') }]);
     await assertRetainedFile(sandbox.path, path, SHARED_SETUP_CONFIG);
 });
-// Require the file that init kept to hold its bytes and its mode.
 async function assertRetainedFile(root: string, path: string, original: string): Promise<void> {
     expect(await readFile(join(root, path), 'utf8')).toBe(original);
     const attributes = await stat(join(root, path));

@@ -2,7 +2,6 @@ export const SEPARATORS = /[^A-Za-z0-9]+/u;
 
 export const DIGIT_BOUNDARY = /(?<=\D)(?=\d)|(?<=\d)(?=\D)/u;
 
-/** The identifier categories a setting can narrow to; every other category borrows the limits of one of these. */
 export const CATEGORY_PARENTS = {
     classes: 'types',
     type_aliases: 'types',
@@ -15,7 +14,6 @@ export const CATEGORY_PARENTS = {
     packages: 'folders',
 } as const;
 
-/** Technical words whose digits form part of their established spelling. */
 export const NUMERIC_WORDS = new Set([
     'base64',
     'utf8',

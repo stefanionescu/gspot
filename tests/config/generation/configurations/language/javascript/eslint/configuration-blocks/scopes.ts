@@ -22,7 +22,6 @@ export class CounterService { count = 1; }
     },
 ] as const;
 
-/** Matching nested TypeScript scopes and one scope with distinct test selectors. */
 export const MATCHING_SCOPE_FILES = {
     'package.json': '{"private":true,"type":"module"}',
     'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src","same","different"]}',

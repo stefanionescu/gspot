@@ -1,4 +1,3 @@
-// Locates shipped configuration and grammar assets.
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
@@ -7,7 +6,6 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { ALL_FILES_GLOB, GRAMMARS_FOLDER, CLI_PACKAGE_JSON, PACKAGE_SEARCH_DEPTH } from '#cli/config/system/assets.ts';
 
-// Find the nearest folder above the running code with a package.json and the configurations, or undefined.
 function findNearestPackage(): string | undefined {
     let folder = dirname(fileURLToPath(import.meta.url));
     for (let index = 0; index < PACKAGE_SEARCH_DEPTH; index += 1) {
@@ -21,8 +19,6 @@ function findNearestPackage(): string | undefined {
     return undefined;
 }
 
-// The package folder that holds the running code. The source tree and an installed package both have one. Code that
-// another build includes, such as the documentation site, finds the package through module resolution instead.
 const packageFolder = findNearestPackage() ?? dirname(createRequire(import.meta.url).resolve(CLI_PACKAGE_JSON));
 
 /**

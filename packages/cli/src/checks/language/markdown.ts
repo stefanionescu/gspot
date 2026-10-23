@@ -65,13 +65,6 @@ async function findTreeSyntaxError(
     }
 }
 
-/**
- * Parses language-tagged code fences and reports syntax errors at their Markdown lines.
- *
- * @param text the Markdown source.
- * @param cache the parsed grammars of the run.
- * @returns one syntax error per invalid code fence.
- */
 async function validateCodeFences(text: string, cache: ParseCache): Promise<FenceSyntaxError[]> {
     const readers: Record<
         FenceParser,
@@ -91,7 +84,6 @@ async function validateCodeFences(text: string, cache: ParseCache): Promise<Fenc
     for (const fence of listCodeFences(text)) {
         const parser = FENCE_PARSERS[fence.language];
         if (typeof parser !== 'string' || fence.body.trim() === '') continue;
-        // Omitted code and placeholder values keep their lines without becoming syntax errors.
         const omitted = parser === 'bash' ? OMITTED_BASH_LINE : '';
         const body = fence.body
             .split('\n')

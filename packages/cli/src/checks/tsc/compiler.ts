@@ -35,25 +35,12 @@ import {
 
 const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
 
-/**
- * Maps absolute paths inside the repository to the copy.
- *
- * @param value the compiler path or paths to map.
- * @param copy the source and copy roots.
- * @returns the mapped paths.
- */
 function convertToCopyPath(value: unknown, copy: TypeScriptReferenceCopy): unknown {
     if (Array.isArray(value)) return value.map((path: unknown) => convertToCopyPath(path, copy));
     if (typeof value !== 'string' || !isAbsolute(value) || !isInside(relative(copy.root, value))) return value;
     return join(copy.copyRoot, relative(copy.root, value));
 }
 
-/**
- * Builds a tsconfig that keeps compiler inputs and sends reference output into the copy.
- *
- * @param copy the parsed tsconfig, and the source and copy roots.
- * @returns the tsconfig for the copy.
- */
 function buildReferenceTsconfig(
     copy: TypeScriptReferenceCopy & { path: string; config: TypeScriptConfiguration },
 ): Record<string, unknown> {

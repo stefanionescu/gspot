@@ -21,13 +21,6 @@ import type { Run, RunResult, RunOptions, PlanAfterFixes } from '#cli/types/runs
 import { buildRunReport, buildBaseResult, formatReproduceCommand } from '#cli/runs/report.ts';
 import type { Finding, CheckCode, CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
 
-/**
- * Checks whether an ignore record covers a finding.
- *
- * @param record one `[[ignore]]` record of gspot.toml.
- * @param finding what a check reported.
- * @returns whether the ignore covers this finding.
- */
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
         return false;
@@ -38,7 +31,6 @@ function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     return record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file);
 }
 
-// Rereads the repository after fixers changed it, so the next run checks the corrected files.
 async function refreshAfterFixes(session: Session): Promise<void> {
     session.reads = createReadCache(session.root);
     session.repository = await readSessionRepository({
@@ -50,7 +42,6 @@ async function refreshAfterFixes(session: Session): Promise<void> {
     session.inspections.clear();
 }
 
-// The result of a check that cannot run: the run stopped, the plan skips it, or the host lacks Docker.
 function findUnrunnableResult(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.check.needs?.includes('docker') !== true) return undefined;
@@ -75,7 +66,6 @@ async function runPlannedCheck(run: Run, runnable: PlannedCheck): Promise<CheckR
     const early = findUnrunnableResult(session, runnable, base);
     if (early) return early;
     const started = performance.now();
-    // Each thrown failure belongs to this check; the other results of the run survive.
     try {
         return await runCheckCode(session, runnable, findCheckCode(runnable.check));
     } catch (error) {
@@ -88,8 +78,6 @@ function removeIgnoredFindings(result: CheckResult, ignores: IgnoreRecord[]): vo
     result.status = result.findings.length > 0 ? 'failed' : 'passed';
 }
 
-// A project-wide check reads the whole project. Path arguments drop its findings in the other tracked files. Findings
-// without a file stay, and so do findings in an untracked file, such as the build output that a site check reads.
 function removeOutsideFindings(result: CheckResult, run: Run): void {
     const { options, session } = run;
     if (options.paths === undefined || options.staged !== undefined) return;
@@ -114,8 +102,6 @@ function finishResult(run: Run, result: CheckResult): void {
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
     const limiter = pLimit(availableParallelism());
     let finished = 0;
-    // Wait for every check before rethrowing an error of finishResult or onProgress, so the resources stay open until
-    // all checks stop.
     const settled = await Promise.allSettled(
         checks.map((planned) =>
             limiter(async () => {

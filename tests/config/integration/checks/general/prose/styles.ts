@@ -1,9 +1,5 @@
 import { TYPO } from '#tests/config/checks/general/spelling.ts';
 
-/**
- * Prose samples for one gspot Vale rule each: the file, its source, and every finding Vale reports on it, which can come
- * from another gspot rule.
- */
 export const STYLE_CASES = [
     {
         path: 'prices.md',
@@ -211,7 +207,6 @@ Use <api-token> in the command.
     },
 ] as const;
 
-/** The guide after its link text names the page. */
 export const CORRECTED_LINK_TEXT_GUIDE = `# Guide
 
 Read [request guide](guide.md).
@@ -221,7 +216,6 @@ Read [request guide](guide.md).
 \`\`\`
 `;
 
-/** A guide with the link text here. */
 export const LINK_TEXT_GUIDE = `# Guide
 
 Read [here](guide.md).
@@ -231,7 +225,6 @@ Read [here](guide.md).
 \`\`\`
 `;
 
-/** A guide whose headings use a reviewed product name and title case. */
 export const HEADING_CASE_GUIDE = `# Guide
 
 ## HTTP request rules
@@ -241,7 +234,6 @@ export const HEADING_CASE_GUIDE = `# Guide
 ## HTTP Request Rules
 `;
 
-/** ESLint suppression comments with reasons, which Vale must not read as prose. */
 export const SUPPRESSION_COMMENTS = [
     '// eslint-disable -- reason: The external declaration requires this signature.',
     '// eslint-enable no-x, @scope/no-y -- reason: Checks resume here.',
@@ -251,7 +243,6 @@ export const SUPPRESSION_COMMENTS = [
     '',
 ] as const;
 
-/** The root and a child scope, each with the word it accepts. */
 export const SCOPE_SPELLING_CASES = [{ scope: '' }, { scope: 'app' }] as const;
 
 export const VOCABULARY_SOURCE = `# Guide

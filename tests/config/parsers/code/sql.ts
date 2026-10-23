@@ -1,4 +1,3 @@
-/** SQL whose psql tokens stay literal inside quotes and comments. */
 export const QUOTED_PSQL_SOURCES = [
     "SELECT ':value', E'\\\\:value', $$:value$$, $body$\n\\set literal\n$body$;",
     '/* :value /* :nested */ :value */',
@@ -6,7 +5,6 @@ export const QUOTED_PSQL_SOURCES = [
     'SELECT 1::int;',
 ] as const;
 
-/** Two statements behind nested block comments and line comments that hold Unicode text. */
 export const NESTED_COMMENT_SQL = [
     '-- 前言',
     '/* outer',

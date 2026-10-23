@@ -1,4 +1,3 @@
-// Indexes the keys, headers, and items of TOML text, and keeps each comment at the entry it describes.
 import { getValueAt } from '#cli/system/tables.ts';
 import { parseDocument } from '@decimalturn/toml-patch';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
@@ -52,13 +51,6 @@ function listNestedNodes(node: TomlValue, path: KeyPath): TomlSyntax['pathNodes'
     return [];
 }
 
-/**
- * Find the key, header, or item that an inline or adjacent leading comment describes.
- *
- * @param syntax the indexed document.
- * @param comment a concrete `#` token.
- * @returns its syntax entry, or no entry for a separate comment.
- */
 function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPathNode | undefined {
     const inline = syntax.pathNodes
         .filter(

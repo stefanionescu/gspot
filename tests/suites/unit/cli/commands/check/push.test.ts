@@ -14,14 +14,12 @@ import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check/push.ts';
 import { CLI_BIN, runGspot, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 
-/** Require the pushed tree and uncommitted source and settings to stay unchanged. */
 async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
     expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(head);
     expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(PUSH_CONTENT.settings);
     expect(await readFile(join(root, 'changed.sh'), 'utf8')).toBe(PUSH_CONTENT.working);
 }
 
-// Push the broken commit over the base, and return the report of that revision.
 async function runBrokenPushCheck(root: string, base: string, broken: string): Promise<RunReport> {
     const result = await runGspot(
         root,

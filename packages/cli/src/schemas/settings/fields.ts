@@ -76,7 +76,6 @@ export const relativePath = z
     .string()
     .min(1)
     .regex(
-        // A backslash may only escape a glob character, such as \( in app/\(legal\)/**; any other marks a Windows path.
         /^(?!!?\/)(?![\s\S]*(?:^!?|\/)\.\.(?:\/|$))(?:[^\\:\p{Cc}]|\\[()[\]{}*?!+@,])+$/u,
         'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
     )
@@ -94,10 +93,8 @@ export const namingCategorySchema = z.strictObject({
 
 namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
 
-/** The calendar form of date arguments on the command line and in the editor JSON schema. */
 export const calendarDateSchema = z.iso.date();
 
-/** Runtime expiry values keep unquoted TOML local dates. */
 export const localDateSchema = z.custom<LocalDate>(
     (value) => value instanceof LocalDate && calendarDateSchema.safeParse(value.toISOString()).success,
     { error: 'Use an unquoted TOML local date in YYYY-MM-DD form, without a time or offset.' },
@@ -161,13 +158,6 @@ export function allowReasonedValue<Output, Input>(
         .meta(definition);
 }
 
-/**
- * Build the schema of a reasoned value, { value, reason }, that returns the value alone.
- *
- * @param schema the validator of the value.
- * @param definition the description of the setting and the change that needs a reason.
- * @returns a schema that accepts the value alone or with its reason.
- */
 function buildReasonedValueSchema<Output, Input>(
     schema: z.ZodType<Output, Input>,
     definition: ReasonedSettingDefinition,

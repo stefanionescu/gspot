@@ -44,10 +44,6 @@ def test_multiplication() -> None:
     },
 ] as const;
 
-/**
- * A coverage limit for a project without pytest-cov, and what pytest/coverage does in each scope. Above 0 the check
- * needs the plugin, and at 0 it runs pytest without coverage arguments.
- */
 export const COVERAGE_LIMIT_CASES = [
     {
         limit: 80,

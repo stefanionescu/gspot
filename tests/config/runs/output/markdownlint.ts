@@ -10,7 +10,6 @@ export const MARKDOWN_REPORT = {
     severity: 'error',
 } as const;
 
-/** Markdownlint output that gspot refuses, with the error it gives. */
 export const MARKDOWNLINT_REPORT_ERRORS = [
     {
         name: 'empty report',

@@ -1,4 +1,3 @@
-// Creates a new project where npm installs gspot from the local registry, as a user does.
 import { testdir } from 'testdirs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
@@ -11,7 +10,6 @@ import { GSPOT_ENVIRONMENT, OFFLINE_ENVIRONMENT } from '#tests/config/setup/envi
 
 const repositoryRoot = join(import.meta.dir, '../../..');
 
-/** An installed npm package runs with the user's paths and no source module overrides. */
 export const userEnvironment: Record<string, string | undefined> = {
     ...buildSpawnEnvironment(),
     NODE_PATH: undefined,

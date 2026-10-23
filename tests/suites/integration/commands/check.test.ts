@@ -31,7 +31,6 @@ test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned ve
     const gitPath = Bun.which('git');
     expect(gitPath).not.toBeNull();
     await symlink(process.execPath, join(bin, isWindows ? 'bun.exe' : 'bun'));
-    // Git for Windows finds its installation from the folder git.exe sits in, which holds no lint tool.
     if (!isWindows) await symlink(gitPath!, join(bin, 'git'));
     const path = isWindows ? `${bin}${delimiter}${dirname(gitPath!)}` : bin;
     const environment = {
@@ -123,7 +122,6 @@ test('a pre-push check in a shallow clone passes project/bash-syntax and refuses
     }).toStrictEqual({ head: selected, source: 'echo selected\n' });
 });
 
-// Root ignores the read-only permission bits that provoke the write failure.
 test.skipIf(isWindows || process.getuid?.() === 0)(
     `a SQLFluff fix that cannot write its file is a failed fix with exit code 2, even though SQLFluff's exit code also means findings`,
     async () => {

@@ -1,4 +1,3 @@
-// Take the writer lock, and write or delete the files of a write plan.
 import { GspotError } from '#cli/system/errors.ts';
 import type { Writer, WritePlan } from '#cli/types/apply.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';

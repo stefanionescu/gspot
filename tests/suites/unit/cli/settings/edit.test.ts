@@ -88,7 +88,6 @@ test('changing an until date in place rewrites it and keeps its comment', async 
     until.setUTCDate(21);
     const result = buildEditedSettings(sandbox.path, input);
     expect(result.changed).toBe(true);
-    // The writer puts a blank line between the top-level keys and the first table.
     expect(result.text).toBe(DATED_IGNORE.replace('2099-05-20', '2099-05-21').replace('\n#', '\n\n#'));
 });
 

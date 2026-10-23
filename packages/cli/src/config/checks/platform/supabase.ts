@@ -14,7 +14,6 @@ export const SERVICE_ROLE_KEY_NAMES = [
     'sb_secret_',
 ] as const;
 
-/** Client file extensions that the language tags of the inventory do not cover. */
 export const SERVICE_ROLE_KEY_EXTENSIONS = ['.kt', '.dart'] as const;
 
 export const DENO_CONFIG_FILES = ['deno.json', 'deno.jsonc'] as const;

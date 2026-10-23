@@ -59,7 +59,6 @@ export const KNIP_ARGUMENTS = [
     '--include',
 ] as const;
 
-/** Package workspaces with entry files. */
 export const KNIP_WORKSPACE_FILES = {
     'package.json': '{"private":true,"type":"module","workspaces":["api","web"]}\n',
     'api/package.json': '{"name":"api","private":true}\n',

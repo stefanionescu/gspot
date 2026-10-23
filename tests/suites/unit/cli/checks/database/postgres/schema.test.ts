@@ -14,13 +14,6 @@ import {
     DROPPED_CONSTRAINTS_SQL,
 } from '#tests/config/checks/database/postgres/schema.ts';
 
-/**
- * Parse SQL text as the migration `migrations/<name>`, with the first character of the name as its version.
- *
- * @param name file under migrations/.
- * @param text the SQL.
- * @returns the parsed file with its version.
- */
 async function parseMigration(name: string, text: string): Promise<Migration> {
     const parsed = await parseSqlFile(text, createReadCache(process.cwd()));
     return { path: `migrations/${name}`, name, version: name.slice(0, 1), text, statements: parsed.statements };

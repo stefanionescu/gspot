@@ -183,7 +183,6 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
     await writeFile(join(sandbox.path, 'app/jsconfig.json'), '{');
     const invalid = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
-    // The scope with the unreadable jsconfig.json errors alone; the other scopes keep their results.
     expect(invalid.report.checks).toMatchObject([
         { scope: '', status: 'passed' },
         {
@@ -197,7 +196,6 @@ test("javascript/tsc reads each scope's own jsconfig options, and a broken one f
     expect(await readFile(join(sandbox.path, 'app/jsconfig.json'), 'utf8')).toBe('{');
 });
 
-/** Write compiler inputs for each scope. Include inherited options and a broken child scope. */
 async function prepareJsconfigScopes(root: string): Promise<{ config: string; corrected: string }> {
     const settings = buildSandboxSettings(['javascript'], {
         scopes: [{ path: 'app' }, { path: 'app/child' }, { path: 'sibling' }],

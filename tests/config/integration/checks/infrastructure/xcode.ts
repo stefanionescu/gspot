@@ -18,14 +18,13 @@ export const XCODE_CASES = [
     },
 ] as const;
 
-/** A file that plutil cannot read, and the reason it prints for it. */
 export const PLUTIL_UNREADABLE_FILES = [
     {
         path: 'missing.plist',
-        reason: 'The file “missing.plist” couldn’t be opened because there is no such file.',
+        reason: 'The file \u201Cmissing.plist\u201D couldn\u2019t be opened because there is no such file.',
     },
     {
         path: 'private.plist',
-        reason: 'The file “private.plist” couldn’t be opened because you don’t have permission to view it.',
+        reason: 'The file \u201Cprivate.plist\u201D couldn\u2019t be opened because you don\u2019t have permission to view it.',
     },
 ] as const;

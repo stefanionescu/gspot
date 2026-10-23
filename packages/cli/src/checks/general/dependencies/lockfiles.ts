@@ -15,7 +15,6 @@ function validateUrl(url: URL, hosts: Set<string>): string | undefined {
 
 function checkFileHosts(session: Session, planned: PlannedCheck, path: string, hosts: Set<string>): Finding[] {
     const lines = readCachedText(session.reads, path).split('\n');
-    // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
     const isNpm = LOCKFILES.find((lockfile) => lockfile.file === posix.basename(path))?.packageManager === 'npm';
     return lines.flatMap((text, index) =>
         (isNpm

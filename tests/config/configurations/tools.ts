@@ -1,4 +1,3 @@
-/** Installer combinations that a tool declares, and what each one installs in the tool project. */
 export const TOOL_PROJECT_PACKAGES = [
     {
         name: 'npm',

@@ -11,10 +11,8 @@ const findingExitCodesSchema = z.array(z.number().int().min(1).max(MAX_EXIT_CODE
 
 export const nonemptyString = z.string().min(1);
 
-/** The stages that a check runs at. A [[command_check]] cannot use the message stage. */
 export const checkStageSchema = z.enum(STAGES) satisfies z.ZodType<Stage>;
 
-/** Arguments need an executable first, and keep empty arguments after it. */
 export const commandSchema = z
     .array(z.string())
     .min(1)
@@ -47,7 +45,6 @@ export const conditionSchema = z.strictObject({
     runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).min(1),
 } satisfies SchemaShape<ConditionFields>);
 
-/** Fields that shipped checks and your own command checks share. */
 export const commandCheckFields = {
     command: commandSchema.optional(),
     stage: checkStageSchema,

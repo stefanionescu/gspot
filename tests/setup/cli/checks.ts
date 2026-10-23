@@ -1,4 +1,3 @@
-// Runs one check in a sandbox and returns its findings, and keeps compiler state in a temporary folder.
 import { spyOn } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { type Session } from '#cli/types/session.ts';

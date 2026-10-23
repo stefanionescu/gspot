@@ -9,7 +9,6 @@ import { create } from 'zustand';
 export const store = create(() => ({ readFile, join }));
 `;
 
-/** ESLint rules and overrides at the root and in two nested scopes. The generated config file and a template read them. */
 export const ESLINT_OVERRIDES_SETTINGS = `configurations = [ "javascript" ]
 
 [rules]
@@ -88,7 +87,6 @@ restricted_imports = [{ name = "node:fs", message = "Use the storage service." }
 store_files = ["state/store.js"]
 `;
 
-/** The restricted-import findings of each scope. */
 export const RESTRICTED_IMPORT_FINDINGS = [
     { file: 'app/deep/source.js', rule: 'no-restricted-imports', line: 1 },
     { file: 'app/source.js', rule: 'no-restricted-imports', line: 1 },
@@ -99,7 +97,6 @@ export const RESTRICTED_IMPORT_FINDINGS = [
     { file: 'state/widget.js', rule: 'no-restricted-imports', line: 3 },
 ] as const;
 
-/** Settings with root and scope restricted imports. */
 export const RESTRICTED_IMPORT_SETTINGS = {
     tables: `[[tools.eslint.restricted_imports]]
 name = "lodash"

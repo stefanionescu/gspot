@@ -1,15 +1,12 @@
 export const TYPESCRIPT_RULES = {
     '@typescript-eslint/no-misused-spread': ['error', { allow: ['string'] }],
-    // The TypeScript rule owns deprecated API uses.
     'sonarjs/deprecation': 'off',
-    // TypeScript owns the types, so JSDoc carries none.
     'jsdoc/require-param-type': 'off',
     'jsdoc/require-returns-type': 'off',
     'jsdoc/check-types': 'off',
     'jsdoc/no-undefined-types': 'off',
     'jsdoc/valid-types': 'off',
     'jsdoc/no-types': 'error',
-    // A TypeScript file declares its types in TypeScript, so the rule reports @typedef, @type, and the other type tags.
     'jsdoc/check-tag-names': ['error', { typed: true }],
 
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
@@ -17,8 +14,6 @@ export const TYPESCRIPT_RULES = {
         'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
     ],
-    // import-x groups `import A, { type B }` with `import type { C }` and merges them into code that does not parse,
-    // unless the merge writes inline type specifiers.
     'import-x/no-duplicates': ['error', { 'prefer-inline': true }],
     '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: false }],
     '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],

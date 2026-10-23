@@ -29,7 +29,6 @@ createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-im
 
         "// The file header.\nimport { a } from './a';\n\nexport const b = a;",
         "import { a } from './a';\n\n// Explains b.\nexport const b = a;",
-        // One blank line between the comment and the code still leaves the comment outside the imports.
         "import { a } from './a';\n\n// Explains b.\n\nexport const b = a;",
         "import { a } from './a';\n// @ts-expect-error\nconsole.log(a);",
         "import { a } from './a';\n\n/**\n * Doc for b.\n */\nexport const b = a;",
@@ -37,7 +36,6 @@ createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-im
             code: "import { a } from './a';\n\n/** Documents the required callback. */\n// eslint-enable no-unused-vars\nexport function callback(value) { return a; }",
         },
         "import { a } from './a';\n\n/** Documents the external value. */\n// @ts-expect-error External declaration is incomplete.\nexport const b = a;",
-        // A decorator above export belongs to the class, so the doc comment above it leads the class.
         "import { Injectable } from './a';\n\n/** Builds greetings. */\n@Injectable()\nexport class Greeter {}",
 
         "import { a } from './a';",

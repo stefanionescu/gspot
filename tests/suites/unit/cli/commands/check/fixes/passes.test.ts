@@ -176,7 +176,6 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
     );
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(2);
     expect(fixed.report.failed).toStrictEqual(['sandbox/first']);
-    // A second pass reruns the fixers whose files the first pass changed; the failed fixer does not run again.
     expect(await readFile(join(sandbox.path, 'order.log'), 'utf8')).toBe('first\nsecond\nthird\nsecond\nthird\n');
     for (const name of ['first', 'second', 'third'])
         expect(await readFile(join(sandbox.path, `${name}.txt`), 'utf8')).toBe('fixed\n');

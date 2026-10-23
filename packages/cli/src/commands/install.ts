@@ -12,18 +12,10 @@ import { TOOL_PROJECT_FILES } from '#cli/config/commands/install.ts';
 import type { InstallCommandJson } from '#cli/types/commands/install.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
-/**
- * Install the tools, and set the Git hooks as the settings ask.
- *
- * @param cwd the folder where the command starts.
- * @param cancelSignal stops the install processes.
- * @returns the install result.
- */
 async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
     const root = findRoot(cwd);
     const session = await openSession(root, { cancelSignal });
     const generated = generate(session);
-    // The tools install from the tool projects on disk, so those must match the settings first.
     if (listOutdatedFiles(session, generated).some((file) => TOOL_PROJECT_FILES.has(file.path)))
         throw new GspotError('install', 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.');
     using writer = openWriter(root);

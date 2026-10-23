@@ -18,7 +18,6 @@ import {
     EXTERNAL_DEPENDENCY_FILES,
 } from '#tests/config/runs/copy/dependencies.ts';
 
-/** Initialize Git in the sandbox and stage its files for a revision copy. */
 function stageRevision(root: string): void {
     runGitStep(root, ['init']);
     runGitStep(root, ['add', '.']);
@@ -87,7 +86,6 @@ test('a nested revision copy links .gspot/node_modules instead of copying it', a
 
     stageRevision(sandbox.path);
     const project = join(sandbox.path, 'project');
-    // The private tools run in place, so the copy links them instead of copying them.
     using copy = await copyRevision(project, { kind: 'index' });
     const tools = await lstat(join(copy.root, GSPOT_PATHS.nodeModules));
     const copied = {
@@ -155,7 +153,6 @@ test('cancellation waits for the dependency copies to finish before removing the
     let destination: string | undefined;
     using _copy = spyOn(promises, 'cp').mockImplementation(async (...copyArguments) => {
         pending += 1;
-        // The copied node_modules folder sits one level below the root of the copy.
         if (typeof copyArguments[1] === 'string') destination = dirname(copyArguments[1]);
         try {
             await original(...copyArguments);

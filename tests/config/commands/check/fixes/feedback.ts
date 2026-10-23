@@ -1,4 +1,3 @@
-/** The fix summary for no, one, and two changed files. Each row holds the dry-run text and the fix text. */
 export const FIX_SUMMARY_CASES = [
     { name: 'no changes', paths: [], preview: 'No fixer changes anything.', applied: 'No fixer changed anything.' },
     {

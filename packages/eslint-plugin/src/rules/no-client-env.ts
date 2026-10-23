@@ -5,8 +5,6 @@ import { clientEnvOptionsSchema } from '../schemas/rules/no/client-env.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { ENVIRONMENT_HOSTS, ENVIRONMENT_PROPERTY, ALLOWED_ENVIRONMENT_NAMES } from '../config/rules/no-client-env.ts';
 
-// ReferenceTracker skips hosts that the config does not declare as globals, so this reads their env member and
-// destructuring directly.
 function listDirectEnvironmentReads(identifier: TSESTree.Identifier): TSESTree.Node[] {
     const hosts: readonly string[] = ENVIRONMENT_HOSTS;
     if (!hosts.includes(identifier.name)) return [];
@@ -20,12 +18,6 @@ function listDirectEnvironmentReads(identifier: TSESTree.Identifier): TSESTree.N
     );
 }
 
-/**
- * List environment reads through global hosts, aliases, and destructuring.
- *
- * @param scope the source scope with unresolved global references
- * @returns the nodes that read a global environment object
- */
 function listGlobalEnvironmentReads(scope: TSESLint.Scope.Scope): TSESTree.Node[] {
     const reads: TSESTree.Node[] = [];
     for (const reference of scope.through) {
@@ -40,13 +32,6 @@ function listGlobalEnvironmentReads(scope: TSESLint.Scope.Scope): TSESTree.Node[
     return reads;
 }
 
-/**
- * List the names read from an environment object, with null for a computed key or a rest element. An empty list means
- * that the code reads the whole object.
- *
- * @param node the environment access
- * @returns the names read directly or through destructuring
- */
 function listEnvironmentNames(node: TSESTree.Node): (string | null)[] {
     const { parent } = node;
     if (parent?.type === AST_NODE_TYPES.MemberExpression && parent.object === node)

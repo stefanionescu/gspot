@@ -47,7 +47,6 @@ test.each([...LEVELS])(
             { scope: '', status: 'failed' },
             { scope: 'app', status: 'failed' },
         ]);
-        // Only level all turns on number-max-precision.
         const rows = [
             { line: 2, rule: 'color-hex-length' },
             ...(level === 'all' ? [{ line: 3, rule: 'number-max-precision' }] : []),
@@ -111,7 +110,6 @@ test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind
         { scope: 'app', status: 'passed' },
         { scope: 'other', status: 'failed' },
     ]);
-    // Outside the Tailwind scope, Stylelint reports the `theme()` call as an unknown function and as an unknown value.
     expect(listFindingRows(failed.report)).toStrictEqual(
         ['build/site.css', 'other/site.css'].flatMap((file) => [
             { file, line: 1, rule: 'at-rule-no-unknown' },

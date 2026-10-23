@@ -8,7 +8,6 @@ import { TOOL_KINDS, TOOL_BUILDS, MAX_EXIT_CODE } from '#cli/config/configuratio
 import { EXTENSION_PATTERN, MINIMUM_VERSION_PATTERN } from '#cli/config/configurations/tool.ts';
 import { regexSchema, commandSchema, conditionSchema } from '#cli/schemas/configurations/fields.ts';
 
-/** Normalize minimum versions when gspot reads manifest.toml, before any version comparison. */
 const minimumVersionSchema = z
     .string()
     .regex(MINIMUM_VERSION_PATTERN)
@@ -34,7 +33,6 @@ const installerOptionsSchema = z.record(z.string(), z.union([z.string(), z.boole
     Record<string, string | boolean>
 >;
 
-// Options mise writes beside the version, such as no_app or rename_exe for a release that ships an app bundle.
 const miseInstallerSchema = z.union([
     z.string(),
     installerDefinition.extend({ options: installerOptionsSchema.optional() } satisfies SchemaShape<{
@@ -68,16 +66,12 @@ const toolSchema = z
         min_version: minimumVersionSchema.optional(),
         install_help: z.string().min(1).optional(),
         system: z.boolean().optional(),
-        // The systems that the tool has a build for; unset means every system.
         builds: z.array(z.enum(TOOL_BUILDS)).min(1).optional(),
         version_command: commandSchema.optional(),
         version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
         version_pattern: z.string().optional(),
-        // Output that means the tool crashed instead of reporting findings, for every check that runs it.
         crash_pattern: regexSchema.optional(),
-        // Header lines to drop when a per-file command reports a failure with no structure.
         finding_header_pattern: regexSchema.optional(),
-        // Where the tool documents one rule; explain prints it with the rule name in place of `{rule}`.
         rule_url: z.string().includes(RULE_PLACEHOLDER, { message: 'A rule page names where {rule} goes.' }).optional(),
         rule_prefix: z.string().min(1).optional(),
         suppression: z
@@ -99,8 +93,6 @@ const toolSchema = z
         prettier: z
             .strictObject({
                 module: z.string().min(1),
-                // The file types the plugin formats; a configuration whose files take plugins owns them while a
-                // selected configuration uses this tool.
                 extensions: z.array(z.string().regex(EXTENSION_PATTERN)).default([]),
                 overrides: z
                     .array(
@@ -112,8 +104,6 @@ const toolSchema = z
                     .default([]),
             } satisfies SchemaShape<NonNullable<Tool['prettier']>>)
             .optional(),
-        // The file types an ESLint plugin or parser lints; a configuration whose files take plugins owns them while a
-        // selected configuration uses it.
         eslint: z
             .strictObject({ extensions: z.array(z.string().regex(EXTENSION_PATTERN)).min(1) } satisfies SchemaShape<
                 NonNullable<Tool['eslint']>
@@ -159,7 +149,6 @@ const toolSchema = z
         return { ...stripUndefined(tool), installers };
     }) satisfies z.ZodType<Tool>;
 
-/** A record with only a name points to the full [[tool]] table in another configuration. */
 export const manifestToolSchema = z.union([
     z
         .looseObject({ name: z.string() } satisfies SchemaShape<{ name: string }>)

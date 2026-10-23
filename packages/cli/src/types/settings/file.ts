@@ -67,7 +67,6 @@ export type Settings = Omit<
     | 'rules'
     | 'ignore'
 > & {
-    /** The gspot.toml table as written and validated, before gspot fills in defaults. */
     written: TomlTable;
     level: NonNullable<ParsedSettings['level']>;
     configurations: string[];
@@ -92,7 +91,6 @@ export type CommandCheck = Check & {
     files: NonNullable<Check['files']>;
 };
 
-/** The values of the root table or of one scope. */
 export type SettingsTable = Settings | Settings['scopes'][string];
 
 type CommandCheckFields = {

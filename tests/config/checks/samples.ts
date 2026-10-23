@@ -1,4 +1,3 @@
-/** Documents for the checks that run a command and the built-in checks. */
 export const README = `# Test
 
 A sandbox that holds documents and nothing else.

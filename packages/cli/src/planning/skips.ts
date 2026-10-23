@@ -8,7 +8,6 @@ import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import type { Host, Skip, PlannedCheck, PlannedScope, SettingsSkip } from '#cli/types/planning.ts';
 
-// A check that needs a dependency skips a scope whose projects declare none of them.
 function findDependencySkip(
     dependencies: string[] | undefined,
     scopePath: string,
@@ -21,7 +20,6 @@ function findDependencySkip(
         : { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
 }
 
-// A check that needs marked files skips a scope that holds none, as configuration detection does.
 function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repository['files']): Skip | undefined {
     if (tags === undefined) return undefined;
     const marked = files.some(
@@ -31,8 +29,6 @@ function findTagSkip(tags: string[] | undefined, scopePath: string, files: Repos
     return marked ? undefined : { cause: 'condition', note: `Needs files marked ${tags.join(' or ')} in this scope.` };
 }
 
-// Skip the check when its scope lacks a configuration, a dependency, or a tagged file that the check needs, or when a
-// history check runs outside Git.
 function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | undefined {
     const { configuration, git, dependencies, tags } = { ...check.configuration?.when, ...check.check.when };
     const scope = check.scope.folder.path;
@@ -51,7 +47,6 @@ function findConditionSkip(check: PlannedCheck, repository: Repository): Skip | 
     };
 }
 
-// Find the [[ignore]] of the check with no rule that has no paths or covers the whole scope: it turns the check off.
 function findIgnoreSkip(scope: Scope, check: Check): SettingsSkip | undefined {
     const ignored = listIgnores(scope.settings, check.id).find(
         (ignore) =>

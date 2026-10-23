@@ -2,7 +2,6 @@ export const NPM_INSTALL_FLAGS = ['--ignore-scripts', '--no-audit', '--no-fund']
 
 export const PNPM_WORKSPACE = 'packages:\n  - "**"\n';
 
-/** Committed source and different working-tree bytes for the built-in and command check push tests. */
 export const PUSH_CONTENT = {
     base: 'echo base\n',
     reviewed: 'echo reviewed\n',
@@ -41,7 +40,6 @@ export const REGISTRY_HOST = '127.0.0.1';
 
 export const NPM_REGISTRY_TOKEN = 'synthetic-package-install-token';
 
-/** The zip options of a regular and an executable Unix file: creator system 3, which means Unix, and the mode in the upper 16 bits. */
 export const ZIP_FILE_OPTIONS = {
     regular: { os: 3, attrs: 0o10_0644 * 0x1_00_00 },
     executable: { os: 3, attrs: 0o10_0755 * 0x1_00_00 },
@@ -53,9 +51,6 @@ export const UPSTREAM_REGISTRY = 'https://registry.npmjs.org/';
 
 export const GSPOT_PACKAGE_SCOPE = '@gspothq/';
 
-/**
- * The publish time the local registry reports for packed packages outside gspot, older than any minimum release age.
- */
 export const PACKED_PUBLISH_TIME = '2025-01-01T00:00:00.000Z';
 
 export const SANDBOX_PACKAGE_JSON = {
@@ -91,14 +86,12 @@ export const VALE_PACKAGE_FILES = {
 `,
 };
 
-/** The authored files every package project starts from. */
 export const NPM_PROJECT_FILES = {
     'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
     'source.js': 'export const greeting="hello";',
     'node_modules/authored.txt': 'keep project dependencies',
 } as const;
 
-/** The npm projects test the Prettier and EditorConfig installs, not the code analyzers. */
 export const NPM_PROJECT_IGNORES = [
     'data-files/v8r',
     'javascript/eslint',
@@ -115,7 +108,6 @@ export const NPM_PROJECT_ROOT_PACKAGE = {
 
 export const YARN_VERSION_THRESHOLD = 2;
 
-/** The authored files every Python sandbox starts from. */
 export const PYTHON_PROJECT_FILES = {
     'pyproject.toml': `[project]
 name = "authored"
@@ -126,7 +118,6 @@ dependencies = ["authored-dependency"]
     'source.py': 'import os\n',
 } as const;
 
-/** The uv variables that each Python sandbox points at its own folder. */
 export const UV_PROJECT_VARIABLES = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT_ENVIRONMENT'] as const;
 
 export const PYTHON_PROJECT_IGNORES = [
@@ -143,7 +134,6 @@ export const PYTHON_INDEX_NAME = 'gspot-test';
 
 export const LFS_ATTRIBUTES = '*.bin filter=lfs diff=lfs merge=lfs -text\n';
 
-/** A file outside the nested settings folder and the committed source inside it. */
 export const NESTED_SCOPE_FILES = {
     'outside.txt': 'repository context',
     'nested settings/source.txt': 'committed',

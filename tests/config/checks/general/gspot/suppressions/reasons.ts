@@ -1,9 +1,7 @@
-/** The TypeScript compiler suppressions that need a reason. */
 export const TYPESCRIPT_SUPPRESSIONS = ['ignore', 'expect-error', 'nocheck'] as const;
 
 export const COMPILER_REASON = 'A separate sandbox checks the external declaration.';
 
-/** Reason comments above suppressions, and the lines the check reports for a missing reason. */
 export const SUPPRESSION_REASON_CASES = [
     [
         'source.ts',
@@ -49,7 +47,6 @@ console.log(1);
     ],
 ] as const;
 
-/** Suppression comments and the exact reasons their patterns must capture. */
 export const SUPPRESSION_REASONS = [
     [
         'sql',
@@ -81,7 +78,6 @@ export const SUPPRESSION_REASONS = [
     ],
 ] as const;
 
-/** Swift suppression directives and the rule of each when it has no reason. */
 export const SWIFT_REASON_CASES = [
     { directive: 'swiftformat:disable blockComments', rule: 'swiftformat-no-reason' },
     { directive: 'periphery:ignore', rule: 'periphery-no-reason' },

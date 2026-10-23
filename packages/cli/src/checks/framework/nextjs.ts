@@ -23,7 +23,6 @@ import {
     NEXT_TYPEGEN_COMMAND,
 } from '#cli/config/checks/framework/nextjs.ts';
 
-// Next.js puts the cause and its detail above the longer stack trace.
 function formatNextjsFailure(text: string): string {
     const lines = stripVTControlCharacters(text).trim().split('\n');
     const marked = lines.findIndex((line) => CAUSE_MARKS.some((mark) => line.includes(mark)));
@@ -43,7 +42,6 @@ export async function checkNextjsTsc(session: Session, planned: PlannedCheck): P
     using scratchFolder = await createCheckCopy(session, planned);
     const root = scratchFolder.path;
     const scratchSession = { ...session, root, reads: createReadCache(root) };
-    // CI=1 stops `next typegen` from installing missing packages; the Next.js generator output stays in the copy.
     const generated = await runCheckTool(scratchSession, planned, NEXT_TYPEGEN_COMMAND, {
         cwd: join(root, planned.scope.folder.path),
         env: CI_ENVIRONMENT,

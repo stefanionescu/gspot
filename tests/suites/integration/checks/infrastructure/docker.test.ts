@@ -24,7 +24,6 @@ import {
     ROOT_USER_DOCKERFILE,
 } from '#tests/config/integration/checks/infrastructure/docker.ts';
 
-/** Import one payload file as an image with this tag. */
 async function importImage(root: string, tag: string, contents: string | Buffer): Promise<void> {
     await writeFile(join(root, 'payload.pem'), contents);
     const archive = runCommandBlocking(['tar', '-cf', 'payload.tar', 'payload.pem'], { cwd: root });
@@ -37,7 +36,6 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
     await using sandbox = await testdir();
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
     const settings = buildSandboxSettings(['docker'], { tables: TRIVY_SCOPE_TABLES });
-    // Trivy rule DS-0002 reports `USER root`. Use `USER node` to fix it.
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
         '.gitignore': 'untracked/\n',
@@ -78,7 +76,6 @@ test.each([...LEVELS])(
         });
 
         expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
-        // At level all, Hadolint also asks for version pins in apt and apk installs.
         const pins =
             level === 'all'
                 ? ([
@@ -117,7 +114,6 @@ test.each([...LEVELS])(
     },
 );
 
-// These Docker checks need the Linux Docker engine.
 test.skipIf(!isLinux)(
     'docker/trivy-image reports a private key in an image, errors on a broken config file, and passes a clean image',
     async () => {

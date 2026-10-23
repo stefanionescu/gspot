@@ -29,7 +29,6 @@ export type InitPlan = {
     noLongerRuns: InitFileRow[];
 };
 
-/** Your own tool settings files that init replaces: what it read, what it deletes, and what stays for you. */
 export type ConflictingConfigFiles = {
     changed: InitFileRow[];
     read: Map<string, FileContents | undefined>;
@@ -43,14 +42,12 @@ export type SettingsDraft = InitAnswers & {
     scopes: ScopeFolder[];
 };
 
-/** The integration choices init uses. */
 export type InitAnswers = {
     hooks: boolean;
     ci: NonNullable<Settings['ci']>['provider'] | 'none';
     rules: boolean;
 };
 
-/** Everything init works out before it asks to continue. */
 export type InitPlanning = {
     detection: DetectionSummary;
     session: Session;
@@ -61,7 +58,6 @@ export type InitPlanning = {
     read: Map<string, FileContents | undefined>;
 };
 
-/** The JSON the init command prints: the plan and the settings it wrote or showed in a dry run. */
 export type InitJson = { root: string; plan: InitPlan; settings: string; written: boolean };
 
 export type DetectionSummary = {
@@ -75,7 +71,6 @@ export type DetectionSummary = {
     hasGit: boolean;
 };
 
-/** A file that init writes, removes, or keeps, with its note. */
 export type InitFileRow = { path: string; note: string };
 
 export type InitOptions = {
@@ -88,7 +83,6 @@ export type InitOptions = {
 
 export type ConfigurationOrigin = 'named' | 'detected' | 'suggested' | 'required';
 
-/** The configurations init selects: at the root, per scope, and every configuration they require. */
 export type InitConfigurations = {
     scopes: ScopeFolder[];
     rootNames: string[];
@@ -104,7 +98,6 @@ export type InitRepository = {
     options: Pick<InitOptions, 'configurations'>;
 };
 
-/** Explicit, detected, and recommended choices, to explain the configurations that init picks. */
 export type ConfigurationChoices = { named: Set<string>; detected: Set<string>; written: Set<string> };
 
 export type PrettierOptions = {

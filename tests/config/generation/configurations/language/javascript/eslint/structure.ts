@@ -1,4 +1,3 @@
-/** Relative imports and aliases for the import suffix and alias rules. */
 export const IMPORT_FILES = {
     'package.json': '{"private":true,"type":"module","imports":{"#owner":"./src/owner.ts","#lib/*":"./src/*"}}\n',
     'tsconfig.json':

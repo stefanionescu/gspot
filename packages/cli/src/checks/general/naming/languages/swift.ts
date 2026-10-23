@@ -18,7 +18,6 @@ function addTypes(found: FileIdentifiers, root: Node): void {
     }
 }
 
-// A parameter holds the name callers write and the name the body reads; the body's name supplies the declaration.
 function addParameters(found: FileIdentifiers, declaration: Node): void {
     for (const parameter of declaration.namedChildren) {
         if (parameter.type !== 'parameter') continue;

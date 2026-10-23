@@ -13,7 +13,6 @@ import {
     DUPLICATED_METADATA,
 } from '#tests/config/integration/checks/general/duplication.ts';
 
-/** Run the jscpd check, check its exit code, and return its report. */
 async function runJscpdCheck(root: string, code: number): Promise<RunReport> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'duplication/jscpd', '--json']));
     expect(result.code, result.stdout + result.stderr).toBe(code);

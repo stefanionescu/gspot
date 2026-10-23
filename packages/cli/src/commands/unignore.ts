@@ -10,7 +10,6 @@ import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
-// Find the records and paths to remove, and leave the read settings unchanged.
 function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
     const removed = new Set(options.paths);
     const ignores: unknown[] = Array.isArray(written['ignore']) ? written['ignore'] : [];
@@ -49,12 +48,6 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
     return { kept, deleted, changedIgnores, removedPaths, everywhere };
 }
 
-/**
- * Remove the matching ignores or paths, and keep the other records.
- *
- * @param options the check, the lint rule, and the paths to match.
- * @returns the edit result, and any ignore that still covers every path.
- */
 async function runUnignoreCommand(
     options: Pick<IgnoreOptions, 'cwd' | 'check' | 'rule' | 'paths'>,
 ): Promise<CommandResult> {

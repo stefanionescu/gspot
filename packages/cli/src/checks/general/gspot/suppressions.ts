@@ -22,7 +22,6 @@ import {
     SUPPRESSION_KIND_MESSAGES,
 } from '#cli/config/checks/general/gspot/suppressions.ts';
 
-// A reason on the line above covers only the next line. Code or comments between them break the link.
 function findReasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
     if (
         previous === undefined ||
@@ -35,7 +34,6 @@ function findReasonAbove(previous: SourceComment | undefined, comment: SourceCom
     return REASON_ABOVE.exec(text)?.groups?.['reason']?.trim();
 }
 
-// Only tools whose checks claim this source contribute suppression syntax.
 function listSuppressionSyntaxes(scope: Scope): SuppressionSyntax[] {
     const configurations = scope.configurations;
     const checks = configurations.flatMap((configuration) =>
@@ -73,7 +71,6 @@ function listSuppressionSyntaxes(scope: Scope): SuppressionSyntax[] {
     });
 }
 
-// The rules named by a suppression with a size-limit grammar; undefined for any other comment.
 function parseSuppressionRules(form: SuppressionSyntax, text: string): string | undefined {
     if (form.separator === undefined) return undefined;
     const suppression = form.marker.exec(text);
@@ -81,7 +78,6 @@ function parseSuppressionRules(form: SuppressionSyntax, text: string): string | 
     return (suppression.groups?.['rules'] ?? '').split(form.separator)[0];
 }
 
-// A suppression that turns off every rule, lifts a size or complexity limit, or gives no reason of its own or above it.
 function classifySuppression(
     form: SuppressionSyntax,
     text: string,

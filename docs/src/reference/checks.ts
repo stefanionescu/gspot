@@ -11,22 +11,14 @@ type Suppression = NonNullable<Tool['suppression']>;
 
 const configurations = CLI_REFERENCE.configurations;
 
-/**
- * Name the tool that a check runs; a built-in check runs none.
- *
- * @param check the check whose tool to name
- * @returns the display name, or nothing for a built-in check
- */
 function formatToolNames(check: Check): string | undefined {
     const program = getToolName(check);
     if (program === undefined) return undefined;
-    // A command taken from a setting names the setting, not the placeholder.
     const setting = SETTING_ONLY_PLACEHOLDER.exec(program)?.groups?.['name'];
     const tool = setting === undefined ? program : `the command in \`${setting}\``;
     return check.other_tools === undefined ? tool : `${tool}, with ${formatList(check.other_tools)}`;
 }
 
-// The tool the check runs, and the build, service, or system it needs, each as one sentence when it applies.
 function listCheckRequirements(check: Check): string[] {
     const tools = formatToolNames(check);
     const systems = listToolSystems(check);
@@ -38,7 +30,6 @@ function listCheckRequirements(check: Check): string[] {
     ];
 }
 
-// Where and when the check runs, in plain sentences, as Ruff opens a rule page.
 function formatCheckFacts(check: Check, configuration: Configuration): string {
     const configurationName = configuration.name;
     const timing =
@@ -55,14 +46,12 @@ function formatCheckFacts(check: Check, configuration: Configuration): string {
         .join(' ');
 }
 
-// The comment that silences one finding of the tool, or the note that the tool takes none.
 function formatSuppressionComment(form: Suppression | undefined): string {
     if (form === undefined) return '';
     if (form.forbidden === true) return '\n\nA suppression comment is refused; use `gspot ignore`.';
     return `\n\nTo silence one place, write a comment such as:\n\n\`\`\`text\n${form.example ?? ''}\n\`\`\``;
 }
 
-// How to turn the check off for some files or for one lint rule, and the comment that silences one place.
 function formatTurnOff(check: Check, suppressions: Map<string, Suppression>): string {
     const commands = [
         `gspot ignore ${check.id} --paths "<glob>" --reason "<why>"`,

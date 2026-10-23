@@ -18,7 +18,6 @@ import {
     REACT_COMPONENT_SOURCE,
 } from '#tests/config/checks/general/naming/identifiers.ts';
 
-// Run naming/identifiers in a new session of the sandbox.
 async function checkIdentifiers(root: string): Promise<RunResult> {
     return runChecks(await openSession(root), buildRunOptions({ only: ['naming/identifiers'] }));
 }

@@ -9,7 +9,6 @@ import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/config/generation/rules.ts';
 
-// Generate the rule files of the shipped configurations at a level, keyed by path.
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([...RULE_CONFIGURATIONS], {

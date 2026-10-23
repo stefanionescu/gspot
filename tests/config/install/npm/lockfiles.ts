@@ -1,4 +1,3 @@
-/** Only the root development dependencies count. Production and workspace dependencies do not. */
 export const ROOT_DEPENDENCIES = [
     [
         'npm',

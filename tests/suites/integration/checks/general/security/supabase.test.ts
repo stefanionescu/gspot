@@ -9,7 +9,6 @@ import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes
 import { SECRET_LOG_FILES } from '#tests/config/integration/checks/general/security/supabase.ts';
 import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
-// The Supabase sandbox installs Deno, and the rule runs through Semgrep.
 describe.skipIf(!hasToolBuild('deno') || !hasToolBuild('semgrep'))('Supabase secret-log rule', () => {
     const installedSandbox = shareInstalledSandbox(SUPABASE_SANDBOX);
 

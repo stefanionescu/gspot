@@ -24,7 +24,6 @@ import {
     RUFF_FORMAT_ARGUMENTS,
 } from '#tests/config/integration/checks/language/python/ruff.ts';
 
-/** Check that pytest fixture rules apply only in the scope that uses pytest. */
 async function assertPytestSelection(root: string, sample: string): Promise<void> {
     const unselected = await spawnGspot(root, ['check', 'tests/test_example.py', '--only', 'python/ruff', '--json']);
     expect(unselected.code, unselected.stdout + unselected.stderr).toBe(0);
@@ -40,7 +39,6 @@ async function assertPytestSelection(root: string, sample: string): Promise<void
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 }
 
-/** Check that the authored assertion ignore affects only the scoped test paths. */
 async function assertIgnoreScope(root: string): Promise<void> {
     for (const path of ['tests/test_example.py', 'app/tests/test_example.py'])
         await writeFile(
@@ -99,7 +97,6 @@ test('Ruff selects the pytest lint rules only in the scope that selects pytest, 
         (path) =>
             ruffConfigurationSchema.parse(parse(configs.find((config) => config.path === path)!.content)).lint.select,
     );
-    // The scope selects pytest at level all, so it adds the recommended and the level-all pytest rules.
     const { ruff } = readConfigurations().get('pytest')!;
     expect(appSelect!.filter((code) => !rootSelect!.includes(code))).toStrictEqual([...ruff.recommended, ...ruff.all]);
 

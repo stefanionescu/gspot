@@ -24,7 +24,6 @@ function removeTable(schema: DatabaseSchema, table: string): void {
     schema.indexes = schema.indexes.filter((index) => index.table !== table);
 }
 
-// The name Postgres gives an unnamed constraint: the table, the key columns except for a primary key, and a suffix.
 function buildConstraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
     const constraintName = node.conname ?? '';
     if (constraintName !== '') return constraintName;
@@ -46,7 +45,6 @@ function addForeignKey(schema: DatabaseSchema, at: Location, name: string, colum
     schema.constraints.set(at.table, constraints);
 }
 
-// A primary or unique key counts as an index on its first column.
 function addConstraint(schema: DatabaseSchema, at: Location, node: Constraint, column?: string): void {
     const kind = node.contype ?? '';
     if (!(kind in CONSTRAINT_SUFFIXES)) return;
@@ -100,7 +98,6 @@ const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, schema, mi
         if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(schema, at, command);
 };
 
-// A dropped table leaves the schema, so no check reports it.
 const readDrop: StatementReader<'DropStmt'> = (statement, schema) => {
     for (const nodeField of listNodeFields(statement.fields.objects, 'List')) {
         const names = listNodeFields(nodeField.items, 'String').map((stringNode) => stringNode.sval ?? '');

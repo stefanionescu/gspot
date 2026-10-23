@@ -1,4 +1,3 @@
-// Runs ESLint rule cases with the declared parsers and shared test callbacks.
 import { it, afterAll, describe } from 'bun:test';
 import * as parser from '@typescript-eslint/parser';
 import { RuleTester, type RuleTesterConfig } from '@typescript-eslint/rule-tester';

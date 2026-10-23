@@ -4,7 +4,6 @@ import { isEditedInPlace } from '#cli/repository/setup/tools.ts';
 import type { ConflictingConfigFiles } from '#cli/types/commands/init.ts';
 import type { RepositorySetup, ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
-// Record what init does with one file: a shared file stays for you, and init deletes an owned one.
 function addConflictingConfigFile(file: ConflictingConfigFile, conflicts: ConflictingConfigFiles): void {
     const { tool, path, shared } = file;
     if (shared)

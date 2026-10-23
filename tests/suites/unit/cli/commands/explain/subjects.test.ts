@@ -55,7 +55,6 @@ test('a path explanation lists the command checks and the ignores that apply', a
     const command = await runGspot(sandbox.path, ['explain', 'project/syntax', '--json']);
     expect(command.code, command.stdout + command.stderr).toBe(0);
     expect(JSON.parse(command.stdout)).toMatchObject(SYNTAX_CHECK_EXPLANATION);
-    // The ignore drops project/syntax and no other check.
     expect((JSON.parse(ignored.stdout) as PathExplanation).checks).toStrictEqual(
         explanation.checks.filter(({ check }) => check !== 'project/syntax'),
     );
@@ -79,7 +78,6 @@ test('a configuration name stays a name, and a tracked or ./ path explains the f
     const file = await runGspot(sandbox.path, ['explain', './bash', '--json']);
     expect(file.code, file.stdout + file.stderr).toBe(0);
     expect(JSON.parse(file.stdout)).toMatchObject({ kind: 'path', subject: 'bash', path: 'bash' });
-    // The shellcheck folder shares a check's tool name; the tracked path still selects the file.
     const tracked = await runGspot(sandbox.path, ['explain', 'shellcheck/run.sh', '--json']);
     expect(tracked.code, tracked.stdout + tracked.stderr).toBe(0);
     expect(JSON.parse(tracked.stdout)).toMatchObject({ kind: 'path', subject: 'shellcheck/run.sh' });
@@ -102,9 +100,7 @@ test('a file path reports its scope, checks, and ignores', async () => {
         fileKind: 'source',
         ignores: [...PATH_IGNORES],
     });
-    // The api scope adds the bash configuration and its commit checks to the ones every repository selects.
     expect(explanation.configurations.filter((name) => !listAlwaysSelected().includes(name))).toStrictEqual(['bash']);
-    // The configurations match the ones whose checks read the file.
     expect(explanation.configurations.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         [...new Set(explanation.checks.flatMap(({ configuration }) => configuration ?? []))].toSorted((left, right) =>
             left.localeCompare(right),

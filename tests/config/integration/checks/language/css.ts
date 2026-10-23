@@ -1,4 +1,3 @@
-/** A build folder name does not mark a stylesheet as build output; Stylelint checks both. */
 export const STYLESHEETS = {
     'build/site.css': `a {
     color: #ff0000;
@@ -18,7 +17,6 @@ export const STYLELINT_TABLES = `[tools.stylelint.rules]\ncolor-hex-length = "sh
 
 export const ALL_LEVEL_STYLELINT_TABLES = `[tools.stylelint.rules]\ncolor-hex-length = "short"\nnumber-max-precision = 0\n[[scope]]\npath = "app"\n\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-hex-length = "long"\n`;
 
-/** Standard properties, whole pixels, and the hex length that each scope asks for fix every finding at both levels. */
 export const CORRECTED_STYLESHEETS = {
     'build/site.css': `a {
     color: #f00;
@@ -34,7 +32,6 @@ export const CORRECTED_STYLESHEETS = {
 `,
 } as const;
 
-/** Tailwind syntax applies only inside the package that declares Tailwind. */
 export const TAILWIND_FILES = {
     'package.json': '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
     'build/site.css': `@tailwind utilities;
@@ -61,5 +58,4 @@ a {
 
 export const TAILWIND_TABLES = `[[scope]]\npath = "app"\n\nconfigurations = ["css"]\n[[scope]]\npath = "other"\n\nconfigurations = ["css"]\n`;
 
-/** The command that runs only Stylelint and prints the JSON report. */
 export const STYLELINT_COMMAND = ['check', '--only', 'css/stylelint', '--json'] as const;

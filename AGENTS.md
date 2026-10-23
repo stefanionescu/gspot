@@ -106,7 +106,8 @@ You can edit the other keys of that file.
     - Use `runCheckSample` for a sample that fails and passes after its fix.
 - Keep CLI calls and direct imports of check functions out of `tests/suites/unit/cli/checks/`. Exit codes, JSON output, and
   other CLI behavior belong to `tests/suites/unit/cli/commands/`.
-- In source, describe an unexported helper with a line comment. Give every exported declaration a doc comment.
+- Give every exported function a doc comment, as the lint rules require. Write no other comments: names say what the
+  code does.
 - Export a declaration where you declare it. End no file with an export list.
 - Write every type as a TypeScript `type` alias. Never write JSDoc type tags in a `.ts` file.
 - Use the types that a package publishes when the code already depends on that package. Do not add a dependency for its

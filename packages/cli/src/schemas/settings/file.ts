@@ -136,7 +136,6 @@ const scopeBody = {
         .optional(),
 };
 
-/** One scope record: its path, configuration choices, and settings tables. */
 export const scopeSchema = z.strictObject({
     path: relativePath.describe(SETTING_DEFINITIONS['scope.path'].description),
     configurations: z
@@ -151,7 +150,6 @@ export const scopeSchema = z.strictObject({
     ...scopeBody,
 }) satisfies z.ZodType<NonNullable<ParsedSettings['scope']>[number], WrittenScope>;
 
-/** Top-level gspot.toml keys that gspot list settings and the settings reference show. */
 export const rootSettingSchemas = {
     level: levelSchema.default(SETTING_DEFINITIONS['level'].default).meta(SETTING_DEFINITIONS['level']),
     tool_timeout_seconds: z

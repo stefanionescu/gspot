@@ -25,7 +25,6 @@ import {
     TYPESCRIPT_PROJECTS_SANDBOX,
 } from '#tests/config/integration/checks/language/typescript/projects.ts';
 
-/** Run the TypeScript check and return its exit code, output, and findings. */
 async function runTscCheck(root: string): Promise<TypecheckResult> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'typescript/tsc', '--json']));
     const output = result.stdout + result.stderr;
@@ -151,7 +150,6 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
         }),
         'app/value.ts': 'export const count = 1;\n',
     });
-    // The linked case points node_modules outside; the absolute case installs only the compiler, so copies stay small.
     await (kind === 'symlink'
         ? symlink(outside.path, join(sandbox.path, 'node_modules'), 'dir')
         : linkTypescript(sandbox.path));
@@ -195,7 +193,6 @@ test('typescript/tsc builds a referenced project with its imported declarations 
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const failed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'typescript/tsc', '--json']));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    // The root project references app, and the app scope reports its error once.
     expect(
         failed.report.checks.map(({ scope, status, findings }) => ({
             scope,

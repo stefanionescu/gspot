@@ -1,4 +1,3 @@
-// Read system information and build command environments.
 import envPaths from 'env-paths';
 import { isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
@@ -15,7 +14,6 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
     const pairs = Object.entries(process.env);
     if (overrides !== undefined) pairs.push(...Object.entries(overrides));
     for (const [key, value] of pairs) {
-        // Windows matches environment names in any case.
         const name = process.platform === 'win32' ? key.toUpperCase() : key;
         if (value === undefined) variables.delete(name);
         else variables.set(name, [key, value]);

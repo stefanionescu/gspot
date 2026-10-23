@@ -42,7 +42,6 @@ export const ENGINE_FINDINGS = [
     { ruleId: 'n/no-unsupported-features/node-builtins', line: 2 },
 ] as const;
 
-/** Package engine findings, then source corrections using supported APIs. */
 export const ENGINE_PHASES = [
     { reported: ['old/source.js', 'old/source.cjs', 'forced/source.js'], corrections: [] },
     { reported: [], corrections: ['old/source.js', 'old/source.cjs', 'forced/source.js'] },

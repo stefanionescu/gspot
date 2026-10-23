@@ -1,4 +1,3 @@
-// Reads contained files, text, and bounded prefixes.
 import { isUtf8 } from 'node:buffer';
 import { join, relative } from 'node:path';
 import { isInside } from '#cli/system/paths.ts';
@@ -23,7 +22,6 @@ function readFilePrefix(source: string, limit: number): Buffer {
     }
 }
 
-// Decode both direct and cached reads through the same missing-file and encoding boundary.
 function readUtf8(path: string, read: () => Buffer): string | undefined {
     try {
         return decodeUtf8Text(path, read());

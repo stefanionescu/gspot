@@ -1,4 +1,3 @@
-// Starts test commands and limits them to the current test timeout, and builds process results.
 import { stat } from 'node:fs/promises';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
@@ -9,7 +8,6 @@ import { TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/environment.ts';
 import type { CapturedChild, CapturedProcess } from '#tests/types/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
-// Bun runs each file's tests serially; the preload opens and disposes one timeout for each test.
 let timeoutAt: number | undefined;
 
 /**
@@ -23,7 +21,6 @@ export function limitToTestDeadline(
     command: readonly string[],
     options: AsyncSpawnOptions,
 ): { options: AsyncSpawnOptions & { timeoutSeconds: number }; context: string } {
-    // The time left of the test, or the shared limit outside a test.
     const remaining = timeoutAt === undefined ? TEST_TIMEOUT_MILLISECONDS : Math.ceil(timeoutAt - performance.now());
     const context = `Command: ${command.join(' ')}\nWorking directory: ${options.cwd}`;
     if (remaining <= 0)
