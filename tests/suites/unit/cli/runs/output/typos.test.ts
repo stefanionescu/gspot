@@ -29,10 +29,10 @@ test('the typos format tells findings from fatal exits', async () => {
             { ...result, code: 78, stderr: 'Invalid native configuration.' },
             { cwd: sandbox.path, root: sandbox.path },
         ).note,
-    ).toBe(`typos crashed with exit 78.\nInvalid native configuration.\n${stdout}`);
+    ).toBe(`typos failed with exit 78:\nInvalid native configuration.\n${stdout}`);
     expect(
         parseCommandFindings(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }).note,
-    ).toBe('typos crashed with exit 2.\ntypos exited 2');
+    ).toBe('typos failed with exit 2 and printed nothing.');
     expect(
         parseCommandFindings(planned, { ...result, stdout: '', code: 0 }, { cwd: sandbox.path, root: sandbox.path })
             .findings,

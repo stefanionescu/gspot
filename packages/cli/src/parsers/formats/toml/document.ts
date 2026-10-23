@@ -123,7 +123,7 @@ export function parseTomlFile(path: string, text: string, schema?: z.ZodType): u
             'line' in error && typeof error.line === 'number' && 'column' in error && typeof error.column === 'number'
                 ? `${path}:${String(error.line)}:${String(error.column + 1)}`
                 : path;
-        const detail = error.message.split('\n', 1).join('').replace(/\.$/u, '');
+        const detail = error.message.split('\n', 1).join('').replace(/[.:]$/u, '');
         throw new GspotError('filesystem', `${position} is not valid TOML: ${detail}. Fix the file.`, { cause: error });
     }
     return schema === undefined ? value : parseFileFields(path, value, schema);

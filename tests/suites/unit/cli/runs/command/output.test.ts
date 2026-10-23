@@ -63,9 +63,9 @@ test('regex output that names no real file, or nothing, on a failed run is a che
     const paths = { cwd: sandbox.path, root: sandbox.path };
     expect(
         parseCommandFindings(planned, buildProcessResult({ ...FAILED_RUN, stdout: TIMESTAMP_OUTPUT }), paths).note,
-    ).toBe('tool crashed with exit 1.\n2026-09-19T02: FATAL');
+    ).toBe('tool failed with exit 1:\n2026-09-19T02: FATAL');
     expect(parseCommandFindings(planned, buildProcessResult(FAILED_RUN), paths).note).toBe(
-        'tool crashed with exit 1.\ntool exited 1',
+        'tool failed with exit 1 and printed nothing.',
     );
     expect(
         parseCommandFindings(
@@ -114,14 +114,14 @@ test('an ESLint finding whose source text holds a module error word stays a find
             { ...result, code: 2, stderr: 'ConfigError: invalid configuration' },
             { cwd: sandbox.path, root: sandbox.path },
         ).note,
-    ).toBe(`eslint crashed with exit 2.\nConfigError: invalid configuration\n${stdout}`);
+    ).toBe(`eslint failed with exit 2:\nConfigError: invalid configuration\n${stdout}`);
     expect(
         parseCommandFindings(
             planned,
             { ...result, stdout: '', code: 2, stderr: 'Oops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin' },
             { cwd: sandbox.path, root: sandbox.path },
         ).note,
-    ).toBe('eslint crashed with exit 2.\nOops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin');
+    ).toBe('eslint failed with exit 2:\nOops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin');
 });
 
 test.each(['{file}', '{files}'])(
@@ -165,7 +165,7 @@ test.each(['{file}', '{files}'])(
         const fatal = await runCheckCommand(session, planned);
         expect(fatal.status).toBe('error');
         expect(fatal.findings).toStrictEqual([]);
-        expect(fatal.note).toBe(`${process.execPath} crashed with exit 7.\ninput.txt:1: Located defect before exit`);
+        expect(fatal.note).toBe(`${process.execPath} failed with exit 7:\ninput.txt:1: Located defect before exit`);
     },
 );
 
@@ -222,7 +222,7 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
     const paths = { root: sandbox.path, cwd: sandbox.path };
     const expected = [{ check: 'notes/regex', file: 'notes/reported.txt', line: 1, message: 'A defect.' }];
     expect(parseCommandFindings(planned, result, paths)).toStrictEqual({
-        note: `${process.execPath} crashed with exit 1.\nnotes/reported.txt:1:A defect.`,
+        note: `${process.execPath} failed with exit 1:\nnotes/reported.txt:1:A defect.`,
     });
     await writeFile(join(sandbox.path, 'notes/reported.txt'), source);
     expect(parseCommandFindings(planned, result, paths).findings).toMatchObject(expected);

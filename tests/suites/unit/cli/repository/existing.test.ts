@@ -44,7 +44,7 @@ test('CI discovery reports malformed YAML', async () => {
     const path = '.gitlab-ci.yml';
     await createFileTree(sandbox.path, { [path]: 'quality: [unterminated' });
     expect(captureThrow(() => readLintJobs(sandbox.path, [path]))).toBe(
-        '.gitlab-ci.yml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 23:. Fix the file.',
+        '.gitlab-ci.yml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 23. Fix the file.',
     );
 });
 

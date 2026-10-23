@@ -8,7 +8,6 @@ import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     MATH_SOURCE,
-    JEST_FAILED_TEST,
     MATH_TEST_SOURCE,
     JEST_PROJECT_FILES,
     JEST_MISSING_IMPORT,
@@ -92,9 +91,9 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
     await writeFile(join(sandbox.path, 'math.test.cjs'), CORRECTED_MATH_TEST_SOURCE.replace('toBe(6)', 'toBe(7)'));
     const failed = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    // A failed test reports the whole Jest output, which ends with the run summary.
-    expect(failed.report.checks[0]!.findings).toMatchObject([{ check: 'jest/coverage', file: '' }]);
-    expect(failed.report.checks[0]!.findings[0]!.message).toStartWith(JEST_FAILED_TEST);
+    expect(
+        failed.report.checks[0]!.findings.map(({ check, file, message }) => ({ check, file, message })),
+    ).toStrictEqual([{ check: 'jest/coverage', file: '', message: '● triples an integer' }]);
     await assertJestFilesKept(sandbox.path);
 });
 

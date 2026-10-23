@@ -43,7 +43,7 @@ test.skipIf(!hasToolBuild('plutil'))(
                 const mixed = await runCommand(['plutil', '-lint', 'bad.plist', path], { cwd: sandbox.path });
                 expect(mixed.code).toBe(1);
                 expect(parseCommandFindings(planned!, mixed, paths)).toStrictEqual({
-                    note: `plutil crashed with exit 1.\nbad.plist: (Encountered unexpected EOF)\n${path}: (${reason})`,
+                    note: `plutil failed with exit 1:\nbad.plist: (Encountered unexpected EOF)\n${path}: (${reason})`,
                 });
             }
         } finally {
@@ -58,7 +58,7 @@ test.skipIf(!hasToolBuild('plutil'))(
                     file: 'bad.plist',
                     fixable: false,
                     help: 'Fix the element plutil names.',
-                    message: '(Encountered unexpected EOF)',
+                    message: 'Encountered unexpected EOF',
                 },
             ],
         });

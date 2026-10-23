@@ -45,7 +45,7 @@ test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, asyn
     using resources = new DisposableStack();
     const session = await openPinnedSession(sandbox.path, ['trivy'], resources);
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code, stdout, stderr })));
-    expect(await captureRejection(runSandboxCheck(session.root, 'docker/trivy-image'))).toStartWith(message);
+    expect(await captureRejection(runSandboxCheck(session.root, 'docker/trivy-image'))).toBe(message);
 });
 test.each([...INVALID_COMPOSE_SOURCES])(
     'docker/trivy-image fails on $name in compose.yaml before it runs Trivy',

@@ -26,7 +26,7 @@ files = { extensions = [".plist", ".entitlements"] }
 help = "Fix the element plutil names."
 level = "recommended"
 name = "plutil"
-output = { format = "regex", pattern = "^(?<file>[^:]+): (?<message>(?!OK$).+)$" }
+output = { format = "regex", pattern = "^(?<file>[^:]+): \\(?(?<message>(?!OK$).+?)\\)?$" }
 stage = "commit"
 summary = "Parses every property list and entitlements file with plutil."
 why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."

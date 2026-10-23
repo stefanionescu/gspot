@@ -68,15 +68,22 @@ function findVersionFailure(
     text: string,
     version: string | undefined,
 ): ParsedToolVersion | undefined {
-    if (result.timedOut) return { state: 'error', note: `Reading the version of ${tool.name} timed out.` };
-    if (result.missing) return { state: 'missing', note: text };
-    // A shim without a set version starts nothing, whatever other mise installs exist.
-    if (text.includes(NO_VERSION)) return { state: 'missing', note: 'not installed' };
-    if (result.code !== (tool.version_exit_code ?? 0))
-        return { state: 'error', note: `The version command of ${tool.name} exited ${String(result.code)}: ${text}` };
+    const failure = findRunFailure(result, tool, text);
+    if (failure !== undefined) return failure;
     if (version === undefined && tool.kind === 'library')
         return { state: 'missing', note: `The version command of the host tool does not list ${tool.name}.` };
     return undefined;
+}
+
+// Find why the version command did not start, timed out, or exited with a code the tool does not use for success.
+function findRunFailure(result: SpawnResult, tool: Tool, text: string): ParsedToolVersion | undefined {
+    if (result.timedOut) return { state: 'error', note: `Reading the version of ${tool.name} timed out.` };
+    if (result.missing) return { state: 'missing', note: text === '' ? `${tool.name} is not installed.` : text };
+    // A shim without a set version starts nothing, whatever other mise installs exist.
+    if (text.includes(NO_VERSION)) return { state: 'missing', note: 'not installed' };
+    if (result.code === (tool.version_exit_code ?? 0)) return undefined;
+    const exited = `The version command of ${tool.name} exited ${String(result.code)}`;
+    return { state: 'error', note: text === '' ? `${exited}.` : `${exited}: ${text}` };
 }
 
 /**

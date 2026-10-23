@@ -53,9 +53,9 @@ function isOnDisk(file: string, roots: string[]): boolean {
 }
 
 function throwCrash(planned: OutputCheck, result: SpawnResult): never {
-    const name = planned.tool?.name ?? planned.check.id;
-    const detail = formatOutputTail(result, `${name} exited ${String(result.code)}`);
-    throw new GspotError('output', `${name} crashed with exit ${String(result.code)}.\n${detail}`);
+    const failure = `${planned.tool?.name ?? planned.check.id} failed with exit ${String(result.code)}`;
+    const detail = formatOutputTail(result, '');
+    throw new GspotError('output', detail === '' ? `${failure} and printed nothing.` : `${failure}:\n${detail}`);
 }
 
 /**

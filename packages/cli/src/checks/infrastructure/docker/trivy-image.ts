@@ -39,7 +39,9 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
         { cwd: session.root },
     );
     if (result.code !== 0 && result.code !== TRIVY_FINDINGS_EXIT_CODE) {
-        const detail = formatOutputTail(result, `exit ${String(result.code)}`);
+        // Trivy writes its error to stderr and may still print a report; the report says nothing about the failure.
+        const output = result.stderr.trim() === '' ? result : { stdout: '', stderr: result.stderr };
+        const detail = formatOutputTail(output, `exit ${String(result.code)}`);
         throw new Error(`Trivy could not scan ${image}: ${detail}`);
     }
     const report = parseToolReport('Trivy', result.stdout, imageReportSchema);

@@ -32,7 +32,13 @@ export const SYSTEM_PLUGIN_REPORTS = [
         stdout: '',
         code: 7,
         missing: false,
-        inspection: { state: 'error', note: 'The version command of pytest-cov exited 7: ' },
+        inspection: { state: 'error', note: 'The version command of pytest-cov exited 7.' },
     },
-    { name: 'missing', stdout: '', code: 0, missing: true, inspection: { state: 'missing', note: '' } },
+    {
+        name: 'missing',
+        stdout: '',
+        code: 0,
+        missing: true,
+        inspection: { state: 'missing', note: 'pytest-cov is not installed.' },
+    },
 ] as const;

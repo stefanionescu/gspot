@@ -28,7 +28,7 @@ export const ACTIONLINT_EXITS = [
         code: 3,
         status: 'error',
         findings: [],
-        note: '<actionlint> crashed with exit 3.\n.github/workflows/caller.yml:4:11: located defect [workflow-call]',
+        note: '<actionlint> failed with exit 3:\n.github/workflows/caller.yml:4:11: located defect [workflow-call]',
     },
 ] as const;
 

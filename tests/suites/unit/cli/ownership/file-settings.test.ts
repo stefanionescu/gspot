@@ -110,7 +110,7 @@ test('managed TOML keys refuse a malformed file, create missing tables, and writ
     using writer = openWriter(sandbox.path);
     const changes = [{ key: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }];
     expect(captureThrow(() => planSettingsWrite(writer, 'broken.toml', changes))).toBe(
-        'broken.toml:1:7 is not valid TOML: Error parsing TOML (1, 7):. Fix the file.',
+        'broken.toml:1:7 is not valid TOML: Error parsing TOML (1, 7). Fix the file.',
     );
     expect(await readFile(join(sandbox.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
     writePlans(writer, [planSettingsWrite(writer, 'mise.toml', changes)]);
