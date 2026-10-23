@@ -4,10 +4,10 @@ import { writeFileSync } from 'node:fs';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as assets from '#cli/system/assets.ts';
-import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { selectRuleFiles } from '#cli/generation/agent-rules.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
-import { RULE_CORRECTNESS_CASES, NAMING_RULE_LEVEL_CASES } from '#tests/config/generation/rules.ts';
+import { RULE_CORRECTNESS_CASES, NAMING_RULE_LEVEL_CASES } from '#tests/config/generation/agent-rules.ts';
 
 test('at level recommended, a rule file loses its level-all sections with their subsections, but keeps fenced examples and the next heading of the same depth', async () => {
     const before = '# Guide\n\n## Required\n\n```md\n## Example\n<!-- level: all -->\n```\n\n';

@@ -6,7 +6,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { parseSettings } from '#cli/settings/read.ts';
 import { captureThrow } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { FIRST_READ } from '#cli/config/generation/rules.ts';
+import { FIRST_READ } from '#cli/config/generation/agent-rules.ts';
 import { REVIEWED_REASON } from '#tests/config/settings/samples.ts';
 import { findRuleFileTarget } from '#tests/setup/cli/config-files.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
