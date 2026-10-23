@@ -14,3 +14,15 @@ export const COMMITLINT_RULES = {
     'body-max-line-length': [COMMITLINT_ERROR_SEVERITY, 'always', COMMIT_LINE_LENGTH],
     'footer-leading-blank': [COMMITLINT_ERROR_SEVERITY, 'always'],
 } as const;
+
+/**
+ * The header patterns of a Conventional Commits message, written as strings so commitlint.json can hold them. The
+ * default commitlint parser has no pattern for the `!` that marks a breaking change.
+ */
+export const COMMITLINT_PARSER_PRESET = {
+    parserOpts: {
+        headerPattern: String.raw`^(\w*)(?:\((.*)\))?!?: (.*)$`,
+        breakingHeaderPattern: String.raw`^(\w*)(?:\((.*)\))?!: (.*)$`,
+        headerCorrespondence: ['type', 'scope', 'subject'],
+    },
+} as const;

@@ -9,6 +9,8 @@ export const COMMIT_MESSAGES = [
     { message: 'fix: repair the parser', rule: undefined },
     { message: 'style(Core): format source', rule: undefined },
     { message: 'revert(Core): restore source', rule: undefined },
+    { message: 'feat(Core)!: drop the parser option', rule: undefined },
+    { message: 'feat!: drop the parser option', rule: undefined },
     { message: 'fix(root): repair the parser', rule: 'scope-enum' },
     { message: 'fix(hooks): repair the parser', rule: 'scope-enum' },
     { message: 'fix(deps): repair the parser', rule: 'scope-enum' },

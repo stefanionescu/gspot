@@ -1,7 +1,12 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { COMMITLINT_RULES, COMMITLINT_ERROR_SEVERITY } from '#cli/config/generation/configurations/general/commits.ts';
+
+import {
+    COMMITLINT_RULES,
+    COMMITLINT_PARSER_PRESET,
+    COMMITLINT_ERROR_SEVERITY,
+} from '#cli/config/generation/configurations/general/commits.ts';
 
 /**
  * Build commitlint.json: the Commitlint rules with the allowed types and scopes of the repository.
@@ -29,5 +34,5 @@ export function buildCommitlintFile(planned: PlannedConfigFile): string {
     for (const [name, value] of Object.entries(getTable(planned.scope.settings, 'tools.commitlint').rules))
         if (rules[name]?.[0] !== 0) rules[name] = [COMMITLINT_ERROR_SEVERITY, ...value];
     for (const name of listIgnoredRules(planned.scope, 'commits/commitlint')) rules[name] = [0];
-    return JSON.stringify({ rules }, null, JSON_INDENT);
+    return JSON.stringify({ parserPreset: COMMITLINT_PARSER_PRESET, rules }, null, JSON_INDENT);
 }

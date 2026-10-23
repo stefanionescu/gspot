@@ -25,7 +25,7 @@ tool = "commitlint"
 [[check]]
 command = ["commitlint", "--config", "{config_file:commitlint}", "--edit", "{message_file}"]
 example = "The message `changed stuff` has no type or scope. Write `fix(cli): report missing configuration` instead."
-help = "Write `<type>: <subject>` or `<type>(<scope>): <subject>` in a first line of 72 characters or fewer. Change the accepted types with `gspot set tools.commitlint.types`."
+help = "Write `<type>: <subject>` or `<type>(<scope>): <subject>` in a first line of 72 characters or fewer, with `!` before the colon for a breaking change. Change the accepted types with `gspot set tools.commitlint.types`."
 level = "all"
 name = "commitlint"
 output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
