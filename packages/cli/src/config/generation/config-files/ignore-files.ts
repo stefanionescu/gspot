@@ -16,7 +16,7 @@ export const IGNORE_SECTION_TITLES = {
     git: 'Files that Git ignores',
     gspot: 'Files that gspot generates',
     generators: 'Generator outputs',
-    dependencies: 'Dependencies',
+    configurations: 'Paths that configurations leave out, such as installed dependencies and local secrets',
     lockfiles: 'Lockfiles',
     environment: 'Local environment files',
 } as const;

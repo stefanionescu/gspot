@@ -90,8 +90,8 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
             patterns: [...readLinguistPatterns(reads, trackedPaths), ...generatorOutputs],
         },
         {
-            key: 'dependencies',
-            title: IGNORE_SECTION_TITLES.dependencies,
+            key: 'configurations',
+            title: IGNORE_SECTION_TITLES.configurations,
             patterns: folders.filter((folder) => !BUILD_OUTPUT_FOLDERS.has(folder)),
         },
         {
