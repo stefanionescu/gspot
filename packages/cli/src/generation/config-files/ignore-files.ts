@@ -4,12 +4,10 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { listIgnores } from '#cli/settings/scopes.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
-import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
-import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import { listPointerPaths } from '#cli/generation/config-files/pointers.ts';
 import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { isRootTextShared, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
@@ -22,14 +20,6 @@ import {
     PRETTIERIGNORE_PURPOSE,
     LOCAL_ENVIRONMENT_PATTERNS,
 } from '#cli/config/generation/config-files/ignore-files.ts';
-
-function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
-    return listGitignorePatterns(session.reads, tracked).filter((pattern) => {
-        if (pattern.replace(LEADING_SLASH, '').startsWith(`${DOT_GSPOT}/`)) return false;
-        const matches = buildPathMatcher([convertToGlob(pattern)]);
-        return !tracked.some((path) => matches(path));
-    });
-}
 
 function listGeneratedPaths(session: Session): string[] {
     const configFiles = listOwnedConfigFiles(session);
@@ -75,11 +65,6 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
                 }),
                 ...folders.filter((folder) => BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
             ],
-        },
-        {
-            key: 'git',
-            title: IGNORE_SECTION_TITLES.git,
-            patterns: listGitIgnoredPatterns(session, trackedPaths),
         },
         { key: 'gspot', title: IGNORE_SECTION_TITLES.gspot, patterns: [...GSPOT_FOLDER_PATTERNS, ...configFiles] },
         {

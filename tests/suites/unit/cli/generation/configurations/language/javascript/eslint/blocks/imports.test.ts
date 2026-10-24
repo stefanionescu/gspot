@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
@@ -78,7 +77,7 @@ test('a bundler scope drops only code suffixes, and its Node scripts keep every 
         'app/value.js': 'export const value = 1;\n',
         'app/styles.css': '.card { color: red; }\n',
         'app/data.json': '{"value":1}\n',
-        'app/lib.mjs': 'export const lib = 1;\n',
+        'app/library.mjs': 'export const library = 1;\n',
         'app/source.js': '',
         'app/tool.mjs': '',
     });
@@ -87,17 +86,17 @@ test('a bundler scope drops only code suffixes, and its Node scripts keep every 
     const rules = ['n/file-extension-in-import'];
     const bundled =
         'import "./styles.css";\nimport data from "./data.json" with { type: "json" };\nimport { value } from "./value";\nexport { data, value };\n';
-    const script = 'import { lib } from "./lib.mjs";\nexport { lib };\n';
+    const script = 'import { library } from "./library.mjs";\nexport { library };\n';
     await createFileTree(sandbox.path, { 'app/source.js': bundled, 'app/tool.mjs': script });
     expect(await listLintFindings(eslint, sandbox.path, ['app/source.js', 'app/tool.mjs'], rules)).toStrictEqual([]);
     const [fixed] = await eslint.lintText('import { value } from "./value.js";\nexport { value };\n', {
         filePath: 'app/source.js',
     });
     expect(fixed?.output).toBe('import { value } from "./value";\nexport { value };\n');
-    const [kept] = await eslint.lintText('import { lib } from "./lib";\nexport { lib };\n', {
+    const [kept] = await eslint.lintText('import { library } from "./library";\nexport { library };\n', {
         filePath: 'app/tool.mjs',
     });
-    expect(kept?.output).toBe('import { lib } from "./lib.mjs";\nexport { lib };\n');
+    expect(kept?.output).toBe('import { library } from "./library.mjs";\nexport { library };\n');
 });
 
 test('a Node script imports through package.json imports, never through TypeScript paths', async () => {
@@ -115,22 +114,6 @@ test('a Node script imports through package.json imports, never through TypeScri
         filePath: 'tools/run/tool.mjs',
     });
     expect(fixed?.output).toBe('import { value } from "#src/app/value.mjs";\nexport { value };\n');
-});
-
-test('import-x never parses a gitignored bundle that code imports', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript']),
-        '.gitignore': 'node_modules/\n.open-next/\n',
-        'worker.js': '',
-    });
-
-    runGitStep(sandbox.path, ['init', '-q']);
-    runGitStep(sandbox.path, ['add', '--', '.gitignore', 'worker.js', 'gspot.toml']);
-    const eslint = await createEslint(sandbox.path);
-    const config = (await eslint.calculateConfigForFile('worker.js')) as { settings: Record<string, unknown> };
-    const ignored = (config.settings['import-x/ignore'] as string[]).map((source) => new RegExp(source, 'u'));
-    expect(ignored.some((pattern) => pattern.test(`${sandbox.path}/.open-next/worker.js`))).toBe(true);
-    expect(ignored.some((pattern) => pattern.test(`${sandbox.path}/worker.js`))).toBe(false);
 });
 
 test('an import of a javascript.externals path gets no gspot/import-boundaries finding', async () => {

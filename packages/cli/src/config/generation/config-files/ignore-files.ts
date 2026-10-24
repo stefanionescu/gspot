@@ -12,7 +12,6 @@ export const PRETTIERIGNORE_PURPOSE = 'Editors and gspot checks use the same ord
 
 export const IGNORE_SECTION_TITLES = {
     build: 'Build output',
-    git: 'Files that Git ignores',
     gspot: 'Files that gspot generates',
     generators: 'Generator outputs',
     configurations: 'Paths that configurations leave out, such as installed dependencies and local secrets',

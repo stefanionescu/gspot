@@ -6,38 +6,13 @@ import type { ReadCache } from '#cli/types/system/files.ts';
 import type { PathIgnore } from '#cli/types/repository/files.ts';
 import { isInside, extractParentFolder } from '#cli/system/paths.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
-import { GITIGNORE_COMMENT, GITIGNORE_NEGATION } from '#cli/config/repository/files/gitignore.ts';
+import { GITIGNORE_COMMENT } from '#cli/config/repository/files/gitignore.ts';
 
 function readPatternLines(reads: ReadCache, file: string): string[] {
     return readCachedText(reads, file)
         .split(/\r?\n/u)
         .map((line) => line.trim())
         .filter((line) => line !== '' && !line.startsWith(GITIGNORE_COMMENT));
-}
-
-function anchorLine(folder: string, line: string): string {
-    if (folder === '') return line;
-    const body = line.replace(/^\//u, '');
-    const isAnchored = line.startsWith('/') || line.slice(0, -1).includes('/');
-    return isAnchored ? `/${folder}/${body}` : `/${folder}/**/${body}`;
-}
-
-/**
- * List the patterns of the tracked .gitignore files as lines of one root ignore file, without negations.
- *
- * @param reads the run cache.
- * @param trackedPaths the tracked files of the repository.
- * @returns the patterns, each anchored at the folder of its .gitignore.
- */
-export function listGitignorePatterns(reads: ReadCache, trackedPaths: string[]): string[] {
-    return trackedPaths
-        .filter((path) => posix.basename(path) === GITIGNORE_FILE)
-        .flatMap((file) => {
-            const folder = extractParentFolder(file);
-            return readPatternLines(reads, file)
-                .filter((line) => !line.startsWith(GITIGNORE_NEGATION))
-                .map((line) => anchorLine(folder, line));
-        });
 }
 
 /**

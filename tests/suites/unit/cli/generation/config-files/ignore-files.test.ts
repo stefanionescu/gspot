@@ -21,7 +21,6 @@ import {
     PRETTIER_IGNORE_CASES,
     IGNORE_LIST_REPOSITORY,
     PRETTIER_IGNORE_SETTINGS,
-    PRETTIER_IGNORE_ATTRIBUTES,
 } from '#tests/config/generation/config-files/ignore-files.ts';
 
 test('shared Markdown settings leave inherited pointers out of generated path ignores', async () => {
@@ -47,6 +46,8 @@ test('shared Markdown settings leave inherited pointers out of generated path ig
 test.each([...PRETTIER_IGNORE_CASES])(
     'the generated .prettierignore ignores $file: $ignored',
     async ({ file, ignored }) => {
+        const PRETTIER_IGNORE_ATTRIBUTES = '/generated/** linguist-generated\n/vendored/** linguist-vendored\n';
+
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(PRETTIER_IGNORE_SETTINGS.configurations, {
                 rules: true,
@@ -149,8 +150,13 @@ test('the ignore lists name only the files that gspot writes, and Ruff gets only
     );
     const ruff = files.find(({ path }) => path.startsWith(`${DOT_GSPOT}/`) && path.endsWith('ruff.toml'))!;
     const excluded = (parse(ruff.content) as { 'extend-exclude': string[] })['extend-exclude'];
-    expect(excluded.length).toBeGreaterThan(0);
-    for (const pattern of excluded) expect(pattern).toMatch(/(?:\/\*\*|\.py)$/u);
+    expect(excluded).toStrictEqual([
+        '../../../../.gspot/**',
+        '../../../../**/node_modules/**',
+        '../../../../**/bower_components/**',
+        '../../../../**/.venv/**',
+        '../../../../**/venv/**',
+    ]);
 });
 
 test('a second apply writes the same files when .prettierignore covers every source file', async () => {
@@ -170,45 +176,6 @@ test('a second apply writes the same files when .prettierignore covers every sou
     }
     expect(outputs[1]).toStrictEqual(outputs[0]);
     expect(outputs[0]!.map((file) => file.split('\n', 1)[0])).toContain('.prettierignore');
-});
-
-test('config files leave out what the tracked .gitignore files ignore, apart from patterns that match a tracked file', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['python', 'javascript']),
-        '.gitignore': '.open-next/\n# A comment\n!keep.log\n.env*\n',
-        'app/.gitignore': 'other/\n/generated/types\n',
-        '.env.example': 'TOKEN=\n',
-        'app/main.py': 'value = 1\n',
-        'entry.js': 'export const value = 1;\n',
-    });
-
-    runGitStep(sandbox.path, ['init', '-q']);
-    runGitStep(sandbox.path, [
-        'add',
-        '-f',
-        '--',
-        '.gitignore',
-        'app/.gitignore',
-        '.env.example',
-        'app/main.py',
-        'entry.js',
-    ]);
-    const session = await openSession(sandbox.path);
-    const section = buildIgnoreSections(session).find(({ key }) => key === 'git')!;
-    expect(section.patterns).toStrictEqual(['.open-next/', '/app/**/other/', '/app/generated/types']);
-    const pyright = generate(session).files.find(({ path }) => path.endsWith('basedpyright.json'))!;
-    const excluded = (JSON.parse(pyright.content) as { exclude: string[] }).exclude;
-    expect(excluded).toStrictEqual(
-        [
-            '**/.open-next/**',
-            'app/**/other/**',
-            `${DOT_GSPOT}/**`,
-            '**/.venv/**',
-            '**/venv/**',
-            '**/node_modules/**',
-            '**/bower_components/**',
-        ].map((pattern) => `../../../../${pattern}`),
-    );
 });
 
 test('root paths in the generated-files section are anchored, so an authored tools/eslint.config.mjs stays checked', async () => {
@@ -236,4 +203,23 @@ test('root paths in the generated-files section are anchored, so an authored too
     const ignored = getValueAt(JSON.parse(duplication.content), ['ignore']);
     expect(ignored).toContain('eslint.config.mjs');
     expect(ignored).not.toContain('**/eslint.config.mjs');
+});
+
+test('changing tracked gitignore patterns leaves generated tool configurations unchanged', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'spelling']),
+        '.gitignore': '',
+        'source.js': 'export const value = 1;\n',
+    });
+    runGitStep(sandbox.path, ['init', '-q']);
+    runGitStep(sandbox.path, ['add', '--', 'gspot.toml', '.gitignore', 'source.js']);
+    const before = generate(await openSession(sandbox.path)).files.filter(({ path }) =>
+        ['.prettierignore', 'typos.toml', 'knip.json', 'eslint.mjs'].some((name) => path.endsWith(name)),
+    );
+    expect(before).toHaveLength(4);
+    await writeFile(join(sandbox.path, '.gitignore'), 'coverage/\nlogs/\n');
+    const after = generate(await openSession(sandbox.path)).files.filter(({ path }) =>
+        ['.prettierignore', 'typos.toml', 'knip.json', 'eslint.mjs'].some((name) => path.endsWith(name)),
+    );
+    expect(after).toStrictEqual(before);
 });
