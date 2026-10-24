@@ -35,6 +35,7 @@ export function prepareReleaseAge(
         ];
     if (packageManager.name === 'bun') {
         const install = {
+            peer: false,
             minimumReleaseAge: days * SECONDS_PER_DAY,
             minimumReleaseAgeExcludes: [...GSPOT_PACKAGES],
         };

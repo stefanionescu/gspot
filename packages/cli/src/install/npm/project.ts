@@ -16,10 +16,10 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { type NpmToolProject } from '#cli/types/install/tool-projects.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { RELEASE_AGE_VERSIONS } from '#cli/config/install/npm/release-age.ts';
 import { isLockfileFresh, stripBunRegistryUrls } from '#cli/install/npm/lockfiles.ts';
 import { type PackageManagerRun, type PackageManagerCommand } from '#cli/types/install/npm.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
+import { RELEASE_AGE_FILES, RELEASE_AGE_VERSIONS } from '#cli/config/install/npm/release-age.ts';
 import { YARN_SETTINGS_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
 import { assertPackageManager, readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/install/npm/registry.ts';
@@ -94,7 +94,13 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerCo
             credentials.push(...(await writeYarnSettings(install, runFolder, env)));
             env[YARN_SETTINGS_FILE_VARIABLE] = YARN_INSTALL_SETTINGS_FILE;
         }
-        const result = await runInstallStep(install, commandArguments, { cwd: runFolder, env });
+        const args = [...commandArguments];
+        if (packageManager.name === 'bun') {
+            const days = getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days;
+            prepareReleaseAge(settings.path, args, packageManager, days);
+            args.push(`--config=${join(settings.path, RELEASE_AGE_FILES.bun)}`);
+        }
+        const result = await runInstallStep(install, args, { cwd: runFolder, env });
         if (result.code !== 0) {
             throw new GspotError(
                 'install',

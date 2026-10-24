@@ -8,19 +8,27 @@ export const PACKAGE_MANAGER_ARGUMENTS = {
             'npm',
             'install',
             '--package-lock-only',
+            '--legacy-peer-deps',
             '--no-audit',
             '--no-fund',
             '--omit-lockfile-registry-resolved',
         ],
-        install: ['npm', 'ci', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
+        install: ['npm', 'ci', '--legacy-peer-deps', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
     },
     bun: {
         lockfile: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted', '--network-concurrency=1'],
         install: ['bun', 'install', '--frozen-lockfile', '--linker', 'hoisted'],
     },
     pnpm: {
-        lockfile: ['pnpm', 'install', '--lockfile-only', '--node-linker=hoisted'],
-        install: ['pnpm', 'install', '--frozen-lockfile', '--ignore-workspace', '--node-linker=hoisted'],
+        lockfile: ['pnpm', 'install', '--lockfile-only', '--node-linker=hoisted', '--auto-install-peers=false'],
+        install: [
+            'pnpm',
+            'install',
+            '--frozen-lockfile',
+            '--ignore-workspace',
+            '--node-linker=hoisted',
+            '--auto-install-peers=false',
+        ],
     },
 } as const;
 

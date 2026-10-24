@@ -137,8 +137,10 @@ test('an npm install that runs past the time limit names the limit', async () =>
     const session = await openSession(sandbox.path);
     using owner = openWriter(sandbox.path);
     using _bun = fakeFailingBun({ timedOut: true });
-    expect(await captureRejection(installNpmTools(buildToolInstall(session, owner)))).toBe(
-        `The command bun install --frozen-lockfile --linker hoisted ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
+    const message = await captureRejection(installNpmTools(buildToolInstall(session, owner)));
+    expect(message).toStartWith('The command bun install --frozen-lockfile --linker hoisted --config=');
+    expect(message).toEndWith(
+        `bunfig.toml ran longer than tool_timeout_seconds (${String(session.timeoutSeconds)}s). Raise it with gspot set tool_timeout_seconds <seconds>.`,
     );
 });
 

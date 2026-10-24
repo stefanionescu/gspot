@@ -31,7 +31,7 @@ test('a Bun tool lockfile reads the release age from a bunfig.toml in its folder
     );
     expect(hold).toStrictEqual([...PACKAGE_MANAGER_ARGUMENTS.bun.lockfile]);
     expect(Bun.TOML.parse(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8'))).toStrictEqual({
-        install: { minimumReleaseAge: 604_800, minimumReleaseAgeExcludes: [...OWN_PACKAGES] },
+        install: { peer: false, minimumReleaseAge: 604_800, minimumReleaseAgeExcludes: [...OWN_PACKAGES] },
     });
 });
 
