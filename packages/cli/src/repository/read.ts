@@ -26,7 +26,6 @@ import {
     NOT_REPOSITORY_CODE,
     NOT_REPOSITORY_MESSAGE,
     GIT_TOP_LEVEL_ARGUMENTS,
-    GIT_WORK_TREE_ARGUMENTS,
 } from '#cli/config/system/git.ts';
 
 function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Record<string, string>> {
@@ -140,11 +139,9 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
  */
 export function findRoot(start: string): string {
     const folder = realpathSync(start);
-    const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS);
-    const gitRoot = top.code === 0 ? resolve(top.stdout.replace(TRAILING_NEWLINE, '')) : undefined;
-    if (gitRoot !== undefined) return gitRoot;
-    const inspection = runGitBlocking(folder, GIT_WORK_TREE_ARGUMENTS, { env: GIT_LOCALE });
-    if (inspection.code !== NOT_REPOSITORY_CODE || !inspection.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
+    const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });
+    if (top.code === 0) return resolve(top.stdout.replace(TRAILING_NEWLINE, ''));
+    if (top.code !== NOT_REPOSITORY_CODE || !top.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
         throw new Error(
             `Git could not find the repository root of ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`,
         );
