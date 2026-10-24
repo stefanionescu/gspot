@@ -12,8 +12,10 @@ import { DOCKER_TOOL } from '#cli/config/tools/inspect.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { SHORT_HASH_LENGTH } from '#cli/config/runs/report.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { IgnoreRecord } from '#cli/types/settings/file.ts';
+import type { ReproduceOptions } from '#cli/types/runs/report.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { RAN_STATUSES, FAILED_STATUSES } from '#cli/config/runs/check.ts';
 import { DOCKER_MISSING_MESSAGE } from '#cli/config/commands/check/run.ts';
@@ -86,17 +88,26 @@ function removeOutsideFindings(result: CheckResult, run: Run): void {
     result.findings = result.findings.filter((finding) => paths.has(finding.file) || !tracked.has(finding.file));
 }
 
+function buildReproduceOptions(options: RunOptions): ReproduceOptions {
+    const comparison = options.comparison;
+    let changed: string | undefined;
+    if (comparison?.content === 'working-tree') changed = comparison.reference;
+    else if (comparison?.content === 'commit') changed = options.base?.slice(0, SHORT_HASH_LENGTH);
+    return {
+        paths: options.pathArguments,
+        changed,
+        messageFile: options.messageFile,
+        staged: comparison?.content === 'index',
+    };
+}
+
 function finishResult(run: Run, result: CheckResult): void {
     if (RAN_STATUSES.has(result.status)) {
         removeOutsideFindings(result, run);
         removeIgnoredFindings(result, run.session.settingsFile.settings.ignore);
     }
     if (FAILED_STATUSES.has(result.status))
-        result.reproduce = formatReproduceCommand(result.check, result.scope, {
-            messageFile: run.options.messageFile,
-            push: run.options.push,
-            staged: run.options.comparison?.content === 'index',
-        });
+        result.reproduce = formatReproduceCommand(result.check, result.scope, buildReproduceOptions(run.options));
 }
 
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {

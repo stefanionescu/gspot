@@ -18,6 +18,7 @@ export type Run = {
 };
 
 export type RunOptions = RunReportOptions & {
+    pathArguments: string[];
     push?: PushInput | undefined;
     fix: boolean;
 };

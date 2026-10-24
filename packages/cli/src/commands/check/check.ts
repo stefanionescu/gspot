@@ -172,6 +172,7 @@ async function checkStaged(
     const paths = options.paths.map((path) => relative(root, resolve(options.cwd, path)));
     return await checkTree(copy.root, { ...options, cwd: copy.root, paths }, cancelSignal, {
         content: 'index',
+        paths: options.paths,
         installedRoot: root,
         reference: copy.tree,
         staged,

@@ -136,7 +136,7 @@ export function buildVerbosityReport(verbose: boolean): string {
         ),
         '  help: Read the command output; this repository declares the check.',
         ...(verbose ? [] : ['  and 1 more (--verbose prints every finding)']),
-        '  run again: gspot check --only example/findings',
+        '  run again: gspot check --only example/findings --changed HEAD',
         '',
         ...(verbose
             ? ['example/passing  passed  1 file  0.0s', `  $ ${process.execPath} -e process.exitCode=0;`, '']

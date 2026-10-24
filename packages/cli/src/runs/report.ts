@@ -108,23 +108,20 @@ export function buildRunReport(run: FinishedRun): RunReport {
  *
  * @param checkId the ID to run.
  * @param scope the folder path, '' for the root.
- * @param options the message file or the exact push input.
- * @param options.push the hook input that the check read.
- * @param options.push.stdin the lines Git handed the hook.
- * @param options.push.remote the name Git gave, if any.
+ * @param options the file selection and hook arguments.
+ * @param options.paths the path arguments as typed.
+ * @param options.changed the compared reference, including the push base.
  * @param options.messageFile the file that Git passes to commit-msg.
  * @param options.staged whether the finding came from the index.
  * @returns the command line.
  */
 export function formatReproduceCommand(checkId: string, scope: string, options: ReproduceOptions): string {
-    const { push, messageFile, staged } = options;
-    if (push !== undefined) {
-        const remote = push.remote === undefined ? '' : ` -- ${quoteArgument(push.remote)}`;
-        return `printf '%s' ${quoteArgument(push.stdin)} | gspot check --hook pre-push --only ${quoteArgument(checkId)}${remote}`;
-    }
+    const { paths, changed, messageFile, staged } = options;
     const words = ['gspot check'];
-    if (scope !== '' && messageFile === undefined) words.push(quoteArgument(scope));
+    if (paths.length > 0) words.push(...paths.map((path) => quoteArgument(path)));
+    else if (scope !== '' && messageFile === undefined) words.push(quoteArgument(scope));
     words.push('--only', quoteArgument(checkId));
+    if (changed !== undefined) words.push('--changed', quoteArgument(changed));
     if (messageFile !== undefined) words.push('--hook', 'commit-msg', '--', quoteArgument(messageFile));
     if (staged) words.push('--staged');
     return words.join(' ');

@@ -98,6 +98,9 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
         await runGspot(sandbox.path, ['check', 'src/selected.ts', '--only', 'sandbox/project', '--json', ...flags]),
     );
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
+    expect(narrowed.report.checks[0]?.reproduce).toBe(
+        `gspot check src/selected.ts --only sandbox/project${staged ? ' --staged' : ''}`,
+    );
     expect(narrowed.report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual(['here', 'fileless']);
     const project = parseCheckReport(
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/project', '--json', ...flags]),

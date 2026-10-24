@@ -169,9 +169,9 @@ test('the pre-push report prints a command that reproduces the same findings', a
     const { base, broken } = await preparePushRepository(sandbox.path);
     const failedReport = await runBrokenPushCheck(sandbox.path, base, broken);
     const reproduction = failedReport.checks.map(({ reproduce }) => reproduce);
-    expect(reproduction).toStrictEqual([
-        `printf '%s' 'refs/heads/main ${broken} refs/heads/main ${base}\n' | gspot check --hook pre-push --only project/bash-syntax -- origin`,
-    ]);
+    expect(reproduction).toStrictEqual([`gspot check --only project/bash-syntax --changed ${base.slice(0, 7)}`]);
+    await using checkout = await testdir();
+    runGitStep(sandbox.path, ['worktree', 'add', '--detach', checkout.path, broken]);
     const repeated = await runCommand(
         [
             'bash',
@@ -182,12 +182,12 @@ test('the pre-push report prints a command that reproduces the same findings', a
             CLI_BIN,
             reproduction[0]!.replace('gspot check', 'gspot check --json'),
         ],
-        { cwd: sandbox.path },
+        { cwd: checkout.path },
     );
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
-    const repeatedReport = JSON.parse(repeated.stdout) as PushReport;
-    expect(repeatedReport.revisions[0]?.hash).toBe(broken);
-    expect(repeatedReport.revisions[0]?.report.checks[0]?.findings).toStrictEqual(failedReport.checks[0]?.findings);
+    const repeatedReport = JSON.parse(repeated.stdout) as RunReport;
+    expect(repeatedReport.checks[0]?.findings).toStrictEqual(failedReport.checks[0]?.findings);
+    runGitStep(sandbox.path, ['worktree', 'remove', '--force', checkout.path]);
     await assertWorkingTreeKept(sandbox.path, broken);
 });
 

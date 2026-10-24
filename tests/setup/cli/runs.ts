@@ -11,7 +11,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 115 calls in 43 files share it.
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
-    return { stage: 'all', fix: false, isDryRun: false, ...overrides };
+    return { stage: 'all', fix: false, isDryRun: false, pathArguments: [], ...overrides };
 }
 
 /**

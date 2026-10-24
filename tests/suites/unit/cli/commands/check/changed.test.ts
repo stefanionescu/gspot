@@ -39,6 +39,7 @@ test('--changed compares with the merge base, names its base, and a folder argum
     );
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
     expect(selected.report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
+    expect(selected.report.checks[0]?.reproduce).toBe('gspot check api --only sandbox/paths --changed refs/heads/base');
     expect(selected.report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
@@ -46,6 +47,7 @@ test('--changed compares with the merge base, names its base, and a folder argum
         await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', 'base', '--json']),
     );
     expect(explicit.code, explicit.stdout + explicit.stderr).toBe(1);
+    expect(explicit.report.checks[0]?.reproduce).toBe('gspot check --only sandbox/paths --changed base');
     expect(
         explicit.report.checks
             .flatMap((check) => check.findings.map((finding) => finding.message))

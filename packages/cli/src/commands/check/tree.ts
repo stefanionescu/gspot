@@ -19,9 +19,10 @@ import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
-function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: RevisionSource | undefined): RunOptions {
-    const { changed, staging, stage, paths } = filters;
-    const changedPaths = changed?.paths;
+function buildHistorySelection(
+    revision: RevisionSource | undefined,
+    changed: RunFilters['changed'],
+): Pick<RunOptions, 'commits' | 'base' | 'historyComplete'> {
     let commits = changed?.commits;
     let base = changed?.reference;
     let historyComplete: RunOptions['historyComplete'];
@@ -30,8 +31,15 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
         base = revision.base ?? base;
         historyComplete = revision.historyComplete;
     } else if (revision !== undefined) commits = undefined;
+    return stripUndefined({ commits, base, historyComplete });
+}
+
+function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: RevisionSource | undefined): RunOptions {
+    const { changed, staging, stage, paths } = filters;
+    const changedPaths = changed?.paths;
     const comparison = buildComparison(revision, changed);
     return {
+        pathArguments: revision?.content === 'index' ? revision.paths : options.paths,
         ...stripUndefined({
             stage,
             fix: options.fix,
@@ -44,9 +52,7 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
             paths,
             messageFile: options.messageFile,
             push: options.push,
-            commits,
-            base,
-            historyComplete,
+            ...buildHistorySelection(revision, changed),
         }),
         unstagedChanges: staging.unstaged,
     };
