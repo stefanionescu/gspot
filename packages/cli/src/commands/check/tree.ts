@@ -39,6 +39,7 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
     const changedPaths = changed?.paths;
     const comparison = buildComparison(revision, changed);
     return {
+        cwd: revision?.content === 'index' ? revision.cwd : options.cwd,
         pathArguments: revision?.content === 'index' ? revision.paths : options.paths,
         ...stripUndefined({
             stage,

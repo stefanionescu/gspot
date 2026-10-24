@@ -107,7 +107,7 @@ export function buildRunReport(run: FinishedRun): RunReport {
  * Formats the command that runs one check alone.
  *
  * @param checkId the ID to run.
- * @param scope the folder path, '' for the root.
+ * @param scopeArgument the scope relative to the calling folder, or undefined for the root.
  * @param options the file selection and hook arguments.
  * @param options.paths the path arguments as typed.
  * @param options.changed the compared reference, including the push base.
@@ -115,11 +115,15 @@ export function buildRunReport(run: FinishedRun): RunReport {
  * @param options.staged whether the finding came from the index.
  * @returns the command line.
  */
-export function formatReproduceCommand(checkId: string, scope: string, options: ReproduceOptions): string {
+export function formatReproduceCommand(
+    checkId: string,
+    scopeArgument: string | undefined,
+    options: ReproduceOptions,
+): string {
     const { paths, changed, messageFile, staged } = options;
     const words = ['gspot check'];
     if (paths.length > 0) words.push(...paths.map((path) => quoteArgument(path)));
-    else if (scope !== '' && messageFile === undefined) words.push(quoteArgument(scope));
+    else if (scopeArgument !== undefined && messageFile === undefined) words.push(quoteArgument(scopeArgument));
     words.push('--only', quoteArgument(checkId));
     if (changed !== undefined) words.push('--changed', quoteArgument(changed));
     if (messageFile !== undefined) words.push('--hook', 'commit-msg', '--', quoteArgument(messageFile));

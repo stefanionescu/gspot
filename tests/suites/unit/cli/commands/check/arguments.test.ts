@@ -112,6 +112,29 @@ test.each([false, true])('path arguments narrow project-wide findings (staged: %
     ]);
 });
 
+test.each([false, true])('run again resolves a scope from the calling folder (staged: %s)', async (staged) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['bash'] }] }),
+        'app/run.sh': 'cleanup() { printf "unused\\n"; }\n',
+        'sub/marker.txt': 'source\n',
+    });
+    if (staged) {
+        commitAll(sandbox.path);
+        await writeFile(join(sandbox.path, 'app/run.sh'), 'cleanup() { printf "changed\\n"; }\n');
+        runGitStep(sandbox.path, ['add', '--', 'app/run.sh']);
+    }
+    const cwd = join(sandbox.path, 'sub');
+    const result = parseCheckReport(
+        await runGspot(cwd, ['check', '--only', 'bash/unused-functions', '--json', ...(staged ? ['--staged'] : [])]),
+    );
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    const reproduce = result.report.checks[0]!.reproduce!;
+    expect(reproduce).toBe(`gspot check ../app --only bash/unused-functions${staged ? ' --staged' : ''}`);
+    const repeated = parseCheckReport(await runGspot(cwd, [...reproduce.split(' ').slice(1), '--json']));
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
+    expect(repeated.report.checks[0]?.findings).toStrictEqual(result.report.checks[0]?.findings);
+});
+
 test('--staged keeps every stage while --hook pre-commit runs only commit checks', async () => {
     const definitions = (['commit', 'push', 'manual'] as const).map((stage) => buildPassingCheck(stage));
     await using sandbox = await testdir({

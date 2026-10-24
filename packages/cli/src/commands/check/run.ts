@@ -1,4 +1,5 @@
 import pLimit from 'p-limit';
+import { join, relative } from 'node:path';
 import { availableParallelism } from 'node:os';
 import { GspotError } from '#cli/system/errors.ts';
 import { findTool } from '#cli/runs/command/tool.ts';
@@ -106,8 +107,13 @@ function finishResult(run: Run, result: CheckResult): void {
         removeOutsideFindings(result, run);
         removeIgnoredFindings(result, run.session.settingsFile.settings.ignore);
     }
-    if (FAILED_STATUSES.has(result.status))
-        result.reproduce = formatReproduceCommand(result.check, result.scope, buildReproduceOptions(run.options));
+    if (FAILED_STATUSES.has(result.status)) {
+        const scopeArgument =
+            result.scope === ''
+                ? undefined
+                : relative(run.options.cwd, join(run.session.installedRoot, result.scope)) || '.';
+        result.reproduce = formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options));
+    }
 }
 
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {

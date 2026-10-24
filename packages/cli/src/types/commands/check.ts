@@ -39,6 +39,7 @@ export type CheckOptions = {
 export type RevisionSource =
     | {
           content: 'index';
+          cwd: string;
           paths: string[];
           installedRoot: string;
           reference: string;
