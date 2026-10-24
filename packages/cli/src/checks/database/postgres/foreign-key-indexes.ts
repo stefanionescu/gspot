@@ -7,12 +7,12 @@ import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 /**
- * Reports each foreign key whose columns do not lead an index, primary key, or unique key.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose migrations to read.
- * @returns the findings.
- */
+Reports each foreign key whose columns do not lead an index, primary key, or unique key.
+
+@param session the repository and its tools.
+@param planned the scope whose migrations to read.
+@returns the findings.
+*/
 export async function checkForeignKeyIndexes(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildSchema(migrations);

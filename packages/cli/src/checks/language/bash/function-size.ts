@@ -8,12 +8,12 @@ import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import { COUNT_LIMITS } from '#cli/config/checks/language/bash/function-size.ts';
 
 /**
- * Checks each shell function against the size limits: code lines, branches, nesting, and assignments.
- *
- * @param session the repository and its tools.
- * @param planned the scope scripts and limits.
- * @returns one finding per exceeded limit.
- */
+Checks each shell function against the size limits: code lines, branches, nesting, and assignments.
+
+@param session the repository and its tools.
+@param planned the scope scripts and limits.
+@returns one finding per exceeded limit.
+*/
 export async function checkBashFunctionSize(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>

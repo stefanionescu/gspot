@@ -179,12 +179,12 @@ function listManualLines(command: string, manual: { checks: string[]; tools: str
 }
 
 /**
- * Build one lint job for each system, each with one mise setup.
- *
- * @param pipeline what the workflow runs.
- *
- * @returns the GitHub workflow file.
- */
+Build one lint job for each system, each with one mise setup.
+
+@param pipeline what the workflow runs.
+
+@returns the GitHub workflow file.
+*/
 export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     const platforms = [...new Set([...pipeline.operatingSystems, ...(pipeline.hasSwift ? (['macos'] as const) : [])])];
     const jobs = platforms.map((platform): [string, Record<string, unknown>] =>
@@ -208,12 +208,12 @@ export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
 }
 
 /**
- * Build a GitLab include, and leave the authored pipeline unchanged. Platform and Swift choices do not apply.
- *
- * @param pipeline what the include runs.
- *
- * @returns the GitLab include file.
- */
+Build a GitLab include, and leave the authored pipeline unchanged. Platform and Swift choices do not apply.
+
+@param pipeline what the include runs.
+
+@returns the GitLab include file.
+*/
 export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     const command = buildGspotCommand(pipeline);
     const setup =
@@ -289,11 +289,11 @@ function buildFrozenInstall(session: Session, scope: string, lockfile: string): 
 }
 
 /**
- * List the tracked lockfiles of the root and of each scope, which CI installs from and keys its cache on.
- *
- * @param session the repository and its scopes.
- * @returns the repository paths of the lockfiles.
- */
+List the tracked lockfiles of the root and of each scope, which CI installs from and keys its cache on.
+
+@param session the repository and its scopes.
+@returns the repository paths of the lockfiles.
+*/
 export function listProjectLockfiles(session: Session): string[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     return session.scopes.flatMap(({ folder }) =>
@@ -304,12 +304,12 @@ export function listProjectLockfiles(session: Session): string[] {
 }
 
 /**
- * List the shell lines that install the locked dependencies of each project, then write the route types of each
- * Next.js project, which typed lint rules read.
- *
- * @param session the repository, its scopes, and its tools.
- * @returns the lines, each run from the repository root.
- */
+List the shell lines that install the locked dependencies of each project, then write the route types of each
+Next.js project, which typed lint rules read.
+
+@param session the repository, its scopes, and its tools.
+@returns the lines, each run from the repository root.
+*/
 export function listProjectInstallLines(session: Session): string[] {
     const lockfiles = new Set(listProjectLockfiles(session));
     return session.scopes.flatMap(({ folder, configurations }) => {

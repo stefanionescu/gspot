@@ -11,12 +11,12 @@ function formatList(label: string, values: string[]): string[] {
 }
 
 /**
- * Describe a configuration's detection, checks, rules, and settings.
- *
- * @param session the repository settings when the caller opened a repository.
- * @param configurationName the configuration to describe.
- * @returns the explanation, or undefined for an unknown configuration.
- */
+Describe a configuration's detection, checks, rules, and settings.
+
+@param session the repository settings when the caller opened a repository.
+@param configurationName the configuration to describe.
+@returns the explanation, or undefined for an unknown configuration.
+*/
 export function explainConfiguration(session: Session | undefined, configurationName: string): Explanation | undefined {
     const configuration = readConfigurations().get(configurationName);
     if (configuration === undefined) return undefined;

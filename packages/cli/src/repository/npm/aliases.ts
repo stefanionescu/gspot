@@ -15,12 +15,12 @@ function findImportTarget(target: unknown): string | undefined {
 }
 
 /**
- * Read the package.json imports of one project, which Node resolves without a compiler.
- *
- * @param root the repository root.
- * @param prefix the project folder with a trailing slash, or empty for the root.
- * @returns the alias prefixes and their repository-relative folders.
- */
+Read the package.json imports of one project, which Node resolves without a compiler.
+
+@param root the repository root.
+@param prefix the project folder with a trailing slash, or empty for the root.
+@returns the alias prefixes and their repository-relative folders.
+*/
 export function readPackageAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
     const path = `${prefix}package.json`;
@@ -37,13 +37,13 @@ export function readPackageAliases(root: string, prefix: string): Record<string,
 }
 
 /**
- * Resolve package imports and TypeScript paths for one scope. TypeScript paths win.
- *
- * @param repositoryRoot the root that alias paths start from.
- * @param scope the folder, empty for the root.
- * @param reads the run cache for compiler settings.
- * @returns aliases relative to the repository root.
- */
+Resolve package imports and TypeScript paths for one scope. TypeScript paths win.
+
+@param repositoryRoot the root that alias paths start from.
+@param scope the folder, empty for the root.
+@param reads the run cache for compiler settings.
+@returns aliases relative to the repository root.
+*/
 export function readScopeAliases(repositoryRoot: string, scope: string, reads: ReadCache): Record<string, string> {
     const prefix = joinScope(scope, '');
     const aliases = readPackageAliases(repositoryRoot, prefix);

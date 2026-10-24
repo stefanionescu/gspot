@@ -24,13 +24,13 @@ function parseVultureFinding(planned: PlannedCheck, line: string, selected: Read
 }
 
 /**
- * Runs vulture over every Python file of the scope, so that a use in any file counts, and reports the findings in the
- * files of this run.
- *
- * @param session the repository and its tools.
- * @param planned the scope, its files, and the repository files.
- * @returns each unused definition and each line of unreachable code.
- */
+Runs vulture over every Python file of the scope, so that a use in any file counts, and reports the findings in the
+files of this run.
+
+@param session the repository and its tools.
+@param planned the scope, its files, and the repository files.
+@returns each unused definition and each line of unreachable code.
+*/
 export async function checkPythonVulture(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scope = planned.scope.folder.path;
     const children = listChildScopes(session.scopes, planned.scope);

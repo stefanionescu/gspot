@@ -146,12 +146,12 @@ const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefine
 };
 
 /**
- * Build the text of one config file, and of the files that it imports.
- *
- * @param planned the config file with its scope, level, and target path.
- * @param targets the config file path for each scope.
- * @returns the generated file, with paths relative to where it sits, and its companion files.
- */
+Build the text of one config file, and of the files that it imports.
+
+@param planned the config file with its scope, level, and target path.
+@param targets the config file path for each scope.
+@returns the generated file, with paths relative to where it sits, and its companion files.
+*/
 export function buildConfigFile(
     planned: PlannedConfigFile,
     targets: ConfigFileGeneration['targets'],

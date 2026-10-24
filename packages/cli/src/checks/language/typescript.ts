@@ -13,12 +13,12 @@ import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfi
 import { TSCONFIG_NAME, TYPESCRIPT_TAG } from '#cli/config/checks/language/typescript.ts';
 
 /**
- * Reports each required compiler option that a scope tsconfig leaves off.
- *
- * @param session the repository and its tools.
- * @param planned the scope to check.
- * @returns the findings.
- */
+Reports each required compiler option that a scope tsconfig leaves off.
+
+@param session the repository and its tools.
+@param planned the scope to check.
+@returns the findings.
+*/
 export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck): Finding[] {
     const project = readTsconfigProject(
         session.root,

@@ -121,13 +121,13 @@ const TOOL_SETTINGS: Map<string, Setting[]> = new Map(
 );
 
 /**
- * Build the known settings in the order of the selected configurations. Framework, platform, library, and database
- * configurations override single-value defaults.
- *
- * @param configurations the manifests of the selection, in order.
- * @param level picks the recommended or all defaults.
- * @returns the settings, their defaults, and the conflicts found on the way.
- */
+Build the known settings in the order of the selected configurations. Framework, platform, library, and database
+configurations override single-value defaults.
+
+@param configurations the manifests of the selection, in order.
+@param level picks the recommended or all defaults.
+@returns the settings, their defaults, and the conflicts found on the way.
+*/
 export function buildAvailableSettings(configurations: Configuration[], level: Level): AvailableSettings {
     const roots = ROOT_SETTINGS;
     const settingsByTool = TOOL_SETTINGS;
@@ -153,11 +153,11 @@ export function buildAvailableSettings(configurations: Configuration[], level: L
 }
 
 /**
- * List the settings that one configuration declares, with their defaults, from the definitions in the settings schemas.
- *
- * @param configuration the configuration name.
- * @returns the settings of this configuration.
- */
+List the settings that one configuration declares, with their defaults, from the definitions in the settings schemas.
+
+@param configuration the configuration name.
+@returns the settings of this configuration.
+*/
 export function listSettings(configuration: string): Setting[] {
     const settings: Setting[] = [];
     const visited = new Set<z.ZodType>();
@@ -187,13 +187,13 @@ export function listSettings(configuration: string): Setting[] {
 }
 
 /**
- * Apply defaults detected from the package manager and project dependencies.
- *
- * @param availableSettings the mutable defaults of the selected configurations.
- * @param detected the package manager and dependency names of the scope.
- * @param detected.packageManagerName the package manager when the scope holds a site build default.
- * @param detected.dependencyNames the package names recorded in the scope.
- */
+Apply defaults detected from the package manager and project dependencies.
+
+@param availableSettings the mutable defaults of the selected configurations.
+@param detected the package manager and dependency names of the scope.
+@param detected.packageManagerName the package manager when the scope holds a site build default.
+@param detected.dependencyNames the package names recorded in the scope.
+*/
 export function applyDetectedDefaults(
     availableSettings: AvailableSettings,
     detected: { packageManagerName: string | undefined; dependencyNames: string[] },

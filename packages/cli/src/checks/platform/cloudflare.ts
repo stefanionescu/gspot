@@ -89,12 +89,12 @@ function validateRedirects(text: string): NumberedLine[] {
 }
 
 /**
- * Reports syntax errors in each _redirects file.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Reports syntax errors in each _redirects file.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export function checkCloudflareRedirects(session: Session, planned: PlannedCheck): Finding[] {
     return listSourcePaths(planned.files, [REDIRECTS_FILE]).flatMap((path) =>
         validateRedirects(readCachedText(session.reads, path)).map((invalidLine) =>
@@ -104,12 +104,12 @@ export function checkCloudflareRedirects(session: Session, planned: PlannedCheck
 }
 
 /**
- * Reports syntax errors in each _headers file, and each security header that the block for every path does not set.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Reports syntax errors in each _headers file, and each security header that the block for every path does not set.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export function checkCloudflareHeaders(session: Session, planned: PlannedCheck): Finding[] {
     return listSourcePaths(planned.files, [HEADERS_FILE]).flatMap((path) => {
         const { blocks, errors } = parseHeadersFile(readCachedText(session.reads, path));

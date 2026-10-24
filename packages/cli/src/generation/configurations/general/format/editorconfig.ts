@@ -28,11 +28,11 @@ function buildSectionPath(pattern: string, scope: string): string {
 }
 
 /**
- * Build .editorconfig: the EditorConfig sections of this repository.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the EditorConfig sections of this repository.
- */
+Build .editorconfig: the EditorConfig sections of this repository.
+
+@param planned the config file with its scope, level, and target path.
+@returns the EditorConfig sections of this repository.
+*/
 export function buildEditorconfigFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.values;
     const settings = planned.session.settingsFile.settings;

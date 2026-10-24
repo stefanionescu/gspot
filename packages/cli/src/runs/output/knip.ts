@@ -5,11 +5,11 @@ import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { KNIP_ISSUE_TYPES, KNIP_ISSUE_MESSAGES } from '#cli/config/runs/output/knip.ts';
 
 /**
- * Read the Knip JSON categories, and keep grouped symbols and source positions.
- *
- * @param output the tool output to read.
- * @returns the findings, with each positioned member of a grouped issue.
- */
+Read the Knip JSON categories, and keep grouped symbols and source positions.
+
+@param output the tool output to read.
+@returns the findings, with each positioned member of a grouped issue.
+*/
 export function parseKnipFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help } = output;
     const report = parseToolReport('Knip', stdout, knipReportSchema);

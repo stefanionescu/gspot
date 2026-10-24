@@ -113,11 +113,11 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
 }
 
 /**
- * Check whether a planned check has files, deleted trigger paths, a commit message, or pushed commits to read.
- *
- * @param check the plan to inspect.
- * @returns whether the check has something to run over.
- */
+Check whether a planned check has files, deleted trigger paths, a commit message, or pushed commits to read.
+
+@param check the plan to inspect.
+@returns whether the check has something to run over.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 12 calls in 6 files share it.
 export function isActive(check: PlannedCheck): boolean {
     return (
@@ -129,13 +129,13 @@ export function isActive(check: PlannedCheck): boolean {
 }
 
 /**
- * Plan the checks of every scope, skip each check that another check replaces, and refuse history checks when the
- * pushed history lacks commits.
- *
- * @param session the repository to check.
- * @param options what the run narrows to.
- * @returns the planned checks in scope order.
- */
+Plan the checks of every scope, skip each check that another check replaces, and refuse history checks when the
+pushed history lacks commits.
+
+@param session the repository to check.
+@param options what the run narrows to.
+@returns the planned checks in scope order.
+*/
 export function planChecks(session: Session, options: PlanOptions): PlannedCheck[] {
     const checks = planScopes(session, options).flatMap((planned) => skipReplacedChecks(planned));
     if (options.historyComplete === false) {
@@ -150,12 +150,12 @@ export function planChecks(session: Session, options: PlanOptions): PlannedCheck
 }
 
 /**
- * Keep an override command, and drop the shipped coverage arguments when every coverage minimum equals 0.
- *
- * @param planned the check and its scope settings.
- * @param authored the command and workspace.
- * @returns the command, with coverage only when a coverage minimum needs it.
- */
+Keep an override command, and drop the shipped coverage arguments when every coverage minimum equals 0.
+
+@param planned the check and its scope settings.
+@param authored the command and workspace.
+@returns the command, with coverage only when a coverage minimum needs it.
+*/
 export function stripCoverageArguments(
     planned: Pick<PlannedCheck, 'check' | 'scope' | 'configuration'>,
     authored: Pick<Check, 'command'>,
@@ -168,23 +168,23 @@ export function stripCoverageArguments(
 }
 
 /**
- * Check whether every coverage requirement of a scope equals zero.
- *
- * @param scope the resolved coverage settings.
- * @returns whether the scope needs no coverage output.
- */
+Check whether every coverage requirement of a scope equals zero.
+
+@param scope the resolved coverage settings.
+@returns whether the scope needs no coverage output.
+*/
 export function isCoverageOff(scope: Scope): boolean {
     const coverage = getTable(scope.settings, 'coverage');
     return COVERAGE_DIMENSIONS.every((name) => coverage[name] === 0);
 }
 
 /**
- * Check whether a command uses one of the declared coverage arguments.
- *
- * @param command the program and arguments.
- * @param coverageArguments the coverage flags of the check.
- * @returns whether the command requests coverage output.
- */
+Check whether a command uses one of the declared coverage arguments.
+
+@param command the program and arguments.
+@param coverageArguments the coverage flags of the check.
+@returns whether the command requests coverage output.
+*/
 export function hasCoverageArguments(
     command: readonly string[] | undefined,
     coverageArguments: readonly string[] | undefined,

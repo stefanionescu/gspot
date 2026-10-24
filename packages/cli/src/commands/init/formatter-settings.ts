@@ -181,13 +181,13 @@ function readScopeFormat(
 }
 
 /**
- * Read the formatting options for each scope that init sets up.
- *
- * @param draft the configurations and the template.
- * @param repository the root and the tracked files.
- * @param configurations every configuration.
- * @returns the formatting tables, with the template values kept.
- */
+Read the formatting options for each scope that init sets up.
+
+@param draft the configurations and the template.
+@param repository the root and the tracked files.
+@param configurations every configuration.
+@returns the formatting tables, with the template values kept.
+*/
 export function readFormatTables(
     draft: SettingsDraft,
     repository: Repository,

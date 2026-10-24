@@ -8,11 +8,11 @@ import {
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
- * Apply the TanStack Query presets with enabled warnings raised to errors.
- *
- * @param scope the preset exports and code selectors.
- * @returns imported bindings and unscoped block data.
- */
+Apply the TanStack Query presets with enabled warnings raised to errors.
+
+@param scope the preset exports and code selectors.
+@returns imported bindings and unscoped block data.
+*/
 export function buildTanstackQueryBlocks(scope: Pick<EslintScope, 'presets' | 'eslintFiles'>): ConfigurationBlocks {
     const { presets, eslintFiles } = scope;
     const recommended = getPreset(presets, 'recommended');

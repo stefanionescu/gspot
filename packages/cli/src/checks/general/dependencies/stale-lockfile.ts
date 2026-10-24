@@ -43,12 +43,12 @@ function compareSpecifiers(
 }
 
 /**
- * Reports a package.json whose dependencies differ from what its lockfile records, which a frozen install refuses.
- *
- * @param session the repository and its tools.
- * @param planned the scope and the run cache.
- * @returns one finding per dependency out of step with the lockfile.
- */
+Reports a package.json whose dependencies differ from what its lockfile records, which a frozen install refuses.
+
+@param session the repository and its tools.
+@param planned the scope and the run cache.
+@returns one finding per dependency out of step with the lockfile.
+*/
 export function checkDependenciesStaleLockfile(session: Session, planned: PlannedCheck): Finding[] {
     const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);

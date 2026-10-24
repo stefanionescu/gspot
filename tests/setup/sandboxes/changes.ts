@@ -89,13 +89,13 @@ async function writeChanges(cwd: string, changes: SampleChanges, settings: strin
 }
 
 /**
- * Change a sandbox, and restore its files on disposal, and in a Git repository its index and `HEAD` too. It saves file
- * bytes and modes before the first change, so a failed change still restores them.
- *
- * @param sandbox the installed sandbox to change.
- * @param changes the files, settings, removals, and executable bits to apply.
- * @returns the disposer that restores the sandbox.
- */
+Change a sandbox, and restore its files on disposal, and in a Git repository its index and `HEAD` too. It saves file
+bytes and modes before the first change, so a failed change still restores them.
+
+@param sandbox the installed sandbox to change.
+@param changes the files, settings, removals, and executable bits to apply.
+@returns the disposer that restores the sandbox.
+*/
 export async function changeSandbox(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
     const tree = runGit(cwd, ['write-tree']).stdout.trim();
@@ -183,12 +183,12 @@ export function buildSandboxChanges(
 }
 
 /**
- * Append settings to the gspot.toml of an installed sandbox, then write and format the generated files again, as a
- * repository does after it edits its settings by hand.
- *
- * @param sandbox the installed sandbox.
- * @param settings the TOML text to append.
- */
+Append settings to the gspot.toml of an installed sandbox, then write and format the generated files again, as a
+repository does after it edits its settings by hand.
+
+@param sandbox the installed sandbox.
+@param settings the TOML text to append.
+*/
 export async function appendSandboxSettings(sandbox: Sandbox, settings: string): Promise<void> {
     await appendFile(join(sandbox.root, 'gspot.toml'), settings);
     await runGspotStep(sandbox, ['apply']);

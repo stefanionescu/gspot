@@ -15,13 +15,13 @@ import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/track
 import { GLOB_EXCLUDE, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 
 /**
- * Build a command path from its calling folder within the repository.
- *
- * @param root the folder that bounds command paths.
- * @param cwd the folder where the command starts.
- * @param subject the path as typed.
- * @returns the repository-relative path with forward slashes.
- */
+Build a command path from its calling folder within the repository.
+
+@param root the folder that bounds command paths.
+@param cwd the folder where the command starts.
+@param subject the path as typed.
+@returns the repository-relative path with forward slashes.
+*/
 export function buildRepositoryPath(root: string, cwd: string, subject: string): string {
     const path = convertToPosixPath(relative(root, resolve(cwd, subject)));
     if (!isInside(path)) throw new GspotError('arguments', `Path ${subject} is outside this repository.`);
@@ -29,36 +29,36 @@ export function buildRepositoryPath(root: string, cwd: string, subject: string):
 }
 
 /**
- * Test scope containment. The empty root path matches every file.
- *
- * @param path the file to test.
- * @param scope the folder that may contain the file.
- * @returns whether the scope contains the file.
- */
+Test scope containment. The empty root path matches every file.
+
+@param path the file to test.
+@param scope the folder that may contain the file.
+@returns whether the scope contains the file.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 44 calls in 25 files share it.
 export function isInScope(path: string, scope: string): boolean {
     return scope === '' || path === scope || path.startsWith(`${scope}/`);
 }
 
 /**
- * Lists the scopes inside another scope, excluding that scope itself.
- *
- * @param paths every scope path.
- * @param scope the parent folder, empty for the repository root.
- * @returns the nested paths in their original order.
- */
+Lists the scopes inside another scope, excluding that scope itself.
+
+@param paths every scope path.
+@param scope the parent folder, empty for the repository root.
+@returns the nested paths in their original order.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 5 files share it.
 export function listNestedScopes(paths: readonly string[], scope: string): string[] {
     return paths.filter((path) => path !== scope && isInScope(path, scope));
 }
 
 /**
- * Orders scope paths from outermost to innermost, then by name.
- *
- * @param left the first scope path.
- * @param right the second scope path.
- * @returns the comparison result.
- */
+Orders scope paths from outermost to innermost, then by name.
+
+@param left the first scope path.
+@param right the second scope path.
+@returns the comparison result.
+*/
 export function compareScopeDepth(left: string, right: string): number {
     const leftDepth = left === '' ? 0 : left.split('/').length;
     const rightDepth = right === '' ? 0 : right.split('/').length;
@@ -66,12 +66,12 @@ export function compareScopeDepth(left: string, right: string): number {
 }
 
 /**
- * Check whether literal include selectors cover a whole project scope.
- *
- * @param paths the root-relative inclusion and exclusion selectors.
- * @param scope the project folder, empty for the root.
- * @returns true only when no exclusion or partial selector leaves scope content active.
- */
+Check whether literal include selectors cover a whole project scope.
+
+@param paths the root-relative inclusion and exclusion selectors.
+@param scope the project folder, empty for the root.
+@returns true only when no exclusion or partial selector leaves scope content active.
+*/
 export function isScopeCovered(paths: string[], scope: string): boolean {
     if (paths.some((path) => path.startsWith(GLOB_EXCLUDE))) return false;
     if (EVERY_FILE_GLOBS.some((pattern) => paths.includes(pattern))) return true;
@@ -87,25 +87,25 @@ export function isScopeCovered(paths: string[], scope: string): boolean {
 }
 
 /**
- * Resolve a scope-relative path within its repository.
- *
- * @param scope the repository-relative folder.
- * @param path the scope-relative file.
- * @returns the repository-relative path.
- */
+Resolve a scope-relative path within its repository.
+
+@param scope the repository-relative folder.
+@param path the scope-relative file.
+@returns the repository-relative path.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 56 calls in 39 files share it.
 export function joinScope(scope: string, path: string): string {
     return scope === '' ? path : `${scope}/${path}`;
 }
 
 /**
- * Find the project scopes for init and for runs. Leave out the root and tool-only packages.
- *
- * @param files the repository inventory.
- * @param dependencyFiles the parsed dependency files.
- * @param configurations the configurations with project files and npm tools.
- * @returns project scopes in path order.
- */
+Find the project scopes for init and for runs. Leave out the root and tool-only packages.
+
+@param files the repository inventory.
+@param dependencyFiles the parsed dependency files.
+@param configurations the configurations with project files and npm tools.
+@returns project scopes in path order.
+*/
 export function findScopeFolders(
     files: TrackedFile[],
     dependencyFiles: DependencyFile[],
@@ -137,12 +137,12 @@ export function findScopeFolders(
 }
 
 /**
- * Find the folder that a project file marks: the path before the segments that the pattern names.
- *
- * @param path the tracked file, root-relative.
- * @param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`.
- * @returns the project folder, '' for the root, or undefined for other files.
- */
+Find the folder that a project file marks: the path before the segments that the pattern names.
+
+@param path the tracked file, root-relative.
+@param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`.
+@returns the project folder, '' for the root, or undefined for other files.
+*/
 export function findProjectFolder(path: string, pattern: string): string | undefined {
     const segments = path.split('/');
     const wanted = pattern.split('/');
@@ -160,12 +160,12 @@ export function findProjectFolder(path: string, pattern: string): string | undef
 }
 
 /**
- * Find the scope of a file: the deepest scope that contains it, else the root.
- *
- * @param path the file to place.
- * @param scopeFolders the scopes to search.
- * @returns the deepest matching scope, or the root.
- */
+Find the scope of a file: the deepest scope that contains it, else the root.
+
+@param path the file to place.
+@param scopeFolders the scopes to search.
+@returns the deepest matching scope, or the root.
+*/
 export function findScopeFolder(path: string, scopeFolders: ScopeFolder[]): ScopeFolder {
     const root: ScopeFolder = scopeFolders.find((scope) => scope.path === '') ?? { ...ROOT_SCOPE, configurations: [] };
     return (

@@ -106,13 +106,13 @@ function buildSettingsTable(
 }
 
 /**
- * Build the gspot.toml text for a settings draft.
- *
- * @param draft the settings choices.
- * @param repository the tracked source files.
- * @param configurations the configurations to choose from.
- * @returns the TOML text, with the preface comment and the line that names the template.
- */
+Build the gspot.toml text for a settings draft.
+
+@param draft the settings choices.
+@param repository the tracked source files.
+@param configurations the configurations to choose from.
+@returns the TOML text, with the preface comment and the line that names the template.
+*/
 export function buildInitSettings(
     draft: SettingsDraft,
     repository: Repository,
@@ -132,13 +132,13 @@ export function buildInitSettings(
 }
 
 /**
- * Draft the settings from the configuration choices and the init answers.
- *
- * @param configurations the configurations and scopes.
- * @param answers the integration choices.
- * @param options the authored level, when selected.
- * @returns the root and scope configurations with the answers.
- */
+Draft the settings from the configuration choices and the init answers.
+
+@param configurations the configurations and scopes.
+@param answers the integration choices.
+@param options the authored level, when selected.
+@returns the root and scope configurations with the answers.
+*/
 export function buildSettingsDraft(
     configurations: InitConfigurations,
     answers: InitAnswers,

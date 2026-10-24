@@ -6,12 +6,12 @@ import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import { SAFETY_PATTERNS, ALL_LEVEL_SAFETY_PATTERNS } from '#cli/config/checks/language/bash/safety.ts';
 
 /**
- * Reports each unsafe process kill or removal, and at level `all`, each discarded failure.
- *
- * @param session the repository and its tools.
- * @param planned the scope scripts and level.
- * @returns the findings.
- */
+Reports each unsafe process kill or removal, and at level `all`, each discarded failure.
+
+@param session the repository and its tools.
+@param planned the scope scripts and level.
+@returns the findings.
+*/
 export async function checkBashSafety(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const rules = [
         ...(session.settingsFile.settings.level === 'all' ? ALL_LEVEL_SAFETY_PATTERNS : []),

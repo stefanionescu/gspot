@@ -19,11 +19,11 @@ function splitPortablePath(path: string): string[] {
 }
 
 /**
- * Split a path into segments, and refuse an empty, dot, parent, or null segment.
- *
- * @param path a repository-relative file with forward slashes.
- * @returns the segments of the path.
- */
+Split a path into segments, and refuse an empty, dot, parent, or null segment.
+
+@param path a repository-relative file with forward slashes.
+@returns the segments of the path.
+*/
 export function splitSystemPath(path: string): string[] {
     if (process.platform === 'win32') return splitPortablePath(path);
     const segments = path.split('/');
@@ -36,10 +36,10 @@ export function splitSystemPath(path: string): string[] {
 }
 
 /**
- * Keep write plans outside the gspot state folder.
- *
- * @param path the proposed file.
- */
+Keep write plans outside the gspot state folder.
+
+@param path the proposed file.
+*/
 export function assertWritablePath(path: string): void {
     splitPortablePath(path);
     if (STATE_FOLDER_PATTERN.test(path.normalize('NFC')))

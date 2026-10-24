@@ -4,23 +4,23 @@ import type { RunOptions } from '#cli/types/runs/run.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 
 /**
- * Options for an in-process run of every stage, with no fixes.
- *
- * @param overrides what the test changes.
- * @returns the defaults with the overrides applied.
- */
+Options for an in-process run of every stage, with no fixes.
+
+@param overrides what the test changes.
+@returns the defaults with the overrides applied.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 115 calls in 43 files share it.
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
     return { stage: 'all', fix: false, isDryRun: false, cwd: process.cwd(), pathArguments: [], ...overrides };
 }
 
 /**
- * The planned fixer of the sandbox, with a script in place of its fix command.
- *
- * @param session the open sandbox.
- * @param script JavaScript for the fixer to run.
- * @returns the planned check.
- */
+The planned fixer of the sandbox, with a script in place of its fix command.
+
+@param session the open sandbox.
+@param script JavaScript for the fixer to run.
+@returns the planned check.
+*/
 export function planFixer(session: Session, script: string): PlannedCheck {
     const [planned] = planChecks(session, { stage: 'all', only: ['sandbox/fixer'] });
     if (planned === undefined) throw new Error('The sandbox has no planned fixer.');
@@ -28,11 +28,11 @@ export function planFixer(session: Session, script: string): PlannedCheck {
 }
 
 /**
- * Build fixer settings that run the executable of this test process.
- *
- * @param paths files the fixer covers.
- * @returns the gspot.toml text.
- */
+Build fixer settings that run the executable of this test process.
+
+@param paths files the fixer covers.
+@returns the gspot.toml text.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 2 files share it.
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []

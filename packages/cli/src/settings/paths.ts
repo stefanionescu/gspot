@@ -34,14 +34,14 @@ function mapNestedPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, k
 }
 
 /**
- * Change the declared path leaves with the schemas that validation uses.
- *
- * @param schema the validator of the field.
- * @param value the validated written setting.
- * @param visit changes one path.
- * @param keys where the field sits in its table.
- * @returns the setting with only its declared path leaves changed.
- */
+Change the declared path leaves with the schemas that validation uses.
+
+@param schema the validator of the field.
+@param value the validated written setting.
+@param visit changes one path.
+@param keys where the field sits in its table.
+@returns the setting with only its declared path leaves changed.
+*/
 export function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
     const role = schema.meta()?.path_role;
     if (typeof value === 'string' && role !== undefined) return visit(value, keys, role);
@@ -51,25 +51,25 @@ export function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVi
 }
 
 /**
- * Join a shipped default selector to its scope, and keep a leading exclusion mark.
- *
- * @param path the shipped default selector.
- * @param scope the repository-relative folder that owns the default.
- * @returns the repository-relative selector.
- */
+Join a shipped default selector to its scope, and keep a leading exclusion mark.
+
+@param path the shipped default selector.
+@param scope the repository-relative folder that owns the default.
+@returns the repository-relative selector.
+*/
 export function joinScopeSelector(path: string, scope: string): string {
     if (scope === '' || path === '') return path;
     return path.startsWith('!') ? `!${scope}/${path.slice(1)}` : `${scope}/${path}`;
 }
 
 /**
- * Resolve the path leaves of a shipped default against its project scope.
- *
- * @param key the dotted setting name.
- * @param value the validated default.
- * @param scope the owning folder, empty for repository-root values.
- * @returns repository-relative path values without changing identities or tool options.
- */
+Resolve the path leaves of a shipped default against its project scope.
+
+@param key the dotted setting name.
+@param value the validated default.
+@param scope the owning folder, empty for repository-root values.
+@returns repository-relative path values without changing identities or tool options.
+*/
 export function joinDefaultPaths(key: string, value: unknown, scope: string): unknown {
     if (scope === '' || value === undefined) return value;
     const schema = findSettingSchema(key);

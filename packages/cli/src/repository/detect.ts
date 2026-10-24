@@ -157,13 +157,13 @@ const EVIDENCE_FINDERS = [
 ];
 
 /**
- * Propose configurations from the files and the dependencies, with the evidence for each.
- *
- * @param repository the inventory and parsed package declarations.
- * @param configurations every configuration manifest.
- * @param scope the folder, '' for the root.
- * @returns each matching configuration with its repository evidence.
- */
+Propose configurations from the files and the dependencies, with the evidence for each.
+
+@param repository the inventory and parsed package declarations.
+@param configurations every configuration manifest.
+@param scope the folder, '' for the root.
+@returns each matching configuration with its repository evidence.
+*/
 export function detectConfigurations(
     repository: Pick<Repository, 'root' | 'files' | 'dependencyFiles'>,
     configurations: Map<string, Configuration>,
@@ -184,13 +184,13 @@ export function detectConfigurations(
 }
 
 /**
- * Select the conditions that the file and dependency evidence meets.
- *
- * @param conditions the detection rules of the manifests.
- * @param files the repository source inventory.
- * @param dependencyFiles the parsed dependency files.
- * @returns the conditions that match.
- */
+Select the conditions that the file and dependency evidence meets.
+
+@param conditions the detection rules of the manifests.
+@param files the repository source inventory.
+@param dependencyFiles the parsed dependency files.
+@returns the conditions that match.
+*/
 export function detectConditions(
     conditions: Configuration['detect'][],
     files: TrackedFile[],

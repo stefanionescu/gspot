@@ -42,12 +42,12 @@ function findProcessFailure(result: SpawnResult, name: string, timeoutSeconds: n
 }
 
 /**
- * Run a tool process and classify a failure.
- *
- * @param commandArguments the executable and expanded arguments.
- * @param options the process options and tool name for a failure note.
- * @returns the process result and any failure.
- */
+Run a tool process and classify a failure.
+
+@param commandArguments the executable and expanded arguments.
+@param options the process options and tool name for a failure note.
+@returns the process result and any failure.
+*/
 export async function runToolProcess(
     commandArguments: string[],
     options: ToolRunOptions & { name: string },
@@ -58,13 +58,13 @@ export async function runToolProcess(
 }
 
 /**
- * Finds the executable of a declared tool, or why it cannot run.
- *
- * @param session the repository and tool paths.
- * @param cwd the working folder.
- * @param tool the tool with its version pin.
- * @returns the executable path or its installation failure.
- */
+Finds the executable of a declared tool, or why it cannot run.
+
+@param session the repository and tool paths.
+@param cwd the working folder.
+@param tool the tool with its version pin.
+@returns the executable path or its installation failure.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
 export function findTool(session: Session, cwd: string, tool: Tool): ToolAvailability {
     const miseBinPaths = getMiseBinPaths(session);
@@ -72,13 +72,13 @@ export function findTool(session: Session, cwd: string, tool: Tool): ToolAvailab
 }
 
 /**
- * Add the folders of the installed other tools of a check to the process `PATH`, also in a copy.
- *
- * @param session the repository and its configurations.
- * @param names the other tools to add.
- * @param env variables for the tool process.
- * @returns the environment with their folders on `PATH`.
- */
+Add the folders of the installed other tools of a check to the process `PATH`, also in a copy.
+
+@param session the repository and its configurations.
+@param names the other tools to add.
+@param env variables for the tool process.
+@returns the environment with their folders on `PATH`.
+*/
 export function buildOtherToolEnvironment(
     session: Session,
     names: string[],
@@ -111,14 +111,14 @@ export function buildOtherToolEnvironment(
 }
 
 /**
- * Run the tool of a check with the tool time limit and failure handling.
- *
- * @param session the repository and its tools.
- * @param planned the check and scope.
- * @param command the executable name and arguments, or a shipped program that drives the tool through its JavaScript API.
- * @param options how to start the process.
- * @returns the process output.
- */
+Run the tool of a check with the tool time limit and failure handling.
+
+@param session the repository and its tools.
+@param planned the check and scope.
+@param command the executable name and arguments, or a shipped program that drives the tool through its JavaScript API.
+@param options how to start the process.
+@returns the process output.
+*/
 export async function runCheckTool(
     session: Session,
     planned: PlannedCheck,

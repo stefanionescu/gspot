@@ -12,15 +12,15 @@ import {
 } from '#cli/config/install/npm/release-age.ts';
 
 /**
- * Add the minimum release age to the lockfile run of the tool project. npm takes flags; Bun and pnpm read a settings
- * file in the folder they run in. Yarn reads it from its install settings file instead.
- *
- * @param runFolder the temporary folder that the package manager runs in.
- * @param command the arguments to run.
- * @param packageManager npm, pnpm, Yarn, or Bun, with its version.
- * @param days how long a new release waits.
- * @returns the command to run.
- */
+Add the minimum release age to the lockfile run of the tool project. npm takes flags; Bun and pnpm read a settings
+file in the folder they run in. Yarn reads it from its install settings file instead.
+
+@param runFolder the temporary folder that the package manager runs in.
+@param command the arguments to run.
+@param packageManager npm, pnpm, Yarn, or Bun, with its version.
+@param days how long a new release waits.
+@returns the command to run.
+*/
 export function prepareReleaseAge(
     runFolder: string,
     command: readonly string[],

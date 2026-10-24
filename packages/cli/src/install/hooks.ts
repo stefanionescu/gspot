@@ -68,13 +68,13 @@ function planHooks(session: Session): HookPlan {
 }
 
 /**
- * Set the planned Git setting, or report the instructions for existing hooks.
- *
- * @param session what the hook plan reads.
- * @param steps collects each command that install runs.
- *
- * @returns the install summary.
- */
+Set the planned Git setting, or report the instructions for existing hooks.
+
+@param session what the hook plan reads.
+@param steps collects each command that install runs.
+
+@returns the install summary.
+*/
 export function installHooks(session: Session, steps: (readonly string[])[]): string {
     if (!session.repository.hasGit) return '';
     const plan = planHooks(session);
@@ -87,13 +87,13 @@ export function installHooks(session: Session, steps: (readonly string[])[]): st
 }
 
 /**
- * Check whether the hooks in the settings run in this clone.
- *
- * @param session the settings, runner, and configured checks.
- * @param clone the Git clone whose hooks to inspect.
- *
- * @returns whether the hooks run, and the status line.
- */
+Check whether the hooks in the settings run in this clone.
+
+@param session the settings, runner, and configured checks.
+@param clone the Git clone whose hooks to inspect.
+
+@returns whether the hooks run, and the status line.
+*/
 export function readHookStatus(session: Session, clone: Pick<Repository, 'root' | 'hasGit'>): HookStatus {
     const { settings } = session.settingsFile;
     if (settings.hooks?.enabled !== true) return { ready: true, text: 'none' };

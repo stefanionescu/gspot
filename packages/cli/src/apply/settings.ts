@@ -24,12 +24,12 @@ import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/co
 import type { ApplyReport, SaveSettingsOptions, SettingsEditContext, ConfigurationsOptions } from '#cli/types/apply.ts';
 
 /**
- * Edit settings, check them, and write them and their generated files. Installs nothing.
- *
- * @param repositoryRoot the folder where gspot writes settings and generated files.
- * @param options the settings edit and its summary.
- * @returns the apply report and whether the written settings changed.
- */
+Edit settings, check them, and write them and their generated files. Installs nothing.
+
+@param repositoryRoot the folder where gspot writes settings and generated files.
+@param options the settings edit and its summary.
+@returns the apply report and whether the written settings changed.
+*/
 export async function applySettingsEdit(
     repositoryRoot: string,
     options: SaveSettingsOptions,
@@ -73,11 +73,11 @@ export async function applySettingsEdit(
 }
 
 /**
- * Read and validate the settings once before a command edits them.
- *
- * @param cwd the folder where the command starts.
- * @returns the settings and the gspot.toml text before the edit.
- */
+Read and validate the settings once before a command edits them.
+
+@param cwd the folder where the command starts.
+@returns the settings and the gspot.toml text before the edit.
+*/
 export function prepareSettingsEdit(cwd: string): SettingsEditContext {
     const root = findRoot(cwd);
     const input = readSettingsEdit(root);
@@ -87,11 +87,11 @@ export function prepareSettingsEdit(cwd: string): SettingsEditContext {
 }
 
 /**
- * Validate the configuration names and the scope for add and remove before either command edits a list.
- *
- * @param options where the command starts, the configurations, and the scope.
- * @returns the validated edit, the lists of that scope, and the shipped configurations.
- */
+Validate the configuration names and the scope for add and remove before either command edits a list.
+
+@param options where the command starts, the configurations, and the scope.
+@returns the validated edit, the lists of that scope, and the shipped configurations.
+*/
 export function prepareConfigurationEdit(options: ConfigurationsOptions): {
     root: string;
     input: SettingsEdit;
@@ -118,18 +118,18 @@ export function prepareConfigurationEdit(options: ConfigurationsOptions): {
 }
 
 /**
- * Look up a setting in one scope with the configurations that the session selects, including the ones that the files of
- * the repository select.
- *
- * @param context the settings from before the edit.
- * @param context.root the repository root.
- * @param context.input the settings text and table before the edit.
- * @param context.settings the parsed gspot.toml before the edit.
- * @param context.reads the file cache for the lookup.
- * @param key the dotted setting name.
- * @param scope the folder to look in, or the root when absent.
- * @returns the declaration and defaults for that scope.
- */
+Look up a setting in one scope with the configurations that the session selects, including the ones that the files of
+the repository select.
+
+@param context the settings from before the edit.
+@param context.root the repository root.
+@param context.input the settings text and table before the edit.
+@param context.settings the parsed gspot.toml before the edit.
+@param context.reads the file cache for the lookup.
+@param key the dotted setting name.
+@param scope the folder to look in, or the root when absent.
+@returns the declaration and defaults for that scope.
+*/
 export async function readSetting(
     context: SettingsEditContext,
     key: string,

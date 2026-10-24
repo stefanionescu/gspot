@@ -52,12 +52,12 @@ function buildScopeCompilerProject(
 }
 
 /**
- * Type-checks JavaScript with the type declarations the project uses.
- *
- * @param session the repository and its tools.
- * @param planned the JavaScript compiler check.
- * @returns the check result.
- */
+Type-checks JavaScript with the type declarations the project uses.
+
+@param session the repository and its tools.
+@param planned the JavaScript compiler check.
+@returns the check result.
+*/
 export async function checkJavascriptTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.folder.path;
     if (listCheckedFiles(session.scopes, planned).length === 0)

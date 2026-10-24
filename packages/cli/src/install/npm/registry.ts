@@ -56,14 +56,14 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
 }
 
 /**
- * Add a connection setting under an unused environment variable and return its reference.
- *
- * @param env the install variables that get the value.
- * @param prefix the start of each variable name.
- * @param value the connection setting kept out of generated files.
- *
- * @returns a package-manager environment reference.
- */
+Add a connection setting under an unused environment variable and return its reference.
+
+@param env the install variables that get the value.
+@param prefix the start of each variable name.
+@param value the connection setting kept out of generated files.
+
+@returns a package-manager environment reference.
+*/
 export function addEnvironmentReference(env: Record<string, string>, prefix: string, value: string): string {
     let index = 0;
     while (Object.hasOwn(env, `${prefix}${String(index)}`)) index += 1;
@@ -73,12 +73,12 @@ export function addEnvironmentReference(env: Record<string, string>, prefix: str
 }
 
 /**
- * Collect raw, decoded, and URL-encoded secrets. Lockfile checks and message redaction use them.
- *
- * @param env variables for the tool process.
- *
- * @returns the registry secrets that messages must hide.
- */
+Collect raw, decoded, and URL-encoded secrets. Lockfile checks and message redaction use them.
+
+@param env variables for the tool process.
+
+@returns the registry secrets that messages must hide.
+*/
 export function extractRegistryCredentials(env: Record<string, string>): string[] {
     const credentials = Object.entries(env)
         .filter(([key]) => CREDENTIAL_KEY.test(key))
@@ -97,11 +97,11 @@ export function extractRegistryCredentials(env: Record<string, string>): string[
 }
 
 /**
- * Write npm connection settings through environment references, so the temporary .npmrc contains no credentials.
- *
- * @param settingsFolder the private user settings folder.
- * @param env variables for the tool process.
- */
+Write npm connection settings through environment references, so the temporary .npmrc contains no credentials.
+
+@param settingsFolder the private user settings folder.
+@param env variables for the tool process.
+*/
 export function writeNpmrc(settingsFolder: string, env: Record<string, string>): void {
     const references: string[] = [];
     for (const [key, value] of Object.entries(env)) {
@@ -113,12 +113,12 @@ export function writeNpmrc(settingsFolder: string, env: Record<string, string>):
 }
 
 /**
- * Read npm-compatible connection settings through the npm settings file, and keep credentials in memory.
- *
- * @param repositoryRoot the working folder for npm settings and relative certificate paths.
- *
- * @returns the environment variables that carry the registry settings.
- */
+Read npm-compatible connection settings through the npm settings file, and keep credentials in memory.
+
+@param repositoryRoot the working folder for npm settings and relative certificate paths.
+
+@returns the environment variables that carry the registry settings.
+*/
 export async function readRegistryEnvironment(repositoryRoot: string): Promise<Record<string, string>> {
     const effective = await readRegistrySettings(repositoryRoot);
     const env: Record<string, string> = Object.fromEntries(

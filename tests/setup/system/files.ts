@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { open, lstat, access, readdir, readlink } from 'node:fs/promises';
 
 /**
- * Read every path in a repository with its mode and contents, to check that a write kept them.
- *
- * @param repositoryRoot folder to read.
- * @returns each path and its mode and contents.
- */
+Read every path in a repository with its mode and contents, to check that a write kept them.
+
+@param repositoryRoot folder to read.
+@returns each path and its mode and contents.
+*/
 export async function readTree(repositoryRoot: string): Promise<Record<string, string>> {
     const paths = await readdir(repositoryRoot, { recursive: true });
     return Object.fromEntries(
@@ -29,11 +29,11 @@ export async function readTree(repositoryRoot: string): Promise<Record<string, s
 }
 
 /**
- * Check whether a filesystem path exists, following symbolic links.
- *
- * @param path the file or folder.
- * @returns whether the path exists; false when access fails.
- */
+Check whether a filesystem path exists, following symbolic links.
+
+@param path the file or folder.
+@returns whether the path exists; false when access fails.
+*/
 export function isOnDisk(path: string): Promise<boolean> {
     return access(path).then(
         () => true,

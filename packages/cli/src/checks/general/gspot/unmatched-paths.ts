@@ -13,12 +13,12 @@ import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { GROUP_HELP, UNESCAPED_GROUP, NEGATED_PATTERN } from '#cli/config/checks/general/gspot/unmatched-paths.ts';
 
 /**
- * Reports setting paths that match no tracked file or folder.
- *
- * @param session the repository and its tools.
- * @param planned the settings and tracked files.
- * @returns the findings.
- */
+Reports setting paths that match no tracked file or folder.
+
+@param session the repository and its tools.
+@param planned the settings and tracked files.
+@returns the findings.
+*/
 export function checkGspotUnmatchedPaths(session: Session, planned: PlannedCheck): Finding[] {
     const files = session.repository.files;
     const repositoryPaths = [...includeParentFolders(files.map((file) => file.path))];

@@ -105,12 +105,12 @@ function listUnsettledConflicts(
 }
 
 /**
- * Name an unknown setting, and list the closest keys in the same table.
- *
- * @param availableSettings the settings of the configurations.
- * @param key the written dotted name.
- * @returns the error, with a command that lists the settings.
- */
+Name an unknown setting, and list the closest keys in the same table.
+
+@param availableSettings the settings of the configurations.
+@param key the written dotted name.
+@returns the error, with a command that lists the settings.
+*/
 export function formatUnknownSetting(availableSettings: AvailableSettings, key: string): string {
     const all = availableSettings.settings.keys().toArray();
     if (key.startsWith('limits.')) {
@@ -133,14 +133,14 @@ export function formatUnknownSetting(availableSettings: AvailableSettings, key: 
 }
 
 /**
- * Validate every written key against the known settings and the loosening rule.
- *
- * @param availableSettings the settings and defaults of the selected configurations.
- * @param settings the parsed gspot.toml.
- * @param scopeAvailable the settings of each scope by path, which its own table uses.
- * @param general the settings of general configurations that repository evidence can select.
- * @returns the errors in plain English, empty when the settings pass validation.
- */
+Validate every written key against the known settings and the loosening rule.
+
+@param availableSettings the settings and defaults of the selected configurations.
+@param settings the parsed gspot.toml.
+@param scopeAvailable the settings of each scope by path, which its own table uses.
+@param general the settings of general configurations that repository evidence can select.
+@returns the errors in plain English, empty when the settings pass validation.
+*/
 export function validateKeys(
     availableSettings: AvailableSettings,
     settings: Settings,

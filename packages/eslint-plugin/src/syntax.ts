@@ -44,11 +44,11 @@ function isTypeImportReference(node: TSESTree.Node, source: TSESLint.SourceCode)
 }
 
 /**
- * Walk through type assertions and conditional or logical expressions to the outermost value.
- *
- * @param node the expression
- * @returns the outermost expression that wraps it
- */
+Walk through type assertions and conditional or logical expressions to the outermost value.
+
+@param node the expression
+@returns the outermost expression that wraps it
+*/
 export function findOutermostValue(node: TSESTree.Expression): TSESTree.Expression {
     let value = node;
     while (isTransparentExpression(value.parent)) value = value.parent;
@@ -56,12 +56,12 @@ export function findOutermostValue(node: TSESTree.Expression): TSESTree.Expressi
 }
 
 /**
- * Count the executable statements under a node, nested functions included. An expression body counts as one.
- *
- * @param node the function body, or anything inside it
- * @param visitorKeys the child keys of each node type, from the parser
- * @returns the statement count
- */
+Count the executable statements under a node, nested functions included. An expression body counts as one.
+
+@param node the function body, or anything inside it
+@param visitorKeys the child keys of each node type, from the parser
+@returns the statement count
+*/
 export function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
     if (TYPE_ONLY.has(node.type)) return 0;
     if ('declare' in node && node.declare) return 0;
@@ -79,11 +79,11 @@ function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
 }
 
 /**
- * Find schema factory calls through their Zod imports, including aliased bindings.
- *
- * @param source the parsed module and its scopes
- * @returns calls that construct runtime validation schemas
- */
+Find schema factory calls through their Zod imports, including aliased bindings.
+
+@param source the parsed module and its scopes
+@returns calls that construct runtime validation schemas
+*/
 export function findZodSchemaConstructors(source: TSESLint.SourceCode): TSESTree.Node[] {
     const factories = Object.fromEntries(
         ZOD_SCHEMA_FACTORIES.map((name) => [name, { [ASTUtils.ReferenceTracker.CALL]: true }]),
@@ -108,12 +108,12 @@ export function findZodSchemaConstructors(source: TSESLint.SourceCode): TSESTree
 }
 
 /**
- * Identify a direct alias of a value bound in this module.
- *
- * @param node the expression assigned to another name
- * @param scope the expression's lexical scope
- * @returns whether the expression only selects a bound value
- */
+Identify a direct alias of a value bound in this module.
+
+@param node the expression assigned to another name
+@param scope the expression's lexical scope
+@returns whether the expression only selects a bound value
+*/
 export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope): boolean {
     let value = unwrap(node);
     while (value?.type === AST_NODE_TYPES.MemberExpression && !value.computed) value = unwrap(value.object);

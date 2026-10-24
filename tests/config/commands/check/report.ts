@@ -119,11 +119,11 @@ export const VERBOSITY_FILES = {
 export const DURATION = /\b\d+\.\ds\b/gu;
 
 /**
- * Build the report of the verbosity run, with every duration written as `0.0s`.
- *
- * @param verbose whether the run printed every finding and every command.
- * @returns the report text.
- */
+Build the report of the verbosity run, with every duration written as `0.0s`.
+
+@param verbose whether the run printed every finding and every command.
+@returns the report text.
+*/
 export function buildVerbosityReport(verbose: boolean): string {
     const total = String(FINDINGS_SHOWN + 1);
     return [

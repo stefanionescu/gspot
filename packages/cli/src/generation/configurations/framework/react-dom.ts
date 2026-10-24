@@ -12,11 +12,11 @@ import {
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
- * Apply the accessibility lint rules to the React DOM files.
- *
- * @param scope the planned ESLint file of the scope.
- * @returns the imports and ESLint blocks for this configuration.
- */
+Apply the accessibility lint rules to the React DOM files.
+
+@param scope the planned ESLint file of the scope.
+@returns the imports and ESLint blocks for this configuration.
+*/
 export function buildReactDomBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {
     const { presets, settings } = scope;
     const blocks: ConfigurationBlocks['blocks'] = [];

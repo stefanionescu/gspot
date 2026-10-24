@@ -8,11 +8,11 @@ import {
 } from '#cli/config/generation/configurations/infrastructure/docker.ts';
 
 /**
- * Build hadolint.yml: the Hadolint exclusions and trusted registry settings.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Hadolint exclusions and trusted registry settings.
- */
+Build hadolint.yml: the Hadolint exclusions and trusted registry settings.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Hadolint exclusions and trusted registry settings.
+*/
 export function buildHadolintFile(planned: PlannedConfigFile): string {
     const level = planned.level;
 

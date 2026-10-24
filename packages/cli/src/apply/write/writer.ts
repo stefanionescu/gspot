@@ -16,11 +16,11 @@ function writeBatch(writer: Writer, plans: WritePlan[]): void {
 }
 
 /**
- * Take the repository writer lock until disposal.
- *
- * @param repositoryRoot the boundary for confined writes and the writer lock.
- * @returns the locked file writer.
- */
+Take the repository writer lock until disposal.
+
+@param repositoryRoot the boundary for confined writes and the writer lock.
+@returns the locked file writer.
+*/
 export function openWriter(repositoryRoot: string): Writer {
     using resources = new DisposableStack();
     const files = resources.use(openFiles(repositoryRoot));
@@ -30,11 +30,11 @@ export function openWriter(repositoryRoot: string): Writer {
 }
 
 /**
- * Refuse the plans when they overwrite a file that gspot did not write; otherwise write or delete each changed file.
- *
- * @param writer the locked repository handle.
- * @param plans one write or removal for each file.
- */
+Refuse the plans when they overwrite a file that gspot did not write; otherwise write or delete each changed file.
+
+@param writer the locked repository handle.
+@param plans one write or removal for each file.
+*/
 export function writePlans(writer: Writer, plans: WritePlan[]): void {
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
     if (conflicts.length > 0)

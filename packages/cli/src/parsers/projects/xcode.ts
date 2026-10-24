@@ -160,12 +160,12 @@ function parsePbxproj(text: string): ParsedPbxproj {
 }
 
 /**
- * Find the Swift sources and managed folders that belong to project targets.
- *
- * @param text the project.pbxproj contents.
- * @param path the project.pbxproj file, relative to the repository root.
- * @returns the source paths and managed folders of the project, and the same for each target.
- */
+Find the Swift sources and managed folders that belong to project targets.
+
+@param text the project.pbxproj contents.
+@param path the project.pbxproj file, relative to the repository root.
+@returns the source paths and managed folders of the project, and the same for each target.
+*/
 export function parseProjectSources(text: string, path: string): ProjectSources {
     const folder = extractParentFolder(path.slice(0, path.indexOf(PBXPROJ)));
     const parsed = parsePbxproj(text);
@@ -197,11 +197,11 @@ export function parseProjectSources(text: string, path: string): ProjectSources 
 }
 
 /**
- * Find compiler and SDK settings without reading project source paths.
- *
- * @param text the project file.
- * @returns the first declared SDK and Swift version.
- */
+Find compiler and SDK settings without reading project source paths.
+
+@param text the project file.
+@returns the first declared SDK and Swift version.
+*/
 export function parseBuildSettings(text: string): ProjectBuildSettings {
     const project = parsePbxproj(text);
     const settings = Object.values(project.objects).flatMap((pbxRecord) => pbxRecord.buildSettings ?? []);

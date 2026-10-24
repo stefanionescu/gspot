@@ -61,12 +61,12 @@ function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, 
 }
 
 /**
- * Print a block and record the rule options it applies.
- *
- * @param writer the file's rule options and shared applied set.
- * @param block the block, its scope, and its label.
- * @returns the serialized block and any applicable option blocks.
- */
+Print a block and record the rule options it applies.
+
+@param writer the file's rule options and shared applied set.
+@param block the block, its scope, and its label.
+@returns the serialized block and any applicable option blocks.
+*/
 export function writeEslintBlock(writer: BlockWriter, block: PlannedEslintBlock): string {
     const { allLevelRules, level, codeFiles } = writer;
     const { fields: payload, scope } = block;
@@ -91,11 +91,11 @@ export function writeEslintBlock(writer: BlockWriter, block: PlannedEslintBlock)
 }
 
 /**
- * List your rule options that no enabled block accepted.
- *
- * @param writer the options and the shared applied set.
- * @returns the unapplied rule names.
- */
+List your rule options that no enabled block accepted.
+
+@param writer the options and the shared applied set.
+@returns the unapplied rule names.
+*/
 export function listUnappliedRules(writer: BlockWriter): string[] {
     return [
         ...new Set(

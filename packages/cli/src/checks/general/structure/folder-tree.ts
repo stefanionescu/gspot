@@ -6,11 +6,11 @@ import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import type { FolderChild } from '#cli/types/checks/general/structure.ts';
 
 /**
- * Lists the source files that the folder checks read: no Markdown.
- *
- * @param planned the scope files.
- * @returns the source files without Markdown.
- */
+Lists the source files that the folder checks read: no Markdown.
+
+@param planned the scope files.
+@returns the source files without Markdown.
+*/
 export function listCodeFiles(planned: PlannedCheck): TrackedFile[] {
     const documents = listTaggedExtensions('markdown');
     return planned.files.filter(
@@ -19,11 +19,11 @@ export function listCodeFiles(planned: PlannedCheck): TrackedFile[] {
 }
 
 /**
- * Maps each folder to its files and child folders, from the tracked files.
- *
- * @param files the tracked paths.
- * @returns each folder path with its files and child folders, sorted by name.
- */
+Maps each folder to its files and child folders, from the tracked files.
+
+@param files the tracked paths.
+@returns each folder path with its files and child folders, sorted by name.
+*/
 export function buildFolderTree(files: readonly { path: string }[]): Map<string, FolderChild[]> {
     const tree = new Map<string, Map<string, FolderChild['kind']>>();
     const addChild = (folder: string, name: string, kind: FolderChild['kind']): void => {

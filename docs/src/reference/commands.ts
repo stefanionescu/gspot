@@ -36,12 +36,12 @@ function formatCommand(command: Command): string {
 }
 
 /**
- * Build the Commands page from the CLI help data, with a section per command in program order.
- *
- * @param data the CLI reference facts
- * @param data.commands the help data the CLI registers
- * @returns the Commands page, with its title, description, and Markdown body
- */
+Build the Commands page from the CLI help data, with a section per command in program order.
+
+@param data the CLI reference facts
+@param data.commands the help data the CLI registers
+@returns the Commands page, with its title, description, and Markdown body
+*/
 export function buildCommandPage({ commands }: Pick<CliReference, 'commands'>): ReferencePage {
     return buildReferencePage(
         'Commands',

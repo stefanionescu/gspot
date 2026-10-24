@@ -54,12 +54,12 @@ async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: 
 }
 
 /**
- * Get the fields of a PostgreSQL parse tree node when the node has the given kind.
- *
- * @param node the parse tree node, if any.
- * @param kind the node kind to select.
- * @returns the fields of that kind, or undefined for another kind.
- */
+Get the fields of a PostgreSQL parse tree node when the node has the given kind.
+
+@param node the parse tree node, if any.
+@param kind the node kind to select.
+@returns the fields of that kind, or undefined for another kind.
+*/
 export function getNodeFields<Kind extends keyof SqlNodeFields>(
     node: Node | undefined,
     kind: Kind,
@@ -69,12 +69,12 @@ export function getNodeFields<Kind extends keyof SqlNodeFields>(
 }
 
 /**
- * List the fields of the nodes of one kind in a node list.
- *
- * @param nodes the nodes, if any.
- * @param kind the node kind to select.
- * @returns the fields of the matching nodes, in source order.
- */
+List the fields of the nodes of one kind in a node list.
+
+@param nodes the nodes, if any.
+@param kind the node kind to select.
+@returns the fields of the matching nodes, in source order.
+*/
 export function listNodeFields<Kind extends keyof SqlNodeFields>(
     nodes: Node[] | undefined,
     kind: Kind,
@@ -86,13 +86,13 @@ export function listNodeFields<Kind extends keyof SqlNodeFields>(
 }
 
 /**
- * Pass a parsed statement to the reader for its kind.
- *
- * @param statement the parse result and source offset.
- * @param readers the functions for each kind.
- * @param readerArguments the extra values to pass on.
- * @returns the result, or undefined for a kind without a reader.
- */
+Pass a parsed statement to the reader for its kind.
+
+@param statement the parse result and source offset.
+@param readers the functions for each kind.
+@param readerArguments the extra values to pass on.
+@returns the result, or undefined for a kind without a reader.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function visitStatement<Result, Arguments extends unknown[]>(
     statement: SqlStatement,
@@ -106,12 +106,12 @@ export function visitStatement<Result, Arguments extends unknown[]>(
 }
 
 /**
- * Parse a PostgreSQL file once per run.
- *
- * @param text the original SQL, including supported psql syntax.
- * @param reads the run cache.
- * @returns the statements and the original error positions.
- */
+Parse a PostgreSQL file once per run.
+
+@param text the original SQL, including supported psql syntax.
+@param reads the run cache.
+@returns the statements and the original error positions.
+*/
 export function parseSqlFile(text: string, reads: ReadCache): Promise<SqlFile> {
     const files = getCachedValue(reads, PARSED_SQL_FILES);
     let parsed = files.get(text);

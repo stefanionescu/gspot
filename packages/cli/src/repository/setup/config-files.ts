@@ -84,13 +84,13 @@ function hasToolSection(text: string, path: string, selector: Pick<ConflictingCo
 }
 
 /**
- * Find the settings files of the tools that gspot writes settings for, such as .commitlintrc.json for commitlint.
- *
- * @param repositoryRoot the repository to read.
- * @param files the tracked inventory.
- * @param configurations the configurations whose tools name their settings files.
- * @returns each settings file with its tool, and whether it shares the file with other settings.
- */
+Find the settings files of the tools that gspot writes settings for, such as .commitlintrc.json for commitlint.
+
+@param repositoryRoot the repository to read.
+@param files the tracked inventory.
+@param configurations the configurations whose tools name their settings files.
+@returns each settings file with its tool, and whether it shares the file with other settings.
+*/
 export function listConflictingConfigFiles(
     repositoryRoot: string,
     files: TrackedFile[],

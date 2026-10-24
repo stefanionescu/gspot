@@ -56,13 +56,13 @@ function buildPointerFile(
 }
 
 /**
- * List the paths where a config file puts its pointer: one path, or one in each folder that holds files of the
- * configuration and matches pointer.folders.
- *
- * @param owner the repository and the scope.
- * @param configFile the config file from the manifest.
- * @returns each path where the pointer goes, from the repository root.
- */
+List the paths where a config file puts its pointer: one path, or one in each folder that holds files of the
+configuration and matches pointer.folders.
+
+@param owner the repository and the scope.
+@param configFile the config file from the manifest.
+@returns each path where the pointer goes, from the repository root.
+*/
 export function listPointerPaths(owner: ConfigFileOwner, configFile: ConfigFile): string[] {
     const { scope, configuration } = owner;
     const { scopes, repository } = owner.session;
@@ -126,13 +126,13 @@ function listPointerFieldTargets({
 }
 
 /**
- * Point the package fields that manifests declare at the generated config files.
- *
- * @param session the repository files and scopes.
- * @param generated the config files that this run generates.
- * @param targets the config file path for each scope and config file.
- * @returns changes to the declared package fields.
- */
+Point the package fields that manifests declare at the generated config files.
+
+@param session the repository files and scopes.
+@param generated the config files that this run generates.
+@param targets the config file path for each scope and config file.
+@returns changes to the declared package fields.
+*/
 export function buildPointerFieldEdits(
     session: Session,
     generated: GeneratedFile[],
@@ -181,13 +181,13 @@ export function buildPointerFieldEdits(
 }
 
 /**
- * Build the pointers of one generated config file.
- *
- * @param owner the repository and the scope.
- * @param configFile the shipped config file.
- * @param target the config file path.
- * @returns the pointer files for the config file.
- */
+Build the pointers of one generated config file.
+
+@param owner the repository and the scope.
+@param configFile the shipped config file.
+@param target the config file path.
+@returns the pointer files for the config file.
+*/
 export function buildPointerFiles(owner: ConfigFileOwner, configFile: ConfigFile, target: string): GeneratedFile[] {
     const { pointer } = configFile;
     if (pointer === undefined) return [];

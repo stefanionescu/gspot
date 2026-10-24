@@ -57,14 +57,14 @@ export const outputFormats = {
 } satisfies Record<CheckOutput['format'], OutputParser>;
 
 /**
- * Read the findings in the tool output, with every path relative to the root.
- *
- * @param check how to read the output.
- * @param stdout the standard output of the tool.
- * @param stderr the standard error of the tool.
- * @param paths the folders that resolve reported files.
- * @returns the findings.
- */
+Read the findings in the tool output, with every path relative to the root.
+
+@param check how to read the output.
+@param stdout the standard output of the tool.
+@param stderr the standard error of the tool.
+@param paths the folders that resolve reported files.
+@returns the findings.
+*/
 export function parseOutput(check: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
     const { root, cwd } = paths;
     const rootPath = convertToPosixPath(root);

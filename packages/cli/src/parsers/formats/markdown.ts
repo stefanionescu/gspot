@@ -3,11 +3,11 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { CodeFence } from '#cli/types/parsers/formats/markdown.ts';
 
 /**
- * List code blocks with their language, attributes, and source lines.
- *
- * @param text the Markdown source.
- * @returns the blocks in source order, including blocks without a language tag.
- */
+List code blocks with their language, attributes, and source lines.
+
+@param text the Markdown source.
+@returns the blocks in source order, including blocks without a language tag.
+*/
 export function listCodeFences(text: string): CodeFence[] {
     const fences: CodeFence[] = [];
     visit(fromMarkdown(text), 'code', (node) => {

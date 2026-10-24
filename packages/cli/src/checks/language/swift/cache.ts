@@ -94,13 +94,13 @@ function openBuildCache(folder: string): Files {
 }
 
 /**
- * Computes the build folder for a scope and tool.
- *
- * @param root the installed checkout.
- * @param scope the scope path.
- * @param purpose the tool whose outputs stay separate.
- * @returns the cache folder path.
- */
+Computes the build folder for a scope and tool.
+
+@param root the installed checkout.
+@param scope the scope path.
+@param purpose the tool whose outputs stay separate.
+@returns the cache folder path.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 3 files share it.
 export function getScopeBuildFolder(root: string, scope: string, purpose: SwiftBuildPurpose): string {
     return join(
@@ -113,14 +113,14 @@ export function getScopeBuildFolder(root: string, scope: string, purpose: SwiftB
 }
 
 /**
- * Plans the build of a scope: the command, its folder, and its log path.
- *
- * @param session the repository and its tools.
- * @param planned the scope and its Swift settings.
- * @param purpose the tool whose build needs its own cache.
- * @param purpose.purpose the tool whose build needs its own cache.
- * @returns the command, build folder, and log path.
- */
+Plans the build of a scope: the command, its folder, and its log path.
+
+@param session the repository and its tools.
+@param planned the scope and its Swift settings.
+@param purpose the tool whose build needs its own cache.
+@param purpose.purpose the tool whose build needs its own cache.
+@returns the command, build folder, and log path.
+*/
 export function buildPlan(
     session: Session,
     planned: PlannedCheck,
@@ -165,13 +165,13 @@ export function buildPlan(
 }
 
 /**
- * Locks a build folder and copies in the source files the tool needs.
- *
- * @param root the repository folder.
- * @param files the scope files.
- * @param folder the cache path for the tool.
- * @returns the source path and locked root, which the caller disposes.
- */
+Locks a build folder and copies in the source files the tool needs.
+
+@param root the repository folder.
+@param files the scope files.
+@param folder the cache path for the tool.
+@returns the source path and locked root, which the caller disposes.
+*/
 export function prepareBuild(root: string, files: TrackedFile[], folder: string): SwiftBuildSetup {
     using resources = new DisposableStack();
     const cache = resources.use(openBuildCache(folder));

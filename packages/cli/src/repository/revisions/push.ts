@@ -146,14 +146,14 @@ async function readPushBase(repositoryRoot: string, cancelSignal?: AbortSignal):
 }
 
 /**
- * Resolve the exact objects that the Git pre-push input names, before source checks run.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param input the lines that Git writes to the pre-push hook.
- * @param remote the name or address that the hook gets.
- * @param cancelSignal stops the Git commands.
- * @returns the pushed revisions with their commits, and the updates no check applies to.
- */
+Resolve the exact objects that the Git pre-push input names, before source checks run.
+
+@param repositoryRoot the folder where Git runs.
+@param input the lines that Git writes to the pre-push hook.
+@param remote the name or address that the hook gets.
+@param cancelSignal stops the Git commands.
+@returns the pushed revisions with their commits, and the updates no check applies to.
+*/
 export async function selectPush(
     repositoryRoot: string,
     input: string,
@@ -181,13 +181,13 @@ export async function selectPush(
 }
 
 /**
- * Read the commits after the push base, unless the caller names the pushed commits.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param commits the pushed revisions, if known.
- * @param cancelSignal stops the Git commands.
- * @returns the commits, or the Git error.
- */
+Read the commits after the push base, unless the caller names the pushed commits.
+
+@param repositoryRoot the folder where Git runs.
+@param commits the pushed revisions, if known.
+@param cancelSignal stops the Git commands.
+@returns the commits, or the Git error.
+*/
 export async function readPushedCommits(
     repositoryRoot: string,
     commits: string[] | undefined,

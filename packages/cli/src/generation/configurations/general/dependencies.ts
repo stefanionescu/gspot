@@ -14,11 +14,11 @@ import {
 } from '#cli/config/generation/configurations/general/dependencies.ts';
 
 /**
- * Build osv-scanner.toml: a note on why the file exists, and the package ignores, reasons, and expiration dates.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns a note on why the file exists, and the package ignores, reasons, and expiration dates.
- */
+Build osv-scanner.toml: a note on why the file exists, and the package ignores, reasons, and expiration dates.
+
+@param planned the config file with its scope, level, and target path.
+@returns a note on why the file exists, and the package ignores, reasons, and expiration dates.
+*/
 export function buildOsvScannerFile(planned: PlannedConfigFile): string {
     const ignores = listIgnores(planned.scope.settings, 'dependencies/osv-scanner').filter(
         (ignore) => ignore.rule !== undefined && ignore.paths.length === 0,
@@ -35,11 +35,11 @@ export function buildOsvScannerFile(planned: PlannedConfigFile): string {
 }
 
 /**
- * Set the scanner in the bunfig.toml of each scope that selects dependencies, installs with Bun, and names a scanner.
- *
- * @param session the repository inventory and its scopes.
- * @returns the bunfig.toml edits.
- */
+Set the scanner in the bunfig.toml of each scope that selects dependencies, installs with Bun, and names a scanner.
+
+@param session the repository inventory and its scopes.
+@returns the bunfig.toml edits.
+*/
 export function buildBunScannerEdits(session: Session): ManagedKeys[] {
     return session.scopes.flatMap((scope) => {
         const scanner = getTable(scope.settings, 'dependencies').bun_scanner;

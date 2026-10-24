@@ -65,12 +65,12 @@ function buildJsonFinding(output: ToolOutput, sources: unknown[]): Finding {
 }
 
 /**
- * Read JSON findings from the dotted `list` path. Each `children` key goes one list deeper. A leaf without a field
- * takes it from its parent nodes.
- *
- * @param output the tool output to read.
- * @returns the findings from a valid report.
- */
+Read JSON findings from the dotted `list` path. Each `children` key goes one list deeper. A leaf without a field
+takes it from its parent nodes.
+
+@param output the tool output to read.
+@returns the findings from a valid report.
+*/
 export function parseJsonFindings(output: ToolOutput): Finding[] {
     const { output: format, stdout } = output;
     const start = stdout.search(JSON_START);

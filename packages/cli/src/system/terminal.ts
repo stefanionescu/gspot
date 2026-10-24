@@ -7,20 +7,20 @@ import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJ
 let options: OutputOptions = { json: false, color: false };
 
 /**
- * Read the palette for the configured command output.
- *
- * @returns the enabled or disabled color functions.
- */
+Read the palette for the configured command output.
+
+@returns the enabled or disabled color functions.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 5 files share it.
 export function getColors(): ReturnType<typeof pc.createColors> {
     return pc.createColors(options.color);
 }
 
 /**
- * Check whether both streams go to terminals and NO_COLOR leaves color on.
- *
- * @returns whether to use color.
- */
+Check whether both streams go to terminals and NO_COLOR leaves color on.
+
+@returns whether to use color.
+*/
 export function isColorAllowed(): boolean {
     const noColor = readEnvironmentVariable('NO_COLOR');
     if (noColor !== undefined && noColor !== '') return false;
@@ -28,20 +28,20 @@ export function isColorAllowed(): boolean {
 }
 
 /**
- * Set the output mode for the process.
- *
- * @param next the JSON and color choices.
- */
+Set the output mode for the process.
+
+@param next the JSON and color choices.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
 export function setOutputOptions(next: OutputOptions): void {
     options = next;
 }
 
 /**
- * Print an error message to stderr, or a structured failure to stdout under --json.
- *
- * @param failure the message, or the structured error.
- */
+Print an error message to stderr, or a structured failure to stdout under --json.
+
+@param failure the message, or the structured error.
+*/
 export function printError(failure: string | CommandFailureJson): void {
     if (typeof failure !== 'string' && options.json) {
         process.stdout.write(`${JSON.stringify(failure, null, RESULT_JSON_INDENT)}\n`);
@@ -52,32 +52,32 @@ export function printError(failure: string | CommandFailureJson): void {
 }
 
 /**
- * Print the command result in the chosen format.
- *
- * @param result the command output.
- */
+Print the command result in the chosen format.
+
+@param result the command output.
+*/
 export function printResult(result: CommandResult): void {
     if (options.json) process.stdout.write(`${JSON.stringify(result.json, null, RESULT_JSON_INDENT)}\n`);
     else if (result.text !== '') print(result.text);
 }
 
 /**
- * Print readable text on stdout, unless --json asks for structured output.
- *
- * @param text the output, which gets a final newline if it lacks one.
- */
+Print readable text on stdout, unless --json asks for structured output.
+
+@param text the output, which gets a final newline if it lacks one.
+*/
 export function print(text: string): void {
     if (options.json) return;
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }
 
 /**
- * Run a command that termination signals can stop, and remove each listener when it finishes.
- *
- * @param run the command, which gets the shared abort signal.
- * @param canceledMessage the message when a cancellation stops the command before it has a result.
- * @returns the command result, with the signal status after an interruption.
- */
+Run a command that termination signals can stop, and remove each listener when it finishes.
+
+@param run the command, which gets the shared abort signal.
+@param canceledMessage the message when a cancellation stops the command before it has a result.
+@returns the command result, with the signal status after an interruption.
+*/
 export async function runCancelableCommand<Json extends object>(
     run: (cancelSignal: AbortSignal) => Promise<CommandResult<Json>>,
     canceledMessage: string,

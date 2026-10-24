@@ -147,12 +147,12 @@ function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] 
 }
 
 /**
- * Reports forbidden suppressions and suppressions without a valid reason.
- *
- * @param session the repository and its tools.
- * @param planned the files to scan, by scope.
- * @returns the findings.
- */
+Reports forbidden suppressions and suppressions without a valid reason.
+
+@param session the repository and its tools.
+@param planned the files to scan, by scope.
+@returns the findings.
+*/
 export async function checkGspotSuppressions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scopes = session.scopes.map((scope) => scope.folder);
     const scopesByPath = new Map(session.scopes.map((scope) => [scope.folder.path, scope]));

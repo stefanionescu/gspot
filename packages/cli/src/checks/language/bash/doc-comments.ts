@@ -67,12 +67,12 @@ function validateDocComment(
 }
 
 /**
- * Reports each function without a summary line, with a vague summary, or with doc sections out of order.
- *
- * @param session the repository and its tools.
- * @param planned the scope scripts to read.
- * @returns the findings.
- */
+Reports each function without a summary line, with a vague summary, or with doc sections out of order.
+
+@param session the repository and its tools.
+@param planned the scope scripts to read.
+@returns the findings.
+*/
 export async function checkBashDocComments(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) => {

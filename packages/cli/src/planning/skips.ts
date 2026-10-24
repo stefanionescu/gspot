@@ -65,11 +65,11 @@ function findEmptySetting(scope: Scope, check: Check): string | undefined {
 }
 
 /**
- * Check whether a setting holds no value: unset, false, an empty string, or a table of empty lists.
- *
- * @param value the resolved setting.
- * @returns whether the setting holds no value.
- */
+Check whether a setting holds no value: unset, false, an empty string, or a table of empty lists.
+
+@param value the resolved setting.
+@returns whether the setting holds no value.
+*/
 export function isSettingEmpty(value: unknown): boolean {
     if (typeof value === 'object' && value !== null) return Object.values(value).flat().length === 0;
     const empty: unknown[] = [undefined, false, ''];
@@ -77,13 +77,13 @@ export function isSettingEmpty(value: unknown): boolean {
 }
 
 /**
- * Skip checks for other systems, or for tools with no build for this system.
- *
- * @param check the check to read.
- * @param tool the tool and its pin.
- * @param host the system and architecture.
- * @returns the system skip, or undefined when this system can run the check.
- */
+Skip checks for other systems, or for tools with no build for this system.
+
+@param check the check to read.
+@param tool the tool and its pin.
+@param host the system and architecture.
+@returns the system skip, or undefined when this system can run the check.
+*/
 export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host): Skip | undefined {
     if (check.operating_systems && !(check.operating_systems as readonly string[]).includes(host.platform))
         return {
@@ -97,13 +97,13 @@ export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host)
 }
 
 /**
- * Find the reason that the settings turn a check off.
- *
- * @param settings the validated gspot.toml.
- * @param scope the settings of the project folder.
- * @param check the check and its project prerequisites.
- * @returns the skip reason, or undefined for an active check.
- */
+Find the reason that the settings turn a check off.
+
+@param settings the validated gspot.toml.
+@param scope the settings of the project folder.
+@param check the check and its project prerequisites.
+@returns the skip reason, or undefined for an active check.
+*/
 export function findSettingsSkip(settings: Settings, scope: Scope, check: Check): SettingsSkip | undefined {
     if (settings.level !== 'all' && check.level !== 'recommended')
         return { cause: 'level', note: 'off at level recommended' };
@@ -114,16 +114,16 @@ export function findSettingsSkip(settings: Settings, scope: Scope, check: Check)
 }
 
 /**
- * Find the first reason that a planned check cannot run.
- *
- * @param check the plan to test.
- * @param planned what planning reads.
- * @param planned.session the repository.
- * @param planned.options the parsed flags.
- * @param planned.host the system name and architecture.
- *
- * @returns the first skip, or undefined when the check can run.
- */
+Find the first reason that a planned check cannot run.
+
+@param check the plan to test.
+@param planned what planning reads.
+@param planned.session the repository.
+@param planned.options the parsed flags.
+@param planned.host the system name and architecture.
+
+@returns the first skip, or undefined when the check can run.
+*/
 export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip | undefined {
     const { session, options, host } = planned;
     const settings = session.settingsFile.settings;

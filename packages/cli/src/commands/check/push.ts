@@ -45,13 +45,13 @@ function buildPushReport(
 }
 
 /**
- * Check each revision that the pre-push input names, each in a copy.
- *
- * @param root the working tree that gives the settings and gets the push report.
- * @param options the parsed flags, with the pre-push input.
- * @param cancelSignal stops the run.
- * @returns the command result for the push.
- */
+Check each revision that the pre-push input names, each in a copy.
+
+@param root the working tree that gives the settings and gets the push report.
+@param options the parsed flags, with the pre-push input.
+@param cancelSignal stops the run.
+@returns the command result for the push.
+*/
 export async function checkPush(
     root: string,
     options: CheckOptions & { push: NonNullable<CheckOptions['push']> },

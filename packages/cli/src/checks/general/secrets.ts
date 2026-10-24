@@ -64,12 +64,12 @@ function findMissingEnvironmentKeys(
 }
 
 /**
- * Scans each pushed commit with Gitleaks, so a secret removed before the last commit still shows.
- *
- * @param session the repository and its tools.
- * @param planned the Gitleaks check and commit range.
- * @returns the check result.
- */
+Scans each pushed commit with Gitleaks, so a secret removed before the last commit still shows.
+
+@param session the repository and its tools.
+@param planned the Gitleaks check and commit range.
+@returns the check result.
+*/
 export async function checkSecretsGitleaksPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const command = getSiblingCommand(planned, GITLEAKS_STAGED_CHECK).filter(
         (argument) => argument !== GITLEAKS_STAGED_FLAG,
@@ -82,13 +82,13 @@ export async function checkSecretsGitleaksPushed(session: Session, planned: Plan
 }
 
 /**
- * Reports each environment variable that the code reads and no example environment file lists, or skips the check when
- * the scope has no example environment file.
- *
- * @param session the repository and its tools.
- * @param planned the scope to check.
- * @returns the findings.
- */
+Reports each environment variable that the code reads and no example environment file lists, or skips the check when
+the scope has no example environment file.
+
+@param session the repository and its tools.
+@param planned the scope to check.
+@returns the findings.
+*/
 export async function checkSecretsEnvExamples(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const { env_examples: names, environment_functions: environmentFunctions } = getTable(
         planned.scope.settings,

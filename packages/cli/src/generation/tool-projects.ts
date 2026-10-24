@@ -15,12 +15,12 @@ import {
 } from '#cli/config/generation/tool-projects.ts';
 
 /**
- * Build the mise tool project without the runtime pins of the repository.
- *
- * @param configurations the configurations in use.
- *
- * @returns the mise tool project.
- */
+Build the mise tool project without the runtime pins of the repository.
+
+@param configurations the configurations in use.
+
+@returns the mise tool project.
+*/
 export function buildMiseProject(configurations: Configuration[]): GeneratedFile {
     const tools = Object.fromEntries(
         listMisePins(configurations)
@@ -37,14 +37,14 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
 }
 
 /**
- * Build the npm tools as a tool project, and add no dependencies to the repository.
- *
- * @param project what the tool project holds.
- * @param project.configurations the configurations with npm tools.
- * @param project.packageManager true for Yarn 2 or later as the repository package manager.
- *
- * @returns the tool project files.
- */
+Build the npm tools as a tool project, and add no dependencies to the repository.
+
+@param project what the tool project holds.
+@param project.configurations the configurations with npm tools.
+@param project.packageManager true for Yarn 2 or later as the repository package manager.
+
+@returns the tool project files.
+*/
 export function buildNpmProject({ configurations, packageManager }: PlannedNpmProject): GeneratedFile[] {
     const pins = listToolProjectPins(configurations).npm;
     const files: GeneratedFile[] = [
@@ -69,12 +69,12 @@ export function buildNpmProject({ configurations, packageManager }: PlannedNpmPr
 }
 
 /**
- * Build the Python tool project that holds the Python lint tools.
- *
- * @param configurations the configurations in use.
- * @param days the minimum release age, so uv installs no release newer than that.
- * @returns the Python tool project files, or none without Python tools.
- */
+Build the Python tool project that holds the Python lint tools.
+
+@param configurations the configurations in use.
+@param days the minimum release age, so uv installs no release newer than that.
+@returns the Python tool project files, or none without Python tools.
+*/
 export function buildPythonProject(configurations: Configuration[], days: number): GeneratedFile[] {
     const { python: dependencies } = listToolProjectPins(configurations);
     if (dependencies.length === 0) return [];

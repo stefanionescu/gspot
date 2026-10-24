@@ -32,12 +32,12 @@ export async function readToolProjectFiles(
 }
 
 /**
- * Build the tool install for a sandbox.
- *
- * @param session the open sandbox.
- * @param writer holds the repository lock and saves files.
- * @returns the session, writer, generated files, and tools that the install steps read.
- */
+Build the tool install for a sandbox.
+
+@param session the open sandbox.
+@param writer holds the repository lock and saves files.
+@returns the session, writer, generated files, and tools that the install steps read.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 3 files share it.
 export function buildToolInstall(session: Session, writer: Writer): ToolInstall {
     return {
@@ -51,13 +51,13 @@ export function buildToolInstall(session: Session, writer: Writer): ToolInstall 
 }
 
 /**
- * A program pin, with an npm installer when npm names a package.
- *
- * @param name executable to pin.
- * @param version release to pin.
- * @param npm package that ships the program.
- * @returns a tool with that program pinned.
- */
+A program pin, with an npm installer when npm names a package.
+
+@param name executable to pin.
+@param version release to pin.
+@param npm package that ships the program.
+@returns a tool with that program pinned.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 3 files share it.
 export function buildProgramPin(name: string, version: string, npm?: string): Tool {
     return {
@@ -69,11 +69,11 @@ export function buildProgramPin(name: string, version: string, npm?: string): To
 }
 
 /**
- * List the npm install folder and lockfile of the tool project that exist, to show that a command installed nothing.
- *
- * @param root the repository.
- * @returns the paths from the repository root.
- */
+List the npm install folder and lockfile of the tool project that exist, to show that a command installed nothing.
+
+@param root the repository.
+@returns the paths from the repository root.
+*/
 export async function listToolInstallFiles(root: string): Promise<string[]> {
     const paths = [GSPOT_PATHS.nodeModules, `${DOT_GSPOT}/package-lock.json`];
     const found = await Promise.all(paths.map(async (path) => ((await isOnDisk(join(root, path))) ? [path] : [])));

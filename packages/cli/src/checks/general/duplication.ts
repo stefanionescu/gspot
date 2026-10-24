@@ -27,12 +27,12 @@ import {
 } from '#cli/config/checks/general/duplication.ts';
 
 /**
- * Runs jscpd over the scope and reports the clones.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose source files to compare.
- * @returns the findings.
- */
+Runs jscpd over the scope and reports the clones.
+
+@param session the repository and its tools.
+@param planned the scope whose source files to compare.
+@returns the findings.
+*/
 export async function checkDuplicationJscpd(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     using workFolder = createTemporaryFolder();
     const work = workFolder.path;

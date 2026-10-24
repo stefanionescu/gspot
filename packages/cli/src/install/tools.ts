@@ -14,13 +14,13 @@ import { assertPackageManagerVersion } from '#cli/install/npm/project.ts';
 import type { ToolInstall, InstallResult } from '#cli/types/install/tools.ts';
 
 /**
- * Install the tools in their tool projects and set the hooks of this clone.
- *
- * @param session the repository to install for.
- * @param writer the locked repository handle.
- * @param generated the tool projects to install.
- * @returns the commands that ran and the install summary.
- */
+Install the tools in their tool projects and set the hooks of this clone.
+
+@param session the repository to install for.
+@param writer the locked repository handle.
+@param generated the tool projects to install.
+@returns the commands that ran and the install summary.
+*/
 export async function installTools(
     session: Session,
     writer: Writer,

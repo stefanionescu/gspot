@@ -21,12 +21,12 @@ import {
 } from '#cli/config/parsers/code/environment.ts';
 
 /**
- * Read expansions of the environment names that the environment readers declare.
- *
- * @param syntaxRoot the parsed Bash source.
- * @param readerVariables the variables that environment readers declare.
- * @returns the environment reads and their source positions.
- */
+Read expansions of the environment names that the environment readers declare.
+
+@param syntaxRoot the parsed Bash source.
+@param readerVariables the variables that environment readers declare.
+@returns the environment reads and their source positions.
+*/
 export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
     return syntaxRoot.descendantsOfType([...EXPANSION_NODES]).flatMap((expansion) =>
         expansion.namedChildren
@@ -40,11 +40,11 @@ export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: Read
 }
 
 /**
- * Read Swift process environment access from navigation expressions.
- *
- * @param syntaxRoot the parsed Swift source.
- * @returns the environment reads and their source positions.
- */
+Read Swift process environment access from navigation expressions.
+
+@param syntaxRoot the parsed Swift source.
+@returns the environment reads and their source positions.
+*/
 export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
     return syntaxRoot
         .descendantsOfType('navigation_expression')
@@ -67,13 +67,13 @@ function findEnvironmentKey(node: ts.Node, source: ts.SourceFile, getters: Set<s
 }
 
 /**
- * Read environment members and calls to the environment functions in JavaScript or TypeScript.
- *
- * @param path the original source path.
- * @param text the JavaScript or TypeScript source.
- * @param environmentFunctions the configured names that read process variables.
- * @returns the environment reads and their source positions.
- */
+Read environment members and calls to the environment functions in JavaScript or TypeScript.
+
+@param path the original source path.
+@param text the JavaScript or TypeScript source.
+@param environmentFunctions the configured names that read process variables.
+@returns the environment reads and their source positions.
+*/
 export function listJavascriptEnvironmentReads(
     path: string,
     text: string,
@@ -211,12 +211,12 @@ function findEnvironmentKeyNode(node: Node): Node | null | undefined {
 }
 
 /**
- * Read Python environment access and calls to the environment functions, through import aliases.
- *
- * @param syntaxRoot the parsed Python source.
- * @param environmentFunctions the configured names that read process variables.
- * @returns the environment reads and their source positions.
- */
+Read Python environment access and calls to the environment functions, through import aliases.
+
+@param syntaxRoot the parsed Python source.
+@param environmentFunctions the configured names that read process variables.
+@returns the environment reads and their source positions.
+*/
 export function listPythonEnvironmentReads(
     syntaxRoot: Node,
     environmentFunctions: readonly string[],

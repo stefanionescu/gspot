@@ -7,12 +7,12 @@ import { DEFAULT_DIALECT } from '#cli/config/repository/files/classify.ts';
 import { BATS_EXTENSION, SHELLCHECK_DIALECT_FLAG } from '#cli/config/checks/language/bash/shellcheck.ts';
 
 /**
- * Runs ShellCheck, and passes a dialect only for scripts without a shebang.
- *
- * @param session the repository and its tools.
- * @param planned the ShellCheck check and its files.
- * @returns the check result.
- */
+Runs ShellCheck, and passes a dialect only for scripts without a shebang.
+
+@param session the repository and its tools.
+@param planned the ShellCheck check and its files.
+@returns the check result.
+*/
 export async function checkBashShellcheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const groups = Map.groupBy(planned.files, (file) => {
         if (file.path.endsWith(BATS_EXTENSION) || file.path.endsWith(`.${DEFAULT_DIALECT}`)) return undefined;

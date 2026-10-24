@@ -13,13 +13,13 @@ import {
 } from '#cli/config/repository/revisions/files.ts';
 
 /**
- * Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param source index or commit to inspect.
- * @param cancelSignal stops the command.
- * @returns validated entries.
- */
+Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
+
+@param repositoryRoot the folder where Git runs.
+@param source index or commit to inspect.
+@param cancelSignal stops the command.
+@returns validated entries.
+*/
 export async function listRevisionFiles(
     repositoryRoot: string,
     source: Revision,
@@ -36,13 +36,13 @@ export async function listRevisionFiles(
 }
 
 /**
- * Read each raw blob once, and visit it before the next blob loads.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param requested full blob object IDs.
- * @param visit reads one validated object.
- * @param cancelSignal stops the command.
- */
+Read each raw blob once, and visit it before the next blob loads.
+
+@param repositoryRoot the folder where Git runs.
+@param requested full blob object IDs.
+@param visit reads one validated object.
+@param cancelSignal stops the command.
+*/
 export async function visitGitBlobs(
     repositoryRoot: string,
     requested: string[],
@@ -67,13 +67,13 @@ export async function visitGitBlobs(
 }
 
 /**
- * Collect the validated blobs for a caller that compares several objects.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param requested full blob object IDs.
- * @param cancelSignal stops the command.
- * @returns validated object bytes.
- */
+Collect the validated blobs for a caller that compares several objects.
+
+@param repositoryRoot the folder where Git runs.
+@param requested full blob object IDs.
+@param cancelSignal stops the command.
+@returns validated object bytes.
+*/
 export async function readBlobs(
     repositoryRoot: string,
     requested: string[],
@@ -92,12 +92,12 @@ export async function readBlobs(
 }
 
 /**
- * Read the current commit, distinguishing an unborn branch from failed Git reads.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param cancelSignal stops the command.
- * @returns current commit hash, or undefined for an unborn branch.
- */
+Read the current commit, distinguishing an unborn branch from failed Git reads.
+
+@param repositoryRoot the folder where Git runs.
+@param cancelSignal stops the command.
+@returns current commit hash, or undefined for an unborn branch.
+*/
 export async function readHead(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<string | undefined> {
     const options = { cancelSignal };
     const head = await runGit(repositoryRoot, GIT_HEAD_ARGUMENTS, options);
@@ -110,12 +110,12 @@ export async function readHead(repositoryRoot: string, cancelSignal?: AbortSigna
 }
 
 /**
- * Resolve committed entries, distinguishing an unborn branch from failed Git reads.
- *
- * @param repositoryRoot the folder where Git runs.
- * @param cancelSignal stops the command.
- * @returns current commit entries, or an empty list for an unborn branch.
- */
+Resolve committed entries, distinguishing an unborn branch from failed Git reads.
+
+@param repositoryRoot the folder where Git runs.
+@param cancelSignal stops the command.
+@returns current commit entries, or an empty list for an unborn branch.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 3 files share it.
 export async function listHeadFiles(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitFile[]> {
     const head = await readHead(repositoryRoot, cancelSignal);

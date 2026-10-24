@@ -15,10 +15,10 @@ import { SWIFT_PACKAGE } from '#tests/config/checks/language/swift/build.ts';
 import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
 
 /**
- * Keep the compiler cache in a temporary folder until the test ends.
- *
- * @returns a stack that removes the folder and the spy.
- */
+Keep the compiler cache in a temporary folder until the test ends.
+
+@returns a stack that removes the folder and the spy.
+*/
 export async function redirectCacheFolder(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
     const cache = resources.use(await testdir());
@@ -27,15 +27,15 @@ export async function redirectCacheFolder(): Promise<AsyncDisposableStack> {
 }
 
 /**
- * Plan one sandbox check with its complete repository and selected scope files.
- *
- * @param session the sandbox the test opened.
- * @param checkId for example bash/shellcheck.
- * @param options which files to include and what to clean up.
- * @param options.scope a folder to check; the root by default.
- * @param options.paths files to check; every file by default.
- * @returns the files and settings that the check reads.
- */
+Plan one sandbox check with its complete repository and selected scope files.
+
+@param session the sandbox the test opened.
+@param checkId for example bash/shellcheck.
+@param options which files to include and what to clean up.
+@param options.scope a folder to check; the root by default.
+@param options.paths files to check; every file by default.
+@returns the files and settings that the check reads.
+*/
 export function planSandboxCheck(
     session: Session,
     checkId: string,
@@ -67,13 +67,13 @@ export function planSandboxCheck(
 }
 
 /**
- * Create a Swift sandbox with fake tool versions and a temporary compiler cache.
- *
- * @param sandbox folder that the test removes.
- * @param checkId for example swift/swiftlint.
- * @param files paths and text to add or replace.
- * @returns the session, planned check, and their cleanup.
- */
+Create a Swift sandbox with fake tool versions and a temporary compiler cache.
+
+@param sandbox folder that the test removes.
+@param checkId for example swift/swiftlint.
+@param files paths and text to add or replace.
+@returns the session, planned check, and their cleanup.
+*/
 export async function prepareSwiftCheck(
     sandbox: TestdirResult,
     checkId: string,
@@ -119,11 +119,11 @@ export async function openFakeToolSession(
 }
 
 /**
- * Find the code of a built-in check, as a function that resolves to its findings.
- *
- * @param checkId a check with built-in code, such as `structure/lone-files`.
- * @returns a function that runs the planned check in its session and resolves to its findings.
- */
+Find the code of a built-in check, as a function that resolves to its findings.
+
+@param checkId a check with built-in code, such as `structure/lone-files`.
+@returns a function that runs the planned check in its session and resolves to its findings.
+*/
 export function findBuiltInCheck(checkId: string): (session: Session, planned: PlannedCheck) => Promise<Finding[]> {
     const check = findCheckCode({ id: checkId })?.check;
     if (check === undefined) throw new Error(`${checkId} has no built-in check.`);

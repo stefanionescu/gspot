@@ -23,13 +23,13 @@ function listPluginRecords(scopes: Scope[]) {
 }
 
 /**
- * List the import of each plugin module, keyed by its rule prefix, as the generated file imports it.
- *
- * @param scopes every project and its settings.
- * @param targetPath the generated ESLint file, which imports each module by a path relative to it.
- * @param shipped the plugins that gspot loads, whose prefixes your plugins may not take.
- * @returns the imports of your plugins.
- */
+List the import of each plugin module, keyed by its rule prefix, as the generated file imports it.
+
+@param scopes every project and its settings.
+@param targetPath the generated ESLint file, which imports each module by a path relative to it.
+@param shipped the plugins that gspot loads, whose prefixes your plugins may not take.
+@returns the imports of your plugins.
+*/
 export function listLocalPlugins(scopes: Scope[], targetPath: string, shipped: EslintPlugins): EslintPlugins {
     const records = listPluginRecords(scopes);
     const paths = new Map<string, string>();
@@ -59,12 +59,12 @@ export function listLocalPlugins(scopes: Scope[], targetPath: string, shipped: E
 }
 
 /**
- * Build one block per plugin record that turns its rules on as errors for the code files of its scope.
- *
- * @param scopes every project and its settings.
- * @param codeFiles the code file patterns of the ESLint file.
- * @returns the rule blocks of your plugins.
- */
+Build one block per plugin record that turns its rules on as errors for the code files of its scope.
+
+@param scopes every project and its settings.
+@param codeFiles the code file patterns of the ESLint file.
+@returns the rule blocks of your plugins.
+*/
 export function buildLocalPluginBlocks(scopes: Scope[], codeFiles: string[]): EslintBlockFields[] {
     return listPluginRecords(scopes).map(({ name, rules, scope }) => ({
         files:

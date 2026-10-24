@@ -58,11 +58,11 @@ function listTrackedDeclarationFiles(planned: PlannedConfigFile, authored: TypeS
 }
 
 /**
- * Build jsconfig.json: the JavaScript type-checking project and its scoped source selectors.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the JavaScript type-checking project and its scoped source selectors.
- */
+Build jsconfig.json: the JavaScript type-checking project and its scoped source selectors.
+
+@param planned the config file with its scope, level, and target path.
+@returns the JavaScript type-checking project and its scoped source selectors.
+*/
 export function buildJsconfigFile(planned: PlannedConfigFile): string {
     const { root, reads } = planned.session;
     const { targetPath: target } = planned;

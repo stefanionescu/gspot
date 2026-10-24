@@ -143,14 +143,14 @@ async function readRunFilters(
 }
 
 /**
- * Check the files of one working tree: the repository, or a copy of the staged index or of a pushed commit.
- *
- * @param treeFolder the working tree or the copy to check.
- * @param options the parsed flags.
- * @param cancelSignal stops the run.
- * @param revision the commit or index that the copy holds, if any.
- * @returns the command result.
- */
+Check the files of one working tree: the repository, or a copy of the staged index or of a pushed commit.
+
+@param treeFolder the working tree or the copy to check.
+@param options the parsed flags.
+@param cancelSignal stops the run.
+@param revision the commit or index that the copy holds, if any.
+@returns the command result.
+*/
 export async function checkTree(
     treeFolder: string,
     options: CheckOptions,

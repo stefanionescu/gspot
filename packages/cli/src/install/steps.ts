@@ -4,15 +4,15 @@ import type { ToolInstall } from '#cli/types/install/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 
 /**
- * Record and run one install command with the shared cancellation and time limit.
- *
- * @param install the installation state and attempted commands.
- * @param command the program and arguments.
- * @param options the working folder and environment.
- * @param options.cwd the folder where the command runs.
- * @param options.env variable overrides for the child process.
- * @returns the process output and exit status.
- */
+Record and run one install command with the shared cancellation and time limit.
+
+@param install the installation state and attempted commands.
+@param command the program and arguments.
+@param options the working folder and environment.
+@param options.cwd the folder where the command runs.
+@param options.env variable overrides for the child process.
+@returns the process output and exit status.
+*/
 export async function runInstallStep(
     install: ToolInstall,
     command: readonly string[],

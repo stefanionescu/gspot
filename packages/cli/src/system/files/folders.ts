@@ -24,11 +24,11 @@ function assertInsideFolder(pattern: string): void {
 }
 
 /**
- * Makes an empty folder under the system temporary folder that removes itself, with everything in it, when disposed.
- * Use the real system path, which on Windows expands short folder names, as the paths tools report do.
- *
- * @returns the folder, which the caller disposes, as `using` does.
- */
+Makes an empty folder under the system temporary folder that removes itself, with everything in it, when disposed.
+Use the real system path, which on Windows expands short folder names, as the paths tools report do.
+
+@returns the folder, which the caller disposes, as `using` does.
+*/
 export function createTemporaryFolder(): TemporaryFolder {
     const path = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-')));
     return {
@@ -40,12 +40,12 @@ export function createTemporaryFolder(): TemporaryFolder {
 }
 
 /**
- * Find the files under the fixed folder of each pattern. Include dot files, and do not open folder links.
- *
- * @param folder the folder to scan.
- * @param patterns one glob or several; a leading ! excludes matches.
- * @returns matching paths relative to cwd, each once in scan order.
- */
+Find the files under the fixed folder of each pattern. Include dot files, and do not open folder links.
+
+@param folder the folder to scan.
+@param patterns one glob or several; a leading ! excludes matches.
+@returns matching paths relative to cwd, each once in scan order.
+*/
 export function listMatchingPaths(folder: string, patterns: string | string[]): string[] {
     const list = [patterns].flat();
     for (const pattern of list) assertInsideFolder(pattern);

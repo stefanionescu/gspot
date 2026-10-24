@@ -135,15 +135,15 @@ function findMissingOtherTool(
 }
 
 /**
- * Copy a check's source, dependencies and config files into a temporary folder.
- *
- * @param planned the check to run.
- * @param copy the repository, command, and implementation overrides.
- * @param copy.session the repository and its tools.
- * @param copy.command the executable and authored arguments.
- * @param copy.options the implementation overrides.
- * @returns the disposable temporary folder.
- */
+Copy a check's source, dependencies and config files into a temporary folder.
+
+@param planned the check to run.
+@param copy the repository, command, and implementation overrides.
+@param copy.session the repository and its tools.
+@param copy.command the executable and authored arguments.
+@param copy.options the implementation overrides.
+@returns the disposable temporary folder.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export async function copyCheckFiles(
     planned: PlannedCheck,
@@ -158,17 +158,17 @@ export async function copyCheckFiles(
 }
 
 /**
- * Prepare a check command in another working folder.
- *
- * @param folder the working copy of the repository.
- * @param planned the check to run.
- * @param expansion the repository, command, tool, and implementation overrides.
- * @param expansion.session the repository and its tools.
- * @param expansion.command the executable and authored arguments.
- * @param expansion.toolPath the resolved executable path.
- * @param expansion.options the implementation overrides.
- * @returns the command expanded for that folder.
- */
+Prepare a check command in another working folder.
+
+@param folder the working copy of the repository.
+@param planned the check to run.
+@param expansion the repository, command, tool, and implementation overrides.
+@param expansion.session the repository and its tools.
+@param expansion.command the executable and authored arguments.
+@param expansion.toolPath the resolved executable path.
+@param expansion.options the implementation overrides.
+@returns the command expanded for that folder.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
 export function prepareCommandIn(
     folder: string,
@@ -190,14 +190,14 @@ export function prepareCommandIn(
 }
 
 /**
- * Select the command's tool declaration and build its environment.
- *
- * @param session the repository and its tools.
- * @param planned the check and its selected scope.
- * @param name the executable that the command runs.
- * @param options the implementation overrides.
- * @returns the tool declaration and its expanded environment.
- */
+Select the command's tool declaration and build its environment.
+
+@param session the repository and its tools.
+@param planned the check and its selected scope.
+@param name the executable that the command runs.
+@param options the implementation overrides.
+@returns the tool declaration and its expanded environment.
+*/
 export function prepareToolEnvironment(
     session: Session,
     planned: PlannedCheck,
@@ -210,13 +210,13 @@ export function prepareToolEnvironment(
 }
 
 /**
- * Resolves the working folder and expands the tool environment values.
- *
- * @param session the repository or its copy.
- * @param planned the check and its files.
- * @param options the overrides from the check code.
- * @returns the paths and environment for the tool.
- */
+Resolves the working folder and expands the tool environment values.
+
+@param session the repository or its copy.
+@param planned the check and its files.
+@param options the overrides from the check code.
+@returns the paths and environment for the tool.
+*/
 export function buildCommandSetup(session: Session, planned: PlannedCheck, options: CheckRunOptions): CommandSetup {
     const { check, scope } = planned;
     const runsInScope = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
@@ -241,13 +241,13 @@ export function buildCommandSetup(session: Session, planned: PlannedCheck, optio
 }
 
 /**
- * Builds the placeholder values from the scope and working folder.
- *
- * @param source the repository and settings.
- * @param planned the check and its files.
- * @param cwd the folder that the tool runs in.
- * @returns the placeholder values, with paths relative to cwd.
- */
+Builds the placeholder values from the scope and working folder.
+
+@param source the repository and settings.
+@param planned the check and its files.
+@param cwd the folder that the tool runs in.
+@returns the placeholder values, with paths relative to cwd.
+*/
 export function buildCommandSubstitutions(source: Session, planned: PlannedCheck, cwd: string): Substitutions {
     const substitutions: Substitutions = {
         files: planned.files
@@ -265,16 +265,16 @@ export function buildCommandSubstitutions(source: Session, planned: PlannedCheck
 }
 
 /**
- * Expands a check or fix command into file batches that fit the command line.
- *
- * @param planned the check to run.
- * @param expansion what to run.
- * @param expansion.session the repository and its tools.
- * @param expansion.command the executable and the arguments as declared.
- * @param expansion.setup the working paths and tool variables.
- * @param expansion.toolPath the resolved executable path.
- * @returns the working folder and command batches.
- */
+Expands a check or fix command into file batches that fit the command line.
+
+@param planned the check to run.
+@param expansion what to run.
+@param expansion.session the repository and its tools.
+@param expansion.command the executable and the arguments as declared.
+@param expansion.setup the working paths and tool variables.
+@param expansion.toolPath the resolved executable path.
+@returns the working folder and command batches.
+*/
 export function prepareCommand(
     planned: PlannedCheck,
     expansion: { session: Session; command: string[]; setup: CommandSetup; toolPath: string },
@@ -295,13 +295,13 @@ export function prepareCommand(
 }
 
 /**
- * Finds the tool and runs the expanded commands of a check.
- *
- * @param session the repository and its tools.
- * @param planned the check to run.
- * @param options the command and copy folder overrides.
- * @returns the check result.
- */
+Finds the tool and runs the expanded commands of a check.
+
+@param session the repository and its tools.
+@param planned the check to run.
+@param options the command and copy folder overrides.
+@returns the check result.
+*/
 export async function runCheckCommand(
     session: Session,
     planned: PlannedCheck,
@@ -325,13 +325,13 @@ export async function runCheckCommand(
 }
 
 /**
- * Runs each command group and merges the findings, keeping earlier findings when a later run fails.
- *
- * @param session the repository and tools.
- * @param planned the check to run.
- * @param groups the files and command of each run.
- * @returns the merged result, or the first failure with the findings so far.
- */
+Runs each command group and merges the findings, keeping earlier findings when a later run fails.
+
+@param session the repository and tools.
+@param planned the check to run.
+@param groups the files and command of each run.
+@returns the merged result, or the first failure with the findings so far.
+*/
 export async function runCommandGroups(
     session: Session,
     planned: PlannedCheck,

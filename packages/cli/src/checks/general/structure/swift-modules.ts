@@ -66,11 +66,11 @@ function listXcodeModules(session: Session, path: string, swiftFiles: string[]):
 }
 
 /**
- * List the Swift modules that the repository builds, each with its Swift files.
- *
- * @param session the repository and its tools.
- * @returns the modules of every Package.swift target and every Xcode native target.
- */
+List the Swift modules that the repository builds, each with its Swift files.
+
+@param session the repository and its tools.
+@returns the modules of every Package.swift target and every Xcode native target.
+*/
 export async function listSwiftModules(session: Session): Promise<SwiftModule[]> {
     const paths = session.repository.files.map((file) => file.path);
     const swiftFiles = paths.filter((path) => path.endsWith(SWIFT_EXTENSION) && posix.basename(path) !== PACKAGE_SWIFT);

@@ -30,12 +30,12 @@ function extractPrefix(baseName: string): string {
 }
 
 /**
- * Reports each prefix that at least `limits.shared_prefix_files` siblings in a folder share.
- *
- * @param _session the repository and its tools.
- * @param planned the scope files and limit.
- * @returns the findings.
- */
+Reports each prefix that at least `limits.shared_prefix_files` siblings in a folder share.
+
+@param _session the repository and its tools.
+@param planned the scope files and limit.
+@returns the findings.
+*/
 export function checkStructureSharedPrefixes(_session: Session, planned: PlannedCheck): Finding[] {
     const limit = getTable(planned.scope.settings, 'limits').shared_prefix_files;
     const prefixes = new Set(

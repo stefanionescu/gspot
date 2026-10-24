@@ -202,13 +202,13 @@ async function writeRevisionFiles(
 }
 
 /**
- * Writes a Git revision into a copy without checkout filters, stashing, or working-tree writes.
- *
- * @param repositoryRoot the checkout with the Git objects and installed dependencies.
- * @param source the revision to copy.
- * @param cancelSignal stops the copy.
- * @returns what action returns.
- */
+Writes a Git revision into a copy without checkout filters, stashing, or working-tree writes.
+
+@param repositoryRoot the checkout with the Git objects and installed dependencies.
+@param source the revision to copy.
+@param cancelSignal stops the copy.
+@returns what action returns.
+*/
 export async function copyRevision(
     repositoryRoot: string,
     source: Revision,

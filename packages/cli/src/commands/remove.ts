@@ -107,11 +107,11 @@ function findRequirementChain(
 }
 
 /**
- * Register the remove command.
- *
- * @param program the gspot program that gets the command.
- * @param onResult receives the result of the command.
- */
+Register the remove command.
+
+@param program the gspot program that gets the command.
+@param onResult receives the result of the command.
+*/
 export function registerRemove(program: Command, onResult: CommandCompletion): void {
     program
         .command('remove')

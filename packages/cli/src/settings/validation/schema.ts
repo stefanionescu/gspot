@@ -26,11 +26,11 @@ import {
 } from '#cli/settings/validation/values.ts';
 
 /**
- * Name the invalid setting, and keep the message of the validator.
- *
- * @param issue the schema validation message.
- * @returns the setting path and its validation failure, each line after the gspot.toml name.
- */
+Name the invalid setting, and keep the message of the validator.
+
+@param issue the schema validation message.
+@returns the setting path and its validation failure, each line after the gspot.toml name.
+*/
 export function formatSettingsIssue(issue: z.core.$ZodIssue): string[] {
     const branches = issue.code === 'invalid_union' ? issue.errors : [];
     const reasonedValueErrors = branches.find((errors) =>
@@ -88,11 +88,11 @@ function throwErrors(errors: SettingsError[]): never {
 }
 
 /**
- * Validate the written configuration lists, tool options, ignores, and paths before a command uses them.
- *
- * @param settings the parsed gspot.toml.
- * @param repositoryRoot the optional folder for checking declared scope paths.
- */
+Validate the written configuration lists, tool options, ignores, and paths before a command uses them.
+
+@param settings the parsed gspot.toml.
+@param repositoryRoot the optional folder for checking declared scope paths.
+*/
 export function validateSettings(settings: Settings, repositoryRoot: string | undefined): void {
     const configurations = readConfigurations();
     const written: WrittenConfiguration[] = [

@@ -12,12 +12,12 @@ import { getSiblingCommand, runOverPushedCommits } from '#cli/runs/commits.ts';
 import { MESSAGE_FILE, COMMITLINT_CHECK, GIT_COMMIT_MESSAGE_ARGUMENTS } from '#cli/config/checks/general/commits.ts';
 
 /**
- * Checks every pushed commit message, including empty commits that change no files.
- *
- * @param session the repository and its tools.
- * @param planned the commitlint check and commit range.
- * @returns the check result.
- */
+Checks every pushed commit message, including empty commits that change no files.
+
+@param session the repository and its tools.
+@param planned the commitlint check and commit range.
+@returns the check result.
+*/
 export async function checkCommitsCommitlintPushed(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     using folder = createTemporaryFolder();
     const commitFile = join(folder.path, MESSAGE_FILE);

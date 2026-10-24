@@ -51,12 +51,12 @@ function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): Findin
 }
 
 /**
- * Runs svelte-check on the scope for compiler warnings, accessibility warnings, and type errors.
- *
- * @param session the repository and its tools.
- * @param planned the scope to check.
- * @returns one finding for each error and warning.
- */
+Runs svelte-check on the scope for compiler warnings, accessibility warnings, and type errors.
+
+@param session the repository and its tools.
+@param planned the scope to check.
+@returns one finding for each error and warning.
+*/
 export async function checkSvelteCheck(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     using runtime = createTemporaryFolder();
     const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.folder.path, TSCONFIG_FILE);

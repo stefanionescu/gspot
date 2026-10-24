@@ -49,12 +49,12 @@ function parseExpoDoctor(stdout: string): string[] {
 }
 
 /**
- * Runs Expo Doctor in a scope that depends on expo.
- *
- * @param session the repository and its tools.
- * @param planned the scope to check.
- * @returns one finding per failed Doctor check.
- */
+Runs Expo Doctor in a scope that depends on expo.
+
+@param session the repository and its tools.
+@param planned the scope to check.
+@returns one finding per failed Doctor check.
+*/
 export async function checkExpoDoctor(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const path = joinScope(planned.scope.folder.path, PACKAGE_JSON);
     if (!hasInstalledExpo(join(session.root, planned.scope.folder.path)))

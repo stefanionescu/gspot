@@ -124,17 +124,17 @@ function formatConfigurationSection(rows: InitPlan['configurations'], level: Ini
 }
 
 /**
- * Build the plan that init shows before you accept it: the configurations, and the files that init writes, deletes,
- * leaves in place, and changes.
- *
- * @param scan the repository facts, answers, and configurations.
- * @param settings the validated gspot.toml and its generated files.
- * @param settings.settings the parsed gspot.toml for file generation.
- * @param settings.settingsText the proposed gspot.toml text.
- * @param settings.requirements the configurations whose tools the checks need.
- * @param settings.generated the files to write and their ownership plan.
- * @returns the plan that init proposes.
- */
+Build the plan that init shows before you accept it: the configurations, and the files that init writes, deletes,
+leaves in place, and changes.
+
+@param scan the repository facts, answers, and configurations.
+@param settings the validated gspot.toml and its generated files.
+@param settings.settings the parsed gspot.toml for file generation.
+@param settings.settingsText the proposed gspot.toml text.
+@param settings.requirements the configurations whose tools the checks need.
+@param settings.generated the files to write and their ownership plan.
+@returns the plan that init proposes.
+*/
 export function planInitFiles(
     scan: InitScan,
     {
@@ -194,11 +194,11 @@ export function planInitFiles(
 }
 
 /**
- * Format the plan that init prints before it writes anything.
- *
- * @param plan the configurations and file changes to preview.
- * @returns the text.
- */
+Format the plan that init prints before it writes anything.
+
+@param plan the configurations and file changes to preview.
+@returns the text.
+*/
 export function formatInitPlan(plan: InitPlan): string {
     const { dim } = getColors();
     const lines = [
@@ -258,11 +258,11 @@ function formatConflictingConfigFiles(summary: DetectionSummary): string[] {
 }
 
 /**
- * Format the detection header: tracked files, the evidence for each group, scopes, and existing tools.
- *
- * @param summary what init detected.
- * @returns the text, with a final blank line when the repository has existing tools.
- */
+Format the detection header: tracked files, the evidence for each group, scopes, and existing tools.
+
+@param summary what init detected.
+@returns the text, with a final blank line when the repository has existing tools.
+*/
 export function formatDetection(summary: DetectionSummary): string {
     const languages = summary.detected
         .filter(

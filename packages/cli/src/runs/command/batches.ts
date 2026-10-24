@@ -18,16 +18,16 @@ function measureArgumentSize(argument: string, platform: NodeJS.Platform): numbe
 }
 
 /**
- * Splits a command into command lines that fit the system argument limit.
- *
- * @param planned the check to run.
- * @param expansion what to run.
- * @param expansion.session the repository and its tools.
- * @param expansion.command the executable and authored arguments.
- * @param expansion.substitutions the file paths and placeholder values.
- * @param expansion.toolPath the resolved executable path.
- * @returns the runs, in order.
- */
+Splits a command into command lines that fit the system argument limit.
+
+@param planned the check to run.
+@param expansion what to run.
+@param expansion.session the repository and its tools.
+@param expansion.command the executable and authored arguments.
+@param expansion.substitutions the file paths and placeholder values.
+@param expansion.toolPath the resolved executable path.
+@returns the runs, in order.
+*/
 export function buildCommandLines(
     planned: PlannedCheck,
     expansion: { session: Session; command: string[]; substitutions: Substitutions; toolPath: string },
@@ -48,13 +48,13 @@ export function buildCommandLines(
 }
 
 /**
- * Splits file arguments while reserving space for the executable and fixed arguments.
- *
- * @param files the paths to split.
- * @param fixed the executable and arguments outside the file list.
- * @param platform the system that runs the command.
- * @returns the batches, in order.
- */
+Splits file arguments while reserving space for the executable and fixed arguments.
+
+@param files the paths to split.
+@param fixed the executable and arguments outside the file list.
+@param platform the system that runs the command.
+@returns the batches, in order.
+*/
 export function splitFileArguments(files: string[], fixed: string[], platform: NodeJS.Platform): string[][] {
     const limit = platform === 'win32' ? WINDOWS_COMMAND_LIMIT : UNIX_COMMAND_LIMIT;
     const budget = limit - fixed.reduce((size, argument) => size + measureArgumentSize(argument, platform), 0);

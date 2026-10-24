@@ -91,13 +91,13 @@ function expandArgument(
 }
 
 /**
- * Find the config file that {config_file:<name>} names, with the configurations of the check first.
- *
- * @param session the repository and its configurations.
- * @param planned the check that names it.
- * @param name the config file path without its extensions.
- * @returns the [[config_file]] table of that config file.
- */
+Find the config file that {config_file:<name>} names, with the configurations of the check first.
+
+@param session the repository and its configurations.
+@param planned the check that names it.
+@param name the config file path without its extensions.
+@returns the [[config_file]] table of that config file.
+*/
 export function getConfigFile(session: Session, planned: PlannedCheck, name: string): ConfigFile {
     const target = listConfigFiles(session, planned).find(
         (configFile) => extractConfigFileName(configFile.file) === name,
@@ -108,13 +108,13 @@ export function getConfigFile(session: Session, planned: PlannedCheck, name: str
 }
 
 /**
- * Lists the config files that a check command or its environment names.
- *
- * @param session the repository and its configurations.
- * @param planned the check that runs.
- * @param command the arguments to scan.
- * @returns the config file paths, relative to the root.
- */
+Lists the config files that a check command or its environment names.
+
+@param session the repository and its configurations.
+@param planned the check that runs.
+@param command the arguments to scan.
+@returns the config file paths, relative to the root.
+*/
 export function listCommandConfigFiles(session: Session, planned: PlannedCheck, command: readonly string[]): string[] {
     const words = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
     const scope = planned.scope.folder.path;
@@ -143,13 +143,13 @@ export function listCommandConfigFiles(session: Session, planned: PlannedCheck, 
 }
 
 /**
- * Lists the source and config files that a copy needs for a command.
- *
- * @param session the repository and its configurations.
- * @param planned the check and its files.
- * @param command the arguments, with config file placeholders.
- * @returns repository-relative paths for the copy.
- */
+Lists the source and config files that a copy needs for a command.
+
+@param session the repository and its configurations.
+@param planned the check and its files.
+@param command the arguments, with config file placeholders.
+@returns repository-relative paths for the copy.
+*/
 export function listCopyFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
     const scope = planned.scope.folder.path;
     const owned = (planned.configuration?.configFiles ?? []).map((configFile) =>
@@ -165,14 +165,14 @@ export function listCopyFiles(session: Session, planned: PlannedCheck, command: 
 }
 
 /**
- * Expands a scalar command argument or environment value from the check scope.
- *
- * @param session the repository and settings.
- * @param planned the check and its scope.
- * @param argument the value with placeholders.
- * @param substitutions the expansion values.
- * @returns the expanded value.
- */
+Expands a scalar command argument or environment value from the check scope.
+
+@param session the repository and settings.
+@param planned the check and its scope.
+@param argument the value with placeholders.
+@param substitutions the expansion values.
+@returns the expanded value.
+*/
 export function replacePlaceholders(
     session: Session,
     planned: PlannedCheck,
@@ -212,14 +212,14 @@ export function replacePlaceholders(
 }
 
 /**
- * Expands setting and scope placeholders, and keeps a marker for each file slot.
- *
- * @param session the repository and settings.
- * @param planned the check and its scope.
- * @param command the arguments as declared.
- * @param substitutions the expansion values.
- * @returns argument text and file markers.
- */
+Expands setting and scope placeholders, and keeps a marker for each file slot.
+
+@param session the repository and settings.
+@param planned the check and its scope.
+@param command the arguments as declared.
+@param substitutions the expansion values.
+@returns argument text and file markers.
+*/
 export function expandCommand(
     session: Session,
     planned: PlannedCheck,
@@ -239,12 +239,12 @@ export function expandCommand(
 }
 
 /**
- * Replaces every file marker after variable-length arguments have expanded.
- *
- * @param command the expanded command.
- * @param files the paths relative to the working folder.
- * @returns one command per file, or one command when no file marker exists.
- */
+Replaces every file marker after variable-length arguments have expanded.
+
+@param command the expanded command.
+@param files the paths relative to the working folder.
+@returns one command per file, or one command when no file marker exists.
+*/
 export function buildFileCommandLines(command: CommandArgument[], files: string[]): CommandLine[] {
     const hasFile = command.some((segment) => typeof segment !== 'string');
     return (hasFile ? files : ['']).map((file) => ({

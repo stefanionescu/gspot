@@ -5,11 +5,11 @@ import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/lan
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 /**
- * Restrict the Zustand store creators to the store files, so a store lives in a factory that a provider owns.
- *
- * @param scope the planned ESLint file of the scope.
- * @returns the imports and ESLint blocks for this configuration.
- */
+Restrict the Zustand store creators to the store files, so a store lives in a factory that a provider owns.
+
+@param scope the planned ESLint file of the scope.
+@returns the imports and ESLint blocks for this configuration.
+*/
 export function buildZustandBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;
     const blocks: ConfigurationBlocks['blocks'] = [

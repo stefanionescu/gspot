@@ -62,12 +62,12 @@ function parsePydoclintOptions(path: string, text: string, convention: unknown):
 }
 
 /**
- * Runs pydoclint with the declared docstring style, or with the style each file uses.
- *
- * @param session the repository and installed tools.
- * @param planned the docstring check for one scope.
- * @returns the check result, with earlier findings kept when a later batch fails.
- */
+Runs pydoclint with the declared docstring style, or with the style each file uses.
+
+@param session the repository and installed tools.
+@param planned the docstring check for one scope.
+@returns the check result, with earlier findings kept when a later batch fails.
+*/
 export async function checkPythonPydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const configured = parsePydoclintOptions(
         joinScope(planned.scope.folder.path, PYPROJECT_TOML),

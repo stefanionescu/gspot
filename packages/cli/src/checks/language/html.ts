@@ -108,12 +108,12 @@ function checkScriptAttributes(planned: PlannedCheck, source: SourceTree): Findi
 }
 
 /**
- * Reports inline scripts, handler attributes, and script links in each HTML file.
- *
- * @param session the repository and its tools.
- * @param planned the scope HTML files.
- * @returns the findings.
- */
+Reports inline scripts, handler attributes, and script links in each HTML file.
+
+@param session the repository and its tools.
+@param planned the scope HTML files.
+@returns the findings.
+*/
 export async function checkHtmlInlineScripts(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: Finding[] = [];

@@ -119,13 +119,13 @@ function parsePythonToolLockfile(lockfile: string): UvLockfile | undefined {
 }
 
 /**
- * Resolve the Python tool lockfile outside the repository before writing it.
- *
- * @param install what install needs for this step.
- * @param toolProjectFile the generated pyproject.toml.
- *
- * @returns credential-free lockfile bytes.
- */
+Resolve the Python tool lockfile outside the repository before writing it.
+
+@param install what install needs for this step.
+@param toolProjectFile the generated pyproject.toml.
+
+@returns credential-free lockfile bytes.
+*/
 export async function preparePythonLockfile(
     install: ToolInstall,
     toolProjectFile: GeneratedFile,
@@ -160,13 +160,13 @@ export async function preparePythonLockfile(
 }
 
 /**
- * Install the frozen Python tool project in .gspot.
- *
- * @param install what install needs for this step.
- * @param executable the path of uv.
- *
- * @returns the install summary.
- */
+Install the frozen Python tool project in .gspot.
+
+@param install what install needs for this step.
+@param executable the path of uv.
+
+@returns the install summary.
+*/
 export async function installPythonTools(install: ToolInstall, executable: string): Promise<string> {
     const { root } = install.session;
     const owner = install.writer.files;
@@ -190,13 +190,13 @@ export async function installPythonTools(install: ToolInstall, executable: strin
 }
 
 /**
- * Compare a Python tool project with the pins recorded in its uv lockfile.
- *
- * @param project the parsed tool project file.
- * @param lockfile the recorded uv.lock contents.
- * @param indexes the configured Python index settings.
- * @returns whether the two files describe the same requirements.
- */
+Compare a Python tool project with the pins recorded in its uv lockfile.
+
+@param project the parsed tool project file.
+@param lockfile the recorded uv.lock contents.
+@param indexes the configured Python index settings.
+@returns whether the two files describe the same requirements.
+*/
 export function isPythonLockfileFresh(
     project: ToolPyproject,
     lockfile: string | undefined,

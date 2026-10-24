@@ -61,14 +61,14 @@ function listMiseExecutablePaths(workingFolder: string, name: string, timeoutSec
 }
 
 /**
- * List the executables of the repository or its tool project, without the system search path.
- *
- * @param repositoryRoot the boundary for validating managed executable paths.
- * @param name the executable to find.
- * @param options the search folders and installation ownership.
- *
- * @returns the executable paths that exist, without the system `PATH`.
- */
+List the executables of the repository or its tool project, without the system search path.
+
+@param repositoryRoot the boundary for validating managed executable paths.
+@param name the executable to find.
+@param options the search folders and installation ownership.
+
+@returns the executable paths that exist, without the system `PATH`.
+*/
 export function listRepositoryExecutablePaths(
     repositoryRoot: string,
     name: string,
@@ -83,13 +83,13 @@ export function listRepositoryExecutablePaths(
 }
 
 /**
- * Ask mise for the program folders of the tools that the mise tool project pins.
- *
- * @param repositoryRoot the folder with the managed mise settings.
- * @param toolNames the mise tools to find.
- * @param timeoutSeconds the limit for the mise query.
- * @returns the executable folders that mise installed.
- */
+Ask mise for the program folders of the tools that the mise tool project pins.
+
+@param repositoryRoot the folder with the managed mise settings.
+@param toolNames the mise tools to find.
+@param timeoutSeconds the limit for the mise query.
+@returns the executable folders that mise installed.
+*/
 export function readMiseBinPaths(repositoryRoot: string, toolNames: string[], timeoutSeconds: number): string[] {
     if (
         toolNames.length === 0 ||
@@ -107,14 +107,14 @@ export function readMiseBinPaths(repositoryRoot: string, toolNames: string[], ti
 }
 
 /**
- * List every executable with the name, in the order that gspot prefers.
- *
- * @param repositoryRoot the base for repository searches and the fallback mise query.
- * @param name the executable to find.
- * @param options the search folders and tool project installation ownership.
- *
- * @returns the paths that exist.
- */
+List every executable with the name, in the order that gspot prefers.
+
+@param repositoryRoot the base for repository searches and the fallback mise query.
+@param name the executable to find.
+@param options the search folders and tool project installation ownership.
+
+@returns the paths that exist.
+*/
 export function listExecutablePaths(
     repositoryRoot: string,
     name: string,
@@ -133,11 +133,11 @@ export function listExecutablePaths(
 }
 
 /**
- * Read and cache the installed mise folders when a tool search needs them.
- *
- * @param session the run whose tools select the mise query.
- * @returns the folders that mise installed.
- */
+Read and cache the installed mise folders when a tool search needs them.
+
+@param session the run whose tools select the mise query.
+@returns the folders that mise installed.
+*/
 export function getMiseBinPaths(session: Session): string[] {
     session.miseBinPaths ??= readMiseBinPaths(
         session.installedRoot,
@@ -148,11 +148,11 @@ export function getMiseBinPaths(session: Session): string[] {
 }
 
 /**
- * Locate uv when a Python installation needs it, and reuse it for the run.
- *
- * @param session the working tree and its tool search cache.
- * @returns the uv program to run.
- */
+Locate uv when a Python installation needs it, and reuse it for the run.
+
+@param session the working tree and its tool search cache.
+@returns the uv program to run.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function getUvPath(session: Session): string {
     session.uvPath ??=

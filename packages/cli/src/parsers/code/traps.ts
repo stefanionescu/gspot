@@ -12,13 +12,13 @@ import {
 } from '#cli/config/parsers/code/bash.ts';
 
 /**
- * Parse literal trap scripts once and retain their trees until the caller disposes them.
- *
- * @param commands the script's commands.
- * @param cache the grammars of this run.
- * @param resources disposes the script trees after their readers finish.
- * @returns the script bodies and parsed roots.
- */
+Parse literal trap scripts once and retain their trees until the caller disposes them.
+
+@param commands the script's commands.
+@param cache the grammars of this run.
+@param resources disposes the script trees after their readers finish.
+@returns the script bodies and parsed roots.
+*/
 export async function readTrapScripts(
     commands: Node[],
     cache: ParseCache | undefined,
@@ -55,12 +55,12 @@ export async function readTrapScripts(
 }
 
 /**
- * Read command names, argument counts, and argument forwarding from script or trap nodes.
- *
- * @param commands the parsed commands.
- * @param lineOffset the script's line offset in the source script.
- * @returns calls with their source positions.
- */
+Read command names, argument counts, and argument forwarding from script or trap nodes.
+
+@param commands the parsed commands.
+@param lineOffset the script's line offset in the source script.
+@returns calls with their source positions.
+*/
 export function buildCommandCalls(commands: Node[], lineOffset: number): ScriptSyntax['calls'] {
     return commands.flatMap((node) => {
         const name = node.childForFieldName('name')?.text;

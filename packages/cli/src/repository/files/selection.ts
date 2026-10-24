@@ -23,11 +23,11 @@ function addPluginExtensions(owners: FileMatch, configurations: Configuration[])
     return { ...owners, extensions: [...owners.extensions, ...extensions] };
 }
 /**
- * Build one matcher for the extensions, filenames, tags, and paths of a files table.
- *
- * @param table the file patterns.
- * @returns a test of whether a tracked file matches.
- */
+Build one matcher for the extensions, filenames, tags, and paths of a files table.
+
+@param table the file patterns.
+@returns a test of whether a tracked file matches.
+*/
 export function buildFileMatcher(table: FileMatch): (file: TrackedFile) => boolean {
     const filenames = buildFilenameMatcher(table.filenames);
     const paths = buildPathMatcher(table.paths);
@@ -38,16 +38,16 @@ export function buildFileMatcher(table: FileMatch): (file: TrackedFile) => boole
         paths(file.path);
 }
 /**
- * List the files that the patterns match in one scope, within its `kinds` and `languages` limits.
- *
- * @param table the file patterns.
- * @param files the tracked inventory.
- * @param options the scope to match in.
- * @param options.configurations configurations that declare languages and Prettier plugins.
- * @param options.scopePath the folder to match in.
- * @param options.settings settings and repository-relative test paths for the scope.
- * @returns the matching files.
- */
+List the files that the patterns match in one scope, within its `kinds` and `languages` limits.
+
+@param table the file patterns.
+@param files the tracked inventory.
+@param options the scope to match in.
+@param options.configurations configurations that declare languages and Prettier plugins.
+@param options.scopePath the folder to match in.
+@param options.settings settings and repository-relative test paths for the scope.
+@returns the matching files.
+*/
 export function listCoveredFiles(
     table: FileMatch,
     files: TrackedFile[],
@@ -98,12 +98,12 @@ export function listCoveredFiles(
     });
 }
 /**
- * Select source paths by extension or whole file name.
- *
- * @param files the classified inventory.
- * @param endings the extensions or file names to select; every source file when absent.
- * @returns the matching source paths.
- */
+Select source paths by extension or whole file name.
+
+@param files the classified inventory.
+@param endings the extensions or file names to select; every source file when absent.
+@returns the matching source paths.
+*/
 export function listSourcePaths(files: TrackedFile[], endings: readonly string[]): string[] {
     return files
         .filter(
@@ -118,12 +118,12 @@ export function listSourcePaths(files: TrackedFile[], endings: readonly string[]
         .map((file) => file.path);
 }
 /**
- * List the files covered by another check in the selected configurations.
- *
- * @param planned the planned scope and its candidate files.
- * @param checkId the declaration whose coverage to apply.
- * @returns the matching tracked files.
- */
+List the files covered by another check in the selected configurations.
+
+@param planned the planned scope and its candidate files.
+@param checkId the declaration whose coverage to apply.
+@returns the matching tracked files.
+*/
 export function listCheckFiles(planned: PlannedCheck, checkId: string): TrackedFile[] {
     return planned.scope.configurations.flatMap((configuration) =>
         configuration.checks

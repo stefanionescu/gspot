@@ -35,12 +35,12 @@ import {
 const packageManagerVersions: CacheKey<Map<string, PackageManager>> = { create: () => new Map() };
 
 /**
- * Refuse a tool-project operation when the session selects no package manager.
- *
- * @param pin the package manager selected by the session.
- * @returns the declared or detected package manager.
- * @throws when the session has no package manager for a tool project.
- */
+Refuse a tool-project operation when the session selects no package manager.
+
+@param pin the package manager selected by the session.
+@returns the declared or detected package manager.
+@throws when the session has no package manager for a tool project.
+*/
 export function assertPackageManager(pin: PackageManagerPin | undefined): PackageManagerPin {
     if (pin === undefined) throw new GspotError('install', MISSING_PACKAGE_MANAGER_MESSAGE);
     return pin;
@@ -86,22 +86,22 @@ async function readFirstPackageManager(
 }
 
 /**
- * Check whether the package manager runs Yarn Berry, which has its own settings and install arguments.
- *
- * @param packageManager the validated name and exact version.
- * @returns whether the package manager uses Yarn Berry.
- */
+Check whether the package manager runs Yarn Berry, which has its own settings and install arguments.
+
+@param packageManager the validated name and exact version.
+@returns whether the package manager uses Yarn Berry.
+*/
 export function isYarnBerry(packageManager: PackageManager): boolean {
     if (packageManager.name !== 'yarn') return false;
     return semver.major(packageManager.version) >= YARN_BERRY_MAJOR;
 }
 
 /**
- * Read and validate the package manager pin written in package.json.
- *
- * @param packageJson the repository package fields.
- * @returns the declared package manager and its source field.
- */
+Read and validate the package manager pin written in package.json.
+
+@param packageJson the repository package fields.
+@returns the declared package manager and its source field.
+*/
 export function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
     if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
     const engines = packageJson.devEngines?.packageManager;
@@ -116,12 +116,12 @@ export function readPackageManagerPin(packageJson: PackageJson): PackageManagerF
 }
 
 /**
- * Select the repository package manager from its pin and lockfiles.
- *
- * @param repositoryRoot the folder whose package.json files and lockfiles select the manager.
- * @param trackedPaths the source paths inventoried in the repository.
- * @returns the manager name and its declared or detected version, when present.
- */
+Select the repository package manager from its pin and lockfiles.
+
+@param repositoryRoot the folder whose package.json files and lockfiles select the manager.
+@param trackedPaths the source paths inventoried in the repository.
+@returns the manager name and its declared or detected version, when present.
+*/
 export async function detectPackageManager(repositoryRoot: string, trackedPaths: string[]): Promise<PackageManagerPin> {
     const packageJsonPaths = [
         PACKAGE_JSON,
@@ -143,14 +143,14 @@ export async function detectPackageManager(repositoryRoot: string, trackedPaths:
 }
 
 /**
- * Resolve an undeclared package manager version only when generating or installing a tool project.
- *
- * @param repositoryRoot the working folder for the query of an undeclared version.
- * @param packageManager the declared or detected name and version.
- * @param timeoutSeconds the limit for the version query.
- * @param reads the run cache that owns the resolved version.
- * @returns the name and version requirement that the tool project uses.
- */
+Resolve an undeclared package manager version only when generating or installing a tool project.
+
+@param repositoryRoot the working folder for the query of an undeclared version.
+@param packageManager the declared or detected name and version.
+@param timeoutSeconds the limit for the version query.
+@param reads the run cache that owns the resolved version.
+@returns the name and version requirement that the tool project uses.
+*/
 export function readPackageManagerVersion(
     repositoryRoot: string,
     packageManager: PackageManagerPin,
@@ -172,14 +172,14 @@ export function readPackageManagerVersion(
 }
 
 /**
- * Select the tool-project manager name without querying unrelated package managers.
- *
- * @param repositoryRoot the folder for a Yarn version query.
- * @param packageManager the repository package manager pin.
- * @param timeoutSeconds the version query limit.
- * @param reads the run cache for resolved versions.
- * @returns npm for Yarn Classic, or the selected manager name.
- */
+Select the tool-project manager name without querying unrelated package managers.
+
+@param repositoryRoot the folder for a Yarn version query.
+@param packageManager the repository package manager pin.
+@param timeoutSeconds the version query limit.
+@param reads the run cache for resolved versions.
+@returns npm for Yarn Classic, or the selected manager name.
+*/
 export function selectToolPackageManager(
     repositoryRoot: string,
     packageManager: PackageManagerPin,
@@ -192,14 +192,14 @@ export function selectToolPackageManager(
 }
 
 /**
- * Resolve a package manager for the tool project, using npm when the repository pins Yarn 1.
- *
- * @param repositoryRoot the folder for a version query.
- * @param packageManager the repository package manager pin.
- * @param timeoutSeconds the version query limit.
- * @param reads the run cache for resolved versions.
- * @returns a package manager that can hold back new tool releases.
- */
+Resolve a package manager for the tool project, using npm when the repository pins Yarn 1.
+
+@param repositoryRoot the folder for a version query.
+@param packageManager the repository package manager pin.
+@param timeoutSeconds the version query limit.
+@param reads the run cache for resolved versions.
+@returns a package manager that can hold back new tool releases.
+*/
 export function readToolPackageManager(
     repositoryRoot: string,
     packageManager: PackageManagerPin,
@@ -212,12 +212,12 @@ export function readToolPackageManager(
 }
 
 /**
- * Select the runner from the root gspot dependency.
- *
- * @param repositoryRoot the folder whose package.json decides the runner.
- *
- * @returns the runner of the package manager, or mise when gspot has no root npm dependency.
- */
+Select the runner from the root gspot dependency.
+
+@param repositoryRoot the folder whose package.json decides the runner.
+
+@returns the runner of the package manager, or mise when gspot has no root npm dependency.
+*/
 export async function selectStartRunner(repositoryRoot: string): Promise<StartRunner> {
     const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
     const hasDependency =
@@ -230,12 +230,12 @@ export async function selectStartRunner(repositoryRoot: string): Promise<StartRu
 }
 
 /**
- * Run a declared package manager with its pinned runtime and version.
- *
- * @param packageManager the manager name and declared version, if any.
- * @param args the manager arguments.
- * @returns the direct command or the mise command for the exact pin.
- */
+Run a declared package manager with its pinned runtime and version.
+
+@param packageManager the manager name and declared version, if any.
+@param args the manager arguments.
+@returns the direct command or the mise command for the exact pin.
+*/
 export function buildPackageManagerCommand(packageManager: PackageManagerCommand, args: readonly string[]): string[] {
     const command = [packageManager.name, ...args];
     if (packageManager.version === undefined) return command;

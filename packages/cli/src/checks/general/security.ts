@@ -21,12 +21,12 @@ function listSemgrepRuleFiles(session: Session, planned: PlannedCheck): string[]
 }
 
 /**
- * Runs Semgrep with the rule files of the scope.
- *
- * @param session the repository and installed tools.
- * @param planned the check for one scope.
- * @returns the check result.
- */
+Runs Semgrep with the rule files of the scope.
+
+@param session the repository and installed tools.
+@param planned the check for one scope.
+@returns the check result.
+*/
 export async function checkSecuritySemgrep(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const command = planned.check.command as string[];
     const rules = listSemgrepRuleFiles(session, planned);

@@ -112,12 +112,12 @@ async function runSwiftBuild(
 }
 
 /**
- * Builds the scope and reports the compiler errors.
- *
- * @param session the repository and its tools.
- * @param planned the scope to build.
- * @returns the findings.
- */
+Builds the scope and reports the compiler errors.
+
+@param session the repository and its tools.
+@param planned the scope to build.
+@returns the findings.
+*/
 export async function checkSwiftBuild(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const plan = buildPlan(session, planned);
     const { output, code, source } = await runSwiftBuild(session, planned, plan, 'compile');
@@ -133,12 +133,12 @@ export async function checkSwiftBuild(session: Session, planned: PlannedCheck): 
 }
 
 /**
- * Runs the SwiftLint analyzer rules over the compiler log of the build.
- *
- * @param session the repository and its tools.
- * @param planned the scope to analyze.
- * @returns the findings.
- */
+Runs the SwiftLint analyzer rules over the compiler log of the build.
+
+@param session the repository and its tools.
+@param planned the scope to analyze.
+@returns the findings.
+*/
 export async function checkSwiftSwiftlintAnalyze(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const plan = buildPlan(session, planned, { purpose: 'analyze' });
     const build = await runSwiftBuild(session, planned, plan, 'analyze');
@@ -168,12 +168,12 @@ export async function checkSwiftSwiftlintAnalyze(session: Session, planned: Plan
 }
 
 /**
- * Runs Periphery over the project and reports every declaration nothing uses.
- *
- * @param session the repository and its tools.
- * @param planned the scope to scan.
- * @returns the findings.
- */
+Runs Periphery over the project and reports every declaration nothing uses.
+
+@param session the repository and its tools.
+@param planned the scope to scan.
+@returns the findings.
+*/
 export async function checkSwiftPeriphery(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const folder = getScopeBuildFolder(session.installedRoot, planned.scope.folder.path, 'periphery');
     const configFile = join(
@@ -197,12 +197,12 @@ export async function checkSwiftPeriphery(session: Session, planned: PlannedChec
 }
 
 /**
- * Lists the SwiftLint files a copy keeps: the scope pointer, the config file, and SwiftLint files in parent folders.
- *
- * @param session the repository and its tools.
- * @param planned the scope files and config files.
- * @returns the repository-relative paths, sorted.
- */
+Lists the SwiftLint files a copy keeps: the scope pointer, the config file, and SwiftLint files in parent folders.
+
+@param session the repository and its tools.
+@param planned the scope files and config files.
+@returns the repository-relative paths, sorted.
+*/
 export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck): string[] {
     const paths = [
         joinScope(planned.scope.folder.path, SWIFTLINT_CONFIG_FILE),

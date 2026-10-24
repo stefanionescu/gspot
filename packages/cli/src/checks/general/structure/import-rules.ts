@@ -155,13 +155,13 @@ async function checkSwiftImports(session: Session, planned: PlannedCheck, lookup
 }
 
 /**
- * Applies [[import_rule]] to Python and Swift imports, and reports the code files of every language that no rule covers.
- * ESLint applies the rules to JavaScript and TypeScript imports.
- *
- * @param session the repository and its tools.
- * @param planned the scope files, the repository files, and the settings.
- * @returns a finding for each refused import and each uncovered file.
- */
+Applies [[import_rule]] to Python and Swift imports, and reports the code files of every language that no rule covers.
+ESLint applies the rules to JavaScript and TypeScript imports.
+
+@param session the repository and its tools.
+@param planned the scope files, the repository files, and the settings.
+@returns a finding for each refused import and each uncovered file.
+*/
 export async function checkStructureImportRules(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const rules = session.settingsFile.settings.import_rule;
     if (rules.length === 0) throw new GspotError('skip', IMPORT_RULES_SKIP);

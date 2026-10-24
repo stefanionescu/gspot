@@ -207,11 +207,11 @@ async function runCheck(paths: string[], flags: CheckFlags, cwd: string): Promis
 }
 
 /**
- * Register the check command.
- *
- * @param program the gspot program that gets the command.
- * @param onResult receives the result of the command.
- */
+Register the check command.
+
+@param program the gspot program that gets the command.
+@param onResult receives the result of the command.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: main.ts registers the command through it, like every other command.
 export function registerCheck(program: Command, onResult: CommandCompletion): void {
     program

@@ -10,11 +10,11 @@ import {
 } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 /**
- * Apply the typed presets and the project files.
- *
- * @param scope the planned ESLint file of the scope.
- * @returns the imports and ESLint blocks for this configuration.
- */
+Apply the typed presets and the project files.
+
+@param scope the planned ESLint file of the scope.
+@returns the imports and ESLint blocks for this configuration.
+*/
 export function buildVitestBlocks(scope: Pick<EslintScope, 'presets' | 'eslintFiles'>): ConfigurationBlocks {
     const { presets, eslintFiles } = scope;
     const blocks: ConfigurationBlocks['blocks'] = [];

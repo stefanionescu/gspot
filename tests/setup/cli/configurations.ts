@@ -5,10 +5,10 @@ import { type Check, type Configuration } from '#cli/types/configurations.ts';
 import { listChecksById, readConfigurations } from '#cli/configurations/manifests.ts';
 
 /**
- * List the shipped configurations that gspot selects in every repository.
- *
- * @returns their names.
- */
+List the shipped configurations that gspot selects in every repository.
+
+@returns their names.
+*/
 export function listAlwaysSelected(): string[] {
     return [...readConfigurations().values()]
         .filter((configuration) => configuration.always_selected)
@@ -16,15 +16,15 @@ export function listAlwaysSelected(): string[] {
 }
 
 /**
- * Parse a manifest.toml for one test.
- *
- * @param name what to call the configuration.
- * @param fields extra manifest tables and fields.
- * @param fields.requires configurations that it needs.
- * @param fields.tables extra TOML for the manifest.
- * @param fields.group where the configuration sits.
- * @returns the parsed configuration.
- */
+Parse a manifest.toml for one test.
+
+@param name what to call the configuration.
+@param fields extra manifest tables and fields.
+@param fields.requires configurations that it needs.
+@param fields.tables extra TOML for the manifest.
+@param fields.group where the configuration sits.
+@returns the parsed configuration.
+*/
 export function buildConfiguration(
     name: string,
     fields: { requires?: string[]; tables?: string; group?: Configuration['group'] } = {},

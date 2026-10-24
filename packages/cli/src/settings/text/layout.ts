@@ -115,13 +115,13 @@ function splitSection(
 }
 
 /**
- * Build the TOML text of the ordered tables, with the kept comments around TOML values.
- *
- * @param table the ordered written values.
- * @param indent the whitespace for one level.
- * @param comments the kept `#` lines on their keys and headers.
- * @returns the formatted TOML text.
- */
+Build the TOML text of the ordered tables, with the kept comments around TOML values.
+
+@param table the ordered written values.
+@param indent the whitespace for one level.
+@param comments the kept `#` lines on their keys and headers.
+@returns the formatted TOML text.
+*/
 export function encodeSettings(table: TomlTable, indent: string, comments: TomlComments): string {
     const blocks: string[] = [];
     const root: string[] = [];
@@ -274,13 +274,13 @@ function findKeptCommentPlacement(
 }
 
 /**
- * Keep each comment on the key that still owns it before records merge or move.
- * An unclear split gives its general comments to the first row; path comments follow their own values.
- *
- * @param syntax the original keys, headers, and parsed values.
- * @param destination the ordered written values.
- * @returns the comment blocks in source order, and the free comments apart.
- */
+Keep each comment on the key that still owns it before records merge or move.
+An unclear split gives its general comments to the first row; path comments follow their own values.
+
+@param syntax the original keys, headers, and parsed values.
+@param destination the ordered written values.
+@returns the comment blocks in source order, and the free comments apart.
+*/
 export function listKeptComments(syntax: TomlSyntax, destination: TomlTable): TomlComments {
     const comments: TomlComments = new Map();
     for (const anchoredComment of listAnchoredComments(syntax)) {

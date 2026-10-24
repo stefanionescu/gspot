@@ -69,13 +69,13 @@ function mergeIgnores(ignores: TomlTable[]): TomlTable[] {
 }
 
 /**
- * Add an ignore to the list, or merge its paths into the record with the same check, rule, names, reason, and until.
- * When either record has no paths, the merged record has none. Changes ignores in place.
- *
- * @param ignores the written [[ignore]] records.
- * @param ignore the record to add.
- * @returns the saved record.
- */
+Add an ignore to the list, or merge its paths into the record with the same check, rule, names, reason, and until.
+When either record has no paths, the merged record has none. Changes ignores in place.
+
+@param ignores the written [[ignore]] records.
+@param ignore the record to add.
+@returns the saved record.
+*/
 export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable {
     const { paths: writtenPaths, ...identity } = ignore;
     const matching = ignores.find(({ paths: _previousPaths, ...previous }) => isDeepStrictEqual(previous, identity));
@@ -94,13 +94,13 @@ export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable 
 }
 
 /**
- * Build the TOML text of the settings. Keep the written comments and the template source, and start with the schema
- * directive, which replaces any directive on the first line before.
- *
- * @param previousText the gspot.toml contents before, or empty for init.
- * @param settings the written values, before defaults.
- * @returns the TOML 1.0 text.
- */
+Build the TOML text of the settings. Keep the written comments and the template source, and start with the schema
+directive, which replaces any directive on the first line before.
+
+@param previousText the gspot.toml contents before, or empty for init.
+@param settings the written values, before defaults.
+@returns the TOML 1.0 text.
+*/
 export function buildSettingsText(previousText: string, settings: TomlTable): string {
     const authored = previousText.replace(SCHEMA_DIRECTIVE_LINE, '');
     let target = sortTable(settings);

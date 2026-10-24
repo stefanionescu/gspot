@@ -10,11 +10,11 @@ import {
 } from '#cli/config/generation/configurations/general/commits.ts';
 
 /**
- * Build commitlint.json: the Commitlint rules with the allowed types and scopes of the repository.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Commitlint rules with the allowed types and scopes of the repository.
- */
+Build commitlint.json: the Commitlint rules with the allowed types and scopes of the repository.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Commitlint rules with the allowed types and scopes of the repository.
+*/
 export function buildCommitlintFile(planned: PlannedConfigFile): string {
     const { scopes } = planned.session;
 

@@ -12,11 +12,11 @@ import {
 } from '#cli/config/generation/configurations/language/python/basedpyright.ts';
 
 /**
- * Build basedpyright.json: the Python environment and source paths used by Basedpyright.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Python environment and source paths used by Basedpyright.
- */
+Build basedpyright.json: the Python environment and source paths used by Basedpyright.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Python environment and source paths used by Basedpyright.
+*/
 export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
     const pythonScopePath = posix.join(
         posix.relative(posix.dirname(planned.targetPath), '.'),

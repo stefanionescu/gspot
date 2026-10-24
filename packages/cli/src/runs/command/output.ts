@@ -75,16 +75,16 @@ function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths:
 }
 
 /**
- * Builds the check result from what the runs collected.
- *
- * @param check the check that ran.
- * @param completion what the run collected.
- * @param completion.base the initial check result.
- * @param completion.state the findings and failure flag.
- * @param completion.commandArguments what the process ran, placeholders expanded.
- * @param completion.started the monotonic start time.
- * @returns the status, findings, and duration.
- */
+Builds the check result from what the runs collected.
+
+@param check the check that ran.
+@param completion what the run collected.
+@param completion.base the initial check result.
+@param completion.state the findings and failure flag.
+@param completion.commandArguments what the process ran, placeholders expanded.
+@param completion.started the monotonic start time.
+@returns the status, findings, and duration.
+*/
 export function buildCheckResult(
     check: Check,
     completion: { base: CheckResult; state: CommandRun; commandArguments: string[]; started: number },
@@ -101,13 +101,13 @@ export function buildCheckResult(
 }
 
 /**
- * Parses the command output, or returns why gspot refused it.
- *
- * @param planned the check that ran.
- * @param result what the process returned.
- * @param paths the repository root and working folder.
- * @returns findings or a refusal note.
- */
+Parses the command output, or returns why gspot refused it.
+
+@param planned the check that ran.
+@param result what the process returned.
+@param paths the repository root and working folder.
+@returns findings or a refusal note.
+*/
 export function parseCommandFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): ParsedFindings {
     try {
         return { findings: parseVerifiedFindings(planned, result, paths) };
@@ -118,13 +118,13 @@ export function parseCommandFindings(planned: OutputCheck, result: SpawnResult, 
 }
 
 /**
- * Records a process result and assigns its findings to their file and scope.
- *
- * @param planned the check that ran.
- * @param tool the tool with its version pin.
- * @param output what one run printed and parsed.
- * @param commandRun what the runs collected so far.
- */
+Records a process result and assigns its findings to their file and scope.
+
+@param planned the check that ran.
+@param tool the tool with its version pin.
+@param output what one run printed and parsed.
+@param commandRun what the runs collected so far.
+*/
 export function addCommandLine(
     planned: PlannedCheck,
     tool: Tool,
@@ -146,13 +146,13 @@ export function addCommandLine(
 }
 
 /**
- * Checks whether a run exited with an undeclared code or printed a crash pattern.
- *
- * @param check the declared exit codes and crash pattern.
- * @param tool the tool with the shared crash pattern.
- * @param result what the process returned.
- * @returns whether the tool broke.
- */
+Checks whether a run exited with an undeclared code or printed a crash pattern.
+
+@param check the declared exit codes and crash pattern.
+@param tool the tool with the shared crash pattern.
+@param result what the process returned.
+@returns whether the tool broke.
+*/
 export function isReportedCrash(check: Check, tool: Tool | undefined, result: SpawnResult): boolean {
     if (result.code !== 0 && check.exit_codes !== undefined && !check.exit_codes.includes(result.code)) return true;
     const pattern = tool?.crash_pattern;
@@ -160,12 +160,12 @@ export function isReportedCrash(check: Check, tool: Tool | undefined, result: Sp
 }
 
 /**
- * Formats the last lines of tool output.
- *
- * @param result what the tool printed.
- * @param emptyOutputText the text when both streams stay empty.
- * @returns the last lines of output.
- */
+Formats the last lines of tool output.
+
+@param result what the tool printed.
+@param emptyOutputText the text when both streams stay empty.
+@returns the last lines of output.
+*/
 export function formatOutputTail(
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
     emptyOutputText = 'The tool printed no error output.',
@@ -179,13 +179,13 @@ export function formatOutputTail(
 }
 
 /**
- * Returns the findings, or fails when the tool exited nonzero with none.
- *
- * @param result the exit code and output.
- * @param findings what the parser read.
- * @param toolName the program that ran.
- * @returns the parsed findings.
- */
+Returns the findings, or fails when the tool exited nonzero with none.
+
+@param result the exit code and output.
+@param findings what the parser read.
+@param toolName the program that ran.
+@returns the parsed findings.
+*/
 export function assertToolFindings(
     result: Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>,
     findings: Finding[],

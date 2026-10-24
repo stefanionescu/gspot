@@ -11,13 +11,13 @@ export function parseJsonFile(path: string, text: string): Record<string, unknow
 export function parseJsonFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
 
 /**
- * Read a JSON object, and validate it against the schema, if any.
- *
- * @param path the repository-relative file.
- * @param text the complete JSON source, including comments.
- * @param schema the shape to check.
- * @returns the parsed object.
- */
+Read a JSON object, and validate it against the schema, if any.
+
+@param path the repository-relative file.
+@param text the complete JSON source, including comments.
+@param schema the shape to check.
+@returns the parsed object.
+*/
 export function parseJsonFile(path: string, text: string, schema?: z.ZodType): unknown {
     let value: unknown;
     try {
@@ -38,12 +38,12 @@ export function parseJsonFile(path: string, text: string, schema?: z.ZodType): u
 }
 
 /**
- * Open a JSON file to edit shared fields, and leave other content as written.
- *
- * @param path the file that syntax and edit errors name.
- * @param text the complete JSON or JSON-with-comments text.
- * @returns the editable document.
- */
+Open a JSON file to edit shared fields, and leave other content as written.
+
+@param path the file that syntax and edit errors name.
+@param text the complete JSON or JSON-with-comments text.
+@returns the editable document.
+*/
 export function openJsonFile(path: string, text: string): EditableFile {
     let editedText = text;
     let document = parseJsonFile(path, editedText);
@@ -64,13 +64,13 @@ export function parseToolReport(tool: string, text: string): unknown;
 export function parseToolReport<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value;
 
 /**
- * Parse and validate a report, and keep its untrusted contents out of errors.
- *
- * @param tool the program that printed the report.
- * @param text the JSON report.
- * @param schema the shape to validate when supplied.
- * @returns the parsed report, with any requested validation.
- */
+Parse and validate a report, and keep its untrusted contents out of errors.
+
+@param tool the program that printed the report.
+@param text the JSON report.
+@param schema the shape to validate when supplied.
+@returns the parsed report, with any requested validation.
+*/
 export function parseToolReport(tool: string, text: string, schema?: z.ZodType): unknown {
     try {
         const parsed: unknown = JSON.parse(text);

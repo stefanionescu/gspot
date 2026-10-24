@@ -11,12 +11,12 @@ import { LFS_FILTER } from '#cli/config/repository/files/classify.ts';
 import { joinScope, findScopeFolder } from '#cli/repository/scopes.ts';
 
 /**
- * Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
- *
- * @param session the repository and its tools.
- * @param planned the tracked files and size limit.
- * @returns the findings.
- */
+Reports each tracked file over `repository.max_file_kilobytes`, except generated, vendored, and Git Large File Storage (LFS) files.
+
+@param session the repository and its tools.
+@param planned the tracked files and size limit.
+@returns the findings.
+*/
 export function checkRepositoryLargeFiles(session: Session, planned: PlannedCheck): Finding[] {
     const limitKilobytes = getTable(planned.scope.settings, 'repository').max_file_kilobytes;
     return session.repository.files
@@ -38,12 +38,12 @@ export function checkRepositoryLargeFiles(session: Session, planned: PlannedChec
 }
 
 /**
- * Reports indexed files that the scope configurations mark as untracked.
- *
- * @param session the repository and its tools.
- * @param planned the Git index and each scope.
- * @returns the findings.
- */
+Reports indexed files that the scope configurations mark as untracked.
+
+@param session the repository and its tools.
+@param planned the Git index and each scope.
+@returns the findings.
+*/
 export function checkRepositoryLocalFiles(session: Session, planned: PlannedCheck): Finding[] {
     const scopes = session.scopes.map(({ folder }) => folder);
     const matchers = session.scopes.map(({ folder, configurations, settings }) => {

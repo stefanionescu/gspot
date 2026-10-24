@@ -16,12 +16,12 @@ function formatCommentBlock(lines: string[], mark: string): string {
 }
 
 /**
- * Format the header of a generated file outside .gspot.
- *
- * @param path the generated file.
- * @param notes lines to add after the header text.
- * @returns the comment block with a final newline, or '' inside .gspot and for JSON.
- */
+Format the header of a generated file outside .gspot.
+
+@param path the generated file.
+@param notes lines to add after the header text.
+@returns the comment block with a final newline, or '' inside .gspot and for JSON.
+*/
 export function formatHeader(path: string, notes: string[] = []): string {
     if (path.startsWith(`${DOT_GSPOT}/`)) return '';
     const extension = extractExtension(path);

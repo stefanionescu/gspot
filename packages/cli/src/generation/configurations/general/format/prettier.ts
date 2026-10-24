@@ -16,11 +16,11 @@ import {
 } from '#cli/config/generation/configurations/general/format/prettier.ts';
 
 /**
- * Collect the root and nested formatting settings with their selectors.
- *
- * @param settings the parsed gspot.toml.
- * @returns the root and nested formatting overrides with their file selectors.
- */
+Collect the root and nested formatting settings with their selectors.
+
+@param settings the parsed gspot.toml.
+@returns the root and nested formatting overrides with their file selectors.
+*/
 export function listScopeFormats(settings: Settings): ScopeFormat[] {
     const tables = listSettingsTables(settings)
         .toSorted((first, second) => compareScopeDepth(first.scope ?? '', second.scope ?? ''))
@@ -73,11 +73,11 @@ function convertFormatSettings(format: Partial<FormatSettings>): Record<string, 
 }
 
 /**
- * Build prettier.json, which the root pointer loads: the formatter options, plugins, and scope overrides.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the formatter options, plugins, and scope overrides.
- */
+Build prettier.json, which the root pointer loads: the formatter options, plugins, and scope overrides.
+
+@param planned the config file with its scope, level, and target path.
+@returns the formatter options, plugins, and scope overrides.
+*/
 export function buildPrettierFile(planned: PlannedConfigFile): string {
     const settings = planned.session.settingsFile.settings;
     const format = planned.scope.settings.values.format;

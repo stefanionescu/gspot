@@ -24,11 +24,11 @@ function readSwiftVersion(reads: ReadCache, scope: string, projectPath: string):
 }
 
 /**
- * Build swiftformat: the SwiftFormat settings of the repository.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the SwiftFormat settings of the repository.
- */
+Build swiftformat: the SwiftFormat settings of the repository.
+
+@param planned the config file with its scope, level, and target path.
+@returns the SwiftFormat settings of the repository.
+*/
 export function buildSwiftformatFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
     const { reads } = planned.session;

@@ -21,12 +21,12 @@ function listFunctions(module: PythonModule): PythonFunction[] {
 }
 
 /**
- * Check whether a Python string expression comes first, after any comments.
- *
- * @param node the statement to test.
- * @param siblings the statements in the same file or function body.
- * @returns true when the string holds a docstring.
- */
+Check whether a Python string expression comes first, after any comments.
+
+@param node the statement to test.
+@param siblings the statements in the same file or function body.
+@returns true when the string holds a docstring.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
 export function isDocstring(node: Node, siblings: Node[]): boolean {
     return (
@@ -52,13 +52,13 @@ async function readPython(sources: SourceFiles): Promise<PythonFiles> {
 }
 
 /**
- * Parse one Python module, with the grammar cache of the run, if any.
- *
- * @param path the repository-relative source file.
- * @param text the exact source content.
- * @param cache the source reads and tree cleanup for this run.
- * @returns a parsed module whose caller disposes its tree.
- */
+Parse one Python module, with the grammar cache of the run, if any.
+
+@param path the repository-relative source file.
+@param text the exact source content.
+@param cache the source reads and tree cleanup for this run.
+@returns a parsed module whose caller disposes its tree.
+*/
 export async function parsePythonModule(path: string, text: string, cache?: ParseCache): Promise<PythonModule> {
     const tree = await parseSource('python', text, cache);
     const statements = tree.rootNode.namedChildren.filter((child) => child.type !== 'comment');
@@ -73,11 +73,11 @@ export async function parsePythonModule(path: string, text: string, cache?: Pars
 }
 
 /**
- * Find the docstring text of a function.
- *
- * @param definition the function node.
- * @returns the text inside the quotes, or undefined.
- */
+Find the docstring text of a function.
+
+@param definition the function node.
+@returns the text inside the quotes, or undefined.
+*/
 export function findDocstring(definition: Node): string | undefined {
     const siblings = definition.childForFieldName('body')?.namedChildren ?? [];
     const first = siblings.find((child) => child.type !== 'comment');

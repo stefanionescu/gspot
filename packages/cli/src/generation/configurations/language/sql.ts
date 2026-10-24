@@ -8,11 +8,11 @@ import {
 } from '#cli/config/generation/configurations/language/sql.ts';
 
 /**
- * Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclusions.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the SQL dialect, formatting choices, and SQLFluff rule exclusions.
- */
+Build sqlfluff.cfg: the SQL dialect, formatting choices, and SQLFluff rule exclusions.
+
+@param planned the config file with its scope, level, and target path.
+@returns the SQL dialect, formatting choices, and SQLFluff rule exclusions.
+*/
 export function buildSqlfluffFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.values;
     const level = planned.level;

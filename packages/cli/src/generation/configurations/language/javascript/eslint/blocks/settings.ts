@@ -56,13 +56,13 @@ function mergeRestrictedImports(rules: EslintRuleOptions['rules'], restricted: u
 }
 
 /**
- * Build the lint rule options and the path overrides in order, each for its own project.
- *
- * @param settings the parsed gspot.toml.
- * @param scopes every project, whose restricted imports join its own no-restricted-imports options.
- *
- * @returns one option block per scope and path override, in the order they apply.
- */
+Build the lint rule options and the path overrides in order, each for its own project.
+
+@param settings the parsed gspot.toml.
+@param scopes every project, whose restricted imports join its own no-restricted-imports options.
+
+@returns one option block per scope and path override, in the order they apply.
+*/
 export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRuleOptions[] {
     const tables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scope ?? '', second.scope ?? ''),
@@ -104,13 +104,13 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
 }
 
 /**
- * Build the blocks that turn off the lint rules that a manifest excludes with a reason.
- * They follow the structure defaults and come before your own settings.
- *
- * @param scopes every project and its configurations.
- *
- * @returns lint blocks that leave out every nested scope.
- */
+Build the blocks that turn off the lint rules that a manifest excludes with a reason.
+They follow the structure defaults and come before your own settings.
+
+@param scopes every project and its configurations.
+
+@returns lint blocks that leave out every nested scope.
+*/
 export function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
     return scopes.flatMap((scope) => {
         const scopePath = scope.folder.path;
@@ -129,12 +129,12 @@ export function buildRulesOffBlocks(scopes: Scope[]): EslintRuleBlock[] {
 }
 
 /**
- * Build the settings blocks: environment, trivial-code, turned-off rule, and ignore blocks. Code files and package.json
- * files stay apart.
- *
- * @param planned the settings blocks and the ESLint file sets.
- * @returns the lint blocks with resolved file selectors.
- */
+Build the settings blocks: environment, trivial-code, turned-off rule, and ignore blocks. Code files and package.json
+files stay apart.
+
+@param planned the settings blocks and the ESLint file sets.
+@returns the lint blocks with resolved file selectors.
+*/
 export function buildSelectedBlocks(
     planned: Pick<PlannedEslintFile, 'settingsBlocks' | 'eslintFiles'>,
 ): EslintBlockFields[] {
@@ -162,11 +162,11 @@ export function buildSelectedBlocks(
 }
 
 /**
- * Build import restrictions where a scope changes the list inherited from its parent.
- *
- * @param planned every scope and the code selectors of the generated file.
- * @returns one block per changed list, excluding scopes with their own lists.
- */
+Build import restrictions where a scope changes the list inherited from its parent.
+
+@param planned every scope and the code selectors of the generated file.
+@returns one block per changed list, excluding scopes with their own lists.
+*/
 export function buildRestrictedImportBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
 ): EslintBlockFields[] {
@@ -196,12 +196,12 @@ export function buildRestrictedImportBlocks(
 }
 
 /**
- * Build the environment-variable rule blocks for each project with its own environment readers.
- *
- * @param planned what the lint rules cover.
- *
- * @returns the lint blocks at level all, or none.
- */
+Build the environment-variable rule blocks for each project with its own environment readers.
+
+@param planned what the lint rules cover.
+
+@returns the lint blocks at level all, or none.
+*/
 export function buildEnvironmentRuleBlocks(
     planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>,
 ): EslintRuleBlock[] {
@@ -241,12 +241,12 @@ export function buildEnvironmentRuleBlocks(
 }
 
 /**
- * Calculate the trivial-code limits for each project.
- *
- * @param planned what the limits cover.
- *
- * @returns the lint rules that detect trivial functions and files that only forward code.
- */
+Calculate the trivial-code limits for each project.
+
+@param planned what the limits cover.
+
+@returns the lint rules that detect trivial functions and files that only forward code.
+*/
 export function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session, nodeFiles } = planned;
     if (session.settingsFile.settings.level !== 'all') return [];

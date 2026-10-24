@@ -9,12 +9,12 @@ import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
 import { PIP_INSTALL, INSTALL_FILE_SUFFIXES } from '#cli/config/checks/language/python/pip-installs.ts';
 
 /**
- * Reports hand-kept requirements files and unmanaged pip installs, so pyproject.toml owns every dependency.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Reports hand-kept requirements files and unmanaged pip installs, so pyproject.toml owns every dependency.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export function checkPythonPipInstalls(session: Session, planned: PlannedCheck): Finding[] {
     if (
         !(planned.check.files?.filenames ?? []).some((file) =>

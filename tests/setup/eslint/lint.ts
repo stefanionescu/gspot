@@ -30,12 +30,12 @@ export async function listLintFindings(
 }
 
 /**
- * Link the test packages, run apply, and load the generated ESLint config file.
- *
- * @param sandboxRoot folder with a gspot.toml.
- * @param options more ESLint options.
- * @returns ESLint set up with the generated config file.
- */
+Link the test packages, run apply, and load the generated ESLint config file.
+
+@param sandboxRoot folder with a gspot.toml.
+@param options more ESLint options.
+@returns ESLint set up with the generated config file.
+*/
 export async function createEslint(sandboxRoot: string, options?: ESLint.Options): Promise<ESLint> {
     await linkInstalledModules(join(sandboxRoot, 'node_modules'));
     await runGspotStep({ root: sandboxRoot, environment: {}, run: runGspot }, ['apply']);

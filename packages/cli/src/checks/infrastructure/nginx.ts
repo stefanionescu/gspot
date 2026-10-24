@@ -156,12 +156,12 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
 }
 
 /**
- * Tests every tracked nginx.conf with the server's own parser.
- *
- * @param session the repository and its tools.
- * @param planned the scope files and nginx image.
- * @returns one finding for each file nginx refuses.
- */
+Tests every tracked nginx.conf with the server's own parser.
+
+@param session the repository and its tools.
+@param planned the scope files and nginx image.
+@returns one finding for each file nginx refuses.
+*/
 export async function checkNginxSyntax(session: Session, planned: PlannedCheck): Promise<BuiltInCheckResult> {
     const image = getTable(planned.scope.settings, 'tools.nginx')['image'];
     const paths = listSourcePaths(planned.files, [NGINX_CONF]);

@@ -123,12 +123,12 @@ function listGeneratorSources(session: Session, planned: PlannedCheck): Generato
 }
 
 /**
- * Runs the declared generator in a copy and reports missing or changed generator output.
- *
- * @param session the repository and its tools.
- * @param planned the generator check and its scope.
- * @returns one finding per missing or stale file.
- */
+Runs the declared generator in a copy and reports missing or changed generator output.
+
+@param session the repository and its tools.
+@param planned the generator check and its scope.
+@returns one finding per missing or stale file.
+*/
 export async function checkGeneratorOutputs(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const sources = listGeneratorSources(session, planned);
     if (sources === undefined) return [];

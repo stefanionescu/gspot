@@ -11,10 +11,10 @@ import {
 } from '#cli/config/settings/json-schema.ts';
 
 /**
- * Build the editor schema for this gspot version.
- *
- * @returns the JSON Schema document.
- */
+Build the editor schema for this gspot version.
+
+@returns the JSON Schema document.
+*/
 export function buildJsonSchema(): Record<string, unknown> {
     const converted = convertToJsonSchema(settingsSchema);
     const properties = Object.entries(converted.properties as Record<string, z.core.JSONSchema.JSONSchema>).map(

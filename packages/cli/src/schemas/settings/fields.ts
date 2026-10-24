@@ -142,12 +142,12 @@ export const formatSchema = formatFields.extend({
 } satisfies SchemaShape<Pick<TableSettings<'format'>, 'override'>, Pick<WrittenFormat, 'override'>>);
 
 /**
- * Accept a setting value, or a reasoned value with the same value schema.
- *
- * @param schema the value validator.
- * @param definition the description of the setting and the change that needs a reason.
- * @returns the setting schema with its default and definition.
- */
+Accept a setting value, or a reasoned value with the same value schema.
+
+@param schema the value validator.
+@param definition the description of the setting and the change that needs a reason.
+@returns the setting schema with its default and definition.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 23 calls in 5 files share it.
 export function allowReasonedValue<Output, Input>(
     schema: z.ZodType<Output, Input>,
@@ -168,11 +168,11 @@ export function allowReasonedValue<Output, Input>(
 }
 
 /**
- * Remove optional and default wrappers to inspect the shape of a setting.
- *
- * @param schema the validator to inspect.
- * @returns the inner validator.
- */
+Remove optional and default wrappers to inspect the shape of a setting.
+
+@param schema the validator to inspect.
+@returns the inner validator.
+*/
 export function unwrapSettingSchema(schema: z.ZodType): z.ZodType {
     let inner = schema;
     while (inner instanceof z.ZodOptional || inner instanceof z.ZodDefault || inner instanceof z.ZodPrefault)

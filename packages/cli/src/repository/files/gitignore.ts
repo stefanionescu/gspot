@@ -16,12 +16,12 @@ function readPatternLines(reads: ReadCache, file: string): string[] {
 }
 
 /**
- * Test a path against ignore files in order, keeping later negations.
- *
- * @param path the repository-relative file or folder path.
- * @param ignores the patterns with the folder that contains each ignore file.
- * @returns whether the final matching pattern ignores the path.
- */
+Test a path against ignore files in order, keeping later negations.
+
+@param path the repository-relative file or folder path.
+@param ignores the patterns with the folder that contains each ignore file.
+@returns whether the final matching pattern ignores the path.
+*/
 export function isIgnored(path: string, ignores: PathIgnore[]): boolean {
     let ignored = false;
     for (const { base, matcher } of ignores) {
@@ -34,12 +34,12 @@ export function isIgnored(path: string, ignores: PathIgnore[]): boolean {
 }
 
 /**
- * Build a test for paths that a tracked .gitignore ignores, or that sit inside an ignored folder.
- *
- * @param reads the run cache.
- * @param trackedPaths the tracked files of the repository.
- * @returns whether Git ignores the repository-relative path.
- */
+Build a test for paths that a tracked .gitignore ignores, or that sit inside an ignored folder.
+
+@param reads the run cache.
+@param trackedPaths the tracked files of the repository.
+@returns whether Git ignores the repository-relative path.
+*/
 export function buildGitignoreTest(reads: ReadCache, trackedPaths: string[]): (path: string) => boolean {
     const ignores: PathIgnore[] = trackedPaths
         .filter((path) => posix.basename(path) === GITIGNORE_FILE)

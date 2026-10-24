@@ -80,11 +80,11 @@ function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeF
 }
 
 /**
- * Collect what the ESLint config file of one scope needs: its file patterns, presets, rule options, and settings blocks.
- *
- * @param planned the config file to build.
- * @returns the scopes, presets, rule options, and settings blocks of the ESLint file.
- */
+Collect what the ESLint config file of one scope needs: its file patterns, presets, rule options, and settings blocks.
+
+@param planned the config file to build.
+@returns the scopes, presets, rule options, and settings blocks of the ESLint file.
+*/
 export function buildPlannedEslintFile(planned: PlannedConfigFile): PlannedEslintFile {
     const { session, scope, configFile } = planned;
     const { settings } = scope;

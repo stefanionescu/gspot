@@ -41,12 +41,12 @@ async function parseMigrations(session: Session, paths: Pick<Migration, 'path' |
 }
 
 /**
- * Reads and parses the forward migrations of the scope in version order, once for each set of paths.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose migrations to read.
- * @returns the migrations and a finding for each syntax error, both empty when the scope has no migration.
- */
+Reads and parses the forward migrations of the scope in version order, once for each set of paths.
+
+@param session the repository and its tools.
+@param planned the scope whose migrations to read.
+@returns the migrations and a finding for each syntax error, both empty when the scope has no migration.
+*/
 export async function readMigrations(session: Session, planned: PlannedCheck): Promise<MigrationRead> {
     const paths = listMigrationPaths(planned);
     if (paths.length === 0) return { migrations: [], findings: [] };
@@ -85,13 +85,13 @@ function listMigrationPaths(planned: PlannedCheck): string[] {
 }
 
 /**
- * Read migrations for semantic checks to inspect.
- *
- * @param session the repository and its tools.
- * @param planned the planned scope and run cache.
- * @returns the migration statements in version order.
- * @throws a skip when the migration-order check owns a syntax failure.
- */
+Read migrations for semantic checks to inspect.
+
+@param session the repository and its tools.
+@param planned the planned scope and run cache.
+@returns the migration statements in version order.
+@throws a skip when the migration-order check owns a syntax failure.
+*/
 export async function readParsedMigrations(session: Session, planned: PlannedCheck): Promise<Migration[]> {
     const { migrations, findings } = await readMigrations(session, planned);
     if (findings.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);

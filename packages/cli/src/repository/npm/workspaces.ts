@@ -40,14 +40,14 @@ function listWorkspacePackages(root: string): Package[] {
 const WORKSPACE_SOURCES = { create: () => new Map<string, string[]>() };
 
 /**
- * List the files of the workspace packages that a project imports or depends on, and the files that those packages
- * publish.
- *
- * @param reads the run cache.
- * @param scope the owning project.
- * @param files the source inventory.
- * @returns the repository-relative paths.
- */
+List the files of the workspace packages that a project imports or depends on, and the files that those packages
+publish.
+
+@param reads the run cache.
+@param scope the owning project.
+@param files the source inventory.
+@returns the repository-relative paths.
+*/
 export function listWorkspaceDependencySources(reads: ReadCache, scope: string, files: TrackedFile[]): string[] {
     const source = reads.root;
     const cache = getCachedValue(reads, WORKSPACE_SOURCES);
@@ -110,11 +110,11 @@ export function listWorkspaceDependencySources(reads: ReadCache, scope: string, 
 }
 
 /**
- * List the folders of the npm workspaces that the repository declares, without the root.
- *
- * @param repositoryRoot the boundary that declared workspace packages must remain inside.
- * @returns the root-relative folders.
- */
+List the folders of the npm workspaces that the repository declares, without the root.
+
+@param repositoryRoot the boundary that declared workspace packages must remain inside.
+@returns the root-relative folders.
+*/
 export function listWorkspaceFolders(repositoryRoot: string): string[] {
     const packages = listWorkspacePackages(repositoryRoot);
     for (const found of packages)
@@ -124,12 +124,12 @@ export function listWorkspaceFolders(repositoryRoot: string): string[] {
 }
 
 /**
- * Select the existing files that package.json files declare for publication.
- *
- * @param repositoryRoot the base folder for the package.json files and their patterns.
- * @param packageJsonPaths the repository-relative package.json files to read.
- * @returns the repository-relative package files.
- */
+Select the existing files that package.json files declare for publication.
+
+@param repositoryRoot the base folder for the package.json files and their patterns.
+@param packageJsonPaths the repository-relative package.json files to read.
+@returns the repository-relative package files.
+*/
 export function listPackageFiles(repositoryRoot: string, packageJsonPaths: string[]): string[] {
     return packageJsonPaths.flatMap((path) => {
         const folder = dirname(path);

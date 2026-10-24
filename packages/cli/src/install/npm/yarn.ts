@@ -58,14 +58,14 @@ function buildEnvironmentSettings(env: Record<string, string>, secrets: string[]
 }
 
 /**
- * Write the .yarnrc-install.yml of the temporary project with environment references in place of its connection
- * settings, and add those variables to env.
- *
- * @param install what install needs for this step.
- * @param runFolder the folder where the isolated project runs.
- * @param env variables for the install; the settings go here too.
- * @returns the credential values the lockfile must not contain.
- */
+Write the .yarnrc-install.yml of the temporary project with environment references in place of its connection
+settings, and add those variables to env.
+
+@param install what install needs for this step.
+@param runFolder the folder where the isolated project runs.
+@param env variables for the install; the settings go here too.
+@returns the credential values the lockfile must not contain.
+*/
 export async function writeYarnSettings(
     install: ToolInstall,
     runFolder: string,

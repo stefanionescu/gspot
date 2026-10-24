@@ -45,11 +45,11 @@ function getParser(name: GrammarName): Promise<Parser> {
 }
 
 /**
- * Select the grammar of a code file by its extension alone.
- *
- * @param path the file to parse.
- * @returns the grammar, or undefined for a file that no code grammar reads.
- */
+Select the grammar of a code file by its extension alone.
+
+@param path the file to parse.
+@returns the grammar, or undefined for a file that no code grammar reads.
+*/
 export function findGrammarByExtension(path: string): GrammarName | undefined {
     if (DECLARATION_EXTENSIONS.some((extension) => path.endsWith(extension))) return undefined;
     const extension = posix.extname(path);
@@ -60,13 +60,13 @@ export function findGrammarByExtension(path: string): GrammarName | undefined {
 }
 
 /**
- * Share one parse per run, and give each reader its own tree handle to dispose.
- *
- * @param name the grammar of the source.
- * @param text the exact source to parse.
- * @param cache source reads and tree cleanup for this run.
- * @returns a tree that the caller owns.
- */
+Share one parse per run, and give each reader its own tree handle to dispose.
+
+@param name the grammar of the source.
+@param text the exact source to parse.
+@param cache source reads and tree cleanup for this run.
+@returns a tree that the caller owns.
+*/
 export async function parseSource(name: GrammarName, text: string, cache?: ParseCache): Promise<Tree> {
     const parser = await getParser(name);
     if (cache?.resources === undefined) return parser.parse(text) as Tree;
@@ -84,12 +84,12 @@ export async function parseSource(name: GrammarName, text: string, cache?: Parse
 }
 
 /**
- * Read the files, lend each parsed tree to a visitor, then release its handle.
- *
- * @param sources the files to parse, each with its grammar.
- * @param visit reads one tree; syntax nodes must not leave this callback.
- * @returns a promise that settles after every file.
- */
+Read the files, lend each parsed tree to a visitor, then release its handle.
+
+@param sources the files to parse, each with its grammar.
+@param visit reads one tree; syntax nodes must not leave this callback.
+@returns a promise that settles after every file.
+*/
 export async function visitParsedSources(
     sources: GrammarSourceFiles,
     visit: (source: SourceTree) => void,
@@ -106,12 +106,12 @@ export async function visitParsedSources(
 }
 
 /**
- * Select the grammar of a language configuration, with TSX for .tsx files.
- *
- * @param path the file to parse.
- * @param language the configuration that owns the file.
- * @returns the grammar, or undefined for declaration files, settings files, and languages without a grammar.
- */
+Select the grammar of a language configuration, with TSX for .tsx files.
+
+@param path the file to parse.
+@param language the configuration that owns the file.
+@returns the grammar, or undefined for declaration files, settings files, and languages without a grammar.
+*/
 export function selectGrammar(path: string, language: string): GrammarName | undefined {
     if (!GRAMMAR_CONFIGURATIONS.has(language)) return undefined;
     if (language === 'bash' && posix.extname(path) === '') return 'bash';

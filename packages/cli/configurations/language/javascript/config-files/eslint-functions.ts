@@ -14,13 +14,13 @@ const runtimeGlobalNames = new WeakMap<object, Set<string>>();
 const runtimeMatcherGroups = new WeakMap<object, ((path: string) => boolean)[]>();
 
 /**
- * Remove host runtime globals and keep framework compiler and test names. Runtime APIs get their globals from blocks with
- * their own file selectors.
- *
- * @param block the framework ESLint configuration block.
- * @param globalsByRuntime the globals tables of the globals package, keyed by runtime name.
- * @returns a copy of the block without the runtime names in its globals, or the block itself when it declares no globals.
- */
+Remove host runtime globals and keep framework compiler and test names. Runtime APIs get their globals from blocks with
+their own file selectors.
+
+@param block the framework ESLint configuration block.
+@param globalsByRuntime the globals tables of the globals package, keyed by runtime name.
+@returns a copy of the block without the runtime names in its globals, or the block itself when it declares no globals.
+*/
 export function stripRuntimeGlobals(
     block: JavascriptBlock,
     globalsByRuntime: Record<string, EslintGlobals>,
@@ -51,12 +51,12 @@ export function stripRuntimeGlobals(
 }
 
 /**
- * Select the files that one runtime declaration covers: a later declaration that covers a file wins.
- *
- * @param index the position of the runtime declaration that this matcher stands for.
- * @param runtimes the runtime declarations, in order.
- * @returns whether a file belongs to this declaration after later ones apply.
- */
+Select the files that one runtime declaration covers: a later declaration that covers a file wins.
+
+@param index the position of the runtime declaration that this matcher stands for.
+@param runtimes the runtime declarations, in order.
+@returns whether a file belongs to this declaration after later ones apply.
+*/
 export function runtimeMatches(index: number, runtimes: EslintRuntime[]): (file: string) => boolean {
     let matchers = runtimeMatcherGroups.get(runtimes);
     if (matchers === undefined) {
@@ -75,13 +75,13 @@ export function runtimeMatches(index: number, runtimes: EslintRuntime[]): (file:
 }
 
 /**
- * Select the Vue or Svelte files whose script element asks for TypeScript. The final parser reports syntax errors, so a
- * file that does not parse counts as untyped.
- *
- * @param parser vue-eslint-parser or svelte-eslint-parser.
- * @param typescriptParser the parser of TypeScript script elements, which svelte-eslint-parser takes.
- * @returns whether a file has a TypeScript script element.
- */
+Select the Vue or Svelte files whose script element asks for TypeScript. The final parser reports syntax errors, so a
+file that does not parse counts as untyped.
+
+@param parser vue-eslint-parser or svelte-eslint-parser.
+@param typescriptParser the parser of TypeScript script elements, which svelte-eslint-parser takes.
+@returns whether a file has a TypeScript script element.
+*/
 export function componentMatches(parser: ComponentParser, typescriptParser?: unknown): (file: string) => boolean {
     const scriptParser =
         typescriptParser === undefined ? false : { ts: typescriptParser, typescript: typescriptParser };

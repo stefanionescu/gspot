@@ -126,12 +126,12 @@ function buildConfigurationPage(
 }
 
 /**
- * Build the grouped configuration index and its pages.
- *
- * @param facts the CLI reference facts
- * @param guideTitles the authored guide titles keyed by slug.
- * @returns the index and each configuration page, keyed by path
- */
+Build the grouped configuration index and its pages.
+
+@param facts the CLI reference facts
+@param guideTitles the authored guide titles keyed by slug.
+@returns the index and each configuration page, keyed by path
+*/
 export function buildConfigurationPages(
     facts: CliReference,
     guideTitles: Map<string, string>,

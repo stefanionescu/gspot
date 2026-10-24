@@ -75,12 +75,12 @@ function compileBannedWords(
 }
 
 /**
- * Reads the naming settings of a scope: the shipped lists plus the repository additions, exemptions, and limits.
- *
- * @param settings the authored repository settings.
- * @param scope the scope, selected configurations, and merged settings.
- * @returns the word lists, exemptions, and limits.
- */
+Reads the naming settings of a scope: the shipped lists plus the repository additions, exemptions, and limits.
+
+@param settings the authored repository settings.
+@param scope the scope, selected configurations, and merged settings.
+@returns the word lists, exemptions, and limits.
+*/
 export function readNamingSettings(settings: Settings, scope: Scope): NamingSettings {
     const {
         settings: scopeSettings,
@@ -122,11 +122,11 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
 }
 
 /**
- * Splits a name into lowercase parts: `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
- *
- * @param name the identifier.
- * @returns the lowercase words and digit groups.
- */
+Splits a name into lowercase parts: `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`; `base64` stays one word.
+
+@param name the identifier.
+@returns the lowercase words and digit groups.
+*/
 export function splitWords(name: string): string[] {
     return name
         .split(SEPARATORS)

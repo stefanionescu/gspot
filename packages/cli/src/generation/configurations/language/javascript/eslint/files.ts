@@ -22,11 +22,11 @@ function isComponentConfiguration(name: string): name is (typeof COMPONENT_CONFI
 }
 
 /**
- * Calculate the exact file sets that base blocks and the blocks of every framework share.
- *
- * @param groups the file sets to combine.
- * @returns code patterns and intersections that leave out non-code files.
- */
+Calculate the exact file sets that base blocks and the blocks of every framework share.
+
+@param groups the file sets to combine.
+@returns code patterns and intersections that leave out non-code files.
+*/
 export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
     const { scopes, nodeFiles } = groups;
     const source = buildSourcePattern(...CODE_LANGUAGES);
@@ -76,12 +76,12 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
 }
 
 /**
- * Build one ESLint brace glob for the source extensions of the languages.
- *
- * @param languages the inventory language tags.
- *
- * @returns the repository-relative file pattern.
- */
+Build one ESLint brace glob for the source extensions of the languages.
+
+@param languages the inventory language tags.
+
+@returns the repository-relative file pattern.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 10 calls in 5 files share it.
 export function buildSourcePattern(...languages: string[]): string {
     return `**/*.{${listTaggedExtensions(...languages)
@@ -90,13 +90,13 @@ export function buildSourcePattern(...languages: string[]): string {
 }
 
 /**
- * Escape detected Node paths for glob selectors within one project scope.
- *
- * @param paths your repository-relative Node files.
- * @param scope the folder that owns these sources.
- *
- * @returns literal file patterns that cannot select neighboring filenames.
- */
+Escape detected Node paths for glob selectors within one project scope.
+
+@param paths your repository-relative Node files.
+@param scope the folder that owns these sources.
+
+@returns literal file patterns that cannot select neighboring filenames.
+*/
 export function buildNodePatterns(paths: string[], scope: string): string[] {
     return paths
         .filter((path) => isInScope(path, scope))
@@ -104,12 +104,12 @@ export function buildNodePatterns(paths: string[], scope: string): string[] {
 }
 
 /**
- * Split globs into readable includes and excludes for blocks and runtime tests.
- *
- * @param patterns your own or generated paths, with a leading ! for an exclusion.
- *
- * @returns the expanded include and exclude globs.
- */
+Split globs into readable includes and excludes for blocks and runtime tests.
+
+@param patterns your own or generated paths, with a leading ! for an exclusion.
+
+@returns the expanded include and exclude globs.
+*/
 export function splitGlobs(patterns: string[]): PathExpressions {
     const expanded = includeFolderContents(patterns);
     return {
@@ -119,13 +119,13 @@ export function splitGlobs(patterns: string[]): PathExpressions {
 }
 
 /**
- * Intersect file selectors with root-relative patterns and one literal project scope.
- *
- * @param files the source selectors.
- * @param scope the project folder.
- * @param paths the repository-relative path patterns.
- * @returns the intersections of the code, project, and your own path selectors.
- */
+Intersect file selectors with root-relative patterns and one literal project scope.
+
+@param files the source selectors.
+@param scope the project folder.
+@param paths the repository-relative path patterns.
+@returns the intersections of the code, project, and your own path selectors.
+*/
 export function buildScopeFiles(
     files: NonNullable<EslintBlockFields['files']>,
     scope: string,
@@ -141,12 +141,12 @@ export function buildScopeFiles(
 }
 
 /**
- * Exclude nested scopes with the same literal escaping used for includes.
- *
- * @param paths the project folders.
- * @param scope the parent folder.
- * @returns the child scope globs.
- */
+Exclude nested scopes with the same literal escaping used for includes.
+
+@param paths the project folders.
+@param scope the parent folder.
+@returns the child scope globs.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 4 files share it.
 export function listNestedScopeGlobs(paths: string[], scope: string): string[] {
     return listNestedScopes(paths, scope).map((path) =>
@@ -155,12 +155,12 @@ export function listNestedScopeGlobs(paths: string[], scope: string): string[] {
 }
 
 /**
- * Intersect each authored test selector with the generated code selectors.
- *
- * @param tests the test selectors.
- * @param code the code selectors.
- * @returns one intersection per test and code selector.
- */
+Intersect each authored test selector with the generated code selectors.
+
+@param tests the test selectors.
+@param code the code selectors.
+@returns one intersection per test and code selector.
+*/
 export function buildTestFiles(tests: string[], code: string[]): [string, string][] {
     return tests.flatMap((test) => code.map((pattern): [string, string] => [test, pattern]));
 }

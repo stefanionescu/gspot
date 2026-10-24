@@ -21,12 +21,12 @@ async function readScript(session: Session, file: TrackedFile): Promise<ScriptFi
 }
 
 /**
- * Parses the scope scripts once and shares them across checks.
- *
- * @param session the repository and its tools.
- * @param planned the scope files and parser resources.
- * @returns the parsed scripts.
- */
+Parses the scope scripts once and shares them across checks.
+
+@param session the repository and its tools.
+@param planned the scope files and parser resources.
+@returns the parsed scripts.
+*/
 export function readScripts(session: Session, planned: PlannedCheck): Promise<ScriptFile[]> {
     const files = planned.files.filter((file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG));
     const key = JSON.stringify([planned.scope.folder.path, files.map((file) => file.path)]);

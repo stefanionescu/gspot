@@ -153,11 +153,11 @@ function listUnownedConfigFiles(
 }
 
 /**
- * List setup suggestions for the repository.
- *
- * @param session the repository to compare with the generated files.
- * @returns the suggested changes.
- */
+List setup suggestions for the repository.
+
+@param session the repository to compare with the generated files.
+@returns the suggested changes.
+*/
 export function listSuggestions(session: Session): Suggestions {
     const configurations = session.toolConfigurations;
     const repositorySetup = readRepositorySetup(session.reads, session.repository);

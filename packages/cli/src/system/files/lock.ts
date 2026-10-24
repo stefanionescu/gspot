@@ -64,11 +64,11 @@ function removeStaleLock(bounds: FileBounds, path: string, absolutePath: string)
 }
 
 /**
- * Release every lock that this Files handle holds.
- *
- * @param bounds the root and its held locks.
- * @returns the paths of released locks for parent-folder cleanup.
- */
+Release every lock that this Files handle holds.
+
+@param bounds the root and its held locks.
+@returns the paths of released locks for parent-folder cleanup.
+*/
 export function releaseLocks(bounds: FileBounds): string[] {
     const released: string[] = [];
     for (const [path, holder] of bounds.locks) {
@@ -81,11 +81,11 @@ export function releaseLocks(bounds: FileBounds): string[] {
 }
 
 /**
- * Take the writer lock at a path. Clear a lock whose holder has exited, and refuse one whose holder still runs.
- *
- * @param bounds the root, which records the lock it now holds.
- * @param path the root-relative lock file.
- */
+Take the writer lock at a path. Clear a lock whose holder has exited, and refuse one whose holder still runs.
+
+@param bounds the root, which records the lock it now holds.
+@param path the root-relative lock file.
+*/
 export function createLock(bounds: FileBounds, path: string): void {
     const target = preparePath(bounds, path);
     const token = `${String(process.pid)}${LOCK_TOKEN_SEPARATOR}${randomUUID()}`;

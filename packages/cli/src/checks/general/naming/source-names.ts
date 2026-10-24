@@ -10,11 +10,11 @@ import type { NamedFile, Identifier, IdentifierRead } from '#cli/types/checks/ge
 import { extractTypescriptIdentifiers } from '#cli/checks/general/naming/languages/typescript.ts';
 
 /**
- * List source files with the selected language configuration for each file.
- *
- * @param planned the selected check, configuration manifests, and source files.
- * @returns the source files and their language names.
- */
+List source files with the selected language configuration for each file.
+
+@param planned the selected check, configuration manifests, and source files.
+@returns the source files and their language names.
+*/
 export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
     const languages = planned.scope.configurations
         .filter((configuration) => configuration.group === 'language')
@@ -32,14 +32,14 @@ export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
 }
 
 /**
- * Lists the identifiers a file declares, or none when no extractor reads its language.
- *
- * @param file the repository path of the source.
- * @param text the source to parse.
- * @param language the configuration that covers the file.
- * @param session the read cache and parser resources.
- * @returns the identifiers in source order, or a syntax error.
- */
+Lists the identifiers a file declares, or none when no extractor reads its language.
+
+@param file the repository path of the source.
+@param text the source to parse.
+@param language the configuration that covers the file.
+@param session the read cache and parser resources.
+@returns the identifiers in source order, or a syntax error.
+*/
 export async function parseIdentifiers(
     file: string,
     text: string,

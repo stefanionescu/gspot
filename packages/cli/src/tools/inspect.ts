@@ -126,12 +126,12 @@ function inspectExecutable(inspected: InspectedTool): ToolInspection {
 }
 
 /**
- * Explain why the required tool cannot run.
- *
- * @param tool the tool to explain.
- * @param inspection the observed installation.
- * @returns the install note, with the next step.
- */
+Explain why the required tool cannot run.
+
+@param tool the tool to explain.
+@param inspection the observed installation.
+@returns the install note, with the next step.
+*/
 export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): string {
     const help = inspection.help ?? buildInstallHelp(tool);
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
@@ -141,12 +141,12 @@ export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): s
 }
 
 /**
- * Inspect one tool, and reuse an inspection from earlier in this run.
- *
- * @param search where to search, with the run cache.
- * @param tool the tool to inspect.
- * @returns the tool path, version, and availability.
- */
+Inspect one tool, and reuse an inspection from earlier in this run.
+
+@param search where to search, with the run cache.
+@param tool the tool to inspect.
+@returns the tool path, version, and availability.
+*/
 export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
     const { root, inspections } = search;
     const cwd = search.cwd ?? root;
@@ -169,12 +169,12 @@ export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
 }
 
 /**
- * Resolve a usable executable, or a failure with the next step.
- *
- * @param tool the tool and its pin.
- * @param inspection the resolved path, version, and install command.
- * @returns the executable path, or the unavailable status and its message.
- */
+Resolve a usable executable, or a failure with the next step.
+
+@param tool the tool and its pin.
+@param inspection the resolved path, version, and install command.
+@returns the executable path, or the unavailable status and its message.
+*/
 export function buildToolAvailability(tool: Tool, inspection: ToolInspection): ToolAvailability {
     if (AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined) return { path: inspection.path };
     if (inspection.state === 'error')

@@ -76,13 +76,13 @@ function buildSelectorPaths(scope: Scope, declaration: Configuration['eslint']['
 }
 
 /**
- * Resolve the syntax selectors that the configurations and settings add in each project scope.
- *
- * @param scopes every project scope.
- * @param level the selected lint rule level.
- * @param reexports the export convention.
- * @returns selector groups with their owning scope and excluded child projects.
- */
+Resolve the syntax selectors that the configurations and settings add in each project scope.
+
+@param scopes every project scope.
+@param level the selected lint rule level.
+@param reexports the export convention.
+@returns selector groups with their owning scope and excluded child projects.
+*/
 export function buildSelectorGroups(
     scopes: Scope[],
     level: Level,

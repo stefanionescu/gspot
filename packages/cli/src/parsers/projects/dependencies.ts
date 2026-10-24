@@ -171,12 +171,12 @@ async function parseSwiftPackage(path: string, text: string): Promise<Dependency
 }
 
 /**
- * Parse package requirements after removing line continuations and comments.
- *
- * @param path the repository-relative requirements file.
- * @param text authored distribution names, version specifiers, and installer options.
- * @returns the package declarations in the file.
- */
+Parse package requirements after removing line continuations and comments.
+
+@param path the repository-relative requirements file.
+@param text authored distribution names, version specifiers, and installer options.
+@returns the package declarations in the file.
+*/
 export function parseRequirements(path: string, text: string): DependencyFile {
     const dependencies: DependencyMap = {};
     for (const line of text.replaceAll(LINE_CONTINUATION, '').split(/\r?\n/u)) {

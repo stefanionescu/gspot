@@ -38,12 +38,12 @@ function formatChangeLines(key: string, setting: Setting, scopeSetting: SettingS
 }
 
 /**
- * Describe a setting's defaults, effective values, and edit commands.
- *
- * @param session the repository settings and selected scopes, when available.
- * @param key the setting name to resolve.
- * @returns the explanation, or undefined when no selected configuration declares the setting.
- */
+Describe a setting's defaults, effective values, and edit commands.
+
+@param session the repository settings and selected scopes, when available.
+@param key the setting name to resolve.
+@returns the explanation, or undefined when no selected configuration declares the setting.
+*/
 export function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const { settings } = session.settingsFile;

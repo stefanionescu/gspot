@@ -13,22 +13,22 @@ import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/ap
 import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/files/generated.ts';
 
 /**
- * Say that the generated files need no change.
- *
- * @param count how many files gspot generates.
- * @returns the sentence, with the verb agreeing with the count.
- */
+Say that the generated files need no change.
+
+@param count how many files gspot generates.
+@returns the sentence, with the verb agreeing with the count.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function formatUpToDate(count: number): string {
     return `No change: the ${formatCount(count, 'generated file')} ${count === 1 ? 'is' : 'are'} up to date.`;
 }
 
 /**
- * Format generated file changes and notes for command output.
- *
- * @param report the applied file changes and notes.
- * @returns the report text.
- */
+Format generated file changes and notes for command output.
+
+@param report the applied file changes and notes.
+@returns the report text.
+*/
 export function formatApplyReport(report: ApplyReport): string {
     const lines = [
         ...report.written.map((path) => `wrote    ${path}`),
@@ -87,15 +87,15 @@ function buildReplacementPlans(
 }
 
 /**
- * Plan, write, and report generated file changes under the repository writer lock.
- *
- * @param session the repository to write to.
- * @param generated the files to write, with resolved lockfiles.
- * @param writer writes and removes files.
- * @param options what the write may replace.
- * @param options.reviewedOriginals the file contents that you reviewed and approved for replacement.
- * @returns the file changes.
- */
+Plan, write, and report generated file changes under the repository writer lock.
+
+@param session the repository to write to.
+@param generated the files to write, with resolved lockfiles.
+@param writer writes and removes files.
+@param options what the write may replace.
+@param options.reviewedOriginals the file contents that you reviewed and approved for replacement.
+@returns the file changes.
+*/
 export async function writeGeneratedFiles(
     session: Session,
     generated: GenerationResult,

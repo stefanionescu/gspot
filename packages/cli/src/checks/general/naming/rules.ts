@@ -240,12 +240,12 @@ function listCaseNames(base: CategoryLimits, identifier: Identifier, overrides: 
 }
 
 /**
- * Checks an identifier against the naming settings, unless a path override allows it.
- *
- * @param identifier the name to check.
- * @param naming the check and its naming settings.
- * @returns the findings, empty when the name passes.
- */
+Checks an identifier against the naming settings, unless a path override allows it.
+
+@param identifier the name to check.
+@param naming the check and its naming settings.
+@returns the findings, empty when the name passes.
+*/
 export function validateIdentifier(identifier: Identifier, naming: FileNaming): Finding[] {
     const context: CheckedIdentifier = {
         ...naming,
@@ -279,13 +279,13 @@ export function validateIdentifier(identifier: Identifier, naming: FileNaming): 
 }
 
 /**
- * Check declared names against naming rules and the selected test-file patterns.
- *
- * @param planned the selected check and its test-file patterns.
- * @param settings the naming limits and allowances.
- * @param identifiers the declarations and their source positions.
- * @returns the naming findings for the supplied declarations.
- */
+Check declared names against naming rules and the selected test-file patterns.
+
+@param planned the selected check and its test-file patterns.
+@param settings the naming limits and allowances.
+@param identifiers the declarations and their source positions.
+@returns the naming findings for the supplied declarations.
+*/
 export function validateIdentifiers(
     planned: PlannedCheck,
     settings: NamingSettings,

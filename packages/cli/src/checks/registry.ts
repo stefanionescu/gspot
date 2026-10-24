@@ -199,11 +199,11 @@ const CHECK_CODE: Record<string, CheckCode> = {
 };
 
 /**
- * Find the code of one check: the generator output check, or the code under its check ID.
- *
- * @param check the check to run.
- * @returns the check code, or undefined for a check that runs only its declared command.
- */
+Find the code of one check: the generator output check, or the code under its check ID.
+
+@param check the check to run.
+@returns the check code, or undefined for a check that runs only its declared command.
+*/
 export function findCheckCode(check: Pick<Check, 'id' | 'generator_outputs'>): CheckCode | undefined {
     if (check.generator_outputs !== undefined) return { check: checkGeneratorOutputs };
     return CHECK_CODE[check.id];

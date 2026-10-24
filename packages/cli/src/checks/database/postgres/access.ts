@@ -73,12 +73,12 @@ function listMigrationStatements(migrations: Migration[]): MigrationStatement[] 
 }
 
 /**
- * Reports each table in a client schema with row security off.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose migrations to read.
- * @returns the findings.
- */
+Reports each table in a client schema with row security off.
+
+@param session the repository and its tools.
+@param planned the scope whose migrations to read.
+@returns the findings.
+*/
 export async function checkRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildSchema(migrations);
@@ -98,12 +98,12 @@ export async function checkRowLevelSecurity(session: Session, planned: PlannedCh
 }
 
 /**
- * Reports each grant of every privilege in a migration after the frozen ones.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose migrations to read.
- * @returns the findings.
- */
+Reports each grant of every privilege in a migration after the frozen ones.
+
+@param session the repository and its tools.
+@param planned the scope whose migrations to read.
+@returns the findings.
+*/
 export async function checkPostgresGrants(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const frozen = selectFrozenMigrations(
@@ -128,12 +128,12 @@ export async function checkPostgresGrants(session: Session, planned: PlannedChec
 }
 
 /**
- * Reports each SECURITY DEFINER function that sets no search_path.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose migrations to read.
- * @returns the findings.
- */
+Reports each SECURITY DEFINER function that sets no search_path.
+
+@param session the repository and its tools.
+@param planned the scope whose migrations to read.
+@returns the findings.
+*/
 export async function checkDefinerSearchPath(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const message =
         'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.';

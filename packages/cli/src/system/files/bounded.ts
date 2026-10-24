@@ -87,11 +87,11 @@ function isRenameBlocked(expected: FileContents | undefined): boolean {
 }
 
 /**
- * Keep only the permissions that the system file API shows. Windows shows a read-only flag.
- *
- * @param file the mode, and whether it holds a link.
- * @returns the mode the system can represent.
- */
+Keep only the permissions that the system file API shows. Windows shows a read-only flag.
+
+@param file the mode, and whether it holds a link.
+@returns the mode the system can represent.
+*/
 export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isLink'>): number {
     if (file.isLink) return PERMISSION_BITS;
     if (process.platform !== 'win32') return file.mode;
@@ -100,12 +100,12 @@ export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isLink'>): 
 }
 
 /**
- * Check whether two file contents hold the same bytes and the same mode, as far as the system can show it.
- *
- * @param found the file contents on disk.
- * @param expected the file contents that the caller expects.
- * @returns true when neither exists or both match.
- */
+Check whether two file contents hold the same bytes and the same mode, as far as the system can show it.
+
+@param found the file contents on disk.
+@param expected the file contents that the caller expects.
+@returns true when neither exists or both match.
+*/
 export function isSameContents(found: FileContents | undefined, expected: FileContents | undefined): boolean {
     if (found === undefined || expected === undefined) return found === expected;
     const read = { ...found, mode: normalizeFileMode(found) };
@@ -114,36 +114,36 @@ export function isSameContents(found: FileContents | undefined, expected: FileCo
 }
 
 /**
- * Build the absolute path of a file after a check that every parent names a real folder, not a link.
- *
- * @param bounds the root.
- * @param path the root-relative file.
- * @returns the absolute path.
- */
+Build the absolute path of a file after a check that every parent names a real folder, not a link.
+
+@param bounds the root.
+@param path the root-relative file.
+@returns the absolute path.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 3 files share it.
 export function buildContainedPath(bounds: FileBounds, path: string): string {
     return walkParentFolders(bounds, path, lstatSync);
 }
 
 /**
- * Build the absolute path of a file, create missing parents, and refuse parents that link or name no folder.
- *
- * @param bounds the root.
- * @param path the root-relative file.
- * @returns the absolute path after preparing its parents.
- */
+Build the absolute path of a file, create missing parents, and refuse parents that link or name no folder.
+
+@param bounds the root.
+@param path the root-relative file.
+@returns the absolute path after preparing its parents.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 3 files share it.
 export function preparePath(bounds: FileBounds, path: string): string {
     return walkParentFolders(bounds, path, prepareParentFolder);
 }
 
 /**
- * Read a regular file with no other hard link, or return undefined when absent.
- *
- * @param bounds the root.
- * @param path the root-relative file.
- * @returns the file contents.
- */
+Read a regular file with no other hard link, or return undefined when absent.
+
+@param bounds the root.
+@param path the root-relative file.
+@returns the file contents.
+*/
 export function readBounded(bounds: FileBounds, path: string): FileContents | undefined {
     try {
         const target = buildContainedPath(bounds, path);
@@ -155,12 +155,12 @@ export function readBounded(bounds: FileBounds, path: string): FileContents | un
 }
 
 /**
- * Read a file or symbolic link without following the link, or return undefined when absent.
- *
- * @param bounds the root.
- * @param path the root-relative file.
- * @returns the file contents.
- */
+Read a file or symbolic link without following the link, or return undefined when absent.
+
+@param bounds the root.
+@param path the root-relative file.
+@returns the file contents.
+*/
 export function readBoundedKeepingLinks(bounds: FileBounds, path: string): FileContents | undefined {
     try {
         const target = buildContainedPath(bounds, path);
@@ -175,13 +175,13 @@ export function readBoundedKeepingLinks(bounds: FileBounds, path: string): FileC
 }
 
 /**
- * Replace the file at a path with new file contents, through a staged file that moves into place.
- *
- * @param bounds the root.
- * @param path the root-relative file.
- * @param contents the file contents to write.
- * @param expected the file contents that the caller last saw, or undefined for a new file.
- */
+Replace the file at a path with new file contents, through a staged file that moves into place.
+
+@param bounds the root.
+@param path the root-relative file.
+@param contents the file contents to write.
+@param expected the file contents that the caller last saw, or undefined for a new file.
+*/
 export function replaceBounded(
     bounds: FileBounds,
     path: string,

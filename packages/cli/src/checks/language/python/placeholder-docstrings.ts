@@ -7,12 +7,12 @@ import { findDocstring, PYTHON_SOURCES } from '#cli/parsers/code/python.ts';
 import { PLACEHOLDERS, NON_WORD_RUN } from '#cli/config/checks/language/python/placeholder-docstrings.ts';
 
 /**
- * Reports Python docstrings that only repeat a name or placeholder.
- *
- * @param session the repository and its tools.
- * @param planned the scope Python files.
- * @returns the findings.
- */
+Reports Python docstrings that only repeat a name or placeholder.
+
+@param session the repository and its tools.
+@param planned the scope Python files.
+@returns the findings.
+*/
 export async function checkPythonPlaceholderDocstrings(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const parsed = await parseCached(
         { root: session.root, reads: session.reads, resources: session.resources, files: planned.files },

@@ -151,12 +151,12 @@ async function planAfterFixes(session: Session, options: RunOptions): Promise<Pl
 }
 
 /**
- * Plan and run the checks, after the fixers when --fix asks, then drop ignored findings and build the run report.
- *
- * @param opened the repository and its tools.
- * @param options the stage, the file selection, and the fix flags.
- * @returns the report, the plan, and the fix report when --fix ran.
- */
+Plan and run the checks, after the fixers when --fix asks, then drop ignored findings and build the run report.
+
+@param opened the repository and its tools.
+@param options the stage, the file selection, and the fix flags.
+@returns the report, the plan, and the fix report when --fix ran.
+*/
 export async function runChecks(opened: Session, options: RunOptions): Promise<RunResult> {
     const session = opened;
     const started = new Date();
@@ -181,14 +181,14 @@ export async function runChecks(opened: Session, options: RunOptions): Promise<R
 }
 
 /**
- * Run a built-in check or the command of its implementation.
- *
- * @param session the repository and its tools.
- * @param planned the check to run.
- * @param code the check implementation, or undefined for a tool command.
- * @param options the command and temporary folder overrides.
- * @returns the check result.
- */
+Run a built-in check or the command of its implementation.
+
+@param session the repository and its tools.
+@param planned the check to run.
+@param code the check implementation, or undefined for a tool command.
+@param options the command and temporary folder overrides.
+@returns the check result.
+*/
 export async function runCheckCode(
     session: Session,
     planned: PlannedCheck,

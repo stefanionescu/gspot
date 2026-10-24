@@ -42,13 +42,13 @@ function listPathIdentifiers(planned: PlannedCheck): Identifier[] {
 }
 
 /**
- * Builds the identifier of a file name: the name without its extension, or the whole file name for a SQL migration.
- *
- * @param path the file, relative to the repository root.
- * @param language the configuration that covers the file.
- * @param containers the bracket pairs that wrap path segments.
- * @returns the name to check and its category.
- */
+Builds the identifier of a file name: the name without its extension, or the whole file name for a SQL migration.
+
+@param path the file, relative to the repository root.
+@param language the configuration that covers the file.
+@param containers the bracket pairs that wrap path segments.
+@returns the name to check and its category.
+*/
 export function buildFileIdentifier(path: string, language: string, containers: PathContainer[]): Identifier {
     const base = posix.basename(path);
     const name = language === 'sql' && base.endsWith(SQL_EXTENSION) ? base : extractBaseName(base);
@@ -60,13 +60,13 @@ export function buildFileIdentifier(path: string, language: string, containers: 
 }
 
 /**
- * Builds an identifier for each folder above a file, from the top down, except dot folders.
- *
- * @param path the file, relative to the repository root.
- * @param language the configuration that covers the file.
- * @param containers the bracket pairs that wrap path segments.
- * @returns one identifier per nonempty folder without a leading dot.
- */
+Builds an identifier for each folder above a file, from the top down, except dot folders.
+
+@param path the file, relative to the repository root.
+@param language the configuration that covers the file.
+@param containers the bracket pairs that wrap path segments.
+@returns one identifier per nonempty folder without a leading dot.
+*/
 export function buildFolderIdentifiers(path: string, language: string, containers: PathContainer[]): Identifier[] {
     const segments = path.split('/').slice(0, -1);
     return segments.flatMap((segment, index) => {
@@ -80,12 +80,12 @@ export function buildFolderIdentifiers(path: string, language: string, container
 }
 
 /**
- * Checks file and folder names against the naming settings.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to check.
- * @returns the findings.
- */
+Checks file and folder names against the naming settings.
+
+@param session the repository and its tools.
+@param planned the scope files to check.
+@returns the findings.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The check registry calls it by its check name.
 export function checkNamingPaths(session: Session, planned: PlannedCheck): Finding[] {
     const settings = readNamingSettings(session.settingsFile.settings, planned.scope);

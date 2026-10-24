@@ -47,15 +47,15 @@ async function buildScopes(
 }
 
 /**
- * Read and classify the repository from the authored settings and scopes.
- *
- * @param input the inputs of the initial repository read.
- * @param input.settings the authored settings and scope configuration.
- * @param input.text the original gspot.toml text.
- * @param input.configurations the shipped configuration declarations.
- * @param input.reads the current repository cache and root folder.
- * @returns the inventory used both before and after fixes.
- */
+Read and classify the repository from the authored settings and scopes.
+
+@param input the inputs of the initial repository read.
+@param input.settings the authored settings and scope configuration.
+@param input.text the original gspot.toml text.
+@param input.configurations the shipped configuration declarations.
+@param input.reads the current repository cache and root folder.
+@returns the inventory used both before and after fixes.
+*/
 export async function readSessionRepository({
     settings,
     text,
@@ -99,17 +99,17 @@ export async function readSessionRepository({
 }
 
 /**
- * Open a repository session. Refuse invalid settings or configuration choices.
- *
- * @param rootPath the repository root.
- * @param options where the tools sit, and what the run already read.
- * @param options.installedRoot the working repository with the installed tools.
- * @param options.reads the run cache.
- * @param options.settingsFile the settings to use, or none to read them from the repository.
- * @param options.resources the cleanup stack of the caller.
- * @param options.cancelSignal stops the operations of this session.
- * @returns the validated session.
- */
+Open a repository session. Refuse invalid settings or configuration choices.
+
+@param rootPath the repository root.
+@param options where the tools sit, and what the run already read.
+@param options.installedRoot the working repository with the installed tools.
+@param options.reads the run cache.
+@param options.settingsFile the settings to use, or none to read them from the repository.
+@param options.resources the cleanup stack of the caller.
+@param options.cancelSignal stops the operations of this session.
+@returns the validated session.
+*/
 export async function openSession(
     rootPath: string,
     {

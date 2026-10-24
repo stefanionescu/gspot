@@ -92,12 +92,12 @@ function decodeQuotedPattern(pattern: string): string | undefined {
 }
 
 /**
- * Read the attribute lines in their file order, and keep quoted paths.
- *
- * @param text the gitattributes source.
- * @param folder the repository-relative place of the .gitattributes file.
- * @returns selectors rooted in that folder and their declared attributes.
- */
+Read the attribute lines in their file order, and keep quoted paths.
+
+@param text the gitattributes source.
+@param folder the repository-relative place of the .gitattributes file.
+@returns selectors rooted in that folder and their declared attributes.
+*/
 export function parseAttributePatterns(text: string, folder: string): AttributePattern[] {
     return text.split('\n').flatMap((line) => {
         const trimmed = line.trim();
@@ -119,12 +119,12 @@ export function parseAttributePatterns(text: string, folder: string): AttributeP
 }
 
 /**
- * Apply attribute tokens over inherited attributes, clearing unspecified entries with the ! prefix.
- *
- * @param tokens the attribute tokens from one matching pattern.
- * @param previous the attributes inherited from earlier lines.
- * @returns the new attributes. The inherited table stays unchanged.
- */
+Apply attribute tokens over inherited attributes, clearing unspecified entries with the ! prefix.
+
+@param tokens the attribute tokens from one matching pattern.
+@param previous the attributes inherited from earlier lines.
+@returns the new attributes. The inherited table stays unchanged.
+*/
 export function mergeAttributes(tokens: string[], previous: Record<string, string>): Record<string, string> {
     const attributes = { ...previous };
     for (const match of tokens) {
@@ -138,11 +138,11 @@ export function mergeAttributes(tokens: string[], previous: Record<string, strin
 }
 
 /**
- * Parse the null-delimited path, name, and value triplets from Git, and keep spaces in paths.
- *
- * @param text the successful check-attr -z output.
- * @returns the final attributes per path.
- */
+Parse the null-delimited path, name, and value triplets from Git, and keep spaces in paths.
+
+@param text the successful check-attr -z output.
+@returns the final attributes per path.
+*/
 export function parsePathAttributes(text: string): Map<string, Record<string, string>> {
     const fields = text.split('\0');
     const attributes = new Map<string, Record<string, string>>();
@@ -155,11 +155,11 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
 }
 
 /**
- * Parse an unquoted index listing, retaining merge stages for working-tree inventory.
- *
- * @param text the complete null-delimited listing.
- * @returns the index entries with their stages.
- */
+Parse an unquoted index listing, retaining merge stages for working-tree inventory.
+
+@param text the complete null-delimited listing.
+@returns the index entries with their stages.
+*/
 export function parseIndexFiles(text: string): GitIndexFile[] {
     return text
         .split('\0')
@@ -172,11 +172,11 @@ export function parseIndexFiles(text: string): GitIndexFile[] {
 }
 
 /**
- * Validate unquoted, null-delimited committed-tree entries.
- *
- * @param output the complete Git listing.
- * @returns supported modes, full object IDs, and UTF-8 paths.
- */
+Validate unquoted, null-delimited committed-tree entries.
+
+@param output the complete Git listing.
+@returns supported modes, full object IDs, and UTF-8 paths.
+*/
 export function parseTreeFiles(output: Uint8Array): GitFile[] {
     const text = decodeUtf8(output);
     if (text === undefined) throw new GspotError('git', 'Git listed a path that is not valid UTF-8.');
@@ -187,23 +187,23 @@ export function parseTreeFiles(output: Uint8Array): GitFile[] {
 }
 
 /**
- * Turn index entries into revision entries, and refuse conflicts.
- *
- * @param indexFiles the validated index listing.
- * @returns entries from the resolved index.
- */
+Turn index entries into revision entries, and refuse conflicts.
+
+@param indexFiles the validated index listing.
+@returns entries from the resolved index.
+*/
 export function stripIndexStages(indexFiles: GitIndexFile[]): GitFile[] {
     if (indexFiles.some((indexFile) => indexFile.stage !== 0)) throw new GspotError('git', UNSUPPORTED_INDEX_LINE);
     return indexFiles.map(({ mode, hash, path }) => ({ mode, hash, path }));
 }
 
 /**
- * Validate the IDs and framing of a batch, and hold only the current blob.
- *
- * @param chunks the raw output, in stream order.
- * @param requestedIds the full object IDs, in response order.
- * @returns the exact bytes of each object, one at a time.
- */
+Validate the IDs and framing of a batch, and hold only the current blob.
+
+@param chunks the raw output, in stream order.
+@param requestedIds the full object IDs, in response order.
+@returns the exact bytes of each object, one at a time.
+*/
 export async function* parseGitBlobs(
     chunks: AsyncIterable<Buffer>,
     requestedIds: readonly string[],

@@ -39,27 +39,27 @@ function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { use
 }
 
 /**
- * List the hooks that run at least one configured check.
- *
- * @param checks the configured checks.
- *
- * @returns the hook names, in the order Git runs them.
- */
+List the hooks that run at least one configured check.
+
+@param checks the configured checks.
+
+@returns the hook names, in the order Git runs them.
+*/
 export function listHookNames(checks: PlannedCheck[]): HookName[] {
     const stages = new Set<string>(checks.map((planned) => planned.check.stage));
     return CHECK_HOOKS.filter((name) => HOOK_CHECKS[name].stages.some((stage) => stages.has(stage)));
 }
 
 /**
- * Build a script for each hook, when the settings turn hooks on.
- *
- * @param settings the parsed gspot.toml.
- * @param runner the command that starts gspot.
- * @param hooks the hooks to write.
- * @param hooks.names the hooks that run a configured check.
- * @param hooks.usesLfs whether the tracked files use Git Large File Storage, which needs every hook in LFS_HOOKS.
- * @returns the hook scripts.
- */
+Build a script for each hook, when the settings turn hooks on.
+
+@param settings the parsed gspot.toml.
+@param runner the command that starts gspot.
+@param hooks the hooks to write.
+@param hooks.names the hooks that run a configured check.
+@param hooks.usesLfs whether the tracked files use Git Large File Storage, which needs every hook in LFS_HOOKS.
+@returns the hook scripts.
+*/
 export function buildHookFiles(
     settings: Settings,
     runner: StartRunner,

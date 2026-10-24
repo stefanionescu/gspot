@@ -78,12 +78,12 @@ function listOutdatedManagedKeys(files: Files, generated: GenerationResult): Out
 }
 
 /**
- * Find changed, missing, or stray generated files. Managed blocks and file edits count too.
- *
- * @param session the repository to compare.
- * @param generated the files that this run generates.
- * @returns the outdated files in path order.
- */
+Find changed, missing, or stray generated files. Managed blocks and file edits count too.
+
+@param session the repository to compare.
+@param generated the files that this run generates.
+@returns the outdated files in path order.
+*/
 export async function listOutdatedFiles(
     session: Pick<Session, 'root' | 'packageManager' | 'repository' | 'installedRoot' | 'reads' | 'timeoutSeconds'>,
     generated: GenerationResult,
@@ -102,12 +102,12 @@ export async function listOutdatedFiles(
 }
 
 /**
- * List every managed path, with the lockfiles of the tool projects in use.
- *
- * @param session the repository and its package manager.
- * @param generated the files that this run generates.
- * @returns every path that this run writes or keeps.
- */
+List every managed path, with the lockfiles of the tool projects in use.
+
+@param session the repository and its package manager.
+@param generated the files that this run generates.
+@returns every path that this run writes or keeps.
+*/
 export function listExpectedPaths(session: Pick<Session, 'packageManager'>, generated: GenerationResult): Set<string> {
     const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));
     for (const file of generated.files) {

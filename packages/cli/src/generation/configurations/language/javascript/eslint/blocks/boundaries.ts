@@ -116,12 +116,12 @@ function buildBoundarySettings({
 }
 
 /**
- * Build one boundary block from the root modules and the project tests.
- *
- * @param planned the scopes, level, and Node script paths to cover.
- *
- * @returns one classification block and its ordered dependency policies.
- */
+Build one boundary block from the root modules and the project tests.
+
+@param planned the scopes, level, and Node script paths to cover.
+
+@returns one classification block and its ordered dependency policies.
+*/
 export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const {
         session: {

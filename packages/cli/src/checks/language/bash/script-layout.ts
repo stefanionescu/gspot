@@ -140,12 +140,12 @@ function stripDeclaration(code: string): string {
 }
 
 /**
- * Checks the layout of each Bash script, and skips scripts with a shebang for another shell.
- *
- * @param session the repository and its tools.
- * @param planned the scope scripts and environment readers.
- * @returns the findings.
- */
+Checks the layout of each Bash script, and skips scripts with a shebang for another shell.
+
+@param session the repository and its tools.
+@param planned the scope scripts and environment readers.
+@returns the findings.
+*/
 export async function checkBashScriptLayout(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const isEnvironmentReader = buildPathMatcher(planned.scope.settings.values.structure?.environment_readers ?? []);
     const scripts = await readScripts(session, planned);

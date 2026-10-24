@@ -8,13 +8,13 @@ import { EXECUTABLE_BITS } from '#cli/config/repository/files/tracked.ts';
 import { GIT_CONFIG_ARGUMENTS, GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/system/git.ts';
 
 /**
- * Run git with a throwaway identity, keeping the line endings the sandbox specifies.
- *
- * @param cwd the sandbox.
- * @param commandArguments everything after git.
- * @param environment extra variables for git.
- * @returns the exit code and both streams.
- */
+Run git with a throwaway identity, keeping the line endings the sandbox specifies.
+
+@param cwd the sandbox.
+@param commandArguments everything after git.
+@param environment extra variables for git.
+@returns the exit code and both streams.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 31 calls in 11 files share it.
 export function runGit(
     cwd: string,
@@ -29,12 +29,12 @@ export function runGit(
 }
 
 /**
- * Run git and returns what it printed; throws when git fails.
- *
- * @param cwd the sandbox.
- * @param commandArguments everything after git.
- * @returns the trimmed standard output.
- */
+Run git and returns what it printed; throws when git fails.
+
+@param cwd the sandbox.
+@param commandArguments everything after git.
+@returns the trimmed standard output.
+*/
 export function runGitStep(cwd: string, commandArguments: readonly string[]): string {
     const result = runGit(cwd, commandArguments);
     if (result.code !== 0)
@@ -43,10 +43,10 @@ export function runGitStep(cwd: string, commandArguments: readonly string[]): st
 }
 
 /**
- * Make the test folder a Git repository with one commit, the state init expects.
- *
- * @param cwd the sandbox.
- */
+Make the test folder a Git repository with one commit, the state init expects.
+
+@param cwd the sandbox.
+*/
 export function commitAll(cwd: string, message = 'init'): string {
     for (const commandArguments of [
         ['init', '-q'],
@@ -60,12 +60,12 @@ export function commitAll(cwd: string, message = 'init'): string {
 }
 
 /**
- * Make a test file executable: set its file mode, and on Windows, whose file systems keep no mode bits, set the mode in
- * the Git index too.
- *
- * @param cwd the sandbox.
- * @param path the repository-relative file.
- */
+Make a test file executable: set its file mode, and on Windows, whose file systems keep no mode bits, set the mode in
+the Git index too.
+
+@param cwd the sandbox.
+@param path the repository-relative file.
+*/
 export async function markExecutable(cwd: string, path: string): Promise<void> {
     const absolute = join(cwd, path);
     const attributes = await stat(absolute);

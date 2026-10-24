@@ -26,12 +26,12 @@ function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
 }
 
 /**
- * Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
- *
- * @param session the repository and installed tools.
- * @param planned the dependency check and its scope.
- * @returns the check result.
- */
+Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
+
+@param session the repository and installed tools.
+@param planned the dependency check and its scope.
+@returns the check result.
+*/
 export async function checkPythonDeptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const text = findCachedText(session.reads, joinScope(planned.scope.folder.path, PYPROJECT_TOML));
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');

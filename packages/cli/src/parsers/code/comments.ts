@@ -198,12 +198,12 @@ async function parseSyntaxComments(grammar: GrammarName, source: string, text: s
 }
 
 /**
- * Read comments in one explicit grammar.
- *
- * @param grammar the tree-sitter language to use.
- * @param text the source contents.
- * @returns comments in source order.
- */
+Read comments in one explicit grammar.
+
+@param grammar the tree-sitter language to use.
+@param text the source contents.
+@returns comments in source order.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The comment parsers table and 3 other calls share it.
 export async function parseGrammarComments(grammar: GrammarName, text: string): Promise<SourceComment[]> {
     const parsed = grammar === 'html' ? text.replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->') : text;
@@ -211,11 +211,11 @@ export async function parseGrammarComments(grammar: GrammarName, text: string): 
 }
 
 /**
- * Remove only the closing delimiter that matches the comment syntax.
- *
- * @param text the original comment.
- * @returns comment text with its opener and without its terminator or trailing whitespace.
- */
+Remove only the closing delimiter that matches the comment syntax.
+
+@param text the original comment.
+@returns comment text with its opener and without its terminator or trailing whitespace.
+*/
 export function stripCommentEnd(text: string): string {
     if (text.startsWith('/*')) return text.replace(BLOCK_COMMENT_END, '').trimEnd();
     if (text.startsWith('<!--')) return text.replace(HTML_COMMENT_END, '').trimEnd();
@@ -223,13 +223,13 @@ export function stripCommentEnd(text: string): string {
 }
 
 /**
- * Read comment text and line locations for suppression discovery.
- *
- * @param path the file, whose name selects the syntax.
- * @param text the source contents.
- * @param tags the file tags, which identify scripts without a known extension.
- * @returns comments in source order, with whether each occupies its line alone.
- */
+Read comment text and line locations for suppression discovery.
+
+@param path the file, whose name selects the syntax.
+@param text the source contents.
+@param tags the file tags, which identify scripts without a known extension.
+@returns comments in source order, with whether each occupies its line alone.
+*/
 export async function parseComments(path: string, text: string, tags: readonly string[]): Promise<SourceComment[]> {
     const lowerPath = path.toLowerCase();
     if (DECLARATION_EXTENSIONS.some((extension) => lowerPath.endsWith(extension)))

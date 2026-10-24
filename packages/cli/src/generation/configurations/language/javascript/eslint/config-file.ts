@@ -78,12 +78,12 @@ function buildConfigurationFiles(
 }
 
 /**
- * Build the main ESLint config file and the ESLint config file of each configuration that adds blocks. The main file
- * holds the ignores and the blocks of the repository, and spreads the blocks of each configuration in plan order.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the JavaScript text of the main file, and the file of each configuration.
- */
+Build the main ESLint config file and the ESLint config file of each configuration that adds blocks. The main file
+holds the ignores and the blocks of the repository, and spreads the blocks of each configuration in plan order.
+
+@param planned the config file with its scope, level, and target path.
+@returns the JavaScript text of the main file, and the file of each configuration.
+*/
 export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
     const { session } = planned;
     const eslintFile = buildPlannedEslintFile(planned);

@@ -12,12 +12,12 @@ import {
 } from '#cli/config/generation/configurations/framework/nestjs.ts';
 
 /**
- * Apply the NestJS presets to the TypeScript files of the scope, with the no-Swagger preset when the scope does not use
- * @nestjs/swagger.
- *
- * @param scope the planned ESLint file of the scope.
- * @returns the imports and ESLint blocks for this configuration.
- */
+Apply the NestJS presets to the TypeScript files of the scope, with the no-Swagger preset when the scope does not use
+@nestjs/swagger.
+
+@param scope the planned ESLint file of the scope.
+@returns the imports and ESLint blocks for this configuration.
+*/
 export function buildNestjsBlocks(
     scope: Pick<EslintScope, 'eslintFiles' | 'presets' | 'scopePath' | 'scopeDependencies'>,
 ): ConfigurationBlocks {

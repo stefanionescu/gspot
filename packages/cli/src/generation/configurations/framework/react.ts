@@ -13,11 +13,11 @@ import {
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
- * Apply the React, hooks, and refresh lint rules for the JSX mode.
- *
- * @param scope the presets and the block writer.
- * @returns the imports and ESLint blocks for this configuration.
- */
+Apply the React, hooks, and refresh lint rules for the JSX mode.
+
+@param scope the presets and the block writer.
+@returns the imports and ESLint blocks for this configuration.
+*/
 export function buildReactBlocks(scope: Pick<EslintScope, 'presets'>): ConfigurationBlocks {
     const { presets } = scope;
     const recommended = getPreset(presets, 'recommended');

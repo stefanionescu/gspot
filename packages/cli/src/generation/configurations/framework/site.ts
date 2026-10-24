@@ -8,11 +8,11 @@ import {
 } from '#cli/config/generation/configurations/framework/site.ts';
 
 /**
- * Build purgecss.mjs: the JavaScript token extractor and safelist used by PurgeCSS.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the JavaScript token extractor and safelist used by PurgeCSS.
- */
+Build purgecss.mjs: the JavaScript token extractor and safelist used by PurgeCSS.
+
+@param planned the config file with its scope, level, and target path.
+@returns the JavaScript token extractor and safelist used by PurgeCSS.
+*/
 export function buildPurgecssFile(planned: PlannedConfigFile): string {
     const standard = [
         String(PURGECSS_PSEUDO_CLASS_PATTERN),

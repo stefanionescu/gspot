@@ -42,12 +42,12 @@ async function readCommittedMigrations(
 }
 
 /**
- * Reports a version that two files share, a file with no version, and a new file that sorts before a committed one.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose migrations to compare with the last commit.
- * @returns the findings.
- */
+Reports a version that two files share, a file with no version, and a new file that sorts before a committed one.
+
+@param session the repository and its tools.
+@param planned the scope whose migrations to compare with the last commit.
+@returns the findings.
+*/
 export async function checkPostgresMigrationOrder(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const { migrations, findings: syntax } = await readMigrations(session, planned);
     if (syntax.length > 0) return syntax;
@@ -104,12 +104,12 @@ export async function checkPostgresMigrationOrder(session: Session, planned: Pla
 }
 
 /**
- * Reports each migration at or before postgres.frozen_through whose text differs from the committed text.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose migrations to compare with the last commit.
- * @returns the findings.
- */
+Reports each migration at or before postgres.frozen_through whose text differs from the committed text.
+
+@param session the repository and its tools.
+@param planned the scope whose migrations to compare with the last commit.
+@returns the findings.
+*/
 export async function checkPostgresEditedMigrations(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const through = getTable(planned.scope.settings, 'postgres')['frozen_through'];
     if (through === FROZEN_NONE) return [];

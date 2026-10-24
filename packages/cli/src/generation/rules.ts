@@ -122,12 +122,12 @@ function listScopeRules(scope: Scope): Set<string> {
 }
 
 /**
- * Select the shared rules and the configuration rules at the level. Leave out the excluded rules
- * and the ones that the level leaves empty.
- *
- * @param session the repository and its settings.
- * @returns each rule with its content and path.
- */
+Select the shared rules and the configuration rules at the level. Leave out the excluded rules
+and the ones that the level leaves empty.
+
+@param session the repository and its settings.
+@returns each rule with its content and path.
+*/
 export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'repository'>): RuleFile[] {
     const {
         settingsFile: {
@@ -161,18 +161,18 @@ export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes'
 }
 
 /**
- * Build the managed block for the rules.
- *
- * @param block what the block lists.
- * @param block.files the rules with their content.
- * @param block.generatedPaths the files gspot writes outside .gspot.
- * @param block.managedKeys the keys that gspot manages inside authored config files.
- * @param block.hasChecks whether any configuration runs a check.
- * @param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
- * @param block.startCommand the command that starts gspot.
- *
- * @returns the heading, rule index, and instructions for changing settings.
- */
+Build the managed block for the rules.
+
+@param block what the block lists.
+@param block.files the rules with their content.
+@param block.generatedPaths the files gspot writes outside .gspot.
+@param block.managedKeys the keys that gspot manages inside authored config files.
+@param block.hasChecks whether any configuration runs a check.
+@param block.hasOwnTitle whether the file has its own top heading, which moves the block headings down.
+@param block.startCommand the command that starts gspot.
+
+@returns the heading, rule index, and instructions for changing settings.
+*/
 export function buildAgentsBlock({
     files,
     generatedPaths,
@@ -213,11 +213,11 @@ export function buildAgentsBlock({
 }
 
 /**
- * Check whether Markdown text has a top heading, outside code blocks.
- *
- * @param text the text of AGENTS.md outside the gspot block.
- * @returns whether a level-one heading exists.
- */
+Check whether Markdown text has a top heading, outside code blocks.
+
+@param text the text of AGENTS.md outside the gspot block.
+@returns whether a level-one heading exists.
+*/
 export function hasTopHeading(text: string): boolean {
     let found = false;
     visit(fromMarkdown(text), 'heading', (node) => {

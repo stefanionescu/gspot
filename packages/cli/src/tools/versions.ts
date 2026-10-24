@@ -73,13 +73,13 @@ function findRunFailure(result: SpawnResult, tool: Tool, text: string): ParsedTo
 }
 
 /**
- * Classify a reported version against its pin and minimum version.
- *
- * @param found the version the tool reported.
- * @param want the pinned version.
- * @param minimum the lowest version the configuration accepts.
- * @returns ok, outdated below the minimum, newer above the pin, system without a pin, or error for no version.
- */
+Classify a reported version against its pin and minimum version.
+
+@param found the version the tool reported.
+@param want the pinned version.
+@param minimum the lowest version the configuration accepts.
+@returns ok, outdated below the minimum, newer above the pin, system without a pin, or error for no version.
+*/
 export function classifyToolVersion(
     found: string,
     want: string | undefined,
@@ -94,12 +94,12 @@ export function classifyToolVersion(
 }
 
 /**
- * Read version output, using the installed package.json when the declared package supplies the executable.
- *
- * @param inspected the tool, installed metadata boundary, working folder, and query timeout.
- * @param path the resolved executable.
- * @returns the version or the query failure.
- */
+Read version output, using the installed package.json when the declared package supplies the executable.
+
+@param inspected the tool, installed metadata boundary, working folder, and query timeout.
+@param path the resolved executable.
+@returns the version or the query failure.
+*/
 export function readToolVersion(inspected: InspectedTool, path: string): ParsedToolVersion {
     const { root, cwd, tool, timeoutSeconds } = inspected;
     const npm = tool.installers['npm'];

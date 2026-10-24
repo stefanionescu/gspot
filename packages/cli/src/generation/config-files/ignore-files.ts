@@ -35,11 +35,11 @@ function listGeneratedPaths(session: Session): string[] {
 }
 
 /**
- * Group path ignores by source, before the ignores of a check.
- *
- * @param session the repository to read.
- * @returns the exclusion groups in order.
- */
+Group path ignores by source, before the ignores of a check.
+
+@param session the repository to read.
+@returns the exclusion groups in order.
+*/
 export function buildIgnoreSections(session: Session): IgnoreSection[] {
     const { reads, repository, scopes } = session;
     const generatorOutputs = scopes.flatMap(({ folder, configurations }) =>
@@ -94,12 +94,12 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
 }
 
 /**
- * Keep the reason with each check-wide path ignore.
- *
- * @param scopeSettings the settings of this scope.
- * @param check the ID whose ignores to keep.
- * @returns the check-wide path ignores with their reasons.
- */
+Keep the reason with each check-wide path ignore.
+
+@param scopeSettings the settings of this scope.
+@param check the ID whose ignores to keep.
+@returns the check-wide path ignores with their reasons.
+*/
 export function listCheckIgnoreSections(scopeSettings: ScopeSettings, check: string): IgnoreSection[] {
     return listIgnores(scopeSettings, check)
         .filter((ignore) => ignore.rule === undefined && ignore.names === undefined)
@@ -107,11 +107,11 @@ export function listCheckIgnoreSections(scopeSettings: ScopeSettings, check: str
 }
 
 /**
- * Keep each pattern in its first section.
- *
- * @param sections the ordered sections.
- * @returns sections with repeated patterns removed.
- */
+Keep each pattern in its first section.
+
+@param sections the ordered sections.
+@returns sections with repeated patterns removed.
+*/
 export function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {
     const seen = new Set<string>();
     return sections.map((section) => ({
@@ -125,12 +125,12 @@ export function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {
 }
 
 /**
- * Turn each reason line into a comment.
- *
- * @param reason the written reason.
- * @param indent the spacing before each comment.
- * @returns the comment lines.
- */
+Turn each reason line into a comment.
+
+@param reason the written reason.
+@param indent the spacing before each comment.
+@returns the comment lines.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function formatReasonLines(reason: string, indent: string): string[] {
     return reason
@@ -165,23 +165,23 @@ function convertToGlob(pattern: string): string {
 }
 
 /**
- * Convert the sections to the globs that config files use.
- *
- * @param sections the ordered exclusion groups and their written reasons.
- * @returns the globs, each once.
- */
+Convert the sections to the globs that config files use.
+
+@param sections the ordered exclusion groups and their written reasons.
+@returns the globs, each once.
+*/
 export function convertToGlobs(sections: IgnoreSection[]): string[] {
     const patterns = sections.flatMap((section) => section.patterns);
     return [...new Set(patterns.map((pattern) => convertToGlob(pattern)))];
 }
 
 /**
- * List the shared and check-specific globs that a Python tool leaves out.
- *
- * @param planned the config file and its scope.
- * @param check the check whose path ignores apply.
- * @returns the globs relative to the config file.
- */
+List the shared and check-specific globs that a Python tool leaves out.
+
+@param planned the config file and its scope.
+@param check the check whose path ignores apply.
+@returns the globs relative to the config file.
+*/
 export function listPythonIgnoredGlobs(planned: PlannedConfigFile, check: string): string[] {
     const base = relative(dirname(planned.targetPath), '.');
     const ignoredGlobs = convertToGlobs(buildIgnoreSections(planned.session)).filter(
@@ -198,11 +198,11 @@ export function listPythonIgnoredGlobs(planned: PlannedConfigFile, check: string
 }
 
 /**
- * Build .prettierignore: the ignored paths in the shared section order, with the written reasons.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the ignore file text.
- */
+Build .prettierignore: the ignored paths in the shared section order, with the written reasons.
+
+@param planned the config file with its scope, level, and target path.
+@returns the ignore file text.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildPrettierignoreFile(planned: PlannedConfigFile): string {
     return formatIgnoreFile([

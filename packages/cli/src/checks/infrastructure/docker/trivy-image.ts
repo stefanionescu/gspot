@@ -59,12 +59,12 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
 }
 
 /**
- * Scans each literal service image once and reports its findings in every Compose file that names it.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Scans each literal service image once and reports its findings in every Compose file that names it.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export async function checkDockerTrivyImage(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scanned = new Map<string, ImageFinding[]>();
     const findings: Finding[] = [];

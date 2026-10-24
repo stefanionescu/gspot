@@ -15,23 +15,23 @@ import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
 import { SETTINGS_FILE, PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
 
 /**
- * Identify a written setting that carries both its value and its reason.
- *
- * @param value the written setting.
- * @returns whether the setting has both reasoned-value fields.
- */
+Identify a written setting that carries both its value and its reason.
+
+@param value the written setting.
+@returns whether the setting has both reasoned-value fields.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 export function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
     return isTable(value) && Object.hasOwn(value, 'value') && Object.hasOwn(value, 'reason');
 }
 
 /**
- * Parse written settings or a template, keep TOML date types, and name the file, line, and column of a syntax error.
- *
- * @param text the written TOML.
- * @param path the source file or URL.
- * @returns the parsed table, without defaults.
- */
+Parse written settings or a template, keep TOML date types, and name the file, line, and column of a syntax error.
+
+@param text the written TOML.
+@param path the source file or URL.
+@returns the parsed table, without defaults.
+*/
 export function parseTomlText(text: string, path: string): TomlTable {
     try {
         return parse(text) as TomlTable;
@@ -45,11 +45,11 @@ export function parseTomlText(text: string, path: string): TomlTable {
 }
 
 /**
- * Read gspot.toml without following a link out of the repository.
- *
- * @param repositoryRoot the folder that contains gspot.toml.
- * @returns the text, and the bytes and mode as read, which writeSettings compares before it writes.
- */
+Read gspot.toml without following a link out of the repository.
+
+@param repositoryRoot the folder that contains gspot.toml.
+@returns the text, and the bytes and mode as read, which writeSettings compares before it writes.
+*/
 export function readSettingsFile(repositoryRoot: string): SettingsFileContents {
     using files = openFiles(repositoryRoot);
     const original = files.read(SETTINGS_FILE);
@@ -61,12 +61,12 @@ export function readSettingsFile(repositoryRoot: string): SettingsFileContents {
 }
 
 /**
- * Write gspot.toml only while the file on disk still matches the one that the edit read.
- *
- * @param writer the file writer for settings.
- * @param text the new gspot.toml contents.
- * @param original the captured file bytes and mode.
- */
+Write gspot.toml only while the file on disk still matches the one that the edit read.
+
+@param writer the file writer for settings.
+@param text the new gspot.toml contents.
+@param original the captured file bytes and mode.
+*/
 export function writeSettings(writer: Writer, text: string, original: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: original?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, original)) return;

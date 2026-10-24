@@ -9,11 +9,11 @@ import {
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
- * Apply the typed presets and the project files.
- *
- * @param scope the presets and file selectors of the scope.
- * @returns imported bindings and unscoped block data.
- */
+Apply the typed presets and the project files.
+
+@param scope the presets and file selectors of the scope.
+@returns imported bindings and unscoped block data.
+*/
 export function buildTypescriptBlocks(
     scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'projects'>,
 ): ConfigurationBlocks {

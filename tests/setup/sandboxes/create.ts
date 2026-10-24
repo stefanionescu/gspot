@@ -30,10 +30,10 @@ import {
 } from '#tests/config/setup/sandboxes.ts';
 
 /**
- * Name the installed npm in the root package.json, as a repository at level all must.
- *
- * @param root the sandbox folder with a package.json.
- */
+Name the installed npm in the root package.json, as a repository at level all must.
+
+@param root the sandbox folder with a package.json.
+*/
 export async function pinSandboxNpm(root: string): Promise<void> {
     const npm = await runCommand(['npm', '--version'], { cwd: root });
     const path = join(root, 'package.json');

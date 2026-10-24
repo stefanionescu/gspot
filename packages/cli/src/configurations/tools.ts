@@ -24,11 +24,11 @@ function findMiseInstaller(tool: Tool): InstallerPin | undefined {
 }
 
 /**
- * Get the name that a config-file placeholder uses for a config file.
- *
- * @param file the path that the manifest names.
- * @returns the file name without its folder and extensions.
- */
+Get the name that a config-file placeholder uses for a config file.
+
+@param file the path that the manifest names.
+@returns the file name without its folder and extensions.
+*/
 export function extractConfigFileName(file: string): string {
     const name = posix.basename(file);
     const dot = name.indexOf('.');
@@ -36,23 +36,23 @@ export function extractConfigFileName(file: string): string {
 }
 
 /**
- * Check whether gspot installs a tool through mise or a pinned tool project.
- *
- * @param tool the declaration to read.
- * @returns whether gspot uses one of its installers.
- */
+Check whether gspot installs a tool through mise or a pinned tool project.
+
+@param tool the declaration to read.
+@returns whether gspot uses one of its installers.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The docs reference calls it, and findMiseInstaller stays private to this file.
 export function isInstalledByGspot(tool: Tool): boolean {
     return findToolProjectPackage(tool) !== undefined || findMiseInstaller(tool) !== undefined;
 }
 
 /**
- * List the tools that mise installs, apart from those in the npm and Python tool projects, and add uv when a Python
- * tool project needs it.
- *
- * @param configurations the configurations in use.
- * @returns the name and version of each mise tool.
- */
+List the tools that mise installs, apart from those in the npm and Python tool projects, and add uv when a Python
+tool project needs it.
+
+@param configurations the configurations in use.
+@returns the name and version of each mise tool.
+*/
 export function listMisePins(configurations: Configuration[]): MisePin[] {
     const tools = listDistinctTools(configurations);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
@@ -70,11 +70,11 @@ export function listMisePins(configurations: Configuration[]): MisePin[] {
 }
 
 /**
- * Find the mise pin of one tool: its version, its systems, and its backend options.
- *
- * @param tool the tool to read.
- * @returns the mise pin, or undefined when mise does not install the tool.
- */
+Find the mise pin of one tool: its version, its systems, and its backend options.
+
+@param tool the tool to read.
+@returns the mise pin, or undefined when mise does not install the tool.
+*/
 export function findMisePin(tool: Tool): MisePin | undefined {
     const excluded = findToolProjectPackage(tool) !== undefined;
     const pin = excluded ? undefined : findMiseInstaller(tool);
@@ -83,11 +83,11 @@ export function findMisePin(tool: Tool): MisePin | undefined {
 }
 
 /**
- * List the npm and Python tool project pins of the configurations.
- *
- * @param configurations the configurations in use.
- * @returns the npm and Python pins.
- */
+List the npm and Python tool project pins of the configurations.
+
+@param configurations the configurations in use.
+@returns the npm and Python pins.
+*/
 export function listToolProjectPins(configurations: Configuration[]): ToolProjectPins {
     const npm: [string, string][] = [];
     const python: string[] = [];
@@ -104,11 +104,11 @@ export function listToolProjectPins(configurations: Configuration[]): ToolProjec
 }
 
 /**
- * List each tool once, sorted by name.
- *
- * @param configurations the configurations in use.
- * @returns the first declaration of each tool name.
- */
+List each tool once, sorted by name.
+
+@param configurations the configurations in use.
+@returns the first declaration of each tool name.
+*/
 export function listDistinctTools(configurations: Configuration[]): Tool[] {
     const tools = new Map<string, Tool>();
     for (const configuration of configurations)
@@ -122,12 +122,12 @@ export function listDistinctTools(configurations: Configuration[]): Tool[] {
 }
 
 /**
- * Find a tool in the owning configuration first, then in any configuration.
- *
- * @param configurations the configurations that may declare the tool.
- * @param name the executable to find.
- * @returns the tool, or a system program when no configuration declares the tool.
- */
+Find a tool in the owning configuration first, then in any configuration.
+
+@param configurations the configurations that may declare the tool.
+@param name the executable to find.
+@returns the tool, or a system program when no configuration declares the tool.
+*/
 export function getTool(configurations: Iterable<Configuration>, name: string): Tool {
     for (const configuration of configurations) {
         const pin = configuration.tools.find((tool) => tool.name === name);
@@ -137,22 +137,22 @@ export function getTool(configurations: Iterable<Configuration>, name: string): 
 }
 
 /**
- * Get the tool that a check names, or the first word of its command.
- *
- * @param check the validated check.
- * @returns the executable, or undefined for a built-in check without a tool.
- */
+Get the tool that a check names, or the first word of its command.
+
+@param check the validated check.
+@returns the executable, or undefined for a built-in check without a tool.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 5 files share it.
 export function getToolName(check: Check): string | undefined {
     return typeof check.tool === 'string' ? check.tool : check.command?.[0];
 }
 
 /**
- * Find the npm or Python package that installs a tool. Generated projects and lookup both use it.
- *
- * @param tool the tool to read.
- * @returns the package to install, or undefined when the system or mise gives the tool.
- */
+Find the npm or Python package that installs a tool. Generated projects and lookup both use it.
+
+@param tool the tool to read.
+@returns the package to install, or undefined when the system or mise gives the tool.
+*/
 export function findToolProjectPackage(tool: Tool): ToolProjectPackage | undefined {
     const python = tool.installers['pypi'];
     if (tool.system !== true && python?.version !== undefined)
@@ -168,11 +168,11 @@ export function findToolProjectPackage(tool: Tool): ToolProjectPackage | undefin
 }
 
 /**
- * List the exact npm package names that the configurations declare.
- *
- * @param configurations the configurations in use.
- * @returns the names, for tool-only package detection.
- */
+List the exact npm package names that the configurations declare.
+
+@param configurations the configurations in use.
+@returns the names, for tool-only package detection.
+*/
 export function listNpmToolNames(configurations: Iterable<Configuration>): Set<string> {
     return new Set(
         [...configurations].flatMap((configuration) =>
@@ -185,12 +185,12 @@ export function listNpmToolNames(configurations: Iterable<Configuration>): Set<s
 }
 
 /**
- * Find the build that a tool lacks on a system such as Windows or arm64 Linux.
- *
- * @param tool the tool with its builds.
- * @param host the system name and architecture.
- * @returns the words for the missing build, or undefined when the tool has a build.
- */
+Find the build that a tool lacks on a system such as Windows or arm64 Linux.
+
+@param tool the tool with its builds.
+@param host the system name and architecture.
+@returns the words for the missing build, or undefined when the tool has a build.
+*/
 export function findMissingBuild(tool: Tool, host: Host): string | undefined {
     if (tool.builds === undefined) return undefined;
     const { platform, arch } = host;
@@ -201,11 +201,11 @@ export function findMissingBuild(tool: Tool, host: Host): string | undefined {
 }
 
 /**
- * Read the plugin prefix of a qualified lint rule.
- *
- * @param rule the rule name, optionally prefixed by its plugin.
- * @returns the prefix before the last slash, or undefined for an unqualified rule.
- */
+Read the plugin prefix of a qualified lint rule.
+
+@param rule the rule name, optionally prefixed by its plugin.
+@returns the prefix before the last slash, or undefined for an unqualified rule.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 2 files share it.
 export function extractRulePrefix(rule: string): string | undefined {
     const slash = rule.lastIndexOf('/');

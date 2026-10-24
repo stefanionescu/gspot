@@ -6,11 +6,11 @@ import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/bui
 import { SQUAWK_RECOMMENDED_OFF } from '#cli/config/generation/configurations/postgres.ts';
 
 /**
- * Build squawk.toml: the disabled Squawk migration rules.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the disabled Squawk migration rules.
- */
+Build squawk.toml: the disabled Squawk migration rules.
+
+@param planned the config file with its scope, level, and target path.
+@returns the disabled Squawk migration rules.
+*/
 export function buildSquawkFile(planned: PlannedConfigFile): string {
     const { files } = planned.session.repository;
 

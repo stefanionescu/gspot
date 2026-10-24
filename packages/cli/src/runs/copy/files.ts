@@ -35,10 +35,10 @@ function writeCopyFile(files: Files, copyRoot: string, file: CopyFile): void {
 }
 
 /**
- * Writes files and Git blobs into a copy.
- *
- * @param plan what to write, and where.
- */
+Writes files and Git blobs into a copy.
+
+@param plan what to write, and where.
+*/
 export async function writeCopyFiles(plan: CopyPlan): Promise<void> {
     using files = openFiles(plan.root);
     let written = 0;
@@ -53,13 +53,13 @@ export async function writeCopyFiles(plan: CopyPlan): Promise<void> {
 }
 
 /**
- * Copies the files and dependency trees that the check needs.
- *
- * @param session the repository and its tools.
- * @param planned the check and its files.
- * @param includedPaths more paths to copy.
- * @returns the new folder, deleted on dispose.
- */
+Copies the files and dependency trees that the check needs.
+
+@param session the repository and its tools.
+@param planned the check and its files.
+@param includedPaths more paths to copy.
+@returns the new folder, deleted on dispose.
+*/
 export async function createCheckCopy(
     session: Session,
     planned: PlannedCheck,
@@ -80,11 +80,11 @@ export async function createCheckCopy(
 }
 
 /**
- * Copies source files and dependency trees into a new copy.
- *
- * @param source the paths and dependency trees to copy.
- * @returns the new folder, deleted on dispose.
- */
+Copies source files and dependency trees into a new copy.
+
+@param source the paths and dependency trees to copy.
+@returns the new folder, deleted on dispose.
+*/
 export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
     const folder = createTemporaryFolder();
     try {
@@ -103,13 +103,13 @@ export async function createCopy(source: CopyPaths): Promise<TemporaryFolder> {
 }
 
 /**
- * Selects the paths and installed dependency trees for a copy of the working tree.
- *
- * @param repositoryRoot the repository folder.
- * @param paths the tracked files to copy.
- * @param scopes the folders that hold installed dependencies.
- * @returns the paths and dependency trees to copy.
- */
+Selects the paths and installed dependency trees for a copy of the working tree.
+
+@param repositoryRoot the repository folder.
+@param paths the tracked files to copy.
+@param scopes the folders that hold installed dependencies.
+@returns the paths and dependency trees to copy.
+*/
 export function selectCopyPaths(repositoryRoot: string, paths: string[], scopes: string[]): CopyPaths {
     const projects = paths.flatMap((path) =>
         DEPENDENCY_FILES.has(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT

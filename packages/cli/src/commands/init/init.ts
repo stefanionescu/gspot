@@ -87,11 +87,11 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
 }
 
 /**
- * Register the init command.
- *
- * @param program the gspot program that gets the command.
- * @param onResult receives the result of the command.
- */
+Register the init command.
+
+@param program the gspot program that gets the command.
+@param onResult receives the result of the command.
+*/
 export function registerInit(program: Command, onResult: CommandCompletion): void {
     program
         .command('init')

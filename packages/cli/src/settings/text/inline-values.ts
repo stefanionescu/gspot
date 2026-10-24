@@ -3,15 +3,15 @@ import { type TomlValue, type TomlComments } from '#cli/types/parsers/formats/to
 import { isTomlKind, getTomlRange, insertTomlComments } from '#cli/parsers/formats/toml/syntax.ts';
 
 /**
- * Build the text of a nested TOML array or inline table, and keep its comments.
- *
- * @param node the parsed value whose layout supplies the source ranges.
- * @param text the TOML source of those ranges.
- * @param path the setting key and array indexes for comment placement.
- * @param comments the `#` lines anchored to their original values.
- * @param indent spaces before each line of a multiline array.
- * @returns TOML value text with its anchored comments.
- */
+Build the text of a nested TOML array or inline table, and keep its comments.
+
+@param node the parsed value whose layout supplies the source ranges.
+@param text the TOML source of those ranges.
+@param path the setting key and array indexes for comment placement.
+@param comments the `#` lines anchored to their original values.
+@param indent spaces before each line of a multiline array.
+@returns TOML value text with its anchored comments.
+*/
 export function encodeValue(
     node: TomlValue,
     text: string,

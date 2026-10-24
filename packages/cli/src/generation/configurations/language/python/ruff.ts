@@ -25,11 +25,11 @@ function selectPythonFormat(scopeSettings: PlannedConfigFile['scope']['settings'
 }
 
 /**
- * Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Ruff lint rules, import settings, and source exclusions.
- */
+Build ruff.toml: the Ruff lint rules, import settings, and source exclusions.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Ruff lint rules, import settings, and source exclusions.
+*/
 export function buildRuffFile(planned: PlannedConfigFile): string {
     const format = selectPythonFormat(planned.scope.settings);
     const pythonScopePath = posix.join(

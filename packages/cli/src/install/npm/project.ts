@@ -114,10 +114,10 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerCo
 }
 
 /**
- * Verify the package manager executable before install changes any tool project file.
- *
- * @param install the tool install of this step.
- */
+Verify the package manager executable before install changes any tool project file.
+
+@param install the tool install of this step.
+*/
 export async function assertPackageManagerVersion(install: ToolInstall): Promise<void> {
     const { session } = install;
     const packageManager =
@@ -155,14 +155,14 @@ export async function assertPackageManagerVersion(install: ToolInstall): Promise
 }
 
 /**
- * Prepare the npm tool project lockfile, free of credentials.
- *
- * @param install what install needs for this step.
- * @param toolProjectFile the generated package.json.
- * @param yarn the generated Yarn settings text, if any.
- *
- * @returns the lockfile and its recorded bytes.
- */
+Prepare the npm tool project lockfile, free of credentials.
+
+@param install what install needs for this step.
+@param toolProjectFile the generated package.json.
+@param yarn the generated Yarn settings text, if any.
+
+@returns the lockfile and its recorded bytes.
+*/
 export async function prepareNpmLockfile(
     install: ToolInstall,
     toolProjectFile: GeneratedFile,
@@ -198,11 +198,11 @@ export async function prepareNpmLockfile(
 }
 
 /**
- * Install the npm tool project in .gspot.
- *
- * @param install what install needs for this step.
- * @returns the install summary.
- */
+Install the npm tool project in .gspot.
+
+@param install what install needs for this step.
+@returns the install summary.
+*/
 export async function installNpmTools(install: ToolInstall): Promise<string> {
     const { session } = install;
     const { root } = session;

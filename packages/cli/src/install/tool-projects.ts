@@ -28,12 +28,12 @@ function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
 }
 
 /**
- * List the state of each tool project lockfile. It resolves and writes nothing.
- *
- * @param session the repository and its package manager.
- * @param generated the tool project files that apply writes.
- * @returns each lockfile with its state: missing, mismatched, or current.
- */
+List the state of each tool project lockfile. It resolves and writes nothing.
+
+@param session the repository and its package manager.
+@param generated the tool project files that apply writes.
+@returns each lockfile with its state: missing, mismatched, or current.
+*/
 export async function listStaleLockfiles(
     session: Pick<Session, 'root' | 'installedRoot' | 'packageManager' | 'timeoutSeconds' | 'reads'>,
     generated: GeneratedFile[],
@@ -91,12 +91,12 @@ async function prepareLockfiles(install: ToolInstall, files: GeneratedFile[]): P
 }
 
 /**
- * Resolve the owned lockfiles, then install the frozen npm and Python tool projects.
- *
- * @param install what install needs for this step.
- *
- * @returns the npm and Python install notes.
- */
+Resolve the owned lockfiles, then install the frozen npm and Python tool projects.
+
+@param install what install needs for this step.
+
+@returns the npm and Python install notes.
+*/
 export async function installSandboxTools(install: ToolInstall): Promise<string[]> {
     const { session, writer, generated, misePath: mise } = install;
     const configurations = session.toolConfigurations;

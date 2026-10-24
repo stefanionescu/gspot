@@ -6,11 +6,11 @@ import { semgrepReportSchema } from '#cli/schemas/runs/semgrep.ts';
 import { SEMGREP_PARSE_RULE, SEMGREP_PARSE_EXIT, SEMGREP_PARSE_ERRORS } from '#cli/config/runs/output/semgrep.ts';
 
 /**
- * Read Semgrep rule findings and source parsing errors, and refuse scanner or rule failures.
- *
- * @param output the tool output to read.
- * @returns positioned findings from a validated report.
- */
+Read Semgrep rule findings and source parsing errors, and refuse scanner or rule failures.
+
+@param output the tool output to read.
+@returns positioned findings from a validated report.
+*/
 export function parseSemgrepFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help } = output;
     const report = parseToolReport('Semgrep', stdout, semgrepReportSchema);

@@ -5,11 +5,11 @@ import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import { markdownlintReportSchema } from '#cli/schemas/runs/markdownlint.ts';
 
 /**
- * Read the findings in the markdownlint JSON report.
- *
- * @param output the tool output to read.
- * @returns the findings, with file paths resolved against the tool folder.
- */
+Read the findings in the markdownlint JSON report.
+
+@param output the tool output to read.
+@returns the findings, with file paths resolved against the tool folder.
+*/
 export function parseMarkdownlintFindings(output: ToolOutput): Finding[] {
     const { check, stdout, help, cwd } = output;
     const reports = parseToolReport('Markdownlint', stdout, markdownlintReportSchema);

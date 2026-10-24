@@ -125,13 +125,13 @@ function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache
 }
 
 /**
- * Resolve compiler options and inherited paths with the TypeScript compiler.
- *
- * @param repositoryRoot the base folder of the cached readers.
- * @param path the absolute tsconfig file.
- * @param reads the run cache.
- * @returns the parsed settings, or undefined when the file does not exist.
- */
+Resolve compiler options and inherited paths with the TypeScript compiler.
+
+@param repositoryRoot the base folder of the cached readers.
+@param path the absolute tsconfig file.
+@param reads the run cache.
+@returns the parsed settings, or undefined when the file does not exist.
+*/
 export function readTsconfig(
     repositoryRoot: string,
     path: string,
@@ -161,14 +161,14 @@ export function readTsconfig(
 }
 
 /**
- * Find the nearest TypeScript project that includes every source of a scope.
- *
- * @param repositoryRoot the base folder of the cached readers.
- * @param scope the repository-relative folder.
- * @param files the source paths of the scope.
- * @param reads the run cache.
- * @returns the project, or undefined for a standalone scope.
- */
+Find the nearest TypeScript project that includes every source of a scope.
+
+@param repositoryRoot the base folder of the cached readers.
+@param scope the repository-relative folder.
+@param files the source paths of the scope.
+@param reads the run cache.
+@returns the project, or undefined for a standalone scope.
+*/
 export function readTsconfigProject(
     repositoryRoot: string,
     scope: string,
@@ -191,14 +191,14 @@ export function readTsconfigProject(
 }
 
 /**
- * Resolve the source inputs through the tsconfig of the project.
- *
- * @param repositoryRoot the base folder of the cached readers.
- * @param scope the importing project folder.
- * @param reads the run cache.
- * @param config the parsed project.
- * @returns resolved source files without installed or compiler libraries.
- */
+Resolve the source inputs through the tsconfig of the project.
+
+@param repositoryRoot the base folder of the cached readers.
+@param scope the importing project folder.
+@param reads the run cache.
+@param config the parsed project.
+@returns resolved source files without installed or compiler libraries.
+*/
 export function listSourceFiles(
     repositoryRoot: string,
     scope: string,

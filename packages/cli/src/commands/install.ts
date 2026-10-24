@@ -29,11 +29,11 @@ async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promis
 }
 
 /**
- * Register the install command.
- *
- * @param program the gspot program that gets the command.
- * @param onResult receives the result of the command.
- */
+Register the install command.
+
+@param program the gspot program that gets the command.
+@param onResult receives the result of the command.
+*/
 export function registerInstall(program: Command, onResult: CommandCompletion): void {
     program
         .command('install')

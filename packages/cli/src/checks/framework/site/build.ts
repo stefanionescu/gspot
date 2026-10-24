@@ -48,11 +48,11 @@ function getSiteBuild(session: Session, planned: PlannedCheck): Promise<SiteBuil
 }
 
 /**
- * List every file under a folder as sorted relative paths.
- *
- * @param folder the build output to walk.
- * @returns the relative paths.
- */
+List every file under a folder as sorted relative paths.
+
+@param folder the build output to walk.
+@returns the relative paths.
+*/
 export function listBuiltFiles(folder: string): string[] {
     const root = realpathSync.native(folder);
     using files = openFiles(root);
@@ -71,24 +71,24 @@ export function listBuiltFiles(folder: string): string[] {
 }
 
 /**
- * Maps a built file to its repository path.
- *
- * @param planned the scope with the build folder setting.
- * @param path the file path inside the build folder.
- * @returns the repository-relative path.
- */
+Maps a built file to its repository path.
+
+@param planned the scope with the build folder setting.
+@param path the file path inside the build folder.
+@returns the repository-relative path.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 1 file share it.
 export function buildRepositoryPath(planned: Pick<PlannedCheck, 'scope'>, path: string): string {
     return `${getTable(planned.scope.settings, 'site')['build_folder']}/${convertToPosixPath(normalize(path))}`;
 }
 
 /**
- * Returns the site build, or skips the check when the build failed.
- *
- * @param session the repository and its tools.
- * @param planned the scope to build.
- * @returns the built site, when the build succeeded.
- */
+Returns the site build, or skips the check when the build failed.
+
+@param session the repository and its tools.
+@param planned the scope to build.
+@returns the built site, when the build succeeded.
+*/
 export async function getSuccessfulBuild(session: Session, planned: PlannedCheck): Promise<SiteBuild> {
     const build = await getSiteBuild(session, planned);
     if (!build.isBuilt) throw new GspotError('skip', 'The site did not build.');
@@ -96,12 +96,12 @@ export async function getSuccessfulBuild(session: Session, planned: PlannedCheck
 }
 
 /**
- * Reports a build command that fails or writes no build folder.
- *
- * @param session the repository and its tools.
- * @param planned the scope to build.
- * @returns the findings.
- */
+Reports a build command that fails or writes no build folder.
+
+@param session the repository and its tools.
+@param planned the scope to build.
+@returns the findings.
+*/
 export async function checkSiteBuild(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const build = await getSiteBuild(session, planned);
     if (build.isBuilt) return [];

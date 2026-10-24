@@ -63,13 +63,13 @@ function formatTurnOff(check: Check, suppressions: Map<string, Suppression>): st
 }
 
 /**
- * Build the reference page of one check: where it runs, why it matters, what to do, and how to turn it off.
- *
- * @param check the record from the manifest
- * @param configuration the parsed configuration that declares it
- * @param suppressions the suppression form of each tool
- * @returns the page and its Markdown
- */
+Build the reference page of one check: where it runs, why it matters, what to do, and how to turn it off.
+
+@param check the record from the manifest
+@param configuration the parsed configuration that declares it
+@param suppressions the suppression form of each tool
+@returns the page and its Markdown
+*/
 export function buildCheckPage(
     check: Check,
     configuration: Configuration,
@@ -98,12 +98,12 @@ export function buildCheckPage(
 }
 
 /**
- * Build the check index: one table per group, each check linked to its page.
- *
- * @param checks every check, with the configuration that owns it
- * @param groups the title of each folder of configurations
- * @returns the index page
- */
+Build the check index: one table per group, each check linked to its page.
+
+@param checks every check, with the configuration that owns it
+@param groups the title of each folder of configurations
+@returns the index page
+*/
 export function buildCheckIndex(checks: CliReference['checks'], groups: Record<string, string>): ReferencePage {
     return buildReferencePage(
         'Checks',
@@ -121,11 +121,11 @@ export function buildCheckIndex(checks: CliReference['checks'], groups: Record<s
 }
 
 /**
- * List the suppression form of every shipped tool that has one.
- *
- * @param configurations every shipped configuration
- * @returns the form of each tool, by tool name
- */
+List the suppression form of every shipped tool that has one.
+
+@param configurations every shipped configuration
+@returns the form of each tool, by tool name
+*/
 export function listSuppressions(configurations: Configuration[]): Map<string, Suppression> {
     return new Map(
         configurations.flatMap((configuration) =>
@@ -139,11 +139,11 @@ export function listSuppressions(configurations: Configuration[]): Map<string, S
 }
 
 /**
- * List the checks of some configurations for a guide page, in the order their manifests declare them.
- *
- * @param configurations the configuration names
- * @returns one row per check
- */
+List the checks of some configurations for a guide page, in the order their manifests declare them.
+
+@param configurations the configuration names
+@returns one row per check
+*/
 export function listGuideChecks(configurations: string[]): GuideCheck[] {
     return CLI_REFERENCE.checks
         .filter(({ configuration }) => configurations.includes(configuration.name))
@@ -156,11 +156,11 @@ export function listGuideChecks(configurations: string[]): GuideCheck[] {
 }
 
 /**
- * Format the check rows shared by indexes and configuration pages.
- *
- * @param checks the declared checks in display order.
- * @returns the Markdown table, or nothing for no checks.
- */
+Format the check rows shared by indexes and configuration pages.
+
+@param checks the declared checks in display order.
+@returns the Markdown table, or nothing for no checks.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function formatCheckTable(checks: Check[]): string {
     return formatTable(

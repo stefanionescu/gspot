@@ -6,13 +6,13 @@ import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/report.ts';
 
 /**
- * Runs a check on each pushed commit and stops at the first missing tool or run error.
- *
- * @param session the repository and its tools.
- * @param planned the history check.
- * @param perCommit the check to run on one commit.
- * @returns the merged result.
- */
+Runs a check on each pushed commit and stops at the first missing tool or run error.
+
+@param session the repository and its tools.
+@param planned the history check.
+@param perCommit the check to run on one commit.
+@returns the merged result.
+*/
 export async function runOverPushedCommits(
     session: Session,
     planned: PlannedCheck,
@@ -29,12 +29,12 @@ export async function runOverPushedCommits(
 }
 
 /**
- * Get the command of another check in the same shipped configuration.
- *
- * @param planned the history check.
- * @param checkId the ID of the check whose command to read.
- * @returns the executable and its arguments.
- */
+Get the command of another check in the same shipped configuration.
+
+@param planned the history check.
+@param checkId the ID of the check whose command to read.
+@returns the executable and its arguments.
+*/
 export function getSiblingCommand(planned: PlannedCheck, checkId: string): string[] {
     const configuration = planned.configuration as NonNullable<PlannedCheck['configuration']>;
     const sibling = configuration.checks.find(({ id }) => id === checkId) as (typeof configuration.checks)[number];

@@ -16,10 +16,10 @@ export const TEST_RUN_FOLDER = join(
 );
 
 /**
- * Read this checkout's validated Bun and Node pins.
- *
- * @returns the two pinned runtime versions.
- */
+Read this checkout's validated Bun and Node pins.
+
+@returns the two pinned runtime versions.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export async function readRuntimePins(): Promise<{ bun: string; node: string }> {
     const runtimeSettings: unknown = parse(await readFile(join(import.meta.dir, '../../..', TOOL_PINS_FILE), 'utf8'));

@@ -7,12 +7,12 @@ import { listOutdatedFiles } from '#cli/apply/files/outdated.ts';
 import { GENERATED_FILE_FINDINGS } from '#cli/config/checks/general/gspot/generated-files.ts';
 
 /**
- * Reports each generated file on disk that does not match what the settings generate.
- *
- * @param session the settings and repository.
- * @param planned the repository-wide drift check.
- * @returns one finding per file that differs.
- */
+Reports each generated file on disk that does not match what the settings generate.
+
+@param session the settings and repository.
+@param planned the repository-wide drift check.
+@returns one finding per file that differs.
+*/
 export async function checkGspotGeneratedFiles(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const outdated = await listOutdatedFiles(session, generate(session));
     return outdated.map((outdatedFile) =>

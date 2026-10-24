@@ -17,12 +17,12 @@ import {
 } from '#cli/parsers/code/environment.ts';
 
 /**
- * Reports each line that reads an environment variable outside the files that structure.environment_readers lists.
- *
- * @param session the repository and its tools.
- * @param planned the scope sources and roles.
- * @returns one finding per reading line.
- */
+Reports each line that reads an environment variable outside the files that structure.environment_readers lists.
+
+@param session the repository and its tools.
+@param planned the scope sources and roles.
+@returns one finding per reading line.
+*/
 export async function checkStructureEnvironmentReaders(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const readerPaths = planned.scope.settings.values.structure?.environment_readers ?? [];
     if (readerPaths.length === 0) return [];

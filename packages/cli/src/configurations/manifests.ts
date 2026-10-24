@@ -95,12 +95,12 @@ function readShippedConfigurations(): Map<string, Configuration> {
 }
 
 /**
- * Build the error for a manifest that fails validation.
- *
- * @param configuration the name of the failing manifest.
- * @param errors the messages in plain English.
- * @returns the error to throw.
- */
+Build the error for a manifest that fails validation.
+
+@param configuration the name of the failing manifest.
+@param errors the messages in plain English.
+@returns the error to throw.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
 export function buildManifestError(configuration: string, errors: string[]): GspotError {
     return new GspotError(
@@ -110,10 +110,10 @@ export function buildManifestError(configuration: string, errors: string[]): Gsp
 }
 
 /**
- * Read every configuration once per process.
- *
- * @returns the configurations by name.
- */
+Read every configuration once per process.
+
+@returns the configurations by name.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 90 calls in 57 files share it.
 export function readConfigurations(): Map<string, Configuration> {
     CONFIGURATIONS ??= readShippedConfigurations();
@@ -121,11 +121,11 @@ export function readConfigurations(): Map<string, Configuration> {
 }
 
 /**
- * List the shipped check IDs and the command check IDs of the repository.
- *
- * @param checks the [[command_check]] records.
- * @returns the shipped IDs, then your command check IDs.
- */
+List the shipped check IDs and the command check IDs of the repository.
+
+@param checks the [[command_check]] records.
+@returns the shipped IDs, then your command check IDs.
+*/
 export function listCheckIds(checks: readonly Pick<Check, 'id'>[]): string[] {
     const shipped = [...listChecksById(readConfigurations().values()).keys()];
     const authored = checks.map((check) => check.id);
@@ -133,11 +133,11 @@ export function listCheckIds(checks: readonly Pick<Check, 'id'>[]): string[] {
 }
 
 /**
- * List the files in the rules folder of a configuration.
- *
- * @param configuration the shipped configuration that owns the rule files.
- * @returns each file with its asset source, its group, and its path under the configurations folder.
- */
+List the files in the rules folder of a configuration.
+
+@param configuration the shipped configuration that owns the rule files.
+@returns each file with its asset source, its group, and its path under the configurations folder.
+*/
 export function listRuleFiles(configuration: Configuration): ShippedRule[] {
     const { group } = configuration;
     const sources = listAssets(`${configuration.folder}/${RULES_FOLDER}/`);
@@ -149,11 +149,11 @@ export function listRuleFiles(configuration: Configuration): ShippedRule[] {
 }
 
 /**
- * Index the declared checks by ID, with the configuration of each.
- *
- * @param configurations the shipped bundles that own the declared checks.
- * @returns the declared checks by ID.
- */
+Index the declared checks by ID, with the configuration of each.
+
+@param configurations the shipped bundles that own the declared checks.
+@returns the declared checks by ID.
+*/
 export function listChecksById(configurations: Iterable<Configuration>): Map<string, ConfigurationCheck> {
     const checks = new Map<string, ConfigurationCheck>();
     for (const configuration of configurations) {
@@ -177,11 +177,11 @@ function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Too
 }
 
 /**
- * Refuse a check ID that no configuration or command check declares.
- *
- * @param name the requested check ID.
- * @param settings the command checks of gspot.toml.
- */
+Refuse a check ID that no configuration or command check declares.
+
+@param name the requested check ID.
+@param settings the command checks of gspot.toml.
+*/
 export function assertCheckExists(name: string, settings: Pick<Settings, 'commandChecks'>): void {
     const checkIds = listCheckIds(Object.values(settings.commandChecks));
     if (!checkIds.includes(name))

@@ -189,12 +189,12 @@ function extractPathTokens(line: string): string[] {
 }
 
 /**
- * Reports each path that names no tracked file, and each run command that names no task.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose Markdown files to read.
- * @returns the findings.
- */
+Reports each path that names no tracked file, and each run command that names no task.
+
+@param session the repository and its tools.
+@param planned the scope whose Markdown files to read.
+@returns the findings.
+*/
 export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): Finding[] {
     const files = planned.files.filter(
         (file) => file.kind === 'source' && MARKDOWN_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
@@ -215,12 +215,12 @@ export function checkDocsMissingPaths(session: Session, planned: PlannedCheck): 
 }
 
 /**
- * Reports a scope without a README.md, and a root without a license file.
- *
- * @param session the repository and its tools.
- * @param planned the scope to search.
- * @returns the findings.
- */
+Reports a scope without a README.md, and a root without a license file.
+
+@param session the repository and its tools.
+@param planned the scope to search.
+@returns the findings.
+*/
 export function checkDocsRequiredFiles(session: Session, planned: PlannedCheck): Finding[] {
     const findings: Finding[] = [];
     const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));

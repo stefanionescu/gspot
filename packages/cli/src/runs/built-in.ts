@@ -27,13 +27,13 @@ function buildBuiltInResult(
 }
 
 /**
- * Run a built-in check and build its result.
- *
- * @param builtInCheck the implementation to run.
- * @param session the repository and its tools.
- * @param planned the check to run.
- * @returns the check result.
- */
+Run a built-in check and build its result.
+
+@param builtInCheck the implementation to run.
+@param session the repository and its tools.
+@param planned the check to run.
+@returns the check result.
+*/
 export async function runBuiltInCheck(
     builtInCheck: BuiltInCheck,
     session: Session,

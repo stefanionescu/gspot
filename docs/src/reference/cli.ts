@@ -65,10 +65,10 @@ function buildCommandReference(command: ReturnType<typeof buildProgram>['command
 }
 
 /**
- * Build the reference facts that the docs pages read.
- *
- * @returns the facts for the reference pages.
- */
+Build the reference facts that the docs pages read.
+
+@returns the facts for the reference pages.
+*/
 export function readCliReference(): CliReference {
     const configurations = [...readConfigurations().values()].toSorted((first, second) =>
         first.name.localeCompare(second.name),

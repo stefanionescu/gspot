@@ -34,12 +34,12 @@ import {
 } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/imports.ts';
 
 /**
- * Build the n/file-extension-in-import blocks for each project and path style.
- *
- * @param scopes the projects and their import styles.
- * @param nodeFiles your own scripts that run on Node.js.
- * @returns the lint rule and TypeScript extension settings for each project.
- */
+Build the n/file-extension-in-import blocks for each project and path style.
+
+@param scopes the projects and their import styles.
+@param nodeFiles your own scripts that run on Node.js.
+@returns the lint rule and TypeScript extension settings for each project.
+*/
 export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): EslintBlock[] {
     const changed = scopes.filter((scope) => {
         const parent = findParentScope(scopes, scope.folder.path);
@@ -83,13 +83,13 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[]): Es
 }
 
 /**
- * Build one relative-import boundary rule from the project folders and aliases. The root and nested rules share the
- * boundary folders and the aliases of their project.
- *
- * @param scopes the projects and their settings.
- * @param aliases the repository-relative alias paths.
- * @returns the relative-import rule setting with its folders and aliases.
- */
+Build one relative-import boundary rule from the project folders and aliases. The root and nested rules share the
+boundary folders and the aliases of their project.
+
+@param scopes the projects and their settings.
+@param aliases the repository-relative alias paths.
+@returns the relative-import rule setting with its folders and aliases.
+*/
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
     const scopePaths = scopes
         .map((scope) => scope.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH))
@@ -107,11 +107,11 @@ export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<strin
 }
 
 /**
- * Resolve nested project boundaries against the aliases of each project.
- *
- * @param planned the scopes and Node.js script paths to cover.
- * @returns the boundary-rule blocks with the aliases of each project.
- */
+Resolve nested project boundaries against the aliases of each project.
+
+@param planned the scopes and Node.js script paths to cover.
+@returns the boundary-rule blocks with the aliases of each project.
+*/
 export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const {
         session: { root, reads, scopes },
@@ -138,12 +138,12 @@ export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session
 }
 
 /**
- * Keep the imports of Node scripts runnable: Node needs full file names, and resolves only package.json imports.
- * These blocks come after the style and project blocks, so they win for .mjs, .cjs, and Node shebang files.
- *
- * @param planned the scopes and the Node scripts without a code extension.
- * @returns one block for each project.
- */
+Keep the imports of Node scripts runnable: Node needs full file names, and resolves only package.json imports.
+These blocks come after the style and project blocks, so they win for .mjs, .cjs, and Node shebang files.
+
+@param planned the scopes and the Node scripts without a code extension.
+@returns one block for each project.
+*/
 export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
     const {
         session: { root, scopes },
@@ -173,12 +173,12 @@ export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session'
 }
 
 /**
- * Turn the ignored folder globs into the patterns that import-x/ignore matches against resolved module paths, so the
- * import rules never parse a gitignored bundle or build output.
- *
- * @param globs the ignore globs of the ESLint file.
- * @returns a pattern for each ignored folder without other wildcards.
- */
+Turn the ignored folder globs into the patterns that import-x/ignore matches against resolved module paths, so the
+import rules never parse a gitignored bundle or build output.
+
+@param globs the ignore globs of the ESLint file.
+@returns a pattern for each ignored folder without other wildcards.
+*/
 export function buildImportIgnores(globs: string[]): string[] {
     return globs.flatMap((glob) => {
         if (glob.startsWith('!') || !glob.endsWith(FOLDER_CONTENTS)) return [];

@@ -18,12 +18,12 @@ import {
 } from '#cli/config/repository/files/swift-tags.ts';
 
 /**
- * Identify Swift imports, test declarations, and package targets without matching comment or string text.
- *
- * @param path the repository-relative source file.
- * @param text the Swift source.
- * @returns the imported modules, test frameworks, and target kinds the source declares.
- */
+Identify Swift imports, test declarations, and package targets without matching comment or string text.
+
+@param path the repository-relative source file.
+@param text the Swift source.
+@returns the imported modules, test frameworks, and target kinds the source declares.
+*/
 export async function detectSwiftTags(path: string, text: string): Promise<string[]> {
     const tree = await parseSource('swift', text);
     try {
@@ -52,11 +52,11 @@ export async function detectSwiftTags(path: string, text: string): Promise<strin
 }
 
 /**
- * Get the top-level module named by a Swift import declaration.
- *
- * @param node the import declaration.
- * @returns the imported module, when the declaration names one.
- */
+Get the top-level module named by a Swift import declaration.
+
+@param node the import declaration.
+@returns the imported module, when the declaration names one.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function getImportedModule(node: Node): string | undefined {
     return node.namedChildren.find((child) => child.type === SWIFT_IDENTIFIER_NODE)?.text.split('.', 1)[0];

@@ -124,12 +124,12 @@ function buildScopeConfigurationBlocks(
 }
 
 /**
- * Collect imported bindings, the scoped blocks of each configuration, and configuration selectors.
- *
- * @param session the repository.
- * @param planned the source facts and resolved scopes.
- * @returns the configuration data before serialization, with the blocks of each configuration in plan order.
- */
+Collect imported bindings, the scoped blocks of each configuration, and configuration selectors.
+
+@param session the repository.
+@param planned the source facts and resolved scopes.
+@returns the configuration data before serialization, with the blocks of each configuration in plan order.
+*/
 export function listConfigurationBlocks(
     session: Session,
     planned: PlannedEslintFile,

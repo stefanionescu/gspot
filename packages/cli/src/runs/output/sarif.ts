@@ -73,11 +73,11 @@ function assertSuccessfulRun(run: SarifRun): void {
 }
 
 /**
- * Read the report and validate its source locations.
- *
- * @param output the tool output to read.
- * @returns the report findings.
- */
+Read the report and validate its source locations.
+
+@param output the tool output to read.
+@returns the report findings.
+*/
 export function parseSarifFindings(output: ToolOutput): Finding[] {
     const { stdout, check, help, root: source } = output;
     const parsed = parseToolReport('SARIF', stdout, sarifLogSchema);

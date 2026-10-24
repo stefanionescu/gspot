@@ -12,12 +12,12 @@ import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { runTsc, listCompilerFiles, restoreCommandPaths, writeReferenceProjects } from '#cli/checks/tsc/compiler.ts';
 
 /**
- * Runs tsc on a project, or on every project that a solution tsconfig names.
- *
- * @param session the repository and its tools.
- * @param planned the compiler check for one scope.
- * @returns the check result.
- */
+Runs tsc on a project, or on every project that a solution tsconfig names.
+
+@param session the repository and its tools.
+@param planned the compiler check for one scope.
+@returns the check result.
+*/
 export async function checkTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const project = readTsconfigProject(
         session.root,

@@ -119,12 +119,12 @@ function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
 }
 
 /**
- * Runs Vale on the scope files, by path where Vale has a grammar and through stdin elsewhere.
- *
- * @param session the repository and its tools.
- * @param planned the scope to check.
- * @returns the findings.
- */
+Runs Vale on the scope files, by path where Vale has a grammar and through stdin elsewhere.
+
+@param session the repository and its tools.
+@param planned the scope to check.
+@returns the findings.
+*/
 export async function checkProseVale(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     if (!hasValePackages(session.installedRoot, session.settingsFile.settings.level))
         throw new GspotError('tool', 'The Vale packages are not installed. Run gspot install.');

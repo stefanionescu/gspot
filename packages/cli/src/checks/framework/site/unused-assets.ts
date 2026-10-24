@@ -9,12 +9,12 @@ import { FILENAME_TAGS } from '#cli/config/repository/files/classify.ts';
 import { ASSET_FOLDER, TEXT_SUFFIXES, REGULAR_FILE_MODES } from '#cli/config/checks/framework/site/unused-assets.ts';
 
 /**
- * Reports each asset that no text file in the scope or the index names.
- *
- * @param session the repository and its tools.
- * @param planned the scope files and the tracked files.
- * @returns the findings.
- */
+Reports each asset that no text file in the scope or the index names.
+
+@param session the repository and its tools.
+@param planned the scope files and the tracked files.
+@returns the findings.
+*/
 export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): Finding[] {
     const files = planned.files;
     const local = new Set(files.map((file) => file.path));

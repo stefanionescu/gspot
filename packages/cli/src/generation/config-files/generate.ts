@@ -19,11 +19,11 @@ import type {
 const configFilesKey: CacheKey<Map<Repository, ConfigFileGeneration>> = { create: () => new Map() };
 
 /**
- * Reuse generated settings only while the session keeps the same repository read cache.
- *
- * @param session the current settings, scopes, and repository files.
- * @returns the generated settings and scope destinations.
- */
+Reuse generated settings only while the session keeps the same repository read cache.
+
+@param session the current settings, scopes, and repository files.
+@returns the generated settings and scope destinations.
+*/
 export function getConfigFiles(session: Session): ConfigFileGeneration {
     const repositorySession =
         session.root === session.repository.root ? session : { ...session, root: session.repository.root };

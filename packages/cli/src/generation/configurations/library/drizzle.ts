@@ -3,11 +3,11 @@ import { type EslintScope, type ConfigurationBlocks } from '#cli/types/generatio
 import { CONFIGURATION_PLUGINS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 /**
- * Require safe changes in Drizzle queries.
- *
- * @param scope the planned ESLint file of the scope.
- * @returns the imports and ESLint blocks for this configuration.
- */
+Require safe changes in Drizzle queries.
+
+@param scope the planned ESLint file of the scope.
+@returns the imports and ESLint blocks for this configuration.
+*/
 export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;
     const blocks: ConfigurationBlocks['blocks'] = [];

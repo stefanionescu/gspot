@@ -4,12 +4,12 @@ import { extractRulePrefix } from '#cli/configurations/tools.ts';
 import { DIRECTIVE_TAIL, CODE_FILE_TAGS, ESLINT_DIRECTIVE } from '#cli/config/commands/init/eslint-disable-comments.ts';
 
 /**
- * List the files whose eslint-disable comments name a rule that no plugin of the new setup provides. ESLint reports
- * such a comment as a rule it cannot find.
- *
- * @param session the repository and the tools that the selected checks run.
- * @returns a plan row for each file, with the rules it names.
- */
+List the files whose eslint-disable comments name a rule that no plugin of the new setup provides. ESLint reports
+such a comment as a rule it cannot find.
+
+@param session the repository and the tools that the selected checks run.
+@returns a plan row for each file, with the rules it names.
+*/
 export function listForeignDisableComments(session: Session): { path: string; note: string }[] {
     const prefixes = new Set(
         session.toolConfigurations.flatMap((configuration) =>

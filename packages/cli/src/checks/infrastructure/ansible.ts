@@ -55,12 +55,12 @@ async function lintProject(
 }
 
 /**
- * Runs ansible-lint on each playbook project.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to lint.
- * @returns the findings.
- */
+Runs ansible-lint on each playbook project.
+
+@param session the repository and its tools.
+@param planned the scope files to lint.
+@returns the findings.
+*/
 export async function checkAnsibleLint(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const folders = listSourcePaths(planned.files, [ANSIBLE_CONFIG_FILE])
         .map((path) => findProjectFolder(path, ANSIBLE_CONFIG_FILE))

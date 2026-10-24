@@ -39,15 +39,15 @@ function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Re
 }
 
 /**
- * Read the tracked files, dependency files, and the written and discovered scopes.
- *
- * @param reads the run cache.
- * @param options what the read needs.
- * @param options.generatedPaths the generated and vendored path rules.
- * @param options.scopes the written scope tables.
- * @param options.configurations the shipped configurations.
- * @returns the repository inventory.
- */
+Read the tracked files, dependency files, and the written and discovered scopes.
+
+@param reads the run cache.
+@param options what the read needs.
+@param options.generatedPaths the generated and vendored path rules.
+@param options.scopes the written scope tables.
+@param options.configurations the shipped configurations.
+@returns the repository inventory.
+*/
 export async function readRepository(
     reads: ReadCache,
     { generatedPaths, scopes, configurations }: RepositoryReadOptions,
@@ -103,12 +103,12 @@ export async function readRepository(
 }
 
 /**
- * Read generated and vendored selectors from each tracked attribute file.
- *
- * @param reads the run cache.
- * @param paths the tracked root-relative files.
- * @returns the selectors that Git attributes declare.
- */
+Read generated and vendored selectors from each tracked attribute file.
+
+@param reads the run cache.
+@param paths the tracked root-relative files.
+@returns the selectors that Git attributes declare.
+*/
 export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[] {
     return [
         ...new Set(
@@ -132,12 +132,12 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
 }
 
 /**
- * Find the Git top level, or the nearest settings folder outside Git.
- * Without settings outside Git, return the starting folder.
- *
- * @param start where the search begins.
- * @returns the settings folder, Git top level, or starting folder outside Git.
- */
+Find the Git top level, or the nearest settings folder outside Git.
+Without settings outside Git, return the starting folder.
+
+@param start where the search begins.
+@returns the settings folder, Git top level, or starting folder outside Git.
+*/
 export function findRoot(start: string): string {
     const folder = realpathSync(start);
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });

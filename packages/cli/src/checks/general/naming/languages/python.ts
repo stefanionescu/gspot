@@ -104,12 +104,12 @@ function addAssignments(found: FileIdentifiers, root: Node): void {
 }
 
 /**
- * Lists the names that a Python module declares.
- *
- * @param syntaxRoot the parsed module.
- * @param file the repository path of the module.
- * @returns the declared names.
- */
+Lists the names that a Python module declares.
+
+@param syntaxRoot the parsed module.
+@param file the repository path of the module.
+@returns the declared names.
+*/
 export function extractPythonIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const found: FileIdentifiers = { file, language: 'python', out: [] };
     addClasses(found, syntaxRoot);

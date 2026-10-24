@@ -23,12 +23,12 @@ function selectFrameworkRuntime(configurations: string[]): string | undefined {
 }
 
 /**
- * Resolve one runtime per file from scoped framework defaults and your own runtime settings. More specific scopes and
- * your later selectors win. Build scripts keep Node.js unless your own runtime names them.
- *
- * @param scopes every project scope.
- * @returns the runtimes, lowest priority first.
- */
+Resolve one runtime per file from scoped framework defaults and your own runtime settings. More specific scopes and
+your later selectors win. Build scripts keep Node.js unless your own runtime names them.
+
+@param scopes every project scope.
+@returns the runtimes, lowest priority first.
+*/
 export function buildRuntimes(scopes: Scope[]): EslintRuntime[] {
     const blocks: EslintRuntime[] = [];
     for (const scope of scopes.toSorted((left, right) => compareScopeDepth(left.folder.path, right.folder.path))) {

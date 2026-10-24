@@ -11,12 +11,12 @@ import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes
 let timeoutAt: number | undefined;
 
 /**
- * Limit a child command to the time the test has left, and build the text a timeout error shows.
- *
- * @param command the child executable and arguments.
- * @param options how to run it, including its own time limit.
- * @returns the limited options and text that names the command.
- */
+Limit a child command to the time the test has left, and build the text a timeout error shows.
+
+@param command the child executable and arguments.
+@param options how to run it, including its own time limit.
+@returns the limited options and text that names the command.
+*/
 export function limitToTestDeadline(
     command: readonly string[],
     options: AsyncSpawnOptions,
@@ -30,10 +30,10 @@ export function limitToTestDeadline(
 }
 
 /**
- * Open one test's timeout.
- *
- * @returns a disposable that clears the test deadline.
- */
+Open one test's timeout.
+
+@returns a disposable that clears the test deadline.
+*/
 export function startTestTimeout(): Disposable {
     timeoutAt = performance.now() + TEST_TIMEOUT_MILLISECONDS;
     return {
@@ -56,12 +56,12 @@ function buildTimeoutError(
 }
 
 /**
- * Run a command within its requested limit and the remaining test timeout.
- *
- * @param command the executable and its arguments.
- * @param options the subprocess environment and working directory.
- * @returns the captured subprocess result.
- */
+Run a command within its requested limit and the remaining test timeout.
+
+@param command the executable and its arguments.
+@param options the subprocess environment and working directory.
+@returns the captured subprocess result.
+*/
 export async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const limited = limitToTestDeadline(command, options);
     const result = await spawnProcess(command, limited.options);
@@ -71,12 +71,12 @@ export async function runCommand(command: readonly string[], options: AsyncSpawn
 }
 
 /**
- * Run a synchronous command within the remaining test timeout.
- *
- * @param command the executable and its arguments.
- * @param options the working directory and environment.
- * @returns captured output and process status.
- */
+Run a synchronous command within the remaining test timeout.
+
+@param command the executable and its arguments.
+@param options the working directory and environment.
+@returns captured output and process status.
+*/
 export function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
     const limited = limitToTestDeadline(command, options);
     const result = spawnProcessBlocking(command, limited.options);
@@ -86,10 +86,10 @@ export function runCommandBlocking(command: readonly string[], options: AsyncSpa
 }
 
 /**
- * Wait within the remaining test time, then kill a child that remains alive.
- *
- * @param pid child that the test started.
- */
+Wait within the remaining test time, then kill a child that remains alive.
+
+@param pid child that the test started.
+*/
 export async function waitForExit(pid: number): Promise<void> {
     if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid child PID: ${String(pid)}.`);
     const deadline = timeoutAt ?? performance.now() + TEST_TIMEOUT_MILLISECONDS;
@@ -107,12 +107,12 @@ export async function waitForExit(pid: number): Promise<void> {
 }
 
 /**
- * Wait until a child writes its ready file, or the test runs out of time. A child creates the file before it writes the
- * content, so the file counts as ready once it holds bytes.
- *
- * @param path the ready file.
- * @returns whether the file holds bytes.
- */
+Wait until a child writes its ready file, or the test runs out of time. A child creates the file before it writes the
+content, so the file counts as ready once it holds bytes.
+
+@param path the ready file.
+@returns whether the file holds bytes.
+*/
 export async function waitForFile(path: string): Promise<boolean> {
     const deadline = timeoutAt ?? performance.now() + TEST_TIMEOUT_MILLISECONDS;
     while (performance.now() < deadline) {
@@ -146,11 +146,11 @@ export function startCommand(
 }
 
 /**
- * Stop a test runner for each supported termination signal.
- *
- * @param stop receives the signal's exit code.
- * @returns a disposable that removes the registered handlers.
- */
+Stop a test runner for each supported termination signal.
+
+@param stop receives the signal's exit code.
+@returns a disposable that removes the registered handlers.
+*/
 export function stopOnSignals(stop: (code: number) => void): Disposable {
     const listeners = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => {
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: removeListener needs the same function that once registered.

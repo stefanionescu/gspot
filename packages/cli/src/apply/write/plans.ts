@@ -42,12 +42,12 @@ function isOwned(path: string, disk: Files): boolean {
 }
 
 /**
- * Find owned files and managed blocks outside the generation plan.
- *
- * @param session the repository files.
- * @param expected the generated destinations that remain.
- * @returns the stray generated paths.
- */
+Find owned files and managed blocks outside the generation plan.
+
+@param session the repository files.
+@param expected the generated destinations that remain.
+@returns the stray generated paths.
+*/
 export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, expected: ReadonlySet<string>): string[] {
     using disk = openFiles(session.root);
     const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
@@ -81,12 +81,12 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
 }
 
 /**
- * Plan a replacement: refuse authored bytes that nobody reviewed.
- *
- * @param writer the locked repository handle.
- * @param request the new bytes and any reviewed file contents.
- * @returns the write plan, with an unchanged, changed, or preserved status.
- */
+Plan a replacement: refuse authored bytes that nobody reviewed.
+
+@param writer the locked repository handle.
+@param request the new bytes and any reviewed file contents.
+@returns the write plan, with an unchanged, changed, or preserved status.
+*/
 export function planReplacement(writer: Writer, request: ReplacementRequest): WritePlan {
     const { path, next, expected } = request;
     const onDisk = next.isLink === true ? writer.files.readKeepingLinks(path) : writer.files.read(path);
@@ -101,14 +101,14 @@ export function planReplacement(writer: Writer, request: ReplacementRequest): Wr
 }
 
 /**
- * Plan the marked block, and keep the text outside it.
- *
- * @param writer the locked repository handle.
- * @param path the file.
- * @param body the block text.
- * @param style markdown or hash markers.
- * @returns the block write plan.
- */
+Plan the marked block, and keep the text outside it.
+
+@param writer the locked repository handle.
+@param path the file.
+@param body the block text.
+@param style markdown or hash markers.
+@returns the block write plan.
+*/
 export function planBlock(writer: Writer, path: string, body: string, style: BlockStyle): WritePlan {
     const onDisk = writer.files.read(path);
     const text = onDisk === undefined ? '' : decodeUtf8Text(path, onDisk.bytes);
@@ -121,12 +121,12 @@ export function planBlock(writer: Writer, path: string, body: string, style: Blo
 }
 
 /**
- * Plan the removal of an owned file, or of its managed block.
- *
- * @param writer the locked repository handle.
- * @param path the stale generated file.
- * @returns the old bytes, and any authored text left after the managed block goes.
- */
+Plan the removal of an owned file, or of its managed block.
+
+@param writer the locked repository handle.
+@param path the stale generated file.
+@returns the old bytes, and any authored text left after the managed block goes.
+*/
 export function planRemoval(writer: Writer, path: string): WritePlan {
     const onDisk = writer.files.readKeepingLinks(path);
     if (onDisk === undefined) return { path, before: onDisk, status: 'unchanged' };

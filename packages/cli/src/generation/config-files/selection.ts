@@ -6,12 +6,12 @@ import { buildMarkdownlintFile } from '#cli/generation/configurations/language/m
 import type { UsedNames, OwnedConfigFile, ConfigFileGeneration } from '#cli/types/generation/files.ts';
 
 /**
- * Check whether a Markdown scope inherits the root config because both scopes generate the same text.
- *
- * @param selected the scoped config file.
- * @param configFiles the config files and their owners.
- * @returns whether the root supplies the same text.
- */
+Check whether a Markdown scope inherits the root config because both scopes generate the same text.
+
+@param selected the scoped config file.
+@param configFiles the config files and their owners.
+@returns whether the root supplies the same text.
+*/
 export function isRootTextShared(selected: OwnedConfigFile, configFiles: OwnedConfigFile[]): boolean {
     const { configFile, owner } = selected;
     if (configFile.pointer?.inherit !== true || owner.scope.folder.path === '') return false;
@@ -31,13 +31,13 @@ export function isRootTextShared(selected: OwnedConfigFile, configFiles: OwnedCo
 }
 
 /**
- * Find the repository-relative path of the config file for a scope.
- *
- * @param scope the folder, empty for the root.
- * @param configFile the config file from the manifest.
- * @param targets the generated paths by scope and file name without extension.
- * @returns the file of the scope, or the root file as a fallback.
- */
+Find the repository-relative path of the config file for a scope.
+
+@param scope the folder, empty for the root.
+@param configFile the config file from the manifest.
+@param targets the generated paths by scope and file name without extension.
+@returns the file of the scope, or the root file as a fallback.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 16 calls in 11 files share it.
 export function getConfigFileTarget(
     scope: string,
@@ -75,11 +75,11 @@ function listScopeConfigFiles(session: Session, scope: Scope, repositoryNames: U
 }
 
 /**
- * List the config files that this run writes, with the scope that owns each.
- *
- * @param session the repository to build for.
- * @returns each needed config file and its owner.
- */
+List the config files that this run writes, with the scope that owns each.
+
+@param session the repository to build for.
+@returns each needed config file and its owner.
+*/
 export function listOwnedConfigFiles(session: Session): OwnedConfigFile[] {
     const repositoryNames = {
         tools: new Set(

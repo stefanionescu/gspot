@@ -140,12 +140,12 @@ function parseSwiftCoverage(text: string, packageText: string, folder: string): 
 }
 
 /**
- * Runs the tests with coverage and compares each target with the line limit or its own override.
- *
- * @param session the repository and its tools.
- * @param planned the scope and coverage limits.
- * @returns the findings.
- */
+Runs the tests with coverage and compares each target with the line limit or its own override.
+
+@param session the repository and its tools.
+@param planned the scope and coverage limits.
+@returns the findings.
+*/
 export async function checkSwiftCoverage(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const settings = getTable(planned.scope.settings, 'coverage');
     const report = await measureCoverage(session, planned);

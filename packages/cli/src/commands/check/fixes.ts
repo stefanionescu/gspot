@@ -191,13 +191,13 @@ async function listBrokenSyntax(
 }
 
 /**
- * Runs fixes in passes and collects their results. A dry run always removes its copy.
- *
- * @param session the repository and its tools.
- * @param planned the checks to fix.
- * @param options whether to run in a copy and report diffs.
- * @returns the fix results, changed paths, and dry-run diffs.
- */
+Runs fixes in passes and collects their results. A dry run always removes its copy.
+
+@param session the repository and its tools.
+@param planned the checks to fix.
+@param options whether to run in a copy and report diffs.
+@returns the fix results, changed paths, and dry-run diffs.
+*/
 export async function runFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {
     const { isDryRun } = options;
     const checks = planned.filter((check) => check.check.fix !== undefined);

@@ -22,12 +22,12 @@ import {
 } from '#cli/config/install/vale.ts';
 
 /**
- * Check that the Vale packages exist before prose checks run.
- *
- * @param repositoryRoot the root with the generated Vale files and package folders.
- * @param level recommended or all, which decides the packages.
- * @returns whether the Vale settings and the package folders exist.
- */
+Check that the Vale packages exist before prose checks run.
+
+@param repositoryRoot the root with the generated Vale files and package folders.
+@param level recommended or all, which decides the packages.
+@returns whether the Vale settings and the package folders exist.
+*/
 export function hasValePackages(repositoryRoot: string, level: Settings['level']): boolean {
     using files = openFiles(repositoryRoot);
     if (files.read(GSPOT_PATHS.valeConfigFile) === undefined) return false;
@@ -38,11 +38,11 @@ export function hasValePackages(repositoryRoot: string, level: Settings['level']
 }
 
 /**
- * Download the Vale packages for the level, and replace the installed ones. Needs the network.
- *
- * @param install what install needs for this step.
- * @returns the install summary.
- */
+Download the Vale packages for the level, and replace the installed ones. Needs the network.
+
+@param install what install needs for this step.
+@returns the install summary.
+*/
 export async function installValePackages(install: ToolInstall): Promise<string> {
     const { session } = install;
     const { root } = session;

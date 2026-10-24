@@ -10,12 +10,12 @@ import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts'
 import { REACT_PACKAGE, REACT_DOM_PACKAGE } from '#cli/config/checks/framework/react-dom.ts';
 
 /**
- * Reports a project whose react and react-dom resolve to different versions.
- *
- * @param session the repository and its tools.
- * @param planned the scope and the run cache.
- * @returns a finding when the versions differ.
- */
+Reports a project whose react and react-dom resolve to different versions.
+
+@param session the repository and its tools.
+@param planned the scope and the run cache.
+@returns a finding when the versions differ.
+*/
 export function checkReactVersions(session: Session, planned: PlannedCheck): Finding[] {
     const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);

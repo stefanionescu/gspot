@@ -109,12 +109,12 @@ function formatComparison(comparison: RunReport['comparison']): string {
 }
 
 /**
- * Print failed fixer warnings, with the full diagnostics when requested.
- *
- * @param fixes the fixer results.
- * @param options the diagnostic verbosity.
- * @param options.verbose whether to include the full fixer output.
- */
+Print failed fixer warnings, with the full diagnostics when requested.
+
+@param fixes the fixer results.
+@param options the diagnostic verbosity.
+@param options.verbose whether to include the full fixer output.
+*/
 export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
     for (const result of fixes.results) {
         if (result.status !== 'failed') continue;
@@ -138,13 +138,13 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
 }
 
 /**
- * Format the check lines, the ignores, and the summary of a run.
- *
- * @param report the check results and totals.
- * @param options how to show the report.
- * @param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
- * @returns the check lines and the summary.
- */
+Format the check lines, the ignores, and the summary of a run.
+
+@param report the check results and totals.
+@param options how to show the report.
+@param options.verbose whether to show passing and skipped checks, their commands, every finding, and each ignore.
+@returns the check lines and the summary.
+*/
 export function formatRunReport(report: RunReport, options: { verbose: boolean }): string {
     const { verbose } = options;
     const checks = report.checks.filter(
@@ -161,10 +161,10 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean }
 }
 
 /**
- * Print the last finished check and its place in the run.
- *
- * @param progress the last finished check and its place in the run.
- */
+Print the last finished check and its place in the run.
+
+@param progress the last finished check and its place in the run.
+*/
 export function printProgress(progress: CheckProgress): void {
     if (!process.stderr.isTTY) return;
     const subject = formatCheckedContent(progress.comparison);
@@ -174,13 +174,13 @@ export function printProgress(progress: CheckProgress): void {
 }
 
 /**
- * Format the fixes as lines: the dry-run diffs, or the changed files and the files that the fixers broke.
- *
- * @param fixes the fixer results, the changed and broken files, and the diffs.
- * @param options how to show the fixes.
- * @param options.isDryRun whether the run shows fixes and writes nothing.
- * @returns the lines that describe the fixes.
- */
+Format the fixes as lines: the dry-run diffs, or the changed files and the files that the fixers broke.
+
+@param fixes the fixer results, the changed and broken files, and the diffs.
+@param options how to show the fixes.
+@param options.isDryRun whether the run shows fixes and writes nothing.
+@returns the lines that describe the fixes.
+*/
 export function formatFixes(fixes: FixReport, options: { isDryRun: boolean }): string[] {
     const { isDryRun } = options;
     const count = fixes.changed.length;

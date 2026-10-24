@@ -12,11 +12,11 @@ import {
 } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
 /**
- * Apply the Svelte presets and the Svelte component parser.
- *
- * @param scope the planned ESLint file of the scope.
- * @returns the imports and ESLint blocks for this configuration.
- */
+Apply the Svelte presets and the Svelte component parser.
+
+@param scope the planned ESLint file of the scope.
+@returns the imports and ESLint blocks for this configuration.
+*/
 export function buildSvelteBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {
     const { presets, settings } = scope;
     const recommended = getPreset(presets, 'recommended');

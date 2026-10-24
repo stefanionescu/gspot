@@ -172,12 +172,12 @@ function buildDatabaseSchema(schema: DatabaseSchema): Schema {
 }
 
 /**
- * Replays the parsed migrations in version order and collects the tables, foreign keys, indexed columns, and tables
- * with row security that they leave.
- *
- * @param migrations parsed SQL files in version order.
- * @returns the schema summary.
- */
+Replays the parsed migrations in version order and collects the tables, foreign keys, indexed columns, and tables
+with row security that they leave.
+
+@param migrations parsed SQL files in version order.
+@returns the schema summary.
+*/
 export function buildSchema(migrations: Migration[]): Schema {
     const state: DatabaseSchema = {
         indexes: [],

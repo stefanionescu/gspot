@@ -68,12 +68,12 @@ function addCases(found: FileIdentifiers, root: Node): void {
 }
 
 /**
- * Lists the names that a Swift file declares.
- *
- * @param syntaxRoot the parsed file.
- * @param file the repository path of the source.
- * @returns the declared names.
- */
+Lists the names that a Swift file declares.
+
+@param syntaxRoot the parsed file.
+@param file the repository path of the source.
+@returns the declared names.
+*/
 export function extractSwiftIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const found: FileIdentifiers = { file, language: 'swift', out: [] };
     addTypes(found, syntaxRoot);

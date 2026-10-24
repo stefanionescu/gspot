@@ -8,12 +8,12 @@ import { parseGrammarComments } from '#cli/parsers/code/comments.ts';
 import { COMMENT_MARKERS } from '#cli/config/checks/general/structure/long-files.ts';
 
 /**
- * Reports source files over the code-line limit of their language.
- *
- * @param session the repository and its tools.
- * @param planned the scope files and limits.
- * @returns one finding per long file.
- */
+Reports source files over the code-line limit of their language.
+
+@param session the repository and its tools.
+@param planned the scope files and limits.
+@returns one finding per long file.
+*/
 export async function checkStructureLongFiles(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const sources = planned.files.flatMap((file) => {
         const comment: [string, string] | undefined = file.tags.includes('shell')

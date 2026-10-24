@@ -18,11 +18,11 @@ import {
 } from '#cli/config/generation/configurations/framework/nextjs.ts';
 
 /**
- * Apply the Next.js presets and the pages and JSX settings.
- *
- * @param scope the planned ESLint file of the scope.
- * @returns the imports and ESLint blocks for this configuration.
- */
+Apply the Next.js presets and the pages and JSX settings.
+
+@param scope the planned ESLint file of the scope.
+@returns the imports and ESLint blocks for this configuration.
+*/
 export function buildNextjsBlocks(
     scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'scopePath' | 'sourceFiles'>,
 ): ConfigurationBlocks {

@@ -6,12 +6,12 @@ import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import { RUNTIME_EMBEDS } from '#cli/config/checks/language/bash/inline-scripts.ts';
 
 /**
- * Reports each line that embeds another runtime.
- *
- * @param session the repository and its tools.
- * @param planned the scope scripts to read.
- * @returns the findings.
- */
+Reports each line that embeds another runtime.
+
+@param session the repository and its tools.
+@param planned the scope scripts to read.
+@returns the findings.
+*/
 export async function checkBashInlineScripts(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>

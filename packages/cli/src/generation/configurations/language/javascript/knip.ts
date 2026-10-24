@@ -105,11 +105,11 @@ function listFileTaskPackages(planned: PlannedConfigFile): string[] {
 }
 
 /**
- * Build knip.json: the workspace entry points, project selectors, and dependency exclusions.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the workspace entry points, project selectors, and dependency exclusions.
- */
+Build knip.json: the workspace entry points, project selectors, and dependency exclusions.
+
+@param planned the config file with its scope, level, and target path.
+@returns the workspace entry points, project selectors, and dependency exclusions.
+*/
 export function buildKnipFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
     const { scopes, toolConfigurations: configurations } = planned.session;

@@ -1,26 +1,26 @@
 import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 
 /**
- * List the import rules whose files the files of one rule may import: the rule itself, and either its can_import list
- * or every rule above it.
- *
- * @param rules every [[import_rule]] record, in order.
- * @param index the position of the importing rule.
- * @returns the allowed rule names, the importing rule first.
- */
+List the import rules whose files the files of one rule may import: the rule itself, and either its can_import list
+or every rule above it.
+
+@param rules every [[import_rule]] record, in order.
+@param index the position of the importing rule.
+@returns the allowed rule names, the importing rule first.
+*/
 export function listAllowedRules(rules: ImportRule[], index: number): string[] {
     const rule = rules[index] as ImportRule;
     return [rule.name, ...(rule.can_import ?? rules.slice(0, index).map(({ name }) => name))];
 }
 
 /**
- * Explain an import that an import rule refuses.
- *
- * @param allowed the names from listAllowedRules, the importing rule first.
- * @param imported the import as written.
- * @param owner the import rule of the imported file, as its category, such as import-rule:core.
- * @returns the finding message.
- */
+Explain an import that an import rule refuses.
+
+@param allowed the names from listAllowedRules, the importing rule first.
+@param imported the import as written.
+@param owner the import rule of the imported file, as its category, such as import-rule:core.
+@returns the finding message.
+*/
 export function formatRefusedImport(allowed: string[], imported: string, owner: string): string {
     const [name, ...others] = allowed;
     const quoted = others.map((rule) => JSON.stringify(rule)).join(', ');

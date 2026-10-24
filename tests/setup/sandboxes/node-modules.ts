@@ -24,12 +24,12 @@ async function listPackageNames(store: string): Promise<string[]> {
 }
 
 /**
- * Link test packages before workspace packages, with their .bin and the workspace .bun store.
- * Links to the real package folders keep relative dependencies that Windows store junctions break.
- * Copied sandboxes keep the installed dependency layout.
- *
- * @param modulesFolder the node_modules folder to create.
- */
+Link test packages before workspace packages, with their .bin and the workspace .bun store.
+Links to the real package folders keep relative dependencies that Windows store junctions break.
+Copied sandboxes keep the installed dependency layout.
+
+@param modulesFolder the node_modules folder to create.
+*/
 export async function linkInstalledModules(modulesFolder: string): Promise<void> {
     const packages = await Promise.all(
         [testModules, workspaceModules].map(async (store) => {
@@ -48,12 +48,12 @@ export async function linkInstalledModules(modulesFolder: string): Promise<void>
 }
 
 /**
- * Link declared packages and the installed packages they depend on, so a copy of node_modules holds only those. A test
- * package wins over a workspace package of the same name, as in linkInstalledModules.
- *
- * @param modulesFolder the node_modules folder to create.
- * @param names packages that the sandbox project declares.
- */
+Link declared packages and the installed packages they depend on, so a copy of node_modules holds only those. A test
+package wins over a workspace package of the same name, as in linkInstalledModules.
+
+@param modulesFolder the node_modules folder to create.
+@param names packages that the sandbox project declares.
+*/
 export async function linkPackages(modulesFolder: string, names: readonly string[]): Promise<void> {
     const pending = await Promise.all(
         names.map(

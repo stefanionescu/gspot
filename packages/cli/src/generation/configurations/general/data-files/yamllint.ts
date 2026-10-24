@@ -9,11 +9,11 @@ import {
 } from '#cli/config/generation/configurations/general/data-files/yamllint.ts';
 
 /**
- * Build yamllint.yml: the YAML lint rules with the configured indentation and disabled checks.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the YAML lint rules with the configured indentation and disabled checks.
- */
+Build yamllint.yml: the YAML lint rules with the configured indentation and disabled checks.
+
+@param planned the config file with its scope, level, and target path.
+@returns the YAML lint rules with the configured indentation and disabled checks.
+*/
 export function buildYamllintFile(planned: PlannedConfigFile): string {
     const rules: Record<string, unknown> = {
         ...Object.fromEntries(YAMLLINT_RULES.map((rule) => [rule, {}])),

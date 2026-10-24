@@ -11,12 +11,12 @@ import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
 
 /**
- * Reports Swift sources that no Xcode target holds.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Reports Swift sources that no Xcode target holds.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export function checkFilesWithoutTarget(session: Session, planned: PlannedCheck): Finding[] {
     const projects = listSourcePaths(planned.files, [PBXPROJ]).map((path) => ({
         path,

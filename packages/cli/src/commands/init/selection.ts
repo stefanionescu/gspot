@@ -89,11 +89,11 @@ function getConfigurationOrigin(name: string, sources: ConfigurationChoices): Co
 }
 
 /**
- * Select configurations for init from the files, the named configurations, and the project scopes.
- *
- * @param init what init detected, with the flags.
- * @returns the scopes and the configurations of each.
- */
+Select configurations for init from the files, the named configurations, and the project scopes.
+
+@param init what init detected, with the flags.
+@returns the scopes and the configurations of each.
+*/
 export function selectForInit(init: InitRepository): InitConfigurations {
     const { repository, configurations, options } = init;
     assertConfigurationsExist(options.configurations ?? [], configurations);
@@ -135,11 +135,11 @@ export function selectForInit(init: InitRepository): InitConfigurations {
 }
 
 /**
- * Build the configuration selection that selectForScope reads, from the draft.
- *
- * @param draft the choices.
- * @returns the configuration choices for the root and each scope.
- */
+Build the configuration selection that selectForScope reads, from the draft.
+
+@param draft the choices.
+@returns the configuration choices for the root and each scope.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function buildSelectedConfigurations(draft: SettingsDraft): SelectedConfigurations {
     return {

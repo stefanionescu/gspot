@@ -4,11 +4,11 @@ import { GspotError } from '#cli/system/errors.ts';
 import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 
 /**
- * Build the environment for tool processes. Merge Windows names that differ only in case, and keep their spelling.
- *
- * @param overrides tool variables that replace or remove inherited values.
- * @returns the variables as strings.
- */
+Build the environment for tool processes. Merge Windows names that differ only in case, and keep their spelling.
+
+@param overrides tool variables that replace or remove inherited values.
+@returns the variables as strings.
+*/
 export function buildSpawnEnvironment(overrides?: Record<string, string | undefined>): Record<string, string> {
     const variables = new Map<string, [string, string]>();
     const pairs = Object.entries(process.env);
@@ -22,21 +22,21 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
 }
 
 /**
- * Read one value from the process environment.
- *
- * @param name the exact process environment key to read.
- * @returns the value when present.
- */
+Read one value from the process environment.
+
+@param name the exact process environment key to read.
+@returns the value when present.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 17 calls in 14 files share it.
 export function readEnvironmentVariable(name: string): string | undefined {
     return process.env[name];
 }
 
 /**
- * Read the gspot cache folder of this system. Refuse a relative cache path from the environment.
- *
- * @returns the absolute cache folder.
- */
+Read the gspot cache folder of this system. Refuse a relative cache path from the environment.
+
+@returns the absolute cache folder.
+*/
 export function readCacheFolder(): string {
     const { cache } = envPaths(CACHE_FOLDER_NAME, { suffix: '' });
     if (!isAbsolute(cache))
@@ -48,10 +48,10 @@ export function readCacheFolder(): string {
 }
 
 /**
- * Translate the Node.js name of this system into the gspot name.
- *
- * @returns the gspot name, or the Node name for another system.
- */
+Translate the Node.js name of this system into the gspot name.
+
+@returns the gspot name, or the Node name for another system.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 4 files share it.
 export function getOperatingSystem(): string {
     return OPERATING_SYSTEMS.find((platform) => platform.nodeName === process.platform)?.name ?? process.platform;

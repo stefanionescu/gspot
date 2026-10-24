@@ -94,13 +94,13 @@ async function replaceLink(copy: DependencyTreeCopy, { source, target }: Pending
 }
 
 /**
- * Selects the paths that Git ignores.
- *
- * @param repositoryRoot the repository folder.
- * @param paths the prerequisites to test.
- * @param cancelSignal stops the Git query.
- * @returns the ones that Git ignores.
- */
+Selects the paths that Git ignores.
+
+@param repositoryRoot the repository folder.
+@param paths the prerequisites to test.
+@param cancelSignal stops the Git query.
+@returns the ones that Git ignores.
+*/
 export async function readIgnoredPaths(
     repositoryRoot: string,
     paths: string[],
@@ -116,10 +116,10 @@ export async function readIgnoredPaths(
 }
 
 /**
- * Clones installed dependency trees into the copy and repairs the links inside them.
- *
- * @param plan the copy and the dependencies to copy.
- */
+Clones installed dependency trees into the copy and repairs the links inside them.
+
+@param plan the copy and the dependencies to copy.
+*/
 export async function copyDependencies(
     plan: Pick<CopyPlan, 'root' | 'target' | 'dependencies' | 'cancelSignal'>,
 ): Promise<void> {
@@ -147,13 +147,13 @@ export async function copyDependencies(
 }
 
 /**
- * Lists the ignored declaration files that your own tsconfig needs.
- *
- * @param workingTree the checkout with installed declaration files.
- * @param indexFiles the tracked files of the revision.
- * @param cancelSignal stops the Git queries.
- * @returns the files to clone, and the tsconfig paths to match.
- */
+Lists the ignored declaration files that your own tsconfig needs.
+
+@param workingTree the checkout with installed declaration files.
+@param indexFiles the tracked files of the revision.
+@param cancelSignal stops the Git queries.
+@returns the files to clone, and the tsconfig paths to match.
+*/
 export async function readDeclarationDependencies(
     workingTree: string,
     indexFiles: GitFile[],

@@ -12,12 +12,12 @@ function formatRuleHelp(issue: z.core.$ZodIssue, check: string): string {
 }
 
 /**
- * Validate each rule with one refusal while retaining its published value schema.
- *
- * @param schema the accepted rule names and option values.
- * @param check the check whose ignore command accepts a refusal.
- * @returns the rule table schema with one issue per invalid rule.
- */
+Validate each rule with one refusal while retaining its published value schema.
+
+@param schema the accepted rule names and option values.
+@param check the check whose ignore command accepts a refusal.
+@returns the rule table schema with one issue per invalid rule.
+*/
 export function buildRuleTableSchema<Schema extends z.ZodType>(
     schema: Schema,
     check: string,

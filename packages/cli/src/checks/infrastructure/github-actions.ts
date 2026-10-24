@@ -66,12 +66,12 @@ function prepareActionlintText(text: string): string {
 }
 
 /**
- * Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with that reference changed to ./.
- *
- * @param session the repository and its tools.
- * @param planned the actionlint check and its files.
- * @returns the check result.
- */
+Runs actionlint. If a workflow or action uses a $/ reference, checks a copy with that reference changed to ./.
+
+@param session the repository and its tools.
+@param planned the actionlint check and its files.
+@returns the check result.
+*/
 export async function checkGithubActionsActionlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
     const actionFiles = new Map(

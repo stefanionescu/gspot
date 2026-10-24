@@ -126,12 +126,12 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
 }
 
 /**
- * List the files that the configurations of a check own, apart from the files of a project-wide run.
- *
- * @param scopes every scope of the session; a scope-wide run leaves out the files of its child scopes.
- * @param check the plan to read.
- * @returns the files that the owners of the check select.
- */
+List the files that the configurations of a check own, apart from the files of a project-wide run.
+
+@param scopes every scope of the session; a scope-wide run leaves out the files of its child scopes.
+@param check the plan to read.
+@returns the files that the owners of the check select.
+*/
 export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedFile[] {
     const owners = check.check.files ?? check.configuration?.files;
     const children = check.check.runs === 'scope' ? listChildScopes(scopes, check.scope) : [];
@@ -146,12 +146,12 @@ export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedF
 }
 
 /**
- * Drop the files of a per-file check that its --ignore-path file ignores, and skip the check when no file remains.
- *
- * @param session the repository with its file cache.
- * @param check the plan to narrow.
- * @returns the check with fewer files, or skipped.
- */
+Drop the files of a per-file check that its --ignore-path file ignores, and skip the check when no file remains.
+
+@param session the repository with its file cache.
+@param check the plan to narrow.
+@returns the check with fewer files, or skipped.
+*/
 export function stripToolIgnoredFiles(session: Session, check: PlannedCheck): PlannedCheck {
     if (check.skip !== undefined || check.check.runs !== 'files' || check.files.length === 0) return check;
     const toolIgnore = readToolIgnore(session, check);
@@ -163,24 +163,24 @@ export function stripToolIgnoredFiles(session: Session, check: PlannedCheck): Pl
 }
 
 /**
- * List the scopes nested inside a scope. Their files belong to them, not to it.
- *
- * @param scopes the scopes of this run.
- * @param scope the parent scope.
- * @returns the child scope paths.
- */
+List the scopes nested inside a scope. Their files belong to them, not to it.
+
+@param scopes the scopes of this run.
+@param scope the parent scope.
+@returns the child scope paths.
+*/
 export function listChildScopes(scopes: Scope[], scope: Scope): string[] {
     const own = scope.folder.path;
     return scopes.map((each) => each.folder.path).filter((path) => path !== '' && path !== own && isInScope(path, own));
 }
 
 /**
- * Check whether a general per-file check runs once at the root. A check that reads a scope config file does not.
- *
- * @param configuration the configuration that declares the check.
- * @param check the check to inspect.
- * @returns true when the check runs once for the repository.
- */
+Check whether a general per-file check runs once at the root. A check that reads a scope config file does not.
+
+@param configuration the configuration that declares the check.
+@param check the check to inspect.
+@returns true when the check runs once for the repository.
+*/
 export function isRootOnlyCheck(configuration: Configuration | undefined, check: Check): boolean {
     if (configuration === undefined) return true;
     if (configuration.group !== 'general' || configuration.files.languages || check.runs === 'scope') return false;
@@ -194,13 +194,13 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
 }
 
 /**
- * Select the files and deleted trigger paths of a planned check.
- *
- * @param planned the scope to plan.
- * @param scopeCheck the check and its manifest.
- *
- * @returns the files and the trigger paths.
- */
+Select the files and deleted trigger paths of a planned check.
+
+@param planned the scope to plan.
+@param scopeCheck the check and its manifest.
+
+@returns the files and the trigger paths.
+*/
 export function selectCheckFiles(
     planned: PlannedScope,
     scopeCheck: ScopeCheck,

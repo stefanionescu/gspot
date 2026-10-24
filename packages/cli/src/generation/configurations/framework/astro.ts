@@ -20,11 +20,11 @@ import {
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
- * Apply Astro's presets and its component parser.
- *
- * @param scope the selected presets and configurations.
- * @returns imported bindings and unscoped block data.
- */
+Apply Astro's presets and its component parser.
+
+@param scope the selected presets and configurations.
+@returns imported bindings and unscoped block data.
+*/
 export function buildAstroBlocks(
     scope: Pick<EslintScope, 'presets' | 'eslintPresets' | 'settings'>,
 ): ConfigurationBlocks {

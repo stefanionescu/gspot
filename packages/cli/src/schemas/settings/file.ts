@@ -225,10 +225,10 @@ export const settingsSchema = z
     .meta({ examples: SETTINGS_EXAMPLES }) satisfies z.ZodType<ParsedSettings, WrittenSettings>;
 
 /**
- * Derive the written field order of the record lists from their schemas.
- *
- * @returns record paths and their ordered field names; scopes retain their leading fields only.
- */
+Derive the written field order of the record lists from their schemas.
+
+@returns record paths and their ordered field names; scopes retain their leading fields only.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
 export function listRecordFields(): Record<string, string[]> {
     return Object.fromEntries(
@@ -256,11 +256,11 @@ export function listRecordFields(): Record<string, string[]> {
 }
 
 /**
- * Locate one setting in the root, configuration, and tool schemas.
- *
- * @param key the dotted setting name.
- * @returns its schema, or undefined when the key names no setting.
- */
+Locate one setting in the root, configuration, and tool schemas.
+
+@param key the dotted setting name.
+@returns its schema, or undefined when the key names no setting.
+*/
 export function findSettingSchema(key: string): z.ZodType | undefined {
     const direct = Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).find(([name]) => name === key);
     if (direct !== undefined) return direct[1];

@@ -14,12 +14,12 @@ import { EXECUTABLE_MODE } from '#tests/config/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 /**
- * Replace one child command and run the others normally.
- *
- * @param name the executable to replace.
- * @param result function that returns the fake run.
- * @returns a spy whose disposal restores how commands run.
- */
+Replace one child command and run the others normally.
+
+@param name the executable to replace.
+@param result function that returns the fake run.
+@returns a spy whose disposal restores how commands run.
+*/
 export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typeof spawnProcess> {
     const runProcess = processes.spawnProcess;
     return spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
@@ -28,10 +28,10 @@ export function fakeCommand(name: string, result: typeof spawnProcess): Mock<typ
 }
 
 /**
- * Record each npm command that gspot starts, other than npm --version, and run it as usual.
- *
- * @returns a spy whose installations list the recorded commands, and whose disposal restores command execution.
- */
+Record each npm command that gspot starts, other than npm --version, and run it as usual.
+
+@returns a spy whose installations list the recorded commands, and whose disposal restores command execution.
+*/
 export function recordNpmCommands(): Mock<typeof spawnProcess> & { installations: string[][] } {
     const runProcess = processes.spawnProcess;
     const installations: string[][] = [];
@@ -43,11 +43,11 @@ export function recordNpmCommands(): Mock<typeof spawnProcess> & { installations
 }
 
 /**
- * Fake the lookup and version output of these tools.
- *
- * @param tools the tools whose pinned versions the fakes print.
- * @returns the disposable mocks.
- */
+Fake the lookup and version output of these tools.
+
+@param tools the tools whose pinned versions the fakes print.
+@returns the disposable mocks.
+*/
 export function fakeToolExecutables(tools: Tool[]): DisposableStack {
     const resources = new DisposableStack();
     const runBlocking = processes.spawnProcessBlocking;
@@ -71,13 +71,13 @@ export function fakeToolExecutables(tools: Tool[]): DisposableStack {
 }
 
 /**
- * Write a child script and its launchers.
- *
- * @param sandboxRoot folder that gets the script and launchers.
- * @param name the executable path without a Windows suffix.
- * @param script the Bun program, written unchanged.
- * @returns the folder to put on `PATH`.
- */
+Write a child script and its launchers.
+
+@param sandboxRoot folder that gets the script and launchers.
+@param name the executable path without a Windows suffix.
+@param script the Bun program, written unchanged.
+@returns the folder to put on `PATH`.
+*/
 export async function writeScriptCommand(sandboxRoot: string, name: string, script: string): Promise<string> {
     const target = join(sandboxRoot, name);
     const folder = dirname(target);
@@ -118,11 +118,11 @@ export async function fakeNpmPackage(
 }
 
 /**
- * Make executable lookup return one path, or the path a function picks for each name.
- *
- * @param path the path, or a function of the name; when the function gives undefined, the real lookup runs.
- * @returns the mock.
- */
+Make executable lookup return one path, or the path a function picks for each name.
+
+@param path the path, or a function of the name; when the function gives undefined, the real lookup runs.
+@returns the mock.
+*/
 export function fakeExecutableLookup(
     path: string | null | ((name: string) => string | null | undefined),
 ): Mock<typeof executables.sync> {

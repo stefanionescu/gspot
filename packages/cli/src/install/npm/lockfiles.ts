@@ -60,12 +60,12 @@ function isStandardTarball(bunPackage: BunPackage, env: Record<string, string>):
 }
 
 /**
- * Remove registry addresses from the portable lockfile of Bun.
- *
- * @param content the lockfile contents.
- * @param env the configured registry addresses.
- * @returns the portable lockfile contents.
- */
+Remove registry addresses from the portable lockfile of Bun.
+
+@param content the lockfile contents.
+@param env the configured registry addresses.
+@returns the portable lockfile contents.
+*/
 export function stripBunRegistryUrls(content: string, env: Record<string, string>): string {
     const parsed = parseJsonFile('bun.lock', content, bunLockSchema);
     let edited = content;
@@ -210,16 +210,16 @@ function isInvalidLockfile(error: unknown): boolean {
 }
 
 /**
- * Check whether a lockfile pins every generated dependency.
- * npm, Bun, and pnpm must have no extra root dependencies; Yarn may keep extra entries.
- *
- * @param name the package manager that wrote the lockfile.
- * @param content the lockfile text.
- * @param dependencies what the tool project declares.
- * @param env the configured package registry addresses.
- *
- * @returns true when the lockfile matches.
- */
+Check whether a lockfile pins every generated dependency.
+npm, Bun, and pnpm must have no extra root dependencies; Yarn may keep extra entries.
+
+@param name the package manager that wrote the lockfile.
+@param content the lockfile text.
+@param dependencies what the tool project declares.
+@param env the configured package registry addresses.
+
+@returns true when the lockfile matches.
+*/
 export function isLockfileFresh(
     name: PackageManager['name'],
     content: string,

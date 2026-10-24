@@ -84,14 +84,14 @@ function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBl
 }
 
 /**
- * Build the blocks before the configuration blocks: default lint rules, pinned presets, and project settings.
- *
- * @param planned the ESLint context of the scope.
- * @param plugins the import names and packages to load.
- * @param boundaryBlocks the project classifications and dependency policies.
- * @param ignoredGlobs the shared ignored paths.
- * @returns the blocks for source syntax and lint rules.
- */
+Build the blocks before the configuration blocks: default lint rules, pinned presets, and project settings.
+
+@param planned the ESLint context of the scope.
+@param plugins the import names and packages to load.
+@param boundaryBlocks the project classifications and dependency policies.
+@param ignoredGlobs the shared ignored paths.
+@returns the blocks for source syntax and lint rules.
+*/
 export function buildOpeningBlocks(
     planned: PlannedEslintFile,
     plugins: EslintPlugins,
@@ -145,13 +145,13 @@ export function buildOpeningBlocks(
 }
 
 /**
- * Build the blocks after the configuration blocks: runtime, selector, test, script, and final pinned rules.
- *
- * @param planned the ESLint context of the scope.
- * @param selectorGroups the syntax selectors that the configurations and settings add.
- * @param runtimeBlocks the runtime declarations shared with file matchers.
- * @returns the blocks for package and file conventions.
- */
+Build the blocks after the configuration blocks: runtime, selector, test, script, and final pinned rules.
+
+@param planned the ESLint context of the scope.
+@param selectorGroups the syntax selectors that the configurations and settings add.
+@param runtimeBlocks the runtime declarations shared with file matchers.
+@returns the blocks for package and file conventions.
+*/
 export function buildClosingBlocks(
     planned: PlannedEslintFile,
     selectorGroups: SelectorGroup[],
@@ -235,12 +235,12 @@ function buildConsoleBlocks(
 }
 
 /**
- * Choose the plugin imports and names for the module header and the lint blocks.
- *
- * @param planned the ESLint context of the scope.
- * @param boundaryBlocks the project classifications that require the boundaries plugin.
- * @returns the ESLint plugins to load.
- */
+Choose the plugin imports and names for the module header and the lint blocks.
+
+@param planned the ESLint context of the scope.
+@param boundaryBlocks the project classifications that require the boundaries plugin.
+@returns the ESLint plugins to load.
+*/
 export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): EslintPlugins {
     const isAll = planned.level === 'all';
     const repositorySettings = planned.session.settingsFile.settings;
@@ -299,14 +299,14 @@ function buildLimitRules(settings: ScopeSettings, language: 'typescript' | 'java
 }
 
 /**
- * Calculate the ESLint limit options from the settings. JavaScript files get the JavaScript limits in their own
- * block, which comes after the block for every code file.
- *
- * @param scopeSettings the settings that the limits read.
- * @param selectors the syntax patterns and their paths.
- *
- * @returns the lint rules at this level.
- */
+Calculate the ESLint limit options from the settings. JavaScript files get the JavaScript limits in their own
+block, which comes after the block for every code file.
+
+@param scopeSettings the settings that the limits read.
+@param selectors the syntax patterns and their paths.
+
+@returns the lint rules at this level.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The base rule sets and limit rules it reads stay private to this file.
 export function buildLevelRules(
     scopeSettings: ScopeSettings,

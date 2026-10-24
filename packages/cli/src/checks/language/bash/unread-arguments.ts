@@ -5,12 +5,12 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 
 /**
- * Reports each function called with more arguments than it reads.
- *
- * @param session the repository and its tools.
- * @param planned the scope scripts to read.
- * @returns the findings.
- */
+Reports each function called with more arguments than it reads.
+
+@param session the repository and its tools.
+@param planned the scope scripts to read.
+@returns the findings.
+*/
 export async function checkBashUnreadArguments(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scripts = await readScripts(session, planned);
     const names = new Set(scripts.flatMap((file) => file.functions.map((scriptFunction) => scriptFunction.name)));

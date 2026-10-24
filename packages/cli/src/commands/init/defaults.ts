@@ -97,11 +97,11 @@ function stripTableDefaults(
 }
 
 /**
- * Drop written values that equal the default, but keep a scope override of its parent.
- *
- * @param settings the ordered draft, whose settings give the defaults.
- * @returns the draft without values that equal the default.
- */
+Drop written values that equal the default, but keep a scope override of its parent.
+
+@param settings the ordered draft, whose settings give the defaults.
+@returns the draft without values that equal the default.
+*/
 export function stripDefaults(settings: TomlTable): TomlTable {
     const configurations = readConfigurations();
     const parsed = settingsSchema.parse(settings);

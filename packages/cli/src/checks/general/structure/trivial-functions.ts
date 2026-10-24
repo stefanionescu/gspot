@@ -116,13 +116,13 @@ function formatSwiftFunctionName(node: Node): string {
 }
 
 /**
- * Reports each named function at or under the statement limit, and each file that only forwards code. Anonymous
- * functions have no name, so the check leaves them out.
- *
- * @param session the repository and its tools.
- * @param planned the scope files and statement limits.
- * @returns the findings.
- */
+Reports each named function at or under the statement limit, and each file that only forwards code. Anonymous
+functions have no name, so the check leaves them out.
+
+@param session the repository and its tools.
+@param planned the scope files and statement limits.
+@returns the findings.
+*/
 export async function checkStructureTrivialFunctions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const parsed = await parseCached({ ...session, files: planned.files, scope: planned.scope }, PARSED_SOURCES);
     const files: Finding[] = [];

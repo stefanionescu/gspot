@@ -32,14 +32,14 @@ export function listScopeFindingRows(report: RunReport): ScopeFindingRow[] {
 }
 
 /**
- * Run gspot in this process over a folder with color off and CI set, and capture what it writes.
- *
- * @param cwd the sandbox.
- * @param commandArguments everything after gspot.
- * @param environment extra variables, restored afterwards.
- * @param options byte input for commands that read standard input.
- * @returns the exit code and both streams.
- */
+Run gspot in this process over a folder with color off and CI set, and capture what it writes.
+
+@param cwd the sandbox.
+@param commandArguments everything after gspot.
+@param environment extra variables, restored afterwards.
+@param options byte input for commands that read standard input.
+@returns the exit code and both streams.
+*/
 export async function runGspot(
     cwd: string,
     commandArguments: readonly string[],
@@ -88,14 +88,14 @@ export function parseCheckReport(output: ProcessOutput): ProcessOutput & { repor
 }
 
 /**
- * Run gspot as a child process in a folder with color off and CI set.
- *
- * @param cwd the sandbox.
- * @param commandArguments everything after gspot.
- * @param environment extra variables for the child.
- * @param options stdin for the child process.
- * @returns the exit code and both streams.
- */
+Run gspot as a child process in a folder with color off and CI set.
+
+@param cwd the sandbox.
+@param commandArguments everything after gspot.
+@param environment extra variables for the child.
+@param options stdin for the child process.
+@returns the exit code and both streams.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 61 files call it.
 export async function spawnGspot(
     cwd: string,

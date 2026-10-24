@@ -8,11 +8,11 @@ import { testdir, createFileTree, type TestdirResult } from 'testdirs';
 import { PUSH_CONTENT, LFS_ATTRIBUTES, NESTED_SCOPE_FILES } from '#tests/config/setup/sandboxes.ts';
 
 /**
- * Create base, reviewed, and broken commits, plus different working-tree bytes, for the push tests.
- *
- * @param sandboxRoot folder for the repository.
- * @returns the commit hashes and the zero hash for a new ref.
- */
+Create base, reviewed, and broken commits, plus different working-tree bytes, for the push tests.
+
+@param sandboxRoot folder for the repository.
+@returns the commit hashes and the zero hash for a new ref.
+*/
 export async function preparePushRepository(
     sandboxRoot: string,
 ): Promise<{ base: string; reviewed: string; broken: string; zero: string }> {
@@ -49,10 +49,10 @@ export async function prepareNestedRepository(
 }
 
 /**
- * Create a committed repository with hooks on and one file that Git Large File Storage (LFS) stores.
- *
- * @returns the sandbox, which removes itself on disposal.
- */
+Create a committed repository with hooks on and one file that Git Large File Storage (LFS) stores.
+
+@returns the sandbox, which removes itself on disposal.
+*/
 export async function createLfsRepository(): Promise<TestdirResult> {
     const sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], { tables: HOOKS_SETTINGS }),

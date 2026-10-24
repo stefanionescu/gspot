@@ -59,11 +59,11 @@ function serializeIgnoredGlobs(grouped: IgnoreSection[]): string {
 }
 
 /**
- * Build typos.toml: the spelling dictionaries and reason-grouped exclusions as TOML.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the spelling dictionaries and reason-grouped exclusions as TOML.
- */
+Build typos.toml: the spelling dictionaries and reason-grouped exclusions as TOML.
+
+@param planned the config file with its scope, level, and target path.
+@returns the spelling dictionaries and reason-grouped exclusions as TOML.
+*/
 export function buildTyposFile(planned: PlannedConfigFile): string {
     const grouped = buildTyposSections(planned);
     const ignoredGlobs = grouped.flatMap((section) => section.patterns);

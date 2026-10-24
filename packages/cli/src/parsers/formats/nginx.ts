@@ -63,11 +63,11 @@ function splitTokens(text: string): string[] {
 }
 
 /**
- * Parse nginx directives. Quoted whitespace stays, and comments drop out.
- *
- * @param text the nginx configuration.
- * @returns each directive as its name followed by its arguments.
- */
+Parse nginx directives. Quoted whitespace stays, and comments drop out.
+
+@param text the nginx configuration.
+@returns each directive as its name followed by its arguments.
+*/
 export function parseNginxDirectives(text: string): [string, ...string[]][] {
     const found: [string, ...string[]][] = [];
     let directive: string[] = [];

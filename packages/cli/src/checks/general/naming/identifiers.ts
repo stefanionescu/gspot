@@ -7,12 +7,12 @@ import { readNamingSettings } from '#cli/checks/general/naming/settings.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/checks/general/naming/source-names.ts';
 
 /**
- * Checks the names that source files declare.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Checks the names that source files declare.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export async function checkNamingIdentifiers(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const settings = readNamingSettings(session.settingsFile.settings, planned.scope);
     const findings: Finding[] = [];

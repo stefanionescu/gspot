@@ -10,12 +10,12 @@ import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/track
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
- * Reports each leaf folder that holds only one code file.
- *
- * @param _session the repository and its tools.
- * @param planned the scope files.
- * @returns the findings.
- */
+Reports each leaf folder that holds only one code file.
+
+@param _session the repository and its tools.
+@param planned the scope files.
+@returns the findings.
+*/
 export function checkStructureLoneFiles(_session: Session, planned: PlannedCheck): Finding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);

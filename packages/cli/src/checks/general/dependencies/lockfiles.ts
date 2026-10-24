@@ -63,13 +63,13 @@ function checkForeignLockfiles(planned: PlannedCheck): Finding[] {
 }
 
 /**
- * Reports lockfile downloads from other hosts or over plain HTTP, and lockfiles of a second package manager in the
- * scope.
- *
- * @param session the repository and its tools.
- * @param planned the scope files and allowed registries.
- * @returns the findings.
- */
+Reports lockfile downloads from other hosts or over plain HTTP, and lockfiles of a second package manager in the
+scope.
+
+@param session the repository and its tools.
+@param planned the scope files and allowed registries.
+@returns the findings.
+*/
 export function checkDependenciesLockfiles(session: Session, planned: PlannedCheck): Finding[] {
     const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
     const lockfiles = new Set<string>(JAVASCRIPT_LOCKFILES);

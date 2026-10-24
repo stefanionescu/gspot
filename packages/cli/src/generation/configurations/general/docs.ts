@@ -12,11 +12,11 @@ import {
 } from '#cli/config/generation/configurations/general/docs.ts';
 
 /**
- * Build lychee.toml: a note on why the file exists, and the lychee link exclusions as TOML.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns a note on why the file exists, and the lychee link exclusions as TOML.
- */
+Build lychee.toml: a note on why the file exists, and the lychee link exclusions as TOML.
+
+@param planned the config file with its scope, level, and target path.
+@returns a note on why the file exists, and the lychee link exclusions as TOML.
+*/
 export function buildLycheeFile(planned: PlannedConfigFile): string {
     const { configurations, settings } = planned.scope;
 

@@ -112,12 +112,12 @@ function formatCheckExplanation(
 }
 
 /**
- * Explain a shipped check or a command check.
- *
- * @param session the repository, or undefined outside one.
- * @param checkId the check ID to explain.
- * @returns the explanation, or undefined when no check has the ID.
- */
+Explain a shipped check or a command check.
+
+@param session the repository, or undefined outside one.
+@param checkId the check ID to explain.
+@returns the explanation, or undefined when no check has the ID.
+*/
 export function explainCheck(session: Session | undefined, checkId: string): Explanation | undefined {
     const configurations = readConfigurations();
     const commandCheck = session?.settingsFile.settings.commandChecks[checkId];
@@ -158,12 +158,12 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
 }
 
 /**
- * Explain one lint rule: its page, and how to turn it off or change its options.
- *
- * @param tool the command or plugin prefix.
- * @param rule the ID without its prefix, such as no-console.
- * @returns the explanation, or undefined when no check runs the tool.
- */
+Explain one lint rule: its page, and how to turn it off or change its options.
+
+@param tool the command or plugin prefix.
+@param rule the ID without its prefix, such as no-console.
+@returns the explanation, or undefined when no check runs the tool.
+*/
 export function explainLintRule(tool: string, rule: string): Explanation | undefined {
     const configurations = readConfigurations();
     const qualified = `${tool}/${rule}`;

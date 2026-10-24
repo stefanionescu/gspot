@@ -36,13 +36,13 @@ function readUtf8(path: string, read: () => Buffer): string | undefined {
 }
 
 /**
- * Read the first bytes of a file, with the resolved root of the run and any cached bytes.
- *
- * @param reads the run cache.
- * @param path the root-relative file.
- * @param limit the maximum byte count.
- * @returns the bytes read.
- */
+Read the first bytes of a file, with the resolved root of the run and any cached bytes.
+
+@param reads the run cache.
+@param path the root-relative file.
+@param limit the maximum byte count.
+@returns the bytes read.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 3 files share it.
 export function readCachedPrefix(reads: ReadCache, path: string, limit: number): Buffer {
     const held = reads.sources.get(path);
@@ -50,24 +50,24 @@ export function readCachedPrefix(reads: ReadCache, path: string, limit: number):
 }
 
 /**
- * Read file bytes from disk inside the folder.
- *
- * @param root the boundary for resolving the relative file path.
- * @param path the root-relative file.
- * @returns the file bytes.
- */
+Read file bytes from disk inside the folder.
+
+@param root the boundary for resolving the relative file path.
+@param path the root-relative file.
+@returns the file bytes.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 15 calls in 8 files share it.
 export function readBytes(root: string, path: string): Buffer {
     return readFileSync(readContainedPath(realpathSync(root), path));
 }
 
 /**
- * Read file bytes once per run.
- *
- * @param reads the run cache.
- * @param path the root-relative file.
- * @returns the first bytes read during this run.
- */
+Read file bytes once per run.
+
+@param reads the run cache.
+@param path the root-relative file.
+@returns the first bytes read during this run.
+*/
 export function readCachedBytes(reads: ReadCache, path: string): Buffer {
     const held = reads.sources.get(path);
     if (held !== undefined) return held;
@@ -77,36 +77,36 @@ export function readCachedBytes(reads: ReadCache, path: string): Buffer {
 }
 
 /**
- * Read UTF-8 text from disk, or return undefined for a missing file.
- *
- * @param root the boundary for resolving the relative file path.
- * @param path the root-relative file.
- * @returns the file text.
- */
+Read UTF-8 text from disk, or return undefined for a missing file.
+
+@param root the boundary for resolving the relative file path.
+@param path the root-relative file.
+@returns the file text.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 18 calls in 12 files share it.
 export function findText(root: string, path: string): string | undefined {
     return readUtf8(path, () => readBytes(root, path));
 }
 
 /**
- * Read UTF-8 text through the run cache, or return undefined for a missing file.
- *
- * @param reads the run cache.
- * @param path the root-relative file.
- * @returns the cached file text.
- */
+Read UTF-8 text through the run cache, or return undefined for a missing file.
+
+@param reads the run cache.
+@param path the root-relative file.
+@returns the cached file text.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 22 calls in 19 files share it.
 export function findCachedText(reads: ReadCache, path: string): string | undefined {
     return readUtf8(path, () => readCachedBytes(reads, path));
 }
 
 /**
- * Read tracked UTF-8 text and refuse a missing file.
- *
- * @param root the repository folder.
- * @param path the tracked file path.
- * @returns the file text.
- */
+Read tracked UTF-8 text and refuse a missing file.
+
+@param root the repository folder.
+@param path the tracked file path.
+@returns the file text.
+*/
 export function readText(root: string, path: string): string {
     const text = findText(root, path);
     if (text === undefined)
@@ -115,12 +115,12 @@ export function readText(root: string, path: string): string {
 }
 
 /**
- * Read tracked UTF-8 text through the run cache and refuse a missing file.
- *
- * @param reads the run cache.
- * @param path the tracked file path.
- * @returns the cached file text.
- */
+Read tracked UTF-8 text through the run cache and refuse a missing file.
+
+@param reads the run cache.
+@param path the tracked file path.
+@returns the cached file text.
+*/
 export function readCachedText(reads: ReadCache, path: string): string {
     const text = findCachedText(reads, path);
     if (text === undefined)
@@ -129,12 +129,12 @@ export function readCachedText(reads: ReadCache, path: string): string {
 }
 
 /**
- * Resolve a source path, and refuse links outside the root.
- *
- * @param root the real path of the repository folder.
- * @param path the root-relative file.
- * @returns the real path of the file.
- */
+Resolve a source path, and refuse links outside the root.
+
+@param root the real path of the repository folder.
+@param path the root-relative file.
+@returns the real path of the file.
+*/
 export function readContainedPath(root: string, path: string): string {
     const target = realpathSync(join(root, ...splitSystemPath(path)));
     if (!isInside(relative(root, target)))
@@ -146,23 +146,23 @@ export function readContainedPath(root: string, path: string): string {
 }
 
 /**
- * Decode UTF-8 bytes as text.
- *
- * @param bytes the source buffer to validate before decoding.
- * @returns the text, or undefined for invalid UTF-8.
- */
+Decode UTF-8 bytes as text.
+
+@param bytes the source buffer to validate before decoding.
+@returns the text, or undefined for invalid UTF-8.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 5 files share it.
 export function decodeUtf8(bytes: Uint8Array): string | undefined {
     return isUtf8(bytes) ? Buffer.from(bytes).toString('utf8') : undefined;
 }
 
 /**
- * Decode a user file, or tell the user how to fix its encoding.
- *
- * @param path the file to name in an encoding error.
- * @param bytes the file contents to decode.
- * @returns the UTF-8 text.
- */
+Decode a user file, or tell the user how to fix its encoding.
+
+@param path the file to name in an encoding error.
+@param bytes the file contents to decode.
+@returns the UTF-8 text.
+*/
 export function decodeUtf8Text(path: string, bytes: Buffer): string {
     const text = decodeUtf8(bytes);
     if (text === undefined)

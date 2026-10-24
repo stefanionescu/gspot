@@ -29,12 +29,12 @@ function getAssetSetName(path: string): string {
     return name.slice(0, name.lastIndexOf('.'));
 }
 /**
- * Checks that each asset catalog Contents.json parses and each image set holds its images.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Checks that each asset catalog Contents.json parses and each image set holds its images.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export function checkXcodeAssets(session: Session, planned: PlannedCheck): Finding[] {
     const repositoryPaths = new Set(session.repository.files.map(({ path }) => path));
     return listSourcePaths(planned.files, [ASSET_CONTENTS])
@@ -59,12 +59,12 @@ export function checkXcodeAssets(session: Session, planned: PlannedCheck): Findi
 }
 
 /**
- * Reports asset sets that no source or Xcode build setting names.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Reports asset sets that no source or Xcode build setting names.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck): Finding[] {
     const sourceTexts = listSourcePaths(planned.files, ASSET_REFERENCE_ENDINGS).map((path) =>
         readCachedText(session.reads, path),
@@ -92,12 +92,12 @@ export function checkXcodeUnusedAssets(session: Session, planned: PlannedCheck):
 }
 
 /**
- * Checks that each string catalog parses and that every string has every locale the catalog uses.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Checks that each string catalog parses and that every string has every locale the catalog uses.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export function checkXcodeXcstrings(session: Session, planned: PlannedCheck): Finding[] {
     return listSourcePaths(planned.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
         const text = readCachedText(session.reads, path);

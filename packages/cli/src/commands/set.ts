@@ -185,11 +185,11 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
 }
 
 /**
- * Register the set command.
- *
- * @param program the gspot program that gets the command.
- * @param onResult receives the result of the command.
- */
+Register the set command.
+
+@param program the gspot program that gets the command.
+@param onResult receives the result of the command.
+*/
 export function registerSet(program: Command, onResult: CommandCompletion): void {
     program
         .command('set')

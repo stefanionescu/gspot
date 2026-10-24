@@ -4,11 +4,11 @@ import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/bui
 import { TAPLO_FORMATTING } from '#cli/config/generation/configurations/general/data-files/taplo.ts';
 
 /**
- * Build taplo.toml: the Taplo formatting settings with automatic schema lookup disabled.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Taplo formatting settings with automatic schema lookup disabled.
- */
+Build taplo.toml: the Taplo formatting settings with automatic schema lookup disabled.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Taplo formatting settings with automatic schema lookup disabled.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildTaploFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.values;

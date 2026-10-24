@@ -8,11 +8,11 @@ import {
 } from '#cli/config/generation/configurations/language/bash.ts';
 
 /**
- * Build shellcheckrc: the ShellCheck source-path and excluded-rule settings.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the ShellCheck source-path and excluded-rule settings.
- */
+Build shellcheckrc: the ShellCheck source-path and excluded-rule settings.
+
+@param planned the config file with its scope, level, and target path.
+@returns the ShellCheck source-path and excluded-rule settings.
+*/
 export function buildShellcheckFile(planned: PlannedConfigFile): string {
     const level = planned.level;
 

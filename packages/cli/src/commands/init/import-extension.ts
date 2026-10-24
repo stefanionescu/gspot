@@ -33,12 +33,12 @@ function detectImportExtension(
 }
 
 /**
- * Choose the import extension style of each JavaScript scope that no framework configuration chooses.
- *
- * @param scopes each scope with its selected configurations.
- * @param repository the tracked files and dependency files.
- * @returns the settings table to write for each scope that needs a style other than the default.
- */
+Choose the import extension style of each JavaScript scope that no framework configuration chooses.
+
+@param scopes each scope with its selected configurations.
+@param repository the tracked files and dependency files.
+@returns the settings table to write for each scope that needs a style other than the default.
+*/
 export function buildImportExtensionTables(
     scopes: { scope: string; selected: Configuration[] }[],
     repository: Repository,

@@ -5,11 +5,11 @@ import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.
 import { MARKDOWNLINT_RULES, MARKDOWNLINT_ALL_RULES } from '#cli/config/generation/configurations/language/markdown.ts';
 
 /**
- * Build markdownlint.jsonc: the Markdown lint rules with the chosen level, indentation, and your own rule options.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Markdown lint rules with the chosen level, indentation, and your own rule options.
- */
+Build markdownlint.jsonc: the Markdown lint rules with the chosen level, indentation, and your own rule options.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Markdown lint rules with the chosen level, indentation, and your own rule options.
+*/
 export function buildMarkdownlintFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.values;
     const level = planned.level;

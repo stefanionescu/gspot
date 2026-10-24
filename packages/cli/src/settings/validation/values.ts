@@ -24,12 +24,12 @@ function readPathError(files: Files, value: string): ReturnType<Files['readStats
 }
 
 /**
- * Refuse scope paths that name a file, and keep written scopes whose folder does not exist yet.
- *
- * @param repositoryRoot the base folder for each written scope path.
- * @param settings the normalized gspot.toml.
- * @returns the errors in plain English.
- */
+Refuse scope paths that name a file, and keep written scopes whose folder does not exist yet.
+
+@param repositoryRoot the base folder for each written scope path.
+@param settings the normalized gspot.toml.
+@returns the errors in plain English.
+*/
 export function validateScopePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
     const paths = Object.values(settings.scopes).map((table) => table.written['path'] as string);
     using files = openFiles(repositoryRoot);
@@ -49,12 +49,12 @@ export function validateScopePaths(repositoryRoot: string, settings: Settings): 
 }
 
 /**
- * Check the rule file paths of the root and every scope against the repository files.
- *
- * @param repositoryRoot the folder the paths start from.
- * @param settings the parsed gspot.toml.
- * @returns an error at each key that names no file.
- */
+Check the rule file paths of the root and every scope against the repository files.
+
+@param repositoryRoot the folder the paths start from.
+@param settings the parsed gspot.toml.
+@returns an error at each key that names no file.
+*/
 export function validateRuleFilePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
     using files = openFiles(repositoryRoot);
     return listSettingsTables(settings).flatMap(({ table, path }) => {
@@ -101,13 +101,13 @@ export function validateRuleFilePaths(repositoryRoot: string, settings: Settings
 }
 
 /**
- * Find the errors in [rules] exclude: an item that matches no rule, and an item that hides a file that the reader opens
- * first.
- *
- * @param exclude the written items, relative to the rules folder.
- * @param configurations the shipped configurations by name.
- * @returns each error with its position in the exclusion list.
- */
+Find the errors in [rules] exclude: an item that matches no rule, and an item that hides a file that the reader opens
+first.
+
+@param exclude the written items, relative to the rules folder.
+@param configurations the shipped configurations by name.
+@returns each error with its position in the exclusion list.
+*/
 export function validateRuleExcludes(exclude: string[], configurations: Map<string, Configuration>): SettingsError[] {
     if (exclude.length === 0) return [];
     const paths = [...configurations.values()].flatMap((configuration) =>
@@ -139,11 +139,11 @@ export function validateRuleExcludes(exclude: string[], configurations: Map<stri
 }
 
 /**
- * Refuse rule options whose values come from another gspot setting.
- *
- * @param settings the root settings and every scope.
- * @returns the settings errors with the key that owns each value.
- */
+Refuse rule options whose values come from another gspot setting.
+
+@param settings the root settings and every scope.
+@returns the settings errors with the key that owns each value.
+*/
 export function validateSettingRules(settings: Settings): SettingsError[] {
     const limitRules = Object.fromEntries(
         Object.entries(ESLINT_LIMIT_RULES).map(([rule, setting]) => [rule, `limits.${setting.limit}`]),

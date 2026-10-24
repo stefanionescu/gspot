@@ -81,14 +81,14 @@ function formatPathExplanation(report: PathExplanation): string {
 }
 
 /**
- * Explain a repository file or a path that the subject names.
- *
- * @param session the repository, or undefined outside a configured one.
- * @param subject the file path, or what else the user typed.
- * @param cwd the folder where the command starts.
- * @returns the file explanation, or undefined for another subject.
- * @throws GspotError when a named path does not exist.
- */
+Explain a repository file or a path that the subject names.
+
+@param session the repository, or undefined outside a configured one.
+@param subject the file path, or what else the user typed.
+@param cwd the folder where the command starts.
+@returns the file explanation, or undefined for another subject.
+@throws GspotError when a named path does not exist.
+*/
 export function explainPath(session: Session | undefined, subject: string, cwd: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const path = buildRepositoryPath(session.root, cwd, subject);

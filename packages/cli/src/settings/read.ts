@@ -11,12 +11,12 @@ import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/
 import { type Settings, type TomlTable, type SettingsFile, type ParsedSettings } from '#cli/types/settings/file.ts';
 
 /**
- * Parse and validate gspot.toml. Throw a GspotError with every settings error.
- *
- * @param text the gspot.toml contents.
- * @param repositoryRoot the optional folder for validating declared scope paths.
- * @returns the normalized settings.
- */
+Parse and validate gspot.toml. Throw a GspotError with every settings error.
+
+@param text the gspot.toml contents.
+@param repositoryRoot the optional folder for validating declared scope paths.
+@returns the normalized settings.
+*/
 export function parseSettings(text: string, repositoryRoot: string | undefined): Settings {
     const written = parseTomlText(text, SETTINGS_FILE);
     const result = settingsSchema.safeParse(written);
@@ -28,11 +28,11 @@ export function parseSettings(text: string, repositoryRoot: string | undefined):
 }
 
 /**
- * Read gspot.toml from a repository root.
- *
- * @param repositoryRoot the folder that contains gspot.toml.
- * @returns the settings and the file text.
- */
+Read gspot.toml from a repository root.
+
+@param repositoryRoot the folder that contains gspot.toml.
+@returns the settings and the file text.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 6 files share it.
 export function readSettings(repositoryRoot: string): SettingsFile {
     const { text } = readSettingsFile(repositoryRoot);
@@ -64,13 +64,13 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
 }
 
 /**
- * Normalize the validated document: fill the table defaults, key the scopes by path, and turn each [[command_check]]
- * into a check.
- *
- * @param parsed the validated document.
- * @param written the table as written in gspot.toml.
- * @returns normalized tables that keep the defaults and the scope values as written.
- */
+Normalize the validated document: fill the table defaults, key the scopes by path, and turn each [[command_check]]
+into a check.
+
+@param parsed the validated document.
+@param written the table as written in gspot.toml.
+@returns normalized tables that keep the defaults and the scope values as written.
+*/
 export function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
     const { command_check: commandChecks, ...document } = parsed;
     const tables = stripUndefined({

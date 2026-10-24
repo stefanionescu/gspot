@@ -236,12 +236,12 @@ function listStaleRecords(
 }
 
 /**
- * Reports disallowed licenses of locked packages, and allowed_package records that match no package.
- *
- * @param session the repository and its tools.
- * @param planned the scopes whose dependencies to scan.
- * @returns the findings.
- */
+Reports disallowed licenses of locked packages, and allowed_package records that match no package.
+
+@param session the repository and its tools.
+@param planned the scopes whose dependencies to scan.
+@returns the findings.
+*/
 export async function checkLicensesAllowed(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const { inventories, skipped } = await scanLicenses(session, planned);
     const findings = inventories.flatMap(({ dependencyFile, packages, ecosystem, settings }) => {

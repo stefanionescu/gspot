@@ -6,12 +6,12 @@ import { extractBaseName, extractParentFolder } from '#cli/system/paths.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
- * Reports each file whose name without its extension matches the name of a sibling folder.
- *
- * @param _session the repository and its tools.
- * @param planned the scope files.
- * @returns the findings.
- */
+Reports each file whose name without its extension matches the name of a sibling folder.
+
+@param _session the repository and its tools.
+@param planned the scope files.
+@returns the findings.
+*/
 export function checkFileFolderClashes(_session: Session, planned: PlannedCheck): Finding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);

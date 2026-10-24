@@ -50,12 +50,12 @@ async function readSourceNames(session: Session, planned: PlannedCheck): Promise
 }
 
 /**
- * Reports allowed names in root naming overrides that match no code or path name.
- *
- * @param session the repository and its tools.
- * @param planned the settings and tracked files.
- * @returns the findings.
- */
+Reports allowed names in root naming overrides that match no code or path name.
+
+@param session the repository and its tools.
+@param planned the settings and tracked files.
+@returns the findings.
+*/
 export async function checkNamingAllowedNames(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const files = await readSourceNames(session, { ...planned, files: session.repository.files });
     const folders = files.flatMap((file) => file.folders).filter((identifier) => identifier.category === 'folders');

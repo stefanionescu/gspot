@@ -15,12 +15,12 @@ import {
 } from '#cli/config/checks/infrastructure/xcode/settings.ts';
 
 /**
- * Reports each entitlement that xcode.allowed_entitlements does not list.
- *
- * @param session the repository and its tools.
- * @param planned the scope files and allowed entitlements.
- * @returns the findings.
- */
+Reports each entitlement that xcode.allowed_entitlements does not list.
+
+@param session the repository and its tools.
+@param planned the scope files and allowed entitlements.
+@returns the findings.
+*/
 export function checkXcodeEntitlements(session: Session, planned: PlannedCheck): Finding[] {
     const allowed = new Set(getTable(planned.scope.settings, 'xcode').allowed_entitlements);
     return listSourcePaths(planned.files, [ENTITLEMENTS_SUFFIX]).flatMap((path) => {
@@ -42,12 +42,12 @@ export function checkXcodeEntitlements(session: Session, planned: PlannedCheck):
 }
 
 /**
- * Reports each plist that turns App Transport Security off for every host.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Reports each plist that turns App Transport Security off for every host.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export function checkAppTransportSecurity(session: Session, planned: PlannedCheck): Finding[] {
     return listSourcePaths(planned.files, [PLIST_SUFFIX]).flatMap((path): Finding[] => {
         const text = readCachedText(session.reads, path);

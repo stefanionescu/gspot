@@ -12,11 +12,11 @@ import {
 } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 
 /**
- * Apply the Testing Library presets of the frameworks in use.
- *
- * @param scope the planned ESLint file of the scope.
- * @returns the imports and ESLint blocks for this configuration.
- */
+Apply the Testing Library presets of the frameworks in use.
+
+@param scope the planned ESLint file of the scope.
+@returns the imports and ESLint blocks for this configuration.
+*/
 export function buildTestingLibraryBlocks(
     scope: Pick<EslintScope, 'presets' | 'eslintFiles' | 'scopeDependencies'>,
 ): ConfigurationBlocks {

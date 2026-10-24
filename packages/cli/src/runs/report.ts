@@ -24,12 +24,12 @@ function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport
 }
 
 /**
- * Starts a passed check result with the check ID, scope, and file count.
- *
- * @param planned the check to run.
- * @param session the scopes of the run.
- * @returns a passed result with no findings.
- */
+Starts a passed check result with the check ID, scope, and file count.
+
+@param planned the check to run.
+@param session the scopes of the run.
+@returns a passed result with no findings.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 11 calls in 9 files share it.
 export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 'scopes'>): CheckResult {
     return {
@@ -43,12 +43,12 @@ export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 's
 }
 
 /**
- * Merge repeated runs of one check. Keep their findings and the base file count.
- *
- * @param merged the results collected so far.
- * @param next the next run of the same check.
- * @returns the combined result, with a missing-tool or process failure when the next run stops.
- */
+Merge repeated runs of one check. Keep their findings and the base file count.
+
+@param merged the results collected so far.
+@param next the next run of the same check.
+@returns the combined result, with a missing-tool or process failure when the next run stops.
+*/
 export function mergeCheckResults(merged: CheckResult, next: CheckResult): CheckResult {
     const stopped = next.status === 'missing' || next.status === 'error';
     const status = merged.status === 'failed' || next.status === 'failed' ? 'failed' : merged.status;
@@ -62,11 +62,11 @@ export function mergeCheckResults(merged: CheckResult, next: CheckResult): Check
 }
 
 /**
- * Builds the report of a finished run, which check --json prints.
- *
- * @param run the plan and what ran.
- * @returns the checks and exit code.
- */
+Builds the report of a finished run, which check --json prints.
+
+@param run the plan and what ran.
+@returns the checks and exit code.
+*/
 export function buildRunReport(run: FinishedRun): RunReport {
     const { session, options, started, planned, ran, ignores, fixes } = run;
     const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
@@ -104,17 +104,17 @@ export function buildRunReport(run: FinishedRun): RunReport {
 }
 
 /**
- * Formats the command that runs one check alone.
- *
- * @param checkId the ID to run.
- * @param scopeArgument the scope relative to the calling folder, or undefined for the root.
- * @param options the file selection and hook arguments.
- * @param options.paths the path arguments as typed.
- * @param options.changed the compared reference, including the push base.
- * @param options.messageFile the file that Git passes to commit-msg.
- * @param options.staged whether the finding came from the index.
- * @returns the command line.
- */
+Formats the command that runs one check alone.
+
+@param checkId the ID to run.
+@param scopeArgument the scope relative to the calling folder, or undefined for the root.
+@param options the file selection and hook arguments.
+@param options.paths the path arguments as typed.
+@param options.changed the compared reference, including the push base.
+@param options.messageFile the file that Git passes to commit-msg.
+@param options.staged whether the finding came from the index.
+@returns the command line.
+*/
 export function formatReproduceCommand(
     checkId: string,
     scopeArgument: string | undefined,

@@ -31,12 +31,12 @@ function listMissingPatterns(required: string[], text: string): string[] {
 }
 
 /**
- * Reports each Dockerfile with no ignore file, or with one that misses a required pattern.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the findings.
- */
+Reports each Dockerfile with no ignore file, or with one that misses a required pattern.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the findings.
+*/
 export function checkDockerignore(session: Session, planned: PlannedCheck): Finding[] {
     const { contexts } = readComposeDocuments(session, planned);
     return planned.files

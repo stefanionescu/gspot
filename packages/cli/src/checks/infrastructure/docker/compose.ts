@@ -69,12 +69,12 @@ function listBuildContexts(declarations: ComposeDeclaration[], folder: string): 
 }
 
 /**
- * Reads Compose services and resolves their local build contexts.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to read.
- * @returns the services and their build contexts.
- */
+Reads Compose services and resolves their local build contexts.
+
+@param session the repository and its tools.
+@param planned the scope files to read.
+@returns the services and their build contexts.
+*/
 export function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeDocuments {
     const documents: ComposeDocuments = { declarations: [], contexts: new Map() };
     for (const group of groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK))) {
@@ -93,12 +93,12 @@ export function readComposeDocuments(session: Session, planned: PlannedCheck): C
 }
 
 /**
- * Validates each Compose project with its overrides.
- *
- * @param session the repository and its tools.
- * @param planned the Compose check and its files.
- * @returns the check result.
- */
+Validates each Compose project with its overrides.
+
+@param session the repository and its tools.
+@param planned the Compose check and its files.
+@returns the check result.
+*/
 export async function checkDockerCompose(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const isCompose = buildPathMatcher(planned.check.files?.paths ?? []);
     const groups = groupComposeFiles(planned.files.filter(({ path }) => isCompose(path)));

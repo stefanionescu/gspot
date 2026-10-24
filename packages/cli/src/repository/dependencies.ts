@@ -24,12 +24,12 @@ async function readDependencyFile(reads: ReadCache, file: TrackedFile): Promise<
 }
 
 /**
- * Read the supported dependency files for dependency and runtime detection.
- *
- * @param reads the run cache.
- * @param files the tracked inventory.
- * @returns one dependency file per supported source file.
- */
+Read the supported dependency files for dependency and runtime detection.
+
+@param reads the run cache.
+@param files the tracked inventory.
+@returns one dependency file per supported source file.
+*/
 export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];
     for (const file of files.filter(
@@ -47,12 +47,12 @@ export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]
 }
 
 /**
- * Read and validate the package.json fields that gspot uses.
- *
- * @param repositoryRoot the base folder of the path.
- * @param path the repository-relative package.json.
- * @returns the validated package fields, or undefined when the file does not exist.
- */
+Read and validate the package.json fields that gspot uses.
+
+@param repositoryRoot the base folder of the path.
+@param path the repository-relative package.json.
+@returns the validated package fields, or undefined when the file does not exist.
+*/
 export function readPackageJson(repositoryRoot: string, path: string): PackageJson | undefined {
     const text = findText(repositoryRoot, path);
     if (text === undefined) return undefined;
@@ -60,12 +60,12 @@ export function readPackageJson(repositoryRoot: string, path: string): PackageJs
 }
 
 /**
- * Read the package.json fields used by repository checks through the run cache.
- *
- * @param reads the cache rooted at the repository.
- * @param path the repository-relative package.json path.
- * @returns the validated fields, or undefined when the file does not exist.
- */
+Read the package.json fields used by repository checks through the run cache.
+
+@param reads the cache rooted at the repository.
+@param path the repository-relative package.json path.
+@returns the validated fields, or undefined when the file does not exist.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in 3 files share it.
 export function readCachedPackageJson(reads: ReadCache, path: string): PackageJson | undefined {
     const text = findCachedText(reads, path);
@@ -73,12 +73,12 @@ export function readCachedPackageJson(reads: ReadCache, path: string): PackageJs
 }
 
 /**
- * Read the dependency specifiers declared for installation.
- *
- * @param reads the cache rooted at the repository.
- * @param path the repository-relative package.json path.
- * @returns the specifiers by name, or undefined when the file does not exist.
- */
+Read the dependency specifiers declared for installation.
+
+@param reads the cache rooted at the repository.
+@param path the repository-relative package.json path.
+@returns the specifiers by name, or undefined when the file does not exist.
+*/
 export function readDependencySpecifiers(reads: ReadCache, path: string): Map<string, string> | undefined {
     const fields = readCachedPackageJson(reads, path);
     if (fields === undefined) return undefined;
@@ -91,12 +91,12 @@ export function readDependencySpecifiers(reads: ReadCache, path: string): Map<st
 }
 
 /**
- * List the tool-only packages: each package.json that holds only declared npm tools and Git hook packages.
- *
- * @param dependencyFiles the parsed files.
- * @param configurations the configurations that declare the npm tools.
- * @returns the paths of the tool-only packages.
- */
+List the tool-only packages: each package.json that holds only declared npm tools and Git hook packages.
+
+@param dependencyFiles the parsed files.
+@param configurations the configurations that declare the npm tools.
+@returns the paths of the tool-only packages.
+*/
 export function listToolOnlyPackages(
     dependencyFiles: DependencyFile[],
     configurations: Iterable<Configuration>,
@@ -114,12 +114,12 @@ export function listToolOnlyPackages(
 }
 
 /**
- * List the dependency names of the nearest declared npm project that contains a scope.
- *
- * @param dependencyFiles the validated files.
- * @param scope the repository-relative project folder.
- * @returns the declared dependency names. Child and sibling projects keep their own.
- */
+List the dependency names of the nearest declared npm project that contains a scope.
+
+@param dependencyFiles the validated files.
+@param scope the repository-relative project folder.
+@returns the declared dependency names. Child and sibling projects keep their own.
+*/
 export function listProjectDependencyNames(dependencyFiles: DependencyFile[], scope: string): string[] {
     const projects = new Map(
         dependencyFiles.filter((file) => file.kind === PACKAGE_JSON).map((file) => [file.path, file]),

@@ -22,15 +22,15 @@ import type {
 } from '#tests/types/samples.ts';
 
 /**
- * Apply a check sample, run it before and after its fix, and restore its files when the caller leaves its scope.
- *
- * @param sandbox the installed repository and its command runner.
- * @param changes the sample files and settings.
- * @param options the check command and corrected files.
- * @param options.commandArguments the check command and its flags.
- * @param options.corrected the replacement file contents.
- * @returns both captured reports with ownership of the sample's restoration.
- */
+Apply a check sample, run it before and after its fix, and restore its files when the caller leaves its scope.
+
+@param sandbox the installed repository and its command runner.
+@param changes the sample files and settings.
+@param options the check command and corrected files.
+@param options.commandArguments the check command and its flags.
+@param options.corrected the replacement file contents.
+@returns both captured reports with ownership of the sample's restoration.
+*/
 export async function runAppliedSample(
     sandbox: Sandbox,
     changes: SampleChanges,
@@ -46,13 +46,13 @@ export async function runAppliedSample(
 }
 
 /**
- * Write the sample, run its check, and restore the sandbox.
- *
- * @param cwd the sandbox, already installed.
- * @param changes the sample.
- * @param environment variables for the command, including `PATH`.
- * @returns the exit code and the output of the check.
- */
+Write the sample, run its check, and restore the sandbox.
+
+@param cwd the sandbox, already installed.
+@param changes the sample.
+@param environment variables for the command, including `PATH`.
+@returns the exit code and the output of the check.
+*/
 export async function runCheckOnChanges(
     cwd: string,
     changes: SampleChanges,
@@ -66,13 +66,13 @@ export async function runCheckOnChanges(
 }
 
 /**
- * Run the check on the sample and then on its fix, and return both reports.
- *
- * @param sandbox the installed sandbox and how to run gspot in it.
- * @param sample the sample and expected finding.
- * @param plan what the sandbox holds, with the default fix.
- * @returns both process results and reports.
- */
+Run the check on the sample and then on its fix, and return both reports.
+
+@param sandbox the installed sandbox and how to run gspot in it.
+@param sample the sample and expected finding.
+@param plan what the sandbox holds, with the default fix.
+@returns both process results and reports.
+*/
 export async function runCheckSample(sandbox: Sandbox, sample: CheckSample, plan: SandboxPlan): Promise<SampleResult> {
     const failed = parseCheckReport(await runCheckOnChanges(sandbox.root, sample, sandbox.environment, sandbox.run));
     const { cleanSource } = plan;

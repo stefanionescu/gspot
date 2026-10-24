@@ -19,12 +19,12 @@ import type {
 } from '#cli/types/settings/inheritance.ts';
 
 /**
- * Find the nearest scope that holds a path.
- *
- * @param scopes every project scope.
- * @param path the repository-relative destination.
- * @returns the scope, or undefined at the root.
- */
+Find the nearest scope that holds a path.
+
+@param scopes every project scope.
+@param path the repository-relative destination.
+@returns the scope, or undefined at the root.
+*/
 export function findParentScope(scopes: Scope[], path: string): Scope | undefined {
     return scopes
         .filter(({ folder }) => folder.path !== path && isInScope(path, folder.path))
@@ -33,16 +33,16 @@ export function findParentScope(scopes: Scope[], path: string): Scope | undefine
 }
 
 /**
- * Select the configurations of the root and each parent scope, each once, in order.
- *
- * @param selected the configuration lists as written.
- * @param selected.configurations the root choices.
- * @param selected.scopes each folder with its written choices.
- * @param selected.removed_configurations the names that you removed.
- * @param scope the folder to select for.
- * @param configurations every configuration.
- * @returns the configurations in order.
- */
+Select the configurations of the root and each parent scope, each once, in order.
+
+@param selected the configuration lists as written.
+@param selected.configurations the root choices.
+@param selected.scopes each folder with its written choices.
+@param selected.removed_configurations the names that you removed.
+@param scope the folder to select for.
+@param configurations every configuration.
+@returns the configurations in order.
+*/
 export function selectForScope(
     selected: SelectedConfigurations,
     scope: string,
@@ -98,15 +98,15 @@ function listLimitVariants(
 }
 
 /**
- * Build the merged settings of a scope from the known settings, the written settings, and the configurations of the
- * scope.
- *
- * @param availableSettings the settings and defaults of the selected configurations.
- * @param settings the written root values and scoped overrides.
- * @param configurations the configurations that the scope selects.
- * @param scope the folder, '' for the root.
- * @returns the scope settings that planning, checks, and the config file builders read.
- */
+Build the merged settings of a scope from the known settings, the written settings, and the configurations of the
+scope.
+
+@param availableSettings the settings and defaults of the selected configurations.
+@param settings the written root values and scoped overrides.
+@param configurations the configurations that the scope selects.
+@param scope the folder, '' for the root.
+@returns the scope settings that planning, checks, and the config file builders read.
+*/
 export function buildScopeSettings(
     availableSettings: AvailableSettings,
     settings: Settings,
@@ -129,12 +129,12 @@ export function buildScopeSettings(
 }
 
 /**
- * Read one validated table from the scope's merged values.
- *
- * @param scopeSettings the merged scope data.
- * @param name the table's dotted name.
- * @returns the requested table.
- */
+Read one validated table from the scope's merged values.
+
+@param scopeSettings the merged scope data.
+@param name the table's dotted name.
+@returns the requested table.
+*/
 export function getTable<Name extends keyof TableValues>(
     scopeSettings: ScopeSettings,
     name: Name,
@@ -145,13 +145,13 @@ export function getTable<Name extends keyof TableValues>(
 }
 
 /**
- * Read a language's limit, falling back to the scope's general limit.
- *
- * @param scopeSettings the merged scope data.
- * @param key the limit name.
- * @param language the language, if the check reads a language-specific value.
- * @returns the numeric limit.
- */
+Read a language's limit, falling back to the scope's general limit.
+
+@param scopeSettings the merged scope data.
+@param key the limit name.
+@param language the language, if the check reads a language-specific value.
+@returns the numeric limit.
+*/
 export function getLimit(scopeSettings: ScopeSettings, key: string, language?: string): number {
     const value =
         getValueAt(scopeSettings.values.limits, [language ?? '', key]) ??
@@ -164,24 +164,24 @@ export function getLimit(scopeSettings: ScopeSettings, key: string, language?: s
 }
 
 /**
- * List the written ignores that apply to a check or to every check.
- *
- * @param scopeSettings the merged scope data.
- * @param check the check name.
- * @returns the matching ignores with normalized paths.
- */
+List the written ignores that apply to a check or to every check.
+
+@param scopeSettings the merged scope data.
+@param check the check name.
+@returns the matching ignores with normalized paths.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 6 files share it.
 export function listIgnores(scopeSettings: ScopeSettings, check: string): ScopeSettings['ignores'] {
     return scopeSettings.ignores.filter((ignore) => ignore.check === check || ignore.check === undefined);
 }
 
 /**
- * List the lint rules disabled throughout the selected scope.
- *
- * @param scope the scope and its merged data.
- * @param check the check name.
- * @returns the disabled rule names.
- */
+List the lint rules disabled throughout the selected scope.
+
+@param scope the scope and its merged data.
+@param check the check name.
+@returns the disabled rule names.
+*/
 export function listIgnoredRules(scope: Scope, check: string): string[] {
     return scope.settings.ignores
         .filter((ignore) => ignore.check === check)
@@ -230,11 +230,11 @@ function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting
 }
 
 /**
- * Find the root scope, which every run has.
- *
- * @param scopes every scope, the root among them.
- * @returns the scope with an empty path.
- */
+Find the root scope, which every run has.
+
+@param scopes every scope, the root among them.
+@returns the scope with an empty path.
+*/
 export function findRootScope(scopes: readonly Scope[]): Scope {
     const root = scopes.find((scope) => scope.folder.path === '');
     if (root === undefined) throw new Error('The scopes hold no repository root.');

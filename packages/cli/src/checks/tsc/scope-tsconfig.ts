@@ -77,12 +77,12 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
 }
 
 /**
- * Selects the compiler flags that the level and configurations require.
- *
- * @param level recommended or all.
- * @param configurations the configurations of the scope.
- * @returns the flags, by name.
- */
+Selects the compiler flags that the level and configurations require.
+
+@param level recommended or all.
+@param configurations the configurations of the scope.
+@returns the flags, by name.
+*/
 export function selectRequiredTsconfigOptions(level: Level, configurations: Configuration[]): Record<string, boolean> {
     const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS) };
     if (configurations.some((configuration) => configuration.name === NESTJS_CONFIGURATION))
@@ -91,12 +91,12 @@ export function selectRequiredTsconfigOptions(level: Level, configurations: Conf
 }
 
 /**
- * Drops the compiler flags that the scope turns off.
- *
- * @param level recommended or all.
- * @param scope the scope and its settings.
- * @returns the enabled compiler flags.
- */
+Drops the compiler flags that the scope turns off.
+
+@param level recommended or all.
+@param scope the scope and its settings.
+@returns the enabled compiler flags.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function selectCheckedTsconfigOptions(level: Level, scope: Scope): Record<string, boolean> {
     return Object.fromEntries(
@@ -107,13 +107,13 @@ export function selectCheckedTsconfigOptions(level: Level, scope: Scope): Record
 }
 
 /**
- * Writes the tsconfig for a scope, which extends the tsconfig of the scope when it has one.
- *
- * @param session the repository and read cache.
- * @param scope where tsc runs, with its settings.
- * @param target where to write the tsconfig.
- * @returns the absolute path.
- */
+Writes the tsconfig for a scope, which extends the tsconfig of the scope when it has one.
+
+@param session the repository and read cache.
+@param scope where tsc runs, with its settings.
+@param target where to write the tsconfig.
+@returns the absolute path.
+*/
 export function writeScopeTsconfig(
     session: Pick<Session, 'root' | 'installedRoot' | 'reads' | 'settingsFile'> & {
         repository: Pick<Session['repository'], 'files' | 'scopeFolders'>;

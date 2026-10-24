@@ -14,11 +14,11 @@ export const JSCPD_SCOPE_FINDINGS = [
 ] as const;
 
 /**
- * A jscpd report with a clone in the scope and one in vendor/, which the scope leaves out.
- *
- * @param prefix the folder that jscpd puts before each path: empty for relative paths.
- * @returns the two clones as jscpd reports them.
- */
+A jscpd report with a clone in the scope and one in vendor/, which the scope leaves out.
+
+@param prefix the folder that jscpd puts before each path: empty for relative paths.
+@returns the two clones as jscpd reports them.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The test builds the report once for each path mode, with its own prefix.
 export function buildJscpdReport(prefix: string): CloneReport {
     return {

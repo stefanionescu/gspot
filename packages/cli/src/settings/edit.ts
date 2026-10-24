@@ -17,13 +17,13 @@ function splitKey(key: string): SettingKey {
 }
 
 /**
- * Apply a settings change to the parsed table, check the result, and build the new gspot.toml text. The change edits
- * input.table in place.
- *
- * @param repositoryRoot the folder against which the edited scope paths resolve.
- * @param edit the settings read before the edit.
- * @returns the new gspot.toml text, the settings that it holds, and whether the text changed.
- */
+Apply a settings change to the parsed table, check the result, and build the new gspot.toml text. The change edits
+input.table in place.
+
+@param repositoryRoot the folder against which the edited scope paths resolve.
+@param edit the settings read before the edit.
+@returns the new gspot.toml text, the settings that it holds, and whether the text changed.
+*/
 export function buildEditedSettings(repositoryRoot: string, edit: SettingsEdit): EditedSettings {
     const { text, table } = edit;
     parseSettings(stringify(table), repositoryRoot);
@@ -33,12 +33,12 @@ export function buildEditedSettings(repositoryRoot: string, edit: SettingsEdit):
 }
 
 /**
- * Set a dotted key to a value, and create tables on the way.
- *
- * @param table the table to edit.
- * @param key the dotted setting name.
- * @param value what to write.
- */
+Set a dotted key to a value, and create tables on the way.
+
+@param table the table to edit.
+@param key the dotted setting name.
+@param value what to write.
+*/
 export function setKey(table: TomlTable, key: string, value: unknown): void {
     const { path, name } = splitKey(key);
     const parent = createTable(table, path);
@@ -47,11 +47,11 @@ export function setKey(table: TomlTable, key: string, value: unknown): void {
 }
 
 /**
- * Delete a dotted key and the empty tables it leaves behind.
- *
- * @param table the table to edit.
- * @param key the dotted setting name.
- */
+Delete a dotted key and the empty tables it leaves behind.
+
+@param table the table to edit.
+@param key the dotted setting name.
+*/
 export function deleteKey(table: TomlTable, key: string): void {
     const { path, name } = splitKey(key);
     const tables = [table];
@@ -73,12 +73,12 @@ export function deleteKey(table: TomlTable, key: string): void {
 }
 
 /**
- * Append items to a list key, each once, and create the list.
- *
- * @param table the table to edit.
- * @param key the dotted name of the list.
- * @param values the items to append.
- */
+Append items to a list key, each once, and create the list.
+
+@param table the table to edit.
+@param key the dotted name of the list.
+@param values the items to append.
+*/
 export function addToList(table: TomlTable, key: string, values: unknown[]): void {
     const { path, name } = splitKey(key);
     const parent = createTable(table, path);
@@ -95,12 +95,12 @@ export function addToList(table: TomlTable, key: string, values: unknown[]): voi
 }
 
 /**
- * Remove list items by value or name, and remove single paths from structured items.
- *
- * @param table the table to edit.
- * @param key the dotted name of the list.
- * @param values the items to remove.
- */
+Remove list items by value or name, and remove single paths from structured items.
+
+@param table the table to edit.
+@param key the dotted name of the list.
+@param values the items to remove.
+*/
 export function removeFromList(table: TomlTable, key: string, values: unknown[]): void {
     const { path, name } = splitKey(key);
     const parent = getValueAt(table, path);
@@ -128,12 +128,12 @@ export function removeFromList(table: TomlTable, key: string, values: unknown[])
 }
 
 /**
- * Find the table that a command writes into: the document, or the scope table with that path.
- *
- * @param table the parsed document.
- * @param scope the folder of a nested table, if any.
- * @returns the document or the matching scope table.
- */
+Find the table that a command writes into: the document, or the scope table with that path.
+
+@param table the parsed document.
+@param scope the folder of a nested table, if any.
+@returns the document or the matching scope table.
+*/
 export function getScopeTable(table: TomlTable, scope: string | undefined): TomlTable {
     if (scope === undefined) return table;
     const scopes = table['scope'];
@@ -154,11 +154,11 @@ export function getScopeTable(table: TomlTable, scope: string | undefined): Toml
 }
 
 /**
- * Read the bytes and mode of gspot.toml before an edit.
- *
- * @param repositoryRoot the folder that holds gspot.toml.
- * @returns the settings before the edit, with the original file contents.
- */
+Read the bytes and mode of gspot.toml before an edit.
+
+@param repositoryRoot the folder that holds gspot.toml.
+@returns the settings before the edit, with the original file contents.
+*/
 export function readSettingsEdit(repositoryRoot: string): SettingsEdit {
     const { text, original } = readSettingsFile(repositoryRoot);
     const table = parseTomlText(text, SETTINGS_FILE);
@@ -166,11 +166,11 @@ export function readSettingsEdit(repositoryRoot: string): SettingsEdit {
 }
 
 /**
- * Read a written setting value from its reasoned value or its plain value.
- *
- * @param written the setting as written.
- * @returns the value that a settings edit changes.
- */
+Read a written setting value from its reasoned value or its plain value.
+
+@param written the setting as written.
+@returns the value that a settings edit changes.
+*/
 export function getWrittenValue(written: unknown): unknown {
     if (isReasonedValue(written)) return written.value;
     return written;

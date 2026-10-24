@@ -10,19 +10,19 @@ import { selectForScope, buildScopeSettings } from '#cli/settings/scopes.ts';
 import { type Settings, type WrittenSettings } from '#cli/types/settings/file.ts';
 
 /**
- * Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
- *
- * @param configurations what the sandbox turns on.
- * @param options extra settings to write.
- * @param options.level `recommended` or `all`.
- * @param options.tables more TOML to append.
- * @param options.scopes child scopes and their extra configurations.
- * @param options.rules whether to write the agent instructions.
- * @param options.ignore checks to leave out.
- * @param options.ignore.checks their check IDs.
- * @param options.ignore.reason why to leave them out.
- * @returns the gspot.toml text.
- */
+Build the gspot.toml text of a sandbox, with rules off unless the options turn them on.
+
+@param configurations what the sandbox turns on.
+@param options extra settings to write.
+@param options.level `recommended` or `all`.
+@param options.tables more TOML to append.
+@param options.scopes child scopes and their extra configurations.
+@param options.rules whether to write the agent instructions.
+@param options.ignore checks to leave out.
+@param options.ignore.checks their check IDs.
+@param options.ignore.reason why to leave them out.
+@returns the gspot.toml text.
+*/
 export function buildSandboxSettings(
     configurations: readonly string[],
     options: {
@@ -57,12 +57,12 @@ export function buildSandboxSettings(
 }
 
 /**
- * Parse settings text and return its errors, or none when it parses.
- *
- * @param text gspot.toml content to parse.
- * @param repositoryRoot folder the settings describe, for errors that depend on its files.
- * @returns the error messages.
- */
+Parse settings text and return its errors, or none when it parses.
+
+@param text gspot.toml content to parse.
+@param repositoryRoot folder the settings describe, for errors that depend on its files.
+@returns the error messages.
+*/
 export function validateSettingsText(text: string, repositoryRoot?: string): string[] {
     try {
         parseSettings(text, repositoryRoot);
@@ -74,11 +74,11 @@ export function validateSettingsText(text: string, repositoryRoot?: string): str
 }
 
 /**
- * Build a command check that prints each path it gets and fails.
- *
- * @param options which files and stage the check covers.
- * @returns the command check record.
- */
+Build a command check that prints each path it gets and fails.
+
+@param options which files and stage the check covers.
+@returns the command check record.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
 export function buildReportingCheck(
     options: Pick<NonNullable<WrittenSettings['command_check']>[number], 'paths' | 'stage'> & { id?: string },

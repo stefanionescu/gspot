@@ -11,11 +11,11 @@ export const isLinux = process.platform === 'linux';
 export const isMacos = process.platform === 'darwin';
 
 /**
- * Whether the pinned tool has a build for this machine.
- *
- * @param name tool as its manifest pins it.
- * @returns whether a tool test may run it here.
- */
+Whether the pinned tool has a build for this machine.
+
+@param name tool as its manifest pins it.
+@returns whether a tool test may run it here.
+*/
 export function hasToolBuild(name: string): boolean {
     const operatingSystem = getOperatingSystem();
     const pin = getTool(readConfigurations().values(), name);
@@ -23,11 +23,11 @@ export function hasToolBuild(name: string): boolean {
 }
 
 /**
- * Make process.platform report another system until disposal.
- *
- * @param name system to report.
- * @returns a resource that restores the real value.
- */
+Make process.platform report another system until disposal.
+
+@param name system to report.
+@returns a resource that restores the real value.
+*/
 export function simulateOperatingSystem(name: NodeJS.Platform): Disposable {
     const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
     Object.defineProperty(process, 'platform', { value: name });

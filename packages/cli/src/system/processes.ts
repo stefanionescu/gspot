@@ -250,12 +250,12 @@ function watchProcess(
 }
 
 /**
- * Run a supervised process tree and capture its text.
- *
- * @param command executable and literal arguments.
- * @param options where and how the process runs.
- * @returns captured output and termination status.
- */
+Run a supervised process tree and capture its text.
+
+@param command executable and literal arguments.
+@param options where and how the process runs.
+@returns captured output and termination status.
+*/
 export async function spawnProcess(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
     const started = performance.now();
     const split = splitCommand(command, options.cwd, started);
@@ -267,13 +267,13 @@ export async function spawnProcess(command: readonly string[], options: AsyncSpa
 }
 
 /**
- * Run a supervised process tree and read its output bytes.
- *
- * @param command executable and literal arguments.
- * @param options where and how the process runs.
- * @param readStdout reads the output bytes.
- * @returns output and termination status, with empty stdout when the callback reads it.
- */
+Run a supervised process tree and read its output bytes.
+
+@param command executable and literal arguments.
+@param options where and how the process runs.
+@param readStdout reads the output bytes.
+@returns output and termination status, with empty stdout when the callback reads it.
+*/
 export async function streamProcess(
     command: readonly string[],
     options: AsyncSpawnOptions,
@@ -292,12 +292,12 @@ export async function streamProcess(
 }
 
 /**
- * Run a process and wait. Git commands and version checks use it.
- *
- * @param command executable and literal arguments.
- * @param options where and how the process runs.
- * @returns captured output and termination status.
- */
+Run a process and wait. Git commands and version checks use it.
+
+@param command executable and literal arguments.
+@param options where and how the process runs.
+@returns captured output and termination status.
+*/
 export function spawnProcessBlocking(command: readonly string[], options: SpawnOptions): SpawnResult {
     const started = performance.now();
     const split = splitCommand(command, options.cwd, started);

@@ -8,12 +8,12 @@ import { PRETTIER_SCRIPT_FILE } from '#cli/config/commands/init/formatter-settin
 import type { RepositorySetup, ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 /**
- * List config files whose working copies match their committed contents.
- *
- * @param root the repository folder.
- * @param paths the config files init replaces.
- * @returns the unchanged committed paths, or none without a commit.
- */
+List config files whose working copies match their committed contents.
+
+@param root the repository folder.
+@param paths the config files init replaces.
+@returns the unchanged committed paths, or none without a commit.
+*/
 export function listCommittedPaths(root: string, paths: string[]): Set<string> {
     const head = runGitBlocking(root, ['rev-parse', '--verify', '--quiet', 'HEAD']);
     if (head.code !== 0) return new Set();
@@ -40,14 +40,14 @@ function addConflictingConfigFile(file: ConflictingConfigFile, conflicts: Confli
 }
 
 /**
- * Read the config files of the chosen tools, and sort them into the files init deletes and the files it keeps.
- *
- * @param root the folder where init reads the originals before it replaces them.
- * @param repositorySetup the config files that init found.
- * @param tools what the checks at this level run.
- * @param fileEdits the shared config file edits for these configurations.
- * @returns the reads, the deletions, and the shared files that stay.
- */
+Read the config files of the chosen tools, and sort them into the files init deletes and the files it keeps.
+
+@param root the folder where init reads the originals before it replaces them.
+@param repositorySetup the config files that init found.
+@param tools what the checks at this level run.
+@param fileEdits the shared config file edits for these configurations.
+@returns the reads, the deletions, and the shared files that stay.
+*/
 export function readConflictingConfigFiles(
     root: string,
     repositorySetup: RepositorySetup,

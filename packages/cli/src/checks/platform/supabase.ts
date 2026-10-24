@@ -116,12 +116,12 @@ async function runDenoCommand(
 }
 
 /**
- * Reports each storage bucket that no migration policy on storage.objects names.
- *
- * @param session the repository and its tools.
- * @param planned the scope with config.toml and migrations.
- * @returns the findings.
- */
+Reports each storage bucket that no migration policy on storage.objects names.
+
+@param session the repository and its tools.
+@param planned the scope with config.toml and migrations.
+@returns the findings.
+*/
 export async function checkSupabaseStoragePolicies(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const parsed = readSupabaseProjectFile(session, planned);
     const at = { file: joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE), line: 1 };
@@ -158,12 +158,12 @@ export async function checkSupabaseStoragePolicies(session: Session, planned: Pl
 }
 
 /**
- * Runs deno lint on each edge function.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to lint.
- * @returns the findings.
- */
+Runs deno lint on each edge function.
+
+@param session the repository and its tools.
+@param planned the scope files to lint.
+@returns the findings.
+*/
 export async function checkSupabaseDenoLint(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const entrypoint of listFunctionEntrypoints(planned)) {
@@ -201,12 +201,12 @@ export async function checkSupabaseDenoLint(session: Session, planned: PlannedCh
 }
 
 /**
- * Reports the first type error of each edge function, from deno check on its entry file.
- *
- * @param session the repository and its tools.
- * @param planned the scope files to check.
- * @returns the findings.
- */
+Reports the first type error of each edge function, from deno check on its entry file.
+
+@param session the repository and its tools.
+@param planned the scope files to check.
+@returns the findings.
+*/
 export async function checkSupabaseDenoCheck(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const entrypoint of listFunctionEntrypoints(planned)) {
@@ -223,12 +223,12 @@ export async function checkSupabaseDenoCheck(session: Session, planned: PlannedC
 }
 
 /**
- * Reports privileged Supabase keys outside edge functions and test files.
- *
- * @param session the repository and its tools.
- * @param planned the scope files and allowed paths.
- * @returns the findings.
- */
+Reports privileged Supabase keys outside edge functions and test files.
+
+@param session the repository and its tools.
+@param planned the scope files and allowed paths.
+@returns the findings.
+*/
 export function checkServiceRoleKey(session: Session, planned: PlannedCheck): Finding[] {
     const folder = getTable(planned.scope.settings, 'supabase').functions_folder;
     const tests = planned.scope.settings.test_files;

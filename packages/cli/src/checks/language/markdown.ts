@@ -98,12 +98,12 @@ async function validateCodeFences(text: string, cache: ParseCache): Promise<Fenc
 }
 
 /**
- * Reports invalid code fences at their error lines.
- *
- * @param session the repository and its tools.
- * @param planned the scope Markdown files.
- * @returns one finding per invalid code fence.
- */
+Reports invalid code fences at their error lines.
+
+@param session the repository and its tools.
+@param planned the scope Markdown files.
+@returns one finding per invalid code fence.
+*/
 export async function checkMarkdownFences(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const file of planned.files) {

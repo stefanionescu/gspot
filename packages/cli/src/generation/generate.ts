@@ -157,12 +157,12 @@ function assertDistinctPaths(generated: GenerationResult): void {
 }
 
 /**
- * Generate every file in memory, and write nothing.
- *
- * @param session the repository to generate for.
- *
- * @returns everything that apply writes.
- */
+Generate every file in memory, and write nothing.
+
+@param session the repository to generate for.
+
+@returns everything that apply writes.
+*/
 export function generate(session: Session): GenerationResult {
     const {
         settingsFile: { settings },

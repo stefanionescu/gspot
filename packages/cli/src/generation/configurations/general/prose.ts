@@ -34,11 +34,11 @@ function listExceptions(words: string[]): string[] {
 }
 
 /**
- * Build the Vale sentence-case rule for headings below the title.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the heading capitalization rule.
- */
+Build the Vale sentence-case rule for headings below the title.
+
+@param planned the config file with its scope, level, and target path.
+@returns the heading capitalization rule.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildHeadingCaseStyle(planned: PlannedConfigFile): string {
     return stringify({
@@ -52,11 +52,11 @@ export function buildHeadingCaseStyle(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build the Vale title-case rule for the document title.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the title capitalization rule.
- */
+Build the Vale title-case rule for the document title.
+
+@param planned the config file with its scope, level, and target path.
+@returns the title capitalization rule.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildTitleCaseStyle(planned: PlannedConfigFile): string {
     return stringify({
@@ -70,11 +70,11 @@ export function buildTitleCaseStyle(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build the `acronyms` style of Vale: the Vale acronym rule with the allowed acronyms.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Vale acronym rule with the allowed acronyms.
- */
+Build the `acronyms` style of Vale: the Vale acronym rule with the allowed acronyms.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Vale acronym rule with the allowed acronyms.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildAcronymsStyle(planned: PlannedConfigFile): string {
     const words = listAllowedWords(planned.session);
@@ -91,11 +91,11 @@ export function buildAcronymsStyle(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build vale.ini: the Vale style locations and rule levels for the prose checks.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Vale style locations and rule levels for the prose checks.
- */
+Build vale.ini: the Vale style locations and rule levels for the prose checks.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Vale style locations and rule levels for the prose checks.
+*/
 export function buildValeIniFile(planned: PlannedConfigFile): string {
     const isAll = planned.level === 'all';
     const folders = isAll ? [VALE_STYLES_PATH, GSPOT_PATHS.valePackages] : [VALE_STYLES_PATH];
@@ -130,11 +130,11 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build the `alt-text` style of Vale: the Vale alternative-text rule.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Vale alternative-text rule.
- */
+Build the `alt-text` style of Vale: the Vale alternative-text rule.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Vale alternative-text rule.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildAltTextStyle(planned: PlannedConfigFile): string {
     const isAll = planned.level === 'all';
@@ -150,11 +150,11 @@ export function buildAltTextStyle(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build the `banned-headings` style of Vale: the Vale rule for the banned headings.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Vale rule for the banned headings.
- */
+Build the `banned-headings` style of Vale: the Vale rule for the banned headings.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Vale rule for the banned headings.
+*/
 export function buildBannedHeadingsStyle(planned: PlannedConfigFile): string {
     const headings = [...new Set([...BANNED_HEADINGS, ...getTable(planned.scope.settings, 'docs').banned_headings])];
     return stringify({
@@ -171,11 +171,11 @@ export function buildBannedHeadingsStyle(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build the `item-length` style of Vale: the Vale rule for the longest list item, in words.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Vale list-item length rule.
- */
+Build the `item-length` style of Vale: the Vale rule for the longest list item, in words.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Vale list-item length rule.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildBulletLengthStyle(planned: PlannedConfigFile): string {
     const max = getTable(planned.scope.settings, 'prose').max_list_item_words;
@@ -188,11 +188,11 @@ export function buildBulletLengthStyle(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build the `paragraph-length` style of Vale: the Vale paragraph length rule with the configured ceiling.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Vale paragraph length rule with the configured ceiling.
- */
+Build the `paragraph-length` style of Vale: the Vale paragraph length rule with the configured ceiling.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Vale paragraph length rule with the configured ceiling.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildParagraphLengthStyle(planned: PlannedConfigFile): string {
     const max = getTable(planned.scope.settings, 'prose').max_paragraph_sentences;
@@ -205,11 +205,11 @@ export function buildParagraphLengthStyle(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build the `sentence-length` style of Vale: the Vale sentence length rule with the configured ceiling.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Vale sentence length rule with the configured ceiling.
- */
+Build the `sentence-length` style of Vale: the Vale sentence length rule with the configured ceiling.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Vale sentence length rule with the configured ceiling.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildSentenceLengthStyle(planned: PlannedConfigFile): string {
     const max = getTable(planned.scope.settings, 'prose').max_sentence_words;
@@ -222,11 +222,11 @@ export function buildSentenceLengthStyle(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build the `possessives` style of Vale: the Vale possessive-form rule.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the Vale possessive-form rule.
- */
+Build the `possessives` style of Vale: the Vale possessive-form rule.
+
+@param planned the config file with its scope, level, and target path.
+@returns the Vale possessive-form rule.
+*/
 export function buildPossessivesStyle(planned: PlannedConfigFile): string {
     const names = listProductNames(planned.session);
 
@@ -242,11 +242,11 @@ export function buildPossessivesStyle(planned: PlannedConfigFile): string {
 }
 
 /**
- * Build the accepted words of Vale: the accepted product names and your own allowed words, one per line.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the accepted product names and your own allowed words, one per line.
- */
+Build the accepted words of Vale: the accepted product names and your own allowed words, one per line.
+
+@param planned the config file with its scope, level, and target path.
+@returns the accepted product names and your own allowed words, one per line.
+*/
 export function buildAcceptedWordsFile(planned: PlannedConfigFile): string {
     const words = listAllowedWords(planned.session);
 

@@ -23,12 +23,12 @@ function addDeclarations(found: FileIdentifiers, root: Node): void {
 }
 
 /**
- * Lists the functions and variables that a shell script declares.
- *
- * @param syntaxRoot the parsed script.
- * @param file the repository path of the script.
- * @returns the declared names.
- */
+Lists the functions and variables that a shell script declares.
+
+@param syntaxRoot the parsed script.
+@param file the repository path of the script.
+@returns the declared names.
+*/
 export function extractBashIdentifiers(syntaxRoot: Node, file: string): Identifier[] {
     const found: FileIdentifiers = { file, language: 'bash', out: [] };
     addFunctions(found, syntaxRoot);

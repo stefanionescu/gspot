@@ -123,11 +123,11 @@ function readHooksPathSetup(root: string, hooksPath: string): RepositorySetup['h
 }
 
 /**
- * Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
- *
- * @param repositoryRoot the repository to read.
- * @returns each hook setup and its location.
- */
+Read the hooks that a clone already runs: another hooks folder, a tool hooks folder, and hook manager settings.
+
+@param repositoryRoot the repository to read.
+@returns each hook setup and its location.
+*/
 export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
     const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
     const packageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
@@ -164,12 +164,12 @@ export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
 }
 
 /**
- * Find the existing lint jobs before init proposes a CI job.
- *
- * @param repositoryRoot the repository to read.
- * @param paths the CI files to read.
- * @returns the names of the jobs that already run a linter.
- */
+Find the existing lint jobs before init proposes a CI job.
+
+@param repositoryRoot the repository to read.
+@param paths the CI files to read.
+@returns the names of the jobs that already run a linter.
+*/
 export function readLintJobs(repositoryRoot: string, paths: string[]): string[] {
     return paths
         .filter((path) => !FOREIGN_CI_FILES.has(path))
@@ -182,12 +182,12 @@ export function readLintJobs(repositoryRoot: string, paths: string[]): string[] 
 }
 
 /**
- * Find config files to replace, hooks, CI, agent files, and lint folders.
- *
- * @param reads the run cache.
- * @param repository the inventory and parsed package declarations.
- * @returns what to replace, keep, or report.
- */
+Find config files to replace, hooks, CI, agent files, and lint folders.
+
+@param reads the run cache.
+@param repository the inventory and parsed package declarations.
+@returns what to replace, keep, or report.
+*/
 export function readRepositorySetup(
     reads: ReadCache,
     repository: Pick<Repository, 'files' | 'dependencyFiles'>,
@@ -237,12 +237,12 @@ export function readRepositorySetup(
 }
 
 /**
- * Check whether generated field edits cover an existing tool settings section.
- *
- * @param configFile the existing file or section.
- * @param fileEdits the generated field edits.
- * @returns whether an edit covers that file and key.
- */
+Check whether generated field edits cover an existing tool settings section.
+
+@param configFile the existing file or section.
+@param fileEdits the generated field edits.
+@returns whether an edit covers that file and key.
+*/
 export function isEditedInPlace(configFile: ConflictingConfigFile, fileEdits: ManagedKeys[]): boolean {
     return fileEdits.some(
         (output) => output.path === configFile.path && output.keys.some((field) => field.key[0] === configFile.key),

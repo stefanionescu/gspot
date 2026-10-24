@@ -98,13 +98,13 @@ function buildPatchedToml(original: TomlSyntax, values: Record<string, unknown>)
 export function parseTomlFile(path: string, text: string): Record<string, unknown>;
 export function parseTomlFile<Value>(path: string, text: string, schema: z.ZodType<Value>): Value;
 /**
- * Parse TOML, and name the file and position on invalid syntax or fields.
- *
- * @param path the source file.
- * @param text the TOML contents.
- * @param schema the shape to check, when supplied.
- * @returns the parsed table.
- */
+Parse TOML, and name the file and position on invalid syntax or fields.
+
+@param path the source file.
+@param text the TOML contents.
+@param schema the shape to check, when supplied.
+@returns the parsed table.
+*/
 export function parseTomlFile(path: string, text: string, schema?: z.ZodType): unknown {
     let value: Record<string, unknown>;
     try {
@@ -122,12 +122,12 @@ export function parseTomlFile(path: string, text: string, schema?: z.ZodType): u
 }
 
 /**
- * Open a TOML file for key edits, and keep its comments and layout.
- *
- * @param path the repository-relative TOML file.
- * @param text the complete TOML document.
- * @returns the editable document.
- */
+Open a TOML file for key edits, and keep its comments and layout.
+
+@param path the repository-relative TOML file.
+@param text the complete TOML document.
+@returns the editable document.
+*/
 export function openTomlFile(path: string, text: string): EditableFile {
     const document: Record<string, unknown> = parseTomlFile(path, text);
     const original = parseTomlSyntax(text, document);

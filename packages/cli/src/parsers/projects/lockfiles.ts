@@ -153,11 +153,11 @@ const SPECIFIER_PARSERS: Readonly<
 };
 
 /**
- * Split a package identity into its name and version. The separator follows the name; a scoped name starts with @.
- *
- * @param identity the package as `name@version`.
- * @returns the name and the version, or undefined without a version.
- */
+Split a package identity into its name and version. The separator follows the name; a scoped name starts with @.
+
+@param identity the package as `name@version`.
+@returns the name and the version, or undefined without a version.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 4 files share it.
 export function splitIdentity(identity: string): [string, string] | undefined {
     const separator = identity.indexOf('@', 1);
@@ -165,13 +165,13 @@ export function splitIdentity(identity: string): [string, string] | undefined {
 }
 
 /**
- * Find the nearest lockfile of a project, from its folder up to the repository root, and list what it holds.
- *
- * @param reads the run cache, rooted at the repository.
- * @param folder the project folder, relative to the repository root.
- * @param lockfiles the lockfile names of the project's package manager family, in the order to try.
- * @returns each locked package as `name@version`, or undefined when no lockfile sits on the way to the root.
- */
+Find the nearest lockfile of a project, from its folder up to the repository root, and list what it holds.
+
+@param reads the run cache, rooted at the repository.
+@param folder the project folder, relative to the repository root.
+@param lockfiles the lockfile names of the project's package manager family, in the order to try.
+@returns each locked package as `name@version`, or undefined when no lockfile sits on the way to the root.
+*/
 export function readLockedPackages(
     reads: ReadCache,
     folder: string,
@@ -188,13 +188,13 @@ export function readLockedPackages(
 }
 
 /**
- * Read the versions that a project's direct dependencies resolve to in its nearest lockfile.
- *
- * @param reads the repository read cache.
- * @param folder the project folder relative to the repository.
- * @param lockfiles the lockfile names in preference order.
- * @returns each direct dependency's version, or undefined without a lockfile.
- */
+Read the versions that a project's direct dependencies resolve to in its nearest lockfile.
+
+@param reads the repository read cache.
+@param folder the project folder relative to the repository.
+@param lockfiles the lockfile names in preference order.
+@returns each direct dependency's version, or undefined without a lockfile.
+*/
 export function readLockedVersions(
     reads: ReadCache,
     folder: string,
@@ -225,13 +225,13 @@ export function readLockedVersions(
 }
 
 /**
- * Parse the dependency specifiers that a lockfile records for each workspace.
- *
- * @param lockfile the lockfile name, which selects its format.
- * @param text the lockfile contents.
- * @param path the repository-relative lockfile path.
- * @returns the dependency specifiers for each folder, with an empty key for the root.
- */
+Parse the dependency specifiers that a lockfile records for each workspace.
+
+@param lockfile the lockfile name, which selects its format.
+@param text the lockfile contents.
+@param path the repository-relative lockfile path.
+@returns the dependency specifiers for each folder, with an empty key for the root.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The lockfile formats it reads stay private to this parser.
 export function parseLockedSpecifiers(
     lockfile: (typeof IMPORTER_LOCKFILES)[number],

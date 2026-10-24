@@ -48,12 +48,12 @@ function formatArgumentError(error: CommanderError, programHelp: string): string
 }
 
 /**
- * Print a command failure, and choose the exit status.
- *
- * @param error what the command threw.
- * @param programHelp the help that gspot prints when the arguments name no command.
- * @returns zero for Commander help, or the command error status.
- */
+Print a command failure, and choose the exit status.
+
+@param error what the command threw.
+@param programHelp the help that gspot prints when the arguments name no command.
+@returns zero for Commander help, or the command error status.
+*/
 export function printFailure(error: unknown, programHelp: string): number {
     if (error instanceof CommanderError) {
         if (error.exitCode === 0) return 0;
@@ -107,11 +107,11 @@ function formatProgramHelp(program: Command): string {
 }
 
 /**
- * Build the CLI with every command. Runs and the command reference both use it.
- *
- * @param onResult receives the result of the command that ran.
- * @returns the Commander program.
- */
+Build the CLI with every command. Runs and the command reference both use it.
+
+@param onResult receives the result of the command that ran.
+@returns the Commander program.
+*/
 export function buildProgram(onResult: CommandCompletion): Command {
     const program: Command = new Command('gspot')
         .description(cliPackage.description)
@@ -151,11 +151,11 @@ export function buildProgram(onResult: CommandCompletion): Command {
 }
 
 /**
- * Run one gspot command, and print its result or its error.
- *
- * @param commandArguments the arguments after the program name.
- * @returns the exit code.
- */
+Run one gspot command, and print its result or its error.
+
+@param commandArguments the arguments after the program name.
+@returns the exit code.
+*/
 export async function runProgram(commandArguments: string[]): Promise<number> {
     let result!: CommandResult;
     const program = buildProgram((value) => {

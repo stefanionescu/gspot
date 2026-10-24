@@ -33,11 +33,11 @@ function buildMatchedFinding(
 }
 
 /**
- * Read a finding from each matching output line.
- *
- * @param output the tool output to read.
- * @returns the findings from matched lines.
- */
+Read a finding from each matching output line.
+
+@param output the tool output to read.
+@returns the findings from matched lines.
+*/
 export function parseRegexFindings(output: ToolOutput): Finding[] {
     const { output: format, text } = output;
     const pattern = new RegExp(format.pattern as string, 'u');
@@ -54,11 +54,11 @@ export function parseRegexFindings(output: ToolOutput): Finding[] {
 }
 
 /**
- * Read findings grouped under output file headings.
- *
- * @param output the tool output to read.
- * @returns the findings under each matched file heading.
- */
+Read findings grouped under output file headings.
+
+@param output the tool output to read.
+@returns the findings under each matched file heading.
+*/
 export function parseGroupedFindings(output: ToolOutput): Finding[] {
     const { check, output: format, text, help } = output;
     const filePattern = new RegExp(format.file_pattern as string, 'u');
@@ -81,11 +81,11 @@ export function parseGroupedFindings(output: ToolOutput): Finding[] {
 }
 
 /**
- * Read one finding from each nonempty output line.
- *
- * @param output the tool output to read.
- * @returns the findings from the output lines.
- */
+Read one finding from each nonempty output line.
+
+@param output the tool output to read.
+@returns the findings from the output lines.
+*/
 export function parseLineFindings(output: ToolOutput): Finding[] {
     const { check, text, help } = output;
     return text

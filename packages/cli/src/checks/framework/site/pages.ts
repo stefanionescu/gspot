@@ -104,12 +104,12 @@ function listPossiblePages(pathname: string): [string, ...string[]] {
 }
 
 /**
- * Reports broken links between built pages, stylesheets, and fragments.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose site to check.
- * @returns one finding for each broken link.
- */
+Reports broken links between built pages, stylesheets, and fragments.
+
+@param session the repository and its tools.
+@param planned the scope whose site to check.
+@returns one finding for each broken link.
+*/
 export async function checkSiteLychee(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const build = await getSuccessfulBuild(session, planned);
     const pages = new Set(listBuiltFiles(build.folder));
@@ -140,12 +140,12 @@ export async function checkSiteLychee(session: Session, planned: PlannedCheck): 
 }
 
 /**
- * Runs html-validate on every built page with the config file for built output.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose site to check.
- * @returns the findings.
- */
+Runs html-validate on every built page with the config file for built output.
+
+@param session the repository and its tools.
+@param planned the scope whose site to check.
+@returns the findings.
+*/
 export async function checkSiteHtmlValidate(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const build = await getSuccessfulBuild(session, planned);
     const pages = listBuiltFiles(build.folder)
@@ -189,12 +189,12 @@ export async function checkSiteHtmlValidate(session: Session, planned: PlannedCh
 }
 
 /**
- * Reports selectors in built stylesheets that no built page or script uses.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose site to check.
- * @returns one finding for each unused selector.
- */
+Reports selectors in built stylesheets that no built page or script uses.
+
+@param session the repository and its tools.
+@param planned the scope whose site to check.
+@returns one finding for each unused selector.
+*/
 export async function checkSitePurgecss(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const build = await getSuccessfulBuild(session, planned);
     const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
@@ -234,12 +234,12 @@ export async function checkSitePurgecss(session: Session, planned: PlannedCheck)
 }
 
 /**
- * Compares the compressed size of built files with each size limit.
- *
- * @param session the repository and its tools.
- * @param planned the scope with the size limits.
- * @returns one finding per exceeded limit.
- */
+Compares the compressed size of built files with each size limit.
+
+@param session the repository and its tools.
+@param planned the scope with the size limits.
+@returns one finding per exceeded limit.
+*/
 export async function checkSiteSize(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const limits = getTable(planned.scope.settings, 'site').size_limit.map((limit) => ({
         ...limit,
@@ -269,12 +269,12 @@ export async function checkSiteSize(session: Session, planned: PlannedCheck): Pr
 }
 
 /**
- * Reports sitemap URLs with no built page, and built pages the sitemap leaves out unless the settings allow them.
- *
- * @param session the repository and its tools.
- * @param planned the scope whose site to check.
- * @returns the findings.
- */
+Reports sitemap URLs with no built page, and built pages the sitemap leaves out unless the settings allow them.
+
+@param session the repository and its tools.
+@param planned the scope whose site to check.
+@returns the findings.
+*/
 export async function checkSiteSitemap(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const build = await getSuccessfulBuild(session, planned);
     const files = new Set(listBuiltFiles(build.folder));

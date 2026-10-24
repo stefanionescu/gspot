@@ -10,11 +10,11 @@ import {
 } from '#cli/config/generation/config-files/html-validate.ts';
 
 /**
- * Build HTML validation settings for source files or built site pages.
- *
- * @param planned the settings file to build.
- * @returns the rules for the configuration's HTML validation check.
- */
+Build HTML validation settings for source files or built site pages.
+
+@param planned the settings file to build.
+@returns the rules for the configuration's HTML validation check.
+*/
 export function buildHtmlSettings(planned: PlannedConfigFile): string {
     const configuration = planned.configuration.name;
     const check = `${configuration}/html-validate`;

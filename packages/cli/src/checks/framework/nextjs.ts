@@ -31,12 +31,12 @@ function formatNextjsFailure(text: string): string {
 }
 
 /**
- * Generates Next.js route types and runs the TypeScript check in the same copy.
- *
- * @param session the repository and its tools.
- * @param planned the Next.js compiler check.
- * @returns the compiler findings and status.
- */
+Generates Next.js route types and runs the TypeScript check in the same copy.
+
+@param session the repository and its tools.
+@param planned the Next.js compiler check.
+@returns the compiler findings and status.
+*/
 export async function checkNextjsTsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     using scratchFolder = await createCheckCopy(session, planned);

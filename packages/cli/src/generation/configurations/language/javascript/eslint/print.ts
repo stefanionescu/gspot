@@ -48,15 +48,15 @@ function serializePresetRules(
 }
 
 /**
- * Print one ESLint block: its other properties, its rules against the preset it spreads, and its files.
- *
- * @param block the ESLint rule fields.
- * @param options plugin and preset expressions and the selected rule level.
- * @param options.properties plugin, parser, and settings expressions with no rule fields.
- * @param options.preset the declared ESLint export to spread.
- * @param options.level the gspot level, absent in configuration blocks so that gspot rules with level none stay on.
- * @returns a JavaScript configuration block.
- */
+Print one ESLint block: its other properties, its rules against the preset it spreads, and its files.
+
+@param block the ESLint rule fields.
+@param options plugin and preset expressions and the selected rule level.
+@param options.properties plugin, parser, and settings expressions with no rule fields.
+@param options.preset the declared ESLint export to spread.
+@param options.level the gspot level, absent in configuration blocks so that gspot rules with level none stay on.
+@returns a JavaScript configuration block.
+*/
 export function serializeBlock(
     block: EslintBlockFields,
     options: {
@@ -126,12 +126,12 @@ function printConfiguration(literal: string): string {
 }
 
 /**
- * Serialize the expression that reads the preset export of the configuration.
- *
- * @param importName the import name of the preset package.
- * @param source the dotted path of the export, or empty for the whole import.
- * @returns the expression that reads the preset.
- */
+Serialize the expression that reads the preset export of the configuration.
+
+@param importName the import name of the preset package.
+@param source the dotted path of the export, or empty for the whole import.
+@returns the expression that reads the preset.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 5 files share it.
 export function serializePresetAccess(importName: string, source: string): string {
     return (
@@ -159,13 +159,13 @@ function listReadNames(text: string): Set<string> {
 }
 
 /**
- * Print the imports of a generated ESLint config file: the shipped functions and the packages that its text reads.
- *
- * @param text the rest of the file.
- * @param imports the import names and packages that the file can read.
- * @param functionsPath the path of the shipped functions module, relative to the file.
- * @returns the import lines.
- */
+Print the imports of a generated ESLint config file: the shipped functions and the packages that its text reads.
+
+@param text the rest of the file.
+@param imports the import names and packages that the file can read.
+@param functionsPath the path of the shipped functions module, relative to the file.
+@returns the import lines.
+*/
 export function serializeImports(
     text: string,
     imports: readonly (readonly [string, string])[],

@@ -70,13 +70,13 @@ function findCommentAnchor(syntax: TomlSyntax, comment: TomlCommentNode): TomlPa
 }
 
 /**
- * Narrow a parsed TOML node by the syntax kind of the library.
- *
- * @param node the parsed item to test.
- * @param node.type its library enum value.
- * @param kind the type name to match.
- * @returns whether the node has that kind.
- */
+Narrow a parsed TOML node by the syntax kind of the library.
+
+@param node the parsed item to test.
+@param node.type its library enum value.
+@param kind the type name to match.
+@returns whether the node has that kind.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers narrow the type through it.
 export function isTomlKind<Kind extends string>(
     node: { type: unknown },
@@ -86,12 +86,12 @@ export function isTomlKind<Kind extends string>(
 }
 
 /**
- * Index concrete keys, headers, and array items without changing layout.
- *
- * @param source TOML text.
- * @param parsed what the TOML parser returned.
- * @returns syntax entries and source-ordered comments.
- */
+Index concrete keys, headers, and array items without changing layout.
+
+@param source TOML text.
+@param parsed what the TOML parser returned.
+@returns syntax entries and source-ordered comments.
+*/
 export function parseTomlSyntax(source: string, parsed: Record<string, unknown>): TomlSyntax {
     const document = parseDocument(source);
     const comments: TomlSyntax['comments'] = [];
@@ -129,14 +129,14 @@ export function parseTomlSyntax(source: string, parsed: Record<string, unknown>)
 }
 
 /**
- * Place comments directly before their own key, header, or array item, without column alignment.
- *
- * @param comments the original syntax entries.
- * @param kind the type of the entry.
- * @param path the keys and array indexes of the entry.
- * @param text the entry contents.
- * @returns syntax with exact source-ordered leading comments.
- */
+Place comments directly before their own key, header, or array item, without column alignment.
+
+@param comments the original syntax entries.
+@param kind the type of the entry.
+@param path the keys and array indexes of the entry.
+@param text the entry contents.
+@returns syntax with exact source-ordered leading comments.
+*/
 export function insertTomlComments(comments: TomlComments, kind: string, path: KeyPath, text: string): string {
     const id = JSON.stringify([kind, ...path]);
     const block = comments.get(id);
@@ -158,11 +158,11 @@ export function insertTomlComments(comments: TomlComments, kind: string, path: K
 }
 
 /**
- * Find the entry that each comment describes, with an identity that stays the same through document edits.
- *
- * @param syntax the indexed entries.
- * @returns comments with their original anchors and stable path identities.
- */
+Find the entry that each comment describes, with an identity that stays the same through document edits.
+
+@param syntax the indexed entries.
+@returns comments with their original anchors and stable path identities.
+*/
 export function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] {
     return syntax.comments.map((comment) => {
         const anchor = findCommentAnchor(syntax, comment);
@@ -172,22 +172,22 @@ export function listAnchoredComments(syntax: TomlSyntax): TomlAnchoredComment[] 
 }
 
 /**
- * Read the extent of a parsed syntax token.
- *
- * @param node parsed syntax.
- * @returns the start and end offsets.
- */
+Read the extent of a parsed syntax token.
+
+@param node parsed syntax.
+@returns the start and end offsets.
+*/
 export function getTomlRange(node: SourceRange): readonly [number, number] {
     if (node.range === undefined) throw new Error('The TOML parser omitted a source range.');
     return node.range;
 }
 
 /**
- * Add a source comment to its retained TOML entry.
- *
- * @param comments the collected comment blocks.
- * @param commentPlacement what to add, and where.
- */
+Add a source comment to its retained TOML entry.
+
+@param comments the collected comment blocks.
+@param commentPlacement what to add, and where.
+*/
 export function addTomlComment(comments: TomlComments, commentPlacement: TomlCommentPlacement): void {
     const { kind, path, comment, placement } = commentPlacement;
     if (path === undefined) return;

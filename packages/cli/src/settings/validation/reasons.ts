@@ -18,13 +18,13 @@ function isLimitLoosening(direction: Exclude<ReasonRequirement, 'adding'>, value
 }
 
 /**
- * Describe a missing or invalid reason for commands and saved settings.
- *
- * @param where the setting or command that needs a reason.
- * @param reason the written text, if any.
- * @param suggestion how to write the missing reason in this context.
- * @returns the error, or undefined when the reason meets the requirements.
- */
+Describe a missing or invalid reason for commands and saved settings.
+
+@param where the setting or command that needs a reason.
+@param reason the written text, if any.
+@param suggestion how to write the missing reason in this context.
+@returns the error, or undefined when the reason meets the requirements.
+*/
 export function validateReason(
     where: string,
     reason: string | undefined,
@@ -47,11 +47,11 @@ function validateRemovedConfigurations(value: unknown, path: KeyPath): SettingsE
 }
 
 /**
- * Find missing or invalid reasons on ignores, reasoned values, naming overrides, and extra tool options.
- *
- * @param settings the normalized gspot.toml.
- * @returns the errors in plain English.
- */
+Find missing or invalid reasons on ignores, reasoned values, naming overrides, and extra tool options.
+
+@param settings the normalized gspot.toml.
+@returns the errors in plain English.
+*/
 export function validateSettingReasons(settings: Settings): SettingsError[] {
     function visit(value: unknown, path: KeyPath): SettingsError[] {
         const field = path.at(-1);
@@ -101,11 +101,11 @@ export function validateSettingReasons(settings: Settings): SettingsError[] {
 }
 
 /**
- * Check whether the reason meets the minimum word count.
- *
- * @param reason the written text, if any.
- * @returns whether the reason meets the requirements.
- */
+Check whether the reason meets the minimum word count.
+
+@param reason the written text, if any.
+@returns whether the reason meets the requirements.
+*/
 export function isReasonAccepted(reason: string | undefined): boolean {
     if (reason === undefined) return false;
     const trimmed = reason.trim();
@@ -113,13 +113,13 @@ export function isReasonAccepted(reason: string | undefined): boolean {
 }
 
 /**
- * Check whether `value` for `setting` loosens `shipped`, so the value needs a reason.
- *
- * @param setting the setting whose reason rule applies.
- * @param value what gspot.toml sets.
- * @param shipped the default of the configuration.
- * @returns whether the value needs a reason.
- */
+Check whether `value` for `setting` loosens `shipped`, so the value needs a reason.
+
+@param setting the setting whose reason rule applies.
+@param value what gspot.toml sets.
+@param shipped the default of the configuration.
+@returns whether the value needs a reason.
+*/
 export function isLoosening(setting: Setting, value: unknown, shipped: unknown): boolean {
     if (setting.reason_needed === 'adding') {
         if (Array.isArray(value))

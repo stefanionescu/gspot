@@ -84,11 +84,11 @@ function buildCssModulesOverrides(
 }
 
 /**
- * Build stylelint.json: the CSS lint presets and rules for this level.
- *
- * @param planned the config file with its scope, level, and target path.
- * @returns the CSS lint presets and rules for this level.
- */
+Build stylelint.json: the CSS lint presets and rules for this level.
+
+@param planned the config file with its scope, level, and target path.
+@returns the CSS lint presets and rules for this level.
+*/
 export function buildStylelintFile(planned: PlannedConfigFile): string {
     const { scope } = planned;
     const { dependencyFiles } = planned.session.repository;

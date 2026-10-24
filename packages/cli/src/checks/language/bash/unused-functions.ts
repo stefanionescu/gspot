@@ -6,12 +6,12 @@ import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import { MAIN_FUNCTION } from '#cli/config/checks/language/bash/script-layout.ts';
 
 /**
- * Reports each function that no script calls, except main.
- *
- * @param session the repository and its tools.
- * @param planned the scope scripts to read.
- * @returns the findings.
- */
+Reports each function that no script calls, except main.
+
+@param session the repository and its tools.
+@param planned the scope scripts to read.
+@returns the findings.
+*/
 export async function checkBashUnusedFunctions(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const scripts = await readScripts(session, planned);
     const referenced = new Set(scripts.flatMap((file) => file.calls.map(({ name }) => name)));

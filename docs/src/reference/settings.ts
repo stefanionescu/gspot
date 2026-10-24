@@ -255,12 +255,12 @@ function findSettingPath(schema: JSONSchema.JSONSchema, key: string): { path: st
 }
 
 /**
- * Link a setting to its row, or a table or record to its heading, on the gspot.toml pages.
- *
- * @param schema the JSON Schema of gspot.toml
- * @param key the dotted key, such as format.indent_style or import_rule
- * @returns the Markdown link
- */
+Link a setting to its row, or a table or record to its heading, on the gspot.toml pages.
+
+@param schema the JSON Schema of gspot.toml
+@param key the dotted key, such as format.indent_style or import_rule
+@returns the Markdown link
+*/
 export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string {
     const { path, node } = findSettingPath(schema, key);
     const name = path.join('.');
@@ -272,11 +272,11 @@ export function linkSetting(schema: JSONSchema.JSONSchema, key: string): string 
 }
 
 /**
- * Build the settings page: the top-level keys, then every table and record, each key under its own heading.
- *
- * @param facts the CLI reference facts
- * @returns the settings page, whose table of contents lists the tables only.
- */
+Build the settings page: the top-level keys, then every table and record, each key under its own heading.
+
+@param facts the CLI reference facts
+@returns the settings page, whose table of contents lists the tables only.
+*/
 export function buildSettingsPage(facts: CliReference): ReferencePage {
     const { schema } = facts;
     const roots = listSchemaProperties(schema, schema);

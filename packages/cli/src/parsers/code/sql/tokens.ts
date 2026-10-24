@@ -116,11 +116,11 @@ function buildReplacement(kind: SqlToken['kind'], text: string): string {
 }
 
 /**
- * Read SQL strings, comments, and client syntax without interpreting quoted bodies as source.
- *
- * @param text the SQL source.
- * @returns tokens with their original UTF-16 boundaries.
- */
+Read SQL strings, comments, and client syntax without interpreting quoted bodies as source.
+
+@param text the SQL source.
+@returns tokens with their original UTF-16 boundaries.
+*/
 export function* listSqlTokens(text: string): Generator<SqlToken> {
     let at = 0;
     while (at < text.length) {
@@ -136,11 +136,11 @@ export function* listSqlTokens(text: string): Generator<SqlToken> {
 }
 
 /**
- * Prepare client-side psql syntax without changing SQL token positions or quoted bodies.
- *
- * @param text the SQL source with client commands and substitutions.
- * @returns parser text and substitution ranges in original UTF-16 coordinates.
- */
+Prepare client-side psql syntax without changing SQL token positions or quoted bodies.
+
+@param text the SQL source with client commands and substitutions.
+@returns parser text and substitution ranges in original UTF-16 coordinates.
+*/
 export function replacePsqlSyntax(text: string): BlankedSql {
     const variables: SqlRange[] = [];
     const pieces: string[] = [];

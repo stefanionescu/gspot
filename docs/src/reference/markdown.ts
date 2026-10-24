@@ -11,13 +11,13 @@ import {
 const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
 
 /**
- * Build a reference page with escaped markup and no edit link.
- *
- * @param title the visible heading
- * @param description the one-line summary
- * @param body the Markdown text
- * @returns the page and its escaped Markdown
- */
+Build a reference page with escaped markup and no edit link.
+
+@param title the visible heading
+@param description the one-line summary
+@param body the Markdown text
+@returns the page and its escaped Markdown
+*/
 export function buildReferencePage(title: string, description: string, body: string): ReferencePage {
     const escaped = body
         .replaceAll(MARKDOWN_ESCAPES, (text) => HTML_BRACKET_ENTITIES[text] ?? text)
@@ -26,24 +26,24 @@ export function buildReferencePage(title: string, description: string, body: str
 }
 
 /**
- * Format a level-two section, or nothing for empty text.
- *
- * @param title the heading
- * @param body the Markdown text
- * @returns the heading and its text, or an empty string
- */
+Format a level-two section, or nothing for empty text.
+
+@param title the heading
+@param body the Markdown text
+@returns the heading and its text, or an empty string
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 4 files share it.
 export function formatSection(title: string, body: string): string {
     return body === '' ? '' : `\n## ${title}\n\n${body}\n`;
 }
 
 /**
- * Format a Markdown table.
- *
- * @param header the column titles
- * @param rows the cells of each line, in Markdown; the table escapes them
- * @returns the table, with a separator line under the header, or nothing without rows
- */
+Format a Markdown table.
+
+@param header the column titles
+@param rows the cells of each line, in Markdown; the table escapes them
+@returns the table, with a separator line under the header, or nothing without rows
+*/
 export function formatTable(header: string[], rows: string[][]): string {
     if (rows.length === 0) return '';
     const cells = rows.map((row) => row.map((cell) => cell.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ')));
@@ -51,23 +51,23 @@ export function formatTable(header: string[], rows: string[][]): string {
 }
 
 /**
- * Join names the way a sentence lists them.
- *
- * @param names the names, already formatted
- * @returns the names as one phrase, such as a, b, and c
- */
+Join names the way a sentence lists them.
+
+@param names the names, already formatted
+@returns the names as one phrase, such as a, b, and c
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 3 files share it.
 export function formatList(names: string[]): string {
     return LIST_FORMAT.format(names);
 }
 
 /**
- * Build the canonical route of a reference index or named page.
- *
- * @param folder the reference section.
- * @param name the page name, or empty for the index.
- * @returns the absolute site path.
- */
+Build the canonical route of a reference index or named page.
+
+@param folder the reference section.
+@param name the page name, or empty for the index.
+@returns the absolute site path.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 4 files share it.
 export function formatReferencePath(folder: keyof typeof REFERENCE_FOLDERS, name: string): string {
     return `${REFERENCE_PATH}${REFERENCE_FOLDERS[folder]}/${name === '' ? '' : name + '/'}`;

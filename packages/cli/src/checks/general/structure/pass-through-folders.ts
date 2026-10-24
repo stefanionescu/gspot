@@ -9,12 +9,12 @@ import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/track
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
 
 /**
- * Reports each folder inside the scope that holds only one folder, above the code of the scope.
- *
- * @param session the repository and its tools.
- * @param planned the scope files.
- * @returns the findings.
- */
+Reports each folder inside the scope that holds only one folder, above the code of the scope.
+
+@param session the repository and its tools.
+@param planned the scope files.
+@returns the findings.
+*/
 export function checkPassThroughFolders(session: Session, planned: PlannedCheck): Finding[] {
     const extensions = filterSourceConfigurations(planned.scope.configurations).flatMap(
         (configuration) => configuration.files.extensions,
