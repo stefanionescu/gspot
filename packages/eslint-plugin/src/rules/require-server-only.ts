@@ -23,23 +23,15 @@ export const requireServerOnly = createRule<[], 'missing'>({
     create(context) {
         return {
             Program(node) {
-                if (
-                    node.body.some(
-                        (statement) =>
-                            statement.type === AST_NODE_TYPES.ExpressionStatement &&
-                            statement.directive === SERVER_DIRECTIVE,
-                    )
-                )
-                    return;
-                if (
-                    node.body.some(
-                        (statement) =>
-                            statement.type === AST_NODE_TYPES.ImportDeclaration &&
-                            statement.source.value === SERVER_ONLY_MODULE,
-                    )
-                )
-                    return;
-                context.report({ node, messageId: 'missing' });
+                const isMarked = node.body.some(
+                    (statement) =>
+                        (statement.type === AST_NODE_TYPES.ExpressionStatement &&
+                            statement.directive === SERVER_DIRECTIVE) ||
+                        (statement.type === AST_NODE_TYPES.ImportDeclaration &&
+                            statement.importKind === 'value' &&
+                            statement.source.value === SERVER_ONLY_MODULE),
+                );
+                if (!isMarked) context.report({ node, messageId: 'missing' });
             },
         };
     },
