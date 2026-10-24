@@ -1,6 +1,6 @@
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
+import { isLoosening, validateReason } from '#cli/settings/validation/reasons.ts';
 import { quoteArgument, formatCodeList, selectSimilarNames } from '#cli/system/text.ts';
-import { isLoosening, validateReason, isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { type Settings, type SettingsError, type SettingsTable } from '#cli/types/settings/file.ts';
 import type { SettingMatch, WrittenSetting, AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
@@ -36,7 +36,7 @@ function validateWrittenList(
 ): SettingsError[] {
     if (!Array.isArray(written.value)) return [];
     const message =
-        written.reason !== undefined || isLoosening(match.setting, written.value, shipped)
+        written.reason === undefined && isLoosening(match.setting, written.value, shipped)
             ? validateReason(key, written.reason)
             : undefined;
     return message === undefined ? [] : [{ path: [...key.split('.'), 'reason'], message }];
@@ -49,11 +49,7 @@ function validateWrittenScalar(
     scope: string | undefined,
     shipped: unknown,
 ): SettingsError[] {
-    if (written.reason !== undefined) {
-        const message = validateReason(key, written.reason);
-        if (message !== undefined) return [{ path: [...key.split('.'), 'reason'], message }];
-    }
-    if (!isLoosening(match.setting, written.value, shipped) || isReasonAccepted(written.reason)) return [];
+    if (written.reason !== undefined || !isLoosening(match.setting, written.value, shipped)) return [];
     const error = formatLooseningError(key, written, shipped, scope);
     return [{ path: key.split('.'), message: error }];
 }

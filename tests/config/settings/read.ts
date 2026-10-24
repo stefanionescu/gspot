@@ -4,6 +4,21 @@ export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0', 'MIT AND Apache-2.0
 
 export const VALID_LICENSES = ['MIT', 'Apache-2.0', 'GPL-2.0+', 'GPL-2.0-only WITH Classpath-exception-2.0'];
 
+export const DUPLICATED_REASON_ERRORS = [
+    {
+        key: 'limits.file_lines',
+        text: '[limits]\nfile_lines = { value = 400, reason = "x" }\n',
+        message:
+            'gspot.toml: limits.file_lines.reason: limits.file_lines needs a reason that says something: "x" is refused. Write one sentence saying why.',
+    },
+    {
+        key: 'docs.allowed_urls',
+        text: '[docs]\nallowed_urls = { value = ["https://example.com/docs"], reason = "x" }\n',
+        message:
+            'gspot.toml: docs.allowed_urls.reason: docs.allowed_urls needs a reason that says something: "x" is refused. Write one sentence saying why.',
+    },
+];
+
 export const KEY_PATH_CASES = [
     {
         name: 'a multiline array value',

@@ -19,7 +19,12 @@ import {
     RULE_FILE_ERRORS,
     UNKNOWN_KEY_CASES,
     RULE_FILE_SETTINGS,
+    DUPLICATED_REASON_ERRORS,
 } from '#tests/config/settings/read.ts';
+
+test.each(DUPLICATED_REASON_ERRORS)('an invalid $key reason is reported once', ({ text, message }) => {
+    expect(validateSettingsText(buildSandboxSettings(['bash', 'docs'], { tables: text }))).toStrictEqual([message]);
+});
 
 test.each(INVALID_LICENSES)('licenses.allowed refuses %s before running a check', (license) => {
     expect(validateSettingsText(stringify({ licenses: { allowed: [license] } }))).toStrictEqual([
