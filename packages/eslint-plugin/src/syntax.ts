@@ -72,13 +72,7 @@ export function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Recor
     return listChildNodes(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);
 }
 
-/**
- * Strip the wrappers that keep the runtime value: type assertions and optional chains.
- *
- * @param node the expression, or null
- * @returns the inner expression
- */
-export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
+function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     let value = node;
     while (value !== null && isUnwrappable(value)) value = value.expression;
     return value;
