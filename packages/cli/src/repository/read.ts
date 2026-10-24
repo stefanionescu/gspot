@@ -1,5 +1,6 @@
 import { statSync, realpathSync } from 'node:fs';
 import { compareText } from '#cli/system/text.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { join, posix, dirname, resolve } from 'node:path';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -33,7 +34,7 @@ function readAttributes(repositoryRoot: string, paths: string[]): Map<string, Re
     const result = runGitBlocking(repositoryRoot, GIT_CHECK_ATTRIBUTES_ARGUMENTS, {
         stdin: paths.join('\0') + '\0',
     });
-    if (result.code !== 0) throw new Error(`Git could not read the attributes: ${result.stderr.trim()}`);
+    if (result.code !== 0) throw new GspotError('git', `Git could not read the attributes: ${result.stderr.trim()}`);
     return parsePathAttributes(result.stdout);
 }
 
@@ -142,9 +143,7 @@ export function findRoot(start: string): string {
     const top = runGitBlocking(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });
     if (top.code === 0) return resolve(top.stdout.replace(TRAILING_NEWLINE, ''));
     if (top.code !== NOT_REPOSITORY_CODE || !top.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
-        throw new Error(
-            `Git could not find the repository root of ${folder} (exit ${String(top.code)}): ${top.stderr.trim()}`,
-        );
+        throw new GspotError('git', `Git could not open ${folder}: ${top.stderr.trim()}`);
     let walked = folder;
     while (statSync(join(walked, SETTINGS_FILE), { throwIfNoEntry: false }) === undefined) {
         const parent = dirname(walked);

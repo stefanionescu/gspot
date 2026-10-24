@@ -92,7 +92,7 @@ test('a .git file that points at a missing folder is reported, not read as a fol
     });
 
     expect(await captureRejection(readIndexFiles(sandbox.path))).toStartWith('Git ls-files failed');
-    expect(() => findRoot(sandbox.path)).toThrow('Git could not find the repository root of');
+    expect(() => findRoot(sandbox.path)).toThrow(`Git could not open ${sandbox.path}:`);
     expect(() => isGitRepository(sandbox.path)).toThrow('is a work tree (exit 128)');
 });
 test('a missing git program is reported instead of a successful walk', async () => {
@@ -104,9 +104,7 @@ test('a missing git program is reported instead of a successful walk', async () 
     expect(await captureRejection(readIndexFiles(sandbox.path))).toMatch(
         /Git ls-files failed.*(?:not found|not recognized)/su,
     );
-    expect(() => findRoot(sandbox.path)).toThrow(
-        /Git could not find the repository root of.*(?:not found|not recognized)/su,
-    );
+    expect(() => findRoot(sandbox.path)).toThrow(/Git could not open [^:]*:.*(?:not found|not recognized)/su);
     expect(() => isGitRepository(sandbox.path)).toThrow(
         /Git could not tell whether .* is a work tree.*(?:not found|not recognized)/su,
     );

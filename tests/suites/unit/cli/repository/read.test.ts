@@ -3,6 +3,10 @@ import { testdir } from 'testdirs';
 import * as git from '#cli/system/git.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { findRoot } from '#cli/repository/read.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { captureRejectedError } from '#tests/setup/matchers.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('finding settings outside Git needs one Git lookup', async () => {
     await using sandbox = await testdir({ 'gspot.toml': 'configurations = []\n', 'deep/source.txt': 'source\n' });
@@ -10,4 +14,35 @@ test('finding settings outside Git needs one Git lookup', async () => {
     using boundary = spyOn(git, 'runGitBlocking').mockImplementation((...commandArguments) => run(...commandArguments));
     expect(findRoot(join(sandbox.path, 'deep'))).toBe(sandbox.path);
     expect(boundary).toHaveBeenCalledTimes(1);
+});
+
+test('a Git refusal while finding the root stays a Git error', async () => {
+    await using sandbox = await testdir();
+    using boundary = spyOn(git, 'runGitBlocking').mockReturnValue(
+        buildProcessResult({ code: 128, stderr: 'fatal: detected dubious ownership\n' }),
+    );
+    const error = await captureRejectedError(Promise.resolve().then(() => findRoot(sandbox.path)));
+    expect(error).toMatchObject({
+        name: 'GspotError',
+        code: 'git',
+        message: `Git could not open ${sandbox.path}: fatal: detected dubious ownership`,
+    });
+    expect(boundary).toHaveBeenCalledTimes(1);
+});
+
+test('a Git refusal while reading attributes stays a Git error', async () => {
+    await using sandbox = await testdir({ 'source.txt': 'source\n' });
+    commitAll(sandbox.path);
+    const run = git.runGitBlocking;
+    using _boundary = spyOn(git, 'runGitBlocking').mockImplementation((root, commandArguments, options) =>
+        commandArguments[0] === 'check-attr'
+            ? buildProcessResult({ code: 128, stderr: 'fatal: cannot read attributes\n' })
+            : run(root, commandArguments, options),
+    );
+    const error = await captureRejectedError(readTestRepository(sandbox.path));
+    expect(error).toMatchObject({
+        name: 'GspotError',
+        code: 'git',
+        message: 'Git could not read the attributes: fatal: cannot read attributes',
+    });
 });
