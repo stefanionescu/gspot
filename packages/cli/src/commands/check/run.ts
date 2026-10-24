@@ -80,7 +80,7 @@ function removeIgnoredFindings(result: CheckResult, ignores: IgnoreRecord[]): vo
 
 function removeOutsideFindings(result: CheckResult, run: Run): void {
     const { options, session } = run;
-    if (options.paths === undefined || options.staged !== undefined) return;
+    if (options.paths === undefined) return;
     const paths = new Set(options.paths);
     const tracked = new Set(session.repository.files.map((file) => file.path));
     result.findings = result.findings.filter((finding) => paths.has(finding.file) || !tracked.has(finding.file));

@@ -64,7 +64,7 @@ test('--only repeats and leaves the paths after it as paths', async () => {
         expect(check.findings.map((finding) => finding.message)).toStrictEqual(['src/selected.ts']);
 });
 
-test('path arguments keep the findings of a project-wide check in the named files', async () => {
+test.each([false, true])('path arguments narrow project-wide findings (staged: %s)', async (staged) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
@@ -88,12 +88,20 @@ test('path arguments keep the findings of a project-wide check in the named file
         'src/other.ts': 'other',
     });
 
+    if (staged) {
+        commitAll(sandbox.path);
+        await createFileTree(sandbox.path, { 'src/selected.ts': 'changed selected', 'src/other.ts': 'changed other' });
+        runGitStep(sandbox.path, ['add', '--', 'src/selected.ts', 'src/other.ts']);
+    }
+    const flags = staged ? ['--staged'] : [];
     const narrowed = parseCheckReport(
-        await runGspot(sandbox.path, ['check', 'src/selected.ts', '--only', 'sandbox/project', '--json']),
+        await runGspot(sandbox.path, ['check', 'src/selected.ts', '--only', 'sandbox/project', '--json', ...flags]),
     );
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
     expect(narrowed.report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual(['here', 'fileless']);
-    const project = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/project', '--json']));
+    const project = parseCheckReport(
+        await runGspot(sandbox.path, ['check', '--only', 'sandbox/project', '--json', ...flags]),
+    );
     expect(project.report.checks[0]?.findings.map((finding) => finding.message)).toStrictEqual([
         'here',
         'elsewhere',
