@@ -1,6 +1,7 @@
 import { isTable } from '#cli/system/tables.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { FIRST_READ } from '#cli/config/generation/rules.ts';
@@ -12,6 +13,15 @@ import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import { SETTING_RULES } from '#cli/config/settings/validation/values.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 import { ESLINT_LIMIT_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
+
+function readPathError(files: Files, value: string): ReturnType<Files['readStats']> | Error {
+    try {
+        return files.readStats(value);
+    } catch (error) {
+        if (!(error instanceof Error)) throw error;
+        return error;
+    }
+}
 
 /**
  * Refuse scope paths that name a file, and keep written scopes whose folder does not exist yet.
@@ -25,20 +35,16 @@ export function validateScopePaths(repositoryRoot: string, settings: Settings): 
     using files = openFiles(repositoryRoot);
     return paths.flatMap((path) => {
         const location: KeyPath = ['scope', path];
-        try {
-            const stats = files.readStats(trimTrailingSlashes(path));
-            return stats === undefined || stats.isDirectory()
-                ? []
-                : [
-                      {
-                          path: location,
-                          message: `The scope \`${path}\` names a file. Name a folder under the repository root.`,
-                      },
-                  ];
-        } catch (error) {
-            if (!(error instanceof Error)) throw error;
-            return [{ path: location, message: error.message }];
-        }
+        const stats = readPathError(files, trimTrailingSlashes(path));
+        if (stats instanceof Error) return [{ path: location, message: stats.message }];
+        return stats === undefined || stats.isDirectory()
+            ? []
+            : [
+                  {
+                      path: location,
+                      message: `The scope \`${path}\` names a file. Name a folder under the repository root.`,
+                  },
+              ];
     });
 }
 
@@ -70,16 +76,27 @@ export function validateRuleFilePaths(repositoryRoot: string, settings: Settings
                   }))
                 : []),
         ];
-        return paths.flatMap(({ value, key, path }) =>
-            files.readStats(value)?.isFile() === true
+        return paths.flatMap(({ value, key, path }) => {
+            const stats = readPathError(files, value);
+            if (stats instanceof Error)
+                return [
+                    {
+                        path,
+                        message: stats.message.replace(
+                            'gspot does not write through links.',
+                            `Point ${key} at a tracked file.`,
+                        ),
+                    },
+                ];
+            return stats?.isFile() === true
                 ? []
                 : [
                       {
                           path,
                           message: `\`${value}\` names no file. Point ${key} at a file, relative to the repository root.`,
                       },
-                  ],
-        );
+                  ];
+        });
     });
 }
 

@@ -175,3 +175,24 @@ test('a Semgrep rule file or a scope plugin module that names no file is refused
         .replaceAll(/missing-(?:root|scope)\.yml/gu, 'present.yml');
     expect(validateSettingsText(corrected, sandbox.path)).toStrictEqual([]);
 });
+
+test('linked ESLint plugins and Semgrep rule files fail settings validation at their keys', async () => {
+    await using sandbox = await testdir({ 'project/.keep': '', 'outside/plugin.mjs': 'export default {};' });
+    const root = join(sandbox.path, 'project');
+    await symlink('../outside/plugin.mjs', join(root, 'local.mjs'));
+    expect(
+        validateSettingsText(
+            stringify({
+                configurations: ['javascript', 'security'],
+                tools: {
+                    eslint: { plugins: [{ name: 'local', path: 'local.mjs', rules: {} }] },
+                    semgrep: { rule_files: ['local.mjs'] },
+                },
+            }),
+            root,
+        ),
+    ).toStrictEqual([
+        'gspot.toml: tools.eslint.plugins.0.path: local.mjs is a link. Point path at a tracked file.',
+        'gspot.toml: tools.semgrep.rule_files.0: local.mjs is a link. Point rule_files at a tracked file.',
+    ]);
+});
