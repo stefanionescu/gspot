@@ -19,8 +19,8 @@ import type { Configuration } from '#cli/types/configurations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/tsc/compiler.ts';
-import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPerScopeTarget } from '#cli/generation/config-files/generate.ts';
+import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
 import { buildJsconfigFile } from '#cli/generation/configurations/language/javascript/jsconfig.ts';
 import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/language/javascript.ts';
@@ -45,9 +45,10 @@ function buildScopeCompilerProject(
         ),
         options: {
             ...config.options,
-            typeRoots:
+            typeRoots: (
                 ts.getEffectiveTypeRoots({ ...config.options, configFilePath: join(root, scope, JSCONFIG_FILE) }, {}) ??
-                [],
+                []
+            ).filter((path) => isInside(relative(root, path))),
         },
     };
 }
