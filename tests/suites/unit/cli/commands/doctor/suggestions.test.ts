@@ -164,8 +164,8 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
     expect(missingText.stdout.split('\n\n').find((block) => block.startsWith('selected, but no matching'))).toBe(
         [
             'selected, but no matching files found',
-            '  bash                               no detection evidence in root    gspot remove bash (if you no longer need it)',
-            "  python                             no detection evidence in api app gspot remove python --scope 'api app' (if you no longer need it)",
+            '  bash                               no detection evidence in root; remove it if you no longer need it    gspot remove bash --reason "<why>"',
+            '  python                             no detection evidence in api app; remove it if you no longer need it gspot remove python --scope \'api app\' --reason "<why>"',
         ].join('\n'),
     );
     expect(await readTree(sandbox.path)).toStrictEqual(before);

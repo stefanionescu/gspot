@@ -62,8 +62,8 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
                 return [
                     {
                         configuration: name,
-                        evidence: `no detection evidence in ${path === '' ? ROOT_SCOPE_LABEL : path}`,
-                        command: `gspot remove ${name}${scopeArgument} (if you no longer need it)`,
+                        evidence: `no detection evidence in ${path === '' ? ROOT_SCOPE_LABEL : path}; remove it if you no longer need it`,
+                        command: `gspot remove ${name}${scopeArgument} --reason "<why>"`,
                     },
                 ];
             });

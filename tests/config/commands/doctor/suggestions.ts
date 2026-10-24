@@ -55,12 +55,12 @@ export const REMOVED_CONFIGURATION_SUGGESTIONS = [
 export const REMOVE_SUGGESTIONS = [
     {
         configuration: 'bash',
-        evidence: 'no detection evidence in root',
-        command: 'gspot remove bash (if you no longer need it)',
+        evidence: 'no detection evidence in root; remove it if you no longer need it',
+        command: 'gspot remove bash --reason "<why>"',
     },
     {
         configuration: 'python',
-        evidence: 'no detection evidence in api app',
-        command: "gspot remove python --scope 'api app' (if you no longer need it)",
+        evidence: 'no detection evidence in api app; remove it if you no longer need it',
+        command: 'gspot remove python --scope \'api app\' --reason "<why>"',
     },
 ] as const;
