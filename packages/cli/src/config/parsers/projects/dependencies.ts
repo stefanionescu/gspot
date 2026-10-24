@@ -1,7 +1,5 @@
 export const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
 
-export const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
-
 export const JAVASCRIPT_RUNTIMES = ['node', 'bun', 'deno'] as const;
 
 export const RUNTIME_COMMAND = /^\s*(node|bun|deno)(?:\s|$)/u;

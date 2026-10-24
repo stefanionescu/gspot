@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseGrammarComments } from '#cli/parsers/code/comments.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies/package-json.ts';
 import { pipfileSchema, pyprojectSchema } from '#cli/schemas/parsers/projects/dependencies/python.ts';
@@ -23,7 +23,6 @@ import {
     RUNTIME_COMMAND,
     REQUIREMENT_NAME,
     LINE_CONTINUATION,
-    SWIFT_PACKAGE_URL,
     JAVASCRIPT_RUNTIMES,
     REQUIREMENT_NAME_END,
     PYTHON_NAME_SEPARATORS,
@@ -135,18 +134,28 @@ function parsePyproject(path: string, text: string): DependencyFile {
 
 async function parseSwiftPackage(path: string, text: string): Promise<DependencyFile> {
     const dependencies: DependencyMap = {};
-    const comments = await parseGrammarComments('swift', text);
-    const source = text
-        .split('\n')
-        .map((line, index) => {
-            const comment = comments.find((each) => each.line === index + 1 && each.text.startsWith('//'));
-            return comment === undefined ? line : line.slice(0, line.lastIndexOf(comment.text));
-        })
-        .join('\n');
-    for (const match of source.matchAll(SWIFT_PACKAGE_URL)) {
-        const url = match[1] ?? '';
-        const last = posix.basename(url);
-        dependencies[last.endsWith(GIT_SUFFIX) ? last.slice(0, -GIT_SUFFIX.length) : last] = url;
+    const tree = await parseSource('swift', text);
+    try {
+        const calls = tree.rootNode
+            .descendantsOfType('call_expression')
+            .filter((call) => call.namedChild(0)?.text === '.package');
+        for (const call of calls) {
+            const argumentsNode = call.namedChildren
+                .find((node) => node.type === 'call_suffix')
+                ?.namedChildren.find((node) => node.type === 'value_arguments');
+            const value = argumentsNode?.namedChildren
+                .find((argument) => argument.childForFieldName('name')?.text === 'url')
+                ?.childForFieldName('value');
+            if (
+                value?.type !== 'line_string_literal' ||
+                value.namedChildren.some((node) => node.type !== 'line_str_text')
+            )
+                continue;
+            const url = value.namedChildren.map((node) => node.text).join('');
+            dependencies[posix.basename(url, GIT_SUFFIX)] = url;
+        }
+    } finally {
+        tree.delete();
     }
     return {
         path,
