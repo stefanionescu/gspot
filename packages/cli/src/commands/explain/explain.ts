@@ -50,6 +50,7 @@ function explainSlashed(
     const slash = subject.indexOf('/');
     const tool = subject.slice(0, slash);
     const rule = subject.slice(slash + 1);
+    if (tool === ESLINT_MANIFEST_TOOL && !rule.includes('/') && !eslintRuleNames.has(rule)) return undefined;
     return explainLintRule(tool, rule);
 }
 
