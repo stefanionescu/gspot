@@ -1,3 +1,5 @@
+export const MARKDOWNLINT_ALL_RULES = ['MD041', 'MD025'] as const;
+
 export const MARKDOWNLINT_RULES = {
     default: true,
     MD013: false,
