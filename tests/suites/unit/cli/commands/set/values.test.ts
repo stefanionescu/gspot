@@ -252,3 +252,13 @@ test.each([...STRING_SETTING_VALUES])('set keeps words as strings for $key: $wor
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(getValueAt(written, key.split('.'))).toStrictEqual(value);
 });
+
+test('--json after the value separator stays a setup command argument', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'echo', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toStartWith('Added "echo", "--json" to ci.setup_command.');
+    expect(result.stderr).toBe('');
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(getValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['echo', '--json']);
+});

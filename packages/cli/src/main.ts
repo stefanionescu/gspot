@@ -161,7 +161,8 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
     const program = buildProgram((value) => {
         result = value;
     });
-    const commandJson = commandArguments.includes('--json');
+    const end = commandArguments.indexOf('--');
+    const commandJson = (end === -1 ? commandArguments : commandArguments.slice(0, end)).includes('--json');
     setOutputOptions({ json: commandJson, color: isColorAllowed() });
     program.hook('preAction', async (_program, command) => {
         if (
