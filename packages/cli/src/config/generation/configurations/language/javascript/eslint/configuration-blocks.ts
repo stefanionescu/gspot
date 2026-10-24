@@ -13,7 +13,6 @@ const REACT_NATIVE_RULES = {
     '@react-native/platform-colors': 'error',
     '@react-native/no-deep-imports': 'error',
     'react-native/no-unused-styles': 'error',
-    'react-native/no-raw-text': 'error',
     'react-native/no-single-element-style-arrays': 'error',
 
     'react-native/split-platform-components': 'error',
