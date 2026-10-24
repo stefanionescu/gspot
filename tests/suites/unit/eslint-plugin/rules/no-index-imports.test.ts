@@ -13,6 +13,7 @@ createRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
         "import { a } from './indexes.js';",
     ],
     invalid: [
+        { code: "import { a } from '~/lib/index.js';", errors: [{ messageId: 'index' }] },
         { code: "import { a } from '#app/index';", errors: [{ messageId: 'index' }] },
         {
             code: "import { a } from './index.js';",
