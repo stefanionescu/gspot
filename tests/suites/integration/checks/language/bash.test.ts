@@ -18,6 +18,19 @@ import {
     SHELLCHECK_DIALECT_FINDINGS,
 } from '#tests/config/integration/checks/language/bash.ts';
 
+test('ShellCheck reports a finding in a filename that starts with a dash', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        '-f.sh': '#!/bin/sh\necho $1\n',
+        'ok.sh': '#!/bin/sh\necho ok\n',
+    });
+    const result = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']));
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(result.report.checks).toMatchObject([
+        { status: 'failed', fileCount: 2, findings: [{ file: '-f.sh', line: 2, rule: 'SC2086' }] },
+    ]);
+});
+
 test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/safety accepts a trap that removes a temporary folder, and no file changes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

@@ -16,10 +16,49 @@ import { writeScriptCommand, fakeExecutableLookup } from '#tests/setup/system/fa
 
 import {
     BASH_SYNTAX_CHECK,
+    DASHED_FILE_SCRIPT,
     PENDING_NOTES_SCRIPT,
     CHILD_SCOPE_SETTINGS,
     PENDING_NOTE_RESULTS,
+    DASHED_FILE_PLACEHOLDERS,
 } from '#tests/config/runs/command.ts';
+
+test.each(DASHED_FILE_PLACEHOLDERS)(
+    '%s keeps filenames beginning with a dash out of tool options',
+    async (placeholder) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([], {
+                tables: stringify({
+                    command_check: [
+                        {
+                            id: 'project/dashed-files',
+                            command: [process.execPath, '-e', DASHED_FILE_SCRIPT, '--', placeholder],
+                            paths: ['*.sh', '*.mjs'],
+                            stage: 'commit',
+                            output: {
+                                format: 'regex',
+                                pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`,
+                            },
+                        },
+                    ],
+                }),
+            }),
+            '-f.sh': 'invalid',
+            '--config=x.mjs': 'invalid',
+        });
+        const result = await runChecks(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['project/dashed-files'] }),
+        );
+        expect(result.report.exitCode).toBe(1);
+        expect(result.report.checks).toMatchObject([{ status: 'failed', fileCount: 2 }]);
+        expect(
+            result.report.checks
+                .flatMap(({ findings }) => findings.map(({ file }) => file))
+                .toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual(['--config=x.mjs', '-f.sh']);
+    },
+);
 
 test('a command check runs its command and reports file and line through its output format', async () => {
     await using sandbox = await testdir({
@@ -72,8 +111,8 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
     const scope = 'apps/café [web]';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['swift'], { scopes: [{ path: scope }] }),
-        'Sources/Main.swift': 'let value = 1\n',
-        [`${scope}/Sources/Main.swift`]: 'let value = 2\n',
+        '--config=x.swift': 'let value = 1\n',
+        [`${scope}/--config=x.swift`]: 'let value = 2\n',
     });
     const session = await openSession(sandbox.path);
     const planned = planChecks(session, { stage: 'commit', only: ['swift/swiftlint'] });
@@ -81,8 +120,8 @@ test('a command in a scope runs in the scope folder with paths relative to it', 
     for (const check of planned) {
         const setup = buildCommandSetup(session, check, {});
         expect(setup.cwd).toBe(join(sandbox.path, check.scope.folder.path));
-        expect(setup.files).toStrictEqual(['Sources/Main.swift']);
-        expect(setup.substitutions.files).toStrictEqual(['Sources/Main.swift']);
+        expect(setup.files).toStrictEqual(['./--config=x.swift']);
+        expect(setup.substitutions.files).toStrictEqual(['./--config=x.swift']);
     }
 });
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {

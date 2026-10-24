@@ -250,7 +250,9 @@ export function buildCommandSetup(session: Session, planned: PlannedCheck, optio
  */
 export function buildCommandSubstitutions(source: Session, planned: PlannedCheck, cwd: string): Substitutions {
     const substitutions: Substitutions = {
-        files: planned.files.map((file) => convertToPosixPath(relative(cwd, join(source.root, file.path)))),
+        files: planned.files
+            .map((file) => convertToPosixPath(relative(cwd, join(source.root, file.path))))
+            .map((path) => (path.startsWith('-') ? `./${path}` : path)),
         scope: planned.scope.folder.path,
         root: source.root,
         indent:

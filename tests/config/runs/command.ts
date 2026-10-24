@@ -1,6 +1,18 @@
 import type { Check } from '#cli/types/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
+export const DASHED_FILE_PLACEHOLDERS = ['{file}', '{files}'];
+
+export const DASHED_FILE_SCRIPT = `
+const { parseArgs } = require('node:util');
+const fs = require('node:fs');
+const { positionals } = parseArgs({ args: process.argv.slice(1), strict: false, allowPositionals: true });
+for (const file of positionals) {
+    console.log(file + ':1: Check this file.');
+    process.exitCode = fs.readFileSync(file, 'utf8') === 'invalid' ? 1 : 0;
+}
+`;
+
 export const BASE_CHECK = {
     id: 'sandbox/diagnostic',
     command: ['tool'],
