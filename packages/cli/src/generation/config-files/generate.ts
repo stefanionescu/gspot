@@ -134,15 +134,7 @@ function buildConfigFiles(session: Session): ConfigFileGeneration {
     return { files: [...state.files.values()], targets: state.targets };
 }
 
-/**
- * Name the path of a config file that a scope writes with its own text: a root file in the scope folder, and any other
- * config file in scopes/<scope>/ of the folder of its configuration.
- *
- * @param configFile the config file to place.
- * @param scope the folder of the scope.
- * @returns the repository-relative path.
- */
-export function buildPerScopeTarget(configFile: Pick<ConfigFile, 'target' | 'file' | 'root'>, scope: string): string {
+function buildPerScopeTarget(configFile: Pick<ConfigFile, 'target' | 'file' | 'root'>, scope: string): string {
     if (configFile.root) return join(scope, configFile.target);
     const folder = configFile.target.slice(0, configFile.target.length - configFile.file.length);
     return join(folder, CONFIG_FILE_SCOPES_FOLDER, scope, configFile.file);

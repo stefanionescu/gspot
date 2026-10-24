@@ -1,10 +1,9 @@
 import ts from 'typescript';
+import { GspotError } from '#cli/system/errors.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import type { Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { formatHeader } from '#cli/generation/header.ts';
 import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { createCheckCopy } from '#cli/runs/copy/files.ts';
@@ -15,14 +14,13 @@ import type { CheckResult } from '#cli/types/runs/check.ts';
 import { runCheckCommand } from '#cli/runs/command/check.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { getConfigFile } from '#cli/runs/command/placeholders.ts';
-import type { Configuration } from '#cli/types/configurations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
+import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/tsc/compiler.ts';
-import { buildPerScopeTarget } from '#cli/generation/config-files/generate.ts';
+import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
 import type { TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
-import { buildJsconfigFile } from '#cli/generation/configurations/language/javascript/jsconfig.ts';
 import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/checks/language/javascript.ts';
 import { listCompilerFiles, restoreCommandPaths, appendTsbuildinfoFlag } from '#cli/checks/tsc/compiler.ts';
 
@@ -53,29 +51,6 @@ function buildScopeCompilerProject(
     };
 }
 
-function findJavascriptProject(session: Session, planned: PlannedCheck): string {
-    const configFile = getConfigFile(session, planned, extractConfigFileName(JSCONFIG_FILE));
-    const paths = new Set([
-        configFile.target,
-        ...session.scopes.map(({ folder }) => buildPerScopeTarget(configFile, folder.path)),
-    ]);
-    using files = openFiles(session.root);
-    for (const path of paths) {
-        const written = files.read(path);
-        if (written === undefined) continue;
-        const built = buildJsconfigFile({
-            session,
-            scope: planned.scope,
-            configuration: planned.configuration as Configuration,
-            configFile,
-            targetPath: path,
-            level: session.settingsFile.settings.level,
-        });
-        if (written.bytes.toString('utf8') === `${formatHeader(path)}${built.trimEnd()}\n`) return path;
-    }
-    throw new Error(`Missing JavaScript config file: ${configFile.target}`);
-}
-
 /**
  * Type-checks JavaScript with the type declarations the project uses.
  *
@@ -87,9 +62,13 @@ export async function checkJavascriptTsc(session: Session, planned: PlannedCheck
     const scope = planned.scope.folder.path;
     if (listCheckedFiles(session.scopes, planned).length === 0)
         return { ...buildBaseResult(planned, session), fileCount: 0 };
-    const target = findJavascriptProject(session, planned);
+    const target = getConfigFileTarget(
+        scope,
+        getConfigFile(session, planned, extractConfigFileName(JSCONFIG_FILE)),
+        getConfigFiles(session).targets,
+    );
     const generated = readTsconfig(session.root, join(session.root, target), session.reads);
-    if (generated === undefined) throw new Error(`Missing JavaScript config file: ${target}`);
+    if (generated === undefined) throw new GspotError('skip', `${target} is missing. Run gspot apply.`);
     const project = {
         ...generated,
         ...buildScopeCompilerProject(session, scope, generated),
