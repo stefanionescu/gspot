@@ -1,13 +1,12 @@
 import ts from 'typescript';
-import { readFileSync } from 'node:fs';
-import { hasErrorCode } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
+import { readFileSync, realpathSync } from 'node:fs';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { NODE_MODULES } from '#cli/config/files/names.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
-import { findCachedText } from '#cli/system/files/reads.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { join, dirname, resolve, relative } from 'node:path';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { findCachedText, readContainedPath } from '#cli/system/files/reads.ts';
 import { typeScriptConfigSchema } from '#cli/schemas/parsers/projects/tsconfig.ts';
 import { isInside, convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 import type { TypeScriptProject, TypeScriptConfiguration } from '#cli/types/parsers/projects/tsconfig.ts';
@@ -114,8 +113,8 @@ function readCompilerFile(repositoryRoot: string, path: string, reads: ReadCache
         const segments = local.split('/');
         const dependency = segments.indexOf(NODE_MODULES);
         if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
-            using files = openFiles(repositoryRoot);
-            if (dependency > 0) files.readStats(segments.slice(0, dependency).join('/'));
+            if (dependency > 0 && isInside(local))
+                readContainedPath(realpathSync(repositoryRoot), segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }
         return findCachedText(reads, local);
@@ -155,7 +154,9 @@ export function readTsconfig(
     } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         const shown = convertToPosixPath(relative(repositoryRoot, path));
-        throw new Error(`Cannot read the compiler settings in ${shown}: ${detail}`, { cause: error });
+        throw new GspotError('configuration', `Cannot read the compiler settings in ${shown}: ${detail}`, {
+            cause: error,
+        });
     }
 }
 

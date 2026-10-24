@@ -1,11 +1,49 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { captureRejectedError } from '#tests/setup/matchers.ts';
+import { symlink, realpath, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { TSCONFIG_PARSE_ERRORS } from '#tests/config/parsers/projects/tsconfig.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+
+test('a tsconfig can extend a dependency installed above the repository', async () => {
+    await using sandbox = await testdir({
+        'node_modules/compiler-settings/tsconfig.json': '{"compilerOptions":{"strict":true}}',
+        'app/tsconfig.json': '{"extends":"compiler-settings/tsconfig.json"}',
+    });
+    const root = join(sandbox.path, 'app');
+    expect(readTsconfig(root, join(root, 'tsconfig.json'), createReadCache(root))?.options.strict).toBe(true);
+});
+
+test.each([...TSCONFIG_PARSE_ERRORS])(
+    '$name raises a configuration error with its compiler diagnostic',
+    async ({ json, message }) => {
+        await using sandbox = await testdir({ 'tsconfig.json': json });
+        const path = join(sandbox.path, 'tsconfig.json');
+        const error = await captureRejectedError(
+            Promise.resolve().then(() => readTsconfig(sandbox.path, path, createReadCache(sandbox.path))),
+        );
+        expect(error).toBeInstanceOf(GspotError);
+        expect(error).toMatchObject({ code: 'configuration', message });
+    },
+);
+
+test('a tsconfig keeps dependencies reached through a node_modules symlink readable', async () => {
+    await using dependencies = await testdir({
+        'node_modules/compiler-settings/package.json': '{"name":"compiler-settings","version":"1.0.0"}',
+        'node_modules/compiler-settings/tsconfig.json': '{"compilerOptions":{"strict":true}}',
+    });
+    await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"compiler-settings/tsconfig.json"}' });
+    await symlink(join(dependencies.path, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+    const target = await realpath(join(sandbox.path, 'node_modules/compiler-settings/tsconfig.json'));
+    const reads = createReadCache(sandbox.path);
+    expect(readTsconfig(sandbox.path, target, reads)?.options.strict).toBe(true);
+    expect(readTsconfig(sandbox.path, join(sandbox.path, 'tsconfig.json'), reads)?.options.strict).toBe(true);
+});
 
 test('a TypeScript project comes from the nearest covering tsconfig.json and refuses an excluded file', async () => {
     await using sandbox = await testdir({
