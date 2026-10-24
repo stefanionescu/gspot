@@ -8,6 +8,7 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { readHookStatus } from '#cli/install/hooks.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
+import { findSettingsSkip } from '#cli/planning/skips.ts';
 import type { StageFilter } from '#cli/types/planning.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
@@ -77,11 +78,12 @@ function selectArgumentPaths(session: Session, options: CheckOptions, changed: s
     return [...selected];
 }
 
-function assertChecksExist(session: Session, only: string[] | undefined): void {
+function assertOnlyChecks(session: Session, only: string[] | undefined): void {
+    const selected = session.scopes.flatMap((scope) =>
+        scope.configurations.flatMap((configuration) => configuration.checks.map((check) => ({ check, scope }))),
+    );
     const checkIds = new Set([
-        ...session.scopes.flatMap((scope) =>
-            scope.configurations.flatMap((configuration) => configuration.checks.map((check) => check.id)),
-        ),
+        ...selected.map(({ check }) => check.id),
         ...Object.values(session.settingsFile.settings.commandChecks).map((check) => check.id),
     ]);
     const unknown = only?.find((check) => !checkIds.has(check));
@@ -90,6 +92,17 @@ function assertChecksExist(session: Session, only: string[] | undefined): void {
             'arguments',
             `There is no check called ${unknown}.${formatSimilarNames(unknown, [...checkIds])}`,
         );
+    for (const id of only ?? []) {
+        const match = selected.find(({ check }) => check.id === id);
+        if (
+            match !== undefined &&
+            findSettingsSkip(session.settingsFile.settings, match.scope, match.check)?.cause === 'level'
+        )
+            throw new GspotError(
+                'arguments',
+                `${id} is off at level recommended. Run gspot set level all to turn it on.`,
+            );
+    }
 }
 
 function warnAboutHooks(session: Session, revision: RevisionSource | undefined): void {
@@ -149,7 +162,7 @@ export async function checkTree(
         resources,
         cancelSignal,
     });
-    assertChecksExist(session, options.only);
+    assertOnlyChecks(session, options.only);
     warnAboutHooks(session, revision);
     const { changed, staging, stage, paths } = await readRunFilters(session, options, cancelSignal, revision);
     const result = await runChecks(session, buildRunOptions(options, { changed, staging, stage, paths }, revision));

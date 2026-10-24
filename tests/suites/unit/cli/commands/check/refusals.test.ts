@@ -48,6 +48,16 @@ test('check refuses the commitlint check outside the commit-msg hook and names t
     );
 });
 
+test('--only refuses a check disabled by the selected level', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+        error: 'arguments',
+        message: 'docs/required-files is off at level recommended. Run gspot set level all to turn it on.',
+    });
+});
+
 test.each(['--changed', '--staged', '--hook'])(
     'check %s outside Git exits 2 with a git error and changes nothing',
     async (flag) => {
