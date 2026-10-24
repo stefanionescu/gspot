@@ -44,7 +44,7 @@ export const CONFIGURATION_DETECTION_LINES = [
         configuration: 'postgres',
         lines: [
             String.raw`Detected by: pg in dependencies, postgres in dependencies, psycopg in dependencies, asyncpg in dependencies, @neondatabase/serverless in dependencies, prisma/schema.prisma matching (?:^|\n)[\t ]*provider[\t ]*=[\t ]*"postgresql"`,
-            'Files: db/migrations/*.sql, migrations/*.sql, **/supabase/migrations/*.sql',
+            'Files: db/migrations/*.sql, migrations/*.sql, prisma/migrations/*/migration.sql, drizzle/*.sql, **/supabase/migrations/*.sql',
         ],
     },
     {

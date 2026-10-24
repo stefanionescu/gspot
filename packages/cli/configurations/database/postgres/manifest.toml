@@ -10,7 +10,7 @@ content = { "prisma/schema.prisma" = '(?:^|\n)[\t ]*provider[\t ]*=[\t ]*"postgr
 dependencies = ["pg", "postgres", "psycopg", "asyncpg", "@neondatabase/serverless"]
 
 [files]
-paths = ["db/migrations/*.sql", "migrations/*.sql", "**/supabase/migrations/*.sql"]
+paths = ["db/migrations/*.sql", "migrations/*.sql", "prisma/migrations/*/migration.sql", "drizzle/*.sql", "**/supabase/migrations/*.sql"]
 
 [defaults]
 "tools.sqlfluff.dialect" = "postgres"

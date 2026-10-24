@@ -103,3 +103,23 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
             .files.map(({ path }) => basename(path)),
     ).toStrictEqual(['5_custom.sql']);
 });
+
+test.each(['prisma/migrations/20260101000000_init/migration.sql', 'drizzle/0001_init.sql'])(
+    '%s is read by the Postgres checks with its migration version',
+    async (path) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['postgres']),
+            [path]: 'GRANT ALL ON TABLE orders TO app_reader;\n',
+        });
+        const session = await openSession(sandbox.path);
+        const input = planSandboxCheck(session, 'postgres/migration-order');
+        const read = await readMigrations(session, input);
+        expect(read.migrations.map(({ version }) => version)).toStrictEqual([
+            path.startsWith('prisma/') ? '20260101000000' : '0001',
+        ]);
+        expect(await findBuiltInCheck('postgres/migration-order')(session, input)).toStrictEqual([]);
+        expect(
+            await findBuiltInCheck('postgres/grants')(session, planSandboxCheck(session, 'postgres/grants')),
+        ).toMatchObject([{ file: path, rule: 'grant-all' }]);
+    },
+);

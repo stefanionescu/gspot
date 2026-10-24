@@ -9,7 +9,7 @@ import { readCachedText } from '#cli/system/files/reads.ts';
 import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { parseSqlFile } from '#cli/parsers/code/sql/postgres.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
-import { MIGRATION_VERSION } from '#cli/config/parsers/code/sql/migrations.ts';
+import { readMigrationVersion } from '#cli/parsers/code/sql/migrations.ts';
 import { type Migration, type MigrationRead } from '#cli/types/checks/postgres.ts';
 
 import {
@@ -57,7 +57,7 @@ export async function readMigrations(session: Session, planned: PlannedCheck): P
             paths
                 .map((path) => ({
                     path,
-                    version: MIGRATION_VERSION.exec(posix.basename(path))?.groups?.['version'] ?? '',
+                    version: readMigrationVersion(path) ?? '',
                 }))
                 .toSorted((left, right) => {
                     const first = BigInt(left.version || '0');
