@@ -1,7 +1,7 @@
 allowed_words = ["Drizzle"]
 
 [configuration]
-description = "Drizzle: no update or delete without `where`, raw SQL only at paths the settings allow, and migrations that match the schema."
+description = "Drizzle: no update or delete without `where`, and migrations that match the schema."
 requires = ["javascript"]
 title = "Drizzle"
 
@@ -27,6 +27,7 @@ system = true
 version_command = ["--version"]
 
 [[eslint.selectors]]
+level = "all"
 message = "Raw SQL skips the types of the schema. Use the query builder, or accept the path with `gspot ignore javascript/eslint --rule no-restricted-syntax --paths <glob> --reason \"<why>\"`."
 selector = "TaggedTemplateExpression[tag.name='sql']"
 

@@ -29,6 +29,7 @@ required_tools = ["@react-native/eslint-plugin", "eslint-plugin-react-native"]
 all_level_rules = ["react-native/no-color-literals", "react-native/no-inline-styles", "react-native/split-platform-components"]
 
 [[eslint.selectors]]
+level = "all"
 message = "Use Pressable. The Touchable components are kept for old code and get no new behavior."
 selector = "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]"
 

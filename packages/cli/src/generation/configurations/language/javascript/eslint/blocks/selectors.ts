@@ -4,8 +4,8 @@ import type { Settings } from '#cli/types/settings/file.ts';
 import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
+import { type Level, type Configuration } from '#cli/types/configurations.ts';
 import { type SelectorGroup, type SelectorPaths } from '#cli/types/generation/eslint.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
@@ -92,7 +92,7 @@ export function buildSelectorGroups(
     return scopes.flatMap((scope) => {
         const prefix = scope.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
         const declarations = scope.configurations.flatMap((configuration) =>
-            level === 'all' ? configuration.eslint.selectors : [],
+            configuration.eslint.selectors.filter((selector) => level === 'all' || selector.level === 'recommended'),
         );
         const applied: SelectorPaths[] = [
             ...new Map(declarations.map((declaration) => [declaration.selector, declaration])).values(),

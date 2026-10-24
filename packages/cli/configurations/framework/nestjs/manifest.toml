@@ -1,5 +1,5 @@
 [configuration]
-description = "NestJS services: the compiler options that decorators need, correct providers, routes, and DTOs, and no circular modules."
+description = "NestJS services: the compiler options that decorators need, correct providers, routes, and DTOs."
 requires = ["typescript"]
 title = "NestJS"
 
@@ -30,6 +30,7 @@ reason = "A Nest module is an empty decorated class that registers providers and
 rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
 
 [[eslint.selectors]]
+level = "all"
 message = "forwardRef hides a cycle between two modules that import each other. Move what both need into a third module."
 selector = "CallExpression[callee.name='forwardRef']"
 

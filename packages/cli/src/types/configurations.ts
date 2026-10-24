@@ -38,7 +38,7 @@ export type ParsedManifest = {
     defaults: Record<string, JsonValue>;
     eslint: {
         all_level_rules: Set<string>;
-        selectors: { selector: string; message: string; paths_setting?: string | undefined }[];
+        selectors: { selector: string; message: string; level: Level; paths_setting?: string | undefined }[];
         rules_off: { rules: string[]; reason: string; files?: string[] | undefined }[];
         required_tools: string[];
     };

@@ -9,13 +9,6 @@ import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.t
 import { writtenNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
 import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/configurations/manifest.ts';
 
-import type {
-    ConfigFile,
-    ParsedCheck,
-    ParsedManifest,
-    ConditionFields,
-    GeneratorOutput,
-} from '#cli/types/configurations.ts';
 import {
     GROUPS,
     CHECK_RUNS,
@@ -23,6 +16,13 @@ import {
     CHECK_WORKING_FOLDERS,
     SHIPPED_CONFIG_FILES_FOLDER,
 } from '#cli/config/configurations/names.ts';
+import {
+    type ConfigFile,
+    type ParsedCheck,
+    type ParsedManifest,
+    type ConditionFields,
+    type GeneratorOutput,
+} from '#cli/types/configurations.ts';
 import {
     levelSchema,
     regexSchema,
@@ -48,6 +48,7 @@ const filesSchema = z.strictObject({
 } satisfies SchemaShape<ParsedManifest['files']>);
 
 const selectorSchema = z.strictObject({
+    level: levelSchema.default('recommended'),
     selector: z.string().min(1),
     message: z.string().min(1),
     paths_setting: z.string().min(1).optional(),

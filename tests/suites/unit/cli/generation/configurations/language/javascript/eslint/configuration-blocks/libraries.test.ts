@@ -165,7 +165,7 @@ test.each([...LEVELS])(
         const eslint = await createEslint(sandbox.path);
         for (const file of [...checked, ...unchecked]) {
             expect(await listLintFindings(eslint, sandbox.path, [file], ['no-restricted-syntax']), file).toStrictEqual(
-                level === 'all' && checked.has(file) ? [{ file, rule: 'no-restricted-syntax', line: 1 }] : [],
+                checked.has(file) ? [{ file, rule: 'no-restricted-syntax', line: 1 }] : [],
             );
         }
     },

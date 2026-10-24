@@ -120,7 +120,8 @@ test.each([...LEVELS])(
                 const { aliasImport, responseMessage, logMessage } = EXPRESS_SAMPLE_LINES;
                 const elevated =
                     file === 'source.js' ? [aliasImport, logMessage] : [aliasImport, responseMessage, logMessage];
-                const lines = level === 'all' ? elevated : [aliasImport];
+                const recommended = file === 'source.js' ? [aliasImport] : [aliasImport, responseMessage];
+                const lines = level === 'all' ? elevated : recommended;
                 return lines.map((line) => ({ file, rule: 'no-restricted-syntax', line }));
             })
             .toSorted((left, right) => left.file.localeCompare(right.file) || left.line - right.line);

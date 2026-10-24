@@ -39,36 +39,24 @@ test('a block that stands alone is reported at the top of a file and inside a fu
             .map(({ line }) => line),
     ).toStrictEqual([2, 6]);
 });
-test.each([...LEVELS])(
-    'React Native and react-hook-form syntax selectors report only at level all (%s)',
-    async (level) => {
-        await using sandbox = await testdir({
-            ...SELECTOR_FILES,
-            'gspot.toml': buildSandboxSettings(['javascript'], {
-                level,
-                rules: true,
-                scopes: [
-                    { path: 'native', configurations: ['react-native'] },
-                    { path: 'forms', configurations: ['react', 'react-hook-form'] },
-                ],
-            }),
-        });
+test.each([...LEVELS])('form validation and list security run at both levels (%s)', async (level) => {
+    await using sandbox = await testdir({
+        ...SELECTOR_FILES,
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level,
+            rules: true,
+            scopes: [
+                { path: 'native', configurations: ['react-native'] },
+                { path: 'forms', configurations: ['react', 'react-hook-form'] },
+            ],
+        }),
+    });
 
-        const eslint = await createEslint(sandbox.path);
-        expect(
-            await listLintFindings(
-                eslint,
-                sandbox.path,
-                ['native/App.jsx', 'forms/Fields.jsx'],
-                ['no-restricted-syntax'],
-            ),
-        ).toStrictEqual(
-            level === 'all'
-                ? [
-                      { file: 'forms/Fields.jsx', rule: 'no-restricted-syntax', line: 3 },
-                      { file: 'native/App.jsx', rule: 'no-restricted-syntax', line: 2 },
-                  ]
-                : [],
-        );
-    },
-);
+    const eslint = await createEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, ['native/App.jsx', 'forms/Fields.jsx'], ['no-restricted-syntax']),
+    ).toStrictEqual([
+        { file: 'forms/Fields.jsx', rule: 'no-restricted-syntax', line: 3 },
+        { file: 'native/App.jsx', rule: 'no-restricted-syntax', line: 2 },
+    ]);
+});
