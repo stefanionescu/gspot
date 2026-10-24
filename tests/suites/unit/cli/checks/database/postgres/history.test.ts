@@ -11,6 +11,27 @@ import { readMigrations } from '#cli/checks/database/postgres/migrations.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { TEAMS_TABLE_SQL, TEAMS_MIGRATION_PATH } from '#tests/config/checks/database/postgres/history.ts';
 
+test('history checks compare committed migration changes with the selected base revision', async () => {
+    await using sandbox = await prepareTeamsHistory();
+    const base = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
+    await createFileTree(sandbox.path, {
+        [TEAMS_MIGRATION_PATH]: TEAMS_TABLE_SQL + 'ALTER TABLE teams ADD COLUMN name text;\n',
+        'migrations/20240101_early.sql': 'SELECT 1;\n',
+    });
+    commitAll(sandbox.path, 'edit');
+    const session = await openSession(sandbox.path);
+    const edited = planSandboxCheck(session, 'postgres/edited-migrations');
+    expect(await findBuiltInCheck('postgres/edited-migrations')(session, edited)).toStrictEqual([]);
+    expect(await findBuiltInCheck('postgres/edited-migrations')(session, { ...edited, base })).toMatchObject([
+        { file: TEAMS_MIGRATION_PATH, rule: 'frozen' },
+    ]);
+    const order = planSandboxCheck(session, 'postgres/migration-order');
+    expect(await findBuiltInCheck('postgres/migration-order')(session, order)).toStrictEqual([]);
+    expect(await findBuiltInCheck('postgres/migration-order')(session, { ...order, base })).toMatchObject([
+        { file: 'migrations/20240101_early.sql', rule: 'order' },
+    ]);
+});
+
 test('history: edited-migrations reports an edited committed migration and passes after the edit is undone', async () => {
     await using sandbox = await prepareTeamsHistory();
     await writeFile(

@@ -7,16 +7,22 @@ import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { SYMLINK_MODE, GITLINK_MODE } from '#cli/config/files/modes.ts';
 import { FROZEN_NONE } from '#cli/config/parsers/code/sql/migrations.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
-import { readBlobs, listHeadFiles } from '#cli/repository/revisions/files.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/database/postgres/migrations.ts';
+import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { readMigrations, readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 const COMMITTED_MIGRATIONS = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
-async function readCommittedMigrations(session: Session, paths: string[]): Promise<Map<string, string>> {
-    return getCachedMapValue(session.reads, COMMITTED_MIGRATIONS, JSON.stringify(paths), async () => {
-        if (!session.repository.hasGit) return new Map<string, string>();
-        const committed = await listHeadFiles(session.root, session.cancelSignal);
+async function readCommittedMigrations(
+    session: Session,
+    paths: string[],
+    revision: string,
+): Promise<Map<string, string>> {
+    if (!session.repository.hasGit) return new Map<string, string>();
+    const commit = revision === 'HEAD' ? await readHead(session.root, session.cancelSignal) : revision;
+    if (commit === undefined) return new Map<string, string>();
+    return getCachedMapValue(session.reads, COMMITTED_MIGRATIONS, `${commit}\0${JSON.stringify(paths)}`, async () => {
+        const committed = await listRevisionFiles(session.root, { kind: 'commit', hash: commit }, session.cancelSignal);
         const selected = new Set(paths);
         const files = committed.filter(
             (file) => selected.has(file.path) && file.mode !== SYMLINK_MODE && file.mode !== GITLINK_MODE,
@@ -72,6 +78,7 @@ export async function checkPostgresMigrationOrder(session: Session, planned: Pla
     const texts = await readCommittedMigrations(
         session,
         migrations.map((migration) => migration.path),
+        planned.base ?? 'HEAD',
     );
     const committed = migrations.filter((migration) => texts.has(migration.path));
     const newest = committed.at(-1);
@@ -110,6 +117,7 @@ export async function checkPostgresEditedMigrations(session: Session, planned: P
     const texts = await readCommittedMigrations(
         session,
         migrations.map((migration) => migration.path),
+        planned.base ?? 'HEAD',
     );
     const frozen = selectFrozenMigrations(
         migrations.map((migration) => migration.path),
