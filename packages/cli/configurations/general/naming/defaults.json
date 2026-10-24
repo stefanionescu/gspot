@@ -28,8 +28,7 @@
                 "processor",
                 "wrapper",
                 "shim",
-                "shims",
-                "support"
+                "shims"
             ]
         },
         "marketing": {
@@ -98,7 +97,7 @@
             ]
         },
         "folders": {
-            "terms": ["shared"]
+            "terms": ["shared", "support"]
         }
     },
     "reserved": {
@@ -411,5 +410,5 @@
             "category": "folders"
         }
     ],
-    "allowed_phrases": ["package manager"]
+    "allowed_phrases": ["package manager", "news"]
 }

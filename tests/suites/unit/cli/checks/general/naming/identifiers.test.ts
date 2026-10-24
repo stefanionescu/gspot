@@ -181,3 +181,16 @@ test('React component variables may take PascalCase, and destructured names keep
         { file: 'context.ts', line: 7, rule: 'case' },
     ]);
 });
+
+test('domain names customer, news and supported pass while whole banned terms are reported', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { level: 'all' }),
+        'orders.js':
+            'export const customerId = 1;\nexport const newsFeed = 1;\nexport const supportedLocales = [];\nexport const finalScore = 1;\nexport const objectStore = {};\n',
+    });
+    const checked = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+    expect(checked.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
+        { line: 4, rule: 'banned-word' },
+        { line: 5, rule: 'banned-word' },
+    ]);
+});

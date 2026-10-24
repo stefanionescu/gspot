@@ -16,7 +16,7 @@ export const BANNED_WORD_FORMS: Readonly<Record<string, readonly string[]>> = {
 
 export const WORD_FORM_CONSONANT = /[aeiou][bcdfghjklmnpqrstvwxyz]$/u;
 
-export const WORD_FORM_SUFFIXES = ['s', 'es', 'ed', 'ing', 'ings', 'er', 'ers'] as const;
+export const WORD_FORM_SUFFIXES = ['s', 'es', 'ed', 'ing', 'ings'] as const;
 
 export const DIGIT_RUNS = /\d+/gu;
 
