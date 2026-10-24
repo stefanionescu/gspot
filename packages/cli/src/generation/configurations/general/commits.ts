@@ -1,6 +1,7 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { getTable, listIgnoredRules } from '#cli/settings/scopes.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
+import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
 
 import {
     COMMITLINT_RULES,
@@ -31,8 +32,14 @@ export function buildCommitlintFile(planned: PlannedConfigFile): string {
         rules['scope-enum'] = [COMMITLINT_ERROR_SEVERITY, 'always', allowed];
         rules['scope-case'] = [0];
     }
-    for (const [name, value] of Object.entries(getTable(planned.scope.settings, 'tools.commitlint').rules))
-        if (rules[name]?.[0] !== 0) rules[name] = [COMMITLINT_ERROR_SEVERITY, ...value];
+    const chosen = getTable(planned.scope.settings, 'tools.commitlint').rules;
+    const running = new Set(
+        Object.entries(rules)
+            .filter(([, value]) => value[0] !== 0)
+            .map(([name]) => name),
+    );
+    assertRuleOptionsRun({ chosen: Object.keys(chosen), running, higher: new Set<string>(), level: planned.level });
+    for (const [name, value] of Object.entries(chosen)) rules[name] = [COMMITLINT_ERROR_SEVERITY, ...value];
     for (const name of listIgnoredRules(planned.scope, 'commits/commitlint')) rules[name] = [0];
     return JSON.stringify({ parserPreset: COMMITLINT_PARSER_PRESET, rules }, null, JSON_INDENT);
 }
