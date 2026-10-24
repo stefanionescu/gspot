@@ -3,6 +3,8 @@ import { parseTomlText } from '#cli/settings/file.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import type { SettingsEditContext } from '#cli/types/apply.ts';
+import { buildRepositoryPath } from '#cli/repository/scopes.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
@@ -134,16 +136,11 @@ function assertReasonCoversList({ options, setting, change, previous, shippedDef
         );
 }
 
-async function runSetCommand(options: SetOptions): Promise<CommandResult> {
-    if (Object.hasOwn(listRecordFields(), options.key))
-        throw new GspotError(
-            'arguments',
-            options.key === 'ignore'
-                ? 'Run gspot ignore <check> --reason "<why>" to add an ignore.'
-                : `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
-        );
-    const edit = prepareSettingsEdit(options.cwd);
-    const { root, input, settings } = edit;
+async function readSettingChange(
+    edit: SettingsEditContext,
+    options: SetOptions,
+): Promise<{ setting: Setting; change: ParsedSettingValue; summary: string }> {
+    const { settings } = edit;
     const { available: availableSettings, match } = await readSetting(edit, options.key, options.scope);
     const setting = match.setting;
     const change =
@@ -157,6 +154,21 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
         options,
         previous,
     });
+    return { setting, change, summary };
+}
+
+async function runSetCommand(options: SetOptions): Promise<CommandResult> {
+    if (Object.hasOwn(listRecordFields(), options.key))
+        throw new GspotError(
+            'arguments',
+            options.key === 'ignore'
+                ? 'Run gspot ignore <check> --reason "<why>" to add an ignore.'
+                : `Write [[${options.key}]] by hand in gspot.toml. Record lists have their own fields.`,
+        );
+    const edit = prepareSettingsEdit(options.cwd);
+    if (options.scope !== undefined) options.scope = buildRepositoryPath(edit.root, options.cwd, options.scope);
+    const { root, input } = edit;
+    const { setting, change, summary } = await readSettingChange(edit, options);
     try {
         editSetting(input.table, change, setting, options);
         return await applySettingsEdit(root, { edit: input, summary });

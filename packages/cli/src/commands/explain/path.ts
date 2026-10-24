@@ -2,10 +2,10 @@ import { GspotError } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
-import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
+import { findScopeFolder, buildRepositoryPath } from '#cli/repository/scopes.ts';
 import { type Explanation, type PathExplanation } from '#cli/types/commands/explain.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | undefined {
@@ -85,15 +85,17 @@ function formatPathExplanation(report: PathExplanation): string {
  *
  * @param session the repository, or undefined outside a configured one.
  * @param subject the file path, or what else the user typed.
+ * @param cwd the folder where the command starts.
  * @returns the file explanation, or undefined for another subject.
  * @throws GspotError when a named path does not exist.
  */
-export function explainPath(session: Session | undefined, subject: string): Explanation | undefined {
+export function explainPath(session: Session | undefined, subject: string, cwd: string): Explanation | undefined {
     if (session === undefined) return undefined;
-    const path = subject.startsWith('./') ? subject.slice('./'.length) : subject;
+    const path = buildRepositoryPath(session.root, cwd, subject);
     const file = session.repository.files.find((each) => each.path === path);
     if (file === undefined) {
-        if (subject.startsWith('./')) throw new GspotError('arguments', `${path} is not a file in this repository.`);
+        if (subject.startsWith('./') || subject.startsWith('../'))
+            throw new GspotError('arguments', `${path} is not a file in this repository.`);
         return undefined;
     }
     const report = buildPathExplanation(session, file);

@@ -3,6 +3,7 @@ import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { buildRepositoryPath } from '#cli/repository/scopes.ts';
 import type { UnsetOptions } from '#cli/types/commands/unset.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
@@ -20,6 +21,7 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { key, keys } = options;
 
     const edit = prepareSettingsEdit(options.cwd);
+    if (options.scope !== undefined) options.scope = buildRepositoryPath(edit.root, options.cwd, options.scope);
     const { root, input } = edit;
     const { match } = await readSetting(edit, key, options.scope);
 

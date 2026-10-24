@@ -1,5 +1,5 @@
+import { resolve } from 'node:path';
 import { addAbortSignal } from 'node:stream';
-import { resolve, relative } from 'node:path';
 import { constants, accessSync } from 'node:fs';
 import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -13,6 +13,7 @@ import type { CheckProgress } from '#cli/types/runs/run.ts';
 import { printProgress } from '#cli/commands/check/report.ts';
 import { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import { runCancelableCommand } from '#cli/system/terminal.ts';
+import { buildRepositoryPath } from '#cli/repository/scopes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { readStagedPaths } from '#cli/repository/revisions/changes.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
@@ -169,7 +170,7 @@ async function checkStaged(
 ): Promise<CommandResult<CheckCommandJson>> {
     const staged = await readStagedPaths(root, cancelSignal);
     using copy = await copyRevision(root, { kind: 'index' }, cancelSignal);
-    const paths = options.paths.map((path) => relative(root, resolve(options.cwd, path)));
+    const paths = options.paths.map((path) => buildRepositoryPath(root, options.cwd, path));
     return await checkTree(copy.root, { ...options, cwd: copy.root, paths }, cancelSignal, {
         content: 'index',
         cwd: options.cwd,

@@ -64,7 +64,7 @@ async function runExplainCommand(cwd: string, subject: string): Promise<CommandR
 
     const session = findText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
 
-    const result = explain(session, subject);
+    const result = explain(session, subject, cwd);
     return {
         text: result.text,
         json: { ...result.data, kind: result.kind, subject: result.subject },
@@ -72,9 +72,9 @@ async function runExplainCommand(cwd: string, subject: string): Promise<CommandR
     };
 }
 
-function explain(session: Session | undefined, subject: string): Explanation {
-    const file = explainPath(session, subject);
-    if (file !== undefined && subject.startsWith('./')) return file;
+function explain(session: Session | undefined, subject: string, cwd: string): Explanation {
+    const file = explainPath(session, subject, cwd);
+    if (file !== undefined && (subject.startsWith('./') || subject.startsWith('../'))) return file;
     let explanation: Explanation | undefined;
     if (subject.includes('/')) explanation = explainSlashed(session, subject, file);
     else if (subject.includes('.')) explanation = explainSetting(session, subject);

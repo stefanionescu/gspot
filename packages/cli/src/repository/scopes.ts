@@ -1,6 +1,9 @@
+import { resolve, relative } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { LINT_FOLDERS } from '#cli/config/repository/setup/tools.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
@@ -9,6 +12,20 @@ import { ROOT_SCOPE, EVERY_FILE_GLOBS } from '#cli/config/repository/scopes.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/tracked.ts';
 import { GLOB_EXCLUDE, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
+
+/**
+ * Build a command path from its calling folder within the repository.
+ *
+ * @param root the folder that bounds command paths.
+ * @param cwd the folder where the command starts.
+ * @param subject the path as typed.
+ * @returns the repository-relative path with forward slashes.
+ */
+export function buildRepositoryPath(root: string, cwd: string, subject: string): string {
+    const path = convertToPosixPath(relative(root, resolve(cwd, subject)));
+    if (!isInside(path)) throw new GspotError('arguments', `Path ${subject} is outside this repository.`);
+    return path;
+}
 
 /**
  * Test scope containment. The empty root path matches every file.

@@ -1,9 +1,7 @@
 import { openSession } from '#cli/session.ts';
-import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { getColors } from '#cli/system/terminal.ts';
 import type { Session } from '#cli/types/session.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { readHookStatus } from '#cli/install/hooks.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
@@ -12,10 +10,10 @@ import { findSettingsSkip } from '#cli/planning/skips.ts';
 import type { StageFilter } from '#cli/types/planning.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import type { RunReport, RunOptions } from '#cli/types/runs/run.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
+import { isInScope, buildRepositoryPath } from '#cli/repository/scopes.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
@@ -69,8 +67,7 @@ function buildComparison(
 }
 
 function listMatchingFiles(session: Session, cwd: string, path: string, files: string[]): string[] {
-    const selector = convertToPosixPath(relative(session.root, resolve(cwd, path)));
-    if (!isInside(selector)) throw new GspotError('arguments', `Path ${path} is outside this repository.`);
+    const selector = buildRepositoryPath(session.root, cwd, path);
     const matches = files.filter((file) => isInScope(file, selector));
     if (matches.length === 0) throw new GspotError('arguments', `Path ${path} matches no repository files.`);
     return matches;

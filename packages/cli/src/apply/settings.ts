@@ -11,6 +11,7 @@ import { selectForScope } from '#cli/settings/scopes.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { buildRepositoryPath } from '#cli/repository/scopes.ts';
 import type { SettingsEdit } from '#cli/types/settings/edits.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
@@ -93,6 +94,7 @@ export function prepareConfigurationEdit(options: ConfigurationsOptions): {
     configurations: Map<string, Configuration>;
 } {
     const edit = prepareSettingsEdit(options.cwd);
+    if (options.scope !== undefined) options.scope = buildRepositoryPath(edit.root, options.cwd, options.scope);
     const configurations = readConfigurations();
     assertConfigurationsExist(options.configurations, configurations);
     assertConfigurationsEditable(options.configurations, configurations);

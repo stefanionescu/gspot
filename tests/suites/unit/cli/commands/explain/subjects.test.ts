@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { unlink, writeFile } from 'node:fs/promises';
 import { getTool } from '#cli/configurations/tools.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -81,6 +81,22 @@ test('a configuration name stays a name, and a tracked or ./ path explains the f
     const tracked = await runGspot(sandbox.path, ['explain', 'shellcheck/run.sh', '--json']);
     expect(tracked.code, tracked.stdout + tracked.stderr).toBe(0);
     expect(JSON.parse(tracked.stdout)).toMatchObject({ kind: 'path', subject: 'shellcheck/run.sh' });
+});
+
+test.each(['run.sh', './run.sh', '../src/run.sh'])('explain resolves %s from its calling folder', async (subject) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'run.sh': 'printf "root\\n"\n',
+        'src/run.sh': 'printf "source\\n"\n',
+    });
+    const cwd = join(sandbox.path, 'src');
+    const before = await runGspot(cwd, ['explain', subject, '--json']);
+    expect(before.code, before.stdout + before.stderr).toBe(0);
+    expect(JSON.parse(before.stdout)).toMatchObject({ kind: 'path', subject: 'src/run.sh', path: 'src/run.sh' });
+    await unlink(join(sandbox.path, 'run.sh'));
+    const after = await runGspot(cwd, ['explain', subject, '--json']);
+    expect(after.code, after.stdout + after.stderr).toBe(0);
+    expect(JSON.parse(after.stdout)).toStrictEqual(JSON.parse(before.stdout));
 });
 test('a file path reports its scope, checks, and ignores', async () => {
     await using sandbox = await testdir({
