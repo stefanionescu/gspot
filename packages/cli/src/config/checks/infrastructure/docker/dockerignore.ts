@@ -12,3 +12,5 @@ export const IGNORE_PATTERN_FORMS = [
 ] as const;
 
 export const DOCKERIGNORE = '.dockerignore';
+
+export const EXCLUDE_ALL_LINES: ReadonlySet<string> = new Set(['*', '**', '**/*']);

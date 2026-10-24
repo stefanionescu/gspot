@@ -1,5 +1,15 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
+export const DOCKERIGNORE_ALLOWLISTS = [
+    { text: '*\n', missing: [] },
+    { text: '**\n', missing: [] },
+    { text: '**/*\n', missing: [] },
+    { text: '*\n!src\n', missing: ['**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'] },
+    { text: '*\n!src\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n', missing: [] },
+    { text: '!src\n*\n', missing: [] },
+    { text: '*\n!.env\n', missing: ['.env', '**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'] },
+] as const;
+
 export const DOCKERIGNORE_CASES = [
     {
         name: 'each scope lists the folders of its own configurations',

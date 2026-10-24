@@ -12,9 +12,23 @@ import { DOCKERFILE_NAME, DOCKERFILE_EXTENSION } from '#cli/config/repository/fi
 import {
     DOCKERIGNORE,
     EDGE_SLASHES,
+    EXCLUDE_ALL_LINES,
     IGNORE_PATTERN_FORMS,
     DOCKERIGNORE_PATTERNS,
 } from '#cli/config/checks/infrastructure/docker/dockerignore.ts';
+
+function listMissingPatterns(required: string[], text: string): string[] {
+    const lines = text.split('\n').map((line) => line.trim().replaceAll(EDGE_SLASHES, ''));
+    const last = lines.findLastIndex((line) => EXCLUDE_ALL_LINES.has(line));
+    const after = lines.slice(last + 1);
+    return required.filter((pattern) => {
+        if (IGNORE_PATTERN_FORMS.some(([prefix, suffix]) => lines.includes(`${prefix}${pattern}${suffix}`)))
+            return false;
+        if (last < 0) return true;
+        if (!after.some((line) => line.startsWith('!'))) return false;
+        return pattern.startsWith('**/') || after.includes(`!${pattern}`);
+    });
+}
 
 /**
  * Reports each Dockerfile with no ignore file, or with one that misses a required pattern.
@@ -62,10 +76,7 @@ export function checkDockerignore(session: Session, planned: PlannedCheck): Find
                         `Add an ignore file at ${paths.join(' or ')} that lists ${required.join(', ')}.`,
                     ),
                 ];
-            const lines = new Set(ignore.text.split('\n').map((line) => line.trim().replaceAll(EDGE_SLASHES, '')));
-            const missing = required.filter((pattern) =>
-                IGNORE_PATTERN_FORMS.every(([prefix, suffix]) => !lines.has(`${prefix}${pattern}${suffix}`)),
-            );
+            const missing = listMissingPatterns(required, ignore.text);
             return missing.length === 0
                 ? []
                 : [
