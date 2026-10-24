@@ -1,10 +1,11 @@
 import { createRule } from '../create-rule.ts';
 import type { ClientEnvOptions } from '../types/rules.ts';
-import { PUBLIC_PREFIXES, CLIENT_DIRECTIVE } from '../config/nextjs.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     OPTIONS_SCHEMA,
+    PUBLIC_PREFIXES,
+    CLIENT_DIRECTIVE,
     ENVIRONMENT_HOSTS,
     ENVIRONMENT_PROPERTY,
     VITE_ENVIRONMENT_NAMES,

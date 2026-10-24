@@ -1,18 +1,18 @@
 import { createRule } from '../create-rule.ts';
+import { TYPE_ONLY } from '../config/syntax.ts';
 import type { ImplementedFunction } from '../types/syntax.ts';
 import type { TrivialFunctionsOptions } from '../types/rules.ts';
-import { OPTIONS_SCHEMA } from '../config/rules/no-trivial-functions.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { unwrap, countStatements, findOutermostValue } from '../syntax.ts';
 
 import {
-    TYPE_ONLY,
+    OPTIONS_SCHEMA,
     FUNCTION_SELECTOR,
     PASSED_VALUE_TYPES,
     INLINE_VALUE_PARENTS,
     FUNCTION_MEMBER_PARENTS,
     TRIVIAL_FUNCTION_STATEMENTS,
-} from '../config/syntax.ts';
+} from '../config/rules/no-trivial-functions.ts';
 
 function isInlineValue(node: ImplementedFunction): boolean {
     if (FUNCTION_MEMBER_PARENTS.has(node.parent.type)) return true;

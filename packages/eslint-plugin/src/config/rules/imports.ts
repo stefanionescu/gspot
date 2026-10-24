@@ -10,4 +10,6 @@ export const INDEX_BASENAMES = new Set([
     'index.cts',
 ]);
 
-export const TRAILING_SLASH = /\/$/u;
+export const IMPORT_SELECTOR = 'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression';
+
+export const RELATIVE_PREFIXES = ['./', '../'] as const;

@@ -28,3 +28,7 @@ export const OPTIONS_SCHEMA = {
     },
     additionalProperties: false,
 } satisfies JSONSchema4;
+
+export const PUBLIC_PREFIXES = ['NEXT_PUBLIC_'] as const;
+
+export const CLIENT_DIRECTIVE = 'use client';

@@ -3,6 +3,7 @@ import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescr
 
 import {
     TYPE_ONLY,
+    DRIVE_LETTER,
     FUNCTION_TYPES,
     UNWRAPPABLE_NODES,
     EXECUTABLE_DECLARATIONS,
@@ -78,8 +79,6 @@ export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope)
     while (value?.type === AST_NODE_TYPES.MemberExpression && !value.computed) value = unwrap(value.object);
     return value?.type === AST_NODE_TYPES.Identifier && (ASTUtils.findVariable(scope, value)?.defs.length ?? 0) > 0;
 }
-
-const DRIVE_LETTER = /^[a-z]:/u;
 
 /**
 Normalize separators and drive casing before comparing repository paths.

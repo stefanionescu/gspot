@@ -2,14 +2,12 @@ import { posix } from 'node:path';
 import picomatch from 'picomatch';
 import { createRule } from '../create-rule.ts';
 import { convertToPosixPath } from '../syntax.ts';
-import { TRAILING_SLASH } from '../config/paths.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
-import { IMPORT_SELECTOR } from '../config/syntax.ts';
 import type { ImportSource } from '../types/syntax.ts';
-import { QUERY, OPTIONS_SCHEMA } from '../config/rules/import-boundaries.ts';
 import type { RuleContext, ImportBoundariesOptions } from '../types/rules.ts';
-import { RELATIVE_PREFIXES, DEFAULT_BOUNDARY_FOLDERS } from '../config/imports.ts';
+import { IMPORT_SELECTOR, RELATIVE_PREFIXES } from '../config/rules/imports.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { QUERY, TRAILING_SLASH, OPTIONS_SCHEMA, DEFAULT_BOUNDARY_FOLDERS } from '../config/rules/import-boundaries.ts';
 
 function getLintedPath(context: RuleContext): string | undefined {
     const absolute = convertToPosixPath(context.physicalFilename);

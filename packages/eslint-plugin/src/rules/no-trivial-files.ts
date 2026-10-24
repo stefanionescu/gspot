@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { createRule } from '../create-rule.ts';
-import { INDEX_BASENAMES } from '../config/paths.ts';
 import { isAlias, convertToPosixPath } from '../syntax.ts';
+import { INDEX_BASENAMES } from '../config/rules/imports.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
 import { OPTIONS_SCHEMA } from '../config/rules/no-trivial-files.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

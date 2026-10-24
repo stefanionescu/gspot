@@ -25,3 +25,7 @@ export const OPTIONS_SCHEMA = {
 } satisfies JSONSchema4;
 
 export const QUERY = /\?[\s\S]*/u;
+
+export const DEFAULT_BOUNDARY_FOLDERS = ['*/*'] as const;
+
+export const TRAILING_SLASH = /\/$/u;

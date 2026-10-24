@@ -1,6 +1,6 @@
 import { createRule } from '../create-rule.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { SERVER_DIRECTIVE, SERVER_ONLY_MODULE } from '../config/nextjs.ts';
+import { SERVER_DIRECTIVE, SERVER_ONLY_MODULE } from '../config/rules/require-server-only.ts';
 
 export const requireServerOnly = createRule<[], 'missing'>({
     name: 'require-server-only',
