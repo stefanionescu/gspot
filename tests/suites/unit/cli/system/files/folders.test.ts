@@ -52,17 +52,15 @@ test('a glob includes dot files and honors exclusions and brace patterns', async
     ).toStrictEqual(['src/a.ts', 'src/nested/.inner/b.ts']);
 });
 
-test.skipIf(isWindows)('a glob lists links as files and never enters them', async () => {
+test.skipIf(isWindows)('a glob excludes file, folder, broken, and cyclic links', async () => {
     await using sandbox = await testdir({ 'src/a.ts': '', 'src/deep/b.ts': '', 'src/.hidden/c.ts': '' });
 
     await symlink('src', join(sandbox.path, 'alias'), 'dir');
     await symlink('missing', join(sandbox.path, 'broken.ts'));
+    await symlink('src/a.ts', join(sandbox.path, 'link.ts'));
     await symlink('..', join(sandbox.path, 'src/.loop'), 'dir');
     expect(
         listMatchingPaths(sandbox.path, '*/*.ts').toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['src/a.ts']);
-    expect(listMatchingPaths(sandbox.path, '*').toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        'alias',
-        'broken.ts',
-    ]);
+    expect(listMatchingPaths(sandbox.path, '*')).toStrictEqual([]);
 });

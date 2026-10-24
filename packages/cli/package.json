@@ -66,6 +66,7 @@
         "spdx-expression-parse": "5.0.0",
         "spdx-satisfies": "6.0.0",
         "std-env": "4.2.0",
+        "tinyglobby": "0.2.17",
         "typescript": "5.9.3",
         "unist-util-visit": "5.1.0",
         "web-tree-sitter": "0.27.0",

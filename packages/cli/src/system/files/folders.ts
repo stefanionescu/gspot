@@ -1,13 +1,21 @@
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import picomatch from 'picomatch';
-import { join, relative } from 'node:path';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { openFiles, walkFiles } from '#cli/system/files/open.ts';
+import { globSync } from 'tinyglobby';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
 import { PARENT_SEGMENT } from '#cli/config/system/files/folders.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
-import { DRIVE_LETTER, GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
+import { DRIVE_LETTER, GLOB_EXCLUDE } from '#cli/config/files/path-patterns.ts';
+
+function hasSymlinkPrefix(folder: string, pattern: string): boolean {
+    const { base } = picomatch.scan(pattern);
+    const segments = base.split('/').filter((segment) => segment !== '' && segment !== '.');
+    return segments.some(
+        (_, index) =>
+            lstatSync(join(folder, ...segments.slice(0, index + 1)), { throwIfNoEntry: false })?.isSymbolicLink() ===
+            true,
+    );
+}
 
 function assertInsideFolder(pattern: string): void {
     const bare = pattern.startsWith(GLOB_EXCLUDE) ? pattern.slice(1) : pattern;
@@ -41,49 +49,13 @@ export function createTemporaryFolder(): TemporaryFolder {
 export function listMatchingPaths(folder: string, patterns: string | string[]): string[] {
     const list = [patterns].flat();
     for (const pattern of list) assertInsideFolder(pattern);
-    const positive = list.filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE));
+    const positive = list.filter((pattern) => !pattern.startsWith(GLOB_EXCLUDE) && !hasSymlinkPrefix(folder, pattern));
     const excluded = list.filter((pattern) => pattern.startsWith(GLOB_EXCLUDE)).map((pattern) => pattern.slice(1));
-    const matches = buildPathMatcher(list);
-    const isPruned = buildPathMatcher(
-        excluded
-            .filter((pattern) => pattern.endsWith(FOLDER_CONTENTS))
-            .map((pattern) => pattern.slice(0, -FOLDER_CONTENTS.length)),
-    );
-    const found = new Set<string>();
-    const addMatchedFile = (absolute: string): void => {
-        const file = convertToPosixPath(relative(folder, absolute));
-        if (matches(file)) found.add(file);
-    };
-    const roots = positive.values().flatMap((pattern) => {
-        const { base, glob } = picomatch.scan(pattern);
-        const segments = base.split('/').filter((segment) => segment !== '' && segment !== '.');
-        if (
-            segments.some(
-                (_, index) =>
-                    lstatSync(join(folder, ...segments.slice(0, index + 1)), {
-                        throwIfNoEntry: false,
-                    })?.isSymbolicLink() === true,
-            )
-        )
-            return [];
-        const path = join(folder, base);
-        const stat = lstatSync(path, { throwIfNoEntry: false });
-        if (stat === undefined) return [];
-        if (!stat.isDirectory()) return glob === '' ? [{ path, isFolder: false }] : [];
-        return isPruned(base) ? [] : [{ path, isFolder: true }];
+    return globSync(positive, {
+        cwd: folder,
+        dot: true,
+        ignore: excluded,
+        followSymbolicLinks: false,
+        expandDirectories: false,
     });
-    for (const { path: start, isFolder } of roots) {
-        if (!isFolder) {
-            addMatchedFile(start);
-            continue;
-        }
-        using files = openFiles(start);
-        walkFiles(files, '', (path) => {
-            const absolute = join(start, path);
-            if (lstatSync(absolute).isDirectory()) return !isPruned(convertToPosixPath(relative(folder, absolute)));
-            addMatchedFile(absolute);
-            return false;
-        });
-    }
-    return [...found];
 }
