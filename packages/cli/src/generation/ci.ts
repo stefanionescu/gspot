@@ -55,7 +55,7 @@ function buildActionPin({ name, sha, version }: ActionPin): Scalar {
 
 function buildGspotCommand(pipeline: Pipeline): string {
     const { packageManager } = pipeline;
-    const tools = [CI_NODE, `npm:${cliPackage.name}@${pipeline.version}`];
+    const tools = [CI_NODE, `npm:${cliPackage.name}[allow_low_downloads=true]@${pipeline.version}`];
     if (packageManager !== undefined && packageManager.name !== 'npm')
         tools.push(`${packageManager.name}@${packageManager.version}`);
     return `mise exec ${tools.map((tool) => quoteArgument(tool)).join(' ')} -- gspot`;

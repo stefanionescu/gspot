@@ -76,15 +76,19 @@ test('the Slow checks step names every slow check in one comma list', async () =
     await using resources = new AsyncDisposableStack();
     const pipeline = await buildPipeline(resources);
     expect(pipeline.manualChecks.map(({ check }) => check.id)).toStrictEqual(['docs/lychee-external', 'project/audit']);
-    const cli = `npm:@gspothq/cli@${pipeline.version}`;
+    const cli = `npm:@gspothq/cli[allow_low_downloads=true]@${pipeline.version}`;
     const command = `mise exec ${quoteArgument(CI_NODE)} ${quoteArgument(cli)} -- gspot`;
     const expected = `${command} check --only ${quoteArgument('docs/lychee-external,project/audit')}`;
     const steps = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps;
+    expect(steps.find((step) => step.name === 'Install gspot tools')?.run).toBe(`${command} install`);
     expect(steps.find((step) => step.name === 'Slow checks')?.run).toBe(
         `(cd ${DOT_GSPOT} && mise install lychee)\n${expected}\n`,
     );
     expect(steps.find((step) => step.name === 'Lint')?.run).toBe(`${command} check --changed "\${GSPOT_CI_BASE}"\n`);
     expect(buildGitlabWorkflow(pipeline).content).toContain(expected);
+    expect((parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script).toContain(
+        `${command} install`,
+    );
 });
 
 test('pushes run the job on the default branch only, and the slow checks only on those pushes', async () => {

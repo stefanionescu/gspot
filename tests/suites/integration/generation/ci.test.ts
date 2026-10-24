@@ -1,15 +1,16 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import type { CiDocument } from '#tests/types/ci.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessOutput } from '#tests/types/processes.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { CLI_BIN, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { type CiDocument, type GithubWorkflow } from '#tests/types/ci.ts';
 import { CI_SETTINGS, GITHUB_PIPELINE, GITLAB_PIPELINE } from '#tests/config/integration/generation/ci.ts';
 
 async function prepareCiProject(root: string, provider: 'gitlab' | 'github') {
@@ -55,7 +56,7 @@ async function fakeCiMise(folder: string) {
         `
 import { existsSync } from 'node:fs';
 const args = process.argv.slice(2);
-if (args[0] === 'exec' && args.some((arg) => arg.startsWith('npm:@gspothq/cli@'))) {
+if (args[0] === 'exec' && args.some((arg) => arg.startsWith('npm:@gspothq/cli[allow_low_downloads=true]@'))) {
     if (existsSync(${JSON.stringify(failure)})) {
         console.error('npm error 404 Not Found - GET https://registry.npmjs.org/@gspothq/cli');
         process.exit(1);
@@ -99,6 +100,28 @@ async function runCiJob(
         },
     });
 }
+
+test('the generated GitHub command installs gspot with empty mise state', async () => {
+    await using sandbox = await testdir();
+    await prepareCiProject(sandbox.path, 'github');
+    const workflow = Bun.YAML.parse(
+        await readFile(join(sandbox.path, '.github/workflows/gspot.yml'), 'utf8'),
+    ) as GithubWorkflow;
+    const command = workflow.jobs['lint']!.steps.find((step) => step.name === 'Install gspot tools')!.run!;
+
+    const result = await runCommand(['bash', '-e', '-c', command.replace(/ install$/u, ' --version')], {
+        cwd: sandbox.path,
+        env: {
+            MISE_CONFIG_DIR: join(sandbox.path, 'config'),
+            MISE_DATA_DIR: join(sandbox.path, 'data'),
+            MISE_STATE_DIR: join(sandbox.path, 'state'),
+            MISE_CACHE_DIR: join(sandbox.path, 'cache'),
+            MISE_CEILING_PATHS: dirname(sandbox.path),
+        },
+    });
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout.trim()).toBe(cliPackage.version);
+});
 
 describe.each(['gitlab', 'github'] as const)('%s CI', (provider) => {
     test('the jobs check the changed files, pass after the fix, and check every file of a first push', async () => {
