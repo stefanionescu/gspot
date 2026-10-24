@@ -5,6 +5,7 @@ import { stripUndefined } from '#cli/system/tables.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
+import { stripDefaults } from '#cli/commands/init/defaults.ts';
 import { PBXPROJ } from '#cli/config/parsers/projects/xcode.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
@@ -127,7 +128,7 @@ export function buildInitSettings(
         setKey(document, 'ci.provider', draft.ci);
     }
     if (!draft.rules) setKey(document, 'rules.enabled', false);
-    return buildSettingsText(PREFACE_BODY, document);
+    return buildSettingsText(PREFACE_BODY, stripDefaults(document));
 }
 
 /**

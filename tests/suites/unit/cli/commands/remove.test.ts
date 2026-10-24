@@ -195,7 +195,7 @@ test('remove --scope writes removed_configurations with its reason and applies i
     expect(saved.scopes['api']!.configurations).toStrictEqual([]);
     expect(saved.configurations).toStrictEqual(['markdown']);
     expect((parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['scope']).toStrictEqual([
-        { path: 'api', removed_configurations: { value: ['bash'], reason } },
+        { path: 'api', configurations: [], removed_configurations: { value: ['bash'], reason } },
     ]);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);

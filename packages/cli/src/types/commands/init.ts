@@ -1,8 +1,9 @@
 import type { Session } from '#cli/types/session.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
 import type { RepositorySetup } from '#cli/types/repository/setup.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
+import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
@@ -113,3 +114,5 @@ export type RuffFormatSettings = {
     format?: RuffFormatOptions | undefined;
     tool?: { ruff?: { format?: RuffFormatOptions | undefined } | undefined } | undefined;
 };
+
+export type WrittenTable = { scope: string; table: TomlTable; available: AvailableSettings };

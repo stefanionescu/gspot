@@ -229,10 +229,11 @@ function listDestinationPaths(syntax: TomlSyntax, destination: TomlTable, path: 
     return mapped.filter((keyPath) => getValueAt(destination, keyPath) !== undefined);
 }
 
-function findCommentPlace(syntax: TomlSyntax, destination: TomlTable, written: TomlTable, owner: TomlCommentAnchor) {
+function findCommentPlace(syntax: TomlSyntax, destination: TomlTable, owner: TomlCommentAnchor) {
     const path = listDestinationPaths(syntax, destination, owner.path)[0];
     if (path === undefined) {
-        if (owner.kind === 'item' || getValueAt(written, owner.path) === undefined) return { kind: owner.kind, path };
+        if (owner.kind === 'item' || getValueAt(destination, owner.path) === undefined)
+            return { kind: owner.kind, path };
         const [header] = [
             syntax.pathNodes.findLast(
                 (pathNode) =>
@@ -253,7 +254,6 @@ function findCommentPlace(syntax: TomlSyntax, destination: TomlTable, written: T
 function findKeptCommentPlacement(
     syntax: TomlSyntax,
     destination: TomlTable,
-    written: TomlTable,
     { comment, anchor: owner }: TomlAnchoredComment,
 ): TomlCommentPlacement {
     const isOpening =
@@ -261,7 +261,7 @@ function findKeptCommentPlacement(
         syntax.pathNodes.every((pathNode) => getTomlRange(comment)[1] < getTomlRange(pathNode.node)[0]);
     if (isOpening) return { kind: 'preamble', path: [], comment, placement: 'free' };
     if (owner !== undefined) {
-        const mapped = findCommentPlace(syntax, destination, written, owner);
+        const mapped = findCommentPlace(syntax, destination, owner);
         return { ...mapped, comment, placement: mapped.kind === 'preamble' ? 'free' : 'owned' };
     }
     const next = syntax.pathNodes.find(
@@ -269,7 +269,7 @@ function findKeptCommentPlacement(
             getTomlRange(pathNode.node)[0] > getTomlRange(comment)[1] &&
             listDestinationPaths(syntax, destination, pathNode.path).length > 0,
     );
-    const anchor = findCommentPlace(syntax, destination, written, next ?? { kind: 'preamble', path: [] });
+    const anchor = findCommentPlace(syntax, destination, next ?? { kind: 'preamble', path: [] });
     return { ...anchor, comment, placement: 'free' };
 }
 
@@ -279,13 +279,12 @@ function findKeptCommentPlacement(
  *
  * @param syntax the original keys, headers, and parsed values.
  * @param destination the ordered written values.
- * @param written the draft before tool defaults drop out.
  * @returns the comment blocks in source order, and the free comments apart.
  */
-export function listKeptComments(syntax: TomlSyntax, destination: TomlTable, written: TomlTable): TomlComments {
+export function listKeptComments(syntax: TomlSyntax, destination: TomlTable): TomlComments {
     const comments: TomlComments = new Map();
     for (const anchoredComment of listAnchoredComments(syntax)) {
-        addTomlComment(comments, findKeptCommentPlacement(syntax, destination, written, anchoredComment));
+        addTomlComment(comments, findKeptCommentPlacement(syntax, destination, anchoredComment));
     }
     return comments;
 }

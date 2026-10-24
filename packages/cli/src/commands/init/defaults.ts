@@ -5,12 +5,12 @@ import { selectForScope } from '#cli/settings/scopes.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { type WrittenTable } from '#cli/types/settings/text.ts';
+import { type WrittenTable } from '#cli/types/commands/init.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
-import { DETECTED_SETTINGS } from '#cli/config/settings/text/defaults.ts';
+import { DETECTED_SETTINGS } from '#cli/config/commands/init/defaults.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 
 function isInheritedValueChanged(

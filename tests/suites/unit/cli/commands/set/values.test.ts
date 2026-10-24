@@ -60,7 +60,9 @@ test('set names -- when a value reads as an option, and takes the values after -
 test.each([...NO_CHANGE_COMMANDS])(
     '%s reports no change when gspot.toml already has the value',
     async (_name, commandArguments) => {
-        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['bash'], commandArguments[0] === 'set' ? { level: 'recommended' } : {}),
+        });
         const result = await runGspot(sandbox.path, commandArguments);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(result.stdout.split('\n', 1)[0]).toBe('No change: gspot.toml stays the same.');

@@ -2,7 +2,6 @@ import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { stripDefaults } from '#cli/settings/text/defaults.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
 import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';
@@ -104,14 +103,13 @@ export function mergeIgnore(ignores: TomlTable[], ignore: TomlTable): TomlTable 
  */
 export function buildSettingsText(previousText: string, settings: TomlTable): string {
     const authored = previousText.replace(SCHEMA_DIRECTIVE_LINE, '');
-    const ordered = sortTable(settings);
-    let target = stripDefaults(ordered);
+    let target = sortTable(settings);
     if (target['ignore'] !== undefined)
         target['ignore'] = mergeIgnores(settingsSchema.shape.ignore.unwrap().parse(target['ignore']));
     const format = tableValuesSchema.in.shape.format.parse(target['format']);
     const indent = format.indent_style === 'tab' ? '\t' : ' '.repeat(format.indent_width);
     const syntax = parseTomlSyntax(authored, parseTomlText(authored, SETTINGS_FILE));
-    const comments = listKeptComments(syntax, target, settings);
+    const comments = listKeptComments(syntax, target);
     target = sortTable(target);
     return `${SCHEMA_DIRECTIVE}\n${encodeSettings(target, indent, comments)}`;
 }

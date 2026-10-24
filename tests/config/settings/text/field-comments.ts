@@ -146,6 +146,7 @@ options = [
 # Unicode scope
 [[scope]]
 path = "apps/前言"
+configurations = []
 `,
     },
     {
