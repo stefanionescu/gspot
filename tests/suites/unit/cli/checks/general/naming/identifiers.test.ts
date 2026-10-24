@@ -194,3 +194,12 @@ test('domain names customer, news and supported pass while whole banned terms ar
         { line: 5, rule: 'banned-word' },
     ]);
 });
+
+test('Next.js JavaScript routes accept PascalCase components', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'nextjs', 'naming'], { level: 'all' }),
+        'app/blog/page.js': 'export default function Page() { return null; }\n',
+        'pages/index.js': 'export default function Home() { return null; }\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
+});

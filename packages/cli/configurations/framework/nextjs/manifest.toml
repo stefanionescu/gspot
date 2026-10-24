@@ -27,6 +27,12 @@ languages = ["typescript", "javascript"]
 paths = ["**"]
 reason = "Next.js discovers these data and metadata exports by name."
 
+[[naming.override]]
+cases = ["pascal", "camel"]
+categories = ["functions"]
+paths = ["**/app/**/*.js", "**/pages/**/*.js"]
+reason = "Next.js reads components from .js files in app/ and pages/."
+
 [[tool]]
 min_version = "15.5.0"
 name = "next"
