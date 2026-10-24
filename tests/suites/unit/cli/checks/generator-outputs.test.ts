@@ -15,9 +15,9 @@ import { EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
-import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { chmod, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { writeScriptCommand, fakeToolExecutables, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 import {
@@ -284,4 +284,27 @@ test('a [[command_check]] with outputs reports an output that differs from what 
     await writeFile(join(sandbox.path, 'generated/api.ts'), 'export const version = 2;\n');
     const fresh = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/codegen'] }));
     expect(fresh.report.failed).toStrictEqual([]);
+});
+
+test('generator output patterns omit directory links', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['drizzle']),
+        'drizzle.config.ts': 'export default {};\n',
+        'generated/regular/output.txt': 'generated\n',
+    });
+    await symlink('regular', join(sandbox.path, 'generated/linked'), 'dir');
+    commitAll(sandbox.path);
+    const session = await openSession(sandbox.path);
+    const input = planSandboxCheck(session, 'drizzle/stale-migrations');
+    const planned = {
+        ...input,
+        check: {
+            ...input.check,
+            command: [process.execPath, '-e', ''],
+            generator_outputs: [{ kind: 'pattern' as const, path: 'generated/**' }],
+        },
+    };
+    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    expect(result.findings).toStrictEqual([]);
+    expect(await readFile(join(sandbox.path, 'generated/regular/output.txt'), 'utf8')).toBe('generated\n');
 });
