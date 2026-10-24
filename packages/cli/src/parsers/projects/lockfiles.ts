@@ -8,7 +8,8 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
-import { PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
+import type { LockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
+import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 
 import {
     uvLockSchema,
@@ -87,6 +88,59 @@ function listSpecifiers(workspace: unknown): Map<string, string> {
     );
 }
 
+function parseNpmVersions(path: string, text: string, folder: string): Map<string, string> {
+    const { packages } = parseJsonFile(path, text, npmLockSchema);
+    const specifiers = listSpecifiers(packages[folder]);
+    return new Map(
+        [...specifiers.keys()].flatMap((name): [string, string][] => {
+            const version = listEnclosingFolders(folder)
+                .map((base) => packages[posix.join(base, NPM_PACKAGE_FOLDER, name)]?.version)
+                .find((lockedVersion) => lockedVersion !== undefined);
+            return version === undefined ? [] : [[name, version]];
+        }),
+    );
+}
+
+function parseBunVersions(path: string, text: string, folder: string): Map<string, string> {
+    const lockfile = parseJsonFile(path, text, bunLockSchema);
+    const workspace = lockfile.workspaces[folder];
+    const importer = isTable(workspace) && typeof workspace['name'] === 'string' ? workspace['name'] : folder;
+    return new Map(
+        [...listSpecifiers(workspace).keys()].flatMap((name): [string, string][] => {
+            const identity = (lockfile.packages[posix.join(importer, name)] ?? lockfile.packages[name])?.[0];
+            const version = typeof identity === 'string' ? splitIdentity(identity)?.[1] : undefined;
+            return version === undefined ? [] : [[name, version]];
+        }),
+    );
+}
+
+function parsePnpmVersions(path: string, text: string, folder: string): Map<string, string> {
+    const { importers } = parseYamlFile(path, text, pnpmLockSchema);
+    const workspace = dependencySectionsSchema.safeParse(importers[folder === '' ? PNPM_ROOT_IMPORTER : folder]);
+    if (!workspace.success) return new Map();
+    return new Map(
+        DEPENDENCY_SECTIONS.flatMap((section) => {
+            const dependencies = workspace.data[section];
+            if (dependencies === undefined) return [];
+            return Object.entries(dependencies).flatMap(([name, locked]): [string, string][] => {
+                const version = isTable(locked) ? locked['version'] : locked;
+                return typeof version === 'string' ? [[name, version.split(PNPM_PEER_START, 1).join('')]] : [];
+            });
+        }),
+    );
+}
+
+function parseYarnVersions(text: string, specifiers: Map<string, string>): Map<string, string> {
+    const packages = Object.entries(yarnLockSchema.parse(parseSyml(text)));
+    const versions = [...specifiers].flatMap(([name, specifier]): [string, string][] => {
+        const descriptors = new Set([`${name}@${specifier}`, `${name}@npm:${specifier}`]);
+        const found = packages.find(([keys]) => keys.split(',').some((key) => descriptors.has(key.trim())));
+        const parsed = yarnPackageSchema.safeParse(found?.[1]);
+        return parsed.success && parsed.data.version !== undefined ? [[name, parsed.data.version]] : [];
+    });
+    return new Map(versions);
+}
+
 const SPECIFIER_PARSERS: Readonly<
     Record<(typeof IMPORTER_LOCKFILES)[number], (path: string, text: string) => [string, unknown][]>
 > = {
@@ -130,6 +184,43 @@ export function readLockedPackages(
             if (text !== undefined) return new Set(PACKAGE_PARSERS[lockfile](path, text));
         }
     }
+    return undefined;
+}
+
+/**
+ * Read the versions that a project's direct dependencies resolve to in its nearest lockfile.
+ *
+ * @param reads the repository read cache.
+ * @param folder the project folder relative to the repository.
+ * @param lockfiles the lockfile names in preference order.
+ * @returns each direct dependency's version, or undefined without a lockfile.
+ */
+export function readLockedVersions(
+    reads: ReadCache,
+    folder: string,
+    lockfiles: readonly LockfileName[],
+): Map<string, string> | undefined {
+    const parsers: Record<LockfileName, (path: string, text: string, importer: string) => Map<string, string>> = {
+        'package-lock.json': parseNpmVersions,
+        'npm-shrinkwrap.json': parseNpmVersions,
+        'bun.lock': parseBunVersions,
+        'pnpm-lock.yaml': parsePnpmVersions,
+        'yarn.lock': (_path, text) => {
+            const manifest = posix.join(folder, PACKAGE_JSON);
+            const content = findCachedText(reads, manifest);
+            const specifiers =
+                content === undefined
+                    ? new Map<string, string>()
+                    : listSpecifiers(parseJsonFile(manifest, content, dependencySectionsSchema));
+            return parseYarnVersions(text, specifiers);
+        },
+    };
+    for (const base of listEnclosingFolders(folder))
+        for (const lockfile of lockfiles) {
+            const path = posix.join(base, lockfile);
+            const text = findCachedText(reads, path);
+            if (text !== undefined) return parsers[lockfile](path, text, posix.relative(base, folder));
+        }
     return undefined;
 }
 

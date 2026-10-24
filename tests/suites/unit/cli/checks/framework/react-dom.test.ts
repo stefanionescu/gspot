@@ -24,3 +24,13 @@ test('react-versions reports react and react-dom that lock different versions, a
     for (const [path, text] of Object.entries(MATCHED_REACT_FILES)) await writeFile(join(sandbox.path, path), text);
     expect(await runSandboxCheck(sandbox.path, 'react-dom/react-versions')).toStrictEqual([]);
 });
+
+test('react-versions ignores an older React installed privately by another dependency', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['react-dom']),
+        'package.json': '{"dependencies":{"react":"18.3.1","react-dom":"18.3.1"}}',
+        'package-lock.json':
+            '{"lockfileVersion":3,"packages":{"":{"dependencies":{"react":"18.3.1","react-dom":"18.3.1"}},"node_modules/react":{"version":"18.3.1"},"node_modules/react-dom":{"version":"18.3.1"},"node_modules/old-chart/node_modules/react":{"version":"17.0.2"}}}',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'react-dom/react-versions')).toStrictEqual([]);
+});
