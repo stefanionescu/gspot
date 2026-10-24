@@ -40,6 +40,15 @@ test('two import rules cannot share a name', () => {
     expect(validateSettingsText(stringify({ import_rule: [lower, { ...upper, name: 'upper' }] }))).toStrictEqual([]);
 });
 
+test('the release age can be written at the root and cannot be written in a scope', () => {
+    expect(validateSettingsText('[dependencies]\nmin_release_age_days = 30\n')).toStrictEqual([]);
+    expect(
+        validateSettingsText('[[scope]]\npath = "api"\n[scope.dependencies]\nmin_release_age_days = 30\n'),
+    ).toStrictEqual([
+        'gspot.toml: [[scope]] record 1 [dependencies]: `min_release_age_days` is not a gspot.toml setting. See generativespotting.com/reference/gspot-toml/ for every key.',
+    ]);
+});
+
 test('rules.exclude accepts a rule file path and a configuration folder', () => {
     const exclude = [findRuleFilePath('engineering', 'ACCESSIBILITY.md'), `${GSPOT_PATHS.configurations}/library`];
     expect(validateSettingsText(stringify({ rules: { exclude } }))).toStrictEqual([]);

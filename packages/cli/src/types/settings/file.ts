@@ -168,6 +168,7 @@ type RootOnlyFields =
     | 'import_rule';
 
 type ParsedScopeTables = {
+    dependencies: Omit<ConfigurationTables['dependencies'], 'min_release_age_days'>;
     coverage: Omit<ConfigurationTables['coverage'], 'swift_target'>;
     docs: Omit<ConfigurationTables['docs'], 'banned_headings'>;
     licenses: Omit<ConfigurationTables['licenses'], 'allowed_package'>;
@@ -273,6 +274,7 @@ export type FormatSettings = Required<Defined<Omit<NonNullable<ParsedSettings['f
 
 export type WrittenScope = Omit<WrittenSettings, RootOnlyFields | keyof ParsedScopeTables> & {
     path: string;
+    dependencies?: Omit<WrittenDependencies, 'min_release_age_days'> | undefined;
     coverage?: Omit<WrittenCoverage, 'swift_target'> | undefined;
     docs?: Omit<WrittenDocs, 'banned_headings'> | undefined;
     licenses?: Omit<WrittenLicenses, 'allowed_package'> | undefined;

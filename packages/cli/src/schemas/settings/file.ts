@@ -80,6 +80,13 @@ const rootBody = {
 
 const scopeBody = {
     ...rootBody,
+    dependencies: configurationTableSchemas.dependencies
+        .unwrap()
+        .omit({ min_release_age_days: true })
+        .optional() satisfies z.ZodType<
+        NonNullable<ParsedSettings['scope']>[number]['dependencies'],
+        WrittenScope['dependencies']
+    >,
     docs: configurationTableSchemas.docs.unwrap().omit({ banned_headings: true }).optional() satisfies z.ZodType<
         NonNullable<ParsedSettings['scope']>[number]['docs'],
         WrittenScope['docs']
