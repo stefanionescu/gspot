@@ -11,6 +11,13 @@ export const BASH_COMMENT_CASES = [
 
 export const MKTEMP_CLEANUP_CASES = [
     {
+        name: 'a literal double-quoted cleanup with escaped quotes and a delayed variable',
+        source: String.raw`tmp=$(mktemp)
+trap "rm -f \"\$tmp\"" EXIT
+`,
+        expected: [{ name: 'tmp', line: 1, cleanupLines: [2] }],
+    },
+    {
         name: 'a trap that changes the path before it removes it',
         source: 'tmp=$(mktemp)\ntrap \'tmp=/etc; rm -rf "$tmp"\' EXIT\n',
         expected: [{ name: 'tmp', line: 1, cleanupLines: [] }],
@@ -122,7 +129,16 @@ export const TRAP_CALLS = [
     { name: 'trap', count: 2, line: 1, forwards: false },
     { name: '_cleanup', count: 0, line: 1, forwards: false },
     { name: 'trap', count: 2, line: 2, forwards: false },
+    { name: '_quoted', count: 0, line: 2, forwards: false },
     { name: 'trap', count: 2, line: 3, forwards: false },
+] as const;
+
+export const QUOTED_TRAP_CALLS = [
+    { source: `trap 'cleanup one "two words"' EXIT\n`, counts: [2] },
+    { source: String.raw`trap "cleanup \"two words\"" EXIT`, counts: [1] },
+    { source: String.raw`trap "cleanup \$value" EXIT`, counts: [1] },
+    { source: 'trap "cleanup $value" EXIT', counts: [] },
+    { source: 'trap "cleanup $(name)" EXIT', counts: [] },
 ] as const;
 
 export const BASH_FUNCTIONS: ScriptFunction = {

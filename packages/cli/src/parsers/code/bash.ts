@@ -2,10 +2,16 @@ import type { Node } from 'web-tree-sitter';
 import type { NumberedLine } from '#cli/types/text.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import type { ParseCache } from '#cli/types/parsers/code/grammars.ts';
-import type { TrapCleanup, ScriptSyntax, TemporaryPath, ScriptTemporaryPaths } from '#cli/types/parsers/code/bash.ts';
+import { readTrapScripts, buildCommandCalls } from '#cli/parsers/code/traps.ts';
 
+import type {
+    TrapScript,
+    TrapCleanup,
+    ScriptSyntax,
+    TemporaryPath,
+    ScriptTemporaryPaths,
+} from '#cli/types/parsers/code/bash.ts';
 import {
-    TRAP_COMMAND,
     SHIFT_COMMAND,
     NOT_LINE_BREAK,
     END_OF_OPTIONS,
@@ -14,7 +20,6 @@ import {
     BASH_BRANCH_NODES,
     FOR_HEADER_FIELDS,
     BASH_COMPOUND_NODES,
-    FORWARDED_ARGUMENTS,
     POSITIONAL_PARAMETER,
     TEMPORARY_VALUE_NODES,
     TEMPORARY_FILE_COMMAND,
@@ -209,41 +214,31 @@ function listRemovedPaths(command: Node): Node[] {
     return targets;
 }
 
-async function listTemporaryPaths(root: Node, commands: Node[], cache?: ParseCache): Promise<TemporaryPath[]> {
+function listTemporaryPaths(root: Node, commands: Node[], traps: TrapScript[]): TemporaryPath[] {
     const registry = buildScriptTemporaryPaths(root);
     const lines = new Map<number, Array<TemporaryPath | undefined>>(
         commands
             .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND)
             .map((command) => [command.startPosition.row + 1, [undefined]]),
     );
-    const traps = commands.filter((command) => command.childForFieldName('name')?.text === TRAP_COMMAND);
-    for (const trap of traps) {
-        const [body, ...signals] = trap
-            .childrenForFieldName('argument')
-            .filter((argument) => argument.text !== END_OF_OPTIONS);
-        if (body?.type !== 'raw_string' || signals.length === 0) continue;
-        const tree = await parseSource('bash', body.text.slice(1, -1), cache);
-        try {
-            const assigned = new Set(
-                tree.rootNode
-                    .descendantsOfType('variable_assignment')
-                    .map((assignment) => assignment.childForFieldName('name')?.text),
-            );
-            const removals = tree.rootNode
-                .descendantsOfType('command')
-                .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND);
-            addRemovals(removals, {
-                lineOffset: body.startPosition.row + 1,
-                owner: findFunctionNode(trap)?.id,
-                registry: {
-                    ...registry,
-                    variables: new Map([...registry.variables].filter(([, path]) => !assigned.has(path.name))),
-                },
-                lines,
-            });
-        } finally {
-            tree.delete();
-        }
+    for (const { trap, body, root: script } of traps) {
+        const assigned = new Set(
+            script
+                .descendantsOfType('variable_assignment')
+                .map((assignment) => assignment.childForFieldName('name')?.text),
+        );
+        const removals = script
+            .descendantsOfType('command')
+            .filter((command) => command.childForFieldName('name')?.text === REMOVE_COMMAND);
+        addRemovals(removals, {
+            lineOffset: body.startPosition.row + 1,
+            owner: findFunctionNode(trap)?.id,
+            registry: {
+                ...registry,
+                variables: new Map([...registry.variables].filter(([, path]) => !assigned.has(path.name))),
+            },
+            lines,
+        });
     }
     const safe = [...lines].filter(([, paths]) => !paths.includes(undefined));
     for (const [line, paths] of safe) {
@@ -266,30 +261,23 @@ export async function parseBashScript(text: string, cache?: ParseCache): Promise
         const codeText = stripComments(text, tree.rootNode.descendantsOfType('comment'));
 
         const commands = tree.rootNode.descendantsOfType('command');
-
-        const functions = parseBashFunctions(tree.rootNode, codeText);
+        using resources = new DisposableStack();
+        const traps = await readTrapScripts(commands, cache, resources);
+        const scripts = new Map(traps.map((script) => [script.trap.id, script]));
         const calls = commands.flatMap((node) => {
-            const name = node.childForFieldName('name')?.text;
-            if (name === undefined) return [];
-            const commandArguments = node.childrenForFieldName('argument');
-            const trapFunction = name === TRAP_COMMAND ? commandArguments[0] : undefined;
-            return [
-                {
-                    name,
-                    count: commandArguments.length,
-                    line: node.startPosition.row + 1,
-                    forwards: commandArguments.some((argument) => FORWARDED_ARGUMENTS.has(argument.text)),
-                },
-                ...(trapFunction?.type === 'word'
-                    ? [{ name: trapFunction.text, count: 0, line: trapFunction.startPosition.row + 1, forwards: false }]
-                    : []),
-            ];
+            const calls = buildCommandCalls([node], 0);
+            const script = scripts.get(node.id);
+            if (script !== undefined)
+                calls.push(
+                    ...buildCommandCalls(script.root.descendantsOfType('command'), script.body.startPosition.row),
+                );
+            return calls;
         });
         return {
             code: codeText.split('\n'),
-            functions,
+            functions: parseBashFunctions(tree.rootNode, codeText),
             calls,
-            temporaryPaths: await listTemporaryPaths(tree.rootNode, commands, cache),
+            temporaryPaths: listTemporaryPaths(tree.rootNode, commands, traps),
         };
     } finally {
         tree.delete();

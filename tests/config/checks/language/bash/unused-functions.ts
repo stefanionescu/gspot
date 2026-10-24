@@ -1,5 +1,7 @@
 import { BASH_HEADER } from '#tests/config/checks/samples.ts';
 
+export const TRAP_SCRIPT_FORMS = ['_cleanup', "'_cleanup'", '"_cleanup"', "'_cleanup; exit 1'"];
+
 const BASH_MAIN = `# main: runs the script.
 main() {
     echo "hello"

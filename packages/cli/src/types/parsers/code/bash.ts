@@ -1,3 +1,7 @@
+import type { Node } from 'web-tree-sitter';
+
+export type TrapScript = { trap: Node; body: Node; root: Node };
+
 type CommandCall = {
     name: string;
     count: number;

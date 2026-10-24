@@ -4,6 +4,7 @@ import { listCodeLines, parseBashScript } from '#cli/parsers/code/bash.ts';
 import {
     TRAP_CALLS,
     BASH_FUNCTIONS,
+    QUOTED_TRAP_CALLS,
     BASH_COMMENT_CASES,
     MKTEMP_CLEANUP_CASES,
     FORWARDING_CALL_CASES,
@@ -69,10 +70,20 @@ test('one-line Bash functions count only their own parameters, not those of nest
     ]);
 });
 
-test('plain trap handlers count as zero-argument calls while quoted and expanded trap bodies stay uninterpreted', async () => {
+test('literal trap handlers count as calls while expanded trap bodies stay uninterpreted', async () => {
     const parsed = await parseBashScript('trap _cleanup EXIT\ntrap "_quoted" EXIT\ntrap $handler EXIT\n');
     expect(parsed.calls).toStrictEqual([...TRAP_CALLS]);
 });
+
+test.each([...QUOTED_TRAP_CALLS])(
+    'quoted trap $source retains literal command argument counts',
+    async ({ source, counts }) => {
+        const parsed = await parseBashScript(source);
+        expect(parsed.calls.filter(({ name }) => name === 'cleanup').map(({ count }) => count)).toStrictEqual([
+            ...counts,
+        ]);
+    },
+);
 
 test.each([...FORWARDING_CALL_CASES])(
     'Bash calls mark positional argument forwarding: $source',
