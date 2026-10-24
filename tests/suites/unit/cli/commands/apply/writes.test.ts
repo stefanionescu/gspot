@@ -19,6 +19,7 @@ import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises'
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 import { findRuleFilePath, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply/writes.ts';
+import { INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/files/generated.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function writeStrayFile(root: string): void {
@@ -203,4 +204,14 @@ test('apply leaves a settings file without a schema directive unchanged', async 
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect((JSON.parse(repeated.stdout) as ApplyReport).updated).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(settings);
+});
+
+test('repeated apply names a missing lockfile without reporting changed tools', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]), 'package.json': '{"private":true}' });
+    const first = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(first.code, first.stdout + first.stderr).toBe(0);
+    expect((JSON.parse(first.stdout) as ApplyReport).notes).toContain(INSTALL_FIRST_NOTE);
+    const repeated = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
+    expect((JSON.parse(repeated.stdout) as ApplyReport).notes).toStrictEqual([INSTALL_MISSING_NOTE]);
 });

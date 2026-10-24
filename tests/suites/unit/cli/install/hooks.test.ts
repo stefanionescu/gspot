@@ -131,7 +131,7 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
             `removed  ${GSPOT_PATHS.hooks}/pre-commit`,
             `removed  ${GSPOT_PATHS.hooks}/pre-push`,
             'note     Git hooks changed. Run gspot install.',
-            'note     The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.',
+            'note     The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.',
             '',
         ].join('\n'),
     });

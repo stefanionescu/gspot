@@ -10,7 +10,13 @@ import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts
 import { GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { type Writer, type WritePlan, type ApplyReport } from '#cli/types/apply.ts';
 import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/apply/write/plans.ts';
-import { MANAGED_KEYS_NOTE, HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE } from '#cli/config/apply/files/generated.ts';
+
+import {
+    MANAGED_KEYS_NOTE,
+    HOOKS_CHANGED_NOTE,
+    INSTALL_FIRST_NOTE,
+    INSTALL_MISSING_NOTE,
+} from '#cli/config/apply/files/generated.ts';
 
 /**
  * Say that the generated files need no change.
@@ -54,11 +60,15 @@ async function addInstallationNote(session: Session, generated: GenerationResult
     const dependenciesChanged = generated.files.some(
         (file) =>
             report.written.includes(file.path) &&
-            (file.kind === 'lock' || file.path === GSPOT_PATHS.npmProject || file.path === GSPOT_PATHS.pythonProject),
+            (file.kind === 'lock' ||
+                file.path === GSPOT_PATHS.npmProject ||
+                file.path === GSPOT_PATHS.pythonProject ||
+                file.path === GSPOT_PATHS.miseProject),
     );
     const lockfiles = await listStaleLockfiles(session, generated.files);
     const hasDrift = lockfiles.some((lockfile) => lockfile.kind !== undefined);
-    if (dependenciesChanged || hasDrift) report.notes.push(INSTALL_FIRST_NOTE);
+    if (dependenciesChanged) report.notes.push(INSTALL_FIRST_NOTE);
+    else if (hasDrift) report.notes.push(INSTALL_MISSING_NOTE);
 }
 
 function buildReplacementPlans(
