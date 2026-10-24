@@ -26,3 +26,14 @@ export const INLINE_SCRIPT_PAGE = `<!doctype html>
 </body>
 </html>
 `;
+
+export const SCRIPT_TYPE_CASES = [
+    { type: 'text/x-template', rules: [] },
+    { type: 'text/plain', rules: [] },
+    { type: 'text/markdown', rules: [] },
+    { type: 'x-shader/x-vertex', rules: [] },
+    { type: '', rules: ['inline-script', 'script-link'] },
+    { type: 'module', rules: ['inline-script', 'script-link'] },
+    { type: ' Text/JavaScript ', rules: ['inline-script', 'script-link'] },
+    { type: 'application/ecmascript', rules: ['inline-script', 'script-link'] },
+] as const;

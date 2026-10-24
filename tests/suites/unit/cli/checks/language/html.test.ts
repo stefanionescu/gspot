@@ -2,7 +2,19 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { URL_MARKUP_CASES, INLINE_SCRIPT_PAGE } from '#tests/config/checks/language/html.ts';
+import { URL_MARKUP_CASES, SCRIPT_TYPE_CASES, INLINE_SCRIPT_PAGE } from '#tests/config/checks/language/html.ts';
+
+test.each([...SCRIPT_TYPE_CASES])(
+    'html/inline-scripts treats type "$type" like the browser',
+    async ({ type, rules }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['html'], { level: 'all' }),
+            'index.html': `<script type="${type}">window.start();</script><script type="${type}" src="data:text/javascript,window.start()"></script>`,
+        });
+        const findings = await runSandboxCheck(sandbox.path, 'html/inline-scripts');
+        expect(findings.map(({ rule }) => rule)).toStrictEqual([...rules]);
+    },
+);
 
 test.each([...URL_MARKUP_CASES])(
     'html/inline-scripts reports each URL in $markup that runs code, at its attribute column',

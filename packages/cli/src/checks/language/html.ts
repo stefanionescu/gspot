@@ -13,9 +13,9 @@ import {
     URL_ATTRIBUTES,
     EVENT_ATTRIBUTE,
     RELATIVE_URL_BASE,
-    INERT_SCRIPT_TYPES,
     SURROUNDING_QUOTES,
     ACTIVE_DOCUMENT_TYPES,
+    EXECUTABLE_SCRIPT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
 } from '#cli/config/checks/language/html.ts';
 
@@ -33,7 +33,7 @@ function listElementAttributes(element: Node): MarkupAttribute[] {
 }
 
 function isActiveResource(attribute: MarkupAttribute, url: URL, scriptType: string): boolean {
-    if (attribute.element === 'script') return !INERT_SCRIPT_TYPES.has(scriptType);
+    if (attribute.element === 'script') return EXECUTABLE_SCRIPT_TYPES.has(scriptType);
     const attributes = DOCUMENT_URL_ATTRIBUTES[attribute.element];
     if (attributes?.includes(attribute.name) !== true) return false;
     const mediaType = url.pathname.split(',', 1)[0]?.split(';', 1)[0]?.trim().toLowerCase() ?? '';
@@ -56,8 +56,12 @@ function checkInlineScripts(planned: PlannedCheck, source: SourceTree): Finding[
         )
         .flatMap((element) => {
             const attributes = listElementAttributes(element);
-            const scriptType = attributes.find((attribute) => attribute.name === 'type')?.value.toLowerCase() ?? '';
-            if (INERT_SCRIPT_TYPES.has(scriptType) || attributes.some((each) => each.name === 'src')) return [];
+            const scriptType =
+                attributes
+                    .find((attribute) => attribute.name === 'type')
+                    ?.value.trim()
+                    .toLowerCase() ?? '';
+            if (!EXECUTABLE_SCRIPT_TYPES.has(scriptType) || attributes.some((each) => each.name === 'src')) return [];
             return [
                 buildFinding(
                     planned,
@@ -72,7 +76,11 @@ function checkInlineScripts(planned: PlannedCheck, source: SourceTree): Finding[
 function checkScriptAttributes(planned: PlannedCheck, source: SourceTree): Finding[] {
     return source.rootNode.descendantsOfType(['element', 'script_element']).flatMap((element) => {
         const attributes = listElementAttributes(element);
-        const scriptType = attributes.find((each) => each.name === 'type')?.value.toLowerCase() ?? '';
+        const scriptType =
+            attributes
+                .find((each) => each.name === 'type')
+                ?.value.trim()
+                .toLowerCase() ?? '';
         return attributes.flatMap((attribute) => {
             const position = getNodePlace(source.path, attribute.node);
             if (EVENT_ATTRIBUTE.test(attribute.name))
