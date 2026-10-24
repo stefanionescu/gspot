@@ -5,7 +5,8 @@ suggests = ["css", "javascript"]
 title = "Static site"
 
 [detect]
-filenames = ["site.webmanifest", "sitemap.xml"]
+filenames = ["sitemap.xml"]
+absent_dependencies = ["next", "nuxt", "@sveltejs/kit", "@remix-run/node", "@react-router/node", "expo"]
 
 [files]
 extensions = [".svg"]

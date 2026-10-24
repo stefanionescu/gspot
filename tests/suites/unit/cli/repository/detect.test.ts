@@ -193,13 +193,36 @@ test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its p
     expect(detected.map(({ configuration }) => configuration)).toStrictEqual(row.detected ? ['runtime'] : []);
 });
 
-test('site is detected from a site.webmanifest or sitemap.xml in any folder', () => {
+test('site is detected from a sitemap.xml in any folder', () => {
     const configurations = readConfigurations();
-    for (const path of SITE_DETECTION_PATHS) {
+    for (const path of SITE_DETECTION_PATHS.filter((path) => path.endsWith('sitemap.xml'))) {
         const detected = detectConfigurations(
             { root: process.cwd(), files: [buildTrackedFile(path)], dependencyFiles: [] },
             configurations,
         );
         expect(detected.find(({ configuration }) => configuration === 'site')?.evidence).toBe(path);
     }
+});
+
+test('site detection excludes a server framework even when a sitemap is present', async () => {
+    await using sandbox = await testdir({
+        'package.json': '{"dependencies":{"next":"15.5.4"}}',
+        'public/sitemap.xml': '<urlset/>',
+    });
+    const repository = await readTestRepository(sandbox.path);
+    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+    expect(
+        detectConfigurations(
+            { root: sandbox.path, files: repository.files, dependencyFiles },
+            readConfigurations(),
+        ).map(({ configuration }) => configuration),
+    ).not.toContain('site');
+});
+test('a favicon manifest alone does not select the static site checks', () => {
+    expect(
+        detectConfigurations(
+            { root: process.cwd(), files: [buildTrackedFile('public/site.webmanifest')], dependencyFiles: [] },
+            readConfigurations(),
+        ).map(({ configuration }) => configuration),
+    ).not.toContain('site');
 });
