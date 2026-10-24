@@ -58,6 +58,16 @@ test('--only refuses a check disabled by the selected level', async () => {
     });
 });
 
+test('--only names the configuration that an unselected check needs', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['check', '--only', 'python/ruff', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+        error: 'arguments',
+        message: 'python/ruff belongs to python, which no scope selects. Run gspot add python.',
+    });
+});
+
 test.each(['--changed', '--staged', '--hook'])(
     'check %s outside Git exits 2 with a git error and changes nothing',
     async (flag) => {

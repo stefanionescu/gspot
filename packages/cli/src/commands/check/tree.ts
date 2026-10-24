@@ -5,7 +5,6 @@ import type { Session } from '#cli/types/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { readHookStatus } from '#cli/install/hooks.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { formatSimilarNames } from '#cli/system/text.ts';
 import { findSettingsSkip } from '#cli/planning/skips.ts';
 import type { StageFilter } from '#cli/types/planning.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
@@ -14,6 +13,7 @@ import type { RunReport, RunOptions } from '#cli/types/runs/run.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope, buildRepositoryPath } from '#cli/repository/scopes.ts';
+import { listChecksById, assertCheckExists } from '#cli/configurations/manifests.ts';
 import type { RunFilters, CheckOptions, RevisionSource } from '#cli/types/commands/check.ts';
 import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
 
@@ -86,22 +86,19 @@ function assertOnlyChecks(session: Session, only: string[] | undefined): void {
     const selected = session.scopes.flatMap((scope) =>
         scope.configurations.flatMap((configuration) => configuration.checks.map((check) => ({ check, scope }))),
     );
-    const checkIds = new Set([
-        ...selected.map(({ check }) => check.id),
-        ...Object.values(session.settingsFile.settings.commandChecks).map((check) => check.id),
-    ]);
-    const unknown = only?.find((check) => !checkIds.has(check));
-    if (unknown !== undefined)
-        throw new GspotError(
-            'arguments',
-            `There is no check called ${unknown}.${formatSimilarNames(unknown, [...checkIds])}`,
-        );
+    const shipped = listChecksById(session.configurations.values());
+    const settings = session.settingsFile.settings;
     for (const id of only ?? []) {
+        assertCheckExists(id, settings);
         const match = selected.find(({ check }) => check.id === id);
-        if (
-            match !== undefined &&
-            findSettingsSkip(session.settingsFile.settings, match.scope, match.check)?.cause === 'level'
-        )
+        if (match === undefined) {
+            const owner = shipped.get(id);
+            if (owner !== undefined)
+                throw new GspotError(
+                    'arguments',
+                    `${id} belongs to ${owner.configuration.name}, which no scope selects. Run gspot add ${owner.configuration.name}.`,
+                );
+        } else if (findSettingsSkip(settings, match.scope, match.check)?.cause === 'level')
             throw new GspotError(
                 'arguments',
                 `${id} is off at level recommended. Run gspot set level all to turn it on.`,
