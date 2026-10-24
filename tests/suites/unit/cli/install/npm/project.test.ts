@@ -16,8 +16,13 @@ import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
-import { FAILED_INSTALL_CASES, PACKAGE_MANAGER_TIMEOUT } from '#tests/config/install/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from '#cli/install/npm/project.ts';
+
+import {
+    FAILED_INSTALL_CASES,
+    PACKAGE_MANAGER_TIMEOUT,
+    PACKAGE_MANAGER_AGE_CASES,
+} from '#tests/config/install/npm/project.ts';
 
 test('the npm fallback for Yarn 1 refuses npm without the release age guard', async () => {
     await using sandbox = await testdir({
@@ -35,6 +40,27 @@ test('the npm fallback for Yarn 1 refuses npm without the release age guard', as
         'gspot install needs npm 11.19.0 or later, which holds back new releases for dependencies.min_release_age_days. Found 11.18.0.',
     );
 });
+
+test.each(PACKAGE_MANAGER_AGE_CASES)(
+    'release age support for $name $version is $accepted',
+    async ({ name, version, minimum, accepted }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([]),
+            'package.json': JSON.stringify({ private: true, packageManager: `${name}@${version}` }),
+        });
+        using _manager = fakeCommand(name, () => Promise.resolve(buildProcessResult({ stdout: `${version}\n` })));
+        const session = await openSession(sandbox.path);
+        using owner = openWriter(sandbox.path);
+        const context = buildToolInstall(session, owner);
+        const checked = assertPackageManagerVersion(context);
+        if (accepted) await checked;
+        else
+            expect(await captureRejection(checked)).toBe(
+                `gspot install needs ${name} ${minimum} or later, which holds back new releases for dependencies.min_release_age_days. Found ${version}.`,
+            );
+        expect(context.steps).toStrictEqual([[name, '--version']]);
+    },
+);
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' | 'timedOut'>>): Disposable {

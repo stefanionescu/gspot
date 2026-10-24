@@ -17,7 +17,6 @@ import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { type NpmToolProject } from '#cli/types/install/tool-projects.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { RELEASE_AGE_VERSIONS } from '#cli/config/install/npm/release-age.ts';
-import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { isLockfileFresh, stripBunRegistryUrls } from '#cli/install/npm/lockfiles.ts';
 import { type PackageManagerRun, type PackageManagerCommand } from '#cli/types/install/npm.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
@@ -131,9 +130,8 @@ export async function assertPackageManagerVersion(install: ToolInstall): Promise
     const requirement = `${String(semver.major(packageManager.version))}.x`;
     const found = version.stdout.trim();
     if (version.code === 0 && semver.satisfies(found, requirement, { includePrerelease: true })) {
-        const minimumVersions: Partial<Record<PackageManager['name'], string>> = RELEASE_AGE_VERSIONS;
-        const minimum = minimumVersions[packageManager.name];
-        if (minimum !== undefined && semver.lt(found, minimum))
+        const minimum = RELEASE_AGE_VERSIONS[packageManager.name];
+        if (semver.lt(found, minimum))
             throw new GspotError(
                 'install',
                 `gspot install needs ${packageManager.name} ${minimum} or later, which holds back new releases for dependencies.min_release_age_days. Found ${found}.`,
