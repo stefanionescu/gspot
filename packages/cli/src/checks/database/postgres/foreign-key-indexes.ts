@@ -7,7 +7,7 @@ import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
 
 /**
- * Reports each foreign key column that no index, primary key, or unique key leads with.
+ * Reports each foreign key whose columns do not lead an index, primary key, or unique key.
  *
  * @param session the repository and its tools.
  * @param planned the scope whose migrations to read.
@@ -17,13 +17,22 @@ export async function checkForeignKeyIndexes(session: Session, planned: PlannedC
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildSchema(migrations);
     return schema.foreignKeys
-        .filter((key) => schema.indexed.get(key.table)?.has(key.column) !== true)
+        .filter(
+            (key) =>
+                schema.indexed
+                    .get(key.table)
+                    ?.some(
+                        (index) =>
+                            index.length >= key.columns.length &&
+                            new Set(index.slice(0, key.columns.length)).isSupersetOf(new Set(key.columns)),
+                    ) !== true,
+        )
         .map((key) =>
             buildFinding(
                 planned,
                 { file: key.path, ...getPosition(key.text, key.offset) },
                 'foreign-key-index',
-                `${key.table}.${key.column} is a foreign key and no index leads with it.`,
+                `${key.table} (${key.columns.join(', ')}) is a foreign key and no index leads with these columns.`,
             ),
         );
 }

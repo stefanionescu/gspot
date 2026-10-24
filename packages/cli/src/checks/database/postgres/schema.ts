@@ -34,15 +34,14 @@ function buildConstraintName(node: Constraint, table: string, kind: string, keys
 }
 
 function addForeignKey(schema: DatabaseSchema, at: Location, name: string, columns: string[]): void {
-    const constraints = schema.constraints.get(at.table) ?? new Map<string, Schema['foreignKeys']>();
-    const keys = columns.map((column) => ({
+    const constraints = schema.constraints.get(at.table) ?? new Map<string, Schema['foreignKeys'][number]>();
+    constraints.set(name, {
         table: at.table,
-        column,
+        columns,
         path: at.migration.path,
         offset: at.statement.start,
         text: at.migration.text,
-    }));
-    constraints.set(name, keys);
+    });
     schema.constraints.set(at.table, constraints);
 }
 
@@ -58,9 +57,7 @@ function addConstraint(schema: DatabaseSchema, at: Location, node: Constraint, c
             : { keys: [column], columns: [column] };
     const isForeign = kind === 'CONSTR_FOREIGN';
     const name = buildConstraintName(node, at.table, kind, isForeign ? columns : keys);
-    const [first] = keys;
-    if (!isForeign && first !== undefined)
-        schema.indexes.push({ table: at.table, name, column: first, constraint: name });
+    if (!isForeign && keys.length > 0) schema.indexes.push({ table: at.table, name, columns: keys, constraint: name });
     if (isForeign) addForeignKey(schema, at, name, columns);
 }
 
@@ -126,20 +123,19 @@ const TOKEN_MATCHERS: SqlStatementVisitors<void, [DatabaseSchema, Migration]> = 
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
     IndexStmt: (statement, state) => {
-        const [first] = listNodeFields(statement.fields.indexParams, 'IndexElem');
-        const column = first?.name ?? '';
-        if (column === '') return;
+        const columns = listNodeFields(statement.fields.indexParams, 'IndexElem').map((column) => column.name ?? '');
+        if (columns.length === 0) return;
         const table = buildRelationName(statement.fields.relation);
-        state.indexes.push({ table, name: statement.fields.idxname ?? '', column, constraint: '' });
+        state.indexes.push({ table, name: statement.fields.idxname ?? '', columns, constraint: '' });
     },
 };
 
 function buildDatabaseSchema(schema: DatabaseSchema): Schema {
-    const foreignKeys = [...schema.constraints.values()].flatMap((constraints) => [...constraints.values()].flat());
-    const indexed = new Map<string, Set<string>>();
+    const foreignKeys = [...schema.constraints.values()].flatMap((constraints) => [...constraints.values()]);
+    const indexed = new Map<string, string[][]>();
     for (const index of schema.indexes) {
-        const columns = indexed.get(index.table) ?? new Set<string>();
-        columns.add(index.column);
+        const columns = indexed.get(index.table) ?? [];
+        columns.push(index.columns);
         indexed.set(index.table, columns);
     }
     return { tables: schema.tables, secured: schema.secured, foreignKeys, indexed };

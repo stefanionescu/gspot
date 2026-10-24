@@ -92,10 +92,10 @@ why = "A definer function runs with its owner's rights, and a caller who control
 
 [[check]]
 example = "A foreign key on `orders.customer_id` without an index starting with that column reports a missing index. Add `CREATE INDEX orders_customer_id_idx ON orders (customer_id);` in the migration set."
-help = "Create an index that starts with the foreign key column."
+help = "Create an index that starts with all columns of the foreign key."
 level = "recommended"
 name = "foreign-key-indexes"
 runs = "scope"
 stage = "commit"
-summary = "Checks that an index, a primary key, or a unique key leads with every foreign key column."
+summary = "Checks that an index, a primary key, or a unique key starts with all columns of each foreign key."
 why = "Deleting a parent row scans the whole child table when the foreign key has no index."

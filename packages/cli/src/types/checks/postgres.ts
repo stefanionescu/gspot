@@ -26,13 +26,13 @@ export type Migration = {
 export type Schema = {
     tables: Map<string, SourceStatement>;
     secured: Set<string>;
-    foreignKeys: (SourceStatement & { table: string; column: string })[];
-    indexed: Map<string, Set<string>>;
+    foreignKeys: (SourceStatement & { table: string; columns: string[] })[];
+    indexed: Map<string, string[][]>;
 };
 
 export type DatabaseSchema = Pick<Schema, 'tables' | 'secured'> & {
-    indexes: { table: string; name: string; column: string; constraint: string }[];
-    constraints: Map<string, Map<string, Schema['foreignKeys']>>;
+    indexes: { table: string; name: string; columns: string[]; constraint: string }[];
+    constraints: Map<string, Map<string, Schema['foreignKeys'][number]>>;
 };
 
 export type Location = { migration: Migration; statement: SqlStatement; table: string };
