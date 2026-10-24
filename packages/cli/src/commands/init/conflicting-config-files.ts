@@ -4,6 +4,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { ManagedKeys } from '#cli/types/apply.ts';
 import { isEditedInPlace } from '#cli/repository/setup/tools.ts';
 import type { ConflictingConfigFiles } from '#cli/types/commands/init.ts';
+import { PRETTIER_SCRIPT_FILE } from '#cli/config/commands/init/formatter-settings.ts';
 import type { RepositorySetup, ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 
 /**
@@ -31,7 +32,11 @@ function addConflictingConfigFile(file: ConflictingConfigFile, conflicts: Confli
             path,
             note: `${file.table ?? file.key ?? file.tool} settings stay here, and the generated ${tool} config file takes over. Delete the section; the generated config file replaces it.`,
         });
-    else conflicts.deleted.push({ path, note: `replaced by the generated ${tool} config file` });
+    else
+        conflicts.deleted.push({
+            path,
+            note: `replaced by the generated ${tool} config file${tool === 'prettier' && PRETTIER_SCRIPT_FILE.test(path) ? '; gspot cannot read a JavaScript Prettier config, so set format.indent_width and format.print_width by hand' : ''}`,
+        });
 }
 
 /**

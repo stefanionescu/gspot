@@ -1,14 +1,15 @@
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
+import { parse } from '@decimalturn/toml-patch';
 import { getTable } from '#cli/settings/scopes.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { type FormatSettings } from '#cli/types/settings/file.ts';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
+import { type TomlTable, type FormatSettings } from '#cli/types/settings/file.ts';
 
 import {
     FORMAT_FILE_CASES,
@@ -63,3 +64,21 @@ test('init turns Prettier overrides and the Ruff quote style into format overrid
     const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
     expect(options[0]).toMatchObject(PRETTIER_FORMAT_OPTIONS);
 });
+
+test.each(['prettier.config.mjs', '.prettierrc.cjs'])(
+    'init names the format settings it cannot read from %s',
+    async (path) => {
+        await using sandbox = await testdir({
+            [path]: 'export default { printWidth: 100 };\n',
+            'source.js': 'export const count = 1;\n',
+        });
+        commitAll(sandbox.path);
+        const result = await runGspot(sandbox.path, [...buildInitArguments(['format']), '--dry-run', '--json']);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        const { plan, settings } = JSON.parse(result.stdout) as InitJson;
+        expect([...plan.delete, ...plan.write].find((file) => file.path === path)?.note).toContain(
+            'gspot cannot read a JavaScript Prettier config, so set format.indent_width and format.print_width by hand',
+        );
+        expect(parse(settings) as TomlTable).not.toHaveProperty('format');
+    },
+);

@@ -157,8 +157,15 @@ export function planInitFiles(
         ...[...generated.files, ...generated.blocks]
             .filter(({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && !change.some((row) => row.path === path))
             .map(({ path }) => {
-                if (conflicts.deleted.some((row) => row.path === path))
-                    return { path, note: `replaces your file; read the old one with git show HEAD:${path}` };
+                const replaced = conflicts.deleted.find((row) => row.path === path);
+                if (replaced !== undefined)
+                    return {
+                        path,
+                        note: [
+                            `replaces your file; read the old one with git show HEAD:${path}`,
+                            ...replaced.note.split(';').slice(1),
+                        ].join(';'),
+                    };
                 return {
                     path,
                     note: Object.hasOwn(CI_FILE_NOTES, path)

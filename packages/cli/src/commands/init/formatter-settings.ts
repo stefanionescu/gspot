@@ -5,6 +5,7 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
@@ -21,11 +22,12 @@ import { DEFAULT_QUOTES } from '#cli/config/generation/configurations/general/fo
 import {
     PRETTIER_DEFAULTS,
     EDITORCONFIG_FILE,
-    PRETTIER_JSON_FILES,
     RUFF_SETTINGS_FILES,
+    PRETTIER_SCRIPT_FILE,
     FORMAT_CONFIGURATION,
     EDITORCONFIG_SECTION,
     EDITORCONFIG_COMMENT,
+    PRETTIER_FILE_FORMATS,
 } from '#cli/config/commands/init/formatter-settings.ts';
 
 function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | undefined {
@@ -105,6 +107,14 @@ function readEditorconfig(folder: string): PrettierOptions | null {
     };
 }
 
+function parsePrettierFile(path: string, text: string): PrettierOptions {
+    if (PRETTIER_SCRIPT_FILE.test(path)) return {};
+    const format = PRETTIER_FILE_FORMATS[posix.basename(path)];
+    const parsers = { yaml: parseYamlFile, json: parseJsonFile, toml: parseTomlFile };
+    const options = format === undefined ? {} : parsers[format](path, text);
+    return { ...PRETTIER_DEFAULTS, ...stripUndefined(prettierSettingsSchema.parse(options)) };
+}
+
 function readFormatOptions(
     file: string,
     dependencies: Record<string, string>,
@@ -119,9 +129,9 @@ function readFormatOptions(
     const usesPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
     if (usesPrettier) {
-        let options: unknown = isTable(packageOptions) ? packageOptions : {};
-        if (prettierFile !== undefined && (PRETTIER_JSON_FILES as readonly string[]).includes(prettierFile.path))
-            options = parseJsonFile(posix.join(root, prettierFile.path), prettierFile.text);
+        if (prettierFile !== undefined)
+            return parsePrettierFile(posix.join(root, prettierFile.path), prettierFile.text);
+        const options = isTable(packageOptions) ? packageOptions : {};
         return { ...PRETTIER_DEFAULTS, ...stripUndefined(prettierSettingsSchema.parse(options)) };
     }
     return readEditorconfig(root);
@@ -160,7 +170,7 @@ function readScopeFormat(
         quotes,
         override: overrides.length === 0 ? undefined : overrides,
     });
-    return { format: { ...fields } };
+    return Object.keys(fields).length === 0 ? {} : { format: fields };
 }
 
 /**
