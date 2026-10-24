@@ -120,3 +120,5 @@ configurations = ["site"]
 [site]
 build_command = ["bun", "build.js"]
 `;
+
+export const INVALID_SITEMAP_URLS = ['/', 'https://example.test/%E0%A4/'];

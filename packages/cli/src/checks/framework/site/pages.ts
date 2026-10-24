@@ -1,5 +1,6 @@
 import { gzipSync } from 'node:zlib';
 import { pathToFileURL } from 'node:url';
+import { getPosition } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -17,6 +18,7 @@ import { splitFileArguments } from '#cli/runs/command/batches.ts';
 import { getConfigFile } from '#cli/runs/command/placeholders.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import type { SitemapUrls } from '#cli/types/checks/framework/site.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { PURGECSS } from '#cli/config/checks/framework/site/purgecss-process.ts';
@@ -40,26 +42,59 @@ import {
     HTML_VALIDATE_FORMATTER_FLAG,
 } from '#cli/config/checks/framework/site/pages.ts';
 
-function readSitemapUrls(folder: string, files: ReadonlySet<string>): string[] {
-    const visited = new Set<string>();
-    const urls = new Set<string>();
+function parseSitemapUrl(value: string): URL | undefined {
+    const url = URL.parse(value);
+    if (url === null) return undefined;
+    try {
+        decodeURIComponent(url.pathname);
+        return url;
+    } catch (error) {
+        if (error instanceof URIError) return undefined;
+        throw error;
+    }
+}
 
+function readSitemapLocations(folder: string, file: string, planned: PlannedCheck): SitemapUrls {
+    const urls: URL[] = [];
+    const findings: Finding[] = [];
+    const text = readBytes(folder, file).toString('utf8');
+    for (const match of text.matchAll(SITEMAP_LOCATION)) {
+        const value = match.groups?.['url'] ?? '';
+        const url = parseSitemapUrl(value);
+        if (url === undefined) {
+            findings.push(
+                buildFinding(
+                    planned,
+                    { file: buildRepositoryPath(planned, file), ...getPosition(text, match.index) },
+                    'invalid-url',
+                    `The sitemap lists ${value}, which is not an absolute URL with valid escapes.`,
+                ),
+            );
+        } else {
+            urls.push(url);
+        }
+    }
+    return { urls, findings };
+}
+
+function readSitemapUrls(folder: string, files: ReadonlySet<string>, planned: PlannedCheck): SitemapUrls {
+    const visited = new Set<string>();
+    const urls = new Map<string, URL>();
+    const findings: Finding[] = [];
     const read = (file: string): void => {
         if (visited.has(file)) return;
         visited.add(file);
-        for (const url of readBytes(folder, file)
-            .toString('utf8')
-            .matchAll(SITEMAP_LOCATION)
-            .map((match) => match.groups?.['url'])
-            .filter((url) => url !== undefined)) {
-            if (new URL(url).pathname.endsWith(SITEMAP_EXTENSION)) {
-                const nested = decodeURIComponent(new URL(url).pathname).replace(/^\//u, '');
+        const found = readSitemapLocations(folder, file, planned);
+        findings.push(...found.findings);
+        for (const url of found.urls) {
+            if (url.pathname.endsWith(SITEMAP_EXTENSION)) {
+                const nested = decodeURIComponent(url.pathname).replace(/^\//u, '');
                 if (files.has(nested)) read(nested);
-            } else urls.add(url);
+            } else urls.set(url.href, url);
         }
     };
     for (const file of files) if (SITEMAP_FILE.test(file)) read(file);
-    return [...urls];
+    return { urls: [...urls.values()], findings };
 }
 
 function listPossiblePages(pathname: string): [string, ...string[]] {
@@ -78,7 +113,7 @@ function listPossiblePages(pathname: string): [string, ...string[]] {
 export async function checkSiteLychee(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const build = await getSuccessfulBuild(session, planned);
     const pages = new Set(listBuiltFiles(build.folder));
-    const location = readSitemapUrls(build.folder, pages)[0];
+    const location = readSitemapUrls(build.folder, pages, planned).urls[0];
     const paths = [...pages].filter((path) => path.endsWith(HTML_EXTENSION));
     if (paths.length === 0) return [];
     const command = [
@@ -88,7 +123,7 @@ export async function checkSiteLychee(session: Session, planned: PlannedCheck): 
         build.folder,
         ...(location === undefined
             ? []
-            : ['--remap', `^${RegExp.escape(new URL(location).origin)}/ ${pathToFileURL(build.folder).href}/`]),
+            : ['--remap', `^${RegExp.escape(location.origin)}/ ${pathToFileURL(build.folder).href}/`]),
         ...getTable(planned.scope.settings, 'docs').allowed_urls.flatMap((value) => ['--exclude', value]),
     ];
     const findings: Finding[] = [];
@@ -245,11 +280,11 @@ export async function checkSiteSitemap(session: Session, planned: PlannedCheck):
     const files = new Set(listBuiltFiles(build.folder));
     const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));
     if (sitemapFile === undefined) return [];
-    const urls = readSitemapUrls(build.folder, files);
-    const listed = new Set(urls.flatMap((url) => listPossiblePages(new URL(url).pathname)));
+    const { urls, findings } = readSitemapUrls(build.folder, files, planned);
+    const listed = new Set(urls.flatMap((url) => listPossiblePages(url.pathname)));
     const isLeftOut = buildPathMatcher(getTable(planned.scope.settings, 'site').allowed_unlisted_pages);
     const missing = urls
-        .filter((url) => listPossiblePages(new URL(url).pathname).every((page) => !files.has(page)))
+        .filter((url) => listPossiblePages(url.pathname).every((page) => !files.has(page)))
         .map((url) =>
             buildFinding(
                 planned,
@@ -258,7 +293,7 @@ export async function checkSiteSitemap(session: Session, planned: PlannedCheck):
                     line: 1,
                 },
                 'missing-page',
-                `The sitemap lists ${url}, and the build wrote no such page.`,
+                `The sitemap lists ${url.href}, and the build wrote no such page.`,
             ),
         );
     const unlisted = [...files]
@@ -274,5 +309,5 @@ export async function checkSiteSitemap(session: Session, planned: PlannedCheck):
                 'The build wrote this page, and the sitemap does not list it.',
             ),
         );
-    return [...missing, ...unlisted];
+    return [...findings, ...missing, ...unlisted];
 }

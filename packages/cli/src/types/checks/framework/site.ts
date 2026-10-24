@@ -1,3 +1,7 @@
+import type { Finding } from '#cli/types/runs/check.ts';
+
+export type SitemapUrls = { urls: URL[]; findings: Finding[] };
+
 export type SiteBuild = {
     cwd: string;
     command: string[];
