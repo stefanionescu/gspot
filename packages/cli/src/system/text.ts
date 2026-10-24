@@ -101,3 +101,16 @@ export function getPosition(text: string, offset: number): TextPosition {
 export function formatCount(count: number, noun: string): string {
     return `${String(count)} ${noun}${count === 1 ? '' : 's'}`;
 }
+
+/**
+ * Compare text by code units so paths and generated names keep the same order in every locale.
+ *
+ * @param left the first text.
+ * @param right the second text.
+ * @returns a negative number, zero, or a positive number for the text order.
+ */
+export function compareText(left: string, right: string): number {
+    if (left < right) return -1;
+    if (left > right) return 1;
+    return 0;
+}

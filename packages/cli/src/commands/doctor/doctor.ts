@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { openSession } from '#cli/session.ts';
-import { formatCount } from '#cli/system/text.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { getColors } from '#cli/system/terminal.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
@@ -12,6 +11,7 @@ import type { Command } from '@commander-js/extra-typings';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { compareText, formatCount } from '#cli/system/text.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { AVAILABLE_TOOL_STATES } from '#cli/config/tools/inspect.ts';
@@ -97,7 +97,7 @@ function buildDoctorReport(session: Session, versionPin: string | undefined): Do
             inspections.set(JSON.stringify(inspection), inspection);
         }
     }
-    const tools = [...inspections.values()].toSorted((left, right) => left.name.localeCompare(right.name));
+    const tools = [...inspections.values()].toSorted((left, right) => compareText(left.name, right.name));
     const { settings } = session.settingsFile;
     const hooks = readHookStatus(session, session.repository);
     const isBroken = !hooks.ready || tools.some((tool) => !isToolAvailable(tool));

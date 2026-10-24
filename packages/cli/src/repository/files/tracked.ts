@@ -1,5 +1,6 @@
 import ignore from 'ignore';
 import { isInside } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
 import { runGitForBytes } from '#cli/system/git.ts';
@@ -134,7 +135,7 @@ export function listSubmodulePaths(indexFiles: GitIndexFile[]): string[] {
         ...new Set(
             indexFiles.filter((indexFile) => indexFile.mode === GITLINK_MODE).map((indexFile) => indexFile.path),
         ),
-    ].toSorted((left, right) => left.localeCompare(right));
+    ].toSorted((left, right) => compareText(left, right));
 }
 
 /**
@@ -174,7 +175,7 @@ export async function listTrackedFiles(
                 !STATE_FOLDER_PATTERN.test(path.normalize('NFC')) &&
                 !submodules.some((module) => isInScope(path, module)),
         )
-        .toSorted((a, b) => a.localeCompare(b))
+        .toSorted((a, b) => compareText(a, b))
         .map((path) => readListedFile(repositoryRoot, path, executables))
         .filter((file) => file !== undefined);
 }

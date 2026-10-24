@@ -1,4 +1,5 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
+import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
@@ -92,7 +93,7 @@ function buildAttributesBlock(outsidePaths: string[], authored: string): string 
         : GIT_ATTRIBUTES_BLOCK;
     const suffix = inheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
     const lines = outsidePaths
-        .toSorted((left, right) => left.localeCompare(right))
+        .toSorted((left, right) => compareText(left, right))
         .map((path) => `${buildAttributePattern(path)} linguist-generated${suffix}`);
     return [block, ...lines].join('\n');
 }
@@ -212,7 +213,7 @@ export function generate(session: Session): GenerationResult {
     const rules = selectRuleFiles(session);
     generated.files.push(...rules.map(({ target: path, content }) => ({ path, content })));
     addManagedBlocks(session, rules, generated);
-    generated.files = generated.files.toSorted((left, right) => left.path.localeCompare(right.path));
+    generated.files = generated.files.toSorted((left, right) => compareText(left.path, right.path));
     assertDistinctPaths(generated);
     return generated;
 }

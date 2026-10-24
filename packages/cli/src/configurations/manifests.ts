@@ -1,12 +1,12 @@
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { isTable } from '#cli/system/tables.ts';
-import { formatSimilarNames } from '#cli/system/text.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { ShippedRule } from '#cli/types/generation/rules.ts';
 import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
+import { compareText, formatSimilarNames } from '#cli/system/text.ts';
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
 import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/configurations/manifests.ts';
 import { CONFIGURATIONS_FOLDER, SHIPPED_CONFIG_FILES_FOLDER } from '#cli/config/configurations/names.ts';
@@ -89,7 +89,7 @@ function readShippedConfigurations(): Map<string, Configuration> {
     }
     return buildConfigurations(
         [...manifests.values()].toSorted((first, second) =>
-            first.configuration.name.localeCompare(second.configuration.name),
+            compareText(first.configuration.name, second.configuration.name),
         ),
     );
 }

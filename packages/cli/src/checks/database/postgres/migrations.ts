@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -61,7 +62,7 @@ export async function readMigrations(session: Session, planned: PlannedCheck): P
                 .toSorted((left, right) => {
                     const first = BigInt(left.version || '0');
                     const second = BigInt(right.version || '0');
-                    if (first === second) return left.path.localeCompare(right.path);
+                    if (first === second) return compareText(left.path, right.path);
                     return first < second ? -1 : 1;
                 }),
         ),

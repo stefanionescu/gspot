@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
@@ -339,7 +340,7 @@ export function listEffectiveSettings(
                 ),
             ),
         ]),
-    ].toSorted((a, b) => a.localeCompare(b));
+    ].toSorted((a, b) => compareText(a, b));
     return keys
         .map((key) => getSettingValue(availableSettings, settings, key, scope))
         .filter((row) => row !== undefined);

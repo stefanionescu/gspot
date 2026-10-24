@@ -1,3 +1,4 @@
+import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { runGit, readGitText, readGitLines, readGitPaths } from '#cli/system/git.ts';
@@ -76,7 +77,7 @@ export async function readStagedPaths(repositoryRoot: string, cancelSignal?: Abo
     const cached = await readGitPaths(repositoryRoot, GIT_STAGED_DIFF_ARGUMENTS, {
         cancelSignal,
     });
-    const staged = cached.toSorted((a, b) => a.localeCompare(b));
+    const staged = cached.toSorted((a, b) => compareText(a, b));
     const dirty = new Set(await readGitPaths(repositoryRoot, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal }));
     return { staged, unstaged: staged.filter((path) => dirty.has(path)).length };
 }
@@ -106,7 +107,7 @@ export async function readChangedPaths(
     });
     return {
         reference: compared,
-        paths: [...new Set([...committed, ...working])].toSorted((a, b) => a.localeCompare(b)),
+        paths: [...new Set([...committed, ...working])].toSorted((a, b) => compareText(a, b)),
         commits,
     };
 }

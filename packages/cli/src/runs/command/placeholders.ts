@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { compareText } from '#cli/system/text.ts';
 import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { convertToSystemPath } from '#cli/system/paths.ts';
@@ -138,7 +139,7 @@ export function listCommandConfigFiles(session: Session, planned: PlannedCheck, 
                 return [...configured, ...pointed, ...(existing === undefined ? [] : [existing])];
             }),
         ),
-    ].toSorted((left, right) => left.localeCompare(right));
+    ].toSorted((left, right) => compareText(left, right));
 }
 
 /**

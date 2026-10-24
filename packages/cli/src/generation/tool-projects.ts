@@ -1,6 +1,7 @@
 import semver from 'semver';
 import { posix } from 'node:path';
 import { JSON_INDENT } from '#cli/config/text.ts';
+import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -31,7 +32,7 @@ import {
 export function buildMiseProject(configurations: Configuration[]): GeneratedFile {
     const tools = Object.fromEntries(
         listMisePins(configurations)
-            .toSorted((left, right) => left.name.localeCompare(right.name))
+            .toSorted((left, right) => compareText(left.name, right.name))
             .map((pin) => [
                 pin.name,
                 pin.options === undefined ? pin.version : { version: pin.version, ...pin.options },

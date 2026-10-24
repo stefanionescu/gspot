@@ -2,6 +2,7 @@ import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
+import { compareText } from '#cli/system/text.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { ALL_FILES_GLOB, GRAMMARS_FOLDER, CLI_PACKAGE_JSON, PACKAGE_SEARCH_DEPTH } from '#cli/config/system/assets.ts';
@@ -56,5 +57,5 @@ export function listAssets(prefix: string): string[] {
     if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
     return listMatchingPaths(folder, ALL_FILES_GLOB)
         .map((path) => convertToPosixPath(join(prefix, path)))
-        .toSorted((a, b) => a.localeCompare(b));
+        .toSorted((a, b) => compareText(a, b));
 }

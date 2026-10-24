@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
+import { compareText } from '#cli/system/text.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { stripDefaults } from '#cli/settings/text/defaults.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
@@ -16,7 +17,7 @@ function sortTable(table: TomlTable): TomlTable {
         ...FIRST_TABLES,
         ...Object.keys(table)
             .filter((key) => !([...ROOT_KEYS, ...FIRST_TABLES, ...LAST_TABLES] as readonly string[]).includes(key))
-            .toSorted((left, right) => left.localeCompare(right)),
+            .toSorted((left, right) => compareText(left, right)),
         ...LAST_TABLES,
     ];
     return Object.fromEntries(
@@ -40,7 +41,7 @@ function sortValue(value: unknown, path: string[]): unknown {
         ];
     else if (path[0] === 'tools') {
         const sortsNames = path.at(-1) === 'rules';
-        if (sortsNames) order = names.toSorted((left, right) => left.localeCompare(right));
+        if (sortsNames) order = names.toSorted((left, right) => compareText(left, right));
     }
     return Object.fromEntries(order.map((key) => [key, sortValue(value[key], [...path, key])]));
 }
@@ -56,7 +57,7 @@ function compareIgnores(left: TomlTable, right: TomlTable): number {
     const rightKey = buildIgnoreSortKey(right);
     for (const [index, leftKey] of buildIgnoreSortKey(left).entries()) {
         const other = rightKey[index];
-        const order = leftKey.localeCompare(other ?? '');
+        const order = compareText(leftKey, other ?? '');
         if (order !== 0) return order;
     }
     return 0;

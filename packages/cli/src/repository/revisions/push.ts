@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
+import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { readMergeBase, readDefaultRef } from '#cli/repository/revisions/changes.ts';
@@ -96,7 +97,7 @@ async function buildRevision(search: PushSearch, line: PushLine, hash: string): 
     const { base, changed, range } = await readComparison(search, hash, line.remoteHash);
     const history = await readGitLines(root, [...GIT_REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
     const tree = await readGitText(root, [...GIT_TREE_ARGUMENTS, `${hash}${TREE_SUFFIX}`], { cancelSignal });
-    const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => a.localeCompare(b));
+    const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => compareText(a, b));
     return {
         base,
         hash,

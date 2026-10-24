@@ -1,3 +1,4 @@
+import { compareText } from '#cli/system/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import type { ManagedKeys } from '#cli/types/apply.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -65,7 +66,7 @@ function listFolder(root: string, folder: string): string[] {
     if (!isInside(relative(canonicalRoot, target))) return [];
     if (!statSync(target).isDirectory()) return [];
     return readdirSync(target)
-        .toSorted((left, right) => left.localeCompare(right))
+        .toSorted((left, right) => compareText(left, right))
         .filter((name) => !name.startsWith('.') || name === KEPT_DOT_FILE);
 }
 
@@ -223,7 +224,7 @@ export function readRepositorySetup(
                     ((path.startsWith(GITHUB_WORKFLOWS_FOLDER) || path.startsWith(GITLAB_CI_FOLDER)) &&
                         YAML_EXTENSIONS.some((extension) => path.endsWith(extension))),
             )
-            .toSorted((a, b) => a.localeCompare(b)),
+            .toSorted((a, b) => compareText(a, b)),
         agentFiles: AGENT_FILES.filter((name) => paths.has(name)),
         ruleFolders: RULE_FOLDERS.filter(
             (name) =>

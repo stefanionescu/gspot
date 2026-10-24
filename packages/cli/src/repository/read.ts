@@ -1,4 +1,5 @@
 import { statSync, realpathSync } from 'node:fs';
+import { compareText } from '#cli/system/text.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { join, posix, dirname, resolve } from 'node:path';
 import type { ReadCache } from '#cli/types/system/files.ts';
@@ -96,7 +97,7 @@ export async function readRepository(
         files: tracked,
         dependencyFiles,
         scopeFolders: [...new Map([...discovered, ...written].map((scope) => [scope.path, scope])).values()].toSorted(
-            (left, right) => left.path.localeCompare(right.path),
+            (left, right) => compareText(left.path, right.path),
         ),
     };
 }

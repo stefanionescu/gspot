@@ -1,7 +1,6 @@
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
-import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { join, relative, normalize } from 'node:path';
 import { type Finding } from '#cli/types/runs/check.ts';
@@ -12,6 +11,7 @@ import { getCachedValue } from '#cli/system/files/cache.ts';
 import { statSync, lstatSync, realpathSync } from 'node:fs';
 import { formatOutputTail } from '#cli/runs/command/output.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
+import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { type SiteBuild } from '#cli/types/checks/framework/site.ts';
 
@@ -67,7 +67,7 @@ export function listBuiltFiles(folder: string): string[] {
         if (stat.isFile()) found.push(path);
         return false;
     });
-    return found.toSorted((left, right) => left.localeCompare(right));
+    return found.toSorted((left, right) => compareText(left, right));
 }
 
 /**

@@ -3,12 +3,12 @@ import { isDeepStrictEqual } from 'node:util';
 import { parse } from '@decimalturn/toml-patch';
 import { isTable } from '#cli/system/tables.ts';
 import { getUvPath } from '#cli/tools/locate.ts';
-import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { getTool } from '#cli/configurations/tools.ts';
 import { runInstallStep } from '#cli/install/steps.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
+import { compareText, formatCount } from '#cli/system/text.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
@@ -219,9 +219,9 @@ export function isPythonLockfileFresh(
                 name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-'),
             ),
         )
-        .toSorted((left, right) => left.localeCompare(right));
+        .toSorted((left, right) => compareText(left, right));
     return isDeepStrictEqual(
-        pins.toSorted((left, right) => left.localeCompare(right)),
+        pins.toSorted((left, right) => compareText(left, right)),
         expected,
     );
 }

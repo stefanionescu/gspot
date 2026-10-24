@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
@@ -94,4 +94,24 @@ test('generate writes the JSON Schema of gspot.toml for this gspot version', asy
         ({ path }) => path === GSPOT_PATHS.settingsSchema,
     );
     expect(schema?.content).toBe(`${JSON.stringify(buildJsonSchema(), null, JSON_INDENT)}\n`);
+});
+
+test('generated scope settings stay identical across process collations', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'commits'], {
+            scopes: [
+                { path: 'yam', configurations: ['javascript'] },
+                { path: 'jam', configurations: ['javascript'] },
+            ],
+        }),
+        'yam/package.json': '{"private":true}',
+        'jam/package.json': '{"private":true}',
+    });
+    const expected = generate(await openSession(sandbox.path));
+    using _collation = spyOn(String.prototype, 'localeCompare').mockImplementation(() => {
+        throw new Error('Generated text must not depend on process collation.');
+    });
+    const session = await openSession(sandbox.path);
+    expect(session.scopes.map(({ folder }) => folder.path)).toStrictEqual(['', 'jam', 'yam']);
+    expect(generate(session)).toStrictEqual(expected);
 });

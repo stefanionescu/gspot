@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import type { Host } from '#cli/types/planning.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
@@ -97,7 +98,7 @@ export function listToolProjectPins(configurations: Configuration[]): ToolProjec
         else python.push(`${installation.name}==${installation.version}`);
     }
     return {
-        npm: Object.fromEntries(npm.toSorted(([first], [second]) => first.localeCompare(second))),
+        npm: Object.fromEntries(npm.toSorted(([first], [second]) => compareText(first, second))),
         python,
     };
 }
@@ -117,7 +118,7 @@ export function listDistinctTools(configurations: Configuration[]): Tool[] {
     return tools
         .values()
         .toArray()
-        .toSorted((first, second) => first.name.localeCompare(second.name));
+        .toSorted((first, second) => compareText(first.name, second.name));
 }
 
 /**

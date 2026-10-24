@@ -5357,6 +5357,50 @@ export default [
             ]
         ]
     },
+    // javascript: your own rule options
+    {
+        "ignores": [
+            "packages/cli/src/system/environment.ts",
+            "packages/cli/src/system/environment.ts/**",
+            "tests/setup/system/environment.ts",
+            "tests/setup/system/environment.ts/**",
+            "tests/setup/runner/unit.ts",
+            "tests/setup/runner/unit.ts/**"
+        ],
+        rules: {
+            "no-restricted-properties": [
+                "error",
+                {
+                    "object": "Bun",
+                    "property": "env"
+                },
+                {
+                    "object": "Deno",
+                    "property": "env"
+                },
+                {
+                    "property": "localeCompare",
+                    "message": "Use compareText for stable ordering."
+                }
+            ]
+        },
+        files: [
+            [
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}",
+                "**/*",
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}",
+                "**/*",
+                "packages/cli/src/**"
+            ],
+            [
+                "**/*.astro",
+                "**/*",
+                "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,svelte,astro}",
+                "**/*",
+                "packages/cli/src/**"
+            ]
+        ]
+    },
     // javascript
     {
         "ignores": [],

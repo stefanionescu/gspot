@@ -1,4 +1,5 @@
 import { createTwoFilesPatch } from 'diff';
+import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { OutdatedFile } from '#cli/types/apply.ts';
@@ -97,7 +98,7 @@ export async function listOutdatedFiles(
         ...listOutdatedBlocks(files, generated),
         ...listOutdatedManagedKeys(files, generated),
         ...strays,
-    ].toSorted((a, b) => a.path.localeCompare(b.path));
+    ].toSorted((a, b) => compareText(a.path, b.path));
 }
 
 /**

@@ -1,6 +1,7 @@
 import { isCI } from 'std-env';
 import { confirm } from '@clack/prompts';
 import { openSession } from '#cli/session.ts';
+import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readGitSetting } from '#cli/system/git.ts';
 import { writeSettings } from '#cli/settings/file.ts';
@@ -137,7 +138,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     const tools = new Set(applicable.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
     const detectedTools = [
         ...new Set(repositorySetup.conflictingConfigFiles.map((configFile) => configFile.tool)),
-    ].toSorted((a, b) => a.localeCompare(b));
+    ].toSorted((a, b) => compareText(a, b));
     const detection: DetectionSummary = {
         files: repository.files,
         detected: initConfigurations.detected,

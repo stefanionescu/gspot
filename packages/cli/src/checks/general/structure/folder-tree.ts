@@ -1,3 +1,4 @@
+import { compareText } from '#cli/system/text.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
@@ -41,7 +42,7 @@ export function buildFolderTree(files: readonly { path: string }[]): Map<string,
     return new Map(
         [...tree].map(([folder, children]) => [
             folder,
-            [...children].map(([name, kind]) => ({ name, kind })).toSorted((a, b) => a.name.localeCompare(b.name)),
+            [...children].map(([name, kind]) => ({ name, kind })).toSorted((a, b) => compareText(a.name, b.name)),
         ]),
     );
 }

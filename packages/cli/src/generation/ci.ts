@@ -1,4 +1,3 @@
-import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -7,6 +6,7 @@ import { findSystemSkip } from '#cli/planning/skips.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { compareText, quoteArgument } from '#cli/system/text.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import type { Pipeline, ActionPin } from '#cli/types/generation/ci.ts';
@@ -74,7 +74,7 @@ function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSys
     });
     return {
         checks: [...new Set(checks.map((planned) => planned.check.id))].toSorted((first, second) =>
-            first.localeCompare(second),
+            compareText(first, second),
         ),
         tools,
     };

@@ -1,4 +1,5 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
+import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
@@ -100,7 +101,7 @@ function listFileTaskPackages(planned: PlannedConfigFile): string[] {
         .flatMap((file) => listRunPackages(readCachedText(planned.session.reads, file.path)));
     return [...new Set(names)]
         .filter((name) => dependencyNames.has(name))
-        .toSorted((left, right) => left.localeCompare(right));
+        .toSorted((left, right) => compareText(left, right));
 }
 
 /**

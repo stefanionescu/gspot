@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { visit } from 'unist-util-visit';
+import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildAssetPath } from '#cli/system/assets.ts';
@@ -182,7 +183,7 @@ export function buildAgentsBlock({
 }: AgentsBlockContent): string {
     const index = files.length > 0 ? formatRulesIndex(files) : [];
     const outside = generatedPaths
-        .toSorted((first, second) => first.localeCompare(second))
+        .toSorted((first, second) => compareText(first, second))
         .map((path) => `- \`${path}\``);
     const lines = [
         RULES_HEADING,

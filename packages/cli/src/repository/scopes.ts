@@ -1,4 +1,5 @@
 import { resolve, relative } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
@@ -61,7 +62,7 @@ export function listNestedScopes(paths: readonly string[], scope: string): strin
 export function compareScopeDepth(left: string, right: string): number {
     const leftDepth = left === '' ? 0 : left.split('/').length;
     const rightDepth = right === '' ? 0 : right.split('/').length;
-    return leftDepth - rightDepth || left.localeCompare(right);
+    return leftDepth - rightDepth || compareText(left, right);
 }
 
 /**
@@ -131,7 +132,7 @@ export function findScopeFolders(
         }
     }
     return [...folders]
-        .toSorted((left, right) => left.localeCompare(right))
+        .toSorted((left, right) => compareText(left, right))
         .map((path): ScopeFolder => ({ path, configurations: [], origin: 'project' }));
 }
 

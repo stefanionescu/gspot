@@ -1,6 +1,7 @@
 import semver from 'semver';
 import * as nypm from 'nypm';
 import { join, dirname } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
@@ -104,7 +105,7 @@ export async function detectPackageManager(repositoryRoot: string, trackedPaths:
         PACKAGE_JSON,
         ...trackedPaths
             .filter((path) => path.endsWith(`/${PACKAGE_JSON}`) && !path.startsWith(`${DOT_GSPOT}/`))
-            .toSorted((left, right) => left.localeCompare(right))
+            .toSorted((left, right) => compareText(left, right))
             .slice(0, 1),
     ];
     const selected = await readFirstPackageManager(repositoryRoot, packageJsonPaths);

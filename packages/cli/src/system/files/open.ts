@@ -1,3 +1,4 @@
+import { compareText } from '#cli/system/text.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import type { Files, FileBounds } from '#cli/types/system/files.ts';
@@ -39,7 +40,7 @@ export function openFiles(root: string): Files {
                 const target = path === '' ? state.root : buildContainedPath(state, path);
                 if (!lstatSync(target).isDirectory())
                     throw new GspotError('filesystem', `${path || '.'} is not a folder. Choose a folder.`);
-                return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
+                return readdirSync(target).toSorted((left, right) => compareText(left, right));
             } catch (error) {
                 if (hasErrorCode(error, 'ENOENT')) return [];
                 throw error;

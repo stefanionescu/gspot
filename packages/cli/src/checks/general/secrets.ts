@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
@@ -46,7 +47,7 @@ function findMissingEnvironmentKeys(
     const findings: Finding[] = [];
     const seen = new Set<string>();
     for (const { key, line } of reads.toSorted(
-        (left, right) => left.line - right.line || (left.key ?? '').localeCompare(right.key ?? ''),
+        (left, right) => left.line - right.line || compareText(left.key ?? '', right.key ?? ''),
     )) {
         if (key === undefined || exampleKeys.has(key) || seen.has(key)) continue;
         seen.add(key);

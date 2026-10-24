@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -82,7 +83,7 @@ function listArgumentNames(elements: MessageFormatElement[]): string[] {
             const keys =
                 element.type === TYPE.select
                     ? `, select, ${Object.keys(element.options)
-                          .toSorted((left, right) => left.localeCompare(right))
+                          .toSorted((left, right) => compareText(left, right))
                           .join(' ')}`
                     : ', plural';
             const nested = Object.values(element.options).flatMap((option) => listArgumentNames(option.value));

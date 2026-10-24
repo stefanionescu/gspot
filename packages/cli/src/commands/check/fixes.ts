@@ -1,4 +1,5 @@
 import { createTwoFilesPatch } from 'diff';
+import { compareText } from '#cli/system/text.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -204,7 +205,7 @@ export async function runFixers(session: Session, planned: PlannedCheck[], optio
         ...new Set(
             checks.flatMap((check) => [...new Set([...check.files.map((file) => file.path), ...check.triggerPaths])]),
         ),
-    ].toSorted((a, b) => a.localeCompare(b));
+    ].toSorted((a, b) => compareText(a, b));
     using scratch = isDryRun
         ? await createCopy(
               selectCopyPaths(

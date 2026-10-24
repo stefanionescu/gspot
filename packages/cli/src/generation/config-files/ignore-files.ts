@@ -1,3 +1,4 @@
+import { compareText } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { listIgnores } from '#cli/settings/scopes.ts';
@@ -159,7 +160,7 @@ function formatIgnoreFile(sections: IgnoreSection[]): string {
         ...section,
         patterns: section.patterns.some((pattern) => pattern.startsWith('!'))
             ? section.patterns
-            : section.patterns.toSorted((left, right) => left.localeCompare(right)),
+            : section.patterns.toSorted((left, right) => compareText(left, right)),
     }));
     const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns: paths }) => {
         return paths.length === 0 ? [] : ['', ...formatReasonLines(title, ''), ...paths];

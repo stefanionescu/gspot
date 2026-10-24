@@ -2,6 +2,7 @@ import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { isTable } from '#cli/system/tables.ts';
 import { JSON_INDENT } from '#cli/config/text.ts';
+import { compareText } from '#cli/system/text.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { spawnProcess } from '#cli/system/processes.ts';
@@ -106,7 +107,7 @@ async function preparePackages(folder: string, names: Set<string>): Promise<Map<
     const versions = listToolProjectPins([...readConfigurations().values()]).npm;
     const dependencies = Object.fromEntries(
         [...names]
-            .toSorted((first, second) => first.localeCompare(second))
+            .toSorted((first, second) => compareText(first, second))
             .map((name) => {
                 const version = versions[name];
                 if (version === undefined) throw new Error(`The configurations pin no version of ${name}.`);
@@ -155,7 +156,7 @@ async function captureNames(installed: Map<string, InstalledPackage>, folder: st
                 package: eslint.name,
                 version: eslint.version,
                 source: LINTER_PACKAGES.eslint.nameList.source,
-                names: [...builtins.builtinRules.keys()].toSorted((first, second) => first.localeCompare(second)),
+                names: [...builtins.builtinRules.keys()].toSorted((first, second) => compareText(first, second)),
             }),
         ],
         [
@@ -164,7 +165,7 @@ async function captureNames(installed: Map<string, InstalledPackage>, folder: st
                 package: globals.name,
                 version: globals.version,
                 source: LINTER_PACKAGES.globals.nameList.source,
-                names: Object.keys(globalsExports.default).toSorted((first, second) => first.localeCompare(second)),
+                names: Object.keys(globalsExports.default).toSorted((first, second) => compareText(first, second)),
             }),
         ],
         [
@@ -173,7 +174,7 @@ async function captureNames(installed: Map<string, InstalledPackage>, folder: st
                 package: standard.name,
                 version: standard.version,
                 source: LINTER_PACKAGES.stylelint.nameList.source,
-                names: Object.keys(style.rules).toSorted((first, second) => first.localeCompare(second)),
+                names: Object.keys(style.rules).toSorted((first, second) => compareText(first, second)),
             }),
         ],
     ]);

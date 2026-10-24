@@ -24,16 +24,16 @@ export const DOCKERIGNORE_CASES = [
         },
         findings: [
             {
-                file: 'app/Dockerfile',
-                rule: 'missing-file',
-                message:
-                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*, **/.venv/**, **/venv/**.',
-            },
-            {
                 file: 'Dockerfile',
                 rule: 'missing-file',
                 message:
                     'Add an ignore file at Dockerfile.dockerignore or .dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*.',
+            },
+            {
+                file: 'app/Dockerfile',
+                rule: 'missing-file',
+                message:
+                    'Add an ignore file at app/Dockerfile.dockerignore or app/.dockerignore that lists .git, .env, **/.env, **/.env.*, **/.dev.vars, **/.dev.vars.*, **/.venv/**, **/venv/**.',
             },
         ],
     },

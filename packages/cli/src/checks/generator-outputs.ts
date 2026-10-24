@@ -1,4 +1,5 @@
 import { join, posix } from 'node:path';
+import { compareText } from '#cli/system/text.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -44,7 +45,7 @@ function listUntrackedOutputs(session: Session, planned: PlannedCheck, named: st
         : listMatchingPaths(join(session.root, scope), [...named, ...excluded])
               .map((path) => joinScope(scope, path))
               .filter((path) => !tracked.has(path))
-              .toSorted((left, right) => left.localeCompare(right))
+              .toSorted((left, right) => compareText(left, right))
               .map((path) =>
                   buildFinding(
                       planned,
@@ -170,7 +171,7 @@ export async function checkGeneratorOutputs(session: Session, planned: PlannedCh
                 (stdoutPaths.has(path) ? was.toString('utf8').trim() !== now.toString('utf8') : !was.equals(now))
             );
         })
-        .toSorted((left, right) => left.localeCompare(right))
+        .toSorted((left, right) => compareText(left, right))
         .map((path) =>
             buildFinding(
                 planned,

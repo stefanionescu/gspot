@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import assert from 'node:assert/strict';
+import { compareText } from '#cli/system/text.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import type { Session } from '#cli/types/session.ts';
 import { buildBaseResult } from '#cli/runs/report.ts';
@@ -131,7 +132,7 @@ export function isProjectChecked(
     const key = JSON.stringify([
         check,
         path,
-        Object.entries(required).toSorted(([left], [right]) => left.localeCompare(right)),
+        Object.entries(required).toSorted(([left], [right]) => compareText(left, right)),
     ]);
     const earlier = checked.get(key);
     if (earlier !== undefined && earlier !== scope) return true;

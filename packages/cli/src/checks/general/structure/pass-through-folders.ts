@@ -1,3 +1,4 @@
+import { compareText } from '#cli/system/text.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
@@ -25,7 +26,7 @@ export function checkPassThroughFolders(session: Session, planned: PlannedCheck)
     return [...folders]
         .filter((folder) => folder !== scope && (scope === '' || folder.startsWith(`${scope}/`)))
         .filter((folder) => !folder.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment)))
-        .toSorted((left, right) => left.localeCompare(right))
+        .toSorted((left, right) => compareText(left, right))
         .flatMap((folder) => {
             const children = tree.get(folder) ?? [];
             const [only] = children;

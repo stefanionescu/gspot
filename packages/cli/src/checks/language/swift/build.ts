@@ -1,3 +1,4 @@
+import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -220,5 +221,5 @@ export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck
             if (findCachedText(session.reads, path) !== undefined) paths.push(path);
         }
     }
-    return [...new Set(paths)].toSorted((a, b) => a.localeCompare(b));
+    return [...new Set(paths)].toSorted((a, b) => compareText(a, b));
 }

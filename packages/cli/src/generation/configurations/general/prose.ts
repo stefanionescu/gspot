@@ -1,4 +1,5 @@
 import { stringify } from 'yaml';
+import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
@@ -249,7 +250,7 @@ export function buildPossessivesStyle(planned: PlannedConfigFile): string {
 export function buildAcceptedWordsFile(planned: PlannedConfigFile): string {
     const words = listAllowedWords(planned.session);
 
-    return words.toSorted((left, right) => left.localeCompare(right)).join('\n');
+    return words.toSorted((left, right) => compareText(left, right)).join('\n');
 }
 
 function listAllowedWords(session: Session): string[] {

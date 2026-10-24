@@ -1,9 +1,9 @@
 import { DIGITS_ONLY } from '#cli/config/text.ts';
-import { formatCount } from '#cli/system/text.ts';
 import { getColors } from '#cli/system/terminal.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { readLintJobs } from '#cli/repository/setup/tools.ts';
+import { compareText, formatCount } from '#cli/system/text.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
@@ -68,7 +68,7 @@ function buildToolDependencyRows(
             ),
         ]
             .filter((name) => toolPackages.has(name))
-            .toSorted((left, right) => left.localeCompare(right));
+            .toSorted((left, right) => compareText(left, right));
         if (names.length === 0) return [];
         const subject = names.join(', ');
         const verb = names.length === 1 ? 'is' : 'are';
