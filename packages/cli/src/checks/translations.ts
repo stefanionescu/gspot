@@ -1,9 +1,8 @@
 import { posix } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import type { Parsed } from '#cli/types/shapes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { readParsedFile } from '#cli/checks/syntax.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
@@ -114,18 +113,6 @@ function compareMessageArguments(text: string, baseText: string, base: string): 
         .join(' ');
 }
 
-function readMessages(session: Session, path: string): Parsed<Map<string, string>> {
-    const text = readCachedText(session.reads, path);
-    let parsed: Record<string, unknown>;
-    try {
-        parsed = parseJsonFile(path, text, messagesSchema);
-    } catch (error) {
-        if (error instanceof GspotError && error.code === 'filesystem') return { error: error.message };
-        throw error;
-    }
-    return { value: flattenMessages(parsed) };
-}
-
 function readMessageFiles(
     session: Session,
     planned: PlannedCheck,
@@ -136,9 +123,10 @@ function readMessageFiles(
     const findings: Finding[] = [];
     const paths = new Set([...files, ...files.map((file) => findBaseFile(file, messageFiles))]);
     for (const path of [...paths].filter((each) => messageFiles.paths.has(each))) {
-        const messages = readMessages(session, path);
-        if ('error' in messages)
-            findings.push(buildFinding(planned, { file: path, line: 1 }, 'syntax', messages.error));
+        const messages = readParsedFile(planned, path, () =>
+            flattenMessages(parseJsonFile(path, readCachedText(session.reads, path), messagesSchema)),
+        );
+        if ('error' in messages) findings.push(messages.error);
         else messagesByPath.set(path, messages.value);
     }
     return { messagesByPath, findings };

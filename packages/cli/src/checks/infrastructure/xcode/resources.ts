@@ -1,15 +1,14 @@
 import { posix } from 'node:path';
 import { camelCase } from 'scule';
-import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { readParsedFile } from '#cli/checks/syntax.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import type { XcodeStrings, AssetContents } from '#cli/types/checks/infrastructure/xcode.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/checks/infrastructure/xcode.ts';
 
 import {
@@ -43,14 +42,9 @@ export function checkXcodeAssets(session: Session, planned: PlannedCheck): Findi
         .flatMap((path) => {
             const text = readCachedText(session.reads, path);
             const at = { file: path, line: 1 };
-            let contents: AssetContents;
-            try {
-                contents = parseJsonFile(path, text, assetContentsSchema);
-            } catch (error) {
-                if (error instanceof GspotError && error.code === 'filesystem')
-                    return [buildFinding(planned, at, 'syntax', error.message)];
-                throw error;
-            }
+            const parsed = readParsedFile(planned, path, () => parseJsonFile(path, text, assetContentsSchema));
+            if ('error' in parsed) return [parsed.error];
+            const contents = parsed.value;
             if (!path.endsWith(IMAGE_SET)) return [];
             const names = (contents.images ?? []).flatMap((image) =>
                 image.filename === undefined ? [] : [image.filename],
@@ -108,14 +102,9 @@ export function checkXcodeXcstrings(session: Session, planned: PlannedCheck): Fi
     return listSourcePaths(planned.files, [XCSTRINGS_SUFFIX]).flatMap((path) => {
         const text = readCachedText(session.reads, path);
         const at = { file: path, line: 1 };
-        let xcstrings: XcodeStrings;
-        try {
-            xcstrings = parseJsonFile(path, text, stringsFileSchema);
-        } catch (error) {
-            if (error instanceof GspotError && error.code === 'filesystem')
-                return [buildFinding(planned, at, 'syntax', error.message)];
-            throw error;
-        }
+        const parsed = readParsedFile(planned, path, () => parseJsonFile(path, text, stringsFileSchema));
+        if ('error' in parsed) return [parsed.error];
+        const xcstrings = parsed.value;
         const strings = (xcstrings.strings === undefined ? [] : Object.entries(xcstrings.strings)).filter(
             ([, localized]) => localized.shouldTranslate !== false,
         );
