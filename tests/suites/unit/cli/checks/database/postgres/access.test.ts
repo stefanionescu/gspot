@@ -9,11 +9,37 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import {
     GRANT_FILES,
     FROZEN_GRANTS,
+    DEFINER_REPAIRS,
     ROW_SECURITY_SQL,
     DEFINER_FUNCTION_SQL,
     DEFINER_SEARCH_PATH_SQL,
     SECURED_ROW_SECURITY_SQL,
 } from '#tests/config/checks/database/postgres/access.ts';
+
+test.each([...DEFINER_REPAIRS])('definer-search-path accepts a later $name migration', async ({ sql }) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres'], {
+            level: 'all',
+            tables: '[postgres]\nfrozen_through = "1"\n',
+        }),
+        'migrations/1_definer.sql': DEFINER_FUNCTION_SQL,
+        'migrations/2_repair.sql': sql,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([]);
+});
+
+test('definer-search-path keeps an unsafe overload when another signature is repaired', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
+        'migrations/1_definer.sql': DEFINER_FUNCTION_SQL,
+        'migrations/2_overload.sql':
+            'CREATE FUNCTION public.grant_access(account_id int) RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;\n',
+        'migrations/3_repair.sql': "ALTER FUNCTION public.grant_access() SET search_path = '';\n",
+    });
+    expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toMatchObject([
+        { file: 'migrations/2_overload.sql', rule: 'definer-search-path' },
+    ]);
+});
 
 test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the newer ones', async (scope) => {
     const prefix = scope === '' ? '' : `${scope}/`;

@@ -1,29 +1,74 @@
 import { getPosition } from '#cli/system/text.ts';
+import type { Node, TypeName } from '@pgsql/types';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { Migration } from '#cli/types/checks/postgres.ts';
-import type { SqlStatement } from '#cli/types/parsers/code/sql.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
+import type { SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
-import { getNodeFields, listNodeFields } from '#cli/parsers/code/sql/postgres.ts';
+import { PUBLIC_SCHEMA } from '#cli/config/checks/database/postgres/schema.ts';
 import { readParsedMigrations } from '#cli/checks/database/postgres/migrations.ts';
+import type { Migration, MigrationStatement } from '#cli/types/checks/postgres.ts';
+import { getNodeFields, listNodeFields, visitStatement } from '#cli/parsers/code/sql/postgres.ts';
 
-function isLooseDefiner(statement: SqlStatement): boolean {
-    if (statement.kind !== 'CreateFunctionStmt') return false;
-    const options = listNodeFields(statement.fields.options, 'DefElem');
-    const isDefiner = options.some(
-        (option) => option.defname === 'security' && getNodeFields(option.arg, 'Boolean')?.boolval === true,
-    );
-    const hasPath = options.some(
-        (option) => option.defname === 'set' && getNodeFields(option.arg, 'VariableSetStmt')?.name === 'search_path',
-    );
-    return isDefiner && !hasPath;
+function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | undefined)[]): string {
+    const path = listNodeFields(names, 'String').map(({ sval }) => sval ?? '');
+    const qualified = path.length === 1 ? [PUBLIC_SCHEMA, ...path] : path;
+    return JSON.stringify([
+        qualified,
+        parameters.map((parameter) => [
+            listNodeFields(parameter?.names, 'String').map(({ sval }) => sval ?? ''),
+            (parameter?.arrayBounds?.length ?? 0) > 0,
+        ]),
+    ]);
 }
 
-function listMigrationStatements(migrations: Migration[]): { migration: Migration; statement: SqlStatement }[] {
+function listLooseDefiners(migrations: Migration[]): Map<string, MigrationStatement> {
+    const definers = new Map<string, MigrationStatement>();
+    const readers: SqlStatementVisitors<void, [Migration]> = {
+        CreateFunctionStmt: (statement, migration) => {
+            const options = listNodeFields(statement.fields.options, 'DefElem');
+            const isDefiner = options.some(
+                (option) => option.defname === 'security' && getNodeFields(option.arg, 'Boolean')?.boolval === true,
+            );
+            const hasPath = options.some(
+                (option) =>
+                    option.defname === 'set' && getNodeFields(option.arg, 'VariableSetStmt')?.name === 'search_path',
+            );
+            const parameters = listNodeFields(statement.fields.parameters, 'FunctionParameter')
+                .filter(({ mode }) => mode !== 'FUNC_PARAM_OUT' && mode !== 'FUNC_PARAM_TABLE')
+                .map(({ argType }) => argType);
+            const key = buildFunctionKey(statement.fields.funcname, parameters);
+            if (isDefiner && !hasPath) definers.set(key, { migration, statement });
+            else definers.delete(key);
+        },
+        AlterFunctionStmt: ({ fields }) => {
+            const actions = listNodeFields(fields.actions, 'DefElem');
+            if (
+                actions.some(
+                    (action) =>
+                        action.defname === 'set' &&
+                        getNodeFields(action.arg, 'VariableSetStmt')?.name === 'search_path',
+                )
+            )
+                definers.delete(
+                    buildFunctionKey(fields.func?.objname, listNodeFields(fields.func?.objargs, 'TypeName')),
+                );
+        },
+        DropStmt: ({ fields }) => {
+            if (fields.removeType !== 'OBJECT_FUNCTION') return;
+            for (const dropped of listNodeFields(fields.objects, 'ObjectWithArgs'))
+                definers.delete(buildFunctionKey(dropped.objname, listNodeFields(dropped.objargs, 'TypeName')));
+        },
+    };
+    for (const migration of migrations)
+        for (const statement of migration.statements) visitStatement(statement, readers, migration);
+    return definers;
+}
+
+function listMigrationStatements(migrations: Migration[]): MigrationStatement[] {
     return migrations.flatMap((migration) => migration.statements.map((statement) => ({ migration, statement })));
 }
 
@@ -93,8 +138,8 @@ export async function checkDefinerSearchPath(session: Session, planned: PlannedC
     const message =
         'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.';
     const migrations = await readParsedMigrations(session, planned);
-    return listMigrationStatements(migrations)
-        .filter(({ statement }) => isLooseDefiner(statement))
+    return listLooseDefiners(migrations)
+        .values()
         .map(({ migration, statement }) =>
             buildFinding(
                 planned,
@@ -102,5 +147,6 @@ export async function checkDefinerSearchPath(session: Session, planned: PlannedC
                 'definer-search-path',
                 message,
             ),
-        );
+        )
+        .toArray();
 }

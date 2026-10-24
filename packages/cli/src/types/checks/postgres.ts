@@ -38,3 +38,5 @@ export type DatabaseSchema = Pick<Schema, 'tables' | 'secured'> & {
 export type Location = { migration: Migration; statement: SqlStatement; table: string };
 
 export type MigrationRead = { migrations: Migration[]; findings: Finding[] };
+
+export type MigrationStatement = { migration: Migration; statement: SqlStatement };
