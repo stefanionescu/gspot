@@ -12,6 +12,7 @@ import { pythonSchema, javascriptSchema } from '#cli/schemas/settings/languages.
 import { commandSchema, nonemptyString } from '#cli/schemas/configurations/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
+import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/parsers/code/sql/migrations.ts';
 
 import {
     type TableValues,
@@ -136,7 +137,8 @@ export const configurationTableSchemas = {
             client_schemas: nonemptyStrings
                 .default(SETTING_DEFINITIONS['postgres.client_schemas'].default)
                 .meta(SETTING_DEFINITIONS['postgres.client_schemas']),
-            frozen_through: nonemptyString
+            frozen_through: z
+                .union([z.enum([FROZEN_NONE, FROZEN_ALL]), z.string().regex(FROZEN_VERSION)])
                 .default(SETTING_DEFINITIONS['postgres.frozen_through'].default)
                 .meta(SETTING_DEFINITIONS['postgres.frozen_through']),
             migrations_folder: relativePath.optional().meta(SETTING_DEFINITIONS['postgres.migrations_folder']),

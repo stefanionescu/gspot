@@ -3,7 +3,14 @@ import { getPosition } from '#cli/system/text.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { TYPO } from '#tests/config/checks/general/spelling.ts';
 import { parseSqlFile } from '#cli/parsers/code/sql/postgres.ts';
-import { NESTED_COMMENT_SQL, QUOTED_PSQL_SOURCES } from '#tests/config/parsers/code/sql.ts';
+import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
+
+import {
+    NESTED_COMMENT_SQL,
+    QUOTED_PSQL_SOURCES,
+    FROZEN_MIGRATION_CASES,
+    FROZEN_MIGRATION_PATHS,
+} from '#tests/config/parsers/code/sql.ts';
 
 test('empty SQL has no statements', async () => {
     const result = await parseSqlFile('', createReadCache(process.cwd()));
@@ -77,3 +84,10 @@ test.each(["'", "E'", '"'])('an unterminated SQL %s value gives the parser error
         column: 8,
     });
 });
+
+test.each([...FROZEN_MIGRATION_CASES])(
+    'freeze version $through selects the expected migrations',
+    ({ through, frozen }) => {
+        expect([...selectFrozenMigrations([...FROZEN_MIGRATION_PATHS], through)]).toStrictEqual([...frozen]);
+    },
+);

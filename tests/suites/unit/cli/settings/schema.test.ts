@@ -176,3 +176,12 @@ test('names in an ignore is refused for a check whose findings name no definitio
         'names applies only to structure/trivial-functions and python/vulture, whose findings name a definition.',
     );
 });
+
+test.each(['latest', 'v20240101', 'V', '20240101__init.sql'])(
+    'the freeze cutoff refuses an invalid version: %s',
+    (through) => {
+        expect(() =>
+            parseSettings(`configurations = ["postgres"]\n[postgres]\nfrozen_through = "${through}"\n`, undefined),
+        ).toThrow(String.raw`gspot.toml: postgres.frozen_through: Invalid string: must match pattern /^V?\d+$/u`);
+    },
+);
