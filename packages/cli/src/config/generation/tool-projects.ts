@@ -8,6 +8,7 @@ export const PYTHON_TOOL_PROJECT = {
     'requires-python': `==${PYTHON_VERSION}`,
 } as const;
 
-export const YARN_TOOL_PROJECT_SETTINGS = 'nodeLinker: node-modules\nenableGlobalCache: true\n';
+export const YARN_TOOL_PROJECT_SETTINGS =
+    'nodeLinker: node-modules\nenableGlobalCache: true\ninstallStatePath: ./node_modules/.yarn-install-state.gz\n';
 
 export const UV_PROJECT_TABLE = '[tool.uv]';
