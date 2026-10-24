@@ -26,8 +26,32 @@ import {
     CI_SOURCE_WORKFLOW,
     WORKFLOW_TEXT_CASES,
     CI_INJECTION_SETTINGS,
+    OUTSIDE_GITHUB_ACTIONS,
     GENERATED_WORKFLOW_CHECKS,
 } from '#tests/config/checks/infrastructure/github-actions.ts';
+
+test('actionlint copies root actions and unchanged actions outside .github with workflow replacements', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['github-actions']),
+        ...OUTSIDE_GITHUB_ACTIONS,
+    });
+    const session = await openSession(sandbox.path);
+    using _pins = fakeToolExecutables(
+        ['actionlint', 'shellcheck'].map((name) => getTool(session.configurations.values(), name)),
+    );
+    using boundary = spyOn(processes, 'spawnProcess').mockImplementation(async (_command, options) => {
+        expect(await readFile(join(options.cwd, 'action.yml'), 'utf8')).toContain('uses: ./actions/setup');
+        expect(await readFile(join(options.cwd, 'actions/setup/action.yml'), 'utf8')).toBe(
+            OUTSIDE_GITHUB_ACTIONS['actions/setup/action.yml'],
+        );
+        return buildProcessResult();
+    });
+    const result = await runChecks(session, buildRunOptions({ only: ['github-actions/actionlint'] }));
+    expect(result.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(boundary).toHaveBeenCalledTimes(1);
+    for (const [path, source] of Object.entries(OUTSIDE_GITHUB_ACTIONS))
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
+});
 
 test.each([...GENERATED_WORKFLOW_CHECKS])(
     '$tool reports findings in the generated workflow',

@@ -70,3 +70,11 @@ export const GENERATED_WORKFLOW_CHECKS = [
         stdout: '::error file=.github/workflows/gspot.yml,line=56,title=template-injection::untrusted expression\n',
     },
 ] as const;
+
+export const OUTSIDE_GITHUB_ACTIONS = {
+    '.github/workflows/caller.yml':
+        'on: workflow_dispatch\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: $/actions/setup\n',
+    'action.yml': 'name: Root\nruns:\n  using: composite\n  steps:\n    - uses: $/actions/setup\n',
+    'actions/setup/action.yml':
+        'name: Setup\nruns:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo safe\n',
+} as const;

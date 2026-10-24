@@ -88,7 +88,14 @@ export async function checkGithubActionsActionlint(session: Session, planned: Pl
     if (replacements.size === 0) return runCheckCommand(session, planned);
     using scratch = await createCopy({
         root: session.root,
-        paths: session.repository.files.filter((file) => file.path.startsWith(GITHUB_FOLDER)).map((file) => file.path),
+        paths: [
+            ...new Set([
+                ...session.repository.files
+                    .filter((file) => file.path.startsWith(GITHUB_FOLDER))
+                    .map((file) => file.path),
+                ...actionFiles.keys(),
+            ]),
+        ],
         dependencies: [],
         cancelSignal: session.cancelSignal,
     });
