@@ -25,6 +25,9 @@ test.each(['class Sample {}', 'export class Sample {}', 'export default class Sa
 
 createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-imports'], {
     valid: [
+        "import { a } from './a';\n// @ts-expect-error The declaration is incomplete.\nimport { b } from './b';",
+        "import { a } from './a';\n/* global process */\nimport { b } from '../b';",
+        "import { a } from './a';\n/* @ts-expect-error The declaration is incomplete. */\nimport { b } from './b';",
         "import { a } from './a';\n\n// Explains the complete\n// declaration below.\nexport const b = a;",
 
         "// The file header.\nimport { a } from './a';\n\nexport const b = a;",
@@ -43,12 +46,6 @@ createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-im
     ],
     invalid: (
         [
-            [
-                "import { a } from './a';\n// @ts-expect-error The declaration is incomplete.\nimport { b } from './b';",
-                null,
-                2,
-            ],
-            ["import { a } from './a';\n/* global process */\nimport { b } from '../b';", null, 2],
             [
                 "import { a } from './a';\n// Explains the complete\n// import below.\nimport { c } from './c';\nexport const b = a + c;",
                 "// Explains the complete\n// import below.\nimport { a } from './a';\nimport { c } from './c';\nexport const b = a + c;",

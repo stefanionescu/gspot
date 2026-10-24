@@ -159,9 +159,9 @@ export const noCommentsInImports = createRule<[], 'comment'>({
         docs: {
             level: 'all',
             example:
-                'A file header after an import reports `comment`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration remains in place. A tool directive is allowed only after the last import; a directive between imports is reported without a fix. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
+                'A file header after an import reports `comment`. A comment between imports does too. Move the comment above the first import or beside the code it explains. A comment that leads the next declaration remains in place. Tool directives, such as `// @ts-expect-error` above the import it targets, are allowed anywhere in the block. CommonJS require declarations follow the same rule when ESLint selects the commonjs source type.',
             description:
-                'Reports comments within or immediately after an import block. Exempts tool directives after the last import and comments that lead the next declaration.',
+                'Reports comments within or immediately after an import block. Exempts tool directives and comments that lead the next declaration.',
             why: 'An import block lists dependencies. A file header belongs before it, and a behavior comment belongs with the code it explains.',
             fix: 'Move the comment above the first import or beside its declaration. eslint --fix moves it above the block.',
         },
@@ -183,7 +183,7 @@ export const noCommentsInImports = createRule<[], 'comment'>({
                         (comment) =>
                             comment.range[0] > first.range[0] &&
                             comment.range[1] <= end &&
-                            !(isToolDirective(comment.value) && comment.range[0] > last.range[1]) &&
+                            !isToolDirective(comment.value) &&
                             !(other !== undefined && isLeading(source, comment, other, comments)),
                     );
                     if (violating === undefined) continue;
@@ -192,7 +192,6 @@ export const noCommentsInImports = createRule<[], 'comment'>({
                         loc: violating.loc,
                         messageId: 'comment',
                         fix(fixer) {
-                            if (isToolDirective(violating.value)) return null;
                             const removal = buildRemovalRange(source, violating);
                             if (followsImports) {
                                 const rest = text.slice(removal[1]);
