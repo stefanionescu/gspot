@@ -119,8 +119,7 @@ export async function detectPackageManager(repositoryRoot: string, trackedPaths:
         PACKAGE_JSON,
         ...trackedPaths
             .filter((path) => path.endsWith(`/${PACKAGE_JSON}`) && !path.startsWith(`${DOT_GSPOT}/`))
-            .toSorted((left, right) => compareText(left, right))
-            .slice(0, 1),
+            .toSorted((left, right) => compareText(left, right)),
     ];
     const selected = await readFirstPackageManager(repositoryRoot, packageJsonPaths);
     if (selected.version !== undefined) {

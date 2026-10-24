@@ -117,3 +117,14 @@ test.each([...UNSUPPORTED_PACKAGE_MANAGERS])(
         });
     },
 );
+
+test('a lockfile beside a later nested package selects its manager', async () => {
+    await using sandbox = await testdir({
+        'apps/admin/package.json': '{"private":true}',
+        'web/package.json': '{"private":true}',
+        'web/pnpm-lock.yaml': 'lockfileVersion: "9.0"\n',
+    });
+    expect(await detectPackageManager(sandbox.path, ['web/package.json', 'apps/admin/package.json'])).toStrictEqual({
+        name: 'pnpm',
+    });
+});
