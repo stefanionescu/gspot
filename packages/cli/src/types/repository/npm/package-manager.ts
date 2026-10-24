@@ -12,3 +12,5 @@ export type PackageManager = { name: (typeof PACKAGE_MANAGERS)[number]; version:
 export type PackageManagerPin = { name: (typeof PACKAGE_MANAGERS)[number]; version?: string | undefined };
 
 export type PackageManagerField = PackageManagerPin & { written: string; field: string };
+
+export type PackageManagerCommand = { name: string; version?: string | undefined };

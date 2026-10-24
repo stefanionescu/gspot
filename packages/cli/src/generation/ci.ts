@@ -7,16 +7,22 @@ import { listCheckTools } from '#cli/planning/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { compareText, quoteArgument } from '#cli/system/text.ts';
+import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
 import type { Pipeline, ActionPin } from '#cli/types/generation/ci.ts';
 import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
-import { PROJECT_UV_LOCKFILE } from '#cli/config/install/python/project.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { getTool, findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
 import { TOOL_BUILDS, NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
-import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
+import {
+    isYarnBerry,
+    readPackageManagerPin,
+    readPackageManagerVersion,
+    buildPackageManagerCommand,
+} from '#cli/repository/npm/package-manager.ts';
 import {
     CI_PINS,
     CI_NODE,
@@ -251,23 +257,35 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
 }
 
-function buildFrozenInstall(session: Session, lockfile: string): readonly string[] | undefined {
-    if (lockfile === PROJECT_UV_LOCKFILE) {
-        const { version } = getTool(session.configurations.values(), UV_TOOL);
-        if (version === undefined) throw new Error('The uv tool in the shipped manifests has no pinned version.');
-        return ['mise', 'exec', `${UV_TOOL}@${version}`, '--', ...(FROZEN_INSTALLS[lockfile] ?? [])];
-    }
-    const pin =
-        session.packageManager === undefined
-            ? undefined
-            : readPackageManagerVersion(
-                  session.installedRoot,
-                  assertPackageManager(session.packageManager),
-                  session.timeoutSeconds,
-                  session.reads,
-              );
-    if (lockfile === 'yarn.lock' && pin !== undefined && isYarnBerry(pin)) return [...YARN_BERRY_INSTALL];
-    return FROZEN_INSTALLS[lockfile];
+function readProjectPackageManager(
+    session: Session,
+    scope: string,
+    name: NonNullable<Session['packageManager']>['name'],
+): ReturnType<typeof readPackageManagerVersion> {
+    const packageJson = readPackageJson(session.root, joinScope(scope, PACKAGE_JSON));
+    const written = packageJson === undefined ? undefined : readPackageManagerPin(packageJson);
+    const selected = written?.name === name ? written : session.packageManager;
+    return readPackageManagerVersion(
+        session.installedRoot,
+        selected?.name === name ? selected : { name },
+        session.timeoutSeconds,
+        session.reads,
+    );
+}
+
+function buildFrozenInstall(session: Session, scope: string, lockfile: string): readonly string[] | undefined {
+    const command = FROZEN_INSTALLS[lockfile];
+    if (command === undefined) return undefined;
+    const [name] = command;
+    const runner =
+        name === UV_TOOL
+            ? { name, version: getTool(session.configurations.values(), UV_TOOL).version }
+            : readProjectPackageManager(session, scope, name as NonNullable<Session['packageManager']>['name']);
+    const args =
+        lockfile === 'yarn.lock' && isYarnBerry(runner as NonNullable<Session['packageManager']> & { version: string })
+            ? YARN_BERRY_INSTALL.slice(1)
+            : command.slice(1);
+    return buildPackageManagerCommand(runner, args);
 }
 
 /**
@@ -298,7 +316,7 @@ export function listProjectInstallLines(session: Session): string[] {
         const installs = Object.keys(FROZEN_INSTALLS)
             .filter((lockfile) => lockfiles.has(joinScope(folder.path, lockfile)))
             .flatMap((lockfile) => {
-                const command = buildFrozenInstall(session, lockfile);
+                const command = buildFrozenInstall(session, folder.path, lockfile);
                 return command === undefined ? [] : [command.map((argument) => quoteArgument(argument)).join(' ')];
             });
         const isNext = configurations.some((configuration) => configuration.name === NEXTJS_CONFIGURATION);

@@ -3,6 +3,7 @@ import * as nypm from 'nypm';
 import { join, dirname } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { CI_NODE } from '#cli/config/generation/ci.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { VERSION_FLAG } from '#cli/config/tools/versions.ts';
@@ -19,6 +20,7 @@ import type {
     PackageManager,
     PackageManagerPin,
     PackageManagerField,
+    PackageManagerCommand,
 } from '#cli/types/repository/npm/package-manager.ts';
 import {
     NPM_TOOL,
@@ -94,7 +96,13 @@ export function isYarnBerry(packageManager: PackageManager): boolean {
     return semver.major(packageManager.version) >= YARN_BERRY_MAJOR;
 }
 
-function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
+/**
+ * Read and validate the package manager pin written in package.json.
+ *
+ * @param packageJson the repository package fields.
+ * @returns the declared package manager and its source field.
+ */
+export function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
     if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
     const engines = packageJson.devEngines?.packageManager;
     const engine = Array.isArray(engines) ? engines[0] : engines;
@@ -219,4 +227,17 @@ export async function selectStartRunner(repositoryRoot: string): Promise<StartRu
     const name = packageManager === undefined ? 'mise' : packageManager.name;
     const runner = START_RUNNERS[name];
     return { name, ...runner, installCommand: runner.installCommand.replace('<package>', cliPackage.name) };
+}
+
+/**
+ * Run a declared package manager with its pinned runtime and version.
+ *
+ * @param packageManager the manager name and declared version, if any.
+ * @param args the manager arguments.
+ * @returns the direct command or the mise command for the exact pin.
+ */
+export function buildPackageManagerCommand(packageManager: PackageManagerCommand, args: readonly string[]): string[] {
+    const command = [packageManager.name, ...args];
+    if (packageManager.version === undefined) return command;
+    return ['mise', 'exec', CI_NODE, `${packageManager.name}@${packageManager.version}`, '--', ...command];
 }

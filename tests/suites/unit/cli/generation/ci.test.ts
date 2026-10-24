@@ -208,7 +208,7 @@ test('without a setup command, CI installs the locked dependencies of each proje
         'package-lock.json': '{"lockfileVersion":3}',
         'pyproject.toml': '[project]\nname = "service"\nversion = "1.0.0"\n',
         'uv.lock': 'version = 1\n',
-        'web/package.json': '{"private":true,"dependencies":{"next":"16.0.0"}}',
+        'web/package.json': '{"private":true,"packageManager":"pnpm@10.30.0","dependencies":{"next":"16.0.0"}}',
         'web/pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
         'web/next.config.ts': 'export default {};\n',
         'main.py': 'value = 1\n',
@@ -218,9 +218,9 @@ test('without a setup command, CI installs the locked dependencies of each proje
     const session = await openSession(sandbox.path);
     const uv = session.configurations.get('python')!.tools.find(({ name }) => name === 'uv')?.version;
     expect(listProjectInstallLines(session)).toStrictEqual([
-        'npm ci',
-        `mise exec uv@${String(uv)} -- uv sync --locked`,
-        '(cd web && pnpm install --frozen-lockfile)',
+        'mise exec node@24 npm@11.10.1 -- npm ci',
+        `mise exec node@24 uv@${String(uv)} -- uv sync --locked`,
+        '(cd web && mise exec node@24 pnpm@10.30.0 -- pnpm install --frozen-lockfile)',
         '(cd web && npx --no -- next typegen)',
     ]);
 });
