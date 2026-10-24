@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { isTable } from '#cli/system/tables.ts';
+import parseExpression from 'spdx-expression-parse';
 import { type SchemaShape } from '#cli/types/shapes.ts';
-import { nonemptyStrings } from '#cli/schemas/settings/fields.ts';
 import { ALLOWED_VERSION } from '#cli/config/settings/licenses.ts';
 import { nonemptyString } from '#cli/schemas/configurations/fields.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
@@ -16,7 +17,17 @@ const allowedPackageSchema = z.strictObject({
 } satisfies SchemaShape<TableSettings<'licenses'>['allowed_package'][number]>);
 
 export const licensesSchema = z.strictObject({
-    allowed: nonemptyStrings
+    allowed: z
+        .array(
+            nonemptyString.refine((id) => {
+                try {
+                    const expression = parseExpression(id);
+                    return isTable(expression) && 'license' in expression;
+                } catch {
+                    return false;
+                }
+            }, 'Use one SPDX license ID, such as MIT or Apache-2.0, not an AND or OR expression.'),
+        )
         .default(SETTING_DEFINITIONS['licenses.allowed'].default)
         .meta(SETTING_DEFINITIONS['licenses.allowed']),
     allowed_package: z

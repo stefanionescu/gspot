@@ -1,5 +1,9 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
+export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0', 'MIT AND Apache-2.0'];
+
+export const VALID_LICENSES = ['MIT', 'Apache-2.0', 'GPL-2.0+', 'GPL-2.0-only WITH Classpath-exception-2.0'];
+
 export const KEY_PATH_CASES = [
     {
         name: 'a multiline array value',

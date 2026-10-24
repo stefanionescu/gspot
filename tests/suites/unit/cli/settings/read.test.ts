@@ -13,11 +13,23 @@ import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/set
 
 import {
     EMPTY_REASONS,
+    VALID_LICENSES,
     KEY_PATH_CASES,
+    INVALID_LICENSES,
     RULE_FILE_ERRORS,
     UNKNOWN_KEY_CASES,
     RULE_FILE_SETTINGS,
 } from '#tests/config/settings/read.ts';
+
+test.each(INVALID_LICENSES)('licenses.allowed refuses %s before running a check', (license) => {
+    expect(validateSettingsText(stringify({ licenses: { allowed: [license] } }))).toStrictEqual([
+        'gspot.toml: licenses.allowed.0: Use one SPDX license ID, such as MIT or Apache-2.0, not an AND or OR expression.',
+    ]);
+});
+
+test.each(VALID_LICENSES)('licenses.allowed accepts one SPDX license: %s', (license) => {
+    expect(validateSettingsText(stringify({ licenses: { allowed: [license] } }))).toStrictEqual([]);
+});
 
 test('rules.exclude accepts a rule file path and a configuration folder', () => {
     const exclude = [findRuleFilePath('engineering', 'ACCESSIBILITY.md'), `${GSPOT_PATHS.configurations}/library`];
