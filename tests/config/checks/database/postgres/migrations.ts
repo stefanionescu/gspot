@@ -17,7 +17,7 @@ export const SECURED_TEAMS_SQL =
 export const MALFORMED_MIGRATION_FILES = {
     'gspot.toml': buildSandboxSettings(['postgres'], {
         level: 'all',
-        tables: '[postgres]\nfrozen_through = "all"\n',
+        tables: '[postgres]\nfrozen_through = "all"\nclient_schemas = ["public"]\n',
     }),
     [MALFORMED_MIGRATION_PATH]: 'CREATE TABLE ;',
 };

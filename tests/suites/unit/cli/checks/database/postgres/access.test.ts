@@ -2,7 +2,10 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { writeFile } from 'node:fs/promises';
+import { openSession } from '#cli/session.ts';
+import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
@@ -115,4 +118,18 @@ test('definer-search-path reports a SECURITY DEFINER function without search_pat
     ]);
     await writeFile(join(sandbox.path, path), DEFINER_SEARCH_PATH_SQL);
     expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([]);
+});
+
+test('row security skips when no client schemas are selected', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres']),
+        'migrations/1_orders.sql': 'CREATE TABLE public.orders (id bigint PRIMARY KEY);\n',
+    });
+    const result = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['postgres/row-level-security'] }),
+    );
+    expect(result.report.checks).toMatchObject([
+        { status: 'skipped', findings: [], note: 'needs the setting postgres.client_schemas' },
+    ]);
 });

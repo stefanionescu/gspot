@@ -65,10 +65,11 @@ example = "A new table without row-level security reports a finding. Add `ALTER 
 help = "Enable row-level security on the table."
 level = "recommended"
 name = "row-level-security"
+when = { setting = "postgres.client_schemas" }
 runs = "scope"
 stage = "commit"
 summary = "Checks that every table in a client schema turns on row-level security."
-why = "In an exposed schema, every client with the public key can read and write a table that has no row security."
+why = "A client that reaches the schema reads and writes every row of a table without row security."
 
 [[check]]
 example = "The statement `GRANT ALL ON TABLE public.items TO app_reader;` reports a broad grant. If the role only reads rows, use `GRANT SELECT ON TABLE public.items TO app_reader;`."
