@@ -128,10 +128,10 @@ test.each([...UV_LOCKFILE_MISMATCHES])('a changed %s makes the uv lockfile stale
     expect(isPythonLockfileFresh(pythonProject, lockfileText.replace(before, after), {})).toBe(false);
 });
 
-test.each(UV_LOCKFILE_ORIGINS)(
+test.each([...UV_LOCKFILE_ORIGINS])(
     'uv lockfile index %s and artifact %s have allowed origins: %s',
-    (registry, url, expected) => {
+    (registry, url, expected, indexes) => {
         const lockfile = `${lockfileText}\n[[package]]\nname = "example-package"\nversion = "1.2.3"\nsource = { registry = "${registry}" }\nsdist = { url = "${url}" }\nwheels = [{ url = "${url}" }]\n`;
-        expect(isPythonLockfileFresh(pythonProject, lockfile, {})).toBe(expected);
+        expect(isPythonLockfileFresh(pythonProject, lockfile, indexes)).toBe(expected);
     },
 );

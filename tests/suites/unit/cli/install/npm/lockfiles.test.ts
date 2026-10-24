@@ -1,7 +1,13 @@
 import { stringify } from 'yaml';
 import { test, expect, describe } from 'bun:test';
 import { isLockfileFresh } from '#cli/install/npm/lockfiles.ts';
-import { ROOT_DEPENDENCIES, LOCKFILE_REGISTRY, LOCKFILE_SECURITY_CASES } from '#tests/config/install/npm/lockfiles.ts';
+
+import {
+    ROOT_DEPENDENCIES,
+    LOCKFILE_REGISTRY,
+    LOCKFILE_SECURITY_CASES,
+    LOCKFILE_REGISTRY_CASES,
+} from '#tests/config/install/npm/lockfiles.ts';
 
 test.each(ROOT_DEPENDENCIES)(
     'a %s lockfile is current only with the root development dependencies',
@@ -12,35 +18,35 @@ test.each(ROOT_DEPENDENCIES)(
 );
 
 describe.each(['bun', 'npm', 'pnpm'] as const)('%s tool lockfile', (packageManager) => {
-    test.each(LOCKFILE_SECURITY_CASES)(
-        '%s preserves the pinned package identity',
-        (_scenario, name, version, address, expected) => {
-            const dependencies = { 'is-number': '7.0.0' };
-            const integrity = 'sha512-YQ==';
-            let content: string;
-            if (packageManager === 'bun')
-                content = JSON.stringify({
-                    workspaces: { '': { devDependencies: dependencies } },
-                    packages: { 'is-number': [`${name}@${version}`, address, {}, integrity] },
-                });
-            else if (packageManager === 'npm')
-                content = JSON.stringify({
-                    packages: {
-                        '': { devDependencies: dependencies },
-                        'node_modules/is-number': { name, version, resolved: address, integrity },
+    test.each([
+        ...LOCKFILE_SECURITY_CASES.map((row) => [...row, LOCKFILE_REGISTRY, 'is-number'] as const),
+        ...LOCKFILE_REGISTRY_CASES,
+    ])('%s preserves the pinned package identity', (_scenario, name, version, address, expected, env, dependency) => {
+        const dependencies = { [dependency]: '7.0.0' };
+        const integrity = 'sha512-YQ==';
+        let content: string;
+        if (packageManager === 'bun')
+            content = JSON.stringify({
+                workspaces: { '': { devDependencies: dependencies } },
+                packages: { [dependency]: [`${name}@${version}`, address, {}, integrity] },
+            });
+        else if (packageManager === 'npm')
+            content = JSON.stringify({
+                packages: {
+                    '': { devDependencies: dependencies },
+                    [`node_modules/${dependency}`]: { name, version, resolved: address, integrity },
+                },
+            });
+        else
+            content = stringify({
+                importers: { '.': { devDependencies: { [dependency]: { specifier: '7.0.0', version } } } },
+                packages: {
+                    [`${dependency}@${version}`]: {
+                        name,
+                        resolution: { integrity, ...(address !== '' && { tarball: address }) },
                     },
-                });
-            else
-                content = stringify({
-                    importers: { '.': { devDependencies: { 'is-number': { specifier: '7.0.0', version } } } },
-                    packages: {
-                        [`is-number@${version}`]: {
-                            name,
-                            resolution: { integrity, ...(address === '' ? {} : { tarball: address }) },
-                        },
-                    },
-                });
-            expect(isLockfileFresh(packageManager, content, dependencies, LOCKFILE_REGISTRY)).toBe(expected);
-        },
-    );
+                },
+            });
+        expect(isLockfileFresh(packageManager, content, dependencies, env)).toBe(expected);
+    });
 });

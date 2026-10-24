@@ -33,6 +33,7 @@ import {
     UV_LOCKFILE_ARGUMENTS,
     PYTHON_PACKAGE_ORIGINS,
     REQUIREMENT_PACKAGE_NAME,
+    PYTHON_DEFAULT_INDEX_ORIGIN,
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/install/python/project.ts';
 
@@ -235,9 +236,17 @@ function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSetti
         }
         return [];
     });
+    const configuredIndexes = indexes['index'];
+    const hasDefaultIndexOverride =
+        indexes['index-url'] !== undefined ||
+        (Array.isArray(configuredIndexes) &&
+            configuredIndexes.some((index: unknown) => isTable(index) && index['default'] === true));
     const origins = new Set(
-        [...PYTHON_PACKAGE_ORIGINS, ...configured].filter((url) => URL.canParse(url)).map((url) => new URL(url).origin),
+        [...PYTHON_PACKAGE_ORIGINS, ...(hasDefaultIndexOverride ? [] : [PYTHON_DEFAULT_INDEX_ORIGIN]), ...configured]
+            .filter((url) => URL.canParse(url))
+            .map((url) => new URL(url).origin),
     );
+
     return lockfile.package.every((lockedPackage) => {
         const addresses = [
             lockedPackage.source?.['registry'],

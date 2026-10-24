@@ -1,4 +1,5 @@
 import { PYTHON_VERSION } from '#cli/config/install/python/project.ts';
+import type { PythonIndexSettings } from '#cli/types/install/python.ts';
 
 export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"
 find-links = ["wheels", "https://example.com/wheels"]
@@ -40,11 +41,41 @@ export const UV_LOCKFILE_MISMATCHES = [
     ['virtual root', 'virtual = "."', 'virtual = "elsewhere"'],
 ] as const;
 
-export const UV_LOCKFILE_ORIGINS = [
-    ['https://pypi.org/simple', 'https://files.pythonhosted.org/example.whl', true],
-    ['https://attacker.example/simple', 'https://files.pythonhosted.org/example.whl', false],
-    ['https://pypi.org/simple', 'https://attacker.example/example.whl', false],
-] as const;
+export const UV_LOCKFILE_ORIGINS: ReadonlyArray<readonly [string, string, boolean, PythonIndexSettings['settings']]> = [
+    ['https://pypi.org/simple', 'https://files.pythonhosted.org/example.whl', true, {}],
+    ['https://attacker.example/simple', 'https://files.pythonhosted.org/example.whl', false, {}],
+    ['https://pypi.org/simple', 'https://attacker.example/example.whl', false, {}],
+    [
+        'https://pypi.org/simple',
+        'https://files.pythonhosted.org/example.whl',
+        false,
+        { 'index-url': 'https://packages.example/simple' },
+    ],
+    [
+        'https://packages.example/simple',
+        'https://packages.example/example.whl',
+        true,
+        { 'index-url': 'https://packages.example/simple' },
+    ],
+    [
+        'https://pypi.org/simple',
+        'https://files.pythonhosted.org/example.whl',
+        false,
+        { index: [{ url: 'https://packages.example/simple', default: true }] },
+    ],
+    [
+        'https://packages.example/simple',
+        'https://files.pythonhosted.org/example.whl',
+        true,
+        { index: [{ url: 'https://packages.example/simple', default: true }] },
+    ],
+    [
+        'https://pypi.org/simple',
+        'https://files.pythonhosted.org/example.whl',
+        true,
+        { index: [{ url: 'https://packages.example/simple' }] },
+    ],
+];
 
 export const LOCKFILE_PASSWORD_ERROR = {
     name: 'GspotError',

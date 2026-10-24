@@ -45,3 +45,60 @@ export const LOCKFILE_SECURITY_CASES = [
     ['registry tarball swap', 'is-number', '7.0.0', 'https://registry.npmjs.org/left-pad/-/left-pad-1.3.0.tgz', false],
     ['standard tarball', 'is-number', '7.0.0', 'https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz', true],
 ] as const;
+
+export const LOCKFILE_REGISTRY_CASES = [
+    [
+        'public tarball outside the private default registry',
+        'is-number',
+        '7.0.0',
+        'https://registry.npmjs.org/is-number/-/is-number-7.0.0.tgz',
+        false,
+        { npm_config_registry: 'https://packages.example/' },
+        'is-number',
+    ],
+    [
+        'exact private default registry tarball',
+        'is-number',
+        '7.0.0',
+        'https://packages.example/is-number/-/is-number-7.0.0.tgz',
+        true,
+        { npm_config_registry: 'https://packages.example/' },
+        'is-number',
+    ],
+    [
+        'public tarball explicitly selected for a scope',
+        '@example/package',
+        '7.0.0',
+        'https://registry.npmjs.org/@example/package/-/package-7.0.0.tgz',
+        true,
+        {
+            npm_config_registry: 'https://packages.example/',
+            'npm_config_@example:registry': 'https://registry.npmjs.org/',
+        },
+        '@example/package',
+    ],
+    [
+        'public tarball outside a private scope registry',
+        '@example/package',
+        '7.0.0',
+        'https://registry.npmjs.org/@example/package/-/package-7.0.0.tgz',
+        false,
+        {
+            npm_config_registry: 'https://registry.npmjs.org/',
+            'npm_config_@example:registry': 'https://packages.example/',
+        },
+        '@example/package',
+    ],
+    [
+        'exact private scope registry tarball',
+        '@example/package',
+        '7.0.0',
+        'https://packages.example/@example/package/-/package-7.0.0.tgz',
+        true,
+        {
+            npm_config_registry: 'https://registry.npmjs.org/',
+            'npm_config_@example:registry': 'https://packages.example/',
+        },
+        '@example/package',
+    ],
+] as const;
