@@ -1,7 +1,8 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { openWriter } from '#cli/apply/write/writer.ts';
@@ -14,6 +15,7 @@ import { buildToolInstall } from '#tests/setup/cli/tools.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/install/vale.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { hasValePackages, installValePackages } from '#cli/install/vale.ts';
 import { VALE_PACKAGES_INI, VALE_INSTALL_FAILURES, CORRECTED_VALE_INSTALL_SCRIPT } from '#tests/config/install/vale.ts';
 
@@ -30,6 +32,12 @@ test.each([...VALE_INSTALL_FAILURES])(
         const session = await openSession(sandbox.path);
         const tool = getTool(session.configurations.values(), 'vale');
         const executable = join(sandbox.path, 'node_modules/.bin', listExecutableNames('vale')[0]!);
+        const runBlocking = processes.spawnProcessBlocking;
+        using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
+            command[0] === executable && command[1] === '--version'
+                ? buildProcessResult({ stdout: String(tool.version) })
+                : runBlocking(command, options),
+        );
         const launcher = `if(process.argv.includes('--version')) console.log(${JSON.stringify(tool.version)}); else {${script}\n}\n`;
         await writeScriptCommand(sandbox.path, 'node_modules/.bin/vale', launcher);
         using writer = openWriter(sandbox.path);
