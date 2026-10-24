@@ -134,3 +134,23 @@ export const EMPTY_REASONS = [
     { reason: 'because', refused: '"because"' },
     { reason: 'Codex', refused: '"Codex"' },
 ] as const;
+
+export const SCOPE_CONFIGURATION_SETTINGS = [
+    {
+        name: 'a sibling configuration does not expose its settings to another scope',
+        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n',
+        messages: [
+            'gspot.toml: scope.1.tools.sqlfluff.dialect: No selected configuration has the setting tools.sqlfluff.dialect. No setting exists under that table. Run `gspot list settings` to see every one.',
+        ],
+    },
+    {
+        name: 'a selected scope exposes its own configuration settings',
+        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "web"\n',
+        messages: [],
+    },
+    {
+        name: 'root settings remain available to a scope that selects their configuration',
+        text: 'configurations = ["bash"]\n[tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n',
+        messages: [],
+    },
+] as const;

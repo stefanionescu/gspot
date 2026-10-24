@@ -21,6 +21,7 @@ import {
     RULE_FILE_SETTINGS,
     DUPLICATED_REASON_ERRORS,
     INVALID_MARKDOWNLINT_NAMES,
+    SCOPE_CONFIGURATION_SETTINGS,
 } from '#tests/config/settings/read.ts';
 
 test.each(INVALID_MARKDOWNLINT_NAMES)('markdownlint refuses $name with the rule ID guidance', ({ name, value }) => {
@@ -80,6 +81,17 @@ test('a list without its required reason names the inline value and set command'
     ).toStrictEqual([
         'gspot.toml: docs.allowed_urls.reason: docs.allowed_urls needs a reason. Write it as docs.allowed_urls = { value = [...], reason = "..." }, or run gspot set docs.allowed_urls ... --reason "<why>".',
     ]);
+});
+
+test('settings of an unselected language are refused while settings of automatic general configurations stay valid', () => {
+    expect(validateSettingsText('configurations = ["bash"]\n[tools.sqlfluff]\ndialect = "sqlite"\n')).toStrictEqual([
+        'gspot.toml: tools.sqlfluff.dialect: No selected configuration has the setting tools.sqlfluff.dialect. No setting exists under that table. Run `gspot list settings` to see every one.',
+    ]);
+    expect(validateSettingsText('[tools.commitlint]\ntypes = ["feat", "fix"]\n')).toStrictEqual([]);
+});
+
+test.each([...SCOPE_CONFIGURATION_SETTINGS])('$name', ({ text, messages }) => {
+    expect(validateSettingsText(text)).toStrictEqual([...messages]);
 });
 
 test('rules.exclude accepts a rule file path and a configuration folder', () => {

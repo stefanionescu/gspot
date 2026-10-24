@@ -120,7 +120,7 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
     );
     const rootKeys = scopes.get('') as AvailableSettings;
     scopes.delete('');
-    const allSettings = buildAvailableSettings([...configurations.values()], settings.level);
+    const general = [...configurations.values()].filter((configuration) => configuration.group === 'general');
     const errors: SettingsError[] = [
         ...validateSettingReasons(settings),
         ...validateSettingRules(settings),
@@ -147,7 +147,7 @@ export function validateSettings(settings: Settings, repositoryRoot: string | un
         ...validateRuleExcludes(settings.rules.exclude, configurations),
         ...(repositoryRoot === undefined ? [] : validateScopePaths(repositoryRoot, settings)),
         ...(repositoryRoot === undefined ? [] : validateRuleFilePaths(repositoryRoot, settings)),
-        ...validateKeys(rootKeys, settings, scopes, allSettings),
+        ...validateKeys(rootKeys, settings, scopes, buildAvailableSettings(general, settings.level)),
     ];
     if (errors.length > 0) throwErrors(errors);
 }

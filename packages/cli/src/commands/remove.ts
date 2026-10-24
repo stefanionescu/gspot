@@ -1,14 +1,20 @@
 import { GspotError } from '#cli/system/errors.ts';
-import { getScopeTable } from '#cli/settings/edit.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { buildSettings } from '#cli/settings/read.ts';
+import { selectForScope } from '#cli/settings/scopes.ts';
 import { type Command } from '@commander-js/extra-typings';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { isTable, stripUndefined } from '#cli/system/tables.ts';
+import { deleteKey, getScopeTable } from '#cli/settings/edit.ts';
 import { type ConfigurationsOptions } from '#cli/types/apply.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { applySettingsEdit, prepareConfigurationEdit } from '#cli/apply/settings.ts';
+import { findSetting, listWrittenKeys, listSettingsTables } from '#cli/settings/inherit.ts';
 
 function assertNotRequired(names: string[], kept: string[], configurations: Map<string, Configuration>): void {
     for (const configuration of names) {
@@ -30,8 +36,25 @@ function formatConfigurationChange(changed: string[], unchanged: string[], where
     return summary;
 }
 
+function removeUnusedSettings(context: ReturnType<typeof prepareConfigurationEdit>, scope: string | undefined): string {
+    const { input, configurations } = context;
+    const edited = buildSettings(settingsSchema.parse(input.table), input.table);
+    const general = [...configurations.values()].filter((configuration) => configuration.group === 'general');
+    const removed: string[] = [];
+    const affected = listSettingsTables(edited).filter((table) => isInScope(table.scope ?? '', scope ?? ''));
+    for (const table of affected) {
+        const selected = selectForScope(edited, table.scope ?? '', configurations);
+        const available = buildAvailableSettings([...general, ...selected], edited.level);
+        const keys = listWrittenKeys(table.table, available).filter((key) => findSetting(available, key) === undefined);
+        for (const key of keys) deleteKey(getScopeTable(input.table, table.scope), key);
+        removed.push(...keys.map((key) => (table.scope === undefined ? key : `${key} (scope ${table.scope})`)));
+    }
+    return removed.length === 0 ? '' : ` Removed settings ${removed.join(', ')}.`;
+}
+
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
-    const { root, input, scopeSettings, selected, configurations } = prepareConfigurationEdit(options);
+    const context = prepareConfigurationEdit(options);
+    const { root, input, scopeSettings, selected, configurations } = context;
     const kept = selected.filter((name) => !options.configurations.includes(name));
     assertNotRequired(options.configurations, kept, configurations);
     if (!options.configurations.some((name) => selected.includes(name))) {
@@ -57,7 +80,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     };
     const where = options.scope === undefined ? '' : ` from scope ${options.scope}`;
     const unchanged = options.configurations.filter((name) => !selected.includes(name));
-    const summary = formatConfigurationChange(removed, unchanged, where);
+    const summary = formatConfigurationChange(removed, unchanged, where) + removeUnusedSettings(context, options.scope);
     return applySettingsEdit(root, {
         edit: input,
         summary,

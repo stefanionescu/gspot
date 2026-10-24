@@ -138,17 +138,17 @@ export function formatUnknownSetting(availableSettings: AvailableSettings, key: 
  * @param availableSettings the settings and defaults of the selected configurations.
  * @param settings the parsed gspot.toml.
  * @param scopeAvailable the settings of each scope by path, which its own table uses.
- * @param everyConfiguration the settings saved for configurations whose repository evidence disappeared.
+ * @param general the settings of general configurations that repository evidence can select.
  * @returns the errors in plain English, empty when the settings pass validation.
  */
 export function validateKeys(
     availableSettings: AvailableSettings,
     settings: Settings,
     scopeAvailable: Map<string, AvailableSettings>,
-    everyConfiguration: AvailableSettings,
+    general: AvailableSettings,
 ): SettingsError[] {
     const errors = listUnsettledConflicts(availableSettings, settings, scopeAvailable);
-    const later = [availableSettings, ...scopeAvailable.values(), everyConfiguration].toReversed();
+    const later = [availableSettings, ...scopeAvailable.values(), general].toReversed();
     const everywhere: AvailableSettings = {
         settings: new Map(later.flatMap((scopeSettings) => scopeSettings.settings.entries().toArray())),
         defaults: new Map(later.flatMap((scopeSettings) => scopeSettings.defaults.entries().toArray())),
@@ -169,8 +169,8 @@ export function validateKeys(
     for (const { table, scope, path } of listSettingsTables(settings)) {
         const active = scope === undefined ? everywhere : (scopeAvailable.get(scope) as AvailableSettings);
         const selectedAvailable: AvailableSettings = {
-            settings: new Map([...everywhere.settings, ...active.settings]),
-            defaults: new Map([...everywhere.defaults, ...active.defaults]),
+            settings: new Map([...general.settings, ...active.settings]),
+            defaults: new Map([...general.defaults, ...active.defaults]),
             errors: active.errors,
         };
         const found = [
