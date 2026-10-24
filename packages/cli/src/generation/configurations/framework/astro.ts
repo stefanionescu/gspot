@@ -50,7 +50,7 @@ export function buildAstroBlocks(
             {
                 fields: { files: ASTRO_FILES, rules: ASTRO_TYPED_RULES },
                 properties:
-                    "processor: 'astro/client-side-ts', languageOptions: { parserOptions: { parser: tseslint.parser, projectService: false, project: true } }",
+                    "processor: 'astro/client-side-ts', languageOptions: { parserOptions: { parser: tseslint.parser, project: true, projectService: false, extraFileExtensions: ['.astro'] } }",
             },
             {
                 fields: { files: ASTRO_SCRIPT_FILES, ...untyped },
