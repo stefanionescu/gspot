@@ -10,8 +10,8 @@ import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import { listPointerPaths } from '#cli/generation/config-files/pointers.ts';
-import { listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
+import { isRootTextShared, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 
 import {
     BUILD_OUTPUT_FOLDERS,
@@ -31,12 +31,14 @@ function listGitIgnoredPatterns(session: Session, tracked: string[]): string[] {
 }
 
 function listGeneratedPaths(session: Session): string[] {
-    const paths = listOwnedConfigFiles(session).flatMap(({ configFile, owner }) => {
+    const configFiles = listOwnedConfigFiles(session);
+    const paths = configFiles.flatMap((owned) => {
+        const { configFile, owner } = owned;
         const sourceTargets =
             configFile.source === undefined || configFile.target.startsWith(`${DOT_GSPOT}/`)
                 ? []
                 : [configFile.per_scope ? joinScope(owner.scope.folder.path, configFile.target) : configFile.target];
-        return [...sourceTargets, ...listPointerPaths(owner, configFile)];
+        return [...sourceTargets, ...(isRootTextShared(owned, configFiles) ? [] : listPointerPaths(owner, configFile))];
     });
     return [...new Set(paths)].map((path) => `/${path}`);
 }

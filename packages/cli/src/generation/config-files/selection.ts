@@ -2,7 +2,33 @@ import type { Session } from '#cli/types/session.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listCheckTools, listScopeChecks } from '#cli/planning/tools.ts';
+import { buildMarkdownlintFile } from '#cli/generation/configurations/language/markdown.ts';
 import type { UsedNames, OwnedConfigFile, ConfigFileGeneration } from '#cli/types/generation/files.ts';
+
+/**
+ * Check whether a Markdown scope inherits the root config because both scopes generate the same text.
+ *
+ * @param selected the scoped config file.
+ * @param configFiles the config files and their owners.
+ * @returns whether the root supplies the same text.
+ */
+export function isRootTextShared(selected: OwnedConfigFile, configFiles: OwnedConfigFile[]): boolean {
+    const { configFile, owner } = selected;
+    if (configFile.pointer?.inherit !== true || owner.scope.folder.path === '') return false;
+    const root = configFiles.find(
+        (each) => each.configFile.target === configFile.target && each.owner.scope.folder.path === '',
+    );
+    if (root === undefined) return false;
+    const texts = [selected, root].map((owned) =>
+        buildMarkdownlintFile({
+            ...owned.owner,
+            configFile: owned.configFile,
+            targetPath: owned.configFile.target,
+            level: owned.owner.session.settingsFile.settings.level,
+        }),
+    );
+    return texts[0] === texts[1];
+}
 
 /**
  * Find the repository-relative path of the config file for a scope.

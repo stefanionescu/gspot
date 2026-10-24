@@ -24,6 +24,26 @@ import {
     PRETTIER_IGNORE_ATTRIBUTES,
 } from '#tests/config/generation/config-files/ignore-files.ts';
 
+test('shared Markdown settings leave inherited pointers out of generated path ignores', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['markdown'], {
+            scopes: [
+                { path: 'app', configurations: [] },
+                { path: 'docs', configurations: [] },
+            ],
+        }),
+        'README.md': '# Root\n',
+        'app/README.md': '# App\n',
+        'docs/README.md': '# Docs\n',
+    });
+    const session = await openSession(sandbox.path);
+    const generated = generate(session);
+    const pointers = generated.files.filter(({ path }) => path.endsWith('.markdownlint.jsonc')).map(({ path }) => path);
+    expect(pointers).toStrictEqual(['.markdownlint.jsonc']);
+    const ignored = buildIgnoreSections(session).find(({ key }) => key === 'gspot')!.patterns;
+    expect(ignored.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual(['/.markdownlint.jsonc']);
+});
+
 test.each([...PRETTIER_IGNORE_CASES])(
     'the generated .prettierignore ignores $file: $ignored',
     async ({ file, ignored }) => {

@@ -7,7 +7,7 @@ import type { Repository } from '#cli/types/repository/files.ts';
 import { buildConfigFile } from '#cli/generation/config-files/build.ts';
 import { CONFIG_FILE_SCOPES_FOLDER } from '#cli/config/generation/config-files/generate.ts';
 import { listPointerPaths, buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
-import { getConfigFileTarget, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
+import { isRootTextShared, getConfigFileTarget, listOwnedConfigFiles } from '#cli/generation/config-files/selection.ts';
 
 import type {
     BuiltConfigFile,
@@ -105,7 +105,7 @@ function addPointerFiles(
 ): void {
     const { configFile, owner } = selected;
     const target = getConfigFileTarget(owner.scope.folder.path, configFile, generated.targets);
-    if (isRootPointerShared(selected, configFiles, target)) return;
+    if (isRootTextShared(selected, configFiles)) return;
     const pointerOnlyPaths = listPointerOnlyPaths(configFiles, selected);
     for (const pointer of buildPointerFiles(owner, configFile, target)) {
         if (
@@ -115,15 +115,6 @@ function addPointerFiles(
         )
             generated.files.set(pointer.path, pointer);
     }
-}
-
-function isRootPointerShared(selected: OwnedConfigFile, configFiles: OwnedConfigFile[], target: string): boolean {
-    const { configFile, owner } = selected;
-    if (configFile.pointer?.inherit !== true || owner.scope.folder.path === '' || target !== configFile.target)
-        return false;
-    return configFiles.some(
-        (each) => each.configFile.target === configFile.target && each.owner.scope.folder.path === '',
-    );
 }
 
 function buildConfigFiles(session: Session): ConfigFileGeneration {
