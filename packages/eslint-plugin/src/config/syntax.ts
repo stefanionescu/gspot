@@ -18,8 +18,6 @@ export const EXECUTABLE_DECLARATIONS = new Set(['VariableDeclaration', 'TSEnumDe
 
 export const NON_EXECUTABLE_STATEMENTS = new Set(['BlockStatement', 'EmptyStatement']);
 
-export const ALIASED_VALUES = new Set<string>(['Identifier', 'MemberExpression']);
-
 export const TRANSPARENT_EXPRESSIONS = ['ConditionalExpression', 'LogicalExpression', ...TYPE_ASSERTION_NODES] as const;
 
 export const INLINE_VALUE_PARENTS = new Set<string>([

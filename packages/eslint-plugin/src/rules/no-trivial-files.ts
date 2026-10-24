@@ -1,11 +1,10 @@
 import { posix } from 'node:path';
-import { unwrap } from '../syntax.ts';
+import { isAlias } from '../syntax.ts';
 import { createRule } from '../create-rule.ts';
 import { INDEX_BASENAMES } from '../config/paths.ts';
-import { ALIASED_VALUES } from '../config/syntax.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
 import { OPTIONS_SCHEMA } from '../config/rules/no-trivial-files.ts';
-import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listBoundValues(statement: TSESTree.Node): (TSESTree.Node | null)[] {
     switch (statement.type) {
@@ -33,7 +32,7 @@ function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {
     );
 }
 
-function isForwarding(statement: TSESTree.Node): boolean {
+function isForwarding(statement: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     switch (statement.type) {
         case AST_NODE_TYPES.ImportDeclaration:
         case AST_NODE_TYPES.TSImportEqualsDeclaration:
@@ -41,14 +40,14 @@ function isForwarding(statement: TSESTree.Node): boolean {
             return true;
         }
         case AST_NODE_TYPES.ExportNamedDeclaration: {
-            return statement.declaration === null || isForwarding(statement.declaration);
+            return statement.declaration === null || isForwarding(statement.declaration, source);
         }
         case AST_NODE_TYPES.TSTypeAliasDeclaration: {
             return isTypeAlias(statement);
         }
         default: {
             const values = listBoundValues(statement);
-            return values.length > 0 && values.every((value) => ALIASED_VALUES.has(unwrap(value)?.type ?? ''));
+            return values.length > 0 && values.every((value) => isAlias(value, source.getScope(statement)));
         }
     }
 }
@@ -79,7 +78,10 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         return {
             Program(node) {
                 const statements = node.body.filter((statement) => statement.type !== AST_NODE_TYPES.EmptyStatement);
-                if (statements.length > 0 && statements.every((statement) => isForwarding(statement)))
+                if (
+                    statements.length > 0 &&
+                    statements.every((statement) => isForwarding(statement, context.sourceCode))
+                )
                     context.report({ node, messageId: 'trivial' });
             },
         };

@@ -112,3 +112,16 @@ export function findZodSchemaConstructors(source: TSESLint.SourceCode): TSESTree
         .filter((reference) => !isTypeImportReference(reference.node, source))
         .map((reference) => reference.node);
 }
+
+/**
+ * Identify a direct alias of a value bound in this module.
+ *
+ * @param node the expression assigned to another name
+ * @param scope the expression's lexical scope
+ * @returns whether the expression only selects a bound value
+ */
+export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope): boolean {
+    let value = unwrap(node);
+    while (value?.type === AST_NODE_TYPES.MemberExpression && !value.computed) value = unwrap(value.object);
+    return value?.type === AST_NODE_TYPES.Identifier && (ASTUtils.findVariable(scope, value)?.defs.length ?? 0) > 0;
+}

@@ -7,6 +7,9 @@ createRuleTester().run<
     [Partial<TrivialFilesOptions[0]>]
 >('no-trivial-files', plugin.rules['no-trivial-files'], {
     valid: [
+        'export const PORT = process.env.PORT; export const HOST = process.env.HOST;',
+        'import { loadConfig } from "./config"; export const port = loadConfig().port;',
+        'export const ROOT = import.meta.dirname;',
         'export class Money { double() { return this.amount * 2; } }',
         'class Money { double() { return this.amount * 2; } } export { Money };',
         {
@@ -56,15 +59,15 @@ createRuleTester().run<
         },
         'import { z } from "zod"; export const alias = z;',
         'import { run } from "./owner"; export const alias = run;',
-        'export const name = owner.name;',
-        'const alias = owner; export default alias;',
+        'import { owner } from "./owner"; export const name = owner.name;',
+        'import { owner } from "./owner"; const alias = owner; export default alias;',
         'export { value } from "./owner";',
         'export * from "./owner";',
         'import { value } from "./owner"; export { value };',
         'import "./owner";',
         '#!/usr/bin/env bun\nimport "./owner";',
-        'export default (owner as Owner)!;',
-        'export default (owner satisfies Owner);',
+        'import { owner } from "./owner"; export default (owner as Owner)!;',
+        'import { owner } from "./owner"; export default (owner satisfies Owner);',
         'export type Alias = Owner;',
         'export type Alias<T> = Owner<T>;',
         { code: 'export * from "./owner";', filename: '/repo/src/index.ts' },
