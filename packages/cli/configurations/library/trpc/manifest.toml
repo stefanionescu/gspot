@@ -11,4 +11,4 @@ dependencies = ["@trpc/server"]
 [[eslint.selectors]]
 message = "Give the procedure an input schema before its resolver, even when the input is nothing."
 paths_setting = "trpc.router_files"
-selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))"
+selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:matches([callee.object.name=/Procedure$/], [callee.object.property.name='procedure'], [callee.object.callee.property.name=/^(use|meta|output|concat)$/]):not(:has(CallExpression[callee.property.name='input']))"

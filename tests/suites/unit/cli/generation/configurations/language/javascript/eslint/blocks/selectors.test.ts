@@ -60,3 +60,17 @@ test.each([...LEVELS])('form validation and list security run at both levels (%s
         { file: 'native/App.jsx', rule: 'no-restricted-syntax', line: 2 },
     ]);
 });
+
+test('store, form and procedure selectors distinguish validated calls and unrelated queries', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'zustand', 'react-hook-form', 'trpc'], {
+            tables: '[trpc]\nrouter_files = ["source.js"]\n',
+        }),
+        'source.js':
+            'useStore(cartStore);\nuseForm(options);\nuseForm({ ...options });\nuseForm({ defaultValues: { nested: { resolver: 1 } } });\npublicProcedure.query(resolve);\nprotectedProcedure.use(logger).query(resolve);\nt.procedure.query(resolve);\npool.query(sql);\nbyId.query(resolve);\ngetClient().query(sql);\npublicProcedure.input(schema).use(logger).mutation(resolve);\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax'])).toStrictEqual(
+        [1, 4, 5, 6, 7].map((line) => ({ file: 'source.js', rule: 'no-restricted-syntax', line })),
+    );
+});

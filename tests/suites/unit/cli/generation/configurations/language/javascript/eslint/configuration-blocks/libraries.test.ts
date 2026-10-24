@@ -158,7 +158,7 @@ test.each([...LEVELS])(
             ...Object.fromEntries(
                 [...checked, ...unchecked].map((file) => [
                     file,
-                    'procedure.query(() => 1);\nprocedure.input(schema).query(() => 1);\n',
+                    'publicProcedure.query(() => 1);\npublicProcedure.input(schema).query(() => 1);\n',
                 ]),
             ),
         });

@@ -8,7 +8,7 @@ dependencies = ["react-hook-form"]
 
 [[eslint.selectors]]
 message = "Give useForm a resolver, so the schema that types the form also validates it."
-selector = "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))"
+selector = "CallExpression[callee.name='useForm'][arguments.length=0], CallExpression[callee.name='useForm'] > ObjectExpression:first-child:not(:has(> Property[key.name='resolver'])):not(:has(> SpreadElement))"
 
 [[eslint.selectors]]
 message = "A registered field that also takes `value` acts as a controlled field. Drop `value`, or use Controller."
