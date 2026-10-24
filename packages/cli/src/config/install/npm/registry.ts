@@ -24,5 +24,3 @@ export const NPM_SCOPE_REGISTRY_KEY = /^@[^\s:=]+:registry$/u;
 export const REGISTRY_AUTH_KEY = /^\/\/[^\s]+:(?:_authToken|_auth|username|_password|certfile|keyfile)$/u;
 
 export const CERTIFICATE_KEYS = [':certfile', ':keyfile'] as const;
-
-export const REGISTRY_ALIASES = ['BUN_CONFIG_REGISTRY', 'YARN_REGISTRY'] as const;

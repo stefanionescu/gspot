@@ -85,7 +85,7 @@ function listOutdatedManagedKeys(files: Files, generated: GenerationResult): Out
  * @returns the outdated files in path order.
  */
 export async function listOutdatedFiles(
-    session: Pick<Session, 'root' | 'packageManager' | 'repository'>,
+    session: Pick<Session, 'root' | 'packageManager' | 'repository' | 'installedRoot' | 'reads' | 'timeoutSeconds'>,
     generated: GenerationResult,
 ): Promise<OutdatedFile[]> {
     using files = openFiles(session.root);

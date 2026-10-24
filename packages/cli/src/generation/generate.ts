@@ -25,8 +25,12 @@ import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspo
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
 import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/tool-projects.ts';
-import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
+import {
+    assertPackageManager,
+    selectToolPackageManager,
+    readPackageManagerVersion,
+} from '#cli/repository/npm/package-manager.ts';
 import {
     buildGithubWorkflow,
     buildGitlabWorkflow,
@@ -192,16 +196,12 @@ export function generate(session: Session): GenerationResult {
                   dependencyFiles: session.repository.dependencyFiles,
                   scopes,
                   configurations,
-                  isYarnBerry:
-                      packageManager === 'yarn' &&
-                      isYarnBerry(
-                          readPackageManagerVersion(
-                              installedRoot,
-                              assertPackageManager(session.packageManager),
-                              timeoutSeconds,
-                              reads,
-                          ),
-                      ),
+                  packageManager: selectToolPackageManager(
+                      installedRoot,
+                      assertPackageManager(session.packageManager),
+                      timeoutSeconds,
+                      reads,
+                  ),
               })),
         ...buildPythonProject(
             configurations,

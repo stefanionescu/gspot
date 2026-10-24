@@ -16,24 +16,19 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { type NpmToolProject } from '#cli/types/install/tool-projects.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { isLockfileFresh, stripRegistryUrls } from '#cli/install/npm/lockfiles.ts';
+import { RELEASE_AGE_VERSIONS } from '#cli/config/install/npm/release-age.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
+import { isLockfileFresh, stripBunRegistryUrls } from '#cli/install/npm/lockfiles.ts';
+import { type PackageManagerRun, type PackageManagerCommand } from '#cli/types/install/npm.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 import { YARN_SETTINGS_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
+import { assertPackageManager, readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/install/npm/registry.ts';
-import { isYarnBerry, assertPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
-import {
-    type PackageManagerRun,
-    type PackageManagerCommand,
-    type PackageManagerArguments,
-} from '#cli/types/install/npm.ts';
 import {
     NODE_TOOL,
     NPMRC_FILE,
-    YARN_ARGUMENTS,
     NPM_SETTING_PREFIX,
-    YARN_REGISTRY_VARIABLE,
     PACKAGE_MANAGER_ARGUMENTS,
     NPM_CONFIG_FOLDER_VARIABLE,
     YARN_SETTINGS_FILE_VARIABLE,
@@ -46,7 +41,7 @@ async function createNpmLockfile(
     recorded: string | undefined,
     yarn: string | undefined,
 ): Promise<string> {
-    const packageManager = readPackageManagerVersion(
+    const packageManager = readToolPackageManager(
         install.session.installedRoot,
         assertPackageManager(install.session.packageManager),
         install.session.timeoutSeconds,
@@ -62,7 +57,7 @@ async function createNpmLockfile(
     if (yarn !== undefined) writeFileSync(join(runFolder, YARN_SETTINGS_FILE), yarn);
     if (recorded !== undefined && isLockfileFresh(packageManager.name, recorded, project.dependencies, env))
         writeFileSync(join(runFolder, project.lockfile), recorded);
-    const lockfileArguments = selectPackageManagerArguments(packageManager).lockfile;
+    const lockfileArguments = PACKAGE_MANAGER_ARGUMENTS[packageManager.name].lockfile;
     const days = getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days;
     const run = await runPackageManager(install, {
         runFolder,
@@ -71,25 +66,19 @@ async function createNpmLockfile(
         failure: 'lockfile resolution failed',
     });
     const lockfilePath = join(runFolder, project.lockfile);
+    let lockfile = readFileSync(lockfilePath, 'utf8');
     assertCredentialFreeLockfile(
-        readFileSync(lockfilePath, 'utf8'),
+        lockfile,
         run.credentials,
         'The package manager wrote registry credentials into its lockfile. gspot kept the existing files.',
     );
-    stripRegistryUrls(lockfilePath, packageManager, run.env);
-    const lockfile = readFileSync(join(runFolder, project.lockfile), 'utf8');
+    if (packageManager.name === 'bun') lockfile = stripBunRegistryUrls(lockfile, run.env);
     if (!isLockfileFresh(packageManager.name, lockfile, project.dependencies, run.env))
         throw new GspotError(
             'install',
             `${packageManager.name} wrote a tool lockfile that does not match the tool project. gspot kept the existing files.`,
         );
     return lockfile;
-}
-
-function selectPackageManagerArguments(packageManager: PackageManager): PackageManagerArguments {
-    const yarn = isYarnBerry(packageManager) ? YARN_ARGUMENTS.berry : YARN_ARGUMENTS.classic;
-    const commandArguments = packageManager.name === 'yarn' ? yarn : PACKAGE_MANAGER_ARGUMENTS[packageManager.name];
-    return { lockfile: [...commandArguments.lockfile], install: [...commandArguments.install] };
 }
 
 async function runPackageManager(install: ToolInstall, request: PackageManagerCommand): Promise<PackageManagerRun> {
@@ -102,9 +91,7 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerCo
         writeNpmrc(settings.path, env);
         env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
         env[NPM_CONFIG_FOLDER_VARIABLE] = settings.path;
-        const berry = isYarnBerry(packageManager);
-        if (berry) {
-            Reflect.deleteProperty(env, YARN_REGISTRY_VARIABLE);
+        if (packageManager.name === 'yarn') {
             credentials.push(...(await writeYarnSettings(install, runFolder, env)));
             env[YARN_SETTINGS_FILE_VARIABLE] = YARN_INSTALL_SETTINGS_FILE;
         }
@@ -131,7 +118,7 @@ export async function assertPackageManagerVersion(install: ToolInstall): Promise
     const packageManager =
         session.packageManager === undefined
             ? undefined
-            : readPackageManagerVersion(
+            : readToolPackageManager(
                   session.installedRoot,
                   assertPackageManager(session.packageManager),
                   session.timeoutSeconds,
@@ -143,7 +130,16 @@ export async function assertPackageManagerVersion(install: ToolInstall): Promise
     const version = await runInstallStep(install, versionCommand, { cwd: root });
     const requirement = `${String(semver.major(packageManager.version))}.x`;
     const found = version.stdout.trim();
-    if (version.code === 0 && semver.satisfies(found, requirement, { includePrerelease: true })) return;
+    if (version.code === 0 && semver.satisfies(found, requirement, { includePrerelease: true })) {
+        const minimumVersions: Partial<Record<PackageManager['name'], string>> = RELEASE_AGE_VERSIONS;
+        const minimum = minimumVersions[packageManager.name];
+        if (minimum !== undefined && semver.lt(found, minimum))
+            throw new GspotError(
+                'install',
+                `gspot install needs ${packageManager.name} ${minimum} or later, which holds back new releases for dependencies.min_release_age_days. Found ${found}.`,
+            );
+        return;
+    }
     const result =
         version.code === 0
             ? `found ${found}`
@@ -170,7 +166,7 @@ export async function prepareNpmLockfile(
 ): Promise<GeneratedFile> {
     const { root } = install.session;
     const owner = install.writer.files;
-    const packageManager = readPackageManagerVersion(
+    const packageManager = readToolPackageManager(
         install.session.installedRoot,
         assertPackageManager(install.session.packageManager),
         install.session.timeoutSeconds,
@@ -209,7 +205,7 @@ export async function installNpmTools(install: ToolInstall): Promise<string> {
     const owner = install.writer.files;
     const toolProjectFile = owner.read(GSPOT_PATHS.npmProject);
     if (toolProjectFile === undefined) return '';
-    const packageManager = readPackageManagerVersion(
+    const packageManager = readToolPackageManager(
         session.installedRoot,
         assertPackageManager(session.packageManager),
         session.timeoutSeconds,
@@ -221,7 +217,7 @@ export async function installNpmTools(install: ToolInstall): Promise<string> {
     await runPackageManager(install, {
         runFolder,
         packageManager,
-        commandArguments: selectPackageManagerArguments(packageManager).install,
+        commandArguments: [...PACKAGE_MANAGER_ARGUMENTS[packageManager.name].install],
         failure: 'installation failed',
     });
     return `installed ${formatCount(Object.keys(project.dependencies).length, 'npm tool')} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;

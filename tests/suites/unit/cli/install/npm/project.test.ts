@@ -1,7 +1,8 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/system/processes.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { openWriter } from '#cli/apply/write/writer.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
@@ -17,6 +18,23 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/generation/tool-projects.ts';
 import { FAILED_INSTALL_CASES, PACKAGE_MANAGER_TIMEOUT } from '#tests/config/install/npm/project.ts';
 import { installNpmTools, prepareNpmLockfile, assertPackageManagerVersion } from '#cli/install/npm/project.ts';
+
+test('the npm fallback for Yarn 1 refuses npm without the release age guard', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': '{"private":true,"packageManager":"yarn@1.22.22"}',
+    });
+    const run = processes.spawnProcessBlocking;
+    using _version = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
+        command[0] === 'npm' ? buildProcessResult({ stdout: '11.18.0\n' }) : run(command, options),
+    );
+    using _npm = fakeCommand('npm', () => Promise.resolve(buildProcessResult({ stdout: '11.18.0\n' })));
+    const session = await openSession(sandbox.path);
+    using owner = openWriter(sandbox.path);
+    expect(await captureRejection(assertPackageManagerVersion(buildToolInstall(session, owner)))).toBe(
+        'gspot install needs npm 11.19.0 or later, which holds back new releases for dependencies.min_release_age_days. Found 11.18.0.',
+    );
+});
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function fakeFailingBun(failure: Partial<Pick<SpawnResult, 'stdout' | 'stderr' | 'timedOut'>>): Disposable {

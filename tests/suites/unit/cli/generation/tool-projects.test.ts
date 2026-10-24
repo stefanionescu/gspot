@@ -10,8 +10,8 @@ import { buildNpmProject } from '#cli/generation/tool-projects.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
+import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
-import { isYarnBerry, assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 
 import {
     YARN_CLIENTS,
@@ -88,7 +88,7 @@ test.each([...YARN_CLIENTS])(
             dependencyFiles: [],
             scopes: [],
             configurations: [],
-            isYarnBerry: isYarnBerry(packageManager),
+            packageManager: Number(packageManager.version.split('.', 1)[0]) < 2 ? 'npm' : packageManager.name,
         });
         expect(files.map((file) => file.path)).toStrictEqual(
             settings ? [GSPOT_PATHS.npmProject, GSPOT_PATHS.yarnSettings] : [GSPOT_PATHS.npmProject],

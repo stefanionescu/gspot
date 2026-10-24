@@ -51,7 +51,7 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
  * @param project.dependencyFiles the declared project dependencies.
  * @param project.scopes the source projects.
  * @param project.configurations the configurations with npm tools.
- * @param project.isYarnBerry true for Yarn 2 or later as the repository package manager.
+ * @param project.packageManager the package manager of the tool project after mapping Yarn Classic to npm.
  *
  * @returns the tool project files.
  */
@@ -59,7 +59,7 @@ export function buildNpmProject({
     dependencyFiles,
     scopes,
     configurations,
-    isYarnBerry,
+    packageManager,
 }: PlannedNpmProject): GeneratedFile[] {
     const pins = listToolProjectPins(configurations).npm;
     const projects = new Map(
@@ -97,7 +97,7 @@ export function buildNpmProject({
             )}\n`,
         },
     ];
-    if (isYarnBerry)
+    if (packageManager === 'yarn')
         files.push({
             path: GSPOT_PATHS.yarnSettings,
             content: YARN_TOOL_PROJECT_SETTINGS,

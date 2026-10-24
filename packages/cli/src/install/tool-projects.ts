@@ -17,8 +17,8 @@ import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import type { StaleLockfile } from '#cli/types/install/tool-projects.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
-import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { installNpmTools, prepareNpmLockfile } from '#cli/install/npm/project.ts';
+import { assertPackageManager, selectToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { installPythonTools, preparePythonLockfile, isPythonLockfileFresh } from '#cli/install/python/project.ts';
 
 function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
@@ -35,7 +35,7 @@ function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
  * @returns each lockfile with its state: missing, mismatched, or current.
  */
 export async function listStaleLockfiles(
-    session: Pick<Session, 'root' | 'packageManager'>,
+    session: Pick<Session, 'root' | 'installedRoot' | 'packageManager' | 'timeoutSeconds' | 'reads'>,
     generated: GeneratedFile[],
 ): Promise<StaleLockfile[]> {
     const { root } = session;
@@ -53,7 +53,12 @@ export async function listStaleLockfiles(
         )
         .flatMap((toolProjectFile) => {
             if (toolProjectFile.path === GSPOT_PATHS.npmProject) {
-                const name = assertPackageManager(session.packageManager).name;
+                const name = selectToolPackageManager(
+                    session.installedRoot,
+                    assertPackageManager(session.packageManager),
+                    session.timeoutSeconds,
+                    session.reads,
+                );
                 const project = parseToolPackageJson(toolProjectFile.content, name);
                 const path = project.lockfilePath;
                 const recorded = files.read(path);

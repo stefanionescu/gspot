@@ -14,7 +14,6 @@ import { NPMRC_FILE, NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.
 import {
     CREDENTIAL_KEY,
     CONNECTION_KEYS,
-    REGISTRY_ALIASES,
     CERTIFICATE_KEYS,
     REGISTRY_AUTH_KEY,
     CONNECTION_URL_KEY,
@@ -138,8 +137,6 @@ export async function readRegistryEnvironment(repositoryRoot: string): Promise<R
             }),
     );
     const registry = env[`${NPM_SETTING_PREFIX}registry`];
-    if (registry !== undefined) {
-        for (const alias of REGISTRY_ALIASES) env[alias] = registry;
-    }
+    if (registry !== undefined) env['BUN_CONFIG_REGISTRY'] = registry;
     return env;
 }

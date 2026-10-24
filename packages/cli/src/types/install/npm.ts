@@ -12,8 +12,6 @@ export type PackageManagerRun = {
     credentials: string[];
 };
 
-export type PackageManagerArguments = { lockfile: string[]; install: string[] };
-
 export type BunPackage = [identity: string, address: string, metadata: Record<string, unknown>, integrity: string];
 
 export type NpmPackage = {

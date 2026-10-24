@@ -164,6 +164,46 @@ export function readPackageManagerVersion(
 }
 
 /**
+ * Select the tool-project manager name without querying unrelated package managers.
+ *
+ * @param repositoryRoot the folder for a Yarn version query.
+ * @param packageManager the repository package manager pin.
+ * @param timeoutSeconds the version query limit.
+ * @param reads the run cache for resolved versions.
+ * @returns npm for Yarn Classic, or the selected manager name.
+ */
+export function selectToolPackageManager(
+    repositoryRoot: string,
+    packageManager: PackageManagerPin,
+    timeoutSeconds: number,
+    reads: ReadCache,
+): PackageManager['name'] {
+    if (packageManager.name !== 'yarn') return packageManager.name;
+    const selected = readPackageManagerVersion(repositoryRoot, packageManager, timeoutSeconds, reads);
+    return isYarnBerry(selected) ? 'yarn' : NPM_TOOL;
+}
+
+/**
+ * Resolve a package manager for the tool project, using npm when the repository pins Yarn 1.
+ *
+ * @param repositoryRoot the folder for a version query.
+ * @param packageManager the repository package manager pin.
+ * @param timeoutSeconds the version query limit.
+ * @param reads the run cache for resolved versions.
+ * @returns a package manager that can hold back new tool releases.
+ */
+export function readToolPackageManager(
+    repositoryRoot: string,
+    packageManager: PackageManagerPin,
+    timeoutSeconds: number,
+    reads: ReadCache,
+): PackageManager {
+    const name = selectToolPackageManager(repositoryRoot, packageManager, timeoutSeconds, reads);
+    const selected = name === packageManager.name ? packageManager : { name };
+    return readPackageManagerVersion(repositoryRoot, selected, timeoutSeconds, reads);
+}
+
+/**
  * Select the runner from the root gspot dependency.
  *
  * @param repositoryRoot the folder whose package.json decides the runner.

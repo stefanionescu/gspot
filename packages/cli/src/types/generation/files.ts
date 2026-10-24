@@ -5,6 +5,7 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { BlockStyle } from '#cli/types/parsers/formats/managed-blocks.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
+import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import type { Tool, Level, ConfigFile, Configuration } from '#cli/types/configurations.ts';
 import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/config-files/ignore-files.ts';
 
@@ -41,7 +42,7 @@ export type PlannedNpmProject = {
     dependencyFiles: DependencyFile[];
     scopes: Scope[];
     configurations: Configuration[];
-    isYarnBerry: boolean;
+    packageManager: PackageManager['name'];
 };
 
 export type PlannedConfigFile = ConfigFileOwner & { targetPath: string; level: Level; configFile: ConfigFile };

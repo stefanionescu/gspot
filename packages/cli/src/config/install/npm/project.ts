@@ -1,9 +1,8 @@
-export const YARN_ARGUMENTS = {
-    classic: { lockfile: ['yarn', 'install'], install: ['yarn', 'install', '--frozen-lockfile'] },
-    berry: { lockfile: ['yarn', 'install', '--mode=update-lockfile'], install: ['yarn', 'install', '--immutable'] },
-} as const;
-
 export const PACKAGE_MANAGER_ARGUMENTS = {
+    yarn: {
+        lockfile: ['yarn', 'install', '--mode=update-lockfile'],
+        install: ['yarn', 'install', '--immutable'],
+    },
     npm: {
         lockfile: [
             'npm',
@@ -26,8 +25,6 @@ export const PACKAGE_MANAGER_ARGUMENTS = {
 } as const;
 
 export const NPM_CONFIG_FOLDER_VARIABLE = 'XDG_CONFIG_HOME';
-
-export const YARN_REGISTRY_VARIABLE = 'YARN_REGISTRY';
 
 export const YARN_SETTINGS_FILE_VARIABLE = 'YARN_RC_FILENAME';
 

@@ -4,13 +4,11 @@ import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { GspotError } from '#cli/system/errors.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { isTable, getValueAt } from '#cli/system/tables.ts';
 import type { BunPackage } from '#cli/types/install/npm.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import { isYarnBerry } from '#cli/repository/npm/package-manager.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
 import type { YarnPackage } from '#cli/types/parsers/projects/lockfiles.ts';
@@ -18,13 +16,8 @@ import type { DependencyMap } from '#cli/types/parsers/projects/dependencies.ts'
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { bunLockSchema, yarnLockSchema, yarnPackageSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
 import { PNPM_PEER_START, PNPM_ROOT_IMPORTER, NPM_PACKAGE_FOLDER } from '#cli/config/parsers/projects/lockfiles.ts';
+import { INTEGRITY, LOCKFILE_WORKSPACE_KEYS, YARN_DESCRIPTOR_SEPARATOR } from '#cli/config/install/npm/lockfiles.ts';
 
-import {
-    HTTP_URL,
-    INTEGRITY,
-    LOCKFILE_WORKSPACE_KEYS,
-    YARN_DESCRIPTOR_SEPARATOR,
-} from '#cli/config/install/npm/lockfiles.ts';
 import {
     bunPackageSchema,
     npmToolLockSchemas,
@@ -66,36 +59,14 @@ function isStandardTarball(bunPackage: BunPackage, env: Record<string, string>):
     return address === '' || address === new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
 }
 
-function stripRegistryPrefix(address: string, base: URL): string | undefined {
-    if (!HTTP_URL.test(address)) return undefined;
-    const url = new URL(address);
-    if (url.origin !== base.origin || !url.pathname.startsWith(base.pathname)) return undefined;
-    return `${url.pathname.slice(base.pathname.length)}${url.search}${url.hash}`;
-}
-
-function stripYarnRegistryUrls(content: string, registry: string): string {
-    const yarnPackages = yarnLockSchema.parse(parseSyml(content));
-    const expected = Object.fromEntries(
-        Object.entries(yarnPackages).map(([key, yarnPackage]) => [key, yarnPackageSchema.parse(yarnPackage)]),
-    );
-    const base = new URL(registry.endsWith('/') ? registry : `${registry}/`);
-    let edited = content;
-    for (const yarnPackage of Object.values(expected)) {
-        const relative =
-            yarnPackage.resolved === undefined ? undefined : stripRegistryPrefix(yarnPackage.resolved, base);
-        if (relative === undefined) continue;
-        edited = edited.replaceAll(JSON.stringify(yarnPackage.resolved), JSON.stringify(relative));
-        yarnPackage.resolved = relative;
-    }
-    if (!isDeepStrictEqual(yarnLockSchema.parse(parseSyml(edited)), expected))
-        throw new GspotError(
-            'install',
-            'gspot cannot take the local registry addresses out of the Yarn lockfile without changing its entries. gspot kept the existing files.',
-        );
-    return edited;
-}
-
-function stripBunRegistryUrls(content: string, env: Record<string, string>): string {
+/**
+ * Remove registry addresses from the portable lockfile of Bun.
+ *
+ * @param content the lockfile contents.
+ * @param env the configured registry addresses.
+ * @returns the portable lockfile contents.
+ */
+export function stripBunRegistryUrls(content: string, env: Record<string, string>): string {
     const parsed = parseJsonFile('bun.lock', content, bunLockSchema);
     let edited = content;
     for (const [key, bunPackage] of Object.entries(parsed.packages)) {
@@ -268,25 +239,4 @@ export function isLockfileFresh(
         if (isInvalidLockfile(error)) return false;
         throw error;
     }
-}
-
-/**
- * Remove registry locations from portable lockfile bytes.
- *
- * @param lockfilePath the portable lockfile to read and rewrite.
- * @param packageManager the tool that wrote the lockfile.
- * @param env variables for the tool process.
- */
-export function stripRegistryUrls(
-    lockfilePath: string,
-    packageManager: PackageManager,
-    env: Record<string, string>,
-): void {
-    const lockfile = readFileSync(lockfilePath, 'utf8');
-    if (packageManager.name === 'bun') writeFileSync(lockfilePath, stripBunRegistryUrls(lockfile, env));
-    if (packageManager.name !== 'yarn' || isYarnBerry(packageManager)) return;
-    const registry = env[`${NPM_SETTING_PREFIX}registry`];
-    if (registry === undefined)
-        throw new GspotError('install', 'A Yarn 1 lockfile needs npm_config_registry to relocate its URLs.');
-    writeFileSync(lockfilePath, stripYarnRegistryUrls(lockfile, registry));
 }
