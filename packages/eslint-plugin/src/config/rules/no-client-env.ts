@@ -6,6 +6,8 @@ export const ALLOWED_ENVIRONMENT_NAMES = ['NODE_ENV'] as const;
 
 export const ENVIRONMENT_PROPERTY = 'env';
 
+export const VITE_ENVIRONMENT_NAMES = ['MODE', 'BASE_URL', 'PROD', 'DEV', 'SSR'] as const;
+
 export const OPTIONS_SCHEMA = {
     type: 'object',
     properties: {

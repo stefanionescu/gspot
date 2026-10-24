@@ -7,6 +7,7 @@ import {
     OPTIONS_SCHEMA,
     ENVIRONMENT_HOSTS,
     ENVIRONMENT_PROPERTY,
+    VITE_ENVIRONMENT_NAMES,
     ALLOWED_ENVIRONMENT_NAMES,
 } from '../config/rules/no-client-env.ts';
 
@@ -78,14 +79,15 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
         if (!isClient) return {};
         const prefixes = options.publicPrefixes;
         const allowedNames = new Set(options.allowedNames);
+        const viteNames = new Set([...allowedNames, ...VITE_ENVIRONMENT_NAMES]);
         const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowedNames].join(', ');
-        const report = (node: TSESTree.Node): void => {
+        const report = (node: TSESTree.Node, publicNames: ReadonlySet<string>): void => {
             const names = listEnvironmentNames(node);
             if (
                 names.length > 0 &&
                 names.every(
                     (name) =>
-                        name !== null && (allowedNames.has(name) || prefixes.some((prefix) => name.startsWith(prefix))),
+                        name !== null && (publicNames.has(name) || prefixes.some((prefix) => name.startsWith(prefix))),
                 )
             )
                 return;
@@ -100,10 +102,11 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
                     node.object.property.name === 'meta' &&
                     ASTUtils.getPropertyName(node) === ENVIRONMENT_PROPERTY
                 )
-                    report(node);
+                    report(node, viteNames);
             },
             'Program:exit'(node) {
-                for (const access of listGlobalEnvironmentReads(context.sourceCode.getScope(node))) report(access);
+                for (const access of listGlobalEnvironmentReads(context.sourceCode.getScope(node)))
+                    report(access, allowedNames);
             },
         };
     },

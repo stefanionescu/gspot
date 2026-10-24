@@ -8,6 +8,14 @@ createRuleTester().run<
     [Partial<ClientEnvOptions[0]>]
 >('no-client-env', plugin.rules['no-client-env'], {
     valid: [
+        {
+            code: 'const { MODE, BASE_URL, PROD, DEV, SSR } = import.meta.env;',
+            options: [{ client: true, publicPrefixes: ['VITE_'] }],
+        },
+        {
+            code: 'if (import.meta.env.DEV) console.log(import.meta.env.MODE);',
+            options: [{ client: true, publicPrefixes: ['VITE_'] }],
+        },
         "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",
         "'use client';\nconst mode = process.env.NODE_ENV;",
         "'use client';\nconst { NODE_ENV } = process.env;",
@@ -22,6 +30,10 @@ createRuleTester().run<
         },
     ],
     invalid: [
+        {
+            code: "'use client';\nconst mode = process.env.MODE;",
+            errors: [{ messageId: 'private' }],
+        },
         {
             code: "'use client';\nconst key = process.env.SECRET;",
             errors: [{ messageId: 'private', line: 2, column: 13 }],
