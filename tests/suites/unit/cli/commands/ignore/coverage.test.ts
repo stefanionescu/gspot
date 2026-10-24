@@ -6,8 +6,8 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
+import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { FUNCTION_NAME_IGNORES } from '#tests/config/commands/ignore.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -122,25 +122,38 @@ test('ignore without a check keeps the paths out of every check and every config
     expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).not.toHaveProperty('ignore');
 });
 
-test('gspot ignore escapes the brackets of an existing route folder in its paths', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript']),
-        'app/(legal)/terms/page.tsx': 'export default function Terms() { return null; }\n',
-    });
-    commitAll(sandbox.path);
-    const ignored = await runGspot(sandbox.path, [
-        'ignore',
-        'structure/lone-files',
-        '--paths',
-        'app/(legal)/**',
-        '--reason',
-        'Next.js route groups hold one page each.',
-    ]);
-    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-    expect(written['ignore']).toMatchObject([{ paths: [String.raw`app/\(legal\)/**`] }]);
-    expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toStrictEqual([]);
-});
+test.each([false, true])(
+    'ignore and unignore accept literal brackets after a route disappears (removed: %s)',
+    async (removed) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['typescript']),
+            'app/(legal)/terms/page.tsx': 'export default function Terms() { return null; }\n',
+        });
+        commitAll(sandbox.path);
+        const ignored = await runGspot(sandbox.path, [
+            'ignore',
+            'structure/lone-files',
+            '--paths',
+            'app/(legal)/**',
+            '--reason',
+            'Next.js route groups hold one page each.',
+        ]);
+        expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+        const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+        expect(written['ignore']).toMatchObject([{ paths: [String.raw`app/\(legal\)/**`] }]);
+        expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toStrictEqual([]);
+        if (removed) await rm(join(sandbox.path, 'app/(legal)'), { recursive: true });
+        const restored = await runGspot(sandbox.path, [
+            'unignore',
+            'structure/lone-files',
+            '--paths',
+            'app/(legal)/**',
+        ]);
+        expect(restored.code, restored.stdout + restored.stderr).toBe(0);
+        expect(restored.stdout).toStartWith('Removed 1 ignore for structure/lone-files.');
+        expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).not.toHaveProperty('ignore');
+    },
+);
 
 test('gspot ignore --names writes the names of a structure/trivial-functions ignore', async () => {
     await using sandbox = await testdir({

@@ -5,13 +5,13 @@ import { isTable, stripUndefined } from '#cli/system/tables.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { assertCheckExists } from '#cli/configurations/manifests.ts';
 import type { IgnoreRemoval } from '#cli/types/commands/unignore.ts';
-import { NO_CHECK_IGNORE_TEXTS } from '#cli/config/commands/unignore.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import { NO_CHECK_IGNORE_TEXTS, ESCAPED_GLOB_CHARACTERS } from '#cli/config/commands/unignore.ts';
 
 function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
-    const removed = new Set(options.paths);
+    const removed = new Set(options.paths?.map((path) => path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1')));
     const ignores: unknown[] = Array.isArray(written['ignore']) ? written['ignore'] : [];
     const matches = ignores.map((ignore) => ({
         entry: ignore,
@@ -35,7 +35,7 @@ function removeIgnores(written: TomlTable, options: Pick<IgnoreOptions, 'check' 
             everywhere += 1;
             return [entry];
         }
-        const paths = record['paths'].filter((path) => !removed.has(path));
+        const paths = record['paths'].filter((path) => !removed.has(path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1')));
         if (paths.length === record['paths'].length) return [entry];
         if (paths.length === 0) {
             deleted += 1;
