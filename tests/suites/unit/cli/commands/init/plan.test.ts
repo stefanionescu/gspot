@@ -98,7 +98,7 @@ test('the init plan lists each submodule once and reads none of it', async () =>
 
 test('init plans no scope for an old lint folder, and --level all replaces the config files of that level', async () => {
     await using sandbox = await testdir(QUALITY_PACKAGE_FILES);
-    runGitStep(sandbox.path, ['init', '-q']);
+    commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, [
         ...buildInitArguments([], { json: true }),
         '--dry-run',

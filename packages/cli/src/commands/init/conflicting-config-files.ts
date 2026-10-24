@@ -1,8 +1,28 @@
+import { GspotError } from '#cli/system/errors.ts';
+import { runGitBlocking } from '#cli/system/git.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { ManagedKeys } from '#cli/types/apply.ts';
 import { isEditedInPlace } from '#cli/repository/setup/tools.ts';
 import type { ConflictingConfigFiles } from '#cli/types/commands/init.ts';
 import type { RepositorySetup, ConflictingConfigFile } from '#cli/types/repository/setup.ts';
+
+/**
+ * List config files whose working copies match their committed contents.
+ *
+ * @param root the repository folder.
+ * @param paths the config files init replaces.
+ * @returns the unchanged committed paths, or none without a commit.
+ */
+export function listCommittedPaths(root: string, paths: string[]): Set<string> {
+    const head = runGitBlocking(root, ['rev-parse', '--verify', '--quiet', 'HEAD']);
+    if (head.code !== 0) return new Set();
+    const tracked = runGitBlocking(root, ['ls-files', '-z', '--', ...paths]);
+    const changed = runGitBlocking(root, ['diff', '--name-only', '-z', 'HEAD', '--', ...paths]);
+    if (tracked.code !== 0 || changed.code !== 0)
+        throw new GspotError('git', 'Cannot read committed config files. Restore HEAD and run gspot init again.');
+    const modified = new Set(changed.stdout.split('\0'));
+    return new Set(tracked.stdout.split('\0').filter((path) => path !== '' && !modified.has(path)));
+}
 
 function addConflictingConfigFile(file: ConflictingConfigFile, conflicts: ConflictingConfigFiles): void {
     const { tool, path, shared } = file;

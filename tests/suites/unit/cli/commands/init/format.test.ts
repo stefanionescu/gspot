@@ -4,6 +4,7 @@ import { openSession } from '#cli/session.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseSettings } from '#cli/settings/read.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { type FormatSettings } from '#cli/types/settings/file.ts';
@@ -26,7 +27,8 @@ async function readInitFormatOptions(root: string, commandArguments: string[]): 
 }
 
 test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', async ({ files, expected }) => {
-    await using sandbox = await testdir(files);
+    await using sandbox = await testdir({ 'source.txt': 'source\n', ...files });
+    commitAll(sandbox.path);
     const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
     expect(options[0]).toMatchObject(expected);
     for (const [path, source] of Object.entries(files))
@@ -37,6 +39,7 @@ test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', a
 test.each([...SCOPE_FORMAT_CASES])('init reads the format settings of each scope with $name', async ({ expected }) => {
     await using sandbox = await testdir(SCOPE_FORMAT_FILES);
     await createFileTree(sandbox.path, FORMAT_WORKSPACE_FILES);
+    commitAll(sandbox.path);
     const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
     expect(options.map(({ indent_width, print_width, quotes }) => [indent_width, print_width, quotes])).toStrictEqual(
         expected.map(([, ...options]) => options),
@@ -56,6 +59,7 @@ test('init turns Prettier overrides and the Ruff quote style into format overrid
         'main.py': 'value = 1\n',
         'package.json': '{"private":true,"devDependencies":{"prettier":"3.8.1"}}',
     });
+    commitAll(sandbox.path);
     const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
     expect(options[0]).toMatchObject(PRETTIER_FORMAT_OPTIONS);
 });

@@ -140,3 +140,16 @@ export const HOOKS_PATH_CASES = [
 ] as const;
 
 export const HOOK_NAMED_SOURCE = 'export function useThing() { return true; }\n';
+
+const UNCOMMITTED_FORMAT_FILES = [
+    { path: '.prettierrc', original: '{"printWidth": 100}\n', changed: '{"printWidth": 90}\n' },
+    { path: '.prettierignore', original: 'secret-stuff/\n', changed: 'secret-stuff/\nprivate/\n' },
+] as const;
+
+export const UNCOMMITTED_FORMAT_CASES = [
+    'no Git',
+    'unborn Git',
+    'untracked',
+    'staged changes',
+    'unstaged changes',
+].flatMap((state) => UNCOMMITTED_FORMAT_FILES.map((file) => ({ ...file, state })));

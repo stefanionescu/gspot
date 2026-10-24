@@ -75,6 +75,7 @@ test('init keeps the old config file when the generated one cannot be written', 
     await using sandbox = await testdir();
     const authored = '[default.extend-words]\nAuthored = "Authored"\n';
     await createFileTree(sandbox.path, { 'typos.toml': authored });
+    commitAll(sandbox.path);
     const rename = fs.renameSync;
     using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
         if (String(target) === join(sandbox.path, findManifestTarget('spelling', 'typos.toml')))

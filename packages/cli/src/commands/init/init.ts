@@ -29,10 +29,10 @@ import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { readLintJobs, readRepositorySetup } from '#cli/repository/setup/tools.ts';
 import { listForeignDisableComments } from '#cli/commands/init/eslint-disable-comments.ts';
-import { readConflictingConfigFiles } from '#cli/commands/init/conflicting-config-files.ts';
 import { planInitFiles, formatInitPlan, formatDetection } from '#cli/commands/init/plan.ts';
 import { buildInitSettings, buildSettingsDraft } from '#cli/commands/init/settings-text.ts';
 import { GITLAB_CI_FILE, GITHUB_WORKFLOWS_FOLDER } from '#cli/config/repository/setup/tools.ts';
+import { listCommittedPaths, readConflictingConfigFiles } from '#cli/commands/init/conflicting-config-files.ts';
 
 import {
     REMOTE_URL_USER,
@@ -150,6 +150,14 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
     };
     const generated = generate(session);
     const conflicts = readConflictingConfigFiles(root, repositorySetup, tools, generated.managedKeys);
+    const paths = conflicts.deleted.map(({ path }) => path);
+    const committed = listCommittedPaths(root, paths);
+    const uncommitted = paths.filter((path) => !committed.has(path));
+    if (uncommitted.length > 0)
+        throw new GspotError(
+            'arguments',
+            `init replaces ${uncommitted.join(', ')}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.`,
+        );
     const planning: InitScan = {
         reads,
         repository: session.repository,

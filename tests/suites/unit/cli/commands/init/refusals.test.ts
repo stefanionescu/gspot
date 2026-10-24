@@ -1,14 +1,15 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { readdir, symlink, readFile } from 'node:fs/promises';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { WRITER_LOCK_FILE } from '#cli/config/apply/write/writer.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
+import { UNCOMMITTED_FORMAT_CASES } from '#tests/config/commands/init/conflicting-config-files.ts';
 
 test('init with an unknown configuration exits 2 and writes nothing', async () => {
     await using sandbox = await testdir({ 'scripts/a.sh': CLEAN_BASH_SCRIPT });
@@ -103,3 +104,30 @@ test('a linked .gspot folder stops init, and nothing outside changes', async () 
     expect(await readdir(outside)).toStrictEqual(['sentinel']);
     expect(await isOnDisk(join(project, 'gspot.toml'))).toBe(false);
 });
+
+test.each(UNCOMMITTED_FORMAT_CASES)(
+    'init refuses to replace $path absent from HEAD: $state',
+    async ({ state, path, original, changed }) => {
+        await using sandbox = await testdir({ 'source.js': 'export const count = 1;\n' });
+        if (state === 'unborn Git') runGitStep(sandbox.path, ['init', '-q']);
+        if (state === 'untracked') commitAll(sandbox.path);
+        await writeFile(join(sandbox.path, path), original);
+        if (state === 'staged changes' || state === 'unstaged changes') {
+            commitAll(sandbox.path);
+            await writeFile(join(sandbox.path, path), changed);
+            if (state === 'staged changes') runGitStep(sandbox.path, ['add', '--', path]);
+        }
+        const before = await readTree(sandbox.path);
+        for (const dryRun of [true, false]) {
+            const result = await runGspot(sandbox.path, [
+                ...buildInitArguments(['javascript']),
+                ...(dryRun ? ['--dry-run'] : []),
+            ]);
+            expect(result.code, result.stdout + result.stderr).toBe(2);
+            expect(result.stderr).toBe(
+                `init replaces ${path}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.\n`,
+            );
+            expect(await readTree(sandbox.path)).toStrictEqual(before);
+        }
+    },
+);
