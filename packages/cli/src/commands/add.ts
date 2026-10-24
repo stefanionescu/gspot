@@ -20,6 +20,13 @@ function restoreConfigurations(table: TomlTable, removed: string[], configuratio
         };
 }
 
+function formatConfigurationChange(changed: string[], unchanged: string[], where: string): string {
+    let summary = `Added ${changed.join(' and ')}${where}.`;
+    if (unchanged.length > 0)
+        summary += ` ${unchanged.join(' and ')} ${unchanged.length === 1 ? 'is' : 'are'} already selected.`;
+    return summary;
+}
+
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input, scopeSettings, selected } = prepareConfigurationEdit(options);
     const scopeConfigurations = scopeSettings.configurations;
@@ -37,7 +44,9 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     scopeTable['configurations'] = list;
     restoreConfigurations(scopeTable, removed, options.configurations);
     const where = options.scope === undefined ? '' : ` to scope ${options.scope}`;
-    const summary = `Added ${options.configurations.join(' and ')}${where}.`;
+    const added = options.configurations.filter((name) => !selected.includes(name));
+    const unchanged = options.configurations.filter((name) => selected.includes(name));
+    const summary = formatConfigurationChange(added, unchanged, where);
     return await applySettingsEdit(root, {
         edit: input,
         summary,

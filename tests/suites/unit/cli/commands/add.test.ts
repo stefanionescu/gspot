@@ -101,3 +101,11 @@ test('add bash --scope api reports no change when the root already selects bash'
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
+
+test('add names only added configurations in a mixed request', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
+    const result = await runGspot(sandbox.path, ['add', 'bash', 'markdown']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout.split('\n', 1)[0]).toBe('Added markdown. bash is already selected.');
+    expect(readSettings(sandbox.path).settings.configurations).toStrictEqual(['bash', 'markdown']);
+});

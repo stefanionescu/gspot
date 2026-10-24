@@ -23,6 +23,13 @@ function assertNotRequired(names: string[], kept: string[], configurations: Map<
     }
 }
 
+function formatConfigurationChange(changed: string[], unchanged: string[], where: string): string {
+    let summary = `Removed ${changed.join(' and ')}${where}.`;
+    if (unchanged.length > 0)
+        summary += ` ${unchanged.join(' and ')} ${unchanged.length === 1 ? 'was' : 'were'} not selected.`;
+    return summary;
+}
+
 async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
     const { root, input, scopeSettings, selected, configurations } = prepareConfigurationEdit(options);
     const kept = selected.filter((name) => !options.configurations.includes(name));
@@ -49,7 +56,8 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
         reason: options.reason,
     };
     const where = options.scope === undefined ? '' : ` from scope ${options.scope}`;
-    const summary = `Removed ${options.configurations.join(' and ')}${where}.`;
+    const unchanged = options.configurations.filter((name) => !selected.includes(name));
+    const summary = formatConfigurationChange(removed, unchanged, where);
     return applySettingsEdit(root, {
         edit: input,
         summary,

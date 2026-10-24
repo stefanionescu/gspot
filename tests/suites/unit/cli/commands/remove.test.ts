@@ -262,3 +262,19 @@ test('remove names every unknown configuration before changing the settings', as
     expect(result.stderr).toBe(UNKNOWN_CONFIGURATION_REFUSALS);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(text);
 });
+
+test('remove names only removed configurations in a mixed request', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
+    const result = await runGspot(sandbox.path, [
+        'remove',
+        'bash',
+        'python',
+        '--reason',
+        'The scripts moved to another repository.',
+    ]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout.split('\n', 1)[0]).toBe('Removed bash. python was not selected.');
+    const settings = readSettings(sandbox.path).settings;
+    expect(settings.configurations).toStrictEqual([]);
+    expect(settings.removed_configurations).toStrictEqual(['bash']);
+});
