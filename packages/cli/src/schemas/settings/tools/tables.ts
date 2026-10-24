@@ -50,15 +50,14 @@ const yamlOptions = z
 
 const yamlRules = buildRuleTableSchema(
     z
-        .intersection(
-            z
-                .object({ indentation: yamlOptions.extend({ spaces: z.literal('consistent').optional() }).optional() })
-                .catchall(yamlOptions),
+        .object({ indentation: yamlOptions.extend({ spaces: z.literal('consistent').optional() }).optional() })
+        .catchall(yamlOptions)
+        .pipe(
             z.record(
                 z.string().refine((name) => (YAMLLINT_RULES as readonly string[]).includes(name), {
                     error: `Unknown yamllint rule. Accepted rules: ${YAMLLINT_RULES.join(', ')}.`,
                 }),
-                z.unknown(),
+                yamlOptions,
             ),
         )
         .meta({ type: 'object' }),

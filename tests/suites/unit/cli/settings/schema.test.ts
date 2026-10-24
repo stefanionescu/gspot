@@ -115,6 +115,12 @@ test.each([...REFUSED_RULE_OPTIONS])(
     },
 );
 
+test.each(['line-length', 'foo-bar'])('yamllint refuses options for an unsupported rule: %s', (rule) => {
+    expect(() => parseSettings(`[tools.yamllint.rules]\n${rule} = { max = 100 }\n`, undefined)).toThrow(
+        `tools.yamllint.rules.${rule}: Unknown yamllint rule. Accepted rules:`,
+    );
+});
+
 test('the published schema accepts an until date read by a TOML parser', () => {
     const text = `configurations = ["bash"]\n[[ignore]]\ncheck = "bash/shellcheck"\nreason = "${REVIEWED_REASON}"\nuntil = 2026-11-08\n`;
     const parsed: unknown = parse(text);
