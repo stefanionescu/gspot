@@ -7,18 +7,18 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 
-import type {
-    EslintRuleBlock,
-    EslintBlockFields,
-    EslintRuleOptions,
-    PlannedEslintFile,
-    ScopeEslintSettings,
-} from '#cli/types/generation/eslint.ts';
 import {
     CODE_LANGUAGES,
     PACKAGE_JSON_PATTERN,
     ESLINT_SETTINGS_TABLE,
 } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+import {
+    type EslintRuleBlock,
+    type EslintBlockFields,
+    type EslintRuleOptions,
+    type PlannedEslintFile,
+    type ScopeEslintSettings,
+} from '#cli/types/generation/eslint.ts';
 import {
     splitGlobs,
     buildScopeFiles,
@@ -64,18 +64,18 @@ function mergeRestrictedImports(rules: EslintRuleOptions['rules'], restricted: u
  * @returns one option block per scope and path override, in the order they apply.
  */
 export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRuleOptions[] {
-    const scopesByPath = new Map(scopes.map((scope) => [scope.folder.path, scope]));
     const tables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scope ?? '', second.scope ?? ''),
     );
     const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) =>
         table.tools?.['eslint'] === undefined ? [] : [{ scope, settings: table.tools['eslint'] }],
     );
-    const restrictedFor = (scopePath: string): unknown[] => {
-        const scope = scopesByPath.get(scopePath);
-        if (scope === undefined) throw new Error(`No scope for ESLint rule options at ${JSON.stringify(scopePath)}.`);
-        return getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports;
-    };
+    const eslintScopes = new Set(scopeSettings.map(({ scope }) => scope));
+    const restrictedImports = new Map(
+        scopes
+            .filter((scope) => eslintScopes.has(scope.folder.path))
+            .map((scope) => [scope.folder.path, getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports]),
+    );
     const scopeOptions = scopeSettings.flatMap(({ scope, settings }): EslintRuleOptions[] =>
         settings.rules === undefined
             ? []
@@ -83,7 +83,7 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
                   {
                       scope,
                       ...splitGlobs(['**/*']),
-                      rules: mergeRestrictedImports(settings.rules, restrictedFor(scope)),
+                      rules: mergeRestrictedImports(settings.rules, restrictedImports.get(scope) ?? []),
                   },
               ],
     );
@@ -91,7 +91,13 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
         (settings.override ?? []).flatMap(({ paths, rules }) =>
             rules === undefined
                 ? []
-                : [{ scope, ...splitGlobs(paths), rules: mergeRestrictedImports(rules, restrictedFor(scope)) }],
+                : [
+                      {
+                          scope,
+                          ...splitGlobs(paths),
+                          rules: mergeRestrictedImports(rules, restrictedImports.get(scope) ?? []),
+                      },
+                  ],
         ),
     );
     return [...scopeOptions, ...overrides];
