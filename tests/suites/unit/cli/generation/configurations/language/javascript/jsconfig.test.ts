@@ -1,10 +1,15 @@
+import ts from 'typescript';
+import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { createReadCache } from '#cli/system/files/cache.ts';
+import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('a jsconfig beside a tsconfig excludes build output and lists only tracked declaration files', async () => {
@@ -56,4 +61,22 @@ test('a jsconfig beside a tsconfig excludes build output and lists only tracked 
             'vendor',
         ].map((pattern) => `../../../../${pattern}`),
     );
+});
+
+test.each(['recommended', 'all'] as const)('JavaScript implicit parameters follow level %s', async (level) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level }),
+        'source.js':
+            'export function total(items) { return items.length; }\n/** @type {number} */\nexport const count = "one";\n',
+    });
+    await applyGeneratedFiles(sandbox.path);
+    const project = readTsconfig(
+        sandbox.path,
+        join(sandbox.path, findManifestTarget('javascript', 'jsconfig.json')),
+        createReadCache(sandbox.path),
+    )!;
+    const program = ts.createProgram(project.fileNames, { ...project.options, noLib: true });
+    const errorCodes = new Set(program.getSemanticDiagnostics().map(({ code }) => code));
+    expect(errorCodes.has(7006)).toBe(level === 'all');
+    expect(errorCodes.has(2322)).toBe(true);
 });

@@ -77,7 +77,11 @@ export function buildJsconfigFile(planned: PlannedConfigFile): string {
     const owner = jsconfigOwner === undefined ? TSCONFIG_FILE : JSCONFIG_FILE;
     const authored = jsconfigOwner ?? readTsconfig(root, join(root, scope, owner), reads);
     const prefix = convertToPosixPath(relative(dirname(target), scope)) + '/';
-    const compilerOptions: Record<string, unknown> = { ...JAVASCRIPT_OPTIONS, jsx: JAVASCRIPT_IMPORTS.jsx };
+    const compilerOptions: Record<string, unknown> = {
+        ...JAVASCRIPT_OPTIONS,
+        jsx: JAVASCRIPT_IMPORTS.jsx,
+        noImplicitAny: planned.level === 'all',
+    };
     const jsconfig: Record<string, unknown> = { compilerOptions };
     const extensionless = files.some(
         (file) =>
