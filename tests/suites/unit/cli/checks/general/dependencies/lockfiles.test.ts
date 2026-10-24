@@ -18,6 +18,7 @@ import {
     LOCKFILE_HOST_CASES,
     DEPENDENCIES_SANDBOX,
     REGISTRY_SCOPE_RESULTS,
+    LOCKFILE_DOWNLOAD_CASES,
     ALLOWED_GITHUB_REGISTRIES,
 } from '#tests/config/checks/general/dependencies.ts';
 
@@ -138,3 +139,12 @@ test('dependencies/lockfiles reports the lockfile of a second package manager in
     await unlink(join(sandbox.path, 'yarn.lock'));
     expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
 });
+
+test.each([...LOCKFILE_DOWNLOAD_CASES])(
+    '$path checks download fields without treating metadata URLs as registries',
+    async ({ path, text, lines }) => {
+        await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]), [path]: text });
+        const checked = await runSandboxCheck(sandbox.path, 'dependencies/lockfiles');
+        expect(checked.map(({ line }) => line)).toStrictEqual([...lines]);
+    },
+);

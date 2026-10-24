@@ -149,3 +149,31 @@ export const ALLOWED_GITHUB_REGISTRIES = `allowed_registries = { value = ["githu
 export const MATCHED_REACT_FILES = Object.fromEntries(
     Object.entries(BUN_PROJECT_FILES).map(([path, text]) => [path, text.replaceAll('19.0.0', '19.1.0')]),
 );
+
+export const LOCKFILE_DOWNLOAD_CASES = [
+    {
+        path: 'pnpm-lock.yaml',
+        text: 'packages:\n  pkg@1.0.0:\n    resolution: {tarball: https://registry.npmjs.org/pkg/-/pkg-1.0.0.tgz}\n    deprecated: See https://eslint.org/version-support\n',
+        lines: [],
+    },
+    {
+        path: 'pnpm-lock.yaml',
+        text: 'packages:\n  pkg@1.0.0:\n    resolution: {repo: https://github.com/org/pkg.git, commit: abc}\n',
+        lines: [3],
+    },
+    {
+        path: 'yarn.lock',
+        text: 'pkg@1:\n  resolved "https://github.com/org/pkg/archive/v1.tar.gz"\n  homepage "https://example.com"\n',
+        lines: [2],
+    },
+    {
+        path: 'yarn.lock',
+        text: '"pkg@https://github.com/org/pkg/archive/v1.tar.gz":\n  resolution: "pkg@https://github.com/org/pkg/archive/v1.tar.gz"\n  description: "See https://example.com"\n',
+        lines: [2],
+    },
+    {
+        path: 'bun.lock',
+        text: '{"packages": {"pkg": ["pkg@1.0.0", "https://github.com/org/pkg/archive/v1.tar.gz", {}, "sha512-hash"]}, "description": "See https://example.com"}',
+        lines: [1],
+    },
+] as const;

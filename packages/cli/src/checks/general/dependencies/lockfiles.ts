@@ -6,21 +6,25 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
-import { LOCKFILE_URL, NPM_DOWNLOAD, DOWNLOAD_PROTOCOLS } from '#cli/config/checks/general/dependencies/lockfiles.ts';
+import { LOCKFILE_DOWNLOADS, DOWNLOAD_PROTOCOLS } from '#cli/config/checks/general/dependencies/lockfiles.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
     return hosts.has(url.host) ? undefined : `${url.host} is not an allowed registry host.`;
 }
 
-function checkFileHosts(session: Session, planned: PlannedCheck, path: string, hosts: Set<string>): Finding[] {
+function checkFileHosts(
+    session: Session,
+    planned: PlannedCheck,
+    path: string,
+    hosts: Set<string>,
+    pattern: RegExp,
+): Finding[] {
     const lines = readCachedText(session.reads, path).split('\n');
-    const isNpm = LOCKFILES.find((lockfile) => lockfile.file === posix.basename(path))?.packageManager === 'npm';
     return lines.flatMap((text, index) =>
-        (isNpm
-            ? text.matchAll(NPM_DOWNLOAD).map((match) => match[1] ?? '')
-            : text.matchAll(LOCKFILE_URL).map((match) => match[0])
-        )
+        text
+            .matchAll(pattern)
+            .map((match) => match[1] ?? '')
             .flatMap((url) => {
                 const parsed = URL.parse(url);
                 const message =
@@ -72,6 +76,9 @@ export function checkDependenciesLockfiles(session: Session, planned: PlannedChe
     const paths = planned.files.map((file) => file.path).filter((path) => lockfiles.has(posix.basename(path)));
     return [
         ...checkForeignLockfiles(planned),
-        ...paths.flatMap((path) => checkFileHosts(session, planned, path, hosts)),
+        ...paths.flatMap((path) => {
+            const pattern = LOCKFILE_DOWNLOADS.get(posix.basename(path));
+            return pattern === undefined ? [] : checkFileHosts(session, planned, path, hosts, pattern);
+        }),
     ];
 }
