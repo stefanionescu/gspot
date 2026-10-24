@@ -17,6 +17,7 @@ import { findSetting, getSettingValue, listEffectiveSettings } from '#cli/settin
 
 import {
     CONFLICTING_SETTINGS,
+    REPLACED_LIST_DEFAULTS,
     CSS_HTML_NAMING_SETTINGS,
     PURGECSS_SAFELIST_TABLES,
     CONFLICTING_DEFAULT_ERRORS,
@@ -197,7 +198,7 @@ test('a value comes from the configuration default, then the root table, then th
     expect(getSettingValue(baseSettings, settings, 'limits.function_lines')?.source).toBe('configuration structure');
 });
 
-test('list defaults add up across configurations before root and scope additions', () => {
+test('a root list replaces configuration defaults, and a scope list adds to the root list', () => {
     const naming = readConfigurations().get('naming')!;
     const configurations = [naming];
     for (const [index, terms] of [['dispatcher'], ['dispatcher', 'orchestrator']].entries()) {
@@ -208,22 +209,49 @@ test('list defaults add up across configurations before root and scope additions
         });
     }
     const defaults = buildAvailableSettings(configurations, 'recommended');
+    const unwritten = parseSettings(buildSandboxSettings(['naming']), undefined);
+    expect(getSettingValue(defaults, unwritten, 'naming.banned_words')?.value).toStrictEqual([
+        'dispatcher',
+        'orchestrator',
+    ]);
     const settings = parseSettings(
         buildSandboxSettings(['naming'], {
             rules: true,
-            tables: '[naming]\nbanned_words = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\nnaming.banned_words = ["manager", "orchestrator", "handler"]\n',
+            tables: '[naming]\nbanned_words = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\nnaming.banned_words = ["handler"]\n',
         }),
         undefined,
     );
+    expect(getSettingValue(defaults, settings, 'naming.banned_words')?.value).toStrictEqual(['dispatcher', 'manager']);
     expect(getSettingValue(defaults, settings, 'naming.banned_words', 'api')?.value).toStrictEqual([
         'dispatcher',
-        'orchestrator',
         'manager',
         'handler',
     ]);
     expect(
         validateKeys(defaults, settings, new Map([['api', defaults]]), buildSelectedAvailableSettings([])),
     ).toStrictEqual([]);
+});
+
+test.each(REPLACED_LIST_DEFAULTS)(
+    'a written $key list replaces its shipped default',
+    ({ key, configurations, tables, value }) => {
+        const availableSettings = buildSelectedAvailableSettings(configurations);
+        const settings = parseSettings(buildSandboxSettings(configurations, { tables }), undefined);
+        expect(getSettingValue(availableSettings, settings, key)?.value).toStrictEqual(value);
+    },
+);
+
+test('a first list written in a scope replaces the shipped default for that scope and its children', () => {
+    const availableSettings = buildSelectedAvailableSettings(['supabase']);
+    const settings = parseSettings(
+        buildSandboxSettings(['supabase'], {
+            tables: '[[scope]]\npath = "app"\nsupabase.schemas = ["api"]\n',
+        }),
+        undefined,
+    );
+    expect(getSettingValue(availableSettings, settings, 'supabase.schemas')?.value).toStrictEqual(['public']);
+    for (const scope of ['app', 'app/deep'])
+        expect(getSettingValue(availableSettings, settings, 'supabase.schemas', scope)?.value).toStrictEqual(['api']);
 });
 
 test("a scope's rules keep other rules and replace the whole options of the same rule", () => {

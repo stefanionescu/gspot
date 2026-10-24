@@ -191,7 +191,7 @@ test.each([...LOOSENED_SETTINGS])(
 
 test.each([...LOOSENED_SETTINGS])(
     '$key set in one scope keeps the root value, and unset gives the scope the inherited value again',
-    async ({ key, value, second, defaults, appDefaults, siblingDefaults }) => {
+    async ({ key, value, second }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['typescript', 'site'], {
                 level: 'all',
@@ -213,11 +213,7 @@ test.each([...LOOSENED_SETTINGS])(
             (JSON.parse(listed.stdout) as SettingsListJson).settings
                 .filter((row) => row.key === key)
                 .map(({ value }) => value),
-        ).toStrictEqual([
-            [...defaults, second],
-            [...appDefaults, second],
-            [...siblingDefaults, second],
-        ]);
+        ).toStrictEqual([[second], [second], [second]]);
     },
 );
 

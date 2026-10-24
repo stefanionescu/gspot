@@ -64,11 +64,11 @@ gspot set level all
 
 ## Change a setting
 
-| Command                           | What it does                                                                                       |
-| --------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `gspot set <setting> <value>`     | Writes your value. On a list, your list replaces the one you wrote before; the shipped items stay. |
-| `gspot unset <setting>`           | Removes your value and its reason, so the default takes effect again.                              |
-| `gspot unset <setting> <item...>` | Removes list items that you wrote. The shipped items stay.                                         |
+| Command                           | What it does                                                                                                        |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `gspot set <setting> <value>`     | Writes your value. Your first written list replaces the shipped list; a scope list adds to its written parent list. |
+| `gspot unset <setting>`           | Removes your value and its reason, so the default takes effect again.                                               |
+| `gspot unset <setting> <item...>` | Removes list items from your list.                                                                                  |
 
 To change a setting in one folder only, see [Settings in a scope](/configure/monorepos/#settings-in-a-scope).
 

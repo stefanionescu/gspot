@@ -57,7 +57,10 @@ export const PYTHON_TYPE_SOURCE = [
 
 export const TEST_FILE_FINDINGS = [
     { file: 'Sources/Service.swift', rule: 'banned-word' },
+    { file: 'Sources/ServiceTests.swift', rule: 'banned-word' },
     { file: 'src/entry.js', rule: 'banned-word' },
+    { file: 'tests/Service.swift', rule: 'banned-word' },
+    { file: 'tests/default.js', rule: 'banned-word' },
     { file: 'apps/api/verification/entry.js', rule: 'banned-word' },
     { file: 'apps/web/qa/entry.js', rule: 'banned-word' },
     { file: 'apps/web/src/entry.js', rule: 'banned-word' },

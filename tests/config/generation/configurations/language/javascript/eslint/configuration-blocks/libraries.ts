@@ -86,18 +86,15 @@ store_files = ["**/store.js"]
 export const TRANSLATION_SOURCE = 'export const element = <p>Hello there</p>;\n';
 
 export const UNCHECKED_ROUTER_FILES: string[] = [
+    'routers/default.ts',
+    'inherited/routers/action.ts',
     'outside/action.ts',
     'child/custom/action.ts',
     'inherited/custom/action.ts',
     'plain/routers/action.ts',
 ];
 
-export const ROUTER_ROLE_FILES: string[] = [
-    'custom/action.ts',
-    'routers/default.ts',
-    'child/handlers/action.ts',
-    'inherited/routers/action.ts',
-];
+export const ROUTER_ROLE_FILES: string[] = ['custom/action.ts', 'child/handlers/action.ts'];
 
 export const DRIZZLE_SCOPE_SETTINGS = {
     level: 'all',

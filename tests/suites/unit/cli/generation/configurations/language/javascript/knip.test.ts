@@ -158,7 +158,7 @@ test("Knip gets each scope's test_files as entry points without sibling leaks", 
     const { workspaces } = JSON.parse(content) as KnipConfigFile;
     const globsByWorkspace = Object.fromEntries(Object.entries(workspaces).map(([name, { entry }]) => [name, entry]));
     const shared = globsByWorkspace['app/deep']!;
-    expect(shared).toContain('**/*.test.*');
+    expect(shared).toStrictEqual(['src/main.{ts,js}', 'src/index.{ts,js}']);
     expect(globsByWorkspace).toStrictEqual({
         '.': [...shared, 'specifications/**'],
         app: [...shared, 'verification/**'],

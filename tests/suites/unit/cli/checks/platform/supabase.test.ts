@@ -134,6 +134,7 @@ test("service role keys are allowed in each scope's test files and refused in cl
         result.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
     ).toStrictEqual([
         { file: 'client.ts', rule: 'service-role-key' },
+        { file: 'tests/default.ts', rule: 'service-role-key' },
         { file: 'apps/web/client.ts', rule: 'service-role-key' },
     ]);
 });

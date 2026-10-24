@@ -6,7 +6,7 @@ import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 
-test('Trivy severity settings add up through the root and child scopes', async () => {
+test('Trivy severity replaces the shipped list and adds child scope values', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['docker'], {
             level: 'all',
@@ -23,8 +23,7 @@ test('Trivy severity settings add up through the root and child scopes', async (
         const text = files.find((file) => file.path === findConfigFilePath(session, 'trivy', scope))!.content;
         const parsed: unknown = parse(text);
         expect(parsed).toMatchObject({
-            severity:
-                scope === '' ? ['HIGH', 'CRITICAL', 'LOW', 'MEDIUM'] : ['HIGH', 'CRITICAL', 'LOW', 'MEDIUM', 'UNKNOWN'],
+            severity: scope === '' ? ['LOW', 'MEDIUM'] : ['LOW', 'MEDIUM', 'UNKNOWN'],
         });
     }
 });

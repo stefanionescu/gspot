@@ -67,7 +67,7 @@ The [Swift](/languages/swift/#tests) page covers Swift tests and their coverage 
 files out of other checks. Its default covers the usual test folders and file names; the
 [settings reference](/reference/gspot-toml/#test_files) lists them.
 
-Your patterns add to the list, and the patterns of a scope add to the root list:
+Your first written list replaces the default patterns. A scope adds its patterns to its written parent list:
 
 ```shell
 gspot set test_files "e2e/**"

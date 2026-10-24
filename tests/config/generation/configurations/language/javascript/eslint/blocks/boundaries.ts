@@ -148,11 +148,11 @@ export const TEST_IMPORT_RULE_CASES = [
     { path: 'app/source.js', importPath: '../storage/value.js', count: 1 },
     { path: 'app/qa/check.js', importPath: '../../storage/value.js', count: 0 },
     { path: 'app/verification/check.js', importPath: '../../storage/value.js', count: 1 },
-    { path: 'app/example.test.js', importPath: '../storage/value.js', count: 0 },
+    { path: 'app/example.test.js', importPath: '../storage/value.js', count: 1 },
     { path: 'apps/api/app/source.js', importPath: '../storage/value.js', count: 1 },
     { path: 'apps/api/app/verification/check.js', importPath: '../../storage/value.js', count: 0 },
     { path: 'apps/api/app/qa/check.js', importPath: '../../storage/value.js', count: 0 },
-    { path: 'apps/api/app/example.spec.js', importPath: '../storage/value.js', count: 0 },
+    { path: 'apps/api/app/example.spec.js', importPath: '../storage/value.js', count: 1 },
 ] as const;
 
 export const REFUSED_IMPORT_MESSAGES = [

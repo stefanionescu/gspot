@@ -54,17 +54,11 @@ export const LOOSENED_SETTINGS = [
         key: 'site.allowed_unlisted_pages',
         value: 'account/index.html',
         second: 'admin/index.html',
-        defaults: ['dist/404.html'],
-        appDefaults: ['app/dist/404.html'],
-        siblingDefaults: ['sibling/dist/404.html'],
     } as const,
     {
         key: 'dependencies.allowed_registries',
         value: 'registry.example.test',
         second: 'packages.example.test',
-        defaults: ['registry.npmjs.org', 'registry.yarnpkg.com'],
-        appDefaults: ['registry.npmjs.org', 'registry.yarnpkg.com'],
-        siblingDefaults: ['registry.npmjs.org', 'registry.yarnpkg.com'],
     } as const,
 ] as const;
 

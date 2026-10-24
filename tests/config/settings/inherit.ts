@@ -3,6 +3,40 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 
+export const REPLACED_LIST_DEFAULTS = [
+    {
+        key: 'ci.operating_systems',
+        configurations: [],
+        tables: '[ci]\noperating_systems = ["macos"]\n',
+        value: ['macos'],
+    },
+    {
+        key: 'supabase.schemas',
+        configurations: ['supabase'],
+        tables: '[supabase]\nschemas = ["api"]\n',
+        value: ['api'],
+    },
+    {
+        key: 'tools.semgrep.registry_packs',
+        configurations: ['security'],
+        tables: '[tools.semgrep]\nregistry_packs = []\n',
+        value: [],
+    },
+    {
+        key: 'tools.commitlint.types',
+        configurations: ['commits'],
+        tables: '[tools.commitlint]\ntypes = ["feat", "fix"]\n',
+        value: ['feat', 'fix'],
+    },
+    {
+        key: 'tools.trivy.severity',
+        configurations: ['docker'],
+        tables: '[tools.trivy]\nseverity = ["CRITICAL"]\n',
+        value: ['CRITICAL'],
+    },
+    { key: 'test_files', configurations: [], tables: 'test_files = ["spec/**"]\n', value: ['spec/**'] },
+];
+
 export const CONFLICTING_DEFAULT_ERRORS = [
     {
         path: ['configurations'],
