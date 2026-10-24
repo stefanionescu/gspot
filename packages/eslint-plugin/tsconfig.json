@@ -5,5 +5,5 @@
         "types": ["node"],
         "lib": ["ESNext"]
     },
-    "include": ["src/**/*.ts", "plugin.d.ts"]
+    "include": ["src/**/*.ts", "repository/**/*.ts", "plugin.d.ts"]
 }

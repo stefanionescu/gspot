@@ -1,5 +1,5 @@
 import { createRuleTester } from '#tests/setup/eslint/rule-tester.ts';
-import { noPromiseMatchers } from '#eslint-plugin/rules/no-promise-matchers.ts';
+import { noPromiseMatchers } from '#eslint-plugin-repository/no-promise-matchers.ts';
 
 createRuleTester().run('no-promise-matchers', noPromiseMatchers, {
     valid: [

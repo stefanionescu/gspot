@@ -1,4 +1,4 @@
-import { createRule } from '../create-rule.ts';
+import { createRule } from '../src/create-rule.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 
 export const noPromiseMatchers = createRule<[], 'promise'>({

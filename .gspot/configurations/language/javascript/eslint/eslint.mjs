@@ -14,7 +14,7 @@ import regexp from "eslint-plugin-regexp";
 import security from "eslint-plugin-security";
 import perfectionist from "eslint-plugin-perfectionist";
 import boundaries from "eslint-plugin-boundaries";
-import localPlugin0 from "../../../../../packages/eslint-plugin/repository.mjs";
+import localPlugin0 from "../../../../../packages/eslint-plugin/repository/plugin.mjs";
 import typescriptBlocks from "../../typescript/eslint.mjs";
 import astroBlocks from "../../../framework/astro/eslint.mjs";
 import zodBlocks from "../../../library/zod/eslint.mjs";
@@ -526,6 +526,7 @@ export default [
                         "#tests/*": "tests/*",
                         "#cli-package": "packages/cli/package.json",
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
+                        "#eslint-plugin-repository/*": "packages/eslint-plugin/repository/*",
                         "#eslint-plugin-package": "packages/eslint-plugin/package.json",
                         "#root-package": "package.json"
                     }
@@ -618,6 +619,7 @@ export default [
                         "#tests/*": "tests/*",
                         "#cli-package": "packages/cli/package.json",
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
+                        "#eslint-plugin-repository/*": "packages/eslint-plugin/repository/*",
                         "#eslint-plugin-package": "packages/eslint-plugin/package.json",
                         "#root-package": "package.json"
                     }
@@ -646,6 +648,7 @@ export default [
                         "#tests/*": "tests/*",
                         "#cli-package": "packages/cli/package.json",
                         "#eslint-plugin/*": "packages/eslint-plugin/src/*",
+                        "#eslint-plugin-repository/*": "packages/eslint-plugin/repository/*",
                         "#eslint-plugin-package": "packages/eslint-plugin/package.json",
                         "#root-package": "package.json"
                     }
@@ -1119,8 +1122,13 @@ export default [
                         "pattern": [
                             "packages/eslint-plugin/src/*.ts",
                             "packages/eslint-plugin/src/rules/**",
-                            "packages/eslint-plugin/plugin.d.ts",
-                            "packages/eslint-plugin/repository.mjs"
+                            "packages/eslint-plugin/plugin.d.ts"
+                        ]
+                    },
+                    {
+                        "category": "import-rule:plugin-repository",
+                        "pattern": [
+                            "packages/eslint-plugin/repository/**"
                         ]
                     },
                     {
@@ -2083,6 +2091,42 @@ export default [
                         {
                             "from": {
                                 "file": {
+                                    "categories": "import-rule:plugin-repository"
+                                }
+                            },
+                            "disallow": {
+                                "to": {
+                                    "file": {
+                                        "path": "**/*"
+                                    }
+                                }
+                            },
+                            "message": "Import rule \"plugin-repository\" may import its own files and \"plugin\", \"plugin-config\", \"plugin-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        },
+                        {
+                            "from": {
+                                "file": {
+                                    "categories": "import-rule:plugin-repository"
+                                }
+                            },
+                            "allow": {
+                                "to": {
+                                    "file": {
+                                        "categories": {
+                                            "anyOf": [
+                                                "import-rule:plugin-repository",
+                                                "import-rule:plugin",
+                                                "import-rule:plugin-config",
+                                                "import-rule:plugin-types"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "from": {
+                                "file": {
                                     "categories": "import-rule:docs-config"
                                 }
                             },
@@ -2164,7 +2208,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"write\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"docs\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"write\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"plugin-repository\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2199,6 +2243,7 @@ export default [
                                                 "import-rule:plugin-config",
                                                 "import-rule:plugin-types",
                                                 "import-rule:plugin",
+                                                "import-rule:plugin-repository",
                                                 "import-rule:docs-config",
                                                 "import-rule:docs-types"
                                             ]
@@ -2291,7 +2336,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"write\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests-setup\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"write\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"plugin-repository\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2326,6 +2371,7 @@ export default [
                                                 "import-rule:plugin-config",
                                                 "import-rule:plugin-types",
                                                 "import-rule:plugin",
+                                                "import-rule:plugin-repository",
                                                 "import-rule:docs-config",
                                                 "import-rule:docs-types",
                                                 "import-rule:docs",
@@ -2350,7 +2396,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"tests\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"write\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"tests\" may import its own files and \"cli-config\", \"cli-types\", \"system\", \"parsers\", \"configurations\", \"repository\", \"write\", \"settings\", \"planning\", \"generation\", \"tools\", \"session\", \"install\", \"apply\", \"runs\", \"checks\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"plugin-repository\", \"docs-config\", \"docs-types\", \"docs\", \"tests-data\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2385,6 +2431,7 @@ export default [
                                                 "import-rule:plugin-config",
                                                 "import-rule:plugin-types",
                                                 "import-rule:plugin",
+                                                "import-rule:plugin-repository",
                                                 "import-rule:docs-config",
                                                 "import-rule:docs-types",
                                                 "import-rule:docs",
@@ -2605,6 +2652,7 @@ export default [
                                             "import-rule:plugin-config",
                                             "import-rule:plugin-types",
                                             "import-rule:plugin",
+                                            "import-rule:plugin-repository",
                                             "import-rule:docs-config",
                                             "import-rule:docs-types",
                                             "import-rule:docs",
@@ -2652,6 +2700,7 @@ export default [
                                                 "import-rule:plugin-config",
                                                 "import-rule:plugin-types",
                                                 "import-rule:plugin",
+                                                "import-rule:plugin-repository",
                                                 "import-rule:docs-config",
                                                 "import-rule:docs-types",
                                                 "import-rule:docs",

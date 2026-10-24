@@ -292,14 +292,14 @@ import_extension = "ts"
 
 [[tools.eslint.plugins]]
 name = "repository"
-path = "packages/eslint-plugin/repository.mjs"
+path = "packages/eslint-plugin/repository/plugin.mjs"
 
 [tools.eslint.plugins.rules]
 no-promise-matchers = []
 schema-location = [{ folders = ["packages/cli/src/schemas", "tests/schemas"] }]
 
 [tools.knip]
-entry = ["tests/setup/runner/unit.ts", "packages/eslint-plugin/repository.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-exports.ts"]
+entry = ["tests/setup/runner/unit.ts", "packages/eslint-plugin/repository/plugin.mjs", "tests/setup/runner/prepare.ts", "tests/setup/runner/integration.ts", "packages/cli/src/checks/framework/site/purgecss-process.ts", "packages/cli/configurations/language/javascript/config-files/eslint-functions.ts", "docs/src/route-data.ts", "packages/cli/src/bin.ts", "packages/cli/configurations/language/markdown/config-files/markdownlint-cli2.ts", "packages/cli/src/configurations/linter-exports.ts"]
 
 [[scope]]
 path = "docs"
@@ -406,8 +406,13 @@ can_import = []
 
 [[import_rule]]
 name = "plugin"
-paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/plugin.d.ts", "packages/eslint-plugin/repository.mjs"]
+paths = ["packages/eslint-plugin/src/*.ts", "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/plugin.d.ts"]
 can_import = ["plugin-config", "plugin-types"]
+
+[[import_rule]]
+name = "plugin-repository"
+paths = ["packages/eslint-plugin/repository/**"]
+can_import = ["plugin", "plugin-config", "plugin-types"]
 
 [[import_rule]]
 name = "docs-config"

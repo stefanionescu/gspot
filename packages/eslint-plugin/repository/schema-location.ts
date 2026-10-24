@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
-import { createRule } from '../create-rule.ts';
-import { convertToPosixPath } from '../syntax.ts';
-import type { SchemaLocationOptions } from '../types/rules.ts';
+import { createRule } from '../src/create-rule.ts';
+import { convertToPosixPath } from '../src/syntax.ts';
+import type { SchemaLocationOptions } from '../src/types/rules.ts';
 import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
@@ -10,7 +10,7 @@ import {
     ZOD_SCHEMA_FACTORIES,
     ZOD_SCHEMA_NAMESPACES,
     DEFAULT_SCHEMA_FOLDERS,
-} from '../config/rules/schema-location.ts';
+} from '../src/config/rules/schema-location.ts';
 
 function findZodSchemaConstructors(source: TSESLint.SourceCode): TSESTree.Node[] {
     const factories = Object.fromEntries(
