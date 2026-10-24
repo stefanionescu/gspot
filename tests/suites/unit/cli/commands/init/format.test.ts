@@ -17,7 +17,28 @@ import {
     SCOPE_FORMAT_FILES,
     FORMAT_WORKSPACE_FILES,
     PRETTIER_FORMAT_OPTIONS,
+    INVALID_PRETTIER_OPTIONS,
 } from '#tests/config/commands/init/format.ts';
+
+test.each(INVALID_PRETTIER_OPTIONS)(
+    'init names $file and $field for an invalid option type',
+    async ({ file, field, text }) => {
+        await using sandbox = await testdir({
+            ...FORMAT_WORKSPACE_FILES,
+            'source.js': 'export const value = 1;\n',
+            'app/source.js': 'export const value = 2;\n',
+            [file]: text,
+        });
+        commitAll(sandbox.path);
+        const result = await runGspot(sandbox.path, [...buildInitArguments(['format']), '--dry-run']);
+        expect(result.code).toBe(2);
+        expect(result.stdout).toBe('');
+        expect(result.stderr).toBe(
+            `${file}: ${field}: Invalid input: expected number, received string. Fix the field.\n`,
+        );
+        expect(await readFile(`${sandbox.path}/${file}`, 'utf8')).toBe(text);
+    },
+);
 
 async function readInitFormatOptions(root: string, commandArguments: string[]): Promise<FormatSettings[]> {
     const result = await runGspot(root, [...commandArguments, '--dry-run', '--json']);

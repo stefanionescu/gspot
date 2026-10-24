@@ -1,3 +1,10 @@
+export const INVALID_PRETTIER_OPTIONS = [
+    { file: '.prettierrc.json', text: '{"tabWidth":"4"}', field: 'tabWidth' },
+    { file: 'package.json', text: '{"prettier":{"printWidth":"wide"}}', field: 'printWidth' },
+    { file: 'app/.prettierrc.json', text: '{"tabWidth":"4"}', field: 'tabWidth' },
+    { file: 'app/package.json', text: '{"prettier":{"printWidth":"wide"}}', field: 'printWidth' },
+];
+
 export const FORMAT_FILE_CASES = [
     {
         name: 'no formatter configuration',

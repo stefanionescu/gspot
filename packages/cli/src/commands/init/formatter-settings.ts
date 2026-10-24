@@ -2,6 +2,7 @@ import { posix } from 'node:path';
 import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { parseFileFields } from '#cli/system/errors.ts';
 import { selectForScope } from '#cli/settings/scopes.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -112,29 +113,34 @@ function parsePrettierFile(path: string, text: string): PrettierOptions {
     const format = PRETTIER_FILE_FORMATS[posix.basename(path)];
     const parsers = { yaml: parseYamlFile, json: parseJsonFile, toml: parseTomlFile };
     const options = format === undefined ? {} : parsers[format](path, text);
-    return { ...PRETTIER_DEFAULTS, ...stripUndefined(prettierSettingsSchema.parse(options)) };
+    return { ...PRETTIER_DEFAULTS, ...stripUndefined(parseFileFields(path, options, prettierSettingsSchema)) };
 }
 
 function readFormatOptions(
-    file: string,
+    root: string,
+    scope: string,
     dependencies: Record<string, string>,
     prettierFiles: string[],
 ): PrettierOptions | null {
-    const root = posix.dirname(file);
-    const packageJson = findText(root, PACKAGE_JSON);
-    const packageOptions = packageJson === undefined ? undefined : parseJsonFile(file, packageJson)['prettier'];
+    const folder = posix.join(root, scope);
+    const packagePath = posix.join(scope, PACKAGE_JSON);
+    const packageJson = findText(folder, PACKAGE_JSON);
+    const packageOptions = packageJson === undefined ? undefined : parseJsonFile(packagePath, packageJson)['prettier'];
     const prettierFile = prettierFiles
-        .map((path) => ({ path, text: findText(root, path) }))
+        .map((path) => ({ path, text: findText(folder, path) }))
         .find((read): read is { path: string; text: string } => read.text !== undefined);
     const usesPrettier =
         prettierFile !== undefined || packageOptions !== undefined || dependencies['prettier'] !== undefined;
     if (usesPrettier) {
         if (prettierFile !== undefined)
-            return parsePrettierFile(posix.join(root, prettierFile.path), prettierFile.text);
+            return parsePrettierFile(posix.join(scope, prettierFile.path), prettierFile.text);
         const options = isTable(packageOptions) ? packageOptions : {};
-        return { ...PRETTIER_DEFAULTS, ...stripUndefined(prettierSettingsSchema.parse(options)) };
+        return {
+            ...PRETTIER_DEFAULTS,
+            ...stripUndefined(parseFileFields(packagePath, options, prettierSettingsSchema)),
+        };
     }
-    return readEditorconfig(root);
+    return readEditorconfig(folder);
 }
 
 function readScopeFormat(
@@ -150,7 +156,8 @@ function readScopeFormat(
     const format = selected.find((configuration) => configuration.name === FORMAT_CONFIGURATION);
     if (format === undefined) return {};
     const options = readFormatOptions(
-        posix.join(repository.root, scope, PACKAGE_JSON),
+        repository.root,
+        scope,
         Object.fromEntries(
             repository.dependencyFiles
                 .filter((dependencyFile) => findScopeFolder(dependencyFile.path, draft.scopes).path === scope)
