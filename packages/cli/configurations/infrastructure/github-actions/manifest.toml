@@ -6,6 +6,7 @@ title = "GitHub Actions"
 
 [files]
 paths = ["**/.github/workflows/*.{yml,yaml}", "**/action.{yml,yaml}"]
+kinds = ["source", "generated"]
 
 [[tool]]
 mise = "actionlint"
@@ -28,7 +29,7 @@ tool = "zizmor"
 command = ["actionlint", "-no-color", "{files}"]
 example = "A workflow expression with the unknown context `${{ unknown.value }}` reports an error. Use a supported context and property there instead."
 exit_codes = [1]
-files = { paths = ["**/.github/workflows/*.{yml,yaml}"] }
+files = { paths = ["**/.github/workflows/*.{yml,yaml}"], kinds = ["source", "generated"] }
 help = "Fix the line actionlint names."
 level = "recommended"
 name = "actionlint"

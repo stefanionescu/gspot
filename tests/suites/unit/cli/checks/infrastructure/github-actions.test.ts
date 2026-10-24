@@ -5,16 +5,61 @@ import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
+import { generate } from '#cli/generation/generate.ts';
+import { openWriter } from '#cli/apply/write/writer.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
+import { buildVenvBinPath } from '#cli/system/paths.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
-import { runCheckCode } from '#cli/commands/check/run.ts';
+import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runChecks, runCheckCode } from '#cli/commands/check/run.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { writeScriptCommand, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
-import { ACTIONLINT_EXITS, WORKFLOW_TEXT_CASES } from '#tests/config/checks/infrastructure/github-actions.ts';
+
+import {
+    ACTIONLINT_EXITS,
+    CI_SOURCE_WORKFLOW,
+    WORKFLOW_TEXT_CASES,
+    CI_INJECTION_SETTINGS,
+    GENERATED_WORKFLOW_CHECKS,
+} from '#tests/config/checks/infrastructure/github-actions.ts';
+
+test.each([...GENERATED_WORKFLOW_CHECKS])(
+    '$tool reports findings in the generated workflow',
+    async ({ tool, code, rule, stdout }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['github-actions'], { tables: CI_INJECTION_SETTINGS }),
+            '.github/workflows/source.yml': CI_SOURCE_WORKFLOW,
+            [join(buildVenvBinPath(GSPOT_PATHS.pythonEnvironment), 'zizmor')]: 'fixture',
+        });
+        const original = await openSession(sandbox.path);
+        using writer = openWriter(sandbox.path);
+        await writeGeneratedFiles(original, generate(original), writer);
+        const session = await openSession(sandbox.path);
+        using _pins = fakeToolExecutables(
+            ['actionlint', 'shellcheck', 'zizmor'].map((name) => getTool(session.configurations.values(), name)),
+        );
+        using boundary = spyOn(processes, 'spawnProcess').mockImplementation((command) => {
+            expect(command).toContain('.github/workflows/gspot.yml');
+            return Promise.resolve(buildProcessResult({ code, stdout }));
+        });
+        const result = await runChecks(session, buildRunOptions({ only: [`github-actions/${tool}`] }));
+        expect(result.report.checks).toMatchObject([
+            {
+                check: `github-actions/${tool}`,
+                status: 'failed',
+                fileCount: 2,
+                findings: [{ file: '.github/workflows/gspot.yml', rule }],
+            },
+        ]);
+        expect(boundary).toHaveBeenCalledTimes(1);
+    },
+);
 
 test.each([...WORKFLOW_TEXT_CASES])(
     'actionlint prepares $path references without changing their offsets',

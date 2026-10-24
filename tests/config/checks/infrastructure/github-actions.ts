@@ -50,3 +50,23 @@ export const WORKFLOW_TEXT_CASES = [
         expected: 'name: Setup\nruns:\n  using: composite\n  steps:\n    - uses: ./.github/actions/cache\n',
     })),
 ];
+export const CI_INJECTION_SETTINGS =
+    '[ci]\nenabled = true\nsetup_command = ["echo", "${{ github.event.pull_request.title }}"]\n';
+
+export const CI_SOURCE_WORKFLOW =
+    'on: workflow_dispatch\npermissions: {}\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo safe\n';
+
+export const GENERATED_WORKFLOW_CHECKS = [
+    {
+        tool: 'actionlint',
+        code: 1,
+        rule: 'expression',
+        stdout: '.github/workflows/gspot.yml:56:24: untrusted expression [expression]\n',
+    },
+    {
+        tool: 'zizmor',
+        code: 14,
+        rule: 'template-injection',
+        stdout: '::error file=.github/workflows/gspot.yml,line=56,title=template-injection::untrusted expression\n',
+    },
+] as const;

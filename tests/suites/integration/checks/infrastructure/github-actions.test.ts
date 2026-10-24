@@ -10,12 +10,41 @@ import type { Explanation } from '#cli/types/commands/explain.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { spawnGspot, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
+import { CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/checks/infrastructure/github-actions.ts';
 
 import {
     COMPOSITE_ACTION,
     CHECKOUT_WORKFLOW,
     REQUIRED_INPUT_WORKFLOW,
 } from '#tests/config/integration/checks/infrastructure/github-actions.ts';
+
+test('workflow security checks report an injectable setting in the generated workflow', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['github-actions'], { tables: CI_INJECTION_SETTINGS }),
+        '.github/workflows/source.yml': CI_SOURCE_WORKFLOW,
+    });
+    await installGeneratedTools(sandbox.path);
+    const result = parseCheckReport(
+        await spawnGspot(sandbox.path, [
+            'check',
+            '--only',
+            'github-actions/zizmor,github-actions/actionlint',
+            '--json',
+        ]),
+    );
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    for (const [check, expectedRule] of [
+        ['github-actions/zizmor', 'template-injection'],
+        ['github-actions/actionlint', 'expression'],
+    ]) {
+        const checked = result.report.checks.find(({ check: id }) => id === check);
+        expect(checked?.status).toBe('failed');
+        expect(checked?.findings.map(({ file, rule }) => ({ file, rule }))).toContainEqual({
+            file: '.github/workflows/gspot.yml',
+            rule: expectedRule,
+        });
+    }
+});
 
 test('the generated GitHub workflow passes actionlint', async () => {
     await using sandbox = await testdir({ 'README.md': '# Workflow test\n' });
