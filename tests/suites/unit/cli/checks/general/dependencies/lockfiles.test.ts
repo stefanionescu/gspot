@@ -21,6 +21,14 @@ import {
     ALLOWED_GITHUB_REGISTRIES,
 } from '#tests/config/checks/general/dependencies.ts';
 
+test('dependencies/lockfiles accepts a vendored file tarball without treating it as a download', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([]),
+        'package-lock.json': '{"packages":{"node_modules/vendored":{"resolved":"file:vendor/vendored-1.0.0.tgz"}}}',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
+});
+
 test('dependencies/lockfiles reports Git download hosts until they are allowed, and plain HTTP even when allowed', async () => {
     const insecureDownload = new URL(HOST_LOCKFILE.packages['node_modules/third'].resolved);
     insecureDownload.protocol = 'http:';

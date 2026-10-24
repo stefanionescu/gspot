@@ -6,7 +6,7 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
-import { LOCKFILE_URL, NPM_DOWNLOAD } from '#cli/config/checks/general/dependencies/lockfiles.ts';
+import { LOCKFILE_URL, NPM_DOWNLOAD, DOWNLOAD_PROTOCOLS } from '#cli/config/checks/general/dependencies/lockfiles.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
@@ -22,7 +22,9 @@ function checkFileHosts(session: Session, planned: PlannedCheck, path: string, h
             : text.matchAll(LOCKFILE_URL).map((match) => match[0])
         )
             .flatMap((url) => {
-                const message = URL.canParse(url) ? validateUrl(new URL(url), hosts) : undefined;
+                const parsed = URL.parse(url);
+                const message =
+                    parsed !== null && DOWNLOAD_PROTOCOLS.has(parsed.protocol) ? validateUrl(parsed, hosts) : undefined;
                 if (message === undefined) return [];
                 return [buildFinding(planned, { file: path, line: index + 1 }, 'host', message)];
             })
