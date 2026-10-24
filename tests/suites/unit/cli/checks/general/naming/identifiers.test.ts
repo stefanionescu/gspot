@@ -203,3 +203,13 @@ test('Next.js JavaScript routes accept PascalCase components', async () => {
     });
     expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
 });
+
+test('cors stays a domain word while core and its word forms remain banned', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { level: 'all' }),
+        'cors.js':
+            'export const corsHeaders = {};\nexport const coreCount = 1;\nexport const cores = [];\nexport const cored = 1;\n',
+    });
+    const checked = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+    expect(checked.map(({ line }) => line)).toStrictEqual([2, 3, 4]);
+});

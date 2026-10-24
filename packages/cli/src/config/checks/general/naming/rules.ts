@@ -35,3 +35,5 @@ export const RUFF_CATEGORIES: ReadonlySet<string> = new Set([
 ]);
 
 export const SWIFTLINT_PARENTS: ReadonlySet<string> = new Set(['types', 'variables']);
+
+export const VOWEL_SUFFIX = /^[aeiou]/u;

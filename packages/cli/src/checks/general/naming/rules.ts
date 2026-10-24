@@ -8,13 +8,13 @@ import { splitWords } from '#cli/checks/general/naming/settings.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { NUMERIC_WORDS, CATEGORY_PARENTS } from '#cli/config/checks/general/naming/settings.ts';
 
-import type {
-    Identifier,
-    FileNaming,
-    CategoryLimits,
-    NamingSettings,
-    CompiledOverride,
-    CheckedIdentifier,
+import {
+    type Identifier,
+    type FileNaming,
+    type CategoryLimits,
+    type NamingSettings,
+    type CompiledOverride,
+    type CheckedIdentifier,
 } from '#cli/types/checks/general/naming.ts';
 import {
     DIGIT,
@@ -23,6 +23,7 @@ import {
     CAMEL_WORD,
     LOWER_WORD,
     PASCAL_WORD,
+    VOWEL_SUFFIX,
     LAST_EXTENSION,
     RUFF_CATEGORIES,
     TEST_TERM_GROUP,
@@ -55,7 +56,11 @@ function isWordForm(word: string, term: string): boolean {
     return (BANNED_WORD_FORMS[term] ?? [term]).some((base) => {
         if (word === base) return true;
         const forms = [base];
-        if (base.endsWith('e')) forms.push(base.slice(0, -1));
+        if (
+            base.endsWith('e') &&
+            WORD_FORM_SUFFIXES.some((suffix) => VOWEL_SUFFIX.test(suffix) && word === base.slice(0, -1) + suffix)
+        )
+            return true;
         if (base.endsWith('y') && ['ies', 'ied'].some((suffix) => word === base.slice(0, -1) + suffix)) return true;
         if (WORD_FORM_CONSONANT.test(base)) forms.push(base + (base.at(-1) as string));
         return forms.some((form) => WORD_FORM_SUFFIXES.some((suffix) => word === form + suffix));
