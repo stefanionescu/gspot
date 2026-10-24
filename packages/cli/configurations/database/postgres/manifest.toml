@@ -7,7 +7,7 @@ title = "Postgres"
 
 [detect]
 content = { "prisma/schema.prisma" = '(?:^|\n)[\t ]*provider[\t ]*=[\t ]*"postgresql"' }
-dependencies = ["pg", "postgres", "psycopg", "asyncpg", "@neondatabase/serverless"]
+dependencies = ["pg", "postgres", "psycopg*", "asyncpg", "@neondatabase/serverless"]
 
 [files]
 paths = ["db/migrations/*.sql", "migrations/*.sql", "prisma/migrations/*/migration.sql", "drizzle/*.sql", "**/supabase/migrations/*.sql"]

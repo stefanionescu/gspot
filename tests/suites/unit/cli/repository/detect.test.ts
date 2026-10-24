@@ -226,3 +226,18 @@ test('a favicon manifest alone does not select the static site checks', () => {
         ).map(({ configuration }) => configuration),
     ).not.toContain('site');
 });
+
+test.each(['psycopg', 'psycopg2', 'psycopg2-binary', 'psycopg-binary'])(
+    '%s selects Postgres migration checks',
+    async (dependency) => {
+        await using sandbox = await testdir({ 'requirements.txt': `${dependency}==3.2.3\n` });
+        const repository = await readTestRepository(sandbox.path);
+        const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
+        expect(
+            detectConfigurations(
+                { root: sandbox.path, files: repository.files, dependencyFiles },
+                readConfigurations(),
+            ).map(({ configuration }) => configuration),
+        ).toContain('postgres');
+    },
+);
