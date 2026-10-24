@@ -22,10 +22,15 @@ function isLimitLoosening(direction: Exclude<ReasonRequirement, 'adding'>, value
  *
  * @param where the setting or command that needs a reason.
  * @param reason the written text, if any.
+ * @param suggestion how to write the missing reason in this context.
  * @returns the error, or undefined when the reason meets the requirements.
  */
-export function validateReason(where: string, reason: string | undefined): string | undefined {
-    if (reason === undefined) return `${where} needs a reason. Add \`reason = "..."\` to this record.`;
+export function validateReason(
+    where: string,
+    reason: string | undefined,
+    suggestion = 'Add `reason = "..."` to this record.',
+): string | undefined {
+    if (reason === undefined) return `${where} needs a reason. ${suggestion}`;
     if (isReasonAccepted(reason)) return undefined;
     const refused = reason.trim() === '' ? 'an empty reason' : `"${reason}"`;
     return `${where} needs a reason that says something: ${refused} is refused. Write one sentence saying why.`;
@@ -33,7 +38,11 @@ export function validateReason(where: string, reason: string | undefined): strin
 
 function validateRemovedConfigurations(value: unknown, path: KeyPath): SettingsError[] {
     if (!Array.isArray(value) || value.length === 0) return [];
-    const missingReason = validateReason(path.map(String).join('.'), undefined);
+    const missingReason = validateReason(
+        path.map(String).join('.'),
+        undefined,
+        'Run gspot remove <configuration> --reason "<why>".',
+    );
     return buildErrorsAt([...path, 'reason'], missingReason);
 }
 

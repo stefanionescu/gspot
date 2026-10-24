@@ -54,6 +54,23 @@ test('the release age can be written at the root and cannot be written in a scop
     ]);
 });
 
+test('a removed configuration without a reason names the remove command', () => {
+    expect(validateSettingsText('removed_configurations = ["docs"]\n')).toStrictEqual([
+        'gspot.toml: removed_configurations.reason: removed_configurations needs a reason. Run gspot remove <configuration> --reason "<why>".',
+    ]);
+    expect(validateSettingsText('[[scope]]\npath = "app"\nremoved_configurations = ["docs"]\n')).toStrictEqual([
+        'gspot.toml: scope.0.removed_configurations.reason: scope.0.removed_configurations needs a reason. Run gspot remove <configuration> --reason "<why>".',
+    ]);
+});
+
+test('a list without its required reason names the inline value and set command', () => {
+    expect(
+        validateSettingsText('configurations = ["docs"]\n[docs]\nallowed_urls = ["https://example.com/docs"]\n'),
+    ).toStrictEqual([
+        'gspot.toml: docs.allowed_urls.reason: docs.allowed_urls needs a reason. Write it as docs.allowed_urls = { value = [...], reason = "..." }, or run gspot set docs.allowed_urls ... --reason "<why>".',
+    ]);
+});
+
 test('rules.exclude accepts a rule file path and a configuration folder', () => {
     const exclude = [findRuleFilePath('engineering', 'ACCESSIBILITY.md'), `${GSPOT_PATHS.configurations}/library`];
     expect(validateSettingsText(stringify({ rules: { exclude } }))).toStrictEqual([]);

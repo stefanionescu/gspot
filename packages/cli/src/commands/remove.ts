@@ -99,7 +99,11 @@ export function registerRemove(program: Command, onResult: CommandCompletion): v
         .option('--scope <path>', COMMAND_HELP.remove.options['--scope <path>'], trimTrailingSlashes)
         .action(async (configurations, flags) => {
             if (flags.reason === undefined) throw new GspotError('arguments', 'gspot remove needs --reason "<why>".');
-            const invalid = validateReason('gspot remove', flags.reason);
+            const invalid = validateReason(
+                'gspot remove',
+                flags.reason,
+                'Run gspot remove <configuration> --reason "<why>".',
+            );
             if (invalid !== undefined) throw new GspotError('arguments', invalid);
             onResult(
                 await runRemoveCommand({

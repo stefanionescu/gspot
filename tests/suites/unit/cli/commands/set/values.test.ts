@@ -170,7 +170,7 @@ test.each([...LOOSENED_SETTINGS])(
         const refused = await runGspot(sandbox.path, ['set', key, value]);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(refused.stderr).toBe(
-            `gspot.toml: ${key}.reason: ${key} needs a reason. Add \`reason = "..."\` to this record.\n`,
+            `gspot.toml: ${key}.reason: ${key} needs a reason. Write it as ${key} = { value = [...], reason = "..." }, or run gspot set ${key} ... --reason "<why>".\n`,
         );
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         for (const commandArguments of [

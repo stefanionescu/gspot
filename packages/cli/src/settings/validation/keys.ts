@@ -37,7 +37,11 @@ function validateWrittenList(
     if (!Array.isArray(written.value)) return [];
     const message =
         written.reason === undefined && isLoosening(match.setting, written.value, shipped)
-            ? validateReason(key, written.reason)
+            ? validateReason(
+                  key,
+                  undefined,
+                  `Write it as ${key} = { value = [...], reason = "..." }, or run gspot set ${key} ... --reason "<why>".`,
+              )
             : undefined;
     return message === undefined ? [] : [{ path: [...key.split('.'), 'reason'], message }];
 }

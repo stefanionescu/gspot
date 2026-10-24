@@ -55,7 +55,11 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
     assertIgnoreOptions(options, settings);
     const paths = escapeLiteralPaths(root, options.paths);
     const target = options.check ?? 'every check';
-    const message = validateReason(`gspot ignore ${options.check ?? ''}`.trimEnd(), options.reason);
+    const message = validateReason(
+        `gspot ignore ${options.check ?? ''}`.trimEnd(),
+        options.reason,
+        'Run gspot ignore <check> --reason "<why>".',
+    );
     if (message !== undefined) throw new GspotError('arguments', message);
     const list = (input.table['ignore'] as TomlTable[] | undefined) ?? [];
     const saved = mergeIgnore(
