@@ -346,12 +346,6 @@
             "allowed_names": ["_", "i", "j", "k", "x", "y", "n"]
         },
         {
-            "paths": ["**"],
-            "categories": ["folders"],
-            "reason": "Tools name these directories.",
-            "allowed_names": ["node_modules", "__pycache__", "__tests__", "__mocks__"]
-        },
-        {
             "paths": ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"],
             "categories": ["files"],
             "reason": "git names its hooks.",
@@ -379,6 +373,11 @@
         }
     ],
     "path_containers": [
+        {
+            "open": "__",
+            "close": "__",
+            "category": "folders"
+        },
         {
             "open": "[",
             "close": "]",

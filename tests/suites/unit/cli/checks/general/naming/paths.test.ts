@@ -172,3 +172,18 @@ test('Next.js route segments are unwrapped and dot folders are skipped', () => {
         category: 'files',
     });
 });
+
+test('double underscore tool folders keep their inner names and a shared folder stays banned', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'python', 'naming'], { level: 'all' }),
+        'src/__tests__/total.test.js': 'export const total = 1;\n',
+        'src/__mocks__/fs.js': 'export const read = 1;\n',
+        'pkg/__pycache__/cache_file.py': 'cached = 1\n',
+        'app/_components/button.js': 'export const button = 1;\n',
+        'app/_shared/port.js': 'export const port = 1;\n',
+    });
+    const checked = await runSandboxCheck(sandbox.path, 'naming/paths');
+    expect(checked.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'app/_shared/port.js', rule: 'banned-word' },
+    ]);
+});
