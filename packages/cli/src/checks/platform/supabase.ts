@@ -3,16 +3,17 @@ import { fileURLToPath } from 'node:url';
 import { isTable } from '#cli/system/tables.ts';
 import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
+import type { Parsed } from '#cli/types/shapes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { readParsedFile } from '#cli/checks/syntax.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
@@ -70,18 +71,14 @@ function parseDenoCheckError(session: Session, planned: PlannedCheck, folder: st
     return buildFinding(planned, { file, line: Number(place?.['line'] ?? 1) }, 'type-error', first.trim());
 }
 
-function readSupabaseProjectFile(session: Session, planned: PlannedCheck): SupabaseProjectFile | undefined {
+function readSupabaseProjectFile(
+    session: Session,
+    planned: PlannedCheck,
+): Parsed<SupabaseProjectFile, Finding> | undefined {
     const local = joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE);
     const text = findCachedText(session.reads, local);
     if (text === undefined) return undefined;
-    let value: Record<string, unknown>;
-    try {
-        value = parseTomlFile(local, text);
-    } catch (error) {
-        if (error instanceof GspotError && error.code === 'filesystem') return undefined;
-        throw error;
-    }
-    return parseFileFields(local, value, supabaseProjectFileSchema);
+    return readParsedFile(planned, local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
 }
 
 function listFunctionEntrypoints(planned: PlannedCheck): string[] {
@@ -126,9 +123,11 @@ async function runDenoCommand(
  * @returns the findings.
  */
 export async function checkSupabaseStoragePolicies(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const projectFile = readSupabaseProjectFile(session, planned);
+    const parsed = readSupabaseProjectFile(session, planned);
     const at = { file: joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE), line: 1 };
-    if (projectFile === undefined) return [];
+    if (parsed === undefined) return [];
+    if ('error' in parsed) return [parsed.error];
+    const projectFile = parsed.value;
     const migrations = await readParsedMigrations(session, planned);
     const policed = new Set<string>();
     const policies = migrations

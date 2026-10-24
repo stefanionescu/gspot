@@ -47,12 +47,19 @@ test('supabase/deno-lint runs in each scope folder on each edge function of its 
     ]);
 });
 
-test('supabase/storage-policies reports nothing for a config.toml with a TOML syntax error', async () => {
+test('supabase/storage-policies reports a syntax finding for malformed TOML', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['supabase'], { scopes: [{ path: 'apps/api' }] }),
         'apps/api/supabase/config.toml': '[broken',
     });
-    expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope: 'apps/api' })).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope: 'apps/api' })).toMatchObject([
+        {
+            file: 'apps/api/supabase/config.toml',
+            line: 1,
+            rule: 'syntax',
+            message: expect.stringContaining('TOML') as string,
+        },
+    ]);
 });
 
 test.each([1, 2])(
@@ -189,7 +196,7 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
 });
 
 test.each(['', 'apps/api'])(
-    'supabase/storage-policies fails on a config.toml whose buckets value is not a table in scope %j',
+    'supabase/storage-policies reports invalid bucket settings as a syntax finding in scope %j',
     async (scope) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['supabase'], {
@@ -203,10 +210,20 @@ test.each(['', 'apps/api'])(
         const failed = await runChecks(session, buildRunOptions({ only: ['supabase/storage-policies'] }));
 
         const check = failed.report.checks.find((check) => check.scope === scope);
-        expect(check).toMatchObject({ check: 'supabase/storage-policies', scope, status: 'error', findings: [] });
-        expect(check?.note).toBe(
-            `The supabase/storage-policies check failed: ${posix.join(scope, 'supabase/config.toml')}: storage.buckets: Invalid input: expected record, received string. Fix the field.`,
-        );
+        expect(check).toMatchObject({
+            check: 'supabase/storage-policies',
+            scope,
+            status: 'failed',
+            findings: [
+                {
+                    file: posix.join(scope, 'supabase/config.toml'),
+                    line: 1,
+                    rule: 'syntax',
+                    message: `${posix.join(scope, 'supabase/config.toml')}: storage.buckets: Invalid input: expected record, received string. Fix the field.`,
+                },
+            ],
+        });
+        expect(failed.report.exitCode).toBe(1);
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );
