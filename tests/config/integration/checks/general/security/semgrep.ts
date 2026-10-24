@@ -84,6 +84,8 @@ curl -o setup.sh https://example.com/setup.sh
 `;
 
 export const PLATFORM_SOURCES = {
+    'src/html.js':
+        'list.innerHTML = "";\nlist.innerHTML = "<li>None</li>";\nlist.innerHTML = name;\nlist.outerHTML = markup;\n',
     'scripts/inject.js': 'execSync(`printf ${input}`);\n',
     'Info.plist': '<plist><dict><key>NSAllowsArbitraryLoads</key><true/></dict></plist>\n',
     'Allowed.plist':
@@ -104,6 +106,8 @@ export const PLATFORM_SOURCES = {
 } as const;
 
 export const PLATFORM_SOURCE_FINDINGS = [
+    { file: 'src/html.js', rule: 'gspot.javascript.dom-html-sink', line: 3 },
+    { file: 'src/html.js', rule: 'gspot.javascript.dom-html-sink', line: 4 },
     { file: 'functions/input.js', rule: 'gspot.javascript.ssrf-web-request-user-input', line: 1 },
     { file: 'Info.plist', rule: 'arbitrary-loads', line: 1 },
     { file: 'scripts/inject.js', rule: 'gspot.javascript.interpolated-exec', line: 1 },
@@ -124,6 +128,8 @@ export const PLATFORM_ALL_SOURCE_FIXES = {
 } as const;
 
 export const PLATFORM_SOURCE_FIXES = {
+    'src/html.js':
+        'list.innerHTML = "";\nlist.innerHTML = "<li>None</li>";\nlist.textContent = name;\nlist.textContent = markup;\n',
     'Info.plist': '<plist><dict/></plist>\n',
     'scripts/inject.js': 'execFileSync("printf", [input]);\n',
     'functions/input.js': 'fetch("https://example.com/api");\n',

@@ -1,10 +1,15 @@
 rules:
     - id: gspot.javascript.dom-html-sink
-      pattern-either:
-          - pattern: $ELEMENT.innerHTML = $VALUE
-          - pattern: $ELEMENT.outerHTML = $VALUE
-          - pattern: $ELEMENT.insertAdjacentHTML($POSITION, $VALUE)
-          - pattern: document.write($VALUE)
+      patterns:
+          - pattern-either:
+                - pattern: $ELEMENT.innerHTML = $VALUE
+                - pattern: $ELEMENT.outerHTML = $VALUE
+                - pattern: $ELEMENT.insertAdjacentHTML($POSITION, $VALUE)
+                - pattern: document.write($VALUE)
+          - metavariable-pattern:
+                metavariable: $VALUE
+                patterns:
+                    - pattern-not: '"..."'
       message: >-
           Writing HTML into the page allows XSS. Set textContent, create the nodes, or write fixed markup.
       languages:
