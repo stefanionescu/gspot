@@ -20,7 +20,7 @@ function findCommentBlock(lines: string[], start: number): string[] {
     while (index > 0) {
         index -= 1;
         const trimmed = (lines[index] ?? '').trim();
-        if (!trimmed.startsWith('#')) break;
+        if (!trimmed.startsWith('#') || (index === 0 && trimmed.startsWith('#!'))) break;
         if (!SHELLCHECK_TOOL_COMMENT.test(trimmed)) block.unshift(trimmed);
     }
     return block;

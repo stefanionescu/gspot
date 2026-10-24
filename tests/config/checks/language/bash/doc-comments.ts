@@ -1,5 +1,12 @@
 import { BASH_HEADER } from '#tests/config/checks/samples.ts';
 
+export const SHEBANG_DOC_SCRIPT = String.raw`#!/usr/bin/env bash
+# log_line: print a timestamped message to standard error.
+log_line() {
+    printf '%s\n' "$1" >&2
+}
+`;
+
 export const DOC_COMMENT_CASES = [
     {
         check: 'bash/doc-comments',
