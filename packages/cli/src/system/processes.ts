@@ -31,7 +31,7 @@ import {
 } from '#cli/config/system/processes.ts';
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
-    const env = buildSpawnEnvironment(options.env);
+    const env: Record<string, string | undefined> = { ...buildSpawnEnvironment(options.env), PWD: options.cwd };
     const path = Object.keys(env).find((name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH');
     if (isAbsolute(executable) && path !== undefined)
         env[path] = [dirname(executable), env[path]].filter((value) => value !== '').join(delimiter);

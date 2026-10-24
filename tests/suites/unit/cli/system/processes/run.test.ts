@@ -181,3 +181,13 @@ function buildProcessBackends(): ProcessBackend[] {
         },
     ];
 }
+
+test.each(buildProcessBackends())('$name: sets PWD to the child working folder', async (backend) => {
+    await using sandbox = await testdir();
+    const result = await backend.execute([process.execPath, '-e', 'process.stdout.write(process.env.PWD)'], {
+        cwd: sandbox.path,
+        env: { PWD: '/different/symlink/path' },
+    });
+    expect(result.code).toBe(0);
+    expect(result.stdout).toBe(sandbox.path);
+});
