@@ -57,9 +57,10 @@ async function createNpmLockfile(
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PACKAGE_JSON), toolProjectFile.content);
+    const env = await readRegistryEnvironment(install.session.root);
 
     if (yarn !== undefined) writeFileSync(join(runFolder, YARN_SETTINGS_FILE), yarn);
-    if (recorded !== undefined && isLockfileFresh(packageManager.name, recorded, project.dependencies))
+    if (recorded !== undefined && isLockfileFresh(packageManager.name, recorded, project.dependencies, env))
         writeFileSync(join(runFolder, project.lockfile), recorded);
     const lockfileArguments = selectPackageManagerArguments(packageManager).lockfile;
     const days = getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days;
@@ -77,7 +78,7 @@ async function createNpmLockfile(
     );
     stripRegistryUrls(lockfilePath, packageManager, run.env);
     const lockfile = readFileSync(join(runFolder, project.lockfile), 'utf8');
-    if (!isLockfileFresh(packageManager.name, lockfile, project.dependencies))
+    if (!isLockfileFresh(packageManager.name, lockfile, project.dependencies, run.env))
         throw new GspotError(
             'install',
             `${packageManager.name} wrote a tool lockfile that does not match the tool project. gspot kept the existing files.`,
@@ -178,16 +179,18 @@ export async function prepareNpmLockfile(
     const project = parseToolPackageJson(toolProjectFile.content, packageManager.name);
     const original = owner.read(project.lockfilePath);
     const recorded = original?.bytes.toString('utf8');
+    const env = await readRegistryEnvironment(root);
+    if (recorded !== undefined)
+        assertCredentialFreeLockfile(
+            recorded,
+            extractRegistryCredentials(env),
+            'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.',
+        );
     if (
         owner.read(GSPOT_PATHS.npmProject)?.bytes.equals(Buffer.from(toolProjectFile.content)) === true &&
         recorded !== undefined &&
-        isLockfileFresh(packageManager.name, recorded, project.dependencies)
+        isLockfileFresh(packageManager.name, recorded, project.dependencies, env)
     ) {
-        assertCredentialFreeLockfile(
-            recorded,
-            extractRegistryCredentials(await readRegistryEnvironment(root)),
-            'The npm lockfile holds the registry credentials of the repository. gspot kept the existing files. Remove the credentials from the registry URL.',
-        );
         return { path: project.lockfilePath, content: recorded, kind: 'lock', read: original };
     }
     const lockfile = await createNpmLockfile(install, toolProjectFile, project, recorded, yarn);

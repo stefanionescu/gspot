@@ -48,21 +48,17 @@ test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside the
     expect(await listLintFindings(eslint, sandbox.path, ['root.jsx'], ['no-restricted-syntax'])).toStrictEqual([]);
 });
 test('level all keeps every rule that recommended turns on for a React file', async () => {
-    const rules = Object.fromEntries(
-        await Promise.all(
-            LEVELS.map(async (level) => {
-                await using sandbox = await testdir({
-                    'gspot.toml': buildSandboxSettings(['react'], { level }),
-                    'package.json': '{"private":true,"type":"module"}',
-                    'client.jsx': '',
-                });
-
-                const eslint = await createEslint(sandbox.path);
-                const config = (await eslint.calculateConfigForFile('client.jsx')) as EslintConfiguration;
-                return [level, config.rules] as const;
-            }),
-        ),
-    );
+    const rules: Record<string, EslintConfiguration['rules']> = {};
+    for (const level of LEVELS) {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['react'], { level }),
+            'package.json': '{"private":true,"type":"module"}',
+            'client.jsx': '',
+        });
+        const eslint = await createEslint(sandbox.path);
+        const config = (await eslint.calculateConfigForFile('client.jsx')) as EslintConfiguration;
+        rules[level] = config.rules;
+    }
     const active = Object.entries(rules['recommended']!).filter(([, value]) => Array.isArray(value) && value[0] !== 0);
     expect(active.map(([name]) => name)).toContain('react/jsx-key');
     for (const [name] of active) expect((rules['all']![name] as unknown[])[0], name).not.toBe(0);
@@ -144,7 +140,7 @@ test('switching the level and back writes the same files', async () => {
         const session = await openSession(sandbox.path);
         const output = generate(session);
         using writer = openWriter(sandbox.path);
-        writeGeneratedFiles(session, output, writer);
+        await writeGeneratedFiles(session, output, writer);
         outputs.push(output.files.map(({ path, content }) => ({ path, content })));
     }
     expect(outputs[1]).not.toStrictEqual(outputs[0]);

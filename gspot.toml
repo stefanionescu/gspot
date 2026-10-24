@@ -132,6 +132,11 @@ allowed_names = ["resolved"]
 reason = "npm and Yarn lockfiles name each package download URL resolved."
 
 [[naming.override]]
+paths = ["packages/cli/src/types/install/npm.ts"]
+allowed_names = ["resolved", "resolution"]
+reason = "npm and pnpm lockfiles call their download fields resolved and resolution."
+
+[[naming.override]]
 paths = ["packages/cli/src/types/generation/files.ts"]
 allowed_names = ["customSyntax"]
 reason = "Stylelint names its parser option customSyntax."

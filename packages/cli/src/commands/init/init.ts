@@ -71,7 +71,7 @@ async function runInitCommand(options: InitOptions): Promise<CommandResult<InitJ
             json: { root, plan, settings: settingsText, written: false },
             exitCode: 0,
         };
-    const written = writeInitFiles(root, initPlan);
+    const written = await writeInitFiles(root, initPlan);
     written.push('Next: run gspot install to install the tools and turn on the Git hooks.');
     return {
         text: written.join('\n'),
@@ -198,11 +198,11 @@ function deleteConflictingConfigFiles(
     return kept;
 }
 
-function writeInitFiles(root: string, initPlan: InitPlanning): string[] {
+async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<string[]> {
     using writer = openWriter(root);
     const { session, generated } = initPlan;
     writeSettings(writer, initPlan.settingsText, initPlan.read.get(SETTINGS_FILE));
-    const applied = writeGeneratedFiles(session, generated, writer, { reviewedOriginals: initPlan.read });
+    const applied = await writeGeneratedFiles(session, generated, writer, { reviewedOriginals: initPlan.read });
     const kept = deleteConflictingConfigFiles(writer, initPlan.deleted, initPlan.read);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
     const version = getColors().dim(`gspot ${cliPackage.version}`);

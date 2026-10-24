@@ -16,7 +16,8 @@ async function runInstallCommand(cwd: string, cancelSignal: AbortSignal): Promis
     const root = findRoot(cwd);
     const session = await openSession(root, { cancelSignal });
     const generated = generate(session);
-    if (listOutdatedFiles(session, generated).some((file) => TOOL_PROJECT_FILES.has(file.path)))
+    const outdated = await listOutdatedFiles(session, generated);
+    if (outdated.some((file) => TOOL_PROJECT_FILES.has(file.path)))
         throw new GspotError('install', 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.');
     using writer = openWriter(root);
     const { note, steps } = await installTools(session, writer, generated);

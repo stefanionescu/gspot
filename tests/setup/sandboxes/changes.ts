@@ -166,7 +166,7 @@ export async function applySandboxChanges(sandbox: Sandbox, changes: SampleChang
 export async function applyGeneratedFiles(root: string): Promise<void> {
     using writer = openWriter(root);
     const session = await openSession(root);
-    writeGeneratedFiles(session, generate(session), writer);
+    await writeGeneratedFiles(session, generate(session), writer);
 }
 
 /** Change that replace the default sources of a sample but keep .gitignore. */

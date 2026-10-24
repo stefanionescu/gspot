@@ -9,15 +9,15 @@ import { isTable, getValueAt } from '#cli/system/tables.ts';
 import type { BunPackage } from '#cli/types/install/npm.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { isYarnBerry } from '#cli/repository/npm/package-manager.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
 import type { YarnPackage } from '#cli/types/parsers/projects/lockfiles.ts';
-import { PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects/lockfiles.ts';
 import type { DependencyMap } from '#cli/types/parsers/projects/dependencies.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
-import { bunPackageSchema, npmToolLockSchemas } from '#cli/schemas/install/npm/lockfiles.ts';
 import { bunLockSchema, yarnLockSchema, yarnPackageSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
+import { PNPM_PEER_START, PNPM_ROOT_IMPORTER, NPM_PACKAGE_FOLDER } from '#cli/config/parsers/projects/lockfiles.ts';
 
 import {
     HTTP_URL,
@@ -25,6 +25,12 @@ import {
     LOCKFILE_WORKSPACE_KEYS,
     YARN_DESCRIPTOR_SEPARATOR,
 } from '#cli/config/install/npm/lockfiles.ts';
+import {
+    bunPackageSchema,
+    npmToolLockSchemas,
+    npmToolPackageSchema,
+    pnpmToolPackageSchema,
+} from '#cli/schemas/install/npm/lockfiles.ts';
 
 function isYarnLockfileFresh(
     yarnPackages: Record<string, { version?: string | undefined }>,
@@ -57,7 +63,7 @@ function isStandardTarball(bunPackage: BunPackage, env: Record<string, string>):
     if (registry === undefined) return false;
     const base = registry.endsWith('/') ? registry : `${registry}/`;
     const filename = posix.basename(name);
-    return address === new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
+    return address === '' || address === new URL(`${name}/-/${filename}-${version}.tgz`, base).href;
 }
 
 function stripRegistryPrefix(address: string, base: URL): string | undefined {
@@ -117,18 +123,12 @@ function parseDevelopmentDependencies(
     return pins;
 }
 
-function parseWorkspaces(
-    name: Exclude<PackageManager['name'], 'yarn'>,
-    content: string,
-): Record<string, unknown> | undefined {
+function parseToolLockfile(name: Exclude<PackageManager['name'], 'yarn'>, content: string): Record<string, unknown> {
     const path = selectLockfileName(name);
     const schema = npmToolLockSchemas[name];
-    const document =
-        name === 'pnpm'
-            ? parseYamlFile<Record<string, unknown>>(path, content, schema)
-            : parseJsonFile<Record<string, unknown>>(path, content, schema);
-    const workspaces = document[LOCKFILE_WORKSPACE_KEYS[name]];
-    return isTable(workspaces) ? workspaces : undefined;
+    return name === 'pnpm'
+        ? parseYamlFile<Record<string, unknown>>(path, content, schema)
+        : parseJsonFile<Record<string, unknown>>(path, content, schema);
 }
 
 function parseYarnPackages(content: string): Record<string, YarnPackage> | undefined {
@@ -143,10 +143,10 @@ function parseYarnPackages(content: string): Record<string, YarnPackage> | undef
 
 function parseRootDependencies(
     name: Exclude<PackageManager['name'], 'yarn'>,
-    content: string,
+    document: Record<string, unknown>,
 ): DependencyMap | undefined {
-    const workspaces = parseWorkspaces(name, content);
-    if (workspaces === undefined) return undefined;
+    const workspaces = document[LOCKFILE_WORKSPACE_KEYS[name]];
+    if (!isTable(workspaces)) return undefined;
     let root: DependencyMap = {};
     for (const [key, workspace] of Object.entries(workspaces)) {
         const dependencies = parseDevelopmentDependencies(name, workspace);
@@ -154,6 +154,79 @@ function parseRootDependencies(
         if (key === (name === 'pnpm' ? PNPM_ROOT_IMPORTER : '')) root = dependencies;
     }
     return root;
+}
+
+function getBunPackageName(key: string): string {
+    const scope = posix.basename(posix.dirname(key));
+    const name = posix.basename(key);
+    return scope.startsWith('@') ? `${scope}/${name}` : name;
+}
+
+function isBunLockfileFresh(
+    document: Record<string, unknown>,
+    dependencies: DependencyMap,
+    env: Record<string, string>,
+): boolean {
+    const packages = document['packages'] as Record<string, unknown[]>;
+    for (const [key, value] of Object.entries(packages)) {
+        const parsed = bunPackageSchema.safeParse(value);
+        if (!parsed.success) return false;
+        const identity = splitIdentity(parsed.data[0]);
+        if (identity?.[0] !== getBunPackageName(key) || !isStandardTarball(parsed.data, env)) return false;
+    }
+    return Object.entries(dependencies).every(([name, version]) => packages[name]?.[0] === `${name}@${version}`);
+}
+
+function isNpmLockfileFresh(
+    document: Record<string, unknown>,
+    dependencies: DependencyMap,
+    env: Record<string, string>,
+): boolean {
+    const packages = document['packages'] as Record<string, Record<string, unknown>>;
+    const matches = Object.entries(packages).every(([key, lockedPackage]) => {
+        if (!key.includes(NPM_PACKAGE_FOLDER)) return true;
+        const name = key.slice(key.lastIndexOf(NPM_PACKAGE_FOLDER) + NPM_PACKAGE_FOLDER.length);
+        const parsed = npmToolPackageSchema.safeParse(lockedPackage);
+        if (!parsed.success) return false;
+        const { version, resolved = '', integrity, name: identity = name } = parsed.data;
+        return identity === name && isStandardTarball([`${name}@${version}`, resolved, {}, integrity], env);
+    });
+    return (
+        matches &&
+        Object.entries(dependencies).every(
+            ([name, version]) => packages[`${NPM_PACKAGE_FOLDER}${name}`]?.['version'] === version,
+        )
+    );
+}
+
+function isPnpmLockfileFresh(
+    document: Record<string, unknown>,
+    dependencies: DependencyMap,
+    env: Record<string, string>,
+): boolean {
+    const packages = document['packages'] as Record<string, unknown>;
+    const matches = Object.entries(packages).every(([key, lockedPackage]) => {
+        const identity = splitIdentity((key.startsWith('/') ? key.slice(1) : key).split(PNPM_PEER_START, 1).join(''));
+        const parsed = pnpmToolPackageSchema.safeParse(lockedPackage);
+        if (identity === undefined || !parsed.success) return false;
+        const [name, version] = identity;
+        const {
+            name: installed = name,
+            resolution: { tarball = '', integrity },
+        } = parsed.data;
+        return installed === name && isStandardTarball([`${name}@${version}`, tarball, {}, integrity], env);
+    });
+    return (
+        matches &&
+        Object.entries(dependencies).every(([name, pin]) => {
+            const version = getValueAt(document, ['importers', PNPM_ROOT_IMPORTER, 'devDependencies', name, 'version']);
+            return (
+                typeof version === 'string' &&
+                version.split(PNPM_PEER_START, 1)[0] === pin &&
+                Object.hasOwn(packages, `${name}@${pin}`)
+            );
+        })
+    );
 }
 
 function isInvalidLockfile(error: unknown): boolean {
@@ -172,17 +245,25 @@ function isInvalidLockfile(error: unknown): boolean {
  * @param name the package manager that wrote the lockfile.
  * @param content the lockfile text.
  * @param dependencies what the tool project declares.
+ * @param env the configured package registry addresses.
  *
  * @returns true when the lockfile matches.
  */
-export function isLockfileFresh(name: PackageManager['name'], content: string, dependencies: DependencyMap): boolean {
+export function isLockfileFresh(
+    name: PackageManager['name'],
+    content: string,
+    dependencies: DependencyMap,
+    env: Record<string, string>,
+): boolean {
     try {
         if (name === 'yarn') {
             const yarnPackages = parseYarnPackages(content);
             return yarnPackages !== undefined && isYarnLockfileFresh(yarnPackages, dependencies);
         }
-        const parsed = parseRootDependencies(name, content);
-        return parsed !== undefined && isDeepStrictEqual(parsed, dependencies);
+        const document = parseToolLockfile(name, content);
+        if (!isDeepStrictEqual(parseRootDependencies(name, document), dependencies)) return false;
+        const validatePackages = { bun: isBunLockfileFresh, npm: isNpmLockfileFresh, pnpm: isPnpmLockfileFresh };
+        return validatePackages[name](document, dependencies, env);
     } catch (error) {
         if (isInvalidLockfile(error)) return false;
         throw error;

@@ -145,7 +145,7 @@ test('a second apply writes the same files when .prettierignore covers every sou
         const session = await openSession(sandbox.path);
         const output = generate(session);
         using writer = openWriter(sandbox.path);
-        writeGeneratedFiles(session, output, writer);
+        await writeGeneratedFiles(session, output, writer);
         outputs.push(output.files.map(({ path, content }) => `${path}\n${content}`));
     }
     expect(outputs[1]).toStrictEqual(outputs[0]);

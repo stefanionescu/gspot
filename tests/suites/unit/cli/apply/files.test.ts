@@ -28,7 +28,7 @@ test.each([...TOOL_FOLDERS])(
 
         const session = await openSession(sandbox.path);
         using writer = openWriter(sandbox.path);
-        writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, writer);
+        await writeGeneratedFiles(session, { files: [], blocks: [], managedKeys: [] }, writer);
         expect(await isOnDisk(join(sandbox.path, folder))).toBe(false);
     },
 );
@@ -49,7 +49,7 @@ test('leaving level all removes the managed commitlint field from every package.
         scenario.changes.map((file) => ({ path: file.path, keys: [{ key: ['commitlint'], value: undefined }] })),
     );
     using writer = openWriter(sandbox.path);
-    writeGeneratedFiles(session, generated, writer);
+    await writeGeneratedFiles(session, generated, writer);
     for (const [path, source] of installed) {
         const expected = JSON.parse(source) as Record<string, unknown>;
         Reflect.deleteProperty(expected, 'commitlint');
@@ -70,7 +70,7 @@ async function writePackageFields(
         })),
     );
     using writer = openWriter(root);
-    writeGeneratedFiles(session, generated, writer);
+    await writeGeneratedFiles(session, generated, writer);
     const authored = new Map<string, string>(Object.entries(scenario.project));
     for (const path of scenario.unchanged) expect(await readFile(join(root, path), 'utf8')).toBe(authored.get(path)!);
     return new Map(
@@ -95,6 +95,6 @@ test('removing css leaves package.json files with an authored stylelint field by
     const generated = generate(session);
     expect(generated.managedKeys).toStrictEqual([]);
     using writer = openWriter(sandbox.path);
-    writeGeneratedFiles(session, generated, writer);
+    await writeGeneratedFiles(session, generated, writer);
     for (const [path, source] of installed) expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
 });

@@ -13,9 +13,9 @@ import { GENERATED_FILE_FINDINGS } from '#cli/config/checks/general/gspot/genera
  * @param planned the repository-wide drift check.
  * @returns one finding per file that differs.
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The check registry calls it by its check name.
-export function checkGspotGeneratedFiles(session: Session, planned: PlannedCheck): Finding[] {
-    return listOutdatedFiles(session, generate(session)).map((outdatedFile) =>
+export async function checkGspotGeneratedFiles(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+    const outdated = await listOutdatedFiles(session, generate(session));
+    return outdated.map((outdatedFile) =>
         buildFinding(
             planned,
             { file: outdatedFile.path },

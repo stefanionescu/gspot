@@ -42,7 +42,7 @@ export async function applySettingsEdit(
     writeSettings(writer, result.text, input.original);
     let report: ApplyReport;
     try {
-        report = writeGeneratedFiles(session, generated, writer);
+        report = await writeGeneratedFiles(session, generated, writer);
     } catch (error) {
         if (!(error instanceof GspotError)) throw error;
         const message = error.message;

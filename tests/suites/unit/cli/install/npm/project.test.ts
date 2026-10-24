@@ -148,7 +148,10 @@ test('a missing Node stops npm before it writes a lockfile and keeps a cached lo
         ...NPM_TOOL_PROJECT,
         devDependencies: { prettier: '3.8.1' },
     });
-    const lockfile = JSON.stringify({ workspaces: { '': { devDependencies: { prettier: '3.8.1' } } } });
+    const lockfile = JSON.stringify({
+        workspaces: { '': { devDependencies: { prettier: '3.8.1' } } },
+        packages: { prettier: ['prettier@3.8.1', '', {}, 'sha512-YQ=='] },
+    });
     await using sandbox = await testdir({ 'package.json': '{"private":true,"packageManager":"bun@1.4.2"}' });
     await createFileTree(sandbox.path, { 'gspot.toml': buildSandboxSettings([]) });
     const session = await openSession(sandbox.path);

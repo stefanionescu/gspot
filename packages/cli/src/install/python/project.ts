@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { parse } from '@decimalturn/toml-patch';
+import { isTable } from '#cli/system/tables.ts';
 import { getUvPath } from '#cli/tools/locate.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -8,7 +9,6 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { getTool } from '#cli/configurations/tools.ts';
 import { runInstallStep } from '#cli/install/steps.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
-import type { UvCommand } from '#cli/types/install/python.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
@@ -20,6 +20,7 @@ import { UV_SETTINGS_FILE } from '#cli/config/install/python/settings.ts';
 import { uvLockSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
 import type { UvLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
+import { type UvCommand, type PythonIndexSettings } from '#cli/types/install/python.ts';
 import { readPythonSettings, writePythonSettings } from '#cli/install/python/settings.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 import { UV_TOOL, UV_PROJECT_FLAGS, UV_ENVIRONMENT_VARIABLE } from '#cli/config/tools/python.ts';
@@ -30,14 +31,20 @@ import {
     PROJECT_UV_LOCKFILE,
     UV_INSTALL_ARGUMENTS,
     UV_LOCKFILE_ARGUMENTS,
+    PYTHON_PACKAGE_ORIGINS,
     REQUIREMENT_PACKAGE_NAME,
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/install/python/project.ts';
 
-function readPythonLockfile(runFolder: string, credentials: string[], project: ToolPyproject): string {
+function readPythonLockfile(
+    runFolder: string,
+    credentials: string[],
+    project: ToolPyproject,
+    indexes: PythonIndexSettings['settings'],
+): string {
     const lockfile = readFileSync(join(runFolder, PROJECT_UV_LOCKFILE), 'utf8');
     assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
-    if (!isPythonLockfileFresh(project, lockfile))
+    if (!isPythonLockfileFresh(project, lockfile, indexes))
         throw new GspotError(
             'install',
             'The uv lockfile does not match the tool project. gspot kept the existing files.',
@@ -127,9 +134,9 @@ export async function preparePythonLockfile(
     const project = toolPyprojectSchema.parse(parse(toolProjectFile.content));
     const original = owner.read(GSPOT_PATHS.uvLockfile);
     const recorded = original?.bytes.toString('utf8');
-    if (isPythonLockfileFresh(project, recorded)) {
-        const { credentials } = readPythonSettings(root);
-        assertCredentialFreeLockfile(recorded, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
+    const { settings: indexes, credentials: recordedCredentials } = readPythonSettings(root);
+    if (isPythonLockfileFresh(project, recorded, indexes)) {
+        assertCredentialFreeLockfile(recorded, recordedCredentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
         return { path: GSPOT_PATHS.uvLockfile, content: recorded, kind: 'lock', read: original };
     }
     using scratch = createTemporaryFolder();
@@ -145,7 +152,7 @@ export async function preparePythonLockfile(
     });
     return {
         path: GSPOT_PATHS.uvLockfile,
-        content: readPythonLockfile(runFolder, credentials, project),
+        content: readPythonLockfile(runFolder, credentials, project, indexes),
         kind: 'lock',
         read: original,
     };
@@ -186,13 +193,19 @@ export async function installPythonTools(install: ToolInstall, executable: strin
  *
  * @param project the parsed tool project file.
  * @param lockfile the recorded uv.lock contents.
+ * @param indexes the configured Python index settings.
  * @returns whether the two files describe the same requirements.
  */
-export function isPythonLockfileFresh(project: ToolPyproject, lockfile: string | undefined): lockfile is string {
+export function isPythonLockfileFresh(
+    project: ToolPyproject,
+    lockfile: string | undefined,
+    indexes: PythonIndexSettings['settings'],
+): lockfile is string {
     if (lockfile === undefined) return false;
     const projectTable = project.project;
     const recorded = parsePythonToolLockfile(lockfile);
     if (recorded === undefined) return false;
+    if (!hasAllowedPythonOrigins(recorded, indexes)) return false;
     const projectPackage = recorded.package.find(
         (lockedPackage) => lockedPackage.name === projectTable.name && lockedPackage.source?.virtual === '.',
     );
@@ -210,4 +223,34 @@ export function isPythonLockfileFresh(project: ToolPyproject, lockfile: string |
         pins.toSorted((left, right) => left.localeCompare(right)),
         expected,
     );
+}
+
+function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSettings['settings']): boolean {
+    const configured = Object.entries(indexes).flatMap(([key, value]) => {
+        if (key === 'index' && Array.isArray(value))
+            return value.flatMap((index) => (isTable(index) && typeof index['url'] === 'string' ? [index['url']] : []));
+        if (['index-url', 'extra-index-url', 'find-links'].includes(key)) {
+            if (Array.isArray(value)) return value.filter((url): url is string => typeof url === 'string');
+            if (typeof value === 'string') return [value];
+        }
+        return [];
+    });
+    const origins = new Set(
+        [...PYTHON_PACKAGE_ORIGINS, ...configured].filter((url) => URL.canParse(url)).map((url) => new URL(url).origin),
+    );
+    return lockfile.package.every((lockedPackage) => {
+        const addresses = [
+            lockedPackage.source?.['registry'],
+            ...(isTable(lockedPackage['sdist']) ? [lockedPackage['sdist']['url']] : []),
+            ...(Array.isArray(lockedPackage['wheels'])
+                ? lockedPackage['wheels'].map((wheel: unknown) => (isTable(wheel) ? wheel['url'] : undefined))
+                : []),
+        ];
+        return addresses.every(
+            (address) =>
+                address === undefined ||
+                (typeof address === 'string' &&
+                    (URL.canParse(address) ? origins.has(new URL(address).origin) : configured.includes(address))),
+        );
+    });
 }

@@ -145,7 +145,7 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
 
     const initial = await openSession(sandbox.path);
     using writer = openWriter(initial.root);
-    writeGeneratedFiles(initial, generate(initial), writer);
+    await writeGeneratedFiles(initial, generate(initial), writer);
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(true);
     expect(await isOnDisk(join(sandbox.path, findManifestTarget('format', 'prettier.json')))).toBe(true);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
@@ -158,12 +158,12 @@ test('a check ignored on all its paths leaves the plan, the needed tools, and it
     ).not.toContain('prettier');
     const generated = generate(excluded);
     expect(generated.files.map((file) => file.path)).not.toContain(findManifestTarget('format', 'prettier.json'));
-    const removed = writeGeneratedFiles(excluded, generated, writer);
+    const removed = await writeGeneratedFiles(excluded, generated, writer);
     expect(removed.removed).toContain('.prettierignore');
     expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(false);
     const settled = await openSession(sandbox.path);
     expect(settled.configuredChecks.map((check) => check.check.id)).not.toContain('format/prettier');
-    const repeated = writeGeneratedFiles(settled, generate(settled), writer);
+    const repeated = await writeGeneratedFiles(settled, generate(settled), writer);
     expect(repeated.written).toStrictEqual([]);
     expect(repeated.removed).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);

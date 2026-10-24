@@ -50,13 +50,14 @@ function removeUnusedToolFolders(writer: Writer, paths: ReadonlySet<string>): vo
     }
 }
 
-function addInstallationNote(session: Session, generated: GenerationResult, report: ApplyReport): void {
+async function addInstallationNote(session: Session, generated: GenerationResult, report: ApplyReport): Promise<void> {
     const dependenciesChanged = generated.files.some(
         (file) =>
             report.written.includes(file.path) &&
             (file.kind === 'lock' || file.path === GSPOT_PATHS.npmProject || file.path === GSPOT_PATHS.pythonProject),
     );
-    const hasDrift = listStaleLockfiles(session, generated.files).some((lockfile) => lockfile.kind !== undefined);
+    const lockfiles = await listStaleLockfiles(session, generated.files);
+    const hasDrift = lockfiles.some((lockfile) => lockfile.kind !== undefined);
     if (dependenciesChanged || hasDrift) report.notes.push(INSTALL_FIRST_NOTE);
 }
 
@@ -91,12 +92,12 @@ function buildReplacementPlans(
  * @param options.reviewedOriginals the file contents that you reviewed and approved for replacement.
  * @returns the file changes.
  */
-export function writeGeneratedFiles(
+export async function writeGeneratedFiles(
     session: Session,
     generated: GenerationResult,
     writer: Writer,
     options?: { reviewedOriginals?: ReadonlyMap<string, FileContents | undefined> | undefined },
-): ApplyReport {
+): Promise<ApplyReport> {
     const reviewedOriginals = options?.reviewedOriginals;
     const report: ApplyReport = {
         written: [],
@@ -127,7 +128,7 @@ export function writeGeneratedFiles(
     report.removed.push(...pruning.map(({ path }) => path));
     if ([...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`)))
         report.notes.push(HOOKS_CHANGED_NOTE);
-    addInstallationNote(session, generated, report);
+    await addInstallationNote(session, generated, report);
     if (generated.managedKeys.length > 0) report.notes.push(MANAGED_KEYS_NOTE);
     return report;
 }

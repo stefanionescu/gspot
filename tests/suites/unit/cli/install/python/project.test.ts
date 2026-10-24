@@ -17,6 +17,7 @@ import { installPythonTools, preparePythonLockfile, isPythonLockfileFresh } from
 
 import {
     UV_TOML,
+    UV_LOCKFILE_ORIGINS,
     PYTHON_TOOL_PROJECT,
     PYTHON_TOOL_LOCKFILE,
     UV_LOCKFILE_MISMATCHES,
@@ -113,15 +114,24 @@ test('uv installs the tool project with its own Python, whatever UV_PYTHON and .
     }
 });
 test('the uv lockfile check ignores name spelling and requirement order and refuses invalid TOML and a range', () => {
-    expect(isPythonLockfileFresh(pythonProject, lockfileText)).toBe(true);
-    expect(isPythonLockfileFresh(pythonProject, 'not valid =')).toBe(false);
+    expect(isPythonLockfileFresh(pythonProject, lockfileText, {})).toBe(true);
+    expect(isPythonLockfileFresh(pythonProject, 'not valid =', {})).toBe(false);
     expect(
         isPythonLockfileFresh(
             toolPyprojectSchema.parse(parse(projectText.replace('==1.2.3', '>=1.2.3'))),
             lockfileText,
+            {},
         ),
     ).toBe(false);
 });
 test.each([...UV_LOCKFILE_MISMATCHES])('a changed %s makes the uv lockfile stale', (_name, before, after) => {
-    expect(isPythonLockfileFresh(pythonProject, lockfileText.replace(before, after))).toBe(false);
+    expect(isPythonLockfileFresh(pythonProject, lockfileText.replace(before, after), {})).toBe(false);
 });
+
+test.each(UV_LOCKFILE_ORIGINS)(
+    'uv lockfile index %s and artifact %s have allowed origins: %s',
+    (registry, url, expected) => {
+        const lockfile = `${lockfileText}\n[[package]]\nname = "example-package"\nversion = "1.2.3"\nsource = { registry = "${registry}" }\nsdist = { url = "${url}" }\nwheels = [{ url = "${url}" }]\n`;
+        expect(isPythonLockfileFresh(pythonProject, lockfile, {})).toBe(expected);
+    },
+);

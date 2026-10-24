@@ -83,13 +83,13 @@ function listOutdatedManagedKeys(files: Files, generated: GenerationResult): Out
  * @param generated the files that this run generates.
  * @returns the outdated files in path order.
  */
-export function listOutdatedFiles(
+export async function listOutdatedFiles(
     session: Pick<Session, 'root' | 'packageManager' | 'repository'>,
     generated: GenerationResult,
-): OutdatedFile[] {
+): Promise<OutdatedFile[]> {
     using files = openFiles(session.root);
     const expected = listExpectedPaths(session, generated);
-    const lockfiles = listStaleLockfiles(session, generated.files);
+    const lockfiles = await listStaleLockfiles(session, generated.files);
     const strays = listStrayPaths(session, expected).map((path): OutdatedFile => ({ path, kind: 'stray' }));
     return [
         ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),

@@ -31,9 +31,9 @@ function formatOutdatedFiles(outdatedFiles: OutdatedFile[]): string {
     return `${lines.join('\n')}\n`;
 }
 
-function buildDryRunResult(session: Session): CommandResult {
+async function buildDryRunResult(session: Session): Promise<CommandResult> {
     const generated = generate(session);
-    const outdatedFiles = listOutdatedFiles(session, generated);
+    const outdatedFiles = await listOutdatedFiles(session, generated);
     const summary =
         outdatedFiles.length === 0 ? `${formatUpToDate(generated.files.length)}\n` : formatOutdatedFiles(outdatedFiles);
     const pin = { from: readVersionPin(session.root), to: cliPackage.version };
@@ -47,7 +47,7 @@ async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const session = await openSession(root);
     if (options.isDryRun) return buildDryRunResult(session);
     using log = openWriter(root);
-    const report = writeGeneratedFiles(session, generate(session), log);
+    const report = await writeGeneratedFiles(session, generate(session), log);
     const settingsFile = readSettingsFile(root);
     if (!SCHEMA_DIRECTIVE_LINE.test(settingsFile.text)) {
         writeSettings(log, `${SCHEMA_DIRECTIVE}\n${settingsFile.text}`, settingsFile.original);

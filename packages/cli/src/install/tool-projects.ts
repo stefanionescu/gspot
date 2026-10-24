@@ -12,6 +12,8 @@ import { isLockfileFresh } from '#cli/install/npm/lockfiles.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import { readPythonSettings } from '#cli/install/python/settings.ts';
+import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import type { StaleLockfile } from '#cli/types/install/tool-projects.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
@@ -32,11 +34,17 @@ function setLockfile(files: GeneratedFile[], lockfile: GeneratedFile): void {
  * @param generated the tool project files that apply writes.
  * @returns each lockfile with its state: missing, mismatched, or current.
  */
-export function listStaleLockfiles(
+export async function listStaleLockfiles(
     session: Pick<Session, 'root' | 'packageManager'>,
     generated: GeneratedFile[],
-): StaleLockfile[] {
+): Promise<StaleLockfile[]> {
     const { root } = session;
+    const env = generated.some((file) => file.path === GSPOT_PATHS.npmProject)
+        ? await readRegistryEnvironment(root)
+        : {};
+    const indexes = generated.some((file) => file.path === GSPOT_PATHS.pythonProject)
+        ? readPythonSettings(root).settings
+        : {};
     using files = openFiles(root);
     return generated
         .filter(
@@ -50,14 +58,14 @@ export function listStaleLockfiles(
                 const path = project.lockfilePath;
                 const recorded = files.read(path);
                 if (recorded === undefined) return [{ path, kind: 'missing' as const }];
-                const matches = isLockfileFresh(name, recorded.bytes.toString('utf8'), project.dependencies);
+                const matches = isLockfileFresh(name, recorded.bytes.toString('utf8'), project.dependencies, env);
                 return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
             }
             const project = toolPyprojectSchema.parse(parseToml(toolProjectFile.content));
             const path = GSPOT_PATHS.uvLockfile;
             const recorded = files.read(path);
             if (recorded === undefined) return [{ path, kind: 'missing' as const }];
-            const matches = isPythonLockfileFresh(project, recorded.bytes.toString('utf8'));
+            const matches = isPythonLockfileFresh(project, recorded.bytes.toString('utf8'), indexes);
             return matches ? [{ path }] : [{ path, kind: 'changed' as const }];
         });
 }

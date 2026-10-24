@@ -40,6 +40,12 @@ export const UV_LOCKFILE_MISMATCHES = [
     ['virtual root', 'virtual = "."', 'virtual = "elsewhere"'],
 ] as const;
 
+export const UV_LOCKFILE_ORIGINS = [
+    ['https://pypi.org/simple', 'https://files.pythonhosted.org/example.whl', true],
+    ['https://attacker.example/simple', 'https://files.pythonhosted.org/example.whl', false],
+    ['https://pypi.org/simple', 'https://attacker.example/example.whl', false],
+] as const;
+
 export const LOCKFILE_PASSWORD_ERROR = {
     name: 'GspotError',
     code: 'install',
