@@ -1,13 +1,26 @@
 import { join } from 'node:path';
-import type { ZodError } from 'zod';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
 import { rm, writeFile } from 'node:fs/promises';
+import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { writePythonSettings } from '#cli/install/python/settings.ts';
-import { UV_TOML, PYPROJECT_UV_INDEX } from '#tests/config/install/python.ts';
+import { UV_TOML, PYPROJECT_UV_INDEX, INVALID_UV_SETTINGS } from '#tests/config/install/python.ts';
+
+test.each(INVALID_UV_SETTINGS)(
+    'invalid $file $field settings name the file and field',
+    async ({ file, field, text }) => {
+        await using sandbox = await testdir({ [file]: text });
+        await using scratch = await testdir();
+        expect(() => writePythonSettings(sandbox.path, scratch.path)).toThrow(
+            new GspotError(
+                'filesystem',
+                `${file}: ${field}: Invalid input: expected array, received string. Fix the field.`,
+            ),
+        );
+    },
+);
 
 test('uv.toml wins and local index paths are read relative to the repository', async () => {
     await using sandbox = await testdir({ 'uv.toml': UV_TOML, 'pyproject.toml': PYPROJECT_UV_INDEX });
@@ -38,13 +51,9 @@ test('project index settings apply only without uv.toml, missing or empty files 
     expect(parse(readFileSync(join(scratch.path, 'uv.toml'), 'utf8'))).toStrictEqual({});
     await writeFile(join(sandbox.path, 'uv.toml'), 'find-links = [7]');
     expect(() => writePythonSettings(sandbox.path, scratch.path)).toThrow(
-        matchFields<ZodError>({
-            issues: [
-                matchFields<ZodError['issues'][number]>({
-                    path: [0],
-                    message: 'Invalid input: expected string, received number',
-                }),
-            ],
-        }),
+        new GspotError(
+            'filesystem',
+            'uv.toml: find-links.0: Invalid input: expected string, received number. Fix the field.',
+        ),
     );
 });

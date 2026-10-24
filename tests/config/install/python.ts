@@ -91,3 +91,14 @@ name = "authored-project"
 index-url = "https://example.com/simple"
 find-links = ["wheels"]
 `;
+
+export const INVALID_UV_SETTINGS = [
+    { file: 'uv.toml', field: 'find-links', text: 'find-links = "https://example.com/wheels"\n' },
+    { file: 'uv.toml', field: 'index', text: 'index = "x"\n' },
+    {
+        file: 'pyproject.toml',
+        field: 'tool.uv.find-links',
+        text: '[tool.uv]\nfind-links = "https://example.com/wheels"\n',
+    },
+    { file: 'pyproject.toml', field: 'tool.uv.index', text: '[tool.uv]\nindex = "x"\n' },
+];

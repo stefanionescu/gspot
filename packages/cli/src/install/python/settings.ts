@@ -8,14 +8,8 @@ import { extractUrlPasswords } from '#cli/install/credentials.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import type { PythonIndexSettings } from '#cli/types/install/python.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
+import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/install/python/settings.ts';
 import { URL_SCHEME, INDEX_SETTINGS, UV_SETTINGS_FILE } from '#cli/config/install/python/settings.ts';
-
-import {
-    uvIndexesSchema,
-    uvSettingsSchema,
-    uvFindLinksSchema,
-    uvProjectSettingsSchema,
-} from '#cli/schemas/install/python/settings.ts';
 
 function normalizeIndexLocation(root: string, location: string): string {
     if (URL_SCHEME.test(location)) return location;
@@ -50,17 +44,13 @@ export function readPythonSettings(repositoryRoot: string): PythonIndexSettings 
             ? parseTomlFile(PYPROJECT_TOML, project ?? '', uvProjectSettingsSchema).tool.uv
             : parseTomlFile(UV_SETTINGS_FILE, uv, uvSettingsSchema);
     const selected = Object.fromEntries(Object.entries(table).filter(([key]) => INDEX_SETTINGS.has(key)));
-    if (selected['find-links'] !== undefined)
-        selected['find-links'] = uvFindLinksSchema
-            .parse(selected['find-links'])
-            .map((value) => normalizeIndexLocation(repositoryRoot, value));
-    const indexes =
-        selected['index'] === undefined
-            ? []
-            : uvIndexesSchema
-                  .parse(selected['index'])
-                  .map((index) => ({ ...index, url: normalizeIndexLocation(repositoryRoot, index.url) }));
-    if (selected['index'] !== undefined) selected['index'] = indexes;
+    if (table['find-links'] !== undefined)
+        selected['find-links'] = table['find-links'].map((value) => normalizeIndexLocation(repositoryRoot, value));
+    const indexes = (table.index ?? []).map((index) => ({
+        ...index,
+        url: normalizeIndexLocation(repositoryRoot, index.url),
+    }));
+    if (table.index !== undefined) selected['index'] = indexes;
     const credentials = Object.entries(selected).flatMap(([key, value]) => {
         const values: unknown[] = Array.isArray(value) ? value : [value];
         const settingValues =

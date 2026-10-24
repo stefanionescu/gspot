@@ -6,7 +6,10 @@ export type UvCommand = {
     configFile?: string;
 };
 
-export type PythonIndexSettings = { settings: Record<string, unknown>; credentials: string[] };
+export type PythonIndexSettings = {
+    settings: Record<string, unknown> & { 'find-links'?: string[] | undefined; index?: PythonIndex[] | undefined };
+    credentials: string[];
+};
 
 export type PythonProjectSettings = { tool: { uv: PythonIndexSettings['settings'] } };
 
