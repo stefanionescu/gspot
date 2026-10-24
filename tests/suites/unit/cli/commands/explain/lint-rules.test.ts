@@ -99,3 +99,25 @@ test('explain finds rule pages from the root and from a child scope', async () =
     expect(JSON.parse(child.stdout)).toMatchObject(CHILD_RULE_PAGE);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(RULE_PAGE_SETTINGS);
 });
+
+test('explain refuses an unknown unqualified ESLint rule', async () => {
+    const subject = 'no-consolee';
+    await using sandbox = await testdir();
+    const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+        error: 'arguments',
+        message: `gspot cannot explain ${subject}. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).`,
+    });
+});
+
+test('explain gives an unknown explicit ESLint rule the URL of the tool', async () => {
+    await using sandbox = await testdir();
+    const explained = await runGspot(sandbox.path, ['explain', 'eslint/no-consolee', '--json']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(JSON.parse(explained.stdout)).toMatchObject({
+        kind: 'lint-rule',
+        rule: 'no-consolee',
+        page: 'https://eslint.org/docs/latest/rules/no-consolee',
+    });
+});

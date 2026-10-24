@@ -21,6 +21,10 @@ import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
 
+const eslintRuleNames = new Set(
+    nameListSchema.parse(JSON.parse(readFileSync(buildAssetPath(ESLINT_RULE_NAMES_FILE), 'utf8'))).names,
+);
+
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const subjects = [
         ...listCheckIds(session === undefined ? [] : Object.values(session.settingsFile.settings.commandChecks)),
@@ -44,18 +48,15 @@ function explainSlashed(
     if (check !== undefined) return check;
     if (file !== undefined) return file;
     const slash = subject.indexOf('/');
-    return explainLintRule(subject.slice(0, slash), subject.slice(slash + 1));
+    const tool = subject.slice(0, slash);
+    const rule = subject.slice(slash + 1);
+    return explainLintRule(tool, rule);
 }
 
 function explainNamed(session: Session | undefined, subject: string): Explanation | undefined {
     const named = explainSetting(session, subject) ?? explainConfiguration(session, subject);
     if (named !== undefined) return named;
-    if (
-        !nameListSchema
-            .parse(JSON.parse(readFileSync(buildAssetPath(ESLINT_RULE_NAMES_FILE), 'utf8')))
-            .names.includes(subject)
-    )
-        return undefined;
+    if (!eslintRuleNames.has(subject)) return undefined;
     return explainLintRule(ESLINT_MANIFEST_TOOL, subject);
 }
 
