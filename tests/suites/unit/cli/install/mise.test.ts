@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { createHash } from 'node:crypto';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
@@ -70,4 +71,37 @@ test('mise prepares every platform before a locked install and retains its check
         await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8'),
     );
     expect(isContents).toBe(true);
+});
+
+test('mise lock gets a SHA-256 checksum for each platform archive whose release publishes none', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['spelling']) });
+    const session = await openSession(sandbox.path);
+    using writer = openWriter(sandbox.path);
+    const install = buildToolInstall(session, writer);
+    install.misePath = 'mise';
+    const url = 'https://example.com/taplo-linux-x86_64.gz';
+    const runBlocking = processes.spawnProcessBlocking;
+    using _paths = spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) =>
+        command[0] === 'mise' ? buildProcessResult() : runBlocking(command, options),
+    );
+    const respond = Object.assign(() => Promise.resolve(new Response('archive')), { preconnect: fetch.preconnect });
+    using request = spyOn(globalThis, 'fetch').mockImplementation(respond);
+    using _commands = fakeCommand('mise', async (command, options) => {
+        if (command[1] === 'lock') {
+            const project = parse(await readFile(join(options.cwd, 'mise.toml'), 'utf8')) as MiseProject;
+            const sections = Object.entries(project.tools).map(([name, version]) => {
+                const key = /^[\w-]+$/u.test(name) ? name : JSON.stringify(name);
+                const pin = typeof version === 'string' ? version : version.version;
+                return `[[tools.${key}]]\nversion = "${pin}"\n\n[tools.${key}."platforms.linux-x64"]\nurl = "${url}"\n`;
+            });
+            await writeFile(join(options.cwd, 'mise.lock'), sections.join('\n'));
+        }
+        return buildProcessResult();
+    });
+    await installMiseTools(install);
+    const lockfile = await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8');
+    expect(request.mock.calls.map(([address]) => address)).toContain(url);
+    expect(lockfile).toContain(`checksum = "sha256:${createHash('sha256').update('archive').digest('hex')}"`);
+    const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
+    expect(isMiseLockfileFresh(project.content, lockfile)).toBe(true);
 });

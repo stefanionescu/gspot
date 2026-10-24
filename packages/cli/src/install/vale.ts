@@ -7,8 +7,8 @@ import { getTool } from '#cli/configurations/tools.ts';
 import { runInstallStep } from '#cli/install/steps.ts';
 import { getMiseBinPaths } from '#cli/tools/locate.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { downloadArchive } from '#cli/install/downloads.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { VALE_TOOL } from '#cli/config/checks/general/prose.ts';
 import { redactInstallOutput } from '#cli/install/credentials.ts';
@@ -30,53 +30,12 @@ import {
     VALE_STYLES_PATH_PATTERN,
 } from '#cli/config/install/vale.ts';
 
-async function readBoundedArchive(response: Response, url: string): Promise<Buffer> {
-    const reader: ReadableStreamDefaultReader<Uint8Array> | undefined = response.body?.getReader();
-    if (reader === undefined) return Buffer.alloc(0);
-    const chunks: Uint8Array[] = [];
-    let size = 0;
-    try {
-        for (;;) {
-            const { done, value } = await reader.read();
-            if (done) return Buffer.concat(chunks);
-            size += value.length;
-            if (size > VALE_ARCHIVE_LIMIT)
-                throw new GspotError('install', `The Vale package ${url} exceeds the archive size limit.`);
-            chunks.push(value);
-        }
-    } finally {
-        reader.releaseLock();
-    }
-}
-
-async function readValeArchive(install: ToolInstall, url: string): Promise<Buffer> {
-    try {
-        const signals = [AbortSignal.timeout(install.session.timeoutSeconds * MILLISECONDS_PER_SECOND)];
-        if (install.session.cancelSignal !== undefined) signals.push(install.session.cancelSignal);
-        const response = await fetch(url, { signal: AbortSignal.any(signals) });
-        if (!response.ok)
-            throw new GspotError(
-                'install',
-                `Cannot download the Vale package ${url} (HTTP ${String(response.status)}).`,
-            );
-        return await readBoundedArchive(response, url);
-    } catch (error) {
-        install.session.cancelSignal?.throwIfAborted();
-        if (error instanceof GspotError) throw error;
-        throw new GspotError(
-            'install',
-            `Cannot download the Vale package ${url}. Check the network or proxy, then run again.`,
-            { cause: error },
-        );
-    }
-}
-
 async function downloadValePackages(install: ToolInstall, folder: string): Promise<string[]> {
     const packages: string[] = [];
     for (const name of VALE_PACKAGES) {
         const release = VALE_PACKAGE_RELEASES[name];
         const url = `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${release.version}/${name}.zip`;
-        const bytes = await readValeArchive(install, url);
+        const bytes = await downloadArchive(install, { url, name: 'the Vale package', limit: VALE_ARCHIVE_LIMIT });
         const sha256 = createHash('sha256').update(bytes).digest('hex');
         if (sha256 !== release.sha256)
             throw new GspotError(

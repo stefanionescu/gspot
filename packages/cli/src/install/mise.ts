@@ -1,5 +1,6 @@
 import which from 'which';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { parse } from '@decimalturn/toml-patch';
 import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -13,6 +14,7 @@ import { listCheckTools } from '#cli/planning/tools.ts';
 import { readMiseBinPaths } from '#cli/tools/locate.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { planReplacement } from '#cli/apply/write/plans.ts';
+import { downloadArchive } from '#cli/install/downloads.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
 import { getOperatingSystem } from '#cli/system/environment.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
@@ -26,13 +28,18 @@ import { miseProjectSchema, miseLockfileSchema } from '#cli/schemas/install/mise
 import { findMisePin, listMisePins, findMissingBuild, listToolProjectPins } from '#cli/configurations/tools.ts';
 
 import {
+    MISE_URL_LINE,
     MISE_LOCK_FILE,
     MISE_CONFIG_FILE,
+    MISE_CHECKSUM_LINE,
+    MISE_ARCHIVE_LIMIT,
     MISE_LOCK_ARGUMENTS,
+    MISE_PLATFORM_HEADER,
     MISE_TRUST_ARGUMENTS,
     MISE_PLATFORM_PREFIX,
     MISE_CHECKSUM_PATTERN,
     MISE_INSTALL_ARGUMENTS,
+    MISE_LOCK_SECTION_START,
     MISE_LOCKED_ENVIRONMENT,
 } from '#cli/config/install/mise.ts';
 
@@ -99,6 +106,26 @@ export function isMiseLockfileFresh(project: string, lockfile: string | undefine
     );
 }
 
+async function addMissingChecksums(install: ToolInstall, lockfile: string): Promise<string> {
+    const sections = await Promise.all(
+        lockfile.split(MISE_LOCK_SECTION_START).map(async (section) => {
+            const [header = '', ...lines] = section.split('\n');
+            const url = MISE_URL_LINE.exec(section)?.groups?.['url'];
+            if (!MISE_PLATFORM_HEADER.test(header) || url === undefined || MISE_CHECKSUM_LINE.test(section))
+                return section;
+            const bytes = await downloadArchive(install, {
+                url,
+                name: 'the mise tool archive',
+                limit: MISE_ARCHIVE_LIMIT,
+            });
+            return [header, `checksum = "sha256:${createHash('sha256').update(bytes).digest('hex')}"`, ...lines].join(
+                '\n',
+            );
+        }),
+    );
+    return sections.join('');
+}
+
 async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
     const [project] = install.generated.files.filter(({ path }) => path === GSPOT_PATHS.miseProject) as [GeneratedFile];
     const recorded = install.writer.read(GSPOT_PATHS.miseLockfile);
@@ -114,7 +141,7 @@ async function prepareMiseLockfile(install: ToolInstall): Promise<void> {
                 `The command ${command.join(' ')} failed (exit ${String(result.code)}):\n${redactInstallOutput(result, [])}`,
             );
     }
-    const content = readFileSync(join(scratch.path, MISE_LOCK_FILE), 'utf8');
+    const content = await addMissingChecksums(install, readFileSync(join(scratch.path, MISE_LOCK_FILE), 'utf8'));
     if (!isMiseLockfileFresh(project.content, content))
         throw new GspotError(
             'install',
