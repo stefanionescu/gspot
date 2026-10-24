@@ -104,8 +104,8 @@ function buildGitignoreBlock(): string {
 
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: GenerationResult): void {
     const {
-        repository,
         settingsFile: { settings },
+        repository,
         reads,
     } = session;
     const outsidePaths = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
@@ -161,11 +161,9 @@ function assertDistinctPaths(generated: GenerationResult): void {
 export function generate(session: Session): GenerationResult {
     const {
         settingsFile: { settings },
-        repository,
         scopes,
     } = session;
     const { installedRoot, timeoutSeconds, reads } = session;
-    const { root } = repository;
     const packageManager = session.packageManager?.name;
     const configurations = session.toolConfigurations;
     const generated: GenerationResult = {
@@ -190,7 +188,7 @@ export function generate(session: Session): GenerationResult {
         ...(packageManager === undefined
             ? []
             : buildNpmProject({
-                  root,
+                  dependencyFiles: session.repository.dependencyFiles,
                   scopes,
                   configurations,
                   isYarnBerry:

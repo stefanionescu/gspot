@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
@@ -15,8 +16,8 @@ import { isYarnBerry, assertPackageManager } from '#cli/repository/npm/package-m
 import {
     YARN_CLIENTS,
     STYLESHEET_CASES,
+    NEXT_REQUIREMENTS,
     LICENSE_TOOL_CASES,
-    NEXT_INSTALLATIONS,
     NEXTJS_API_SETTINGS,
     REACT_NATIVE_TSCONFIG,
 } from '#tests/config/generation/tool-projects.ts';
@@ -84,7 +85,7 @@ test.each([...YARN_CLIENTS])(
     'Yarn $packageManager.version gets the matching tool project settings',
     ({ packageManager, settings }) => {
         const files = buildNpmProject({
-            root: process.cwd(),
+            dependencyFiles: [],
             scopes: [],
             configurations: [],
             isYarnBerry: isYarnBerry(packageManager),
@@ -96,33 +97,36 @@ test.each([...YARN_CLIENTS])(
     },
 );
 
-test.each([...NEXT_INSTALLATIONS])('Next ESLint plugin requirements follow the installed major: $name', async (row) => {
+test.each([...NEXT_REQUIREMENTS])('Next ESLint plugin follows declared ranges: $name', async (row) => {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['nextjs'], { scopes: [{ path: 'app', configurations: ['nextjs'] }] }),
-        'package.json': '{"private":true,"packageManager":"bun@1.4.2","dependencies":{"next":"*"}}',
-        'app/package.json': '{"private":true,"dependencies":{"next":"*"}}',
-        ...(row.rootVersion === undefined
+        'project/gspot.toml': buildSandboxSettings(['nextjs'], {
+            scopes: [{ path: 'app/client', configurations: ['nextjs'] }],
+        }),
+        'project/package.json': JSON.stringify({ private: true, dependencies: { next: row.rootRange } }),
+        'project/app/client/source.ts': 'export const count = 1;\n',
+        'node_modules/next/package.json': '{"name":"next","version":"17.0.0"}',
+        ...(row.childRange === undefined
             ? {}
             : {
-                  'node_modules/next/package.json': JSON.stringify({
-                      name: 'next',
-                      version: row.rootVersion,
-                  }),
+                  'project/app/package.json': JSON.stringify({ private: true, dependencies: { next: row.childRange } }),
               }),
+        ...(row.rootVersion === undefined
+            ? {}
+            : { 'project/node_modules/next/package.json': JSON.stringify({ name: 'next', version: row.rootVersion }) }),
         ...(row.childVersion === undefined
             ? {}
             : {
-                  'app/node_modules/next/package.json': JSON.stringify({
+                  'project/app/node_modules/next/package.json': JSON.stringify({
                       name: 'next',
                       version: row.childVersion,
                   }),
               }),
     });
 
-    const session = await openSession(sandbox.path);
+    const session = await openSession(join(sandbox.path, 'project'));
     if (row.expected === 'conflict') {
         expect(captureThrow(() => generate(session))).toBe(
-            'Tool pin @next/eslint-plugin-next conflicts: the root requires ^16; app requires ^15.',
+            'Tool pin @next/eslint-plugin-next conflicts: the root requires ^16; app requires ^15; app/client requires ^15.',
         );
     } else {
         const generated = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
@@ -138,8 +142,8 @@ test('only selected Next.js scopes set the shared plugin version', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], NEXTJS_API_SETTINGS),
         'package.json': '{"private":true,"packageManager":"bun@1.4.2"}',
-        'web/package.json': '{"dependencies":{"next":"*"}}',
-        'api/package.json': '{"dependencies":{"next":"*"}}',
+        'web/package.json': '{"dependencies":{"next":"^16.3.6"}}',
+        'api/package.json': '{"dependencies":{"next":"^15.5.9"}}',
         'web/node_modules/next/package.json': '{"name":"next","version":"16.3.6"}',
         'api/node_modules/next/package.json': '{"name":"next","version":"15.5.9"}',
     });

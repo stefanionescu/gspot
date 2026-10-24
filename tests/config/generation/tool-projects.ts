@@ -5,30 +5,62 @@ export const REACT_NATIVE_TSCONFIG = {
     include: ['src'],
 } as const;
 
-export const NEXT_INSTALLATIONS = [
+export const NEXT_REQUIREMENTS = [
     {
-        name: 'an uninstalled Next uses the shipped manifest pin',
+        name: 'an uninstalled project',
+        rootRange: '^15.5.0',
+        childRange: undefined,
         rootVersion: undefined,
-        childVersion: undefined,
-        expected: undefined,
-    },
-    {
-        name: 'a hoisted installed Next supplies its major to root and child',
-        rootVersion: '15.5.9',
         childVersion: undefined,
         expected: '^15',
     },
     {
-        name: 'different installed versions within one major share that major',
+        name: 'unrelated installed packages',
+        rootRange: '^15.5.0',
+        childRange: undefined,
         rootVersion: '16.3.6',
         childVersion: '16.3.5',
+        expected: '^15',
+    },
+    {
+        name: 'matching declared majors',
+        rootRange: '^16.3.6',
+        childRange: '~16.3.5',
+        rootVersion: undefined,
+        childVersion: undefined,
         expected: '^16',
     },
     {
-        name: 'different selected installed majors refuse one shared plugin pin',
-        rootVersion: '16.3.6',
-        childVersion: '15.5.9',
+        name: 'conflicting declared majors',
+        rootRange: '^16.3.6',
+        childRange: '^15.5.9',
+        rootVersion: undefined,
+        childVersion: undefined,
         expected: 'conflict',
+    },
+    {
+        name: 'a catalog reference',
+        rootRange: 'catalog:',
+        childRange: undefined,
+        rootVersion: '15.5.9',
+        childVersion: undefined,
+        expected: undefined,
+    },
+    {
+        name: 'a workspace reference',
+        rootRange: 'workspace:*',
+        childRange: undefined,
+        rootVersion: '15.5.9',
+        childVersion: undefined,
+        expected: undefined,
+    },
+    {
+        name: 'a tag',
+        rootRange: 'latest',
+        childRange: undefined,
+        rootVersion: '15.5.9',
+        childVersion: undefined,
+        expected: undefined,
     },
 ] as const;
 

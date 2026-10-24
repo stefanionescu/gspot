@@ -1,13 +1,14 @@
 import semver from 'semver';
-import { join } from 'node:path';
+import { posix } from 'node:path';
 import { JSON_INDENT } from '#cli/config/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { listMisePins, listToolProjectPins } from '#cli/configurations/tools.ts';
-import { findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/build.ts';
 import { type GeneratedFile, type PlannedNpmProject } from '#cli/types/generation/files.ts';
 
@@ -46,22 +47,34 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
  * Build the npm tools as a tool project, and add no dependencies to the repository.
  *
  * @param project what the tool project holds.
- * @param project.root the repository folder.
+ * @param project.dependencyFiles the declared project dependencies.
  * @param project.scopes the source projects.
  * @param project.configurations the configurations with npm tools.
  * @param project.isYarnBerry true for Yarn 2 or later as the repository package manager.
  *
  * @returns the tool project files.
  */
-export function buildNpmProject({ root, scopes, configurations, isYarnBerry }: PlannedNpmProject): GeneratedFile[] {
+export function buildNpmProject({
+    dependencyFiles,
+    scopes,
+    configurations,
+    isYarnBerry,
+}: PlannedNpmProject): GeneratedFile[] {
     const pins = listToolProjectPins(configurations).npm;
+    const projects = new Map(
+        dependencyFiles.filter((file) => file.kind === PACKAGE_JSON).map((file) => [file.path, file]),
+    );
     const nextVersions = scopes
         .filter(({ configurations: selected }) =>
             selected.some((configuration) => configuration.name === NEXTJS_CONFIGURATION),
         )
         .flatMap(({ folder }) => {
-            const version = findInstalledDependency(root, join(folder.path, 'package.json'), NEXT_PACKAGE)?.version;
-            return version === undefined ? [] : [{ scope: folder.path, major: semver.major(version) }];
+            const project = listEnclosingFolders(folder.path)
+                .map((path) => projects.get(posix.join(path, PACKAGE_JSON)))
+                .find((file) => file !== undefined);
+            const range = project?.dependencies[NEXT_PACKAGE];
+            const version = range !== undefined && semver.validRange(range) !== null ? semver.minVersion(range) : null;
+            return version === null ? [] : [{ scope: folder.path, major: version.major }];
         });
     const majors = new Set(nextVersions.map(({ major }) => major));
     const requirements = nextVersions

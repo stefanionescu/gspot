@@ -4,6 +4,7 @@ import type { FileContents } from '#cli/types/system/files.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { BlockStyle } from '#cli/types/parsers/formats/managed-blocks.ts';
+import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 import type { Tool, Level, ConfigFile, Configuration } from '#cli/types/configurations.ts';
 import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/config-files/ignore-files.ts';
 
@@ -37,7 +38,7 @@ export type SemgrepDocument = { rules: SemgrepRule[] };
 export type HookName = (typeof CHECK_HOOKS)[number];
 
 export type PlannedNpmProject = {
-    root: string;
+    dependencyFiles: DependencyFile[];
     scopes: Scope[];
     configurations: Configuration[];
     isYarnBerry: boolean;
