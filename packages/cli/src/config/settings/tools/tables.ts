@@ -1,5 +1,7 @@
 export const ESLINT_GLOBAL_NAMES_FILE = 'configurations/language/javascript/eslint-global-names.json';
 
+export const MARKDOWNLINT_RULE_ID = /^MD\d{3}$/u;
+
 export const KNIP_PACKAGE_NAME = /^[^*+\\(|{^$\s]+$/u;
 
 export const DOCSTRING_CONVENTIONS = ['google', 'numpy', 'pep257'] as const;

@@ -83,7 +83,7 @@ export const REFUSED_RULE_OPTIONS = [
         configuration: 'markdown',
         toml: '[tools.markdownlint.rules]\ndefault = {}\n',
         message:
-            'gspot.toml: tools.markdownlint.rules.default: This table holds options only, without a severity; the level decides which rules run. To turn default off, run gspot ignore markdown/markdownlint --rule default --reason "<why>".',
+            'gspot.toml: tools.markdownlint.rules.default: Name a rule by its ID, such as MD010 = { spaces_per_tab = 4 }. This table holds rule options only.',
     },
     {
         tool: 'stylelint',

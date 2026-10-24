@@ -20,7 +20,18 @@ import {
     UNKNOWN_KEY_CASES,
     RULE_FILE_SETTINGS,
     DUPLICATED_REASON_ERRORS,
+    INVALID_MARKDOWNLINT_NAMES,
 } from '#tests/config/settings/read.ts';
+
+test.each(INVALID_MARKDOWNLINT_NAMES)('markdownlint refuses $name with the rule ID guidance', ({ name, value }) => {
+    expect(
+        validateSettingsText(
+            stringify({ configurations: ['markdown'], tools: { markdownlint: { rules: { [name]: value } } } }),
+        ),
+    ).toStrictEqual([
+        `gspot.toml: tools.markdownlint.rules.${name}: Name a rule by its ID, such as MD010 = { spaces_per_tab = 4 }. This table holds rule options only.`,
+    ]);
+});
 
 test.each(DUPLICATED_REASON_ERRORS)('an invalid $key reason is reported once', ({ text, message }) => {
     expect(validateSettingsText(buildSandboxSettings(['bash', 'docs'], { tables: text }))).toStrictEqual([message]);
