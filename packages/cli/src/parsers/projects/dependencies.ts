@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
@@ -51,7 +52,7 @@ function convertPythonDependencies(maps: Record<string, PythonDependency>[]): De
     );
 }
 
-function listPythonRequirements(parsed: Pyproject): DependencyMap {
+function listPythonRequirements(path: string, parsed: Pyproject): DependencyMap {
     const project = parsed.project;
     const groups = [
         ...(project?.dependencies ?? []),
@@ -66,19 +67,23 @@ function listPythonRequirements(parsed: Pyproject): DependencyMap {
     return Object.fromEntries(
         groups.map((spec) => {
             const name = parseRequirementName(spec);
-            if (name === undefined) throw new Error(`Invalid Python dependency requirement: ${spec}`);
+            if (name === undefined)
+                throw new GspotError(
+                    'filesystem',
+                    `${path}: ${spec} is not a PEP 508 requirement. Write it as name @ url, then run gspot again.`,
+                );
             return [name, spec];
         }),
     );
 }
 
-function listPythonDependencies(parsed: Pyproject): DependencyMap {
+function listPythonDependencies(path: string, parsed: Pyproject): DependencyMap {
     const poetry = parsed.tool?.poetry;
     const maps = [poetry?.dependencies];
     if (poetry?.group !== undefined) for (const group of Object.values(poetry.group)) maps.push(group.dependencies);
     return Object.assign(
         parsed.tool?.pytest === undefined ? {} : { pytest: 'tool.pytest' },
-        listPythonRequirements(parsed),
+        listPythonRequirements(path, parsed),
         convertPythonDependencies(maps.filter((map): map is Record<string, PythonDependency> => map !== undefined)),
     );
 }
@@ -123,7 +128,7 @@ function parsePipfile(path: string, text: string): DependencyFile {
 
 function parsePyproject(path: string, text: string): DependencyFile {
     const parsed = parseTomlFile(path, text, pyprojectSchema);
-    const dependencies = listPythonDependencies(parsed);
+    const dependencies = listPythonDependencies(path, parsed);
     return {
         path,
         kind: 'pyproject.toml',
