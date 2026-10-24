@@ -15,6 +15,7 @@ import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { type Settings, type TomlTable } from '#cli/types/settings/file.ts';
 import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
+import { ISO_DATE_LENGTH } from '#cli/config/checks/general/gspot/suppressions.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 
 function assertIgnoreOptions(options: IgnoreOptions, settings: Settings): void {
@@ -86,6 +87,8 @@ function parseExpiryDate(text: string): LocalDate {
     const result = calendarDateSchema.safeParse(text);
     if (!result.success)
         throw new GspotError('arguments', '--until needs a calendar date in YYYY-MM-DD form, such as 2027-01-31.');
+    if (result.data <= new Date().toISOString().slice(0, ISO_DATE_LENGTH))
+        throw new GspotError('arguments', '--until must be a date after today, such as 2027-01-31.');
     return new LocalDate(result.data);
 }
 
