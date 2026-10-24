@@ -97,6 +97,32 @@ test('the text check list puts the states of all scopes in one row', async () =>
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
+test('checks that run at the root appear once when selected in several child scopes', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings([], {
+            scopes: [
+                { path: 'app', configurations: ['docker'] },
+                { path: 'worker', configurations: ['docker'] },
+            ],
+        }),
+        'app/Dockerfile': 'FROM scratch\n',
+        'worker/Dockerfile': 'FROM scratch\n',
+    });
+    const listed = await runGspot(sandbox.path, ['list', '--json']);
+    expect(listed.code, listed.stdout + listed.stderr).toBe(0);
+    const { selected } = JSON.parse(listed.stdout) as ConfigurationsListJson;
+    const checks = selected.flatMap((configuration) => configuration.checks);
+    expect(checks.filter(({ name }) => name === 'docker/dockerignore')).toStrictEqual([
+        { name: 'docker/dockerignore', scope: '', state: 'on' },
+    ]);
+    expect(checks.filter(({ name }) => name === 'gspot/generated-files')).toStrictEqual([
+        { name: 'gspot/generated-files', scope: '', state: 'on' },
+    ]);
+    const human = await runGspot(sandbox.path, ['list']);
+    expect(human.stdout).toContain('    docker/dockerignore  root: on\n');
+    expect(human.stdout).toContain('    gspot/generated-files  root: on\n');
+});
+
 test('the text settings list shows scope values while JSON keeps inherited values', async () => {
     await using sandbox = await testdir({
         'gspot.toml': LIST_SCOPE_SETTINGS,

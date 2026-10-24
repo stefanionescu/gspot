@@ -2,6 +2,7 @@ import { openSession } from '#cli/session.ts';
 import { findRoot } from '#cli/repository/read.ts';
 import { type Session } from '#cli/types/session.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
+import { isRootOnlyCheck } from '#cli/planning/files.ts';
 import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
@@ -9,6 +10,7 @@ import { type Settings } from '#cli/types/settings/file.ts';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { listEffectiveSettings } from '#cli/settings/inherit.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
@@ -31,6 +33,28 @@ function buildSettingsResult(session: Session): CommandResult {
     return { text: `${lines.join('\n')}\n`, json: { settings } satisfies SettingsListJson, exitCode: 0 };
 }
 
+function listCheckStates(
+    session: Session,
+    configuration: Configuration,
+    planned: Map<string, PlannedCheck>,
+): ConfigurationsListJson['selected'][number]['checks'] {
+    const listed = new Set<string>();
+    return session.scopes.flatMap((scope) =>
+        scope.configurations.includes(configuration)
+            ? configuration.checks.flatMap((check) => {
+                  const path =
+                      check.runs === 'once' || check.runs === 'history' || isRootOnlyCheck(configuration, check)
+                          ? ''
+                          : scope.folder.path;
+                  const key = `${path}\0${check.id}`;
+                  if (listed.has(key)) return [];
+                  listed.add(key);
+                  return [{ name: check.id, scope: path, state: formatCheckState(planned.get(key)) }];
+              })
+            : [],
+    );
+}
+
 function buildConfigurationsResult(session: Session): CommandResult {
     const configurations = listSelectedConfigurations(session.scopes);
     const names = new Set(configurations.map((configuration) => configuration.name));
@@ -39,15 +63,7 @@ function buildConfigurationsResult(session: Session): CommandResult {
     );
     const selected = configurations.map((configuration) => ({
         name: configuration.name,
-        checks: session.scopes.flatMap((scope) =>
-            scope.configurations.includes(configuration)
-                ? configuration.checks.map((check) => ({
-                      name: check.id,
-                      scope: scope.folder.path,
-                      state: formatCheckState(planned.get(`${scope.folder.path}\0${check.id}`)),
-                  }))
-                : [],
-        ),
+        checks: listCheckStates(session, configuration, planned),
     }));
     const available = session.configurations
         .values()
