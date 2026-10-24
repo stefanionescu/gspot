@@ -84,6 +84,8 @@ curl -o setup.sh https://example.com/setup.sh
 `;
 
 export const PLATFORM_SOURCES = {
+    'supabase/functions/body/index.ts':
+        'schema.parse(await req.json());\nschema.safeParse(await req.json());\nconst body = await req.json();\nconst second = await req.json();\nschema.parseAsync(await req.json());\nschema.safeParseAsync(await req.json());\n',
     'src/html.js':
         'list.innerHTML = "";\nlist.innerHTML = "<li>None</li>";\nlist.innerHTML = name;\nlist.outerHTML = markup;\n',
     'scripts/inject.js': 'execSync(`printf ${input}`);\n',
@@ -106,6 +108,8 @@ export const PLATFORM_SOURCES = {
 } as const;
 
 export const PLATFORM_SOURCE_FINDINGS = [
+    { file: 'supabase/functions/body/index.ts', rule: 'gspot.supabase.edge-unvalidated-json-body', line: 3 },
+    { file: 'supabase/functions/body/index.ts', rule: 'gspot.supabase.edge-unvalidated-json-body', line: 4 },
     { file: 'src/html.js', rule: 'gspot.javascript.dom-html-sink', line: 3 },
     { file: 'src/html.js', rule: 'gspot.javascript.dom-html-sink', line: 4 },
     { file: 'functions/input.js', rule: 'gspot.javascript.ssrf-web-request-user-input', line: 1 },
@@ -128,6 +132,8 @@ export const PLATFORM_ALL_SOURCE_FIXES = {
 } as const;
 
 export const PLATFORM_SOURCE_FIXES = {
+    'supabase/functions/body/index.ts':
+        'schema.parse(await req.json());\nschema.safeParse(await req.json());\nconst body = schema.parse(await req.json());\nconst second = schema.safeParse(await req.json());\nschema.parseAsync(await req.json());\nschema.safeParseAsync(await req.json());\n',
     'src/html.js':
         'list.innerHTML = "";\nlist.innerHTML = "<li>None</li>";\nlist.textContent = name;\nlist.textContent = markup;\n',
     'Info.plist': '<plist><dict/></plist>\n',

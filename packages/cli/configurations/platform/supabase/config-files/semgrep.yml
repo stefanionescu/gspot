@@ -37,6 +37,10 @@ rules:
     - id: gspot.supabase.edge-unvalidated-json-body
       patterns:
           - pattern: await req.json()
+          - pattern-not-inside: $SCHEMA.parse(await req.json(), ...)
+          - pattern-not-inside: $SCHEMA.safeParse(await req.json(), ...)
+          - pattern-not-inside: $SCHEMA.parseAsync(await req.json(), ...)
+          - pattern-not-inside: $SCHEMA.safeParseAsync(await req.json(), ...)
           - pattern-not-inside: |-
                 const $BODY = await req.json()
                 ...
