@@ -21,7 +21,14 @@ function formatRuleOptions(schemas: unknown, defaults: unknown): string {
             ];
         });
     });
-    return formatTable(['Option', 'Type', 'Default', 'What it does'], rows) || 'This rule has no options.';
+    const descriptions = schemaList.flatMap((schema) =>
+        isTable(schema) && typeof schema['description'] === 'string' ? [schema['description']] : [],
+    );
+    return (
+        formatTable(['Option', 'Type', 'Default', 'What it does'], rows) ||
+        descriptions.join('\n\n') ||
+        'This rule has no options.'
+    );
 }
 
 function listRuleConfigs(name: string): string[] {
