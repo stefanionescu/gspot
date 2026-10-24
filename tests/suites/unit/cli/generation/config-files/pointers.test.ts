@@ -9,6 +9,7 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
 import { XCTEST_POINTER_CASES, MARKDOWNLINT_SCOPE_TABLES } from '#tests/config/generation/config-files/pointers.ts';
 
@@ -104,4 +105,20 @@ test('a scope gets its own markdownlint pointer only when its rules differ from 
         '.markdownlint.jsonc',
         'other/.markdownlint.jsonc',
     ]);
+});
+
+test('every generated file outside .gspot starts with the gspot header, and the Stylelint pointer is YAML', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'css', 'markdown', 'python'], { level: 'all' }),
+        'package.json': '{"private":true}\n',
+    });
+    const outside = generate(await openSession(sandbox.path)).files.filter(({ path }) => !path.startsWith('.gspot/'));
+    const paths = outside.map(({ path }) => path);
+    expect(paths).toContain('.stylelintrc.yml');
+    expect(paths).toContain('pyrightconfig.json');
+    for (const { content } of outside) expect(content.split('\n', 1)[0]).toEndWith(GENERATED_HEADER_TEXT);
+    const stylelint = outside.find(({ path }) => path === '.stylelintrc.yml');
+    expect(parse(stylelint?.content ?? '')).toStrictEqual({
+        extends: `./${findManifestTarget('css', 'stylelint.json')}`,
+    });
 });

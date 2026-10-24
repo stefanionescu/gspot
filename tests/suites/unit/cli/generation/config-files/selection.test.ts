@@ -148,6 +148,7 @@ function parseConfigFile(text: string, path: string): void {
         },
         '.json': (text) => void JSON.parse(text),
         '.jsonc': parseJson,
+        'pyrightconfig.json': parseJson,
         '.webmanifest': (text) => void JSON.parse(text),
         '.toml': (text) => {
             parseToml(text);
@@ -160,7 +161,7 @@ function parseConfigFile(text: string, path: string): void {
         '.ts': parseModule,
     };
 
-    const parser = parsers[extname(path)];
+    const parser = parsers[basename(path)] ?? parsers[extname(path)];
     if (parser === undefined) throw new Error(`${path}: no generated-file parser is declared.`);
     parser(text, path);
 }

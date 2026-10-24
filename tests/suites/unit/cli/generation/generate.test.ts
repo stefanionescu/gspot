@@ -38,7 +38,7 @@ test.each(['absent', 'authored', 'managed'])(
             `${source === 'authored' ? '* text=auto eol=lf\n' : ''}${attributes.block}\n`,
         );
         const outside = generated.files.map(({ path }) => path).filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
-        expect(outside).toContain('web app/.stylelintrc.json');
+        expect(outside).toContain('web app/.stylelintrc.yml');
         const read = runGitStep(sandbox.path, ['check-attr', 'eol', '--', ...outside, 'nested/.editorconfig']);
         expect(read.split('\n')).toStrictEqual([
             ...outside.map((path) => `${path}: eol: lf`),

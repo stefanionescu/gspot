@@ -39,7 +39,7 @@ version = "2.0.0"
 
 [[config_file]]
 per_scope = true
-pointer = { path = ".stylelintrc.json", body = "{\n    \"extends\": {target_json}\n}\n" }
+pointer = { path = ".stylelintrc.yml", body = "extends: {target_json}\n" }
 target = "stylelint.json"
 tool = "stylelint"
 

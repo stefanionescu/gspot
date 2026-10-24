@@ -31,7 +31,7 @@ The managed block of `AGENTS.md` lists your repository's generated files and the
 ## Do not edit generated files
 
 Do not edit a generated file. Each one sits in `.gspot/`, starts with a gspot header, or sits in a managed block between
-the gspot markers. JSON files carry no header; the managed block of `.gitattributes` marks them generated.
+the gspot markers. Files in `.gspot/` carry no header; the managed block of `.gitattributes` marks them generated.
 
 `gspot apply` replaces those files from your settings, even files with
 local edits or merge markers. Move any change you need into `gspot.toml` before you apply.

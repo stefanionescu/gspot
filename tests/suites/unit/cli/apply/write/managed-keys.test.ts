@@ -17,13 +17,13 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     const original = STYLELINT_PACKAGE_JSON.replaceAll('\n', '\r\n');
     await createFileTree(sandbox.path, { [path]: original });
     await chmod(join(sandbox.path, path), 0o640);
-    const changes = [{ key: ['stylelint'], value: { extends: './.stylelintrc.json' } }];
+    const changes = [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }];
     const firstWriter = openWriter(sandbox.path);
     writePlans(firstWriter, [planSettingsWrite(firstWriter, path, changes)]);
     expect(hasManagedKeys({ path, keys: changes }, firstWriter.read(path)!)).toBe(true);
     const installed = firstWriter.read(path)!.bytes.toString('utf8');
     expect(installed).toBe(
-        original.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.json"}'),
+        original.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.yml"}'),
     );
     await writeFile(join(sandbox.path, path), installed.replace('native-project', 'edited-project'));
     firstWriter[Symbol.dispose]();

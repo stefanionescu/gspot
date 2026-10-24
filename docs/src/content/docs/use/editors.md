@@ -17,7 +17,7 @@ Run `gspot install` in each clone first. The config files load their plugins fro
 | ------------ | -------------------------------------------- |
 | ESLint       | `eslint.config.mjs`                          |
 | Prettier     | `prettier.config.mjs`                        |
-| Stylelint    | `.stylelintrc.json`                          |
+| Stylelint    | `.stylelintrc.yml`                           |
 | markdownlint | `.markdownlint.jsonc`                        |
 | Ruff         | `ruff.toml`                                  |
 | basedpyright | `pyrightconfig.json`                         |

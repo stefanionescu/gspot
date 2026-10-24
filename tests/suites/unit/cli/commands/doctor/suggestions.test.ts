@@ -74,7 +74,7 @@ test('doctor recognizes managed Stylelint fields in every selected scope', async
     expect(suggestions.unowned).toStrictEqual([]);
     for (const path of ['package.json', 'app/package.json', 'app/child/package.json', 'other/package.json']) {
         const document = JSON.parse(await readFile(join(sandbox.path, path), 'utf8')) as { stylelint: unknown };
-        expect(document.stylelint).toStrictEqual({ extends: './.stylelintrc.json' });
+        expect(document.stylelint).toStrictEqual({ extends: './.stylelintrc.yml' });
     }
 });
 test('doctor leaves the tool projects in .gspot out of detection, detects python from your pyproject.toml, and lists a submodule', async () => {

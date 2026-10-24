@@ -7,6 +7,7 @@ import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { ARITHMETIC_MODULE } from '#tests/config/integration/checks/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { GENERATED_EDIT_LINE, GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
 import { PYTHON_SANDBOX, ARITHMETIC_MODULE_PATH } from '#tests/config/integration/checks/language/python/samples.ts';
 
 const installedSandbox = shareInstalledSandbox(PYTHON_SANDBOX);
@@ -18,9 +19,11 @@ test('init replaces your pyrightconfig.json with a pointer, and basedpyright rep
     await using _change = await changeAppliedSandbox(installedSandbox(), {
         files: { [ARITHMETIC_MODULE_PATH]: typed },
     });
-    const pointer = { extends: `./${findManifestTarget('python', 'basedpyright.json')}` };
+    const target = findManifestTarget('python', 'basedpyright.json');
+    const pointer = { extends: `./${target}` };
+    const header = `// ${GENERATED_HEADER_TEXT}\n// ${GENERATED_EDIT_LINE}\n//\n// The config file is ${target}.\n`;
     expect(await readFile(join(root, 'pyrightconfig.json'), 'utf8')).toBe(
-        `${JSON.stringify(pointer, null, JSON_INDENT)}\n`,
+        `${header}${JSON.stringify(pointer, null, JSON_INDENT)}\n`,
     );
     expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(settings);
     const command = ['check', '--only', 'python/basedpyright', '--json'];

@@ -52,13 +52,13 @@ export const STYLELINT_PACKAGE_FIELDS = {
     tables: '[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "other"\n',
     unchanged: ['plain/package.json'],
     changes: [
-        { path: 'package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.json' } }] },
-        { path: 'app/child/package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.json' } }] },
+        { path: 'package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }] },
+        { path: 'app/child/package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }] },
         {
             path: 'app/package.json',
-            keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.json' } }],
+            keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }],
         },
-        { path: 'other/package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.json' } }] },
+        { path: 'other/package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }] },
     ],
 } satisfies PackageFieldScenario;
 
