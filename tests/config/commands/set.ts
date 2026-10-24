@@ -76,7 +76,7 @@ export const SET_REFUSALS = [
     [
         'a rule turned off',
         ['set', 'tools.markdownlint.rules', '{ MD013 = false }'],
-        'gspot.toml: tools.markdownlint.rules.MD013: This table holds options only, without a severity; the level decides which rules run. To turn MD013 off, run gspot ignore markdown/markdownlint --rule MD013 --reason "<why>".',
+        'The value { MD013 = false } is not valid for tools.markdownlint.rules. Use a valid table value: Option tables by Markdown rule ID, such as MD024; the level decides which rules run. Accept a finding with gspot ignore markdown/markdownlint --rule `<rule>` --reason `<why>`.',
     ],
     ['a key without a value', ['set', 'limits.file_lines'], "Missing required argument 'values'"],
     [

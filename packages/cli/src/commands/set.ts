@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
@@ -6,6 +7,7 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { SettingsEditContext } from '#cli/types/apply.ts';
 import { buildRepositoryPath } from '#cli/repository/scopes.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
+import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { setKey, getScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
@@ -43,6 +45,15 @@ function buildSettingValue(words: unknown[], setting: Setting): ParsedSettingVal
     return { type: 'scalar', value: scalar };
 }
 
+function formatValueAdvice(schema: z.ZodType | undefined, setting: Setting, error: z.ZodError): string {
+    const issue = error.issues.find((issue) => issue.code === 'invalid_value');
+    if (issue !== undefined) return issue.values.map(String).join(' or ');
+    let inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
+    if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
+    if (inner instanceof z.ZodNumber) return `a whole number of ${String(inner.minValue ?? 0)} or more`;
+    return `a valid ${setting.type} value: ${setting.description.replace(/\.$/u, '')}`;
+}
+
 function parseSettingValue(values: string[], setting: Setting): ParsedSettingValue {
     const converted = buildSettingValue(
         values.map((text) => parseValueArgument(text)),
@@ -54,12 +65,11 @@ function parseSettingValue(values: string[], setting: Setting): ParsedSettingVal
         parsedValues.find((parsedValue) => schema?.safeParse(parsedValue.value).success !== false) ?? converted;
     const validation = schema?.safeParse(chosen.value);
     if (validation?.success === false) {
-        const issue = validation.error.issues.find((issue) => issue.code === 'invalid_value');
-        if (issue !== undefined)
-            throw new GspotError(
-                'arguments',
-                `The value ${values.join(' ')} is not valid for ${setting.name}. Use ${issue.values.map(String).join(' or ')}.`,
-            );
+        const advice = formatValueAdvice(schema, setting, validation.error);
+        throw new GspotError(
+            'arguments',
+            `The value ${values.join(' ')} is not valid for ${setting.name}. Use ${advice}.`,
+        );
     }
     return chosen;
 }
