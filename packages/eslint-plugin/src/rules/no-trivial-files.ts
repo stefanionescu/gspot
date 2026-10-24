@@ -34,7 +34,9 @@ function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {
 
 function isForwarding(statement: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     switch (statement.type) {
-        case AST_NODE_TYPES.ImportDeclaration:
+        case AST_NODE_TYPES.ImportDeclaration: {
+            return statement.specifiers.length > 0;
+        }
         case AST_NODE_TYPES.TSImportEqualsDeclaration:
         case AST_NODE_TYPES.ExportAllDeclaration: {
             return true;

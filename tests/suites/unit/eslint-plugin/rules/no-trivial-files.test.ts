@@ -7,6 +7,9 @@ createRuleTester().run<
     [Partial<TrivialFilesOptions[0]>]
 >('no-trivial-files', plugin.rules['no-trivial-files'], {
     valid: [
+        'import "./polyfills.js"; import "./app.js";',
+        'import "./owner";',
+        '#!/usr/bin/env bun\nimport "./owner";',
         'export const PORT = process.env.PORT; export const HOST = process.env.HOST;',
         'import { loadConfig } from "./config"; export const port = loadConfig().port;',
         'export const ROOT = import.meta.dirname;',
@@ -64,8 +67,6 @@ createRuleTester().run<
         'export { value } from "./owner";',
         'export * from "./owner";',
         'import { value } from "./owner"; export { value };',
-        'import "./owner";',
-        '#!/usr/bin/env bun\nimport "./owner";',
         'import { owner } from "./owner"; export default (owner as Owner)!;',
         'import { owner } from "./owner"; export default (owner satisfies Owner);',
         'export type Alias = Owner;',
