@@ -10,7 +10,7 @@ export const OPTIONS_SCHEMA = {
         },
         aliases: {
             description:
-                'Import alias prefixes mapped to repository folders for fixes. Keys and folders may end in `/*`, as in tsconfig paths.',
+                'Import alias patterns mapped to repository paths, as in tsconfig `paths` and package.json `imports`: `@/*` to `src/*`, or an exact key to an exact path.',
             type: 'object',
             additionalProperties: { type: 'string' },
         },

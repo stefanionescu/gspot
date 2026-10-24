@@ -83,6 +83,27 @@ createRuleTester().run<
     ],
     invalid: [
         {
+            code: "import { a } from '../lib/a.js';",
+            filename: '/repo/src/app/main.ts',
+            options: [{ aliases: { '@lib': 'src/lib' } }],
+            output: null,
+            errors: [{ messageId: 'escape' }],
+        },
+        {
+            code: "import { a } from '../lib/a.js';",
+            filename: '/repo/src/app/main.ts',
+            options: [{ aliases: { '#lib/*.js': 'src/lib/*.js' } }],
+            output: "import { a } from '#lib/a.js';",
+            errors: [{ messageId: 'alias' }],
+        },
+        {
+            code: "import metadata from '../../package.json';",
+            filename: '/repo/packages/cli/src/main.ts',
+            options: [{ aliases: { '#cli-package': 'packages/package.json' } }],
+            output: "import metadata from '#cli-package';",
+            errors: [{ messageId: 'alias' }],
+        },
+        {
             code: "import { app } from '../../scripts/app.js';",
             filename: '/repo/web/src/a.ts',
             errors: [{ messageId: 'escape' }],

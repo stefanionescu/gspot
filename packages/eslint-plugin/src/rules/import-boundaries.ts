@@ -4,9 +4,9 @@ import { createRule } from '../create-rule.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
 import { IMPORT_SELECTOR } from '../config/syntax.ts';
 import type { ImportSource } from '../types/syntax.ts';
+import { STDIN_NAMES, TRAILING_SLASH } from '../config/paths.ts';
 import { OPTIONS_SCHEMA } from '../config/rules/import-boundaries.ts';
 import type { RuleContext, ImportBoundariesOptions } from '../types/rules.ts';
-import { STDIN_NAMES, TRAILING_STAR, TRAILING_SLASH } from '../config/paths.ts';
 import { RELATIVE_PREFIXES, DEFAULT_BOUNDARY_FOLDERS } from '../config/imports.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -35,11 +35,20 @@ function getImportedPath(importer: string, source: string): string | undefined {
     return posix.join(posix.dirname(importer), source.split('?', 1)[0] ?? source);
 }
 
+function matchAlias(importedPath: string, pattern: string, target: string): string | undefined {
+    const keyStar = pattern.indexOf('*');
+    const targetStar = target.indexOf('*');
+    if (keyStar === -1 || targetStar === -1) return importedPath === target ? pattern : undefined;
+    const targetStart = target.slice(0, targetStar);
+    const targetEnd = target.slice(targetStar + 1);
+    if (!importedPath.startsWith(targetStart) || !importedPath.endsWith(targetEnd)) return undefined;
+    return `${pattern.slice(0, keyStar)}${importedPath.slice(targetStart.length, importedPath.length - targetEnd.length)}${pattern.slice(keyStar + 1)}`;
+}
+
 function findAlias(importedPath: string, aliases: Record<string, string>): string | undefined {
-    for (const [prefix, folder] of Object.entries(aliases)) {
-        const base = folder.replace(TRAILING_STAR, '').replace(TRAILING_SLASH, '');
-        if (importedPath === base || importedPath.startsWith(`${base}/`))
-            return `${prefix.replace(TRAILING_STAR, '')}${importedPath.slice(base.length + 1)}`;
+    for (const [pattern, target] of Object.entries(aliases)) {
+        const alias = matchAlias(importedPath, pattern, target);
+        if (alias !== undefined) return alias;
     }
     return undefined;
 }
@@ -66,7 +75,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
         docs: {
             level: 'all',
             example:
-                'With `@/` mapped to `src/`, `import { a } from "../turn/a.js";` in `src/other/b.ts` reports `alias`. Correct the import to `import { a } from "@/turn/a.js";`. With folders `api` and `supabase`, a relative import from `api` into `supabase` reports `escape`.',
+                'With `@/*` mapped to `src/*`, `import { a } from "../turn/a.js";` in `src/other/b.ts` reports `alias`. Correct the import to `import { a } from "@/turn/a.js";`. With folders `api` and `supabase`, a relative import from `api` into `supabase` reports `escape`.',
             description:
                 'Finds relative imports that leave the nearest boundary folder. By default every second-level folder, such as `src/cart` or `packages/shop`, is a boundary. Set folders to project paths or folder globs to choose other boundaries. Paths and aliases are relative to `settings.gspot.root`, or to the working folder of ESLint.',
             why: 'Relative paths between folders couple separate parts of a project to the tree shape.',

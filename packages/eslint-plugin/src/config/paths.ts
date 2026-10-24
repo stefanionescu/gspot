@@ -13,4 +13,3 @@ export const INDEX_BASENAMES = new Set([
 export const STDIN_NAMES = new Set(['<input>', '<text>']);
 
 export const TRAILING_SLASH = /\/$/u;
-export const TRAILING_STAR = /\*$/u;
