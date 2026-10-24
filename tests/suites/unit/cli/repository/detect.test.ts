@@ -15,6 +15,14 @@ import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/samples.ts';
 import { buildTrackedFile, readTestRepository } from '#tests/setup/cli/repository.ts';
 import { PRISMA_SCHEMA_CASES, SITE_DETECTION_PATHS, RUNTIME_DETECTION_CASES } from '#tests/config/repository/detect.ts';
 
+async function detectSandbox(root: string): Promise<string[]> {
+    const repository = await readTestRepository(root);
+    const dependencyFiles = await readDependencyFiles(createReadCache(root), repository.files);
+    return detectConfigurations({ root, files: repository.files, dependencyFiles }, readConfigurations()).map(
+        ({ configuration }) => configuration,
+    );
+}
+
 test('detection proposes a language from an extension and the always-selected configurations', () => {
     const plans = detectConfigurations(
         { root: process.cwd(), files: [buildTrackedFile('a.sh')], dependencyFiles: [] },
@@ -209,15 +217,9 @@ test('site detection excludes a server framework even when a sitemap is present'
         'package.json': '{"dependencies":{"next":"15.5.4"}}',
         'public/sitemap.xml': '<urlset/>',
     });
-    const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-    expect(
-        detectConfigurations(
-            { root: sandbox.path, files: repository.files, dependencyFiles },
-            readConfigurations(),
-        ).map(({ configuration }) => configuration),
-    ).not.toContain('site');
+    expect(await detectSandbox(sandbox.path)).not.toContain('site');
 });
+
 test('a favicon manifest alone does not select the static site checks', () => {
     expect(
         detectConfigurations(
@@ -231,13 +233,6 @@ test.each(['psycopg', 'psycopg2', 'psycopg2-binary', 'psycopg-binary'])(
     '%s selects Postgres migration checks',
     async (dependency) => {
         await using sandbox = await testdir({ 'requirements.txt': `${dependency}==3.2.3\n` });
-        const repository = await readTestRepository(sandbox.path);
-        const dependencyFiles = await readDependencyFiles(createReadCache(sandbox.path), repository.files);
-        expect(
-            detectConfigurations(
-                { root: sandbox.path, files: repository.files, dependencyFiles },
-                readConfigurations(),
-            ).map(({ configuration }) => configuration),
-        ).toContain('postgres');
+        expect(await detectSandbox(sandbox.path)).toContain('postgres');
     },
 );
