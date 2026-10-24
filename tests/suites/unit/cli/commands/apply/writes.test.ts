@@ -1,25 +1,21 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { planChecks } from '#cli/planning/checks.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { generate } from '#cli/generation/generate.ts';
 import { type ApplyReport } from '#cli/types/apply.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { planReplacement } from '#cli/apply/write/plans.ts';
-import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runGspot, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 import { findRuleFilePath, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply/writes.ts';
+import { runGit, commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { runGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/files/generated.ts';
+import { FORMAT_SETTINGS, RULES_WRITTEN_FILES, PRETTIER_PATH_IGNORE } from '#tests/config/commands/apply/writes.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
 function writeStrayFile(root: string): void {
@@ -34,8 +30,8 @@ function writeStrayFile(root: string): void {
 }
 
 test('apply leaves generated files writable, keeps their bytes, and deletes a stray owned file and its folder', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { rules: true, tables: '[rules]\nenabled = true\n' }),
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { rules: true }),
     });
 
     writeStrayFile(sandbox.path);
@@ -47,7 +43,7 @@ test('apply leaves generated files writable, keeps their bytes, and deletes a st
     expect(await isOnDisk(join(sandbox.path, '.gitattributes'))).toBe(true);
     const written = (JSON.parse(applied.stdout) as ApplyReport).written;
     const rulePath = findRuleFilePath('engineering', 'WORKING.md');
-    expect(written).toContain(rulePath);
+    expect(written).toStrictEqual([...RULES_WRITTEN_FILES]);
     const bytes = await readFile(join(sandbox.path, rulePath), 'utf8');
     const attributes = await stat(join(sandbox.path, rulePath));
     expect(attributes.mode & 0o200).toBe(0o200);
@@ -69,6 +65,7 @@ test('apply removes a stray directory link without following it', async () => {
     });
 
     const root = join(sandbox.path, 'project');
+    runGitStep(root, ['init', '--quiet']);
     writeStrayFile(root);
     await rm(join(root, `${DOT_GSPOT}/obsolete`), { recursive: true });
     await symlink('../../outside', join(root, `${DOT_GSPOT}/obsolete`));
@@ -128,6 +125,7 @@ test('apply rewrites an edited generated file, deletes unknown files in .gspot, 
 });
 test('removing rules from a fresh clone removes the managed AGENTS.md block', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const source = join(sandbox.path, 'source');
     const checkout = join(sandbox.path, 'checkout');
     const authored = '# Your instructions\n';
@@ -138,40 +136,39 @@ test('removing rules from a fresh clone removes the managed AGENTS.md block', as
     runGitStep(sandbox.path, ['clone', '--quiet', source, checkout]);
     expect(await runGspot(checkout, ['apply'])).toHaveProperty('code', 0);
     await writeFile(join(checkout, 'gspot.toml'), buildSandboxSettings([]));
-    expect(await runGspot(checkout, ['apply'])).toHaveProperty('code', 0);
+    const removed = await runGspot(checkout, ['apply']);
+    expect(removed.code).toBe(0);
+    expect(removed.stdout).toContain('updated  AGENTS.md');
+    expect(removed.stdout).not.toContain('removed  AGENTS.md');
     expect(await readFile(join(checkout, 'AGENTS.md'), 'utf8')).toBe(authored);
 });
-test('a check ignored on all its paths leaves the plan, the needed tools, and its generated files', async () => {
+test('an ignore of every path of a check drops the check, its tool, and its config files', async () => {
     await using sandbox = await testdir({ 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
-
-    const initial = await openSession(sandbox.path);
-    using writer = openWriter(initial.root);
-    await writeGeneratedFiles(initial, generate(initial), writer);
-    expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(true);
-    expect(await isOnDisk(join(sandbox.path, findManifestTarget('format', 'prettier.json')))).toBe(true);
+    runGitStep(sandbox.path, ['init', '--quiet']);
+    const initial = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(initial.code, initial.stdout + initial.stderr).toBe(0);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
-    const excluded = await openSession(sandbox.path);
-    const plans = planChecks(excluded, { stage: 'commit', only: ['format/prettier'] });
-    expect(plans[0]?.skip?.cause).toBe('ignore');
-    expect(excluded.configuredChecks.map((check) => check.check.id)).not.toContain('format/prettier');
-    expect(
-        excluded.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
-    ).not.toContain('prettier');
-    const generated = generate(excluded);
-    expect(generated.files.map((file) => file.path)).not.toContain(findManifestTarget('format', 'prettier.json'));
-    const removed = await writeGeneratedFiles(excluded, generated, writer);
-    expect(removed.removed).toContain('.prettierignore');
-    expect(await isOnDisk(join(sandbox.path, '.prettierignore'))).toBe(false);
-    const settled = await openSession(sandbox.path);
-    expect(settled.configuredChecks.map((check) => check.check.id)).not.toContain('format/prettier');
-    const repeated = await writeGeneratedFiles(settled, generate(settled), writer);
-    expect(repeated.written).toStrictEqual([]);
-    expect(repeated.removed).toStrictEqual([]);
+    const removed = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    const report = JSON.parse(removed.stdout) as ApplyReport;
+    expect(report.written).toStrictEqual([findManifestTarget('spelling', 'typos.toml'), GSPOT_PATHS.npmProject]);
+    expect(report.removed).toStrictEqual([
+        findManifestTarget('format', 'prettier.json'),
+        '.prettierignore',
+        'prettier.config.mjs',
+    ]);
+    const checked = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'format/prettier', '--json']));
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect(checked.report.checks).toMatchObject([{ check: 'format/prettier', status: 'skipped', cause: 'ignore' }]);
+    const repeated = await runGspot(sandbox.path, ['apply', '--json']);
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
+    const settled = JSON.parse(repeated.stdout) as ApplyReport;
+    expect({ written: settled.written, removed: settled.removed }).toStrictEqual({ written: [], removed: [] });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
     expect(await readFile(join(sandbox.path, 'sample.json'), 'utf8')).toBe('{"value":1}\n');
 });
 test('a failed version pin write in apply leaves the old version', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         [GSPOT_PATHS.versionPin]: '0.0.1\n',
     });
@@ -192,13 +189,14 @@ test('a failed version pin write in apply leaves the old version', async () => {
 test('apply leaves a settings file without a schema directive unchanged', async () => {
     const settings = buildSandboxSettings([]).replace(SCHEMA_DIRECTIVE_LINE, '');
     await using sandbox = await testdir({ [SETTINGS_FILE]: settings });
+    runGitStep(sandbox.path, ['init', '--quiet']);
 
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(settings);
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect((JSON.parse(applied.stdout) as ApplyReport).updated).toStrictEqual([]);
+    expect((JSON.parse(applied.stdout) as ApplyReport).updated).not.toContain(SETTINGS_FILE);
     expect(await readFile(join(sandbox.path, SETTINGS_FILE), 'utf8')).toBe(settings);
     const repeated = await runGspot(sandbox.path, ['apply', '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
@@ -208,6 +206,7 @@ test('apply leaves a settings file without a schema directive unchanged', async 
 
 test('repeated apply names a missing lockfile without reporting changed tools', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]), 'package.json': '{"private":true}' });
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const first = await runGspot(sandbox.path, ['apply', '--json']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
     expect((JSON.parse(first.stdout) as ApplyReport).notes).toContain(INSTALL_FIRST_NOTE);

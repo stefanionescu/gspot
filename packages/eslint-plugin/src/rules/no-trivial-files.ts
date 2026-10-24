@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
-import { isAlias } from '../syntax.ts';
 import { createRule } from '../create-rule.ts';
 import { INDEX_BASENAMES } from '../config/paths.ts';
+import { isAlias, convertToPosixPath } from '../syntax.ts';
 import type { TrivialFilesOptions } from '../types/rules.ts';
 import { OPTIONS_SCHEMA } from '../config/rules/no-trivial-files.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -75,7 +75,7 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
         },
     },
     create(context, [options]) {
-        if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(context.physicalFilename.replaceAll('\\', '/'))))
+        if (options.allowIndex && INDEX_BASENAMES.has(posix.basename(convertToPosixPath(context.physicalFilename))))
             return {};
         return {
             Program(node) {

@@ -4,9 +4,8 @@ import type { Session } from '#cli/types/session.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { SWIFT_EXTENSION } from '#cli/config/files/names.ts';
-import { PBXPROJ } from '#cli/config/parsers/projects/xcode.ts';
 import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
+import { PBXPROJ, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
 import type { SwiftModule } from '#cli/types/checks/general/structure.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects/dependencies.ts';
 
@@ -38,8 +37,8 @@ async function listPackageModules(session: Session, path: string, swiftFiles: st
             const callee = call.namedChildren[0];
             const kind = callee?.type === 'prefix_expression' ? callee.childForFieldName('target')?.text : undefined;
             const folders = SWIFTPM_TARGET_FOLDERS[kind ?? ''];
-            const name = findStringArgument(call, 'name');
             if (folders === undefined) return [];
+            const name = findStringArgument(call, 'name');
             if (name === undefined) return [];
             const folder = posix.join(
                 packageFolder,

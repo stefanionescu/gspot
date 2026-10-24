@@ -15,10 +15,16 @@ dependencies = ["next"]
 paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts"]
 
 [[naming.override]]
-allowed_names = ["page", "layout", "template", "default", "loading", "error", "not-found", "global-error", "route", "middleware", "proxy", "instrumentation", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
+allowed_names = ["page", "layout", "template", "default", "loading", "error", "not-found", "global-error", "route", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
 categories = ["files"]
 paths = ["**/app/**", "**/pages/**"]
 reason = "Next.js names these files."
+
+[[naming.override]]
+allowed_names = ["middleware", "proxy", "instrumentation"]
+categories = ["files"]
+paths = ["**"]
+reason = "Next.js reads these files at the project root or in src/."
 
 [[naming.override]]
 allowed_names = ["getStaticProps", "getServerSideProps", "generateMetadata", "generateStaticParams", "generateViewport"]
@@ -44,7 +50,7 @@ kind = "library"
 name = "@next/eslint-plugin-next"
 npm = "@next/eslint-plugin-next"
 rule_prefix = "@next/next"
-version = "16.3.8"
+version = "16.4.2"
 
 [eslint]
 required_tools = ["@next/eslint-plugin-next"]

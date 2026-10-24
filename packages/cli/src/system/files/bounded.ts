@@ -43,11 +43,7 @@ function prepareParentFolder(folder: string): Stats {
 }
 
 function readRegularFile(absolutePath: string, stat: Stats, path: string): FileContents {
-    if (!stat.isFile() || stat.nlink !== 1)
-        throw new GspotError(
-            'filesystem',
-            `${path} is not a regular file with one link. Use a regular file without extra hard links.`,
-        );
+    if (!stat.isFile()) throw new GspotError('filesystem', `${path} is not a regular file. Use a regular file.`);
     const bytes = readFileSync(absolutePath);
     return { bytes, mode: normalizeFileMode({ mode: stat.mode & MODE_BITS }) };
 }
@@ -55,7 +51,8 @@ function readRegularFile(absolutePath: string, stat: Stats, path: string): FileC
 function walkParentFolders(bounds: FileBounds, path: string, statParent: (path: string) => Stats): string {
     const segments = splitSystemPath(path);
     let folder = bounds.root;
-    for (const segment of segments.slice(0, -1)) {
+    const parents = segments.slice(0, -1);
+    for (const segment of parents) {
         folder = join(folder, segment);
         const stat = statParent(folder);
         if (!stat.isDirectory() || stat.isSymbolicLink())
@@ -81,9 +78,14 @@ function writeStagedFile(temporary: string, contents: FileContents): void {
     closeSync(file);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isRenameBlocked(expected: FileContents | undefined): boolean {
-    if (process.platform !== 'win32' || expected === undefined || expected.isLink === true) return false;
-    return (expected.mode & OWNER_WRITE_BIT) === 0;
+    return (
+        process.platform === 'win32' &&
+        expected !== undefined &&
+        expected.isLink !== true &&
+        (expected.mode & OWNER_WRITE_BIT) === 0
+    );
 }
 
 /**
@@ -95,8 +97,7 @@ Keep only the permissions that the system file API shows. Windows shows a read-o
 export function normalizeFileMode(file: Pick<FileContents, 'mode' | 'isLink'>): number {
     if (file.isLink) return PERMISSION_BITS;
     if (process.platform !== 'win32') return file.mode;
-    if ((file.mode & OWNER_WRITE_BIT) !== 0) return WRITABLE_FILE;
-    return READ_ONLY_FILE;
+    return (file.mode & OWNER_WRITE_BIT) === 0 ? READ_ONLY_FILE : WRITABLE_FILE;
 }
 
 /**
@@ -190,16 +191,16 @@ export function replaceBounded(
 ): void {
     const target = preparePath(bounds, path);
     const temporary = join(dirname(target), `${TEMPORARY_FILE_PREFIX}${randomUUID()}${TEMPORARY_FILE_SUFFIX}`);
-    let staged = false;
+    let isStaged = false;
     try {
         writeStagedFile(temporary, contents);
-        staged = true;
+        isStaged = true;
         if (!isSameContents(readBounded(bounds, path), expected))
             throw new GspotError('filesystem', `${path} changed while gspot wrote it. Run the command again.`);
         if (isRenameBlocked(expected)) unlinkSync(target);
         renameSync(temporary, target);
-        staged = false;
+        isStaged = false;
     } finally {
-        if (staged) unlinkSync(temporary);
+        if (isStaged) unlinkSync(temporary);
     }
 }

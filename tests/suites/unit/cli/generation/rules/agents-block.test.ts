@@ -1,74 +1,89 @@
 import { join } from 'node:path';
 import { format } from 'prettier';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildAgentsBlock } from '#cli/generation/rules.ts';
-import { START_RUNNERS } from '#cli/config/repository/npm.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { RULE_INDEX_PATHS } from '#tests/config/generation/rules.ts';
 import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
-import { JAVASCRIPT_IN_APP_TABLES } from '#tests/config/generation/rules.ts';
+
+function listIndexPaths(block: string): (string | undefined)[] {
+    const index = block.slice(0, block.indexOf('## Commands'));
+    return index
+        .matchAll(/^- `([^`]+)`/gmu)
+        .map(([, path]) => path)
+        .toArray();
+}
 
 test('the AGENTS.md block names the folders of a scoped rule without parentheses', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], { rules: true, tables: JAVASCRIPT_IN_APP_TABLES }),
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            rules: true,
+            tables: '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n',
+        }),
         'app/main.js': 'console.log("ready");\n',
     });
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
-    expect(agents).toContain('/JAVASCRIPT.md` in `app/`: ');
-    expect(agents).not.toContain('(app/)');
+    expect(agents.split('\n').filter((line) => line.includes('app/'))).toStrictEqual([
+        '- `.gspot/configurations/language/javascript/rules/JAVASCRIPT.md` in `app/`: when you change JavaScript or TypeScript code.',
+    ]);
 });
 
 test('with no configurations the block still lists the general rules and the check command', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([], { rules: true }) });
-
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { rules: true }) });
     const block = generate(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.block;
-    expect(block).toContain('engineering/rules/WORKING.md');
-    expect(block).toContain('gspot check --staged');
+    expect(listIndexPaths(block)).toStrictEqual(RULE_INDEX_PATHS);
+    expect(block).toContain('Before you commit, run `mise exec -- gspot check --staged`.');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
 test('with a check selected the block names the command, and an excluded file leaves the index', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['spelling'], {
             rules: true,
-            tables: `[rules]\nexclude = ["${findRuleFilePath('engineering', 'ACCESSIBILITY.md')}"]\n`,
+            tables: `[rules]\nexclude = ["${findRuleFilePath('engineering', 'CLI.md')}"]\n`,
         }),
     });
 
     const block = generate(await openSession(sandbox.path)).blocks.find(({ path }) => path === 'AGENTS.md')!.block;
-    expect(block).toContain('gspot check --staged');
-    expect(block).not.toContain('ACCESSIBILITY.md');
-    expect(block).toContain('engineering/rules/TESTING.md');
+    expect(listIndexPaths(block)).toStrictEqual(
+        RULE_INDEX_PATHS.filter((path) => path !== '.gspot/configurations/general/engineering/rules/CLI.md'),
+    );
+    expect(block).toContain('Before you commit, run `mise exec -- gspot check --staged`.');
     expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
 });
 
 test('the AGENTS.md block moves its headings one level down in a file with its own title', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true }),
         'AGENTS.md': '# Shop\n\nHow agents work here.\n\n```bash\n# not a heading\n```\n',
     });
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
-    expect(agents.split('\n').filter((line) => line.startsWith('# '))).toStrictEqual(['# Shop', '# not a heading']);
-    expect(agents).toContain('## Rules\n');
-    expect(agents).toContain('### Commands\n');
+    expect(agents.split('\n').filter((line) => /^#+ /u.test(line))).toStrictEqual([
+        '# Shop',
+        '# not a heading',
+        '## Rules',
+        '### General',
+        '### Commands',
+        '### Generated files',
+    ]);
     const again = await runGspot(sandbox.path, ['apply']);
     expect(again.code, again.stdout + again.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(agents);
 });
 
-test.each(
-    Object.values(START_RUNNERS).flatMap(({ command }) => [true, false].map((hasChecks) => ({ command, hasChecks }))),
-)(
-    'the AGENTS.md block explains the short gspot command as $command with checks=$hasChecks',
-    ({ command, hasChecks }) => {
+test.each([true, false])(
+    'the AGENTS.md Commands section names the start command, and the staged check only when checks run (%p)',
+    (hasChecks) => {
+        const command = 'pnpm exec gspot';
         const block = buildAgentsBlock({
             files: [],
             generatedPaths: [],
@@ -77,7 +92,12 @@ test.each(
             hasChecks,
             startCommand: command,
         });
-        expect(block).toContain(`## Commands\n\nThe rules write \`gspot\` for \`${command}\`.\n\n`);
+        expect(block.slice(block.indexOf('## Commands'), block.indexOf('\n## Generated files'))).toBe(
+            `## Commands\n\nThe rules write \`gspot\` for \`${command}\`.\n\n` +
+                (hasChecks ? `Before you commit, run \`${command} check --staged\`.\n\n` : '') +
+                `To change \`gspot.toml\`, run \`${command} set\`, \`unset\`, \`add\`, \`remove\`, \`ignore\`, or \`unignore\`.\n` +
+                `After you edit \`gspot.toml\` by hand, run \`${command} apply\`.\n`,
+        );
     },
 );
 

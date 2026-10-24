@@ -24,18 +24,17 @@ Throw when the repository pins a different gspot version.
 
 @param repositoryRoot the folder with the pin and the start command.
 */
-export async function assertVersionPin(repositoryRoot: string): Promise<void> {
+export function assertVersionPin(repositoryRoot: string): void {
     const versionPin = readVersionPin(repositoryRoot);
-    if (versionPin !== undefined && versionPin !== cliPackage.version) {
-        const runner = await selectStartRunner(repositoryRoot);
-        const command = runner.installCommand.replace('<version>', versionPin);
-        throw new GspotError(
-            'pin',
-            [
-                `This repository pins gspot ${versionPin}, and you are running gspot ${cliPackage.version}.`,
-                `Install the pinned version: ${command}`,
-                'To upgrade the repository pin to this version: gspot apply',
-            ].join('\n'),
-        );
-    }
+    if (versionPin === undefined || versionPin === cliPackage.version) return;
+    const runner = selectStartRunner(repositoryRoot);
+    const command = runner.installCommand.replace('<version>', () => versionPin);
+    throw new GspotError(
+        'pin',
+        [
+            `This repository pins gspot ${versionPin}, and you are running gspot ${cliPackage.version}.`,
+            `Install the pinned version: ${command}`,
+            'To upgrade the repository pin to this version: gspot apply',
+        ].join('\n'),
+    );
 }

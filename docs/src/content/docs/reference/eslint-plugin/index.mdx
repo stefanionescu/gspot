@@ -7,9 +7,10 @@ import InlineText from '../../../../components/InlineText.astro';
 import { listPluginRules } from '../../../../reference/eslint-plugin.ts';
 import { PLUGIN_REQUIREMENTS } from '../../../../config/setup.ts';
 
-`@gspothq/eslint-plugin` holds ESLint rules for code that AI coding agents often write. They flag files that only
-forward to another module, functions of a few statements, exports that only rename a value, and imports through index
-files. They also flag comments mixed
+`@gspothq/eslint-plugin` holds ESLint rules for code that AI coding agents often write.
+
+The rules flag files that only forward to another module, functions of a few statements, and exports that only rename a
+value. They flag imports through index files and relative imports that leave their folder. They also flag comments mixed
 into import blocks and private environment variables read in client code.
 
 The [gspot CLI](https://www.npmjs.com/package/@gspothq/cli) sets this plugin up for you. Install it yourself only when
@@ -22,10 +23,10 @@ file, such as `eslint.config.mjs`.
 
 | Package manager | Command                                                |
 | --------------- | ------------------------------------------------------ |
+| Bun             | `bun add --dev @gspothq/eslint-plugin eslint`          |
 | npm             | `npm install --save-dev @gspothq/eslint-plugin eslint` |
 | pnpm            | `pnpm add --save-dev @gspothq/eslint-plugin eslint`    |
 | Yarn            | `yarn add --dev @gspothq/eslint-plugin eslint`         |
-| Bun             | `bun add --dev @gspothq/eslint-plugin eslint`          |
 
 ## Use
 

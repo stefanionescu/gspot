@@ -6,7 +6,6 @@ import { GspotError } from '#cli/system/errors.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/system/processes.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { captureThrow } from '#tests/setup/matchers.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
@@ -14,8 +13,8 @@ import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { simulateOperatingSystem } from '#tests/setup/system/platform.ts';
-import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { SWIFT_PACKAGE } from '#tests/config/checks/language/swift/build.ts';
+import { SWIFT_BUILD_COMMANDS } from '#cli/config/checks/language/swift/cache.ts';
 import { SWIFT_PACKAGE_HEADER } from '#tests/config/checks/language/swift/samples.ts';
 import { rm, open, stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { buildPlan, prepareBuild, getScopeBuildFolder } from '#cli/checks/language/swift/cache.ts';
@@ -43,14 +42,26 @@ test.each(['default', 'platform=macOS'])(
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'swift/build');
         for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
-            const { commandArguments } = buildPlan(session, input, { purpose });
-            expect(commandArguments[commandArguments.indexOf('-destination') + 1]).toBe(
-                destination === 'default'
-                    ? configurationTableSchemas.swift.unwrap().shape.xcode_destination.parse(undefined)
-                    : destination,
-            );
-            expect(commandArguments[commandArguments.indexOf('-scheme') + 1]).toBe('App');
-            expect(commandArguments).toContain('App.xcodeproj');
+            const folder = getScopeBuildFolder(session.installedRoot, '', purpose);
+            expect(buildPlan(session, input, purpose)).toStrictEqual({
+                kind: 'xcode',
+                purpose,
+                folder,
+                log: join(folder, 'build.log'),
+                commandArguments: [
+                    'xcodebuild',
+                    ...SWIFT_BUILD_COMMANDS[purpose].xcode,
+                    '-project',
+                    'App.xcodeproj',
+                    '-scheme',
+                    'App',
+                    '-destination',
+                    destination === 'default' ? 'generic/platform=iOS Simulator' : destination,
+                    '-derivedDataPath',
+                    join(folder, 'derived'),
+                    'CODE_SIGNING_ALLOWED=NO',
+                ],
+            });
         }
     },
 );
@@ -79,11 +90,14 @@ test.each([...SWIFT_BUILD_PURPOSES])(
 
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, check);
-        expect(() => buildPlan(session, input, { purpose })).toThrow(
+        expect(() => buildPlan(session, input, purpose)).toThrow(
             new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.'),
         );
         using _executables = fakeToolExecutables(
-            [...session.configurations.values()].flatMap((configuration) => configuration.tools),
+            session.configurations
+                .values()
+                .flatMap((configuration) => configuration.tools)
+                .toArray(),
         );
         const executed = await runChecks(session, buildRunOptions({ only: [check] }));
 
@@ -103,11 +117,17 @@ test.each([...SWIFT_BUILD_PURPOSES])(
         });
         const checkedSession = await openSession(sandbox.path);
         const packageInput = planSandboxCheck(checkedSession, 'swift/build');
-        const plan = buildPlan(checkedSession, packageInput, { purpose });
-        expect(plan.commandArguments[0]).toBe('swift');
-        if (plan.kind !== 'package') throw new Error('Expected a Swift package build.');
-        expect(plan.commandArguments).toContain(plan.scratch);
-        if (purpose === 'coverage') expect(plan.commandArguments).toContain('--enable-code-coverage');
+        const plan = buildPlan(checkedSession, packageInput, purpose);
+        const folder = getScopeBuildFolder(checkedSession.installedRoot, '', purpose);
+        const scratch = join(folder, 'package');
+        expect(plan).toStrictEqual({
+            kind: 'package',
+            purpose,
+            folder,
+            log: join(folder, 'build.log'),
+            scratch,
+            commandArguments: ['swift', ...SWIFT_BUILD_COMMANDS[purpose].package, '--scratch-path', scratch],
+        });
     },
 );
 test('build cache rejects external output links and concurrent writers', async () => {
@@ -123,22 +143,22 @@ test('build cache rejects external output links and concurrent writers', async (
     const folder = buildPlan(session, input).folder;
     const held = prepareBuild(session.root, input.files, folder).files;
     expect(await isOnDisk(join(folder, 'build.lock'))).toBe(true);
-    expect(captureThrow(() => prepareBuild(session.root, input.files, folder))).toBe(
-        `Another gspot command, process ${String(process.pid)}, holds build.lock. Retry after it finishes, or delete build.lock when no gspot command is running.`,
+    expect(() => prepareBuild(session.root, input.files, folder)).toThrow(
+        new Error(
+            `Another gspot command, process ${String(process.pid)}, holds build.lock. Retry after it finishes, or delete build.lock when no gspot command is running.`,
+        ),
     );
     held[Symbol.dispose]();
     const authored = join(outside.path, 'authored');
     await writeFile(authored, 'preserved');
     await symlink(outside.path, join(folder, 'package'));
     const linkedFiles = prepareBuild(session.root, input.files, folder).files;
-    expect(captureThrow(() => linkedFiles.read('package/authored'))).toBe(
-        'A parent of package/authored is a link or is not a folder. Choose a folder without links.',
+    expect(() => linkedFiles.read('package/authored')).toThrow(
+        new Error('A parent of package/authored is a link or is not a folder. Choose a folder without links.'),
     );
-    expect(
-        captureThrow(() => {
-            linkedFiles.write('package/authored', { bytes: Buffer.from('changed'), mode: 0o600 }, undefined);
-        }),
-    ).toBe('A parent of package/authored is a link or is not a folder. Choose a folder without links.');
+    expect(() => {
+        linkedFiles.write('package/authored', { bytes: Buffer.from('changed'), mode: 0o600 }, undefined);
+    }).toThrow(new Error('A parent of package/authored is a link or is not a folder. Choose a folder without links.'));
     linkedFiles[Symbol.dispose]();
     expect(await readFile(authored, 'utf8')).toBe('preserved');
     expect(await isOnDisk(join(folder, 'build.lock'))).toBe(false);
@@ -149,7 +169,7 @@ test('build cache rejects external output links and concurrent writers', async (
     repaired[Symbol.dispose]();
     expect(await isOnDisk(join(folder, 'build.lock'))).toBe(false);
 });
-test('the Swift build folder lives in the gspot cache, the same for one repository and different between repositories', async () => {
+test('the Swift build folder lives in the gspot cache and differs between repositories', async () => {
     await using first = await testdir();
     await using second = await testdir();
     await using _cache = await redirectCacheFolder();
@@ -160,7 +180,6 @@ test('the Swift build folder lives in the gspot cache, the same for one reposito
     const secondSession = await openSession(second.path);
     const secondInput = planSandboxCheck(secondSession, 'swift/build');
     const folder = buildPlan(firstSession, firstInput).folder;
-    expect(folder).toBe(buildPlan(firstSession, firstInput).folder);
     expect(folder).not.toBe(buildPlan(secondSession, secondInput).folder);
     expect(folder).toStartWith(readCacheFolder() + sep);
 });

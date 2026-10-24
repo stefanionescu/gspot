@@ -43,7 +43,6 @@ name = "stale-migrations"
 runs = "scope"
 stage = "push"
 summary = "Runs `drizzle-kit generate` and fails when it creates a migration."
-tool = "drizzle-kit"
 why = "A schema change with no migration works only on the machine that pushed it."
 
 [[check.generator_outputs]]

@@ -18,7 +18,7 @@ kind = "library"
 name = "@darraghor/eslint-plugin-nestjs-typed"
 npm = "@darraghor/eslint-plugin-nestjs-typed"
 rule_prefix = "@darraghor/nestjs-typed"
-version = "7.5.5"
+version = "7.5.8"
 
 [eslint]
 required_tools = ["@darraghor/eslint-plugin-nestjs-typed"]

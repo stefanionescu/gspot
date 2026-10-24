@@ -8,13 +8,13 @@ dependencies = ["react-dom"]
 
 [[tool]]
 kind = "library"
-name = "eslint-plugin-jsx-a11y"
-npm = "eslint-plugin-jsx-a11y"
-rule_prefix = "jsx-a11y"
-version = "6.10.2"
+name = "eslint-plugin-jsx-a11y-x"
+npm = "eslint-plugin-jsx-a11y-x"
+rule_prefix = "jsx-a11y-x"
+version = "0.2.0"
 
 [eslint]
-required_tools = ["eslint-plugin-jsx-a11y"]
+required_tools = ["eslint-plugin-jsx-a11y-x"]
 
 [[check]]
 example = "A project that locks `react 19.1.0` and `react-dom 19.0.0` reports `react-versions`. Install the same version of both."

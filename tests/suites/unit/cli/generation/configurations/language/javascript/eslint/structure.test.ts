@@ -2,24 +2,22 @@ import { join } from 'node:path';
 import type { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { planChecks } from '#cli/planning/checks.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import type { LintFinding, SourceRuleCase, EslintConfiguration } from '#tests/types/tools.ts';
 import { createEslint, listFindingRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { type LintFinding, type SourceRuleCase, type EslintConfiguration } from '#tests/types/tools.ts';
 
 import {
     BARREL_CASES,
     IMPORT_CASES,
     IMPORT_FILES,
     TRIVIAL_RULES,
-    REEXPORT_CASES,
-    STARTER_SOURCE,
-    ENTRYPOINT_SOURCE,
     ENTRYPOINT_TABLES,
     ENTRYPOINT_FOLDERS,
     LEVEL_REEXPORT_CASES,
-    TRIVIAL_ENTRYPOINT_FILES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/structure.ts';
 
 async function listTrivialFindings(root: string, settings: string): Promise<Pick<LintFinding, 'file' | 'rule'>[]> {
@@ -50,6 +48,13 @@ async function assertSourceRules(
 }
 
 test.each([...LEVELS])('Knip entry files still get the trivial-file rules at %s, in nested scopes', async (level) => {
+    const TRIVIAL_ENTRYPOINT_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/task.js'] as const;
+
+    const STARTER_SOURCE =
+        'export function start() { const target = document.querySelector("#app"); if (!target) throw new Error("Missing application target"); target.textContent = "Started"; }\n';
+
+    const ENTRYPOINT_SOURCE = "export { start } from './start.js';\n";
+
     await using sandbox = await testdir({
         'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
         'src/start.js': STARTER_SOURCE,
@@ -184,6 +189,12 @@ test('a JSON import attribute is accepted where your import extensions need a su
 test.each([...LEVEL_REEXPORT_CASES])(
     'at %s with reexports = %s, import, re-export and barrel rules apply in root and child scopes',
     async (level, reexports) => {
+        const REEXPORT_CASES = [
+            ['export * from "./owner.js";\n', 1],
+            ['export { value } from "./owner.js";\n', 1],
+            ['const value = 1; export { value };\n', 0],
+        ] as const;
+
         await using sandbox = await testdir({
             ...IMPORT_FILES,
             'gspot.toml': buildSandboxSettings(['typescript'], {
@@ -199,7 +210,7 @@ test.each([...LEVEL_REEXPORT_CASES])(
             IMPORT_CASES.map(([name, source, rule, count]) => ({ name, source, rule, count })),
         );
         for (const file of ['src/source.ts', 'src/index.ts', 'app/src/source.ts', 'app/src/index.ts']) {
-            const banned = level === 'all' && (reexports === 'none' || !file.endsWith('/index.ts'));
+            const isBanned = level === 'all' && (reexports === 'none' || !file.endsWith('/index.ts'));
             await assertSourceRules(
                 eslint,
                 sandbox.path,
@@ -207,12 +218,12 @@ test.each([...LEVEL_REEXPORT_CASES])(
                 REEXPORT_CASES.map(([source, count]) => ({
                     source,
                     rule: 'no-restricted-syntax',
-                    count: banned ? count : 0,
+                    count: isBanned ? count : 0,
                 })),
             );
         }
-        const barrels = level === 'all' && reexports === 'index-only';
-        if (barrels)
+        const isBarrels = level === 'all' && reexports === 'index-only';
+        if (isBarrels)
             await assertSourceRules(
                 eslint,
                 sandbox.path,
@@ -228,8 +239,32 @@ test.each([...LEVEL_REEXPORT_CASES])(
                 name,
                 source,
                 rule: 'barrel-files/avoid-barrel-files',
-                count: barrels ? count : 0,
+                count: isBarrels ? count : 0,
             })),
         );
     },
 );
+
+test('a built-in trivial-function name ignore leaves the TypeScript ESLint rule active', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript'], {
+            level: 'all',
+            tables: '[[ignore]]\ncheck = "structure/trivial-functions"\nnames = ["launch"]\npaths = ["source.ts"]\nreason = "The external interface keeps this name."\n',
+        }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["source.ts"]}\n',
+        'source.ts': 'function launch() { return execute(); }\nexport const result = launch();\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    const session = await openSession(sandbox.path);
+    const planned = planChecks(session, {
+        stage: 'commit',
+        only: ['structure/trivial-functions', 'javascript/eslint'],
+    });
+    const builtIn = planned.find(({ check }) => check.id === 'structure/trivial-functions');
+    expect(builtIn?.files).toStrictEqual([]);
+    const lintFiles = planned.find(({ check }) => check.id === 'javascript/eslint')?.files.map(({ path }) => path);
+    expect(lintFiles).toContain('source.ts');
+    const findings = await listLintFindings(eslint, sandbox.path, ['source.ts'], ['gspot/no-trivial-functions']);
+    expect(findings).toStrictEqual([{ file: 'source.ts', line: 1, rule: 'gspot/no-trivial-functions' }]);
+});

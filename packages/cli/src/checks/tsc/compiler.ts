@@ -1,5 +1,4 @@
 import ts from 'typescript';
-import assert from 'node:assert/strict';
 import { compareText } from '#cli/system/text.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
 import type { Session } from '#cli/types/session.ts';
@@ -23,14 +22,13 @@ import {
     TSBUILDINFO_FLAG,
     TSC_BUILD_COMMAND,
     TSC_PROJECT_COMMAND,
+    PARENT_TSCONFIG_SKIP,
     TSCONFIG_COPY_FOLDER,
     TSCONFIG_TSBUILDINFO,
     TSC_REFERENCE_BUNDLE,
     TSC_UNFORMATTED_OUTPUT,
     TSC_CONFIG_INPUT_PATHS,
-    TSC_PATHS_BASE_REQUIRED,
     TSC_COMPILER_INPUT_PATHS,
-    TSC_CONFIGURATION_REQUIRED,
     TSC_REFERENCE_OUTPUT_FOLDER,
 } from '#cli/config/checks/tsc/compiler.ts';
 
@@ -38,8 +36,9 @@ const CHECKED_PROJECTS = { create: () => new Map<string, string>() };
 
 function convertToCopyPath(value: unknown, copy: TypeScriptReferenceCopy): unknown {
     if (Array.isArray(value)) return value.map((path: unknown) => convertToCopyPath(path, copy));
-    if (typeof value !== 'string' || !isAbsolute(value) || !isInside(relative(copy.root, value))) return value;
-    return join(copy.copyRoot, relative(copy.root, value));
+    return typeof value === 'string' && isAbsolute(value) && isInside(relative(copy.root, value))
+        ? join(copy.copyRoot, relative(copy.root, value))
+        : value;
 }
 
 function buildReferenceTsconfig(
@@ -47,13 +46,12 @@ function buildReferenceTsconfig(
 ): Record<string, unknown> {
     const { root, copyRoot, path, config } = copy;
     const output = join(copyRoot, DOT_GSPOT, TSC_REFERENCE_OUTPUT_FOLDER, relative(root, path));
+    const base = (config.options.baseUrl ?? config.options['pathsBasePath']) as string;
     const paths =
         config.options.paths === undefined
             ? undefined
             : Object.fromEntries(
                   Object.entries(config.options.paths).map(([name, aliases]) => {
-                      const base = config.options.baseUrl ?? config.options['pathsBasePath'];
-                      assert.ok(typeof base === 'string', TSC_PATHS_BASE_REQUIRED);
                       return [name, aliases.map((alias) => convertToCopyPath(resolve(base, alias), copy))];
                   }),
               );
@@ -69,10 +67,10 @@ function buildReferenceTsconfig(
             ...Object.fromEntries(
                 TSC_COMPILER_INPUT_PATHS.map((name) => [name, convertToCopyPath(config.options[name], copy)]),
             ),
-            ...(paths === undefined ? {} : { paths }),
+            ...(paths !== undefined && { paths }),
             outDir: output,
-            ...(config.options.declarationDir === undefined ? {} : { declarationDir: output }),
-            ...(config.options.outFile === undefined ? {} : { outFile: join(output, TSC_REFERENCE_BUNDLE) }),
+            ...(config.options.declarationDir !== undefined && { declarationDir: output }),
+            ...(config.options.outFile !== undefined && { outFile: join(output, TSC_REFERENCE_BUNDLE) }),
             tsBuildInfoFile: join(output, TSCONFIG_TSBUILDINFO),
         },
     };
@@ -169,7 +167,7 @@ export async function runTsc(
             ...buildBaseResult(planned, session),
             status: 'skipped',
             cause: 'replaced',
-            note: 'The tsconfig of a parent folder covers this project, and gspot checks it there.',
+            note: PARENT_TSCONFIG_SKIP,
         };
     const command: string[] = [];
     if (project !== undefined && (project.config.projectReferences ?? []).length > 0) {
@@ -193,11 +191,9 @@ export function writeReferenceProjects(copy: TypeScriptReferenceCopy): void {
     const { root, copyRoot, projects, reads } = copy;
     const configurations = new Map([
         ...projects,
-        ...[...projects.values()].flatMap((config) =>
+        ...projects.values().flatMap((config) =>
             config.extendedConfigurationFiles.map((path) => {
-                const parsed = readTsconfig(root, path, reads);
-                assert.ok(parsed !== undefined, TSC_CONFIGURATION_REQUIRED);
-                return [path, parsed] as const;
+                return [path, readTsconfig(root, path, reads) as TypeScriptConfiguration] as const;
             }),
         ),
     ]);

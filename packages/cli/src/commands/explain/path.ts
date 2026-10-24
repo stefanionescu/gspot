@@ -11,8 +11,7 @@ import { type Explanation, type PathExplanation } from '#cli/types/commands/expl
 function formatUncheckedKind(file: TrackedFile): string | undefined {
     if (file.kind === 'binary') return 'binary: eligible for secrets and size checks';
     if (file.kind === 'generated') return 'generated: eligible for secret checks and checks for stale generated files';
-    if (file.kind === 'vendored') return 'vendored: eligible for secrets, license, and security checks';
-    return undefined;
+    return file.kind === 'vendored' ? 'vendored: eligible for secrets, license, and security checks' : undefined;
 }
 
 function buildPathExplanation(session: Session, file: TrackedFile): PathExplanation {
@@ -34,7 +33,7 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
         checks: checks.map((check) => ({
             check: check.check.id,
             stage: check.check.stage,
-            ...(check.configuration === undefined ? {} : { configuration: check.configuration.name }),
+            ...(check.configuration !== undefined && { configuration: check.configuration.name }),
         })),
         ignores: session.settingsFile.settings.ignore
             .filter(
@@ -42,8 +41,8 @@ function buildPathExplanation(session: Session, file: TrackedFile): PathExplanat
                     ignore.paths === undefined || ignore.paths.length === 0 || buildPathMatcher(ignore.paths)(path),
             )
             .map((ignore) => ({
-                ...(ignore.check === undefined ? {} : { check: ignore.check }),
-                ...(ignore.rule === undefined ? {} : { rule: ignore.rule }),
+                ...(ignore.check !== undefined && { check: ignore.check }),
+                ...(ignore.rule !== undefined && { rule: ignore.rule }),
                 reason: ignore.reason,
             })),
         fileKindOrigin: file.kindOrigin,
@@ -65,7 +64,7 @@ function formatPathExplanation(report: PathExplanation): string {
     );
     const ignores = report.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
-        const reason = ignore.reason === undefined ? '' : `  ${ignore.reason}`;
+        const reason = `  ${ignore.reason}`;
         return `  ${ignore.check ?? 'every check'}${rule}${reason}`;
     });
     const lines = [
@@ -99,5 +98,5 @@ export function explainPath(session: Session | undefined, subject: string, cwd: 
         return undefined;
     }
     const report = buildPathExplanation(session, file);
-    return { kind: 'path', subject: path, text: formatPathExplanation(report), data: report };
+    return { kind: 'path', subject: path, text: formatPathExplanation(report), facts: report };
 }

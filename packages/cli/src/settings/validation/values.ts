@@ -5,12 +5,13 @@ import type { Files } from '#cli/types/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { FIRST_READ } from '#cli/config/generation/rules.ts';
-import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { listRuleFiles } from '#cli/configurations/manifests.ts';
 import { type Configuration } from '#cli/types/configurations.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
 import { SETTING_RULES } from '#cli/config/settings/validation/values.ts';
+import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
+import { getSettingValue, listSettingsTables } from '#cli/settings/inherit.ts';
 import { type Settings, type SettingsError } from '#cli/types/settings/file.ts';
 import { ESLINT_LIMIT_RULES } from '#cli/config/generation/configurations/language/javascript/eslint/blocks/base.ts';
 
@@ -33,18 +34,16 @@ Refuse scope paths that name a file, and keep written scopes whose folder does n
 export function validateScopePaths(repositoryRoot: string, settings: Settings): SettingsError[] {
     const paths = Object.values(settings.scopes).map((table) => table.written['path'] as string);
     using files = openFiles(repositoryRoot);
-    return paths.flatMap((path) => {
-        const location: KeyPath = ['scope', path];
+    return paths.flatMap((path, index) => {
+        const location: KeyPath = ['scope', index, 'path'];
         const stats = readPathError(files, trimTrailingSlashes(path));
-        if (stats instanceof Error) return [{ path: location, message: stats.message }];
-        return stats === undefined || stats.isDirectory()
+        const message =
+            stats instanceof Error
+                ? stats.message
+                : `The scope \`${path}\` names a file. Name a folder under the repository root.`;
+        return !(stats instanceof Error) && (stats === undefined || stats.isDirectory())
             ? []
-            : [
-                  {
-                      path: location,
-                      message: `The scope \`${path}\` names a file. Name a folder under the repository root.`,
-                  },
-              ];
+            : { path: location, message };
     });
 }
 
@@ -78,24 +77,14 @@ export function validateRuleFilePaths(repositoryRoot: string, settings: Settings
         ];
         return paths.flatMap(({ value, key, path }) => {
             const stats = readPathError(files, value);
-            if (stats instanceof Error)
-                return [
-                    {
-                        path,
-                        message: stats.message.replace(
-                            'gspot does not write through links.',
-                            `Point ${key} at a tracked file.`,
-                        ),
-                    },
-                ];
-            return stats?.isFile() === true
-                ? []
-                : [
-                      {
-                          path,
-                          message: `\`${value}\` names no file. Point ${key} at a file, relative to the repository root.`,
-                      },
-                  ];
+            const message =
+                stats instanceof Error
+                    ? stats.message.replace(
+                          'gspot does not write through links.',
+                          () => `Point ${key} at a tracked file.`,
+                      )
+                    : `\`${value}\` names no file. Point ${key} at a file, relative to the repository root.`;
+            return !(stats instanceof Error) && stats?.isFile() === true ? [] : { path, message };
         });
     });
 }
@@ -110,31 +99,28 @@ first.
 */
 export function validateRuleExcludes(exclude: string[], configurations: Map<string, Configuration>): SettingsError[] {
     if (exclude.length === 0) return [];
-    const paths = [...configurations.values()].flatMap((configuration) =>
-        listRuleFiles(configuration).map((file) => file.path),
-    );
+    const paths = configurations
+        .values()
+        .flatMap((configuration) => listRuleFiles(configuration).map((file) => file.path))
+        .toArray();
     return exclude.flatMap((excluded, index) => {
-        if (
-            FIRST_READ.some((file) => isInScope(`${GSPOT_PATHS.configurations}/${file}`, trimTrailingSlashes(excluded)))
-        )
-            return [
-                {
-                    path: ['rules', 'exclude', index],
-                    message: `[rules] exclude names ${formatCodeList([excluded])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`,
-                },
-            ];
-        if (paths.some((path) => isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(excluded))))
-            return [];
-        const suggestion = formatSimilarNames(
-            excluded,
-            paths.map((path) => `${GSPOT_PATHS.configurations}/${path}`),
+        const hasFirstRead = FIRST_READ.some((file) =>
+            isInScope(`${GSPOT_PATHS.configurations}/${file}`, trimTrailingSlashes(excluded)),
         );
-        return [
-            {
-                path: ['rules', 'exclude', index],
-                message: `[rules] exclude names ${formatCodeList([excluded])}, which matches no rule.${suggestion}`,
-            },
-        ];
+        const isRuleMatch = paths.some((path) =>
+            isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(excluded)),
+        );
+        const suggestion =
+            hasFirstRead || isRuleMatch
+                ? ''
+                : formatSimilarNames(
+                      excluded,
+                      paths.map((path) => `${GSPOT_PATHS.configurations}/${path}`),
+                  );
+        const message = hasFirstRead
+            ? `[rules] exclude names ${formatCodeList([excluded])}, which holds a file every agent opens first (${formatCodeList(FIRST_READ)}). Remove the entry.`
+            : `[rules] exclude names ${formatCodeList([excluded])}, which matches no rule.${suggestion}`;
+        return isRuleMatch && !hasFirstRead ? [] : { path: ['rules', 'exclude', index], message };
     });
 }
 
@@ -166,13 +152,11 @@ export function validateSettingRules(settings: Settings): SettingsError[] {
             ...(Array.isArray(overrides)
                 ? overrides.flatMap((override: unknown, index) =>
                       isTable(override)
-                          ? [
-                                {
-                                    tool: 'eslint',
-                                    rules: override['rules'],
-                                    path: [...path, 'tools', 'eslint', 'override', index, 'rules'],
-                                },
-                            ]
+                          ? {
+                                tool: 'eslint',
+                                rules: override['rules'],
+                                path: [...path, 'tools', 'eslint', 'override', index, 'rules'],
+                            }
                           : [],
                   )
                 : []),
@@ -181,17 +165,37 @@ export function validateSettingRules(settings: Settings): SettingsError[] {
             if (!isTable(rules)) return [];
             return Object.keys(rules).flatMap((rule) => {
                 const setting = owned.get(tool)?.get(rule);
-                if (setting === undefined) return [];
-                return [
-                    {
-                        path: [...path, rule],
-                        message:
-                            setting === '[[import_rule]]'
-                                ? `gspot writes the options of ${rule} from the [[import_rule]] records. Change those records instead.`
-                                : `gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`,
-                    },
-                ];
+                return setting === undefined
+                    ? []
+                    : {
+                          path: [...path, rule],
+                          message:
+                              setting === '[[import_rule]]'
+                                  ? `gspot writes the options of ${rule} from the [[import_rule]] records. Change those records instead.`
+                                  : `gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`,
+                      };
             });
         });
     });
+}
+
+/**
+Require a reason when a Swift target lowers the coverage minimum.
+
+@param settings the parsed settings.
+@param available the selected configuration settings and defaults.
+@returns the missing reasons.
+*/
+export function validateSwiftTargets(settings: Settings, available: AvailableSettings): SettingsError[] {
+    const coverageLines = getSettingValue(available, settings, 'coverage.lines')?.value;
+    return (settings.coverage?.swift_target ?? [])
+        .map((target, index) => ({ target, index }))
+        .filter(
+            ({ target }) =>
+                typeof coverageLines === 'number' && target.lines < coverageLines && target.reason === undefined,
+        )
+        .map(({ index }) => ({
+            path: ['coverage', 'swift_target', index, 'reason'],
+            message: 'A Swift target with a lower line minimum than coverage.lines needs a reason.',
+        }));
 }

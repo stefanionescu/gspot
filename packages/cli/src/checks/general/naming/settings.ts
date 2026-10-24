@@ -2,20 +2,15 @@ import { splitByCase } from 'scule';
 import { getTable } from '#cli/settings/scopes.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { type Settings } from '#cli/types/settings/file.ts';
+import { findParentCategory } from '#cli/settings/naming.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { type Scope, type ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { SETTING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import type { NamingCase, ParsedNamingLanguageFields } from '#cli/types/settings/naming.ts';
+import { SEPARATORS, NUMERIC_WORDS, DIGIT_BOUNDARY } from '#cli/config/checks/general/naming/settings.ts';
 import type { BannedWord, NamingOverride, NamingSettings, CompiledOverride } from '#cli/types/checks/general/naming.ts';
-
-import {
-    SEPARATORS,
-    NUMERIC_WORDS,
-    DIGIT_BOUNDARY,
-    CATEGORY_PARENTS,
-} from '#cli/config/checks/general/naming/settings.ts';
 
 function compileOverride(rule: NamingOverride): CompiledOverride {
     const [languages, categories, allowedNames] = [rule.languages, rule.categories, rule.allowed_names].map((names) =>
@@ -44,16 +39,14 @@ function getNamingLimits(scopeSettings: ScopeSettings, language: string, categor
     const categoryTable = categoryKey === undefined ? undefined : languageTable?.[categoryKey];
     return {
         ...root,
-        ...(languageTable === undefined ? undefined : stripUndefined(languageTable)),
-        ...(categoryTable === undefined ? undefined : stripUndefined(categoryTable)),
+        ...(languageTable !== undefined && stripUndefined(languageTable)),
+        ...(categoryTable !== undefined && stripUndefined(categoryTable)),
     };
 }
 
 function buildLimitsFor(scopeSettings: ScopeSettings): NamingSettings['limitsFor'] {
-    const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
-
     return (language, category) => {
-        const parent = parents[category] ?? category;
+        const parent = findParentCategory(category);
         const limits = getNamingLimits(scopeSettings, language, parent);
         return {
             caseNames:
@@ -95,7 +88,7 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
             compileBannedWords(terms, {
                 setting: `${group} group`,
                 group,
-                ...(group === 'folders' ? { categories: ['folders'] } : {}),
+                ...(group === 'folders' && { categories: ['folders'] }),
             }),
         ),
         ...compileBannedWords(bannedWords, { setting: 'naming.banned_words' }),
@@ -111,13 +104,8 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
     return {
         bannedWords: terms,
         allowedPhrases: shipped.allowed_phrases.map((phrase) => splitWords(phrase)),
-        reserved: new Map(
-            Object.entries(shipped.reserved).map(([term, categories]) => [term.toLowerCase(), categories]),
-        ),
         overrides,
         limitsFor: buildLimitsFor(scopeSettings),
-        isDigitsAllowed: shipped.allow_digits,
-        isRepeatAllowed: shipped.allow_repeated_words,
     };
 }
 

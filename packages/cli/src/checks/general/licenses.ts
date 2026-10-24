@@ -2,12 +2,12 @@ import semver from 'semver';
 import type { z } from 'zod';
 import { statSync } from 'node:fs';
 import satisfies from 'spdx-satisfies';
+import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import { join, dirname, basename } from 'node:path';
 import parseExpression from 'spdx-expression-parse';
 import type { Session } from '#cli/types/session.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
@@ -20,9 +20,7 @@ import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import type { PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
-import { configurationTableSchemas } from '#cli/schemas/settings/tables.ts';
 import { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
-import { getWrittenSetting, listSettingsTables } from '#cli/settings/inherit.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { splitIdentity, readLockedPackages } from '#cli/parsers/projects/lockfiles.ts';
 import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
@@ -45,9 +43,9 @@ import {
     LICENSE_CHECKER_COMMAND,
 } from '#cli/config/checks/general/licenses.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isAllowed(license: string, allowed: readonly string[]): boolean {
-    if (!isSpdxExpression(license)) return false;
-    return satisfies(license, allowed);
+    return isSpdxExpression(license) ? satisfies(license, allowed) : false;
 }
 
 function isSpdxExpression(license: string): boolean {
@@ -108,8 +106,9 @@ function selectPythonLicense(report: PythonLicenseReport): string {
     const mapped = (report['License-Classifier'] ?? UNKNOWN_LICENSE)
         .split(CLASSIFIER_SEPARATOR)
         .map((classifier) => TROVE_LICENSES[classifier]);
-    if (mapped.every((license) => license !== undefined)) return mapped.join(LICENSE_CHOICE);
-    return report['License-Metadata'] ?? report['License-Classifier'] ?? UNKNOWN_LICENSE;
+    return mapped.every((license) => license !== undefined)
+        ? mapped.join(LICENSE_CHOICE)
+        : (report['License-Metadata'] ?? report['License-Classifier'] ?? UNKNOWN_LICENSE);
 }
 
 async function scanPythonLicenses(session: Session, planned: PlannedCheck, start: string): Promise<LicensedPackage[]> {
@@ -129,9 +128,12 @@ async function scanPythonLicenses(session: Session, planned: PlannedCheck, start
     }));
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function hasProjectDependencies(session: Session, dependencyFile: string): boolean {
-    if (basename(dependencyFile) !== PACKAGE_JSON) return true;
-    return (readDependencySpecifiers(session.reads, dependencyFile)?.size ?? 0) > 0;
+    return (
+        basename(dependencyFile) !== PACKAGE_JSON ||
+        (readDependencySpecifiers(session.reads, dependencyFile)?.size ?? 0) > 0
+    );
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
@@ -166,9 +168,10 @@ async function scanProject(session: Session, planned: PlannedCheck, project: Lic
             'The license scan found no packages. Install the selected project dependencies before scanning.',
         );
     const locked = readLockedPackages(session.reads, dirname(dependencyFile), lockfiles);
-    let lockedKeys = locked;
-    if (ecosystem === 'python' && locked !== undefined)
-        lockedKeys = new Set([...locked].map((identity) => normalizeIdentity(identity)));
+    const lockedKeys =
+        ecosystem === 'python' && locked !== undefined
+            ? new Set([...locked].map((identity) => normalizeIdentity(identity)))
+            : locked;
     const packages = lockedKeys === undefined ? scanned : scanned.filter(({ name }) => lockedKeys.has(name));
     return { dependencyFile, packages, locked: [...(lockedKeys ?? [])], ecosystem, settings };
 }
@@ -177,62 +180,48 @@ async function scanLicenses(session: Session, planned: PlannedCheck) {
     const projects = listLicenseProjects(planned.files, session.scopes, session.settingsFile.settings, planned.check);
     if (projects.length === 0) throw new GspotError('skip', 'Set licenses.allowed to check licenses.');
     const inventories: ProjectLicenses[] = [];
-    for (const project of projects.filter(({ skip }) => skip === undefined))
-        if (hasProjectDependencies(session, project.dependencyFile))
+    for (const project of projects) {
+        if (project.skip === undefined && hasProjectDependencies(session, project.dependencyFile))
             inventories.push(await scanProject(session, planned, project));
+    }
     return {
         inventories,
         skipped: projects.filter(({ skip }) => skip !== undefined).map(({ dependencyFile }) => dependencyFile),
     };
 }
 
-function matchesRecord(record: AllowedPackage, identity: string, ecosystem: ProjectLicenses['ecosystem']): boolean {
+function isPackageAllowed(record: AllowedPackage, identity: string, ecosystem: ProjectLicenses['ecosystem']): boolean {
     const split = splitIdentity(identity);
     const wanted = splitIdentity(
         ecosystem === 'python'
             ? normalizeIdentity(`${record.name}@${record.version}`)
             : `${record.name}@${record.version}`,
     );
-    if (split === undefined || wanted === undefined) return false;
-    if (!buildPathMatcher([wanted[0]])(split[0])) return false;
+    if (split === undefined || wanted === undefined || !buildPathMatcher([wanted[0]])(split[0])) return false;
     if ([ANY_VERSION, split[1]].includes(record.version)) return true;
-    return semver.valid(split[1]) !== null && semver.validRange(record.version) !== null
-        ? semver.satisfies(split[1], record.version, { includePrerelease: true })
-        : false;
+    return semver.valid(split[1]) === null || semver.validRange(record.version) === null
+        ? false
+        : semver.satisfies(split[1], record.version, { includePrerelease: true });
 }
 
 function isRecordInUse(record: AllowedPackage, project: ProjectLicenses): boolean {
     const { packages, locked, ecosystem } = project;
     const identities = [...packages.map(({ name }) => name), ...locked];
-    return identities.some((identity) => matchesRecord(record, identity, ecosystem));
+    return identities.some((identity) => isPackageAllowed(record, identity, ecosystem));
 }
 
-function listStaleRecords(
-    session: Session,
-    planned: PlannedCheck,
-    inventories: ProjectLicenses[],
-    skipped: string[],
-): Finding[] {
-    return listSettingsTables(session.settingsFile.settings).flatMap(({ table, scope = '' }) => {
-        const authored = getWrittenSetting(table, 'licenses.allowed_package');
-        if (authored === undefined || skipped.some((dependencyFile) => isInScope(dependencyFile, scope))) return [];
-        const records = configurationTableSchemas.licenses
-            .unwrap()
-            .shape.allowed_package.unwrap()
-            .parse(authored.value);
-        const projects = inventories.filter(({ dependencyFile }) => isInScope(dependencyFile, scope));
-        const where = scope === '' ? '' : ` in ${scope}`;
-        return records
-            .filter((record) => !projects.some((project) => isRecordInUse(record, project)))
-            .map((record) =>
-                buildFinding(
-                    planned,
-                    { file: SETTINGS_FILE, line: 1 },
-                    'unused-record',
-                    `${record.name}@${record.version} matches no locked or installed project dependency${where}. Remove the \`[[licenses.allowed_package]]\` record or correct its name or version.`,
-                ),
-            );
-    });
+function listStaleRecords(planned: PlannedCheck, inventories: ProjectLicenses[], skipped: string[]): Finding[] {
+    if (skipped.length > 0) return [];
+    return getTable(planned.scope.settings, 'licenses')
+        .allowed_package.filter((record) => inventories.every((project) => !isRecordInUse(record, project)))
+        .map((record) =>
+            buildFinding(
+                planned,
+                { file: SETTINGS_FILE, line: 1 },
+                'unused-record',
+                `${record.name}@${record.version} matches no locked or installed project dependency. Remove the \`[[licenses.allowed_package]]\` record or correct its name or version.`,
+            ),
+        );
 }
 
 /**
@@ -246,7 +235,7 @@ export async function checkLicensesAllowed(session: Session, planned: PlannedChe
     const { inventories, skipped } = await scanLicenses(session, planned);
     const findings = inventories.flatMap(({ dependencyFile, packages, ecosystem, settings }) => {
         return packages.flatMap(({ name, license }) => {
-            const isRecorded = settings.allowed_package.some((record) => matchesRecord(record, name, ecosystem));
+            const isRecorded = settings.allowed_package.some((record) => isPackageAllowed(record, name, ecosystem));
             if (isRecorded || isAllowed(license, settings.allowed)) return [];
             return [
                 buildFinding(
@@ -258,5 +247,5 @@ export async function checkLicensesAllowed(session: Session, planned: PlannedChe
             ];
         });
     });
-    return [...findings, ...listStaleRecords(session, planned, inventories, skipped)];
+    return [...findings, ...listStaleRecords(planned, inventories, skipped)];
 }

@@ -71,8 +71,18 @@ test.each([...LINE_ENDING_CASES])(
 
         const output = `${path}:1:6: note: Double quote to prevent globbing and word splitting. [SC2086]${ending}`;
         const findings = parseOutput(check, '', output, { root: sandbox.path, cwd: sandbox.path });
-        expect(findings).toHaveLength(1);
-        expect(findings[0]).toMatchObject({ file: 'scripts/café build.sh', line: 1, column: 6, rule: 'SC2086' });
+        expect(findings).toStrictEqual([
+            {
+                check: check.id,
+                file: 'scripts/café build.sh',
+                line: 1,
+                column: 6,
+                rule: 'SC2086',
+                message: 'Double quote to prevent globbing and word splitting.',
+                help: check.help,
+                fixable: false,
+            },
+        ]);
         expect(
             parseCommandFindings({ check }, buildProcessResult({ ...FAILED_RUN, stderr: output }), {
                 cwd: sandbox.path,
@@ -92,16 +102,31 @@ test.each(['diff', 'log', 'both'])('Taplo reports one finding from %s', async (s
     const stdout = source === 'log' ? '' : diff;
     const stderr = source === 'diff' ? 'INFO loaded configuration\n' : log;
     const findings = parseOutput(check, stdout, stderr, { root: sandbox.path, cwd: sandbox.path });
-    expect(findings).toHaveLength(1);
-    expect(findings[0]).toMatchObject({ file: 'settings/café.toml', fixable: true });
+    expect(findings).toStrictEqual([
+        {
+            check: check.id,
+            file: 'settings/café.toml',
+            message: 'Not formatted the way Taplo formats it.',
+            help: check.help,
+            fixable: true,
+        },
+    ]);
 });
 
 test.each([...WINDOWS_ROOT_CASES])(
     'a Taplo syntax error in $root names its file and position and is not fixable',
     ({ root, stdout, stderr, line, column }) => {
         const check = getShippedCheck('data-files/taplo-format');
-        expect(parseOutput(check, stdout, stderr, { root, cwd: root })).toMatchObject([
-            { check: 'data-files/taplo-format', file: 'settings.toml', line, column, fixable: false },
+        expect(parseOutput(check, stdout, stderr, { root, cwd: root })).toStrictEqual([
+            {
+                check: 'data-files/taplo-format',
+                file: 'settings.toml',
+                line,
+                column,
+                message: 'The file does not parse as TOML.',
+                help: check.help,
+                fixable: false,
+            },
         ]);
     },
 );
@@ -113,8 +138,16 @@ test('grouped output drops line endings and makes absolute paths relative', asyn
     const check: Check = { ...base, output: outputSchema.parse({ format: 'grouped' }) };
     const output = `${join(sandbox.path, 'settings', 'café.toml')}:\r\n  1: Incorrect spacing\r\n`;
     const findings = parseOutput(check, output, '', { root: sandbox.path, cwd: sandbox.path });
-    expect(findings).toHaveLength(1);
-    expect(findings[0]).toMatchObject({ file: 'settings/café.toml', line: 1, message: 'Incorrect spacing' });
+    expect(findings).toStrictEqual([
+        {
+            check: check.id,
+            file: 'settings/café.toml',
+            line: 1,
+            message: 'Incorrect spacing',
+            help: check.help,
+            fixable: false,
+        },
+    ]);
 });
 
 test('a message that names a file by its resolved absolute path names it relative to the root', async () => {
@@ -195,9 +228,11 @@ test('a fixed regex message needs an explicit fixable pattern to offer a fix', (
     const output = outputSchema.parse({ format: 'regex', pattern: '^(?<file>.+)$', message: 'Needs attention.' });
     const check = { ...BASE_CHECK, output, fix: ['formatter'] };
     const paths = { root: '/repo', cwd: '/repo' };
-    expect(parseOutput(check, 'source.ts', '', paths)).toMatchObject([{ message: 'Needs attention.', fixable: false }]);
-    expect(parseOutput({ ...check, output: { ...output, fixable: '^source' } }, 'source.ts', '', paths)).toMatchObject([
-        { fixable: true },
+    expect(parseOutput(check, 'source.ts', '', paths)).toStrictEqual([
+        { check: check.id, file: 'source.ts', message: 'Needs attention.', help: check.help, fixable: false },
+    ]);
+    expect(parseOutput({ ...check, output: { ...output, fixable: '^source' } }, 'source.ts', '', paths)).toStrictEqual([
+        { check: check.id, file: 'source.ts', message: 'Needs attention.', help: check.help, fixable: true },
     ]);
 });
 
@@ -235,7 +270,7 @@ test.each([false, true])(
             planned,
             tool,
             {
-                commandLine: { commandArguments: ['prettier'], ...(perFile ? { file: 'source.js' } : {}) },
+                commandLine: { commandArguments: ['prettier'], ...(perFile && { file: 'source.js' }) },
                 result: buildProcessResult({ code: 1, stdout: 'Format failed\n' }),
                 findings: parsed,
             },

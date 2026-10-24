@@ -39,6 +39,22 @@ function listWorkspacePackages(root: string): Package[] {
 
 const WORKSPACE_SOURCES = { create: () => new Map<string, string[]>() };
 
+function listWorkspaceImportFolders(reads: ReadCache, folder: string, ordered: string[]): string[] {
+    const source = reads.root;
+    const typescriptProject = readTsconfigProject(source, folder, [], reads);
+    return typescriptProject === undefined
+        ? []
+        : listSourceFiles(source, folder, reads, {
+              ...typescriptProject.config,
+              fileNames: typescriptProject.config.fileNames.filter((file) =>
+                  isInScope(convertToPosixPath(relative(source, file)), folder),
+              ),
+          }).flatMap(
+              (file) =>
+                  ordered.find((path) => isInScope(convertToPosixPath(relative(source, file.fileName)), path)) ?? [],
+          );
+}
+
 /**
 List the files of the workspace packages that a project imports or depends on, and the files that those packages
 publish.
@@ -65,7 +81,10 @@ export function listWorkspaceDependencySources(reads: ReadCache, scope: string, 
     );
     const packages = new Map(ordered.map((path) => [path, readPackageJson(source, posix.join(path, PACKAGE_JSON))]));
     const pending = [projectRoot];
-    for (const folder of pending) {
+    let index = 0;
+    while (index < pending.length) {
+        const folder = pending[index] as string;
+        index += 1;
         const packageJson = packages.get(folder);
         if (packageJson === undefined)
             throw new Error(`The workspace package.json is missing: ${posix.join(folder, PACKAGE_JSON)}`);
@@ -75,21 +94,7 @@ export function listWorkspaceDependencySources(reads: ReadCache, scope: string, 
             ...packageJson.peerDependencies,
             ...packageJson.optionalDependencies,
         });
-        const typescriptProject = readTsconfigProject(source, folder, [], reads);
-        const sources =
-            typescriptProject === undefined
-                ? []
-                : listSourceFiles(source, folder, reads, {
-                      ...typescriptProject.config,
-                      fileNames: typescriptProject.config.fileNames.filter((file) =>
-                          isInScope(convertToPosixPath(relative(source, file)), folder),
-                      ),
-                  }).flatMap(
-                      (file) =>
-                          ordered.find((path) =>
-                              isInScope(convertToPosixPath(relative(source, file.fileName)), path),
-                          ) ?? [],
-                  );
+        const sources = listWorkspaceImportFolders(reads, folder, ordered);
         const dependencies = [...packages]
             .filter(([, dependency]) => dependency?.name !== undefined && names.includes(dependency.name))
             .map(([path]) => path);

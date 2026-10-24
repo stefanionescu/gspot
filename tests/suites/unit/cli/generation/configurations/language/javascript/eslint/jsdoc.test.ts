@@ -65,8 +65,10 @@ test('JavaScript needs valid JSDoc types, and tsc reads the generated jsconfig',
             .map((line) => line.slice(0, line.indexOf('(')))
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['malformed.js', 'missing.js', 'undefined.js']);
-    for (const { file } of JSDOC_FINDINGS.filter((finding) => finding.file.endsWith('.js')))
+    for (const { file } of JSDOC_FINDINGS) {
+        if (!file.endsWith('.js')) continue;
         await writeFile(join(sandbox.path, file), CORRECTED_JSDOC);
+    }
     expect(await listLintFindings(eslint, sandbox.path, files, JSDOC_RULES)).toStrictEqual([]);
     const compiled = await runCommand(TSC_ARGUMENTS, { cwd: sandbox.path });
     expect(compiled.code, compiled.stdout + compiled.stderr).toBe(0);
@@ -96,5 +98,9 @@ test('a missing doc block is reported, and the fixer adds no empty block', async
     const source = 'export function measure(value) {\n    return value.length;\n}\n';
     const [result] = await eslint.lintText(source, { filePath: 'client.js' });
     expect(result?.output ?? source).not.toContain('/**');
-    expect(result?.messages.map(({ ruleId }) => ruleId)).toContain('jsdoc/require-jsdoc');
+    expect(
+        result?.messages
+            .filter(({ ruleId }) => ruleId?.startsWith('jsdoc/') === true)
+            .map(({ ruleId, line, column }) => ({ ruleId, line, column })),
+    ).toStrictEqual([{ ruleId: 'jsdoc/require-jsdoc', line: 1, column: 8 }]);
 });

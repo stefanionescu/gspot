@@ -56,6 +56,7 @@ export const CI_CACHE_FILES = [
     `${DOT_GSPOT}/*lock*`,
     GSPOT_PATHS.pythonProject,
     GSPOT_PATHS.miseProject,
+    GSPOT_PATHS.miseLockfile,
 ] as const;
 
 export const CI_JOB_NAME = 'lint';
@@ -109,14 +110,14 @@ export const CI_STEP_NAMES = {
     slow: 'Slow checks',
 } as const;
 
-export const FROZEN_INSTALLS: Readonly<Record<string, readonly string[]>> = {
+export const FROZEN_INSTALLS = {
     'package-lock.json': ['npm', 'ci'],
     'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile'],
     'yarn.lock': ['yarn', 'install', '--frozen-lockfile'],
     'bun.lock': ['bun', 'install', '--frozen-lockfile'],
     'bun.lockb': ['bun', 'install', '--frozen-lockfile'],
     'uv.lock': ['uv', 'sync', '--locked'],
-};
+} as const satisfies Record<string, readonly string[]>;
 
 export const YARN_BERRY_INSTALL = ['yarn', 'install', '--immutable'] as const;
 

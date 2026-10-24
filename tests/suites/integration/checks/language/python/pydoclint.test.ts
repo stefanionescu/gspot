@@ -18,12 +18,11 @@ import {
 const installedSandbox = shareInstalledSandbox(PYTHON_SANDBOX);
 
 test('pydoclint finds the docstring style of each file and does not ask for types again', async () => {
-    const { root, environment } = installedSandbox();
+    const { root } = installedSandbox();
     const files = Object.fromEntries(
         ['', 'app/'].flatMap((scope) => Object.entries(DOCSTRING_MODULES).map(([file, text]) => [scope + file, text])),
     );
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'python/pydoclint',
         files: {
             'gspot.toml': buildSandboxSettings(['python'], {
                 level: 'all',
@@ -34,7 +33,7 @@ test('pydoclint finds the docstring style of each file and does not ask for type
             ...files,
         },
     });
-    const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
+    const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks.map(({ scope, status }) => [scope, status])).toStrictEqual([
         ['', 'failed'],
@@ -48,7 +47,7 @@ test('pydoclint finds the docstring style of each file and does not ask for type
     );
     for (const [file, text] of Object.entries(files))
         await writeFile(join(root, file), text.replace('amount', 'value'));
-    const corrected = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
+    const corrected = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks.map((check) => [check.scope, check.status, check.findings])).toStrictEqual([
         ['', 'passed', []],
@@ -57,7 +56,7 @@ test('pydoclint finds the docstring style of each file and does not ask for type
 });
 
 test('pydoclint keeps your settings that ask for types in docstrings', async () => {
-    const { root, environment } = installedSandbox();
+    const { root } = installedSandbox();
     const project =
         GOOGLE_PYPROJECT +
         `arg-type-hints-in-docstring = true
@@ -65,7 +64,6 @@ check_return_types = true
 check-yield-types = true
 `;
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'python/pydoclint',
         files: {
             'gspot.toml': buildSandboxSettings(['python']),
             'pyproject.toml': project,
@@ -73,7 +71,7 @@ check-yield-types = true
             [ARITHMETIC_MODULE_PATH]: ARITHMETIC_MODULE,
         },
     });
-    const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
+    const failed = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(listFindingRows(failed.report)).toStrictEqual(
         [3, 15].flatMap((line) => TYPED_DOCSTRING_RULES.map((rule) => ({ file: ARITHMETIC_MODULE_PATH, line, rule }))),
@@ -84,7 +82,7 @@ check-yield-types = true
             .replace('Twice the number.', 'int: Twice the number.')
             .replace('Three times the number.', 'int: Three times the number.'),
     );
-    const corrected = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS, environment));
+    const corrected = parseCheckReport(await spawnGspot(root, PYDOCLINT_CHECK_ARGUMENTS));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await readFile(join(root, 'pyproject.toml'), 'utf8')).toBe(project);
 });

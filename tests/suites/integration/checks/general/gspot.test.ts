@@ -1,11 +1,12 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { spawnGspot, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     VALE_SUPPRESSIONS,
@@ -15,12 +16,13 @@ import {
 
 test('suppression detection agrees with Ruff on every noqa comment form and place', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const paths = RUFF_SUPPRESSIONS.map((_, index) => `source_${String(index)}.py`);
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['python'], { level: 'all' }),
         ...Object.fromEntries(RUFF_SUPPRESSIONS.map(({ source }, index) => [paths[index]!, source])),
     });
-    await installGeneratedTools(sandbox.path);
+    await applyThenInstall(sandbox.path);
     const ruff = buildVenvExecutablePath(join(sandbox.path, GSPOT_PATHS.pythonEnvironment), 'ruff');
     const toolResult = await runCommand(
         [ruff, 'check', '--isolated', '--select', 'F401', '--output-format', 'json', ...paths],
@@ -51,6 +53,7 @@ async function readSuppressionResults(root: string, paths: string[], reported: S
 }
 test('suppression detection finds Vale comments and skips documented examples', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const documents = VALE_SUPPRESSIONS.flatMap((suppression, index) =>
         ['md', 'mdx'].map((extension) => ({ ...suppression, path: `guide-${String(index)}.${extension}` })),
     );

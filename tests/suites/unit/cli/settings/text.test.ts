@@ -3,6 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SCHEMA_DIRECTIVE } from '#cli/config/settings/file.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { LAYOUT_CASES } from '#tests/config/settings/text/layout.ts';
@@ -19,9 +20,18 @@ test.each([...IGNORE_COMMENT_CASES, ...ARRAY_COMMENT_CASES, ...FIELD_COMMENT_CAS
     (row) => {
         const { source, expected } = row;
         const target = 'target' in row ? row.target : source;
-        const output = buildSettingsText(source, parseTomlText(target, 'target.toml'));
+        const output = buildSettingsText(
+            source,
+            parseTomlText(target, 'target.toml'),
+            settingsSchema.shape.format.parse(parseTomlText(target, 'target.toml')['format']),
+        );
         expect(output).toBe(`${SCHEMA_DIRECTIVE}\n${expected}`);
-        expect(buildSettingsText(output, parseTomlText(output, 'gspot.toml'))).toBe(output);
+        const parsed = buildSettingsText(
+            output,
+            parseTomlText(output, 'gspot.toml'),
+            settingsSchema.shape.format.parse(parseTomlText(output, 'gspot.toml')['format']),
+        );
+        expect(parsed).toBe(output);
     },
 );
 test('setting level keeps the schema directive first and the opening init comment after it', async () => {
@@ -57,7 +67,7 @@ test('setting level keeps a written value equal to its default', async () => {
 });
 test('a comment on a field in an inline table inside a mixed array cannot be written', () => {
     const written = parseTomlText(INLINE_FIELD_COMMENT, 'gspot.toml');
-    expect(() => buildSettingsText(INLINE_FIELD_COMMENT, written)).toThrow(
-        'The comment for tools.markdownlint.rules.MD001.mixed.0.enabled cannot be represented in TOML 1.0.',
-    );
+    expect(() =>
+        buildSettingsText(INLINE_FIELD_COMMENT, written, settingsSchema.shape.format.parse(written['format'])),
+    ).toThrow('The comment for tools.markdownlint.rules.MD001.mixed.0.enabled cannot be represented in TOML 1.0.');
 });

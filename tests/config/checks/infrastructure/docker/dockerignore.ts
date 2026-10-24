@@ -1,5 +1,7 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
+const REQUIRED_DOCKERIGNORE = '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n';
+
 export const DOCKERIGNORE_ALLOWLISTS = [
     { text: '*\n', missing: [] },
     { text: '**\n', missing: [] },
@@ -41,7 +43,7 @@ export const DOCKERIGNORE_CASES = [
         name: 'a Dockerfile-specific ignore',
         files: {
             Dockerfile: 'FROM scratch\n',
-            'Dockerfile.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            'Dockerfile.dockerignore': REQUIRED_DOCKERIGNORE,
         },
         findings: [],
     },
@@ -49,7 +51,7 @@ export const DOCKERIGNORE_CASES = [
         name: 'a suffixed Dockerfile-specific ignore',
         files: {
             'Dockerfile.test': 'FROM scratch\n',
-            'Dockerfile.test.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            'Dockerfile.test.dockerignore': REQUIRED_DOCKERIGNORE,
         },
         findings: [],
     },
@@ -58,7 +60,7 @@ export const DOCKERIGNORE_CASES = [
         files: {
             'compose.yaml': 'services: {app: {build: {context: project, dockerfile: docker/Dockerfile}}}\n',
             'project/docker/Dockerfile': 'FROM scratch\n',
-            'project/.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            'project/.dockerignore': REQUIRED_DOCKERIGNORE,
         },
         findings: [],
     },
@@ -68,7 +70,7 @@ export const DOCKERIGNORE_CASES = [
             'compose.yaml': 'services: {app: {build: {context: project}}}\n',
             'compose.override.yaml': 'services: {app: {build: {dockerfile: docker/Dockerfile}}}\n',
             'project/docker/Dockerfile': 'FROM scratch\n',
-            'project/.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            'project/.dockerignore': REQUIRED_DOCKERIGNORE,
         },
         findings: [],
     },
@@ -79,7 +81,7 @@ export const DOCKERIGNORE_CASES = [
             'compose.override.yaml': 'services: {affected: {build: {dockerfile: Dockerfile}}}\n',
             'affected/Dockerfile': 'FROM scratch\n',
             'other/Dockerfile': 'FROM scratch\n',
-            'other/.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            'other/.dockerignore': REQUIRED_DOCKERIGNORE,
         },
         findings: [
             {
@@ -94,7 +96,7 @@ export const DOCKERIGNORE_CASES = [
         name: 'a specific ignore taking precedence over the general ignore',
         files: {
             Dockerfile: 'FROM scratch\n',
-            '.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            '.dockerignore': REQUIRED_DOCKERIGNORE,
             'Dockerfile.dockerignore': '.git\n',
         },
         findings: [
@@ -123,7 +125,7 @@ export const DOCKERIGNORE_CASES = [
         files: {
             'gspot.toml': buildSandboxSettings(['docker'], { rules: true }),
             Dockerfile: 'FROM scratch\n',
-            '.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            '.dockerignore': REQUIRED_DOCKERIGNORE,
         },
         findings: [],
     },
@@ -132,7 +134,7 @@ export const DOCKERIGNORE_CASES = [
         files: {
             'gspot.toml': buildSandboxSettings(['docker', 'javascript'], { rules: true }),
             Dockerfile: 'FROM scratch\n',
-            '.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            '.dockerignore': REQUIRED_DOCKERIGNORE,
         },
         findings: [
             {
@@ -147,7 +149,7 @@ export const DOCKERIGNORE_CASES = [
         files: {
             'gspot.toml': buildSandboxSettings(['docker', 'python'], { rules: true }),
             Dockerfile: 'FROM scratch\n',
-            '.dockerignore': '.git\n.env\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n',
+            '.dockerignore': REQUIRED_DOCKERIGNORE,
         },
         findings: [
             {

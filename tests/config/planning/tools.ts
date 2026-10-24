@@ -73,3 +73,23 @@ export const COVERAGE_PROVIDERS = [
         configurations: ['javascript', 'vitest'],
     },
 ] as const;
+
+export const INDEPENDENT_LIBRARIES = [
+    '@eslint/js',
+    '@gspothq/eslint-plugin',
+    'eslint-plugin-sonarjs',
+    'eslint-plugin-unicorn',
+    'eslint-plugin-security',
+    'eslint-plugin-barrel-files',
+    'eslint-plugin-perfectionist',
+    'eslint-plugin-n',
+    'eslint-plugin-jsdoc',
+    'eslint-plugin-regexp',
+    'eslint-plugin-import-x',
+    'eslint-import-resolver-typescript',
+    'eslint-plugin-package-json',
+    'eslint-config-prettier',
+    'globals',
+    'picomatch',
+    'independent-support',
+] as const;

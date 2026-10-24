@@ -2,8 +2,6 @@ import { test, expect } from 'bun:test';
 import { sep, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
-import { matchFields } from '#tests/setup/matchers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { parseOutput } from '#cli/runs/output/formats.ts';
 import { type SarifLog } from '#cli/types/runs/tool-reports.ts';
@@ -53,7 +51,7 @@ test.each([...FAILED_ANALYSES])('a failed CodeQL run in the report is an error, 
 
     expect(() =>
         parseSarifReport({ version: '2.1.0', runs: [{ results: [], invocations: [analysis] }] }, sourceRoot),
-    ).toThrow(matchFields<GspotError>({ name: 'GspotError', code: 'output' }));
+    ).toThrow(new Error('SARIF reported an unsuccessful analysis.'));
 });
 
 test.each([...SARIF_LOCATION_CASES])(
@@ -94,20 +92,37 @@ test.each([...SARIF_LOCATION_CASES])(
     },
 );
 
-test.each([
-    { name: 'a path outside the root', report: buildLocationReport({ uri: '../outside.ts' }) },
+const outsideLocation = { uri: pathToFileURL(resolve(resolve('selected-source'), '../outside.ts')).href };
+const observed = [
+    {
+        name: 'a path outside the root',
+        message: 'SARIF reported a source location outside the copy of the source.',
+        report: buildLocationReport({ uri: '../outside.ts' }),
+    },
     {
         name: 'a file URL outside the root',
-        report: buildLocationReport({ uri: pathToFileURL(resolve(resolve('selected-source'), '../outside.ts')).href }),
+        message: 'SARIF reported a source location outside the copy of the source.',
+        report: buildLocationReport(outsideLocation),
     },
-    { name: 'a web address', report: buildLocationReport({ uri: 'https://example.com/file.ts' }) },
-    { name: 'an unknown URI base', report: buildLocationReport({ uri: 'file.ts', uriBaseId: 'missing' }) },
-    { name: 'a missing artifact', report: buildLocationReport({ index: 1 }) },
-    { name: 'a cyclic URI base', report: CYCLIC_REPORT },
-])('a report location that gspot cannot resolve is refused: $name', ({ report }) => {
-    expect(() => parseSarifReport(report, resolve('selected-source'))).toThrow(
-        matchFields<GspotError>({ name: 'GspotError', code: 'output' }),
-    );
+    {
+        name: 'a web address',
+        message: 'SARIF reported a source location that is not a file.',
+        report: buildLocationReport({ uri: 'https://example.com/file.ts' }),
+    },
+    {
+        name: 'an unknown URI base',
+        message: 'SARIF reported an unknown source location: missing.',
+        report: buildLocationReport({ uri: 'file.ts', uriBaseId: 'missing' }),
+    },
+    {
+        name: 'a missing artifact',
+        message: 'SARIF reported a missing artifact location.',
+        report: buildLocationReport({ index: 1 }),
+    },
+    { name: 'a cyclic URI base', message: 'SARIF reported a cyclic source location.', report: CYCLIC_REPORT },
+];
+test.each(observed)('a report location that gspot cannot resolve is refused: $name', ({ report, message }) => {
+    expect(() => parseSarifReport(report, resolve('selected-source'))).toThrow(new Error(message));
 });
 
 test.each([...POSITIONLESS_RESULTS])(

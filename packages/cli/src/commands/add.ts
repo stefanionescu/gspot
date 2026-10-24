@@ -29,8 +29,6 @@ function formatConfigurationChange(changed: string[], unchanged: string[], where
 
 async function runAddCommand(options: ConfigurationsOptions): Promise<CommandResult> {
     const { root, input, scopeSettings, selected } = prepareConfigurationEdit(options);
-    const scopeConfigurations = scopeSettings.configurations;
-    const removed = scopeSettings.removed_configurations;
     if (options.configurations.every((name) => selected.includes(name))) {
         return {
             text: `No change: ${options.configurations.join(' and ')} ${options.configurations.length === 1 ? 'is' : 'are'} already selected.\n`,
@@ -38,6 +36,8 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
             exitCode: 0,
         };
     }
+    const scopeConfigurations = scopeSettings.configurations;
+    const removed = scopeSettings.removed_configurations;
     const scopeTable = getScopeTable(input.table, options.scope);
     const list = [...scopeConfigurations];
     for (const name of options.configurations) if (!selected.includes(name) && !list.includes(name)) list.push(name);

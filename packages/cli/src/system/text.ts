@@ -3,22 +3,6 @@ import type { TextPosition } from '#cli/types/text.ts';
 import { TYPO_MIN, LIST_LIMIT, TYPO_FRACTION, UNQUOTED_ARGUMENT, SIMILAR_NAME_LIMIT } from '#cli/config/system/text.ts';
 
 /**
-Skip a quoted span before looking for comment openers outside it.
-
-@param line the source to scan.
-@param start the first source offset.
-@returns the offset after the quoted value.
-*/
-export function findQuotedEnd(line: string, start: number): number {
-    const quote = line.charAt(start);
-    for (let at = start + 1; at < line.length; at += 1) {
-        if (line.charAt(at) === '\\') at += 1;
-        else if (line.charAt(at) === quote) return at + 1;
-    }
-    return line.length;
-}
-
-/**
 Select up to SUGGESTION_LIMIT names close enough to look like a typo, closest first.
 
 @param name the text as typed.
@@ -72,9 +56,9 @@ Quote one argument for a POSIX shell command shown to the reader.
 
 @returns the argument with any required shell quoting.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function quoteArgument(argument: string): string {
-    if (UNQUOTED_ARGUMENT.test(argument)) return argument;
-    return `'${argument.replaceAll("'", "'\"'\"'")}'`;
+    return UNQUOTED_ARGUMENT.test(argument) ? argument : `'${argument.replaceAll("'", "'\"'\"'")}'`;
 }
 
 /**
@@ -111,6 +95,5 @@ Compare text by code units so paths and generated names keep the same order in e
 */
 export function compareText(left: string, right: string): number {
     if (left < right) return -1;
-    if (left > right) return 1;
-    return 0;
+    return left > right ? 1 : 0;
 }

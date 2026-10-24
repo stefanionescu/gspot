@@ -33,10 +33,14 @@ import {
     SWIFTLINT_CONFIG_FLAG,
     SWIFTLINT_CONFIG_NAME,
     SWIFTLINT_ANALYZE_COMMAND,
-    MACOS_PRIVATE_REPLACEMENT,
 } from '#cli/config/checks/language/swift/build.ts';
 
 const SWIFT_BUILD_OUTPUTS = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function removePrivatePrefix(text: string): string {
+    return text.replaceAll(MACOS_PRIVATE_PATH, (_match, before: string, folder: string) => `${before}/${folder}/`);
+}
 
 function parseOutputFindings(
     session: Session,
@@ -44,19 +48,18 @@ function parseOutputFindings(
     output: string,
     { levels, defaultRule }: { levels: ReadonlySet<string>; defaultRule: string },
 ): Finding[] {
-    const root = convertToPosixPath(session.root.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT));
+    const root = convertToPosixPath(removePrivatePrefix(session.root));
     return [...new Set(output.split('\n'))]
         .flatMap((line) => {
             const groups = MESSAGE_LINE.exec(line)?.groups;
-            if (groups === undefined || !levels.has(groups['level'] ?? '')) return [];
-            return [groups];
+            return groups === undefined || !levels.has(groups['level'] ?? '') ? [] : [groups];
         })
         .map((groups): Finding => {
             const text = groups['text'] ?? '';
             const suffix = RULE_SUFFIX.exec(text)?.groups;
             const { rule = defaultRule, text: message = text } = suffix === undefined ? {} : suffix;
             const file = groups['file'] ?? '';
-            const normalized = convertToPosixPath(file.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT));
+            const normalized = convertToPosixPath(file);
             return buildFinding(
                 planned,
                 {
@@ -73,37 +76,25 @@ function parseOutputFindings(
 function expandResponseFiles(line: string, folder: string, files: Files): string {
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
-        const content = files.read(
-            convertToPosixPath(
-                relative(
-                    folder.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT),
-                    path.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT),
-                ),
-            ),
-        );
+        const base = removePrivatePrefix(folder);
+        const source = removePrivatePrefix(path);
+        const content = files.read(convertToPosixPath(relative(base, source)));
         return content === undefined ? token : content.bytes.toString('utf8').trim().replaceAll('\n', ' ');
     });
 }
 
-async function runSwiftBuild(
-    session: Session,
-    planned: PlannedCheck,
-    plan: SwiftBuildPlan,
-    purpose: 'compile' | 'analyze',
-): Promise<SwiftBuildOutput> {
+async function runSwiftBuild(session: Session, planned: PlannedCheck, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
     return getCachedMapValue(session.reads, SWIFT_BUILD_OUTPUTS, plan.folder, async () => {
         const setup = prepareBuild(session.root, planned.files, plan.folder);
         using files = setup.files;
         const { source } = setup;
-        if (plan.kind === 'package' && purpose === 'analyze')
+        if (plan.kind === 'package' && plan.purpose === 'analyze')
             files.deleteTree(convertToPosixPath(relative(plan.folder, plan.scratch)));
         const cwd = join(source, planned.scope.folder.path);
         const result = await runCheckTool(session, planned, plan.commandArguments, { cwd });
         const output = `${result.stdout}\n${result.stderr}`
             .split('\n')
-            .map((line) =>
-                expandResponseFiles(line, plan.folder, files).replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT),
-            )
+            .map((line) => removePrivatePrefix(expandResponseFiles(line, plan.folder, files)))
             .join('\n');
         const log = convertToPosixPath(relative(plan.folder, plan.log));
         files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE }, files.read(log));
@@ -120,16 +111,32 @@ Builds the scope and reports the compiler errors.
 */
 export async function checkSwiftBuild(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const plan = buildPlan(session, planned);
-    const { output, code, source } = await runSwiftBuild(session, planned, plan, 'compile');
-    const originalPaths = output.replaceAll(
-        source.replaceAll(MACOS_PRIVATE_PATH, MACOS_PRIVATE_REPLACEMENT),
-        session.root,
-    );
+    const { output, code, source } = await runSwiftBuild(session, planned, plan);
+    const originalPaths = output.replaceAll(removePrivatePrefix(source), () => removePrivatePrefix(session.root));
     const found = parseOutputFindings(session, planned, originalPaths, {
         levels: BUILD_LEVELS,
         defaultRule: 'compiler',
     });
     return assertToolFindings({ code, stdout: originalPaths, stderr: '' }, found, 'Swift build');
+}
+
+async function runCopiedTool(
+    session: Session,
+    planned: PlannedCheck,
+    run: { source: string; commandArguments: string[]; defaultRule: string; tool: string },
+): Promise<Finding[]> {
+    const result = await runCheckTool(session, planned, run.commandArguments, {
+        cwd: join(run.source, planned.scope.folder.path),
+    });
+    const output = removePrivatePrefix(`${result.stdout}\n${result.stderr}`).replaceAll(
+        removePrivatePrefix(run.source),
+        () => removePrivatePrefix(session.root),
+    );
+    const found = parseOutputFindings(session, planned, output, {
+        levels: REPORTED_LEVELS,
+        defaultRule: run.defaultRule,
+    });
+    return assertToolFindings(result, found, run.tool);
 }
 
 /**
@@ -140,8 +147,8 @@ Runs the SwiftLint analyzer rules over the compiler log of the build.
 @returns the findings.
 */
 export async function checkSwiftSwiftlintAnalyze(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const plan = buildPlan(session, planned, { purpose: 'analyze' });
-    const build = await runSwiftBuild(session, planned, plan, 'analyze');
+    const plan = buildPlan(session, planned, 'analyze');
+    const build = await runSwiftBuild(session, planned, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
     const configFile = join(
         session.root,
@@ -158,13 +165,12 @@ export async function checkSwiftSwiftlintAnalyze(session: Session, planned: Plan
         COMPILER_LOG_FLAG,
         plan.log,
     ];
-    const { source } = build;
-    const result = await runCheckTool(session, planned, commandArguments, {
-        cwd: join(source, planned.scope.folder.path),
+    return runCopiedTool(session, planned, {
+        source: build.source,
+        commandArguments,
+        defaultRule: 'analyzer',
+        tool: 'swiftlint',
     });
-    const output = `${result.stdout}\n${result.stderr}`.replaceAll(source, session.root);
-    const found = parseOutputFindings(session, planned, output, { levels: REPORTED_LEVELS, defaultRule: 'analyzer' });
-    return assertToolFindings(result, found, 'swiftlint');
 }
 
 /**
@@ -187,13 +193,12 @@ export async function checkSwiftPeriphery(session: Session, planned: PlannedChec
     const commandArguments = [...PERIPHERY_COMMAND, configFile];
     const setup = prepareBuild(session.root, planned.files, folder);
     using files = setup.files;
-    const source = files.readCanonicalPath(BUILD_SOURCE_FOLDER);
-    const result = await runCheckTool(session, planned, commandArguments, {
-        cwd: join(source, planned.scope.folder.path),
+    return await runCopiedTool(session, planned, {
+        source: files.readCanonicalPath(BUILD_SOURCE_FOLDER),
+        commandArguments,
+        defaultRule: 'unused',
+        tool: 'periphery',
     });
-    const output = `${result.stdout}\n${result.stderr}`.replaceAll(source, session.root);
-    const found = parseOutputFindings(session, planned, output, { levels: REPORTED_LEVELS, defaultRule: 'unused' });
-    return assertToolFindings(result, found, 'periphery');
 }
 
 /**
@@ -216,7 +221,8 @@ export function listSwiftlintConfigFiles(session: Session, planned: PlannedCheck
     ];
     for (const file of planned.files) {
         const folders = listEnclosingFolders(posix.dirname(file.path));
-        for (const folder of folders.slice(0, folders.indexOf(planned.scope.folder.path))) {
+        const parents = folders.slice(0, folders.indexOf(planned.scope.folder.path));
+        for (const folder of parents) {
             const path = posix.join(folder, SWIFTLINT_CONFIG_FILE);
             if (findCachedText(session.reads, path) !== undefined) paths.push(path);
         }

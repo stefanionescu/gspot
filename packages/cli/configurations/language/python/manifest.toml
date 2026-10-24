@@ -45,7 +45,7 @@ reason = "A leading underscore marks a private Python declaration."
 [[tool]]
 mise = "uv"
 name = "uv"
-version = "0.12.22"
+version = "0.13.1"
 
 [[tool]]
 min_version = "0.9.0"
@@ -54,7 +54,7 @@ pypi = "ruff"
 replace = ["ruff.toml", ".ruff.toml"]
 rule_url = "https://docs.astral.sh/ruff/rules/{rule}/"
 suppression = { inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)(?::(?<rules>[^#]*))?", reason = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)[^#]*# ?(?<reason>\\S.*)", example = "import plugins  # noqa: F401 # reason: the module registers its plugins on import", separator = "#", all_rules = "^$", limit_rules = "(?:^|[\\s,])(?:C901|PLR0911|PLR0912|PLR0913|PLR0915)(?=$|[\\s,])" }
-version = "0.16.8"
+version = "0.17.1"
 
 [[tool.replace_key]]
 file = "pyproject.toml"
@@ -66,7 +66,7 @@ name = "basedpyright"
 npm = "basedpyright"
 replace = ["pyrightconfig.json"]
 suppression = { marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)", example = "value = payload['key']  # type: ignore[index] # reason: the payload is checked above" }
-version = "1.40.1"
+version = "1.40.2"
 
 [[tool.replace_key]]
 file = "pyproject.toml"
@@ -79,7 +79,7 @@ table = "tool.pyright"
 [[tool]]
 name = "pydoclint"
 pypi = "pydoclint"
-version = "0.9.1"
+version = "0.11.1"
 
 [[tool]]
 min_version = "0.20.0"
@@ -317,13 +317,13 @@ all = [
 
 [[config_file]]
 per_scope = true
-pointer = { path = "ruff.toml", body = 'extend = "{target}"' }
+pointer = { path = "ruff.toml", body = "extend = {target_json}\n" }
 target = "ruff.toml"
 tool = "ruff"
 
 [[config_file]]
 per_scope = true
-pointer = { path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}" }
+pointer = { path = "pyrightconfig.json", body = "{\n    \"extends\": {target_json}\n}\n" }
 target = "basedpyright.json"
 tool = "basedpyright"
 
@@ -419,7 +419,7 @@ tool = "vulture"
 why = "Code that nothing calls still costs a reader time and still has to compile and pass review."
 
 [[check]]
-example = "A Python function of 80 code lines reports `function-lines` at the default limit of 60. Split it into functions that each do one job."
+example = "A Python function over `limits.python.function_lines` reports `function-lines` with its count. Split it into functions that each do one job."
 files = { extensions = [".py"] }
 help = "Split the function by responsibility, or raise `limits.python.function_lines` with a reason."
 level = "all"

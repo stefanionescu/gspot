@@ -20,17 +20,19 @@ Apply the Svelte presets and the Svelte component parser.
 export function buildSvelteBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>): ConfigurationBlocks {
     const { presets, settings } = scope;
     const recommended = getPreset(presets, 'recommended');
-    const blocks: ConfigurationBlocks['blocks'] = [];
-    const typed = settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
-    blocks.push(...buildArrayPresetBlocks(recommended, 'sveltePlugin', convertPresetWarnings), {
-        fields: {
-            files: SVELTE_FILES,
-            rules: SVELTE_RULES,
+    const isTyped = settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
+    const blocks: ConfigurationBlocks['blocks'] = [
+        ...buildArrayPresetBlocks(recommended, 'sveltePlugin', convertPresetWarnings),
+        {
+            fields: {
+                files: SVELTE_FILES,
+                rules: SVELTE_RULES,
+            },
+            properties: `languageOptions: { parser: svelteParser, parserOptions: { ${isTyped ? 'parser: { ts: tseslint.parser, typescript: tseslint.parser },' : ''} extraFileExtensions: ['.svelte'] } }`,
         },
-        properties: `languageOptions: { parser: svelteParser, parserOptions: { ${typed ? 'parser: { ts: tseslint.parser, typescript: tseslint.parser },' : ''} extraFileExtensions: ['.svelte'] } }`,
-    });
+    ];
     return {
-        imports: CONFIGURATION_PLUGINS['svelte'],
+        imports: CONFIGURATION_PLUGINS.svelte,
         blocks,
     };
 }

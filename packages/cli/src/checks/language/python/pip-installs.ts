@@ -17,8 +17,8 @@ Reports hand-kept requirements files and unmanaged pip installs, so pyproject.to
 */
 export function checkPythonPipInstalls(session: Session, planned: PlannedCheck): Finding[] {
     if (
-        !(planned.check.files?.filenames ?? []).some((file) =>
-            planned.files.some(({ path }) => path === joinScope(planned.scope.folder.path, file)),
+        (planned.check.files?.filenames ?? []).every((file) =>
+            planned.files.every(({ path }) => path !== joinScope(planned.scope.folder.path, file)),
         )
     )
         throw new GspotError('skip', 'This check needs uv.lock, poetry.lock, or pdm.lock in this scope.');

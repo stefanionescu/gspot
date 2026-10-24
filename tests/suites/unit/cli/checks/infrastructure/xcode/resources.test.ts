@@ -3,13 +3,13 @@ import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { rm, mkdir, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     LOGO_IMAGE_SET,
@@ -30,16 +30,13 @@ test.each([...UNREADABLE_RESOURCES])(
         });
 
         const session = await openSession(sandbox.path);
-        const options = buildRunOptions({ stage: 'commit', only: [check] });
+        const planned = planSandboxCheck(session, check);
         const target = join(sandbox.path, path);
         await rm(target);
         await mkdir(target);
-        const unreadable = await runChecks(session, options);
-
-        expect(unreadable.report.checks).toMatchObject([{ check, status: 'error', findings: [] }]);
-        expect(unreadable.report.checks[0]?.note).toBe(
-            `The ${check} check failed: ${path} could not be read. Check the file and its permissions.`,
-        );
+        session.reads.sources.delete(path);
+        const error = await captureRejection(findBuiltInCheck(check)(session, planned));
+        expect(error.message).toBe(`${path} could not be read. Check the file and its permissions.`);
     },
 );
 

@@ -1,4 +1,4 @@
-export const TYPESCRIPT_PATTERN_FIELDS = {
+export const TYPESCRIPT_PATTERN_FIELDS: Readonly<Record<string, string>> = {
     pair_pattern: 'value',
     object_assignment_pattern: 'left',
     assignment_pattern: 'left',

@@ -39,10 +39,12 @@ test('staged and branch comparisons keep both paths of a rename across folders',
 });
 test('staged paths report a broken or missing Git repository instead of an empty list', async () => {
     await using sandbox = await testdir();
-    expect(await captureRejection(readStagedPaths(sandbox.path))).toStartWith('Git diff failed');
+    const readStagedPathsError = await captureRejection(readStagedPaths(sandbox.path));
+    expect(readStagedPathsError.message).toStartWith('Git diff failed');
     runGitStep(sandbox.path, ['init']);
     await writeFile(join(sandbox.path, '.git/index'), 'corrupt index');
-    expect(await captureRejection(readStagedPaths(sandbox.path))).toStartWith('Git diff failed');
+    const diffError = await captureRejection(readStagedPaths(sandbox.path));
+    expect(diffError.message).toStartWith('Git diff failed');
 });
 test('a branch comparison refuses invalid references without reading them as options', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
@@ -50,12 +52,10 @@ test('a branch comparison refuses invalid references without reading them as opt
     commitAll(sandbox.path);
     const changed = await readChangedPaths(sandbox.path, 'HEAD');
     expect(changed.paths).toStrictEqual([]);
-    expect(await captureRejection(readChangedPaths(sandbox.path, 'missing-reference'))).toStartWith(
-        'Git merge-base failed',
-    );
-    expect(await captureRejection(readChangedPaths(sandbox.path, '--output=outside.txt'))).toStartWith(
-        'Git merge-base failed',
-    );
+    const readChangedPathsError = await captureRejection(readChangedPaths(sandbox.path, 'missing-reference'));
+    expect(readChangedPathsError.message).toStartWith('Git merge-base failed');
+    const mergeBaseError = await captureRejection(readChangedPaths(sandbox.path, '--output=outside.txt'));
+    expect(mergeBaseError.message).toStartWith('Git merge-base failed');
     expect(await isOnDisk(join(sandbox.path, 'outside.txt'))).toBe(false);
 });
 test('a new branch compares with the remote default without losing unpushed commits', async () => {
@@ -74,4 +74,24 @@ test('a new branch compares with the remote default without losing unpushed comm
     const { reference, commits } = await readChangedPaths(sandbox.path, '');
     expect(reference).toBe('refs/remotes/origin/main');
     expect(commits).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
+});
+
+test('a branch comparison includes untracked files but excludes ignored files', async () => {
+    await using sandbox = await testdir({ '.gitignore': 'ignored.ts\n', 'source.ts': 'export {};\n' });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'new.ts'), 'export const added = 1;\n');
+    await writeFile(join(sandbox.path, 'ignored.ts'), 'export const ignored = 1;\n');
+    const changed = await readChangedPaths(sandbox.path, 'HEAD');
+    expect(changed.paths).toStrictEqual(['new.ts']);
+});
+
+test('a detached comparison without a remote default explains how to select one', async () => {
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    runGitStep(sandbox.path, ['checkout', '--detach', '--quiet']);
+    const upstreamError = await captureRejection(readChangedPaths(sandbox.path, ''));
+    expect(upstreamError.message).toBe(
+        'No upstream or default branch is available. Run git remote set-head origin --auto once, or pass --changed <ref>.',
+    );
 });

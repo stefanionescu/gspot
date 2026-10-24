@@ -90,22 +90,6 @@
             "terms": ["shared", "support"]
         }
     },
-    "reserved": {
-        "config": [
-            "folders",
-            "packages",
-            "files",
-            "modules",
-            "types",
-            "functions",
-            "variables",
-            "constants",
-            "parameters",
-            "properties",
-            "attributes",
-            "enum_cases"
-        ]
-    },
     "languages": {
         "typescript": {
             "categories": {
@@ -292,23 +276,6 @@
         }
     },
     "allowed_names": [
-        "setTimeout",
-        "clearTimeout",
-        "setInterval",
-        "clearInterval",
-        "setImmediate",
-        "queueMicrotask",
-        "structuredClone",
-        "URLSearchParams",
-        "console",
-        "document",
-        "window",
-        "navigator",
-        "localStorage",
-        "sessionStorage",
-        "CustomEvent",
-        "HTMLElement",
-        "XMLHttpRequest",
         "toJSON",
         "toString",
         "valueOf",
@@ -336,14 +303,12 @@
         "GITHUB_SHA",
         "GITHUB_REF"
     ],
-    "allow_digits": false,
-    "allow_repeated_words": false,
     "override": [
         {
             "paths": ["**"],
             "categories": ["variables", "parameters"],
-            "reason": "Loop and lambda positions take single letters.",
-            "allowed_names": ["_", "i", "j", "k", "x", "y", "n"]
+            "reason": "An underscore marks a discarded binding.",
+            "allowed_names": ["_"]
         },
         {
             "paths": ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"],

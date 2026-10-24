@@ -66,7 +66,7 @@ export type ScopeBoundaries = {
     serverFiles: string[];
 };
 
-export type ScopeEslintSettings = { scope: string; settings: EslintSettings };
+export type ScopeEslintSettings = { scope: Scope; settings: EslintSettings };
 
 export type EslintRuntime = PathExpressions & {
     scope: string;
@@ -135,8 +135,6 @@ export type EslintRuleExpression = { expression: string; rules: Record<string, u
 export type EslintLevelRules = {
     code: Record<string, unknown>;
     javascript: Record<string, unknown>;
-    node: Record<string, unknown>;
-    console: Record<string, unknown>;
 };
 
 export type EslintPlugins = Record<string, readonly [string, string]>;

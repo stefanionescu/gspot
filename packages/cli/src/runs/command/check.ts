@@ -1,11 +1,11 @@
 import { join, relative } from 'node:path';
 import { createCopy } from '#cli/runs/copy/files.ts';
 import type { Session } from '#cli/types/session.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { getTool } from '#cli/configurations/tools.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { listOtherTools } from '#cli/planning/tools.ts';
-import { RAN_STATUSES } from '#cli/config/runs/check.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -14,16 +14,19 @@ import type { ProcessFailure } from '#cli/types/tools/run.ts';
 import { stripCoverageArguments } from '#cli/planning/checks.ts';
 import { buildCommandLines } from '#cli/runs/command/batches.ts';
 import type { TemporaryFolder } from '#cli/types/system/files.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/files/names.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/runs/report.ts';
 import { PYTHON_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
 import type { CheckResult, CheckRunOptions } from '#cli/types/runs/check.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
+import { RAN_STATUSES, PYTHON_ENVIRONMENT_CHECKS } from '#cli/config/runs/check.ts';
 import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/python.ts';
 import { findTool, runToolProcess, buildOtherToolEnvironment } from '#cli/runs/command/tool.ts';
 import { addCommandLine, buildCheckResult, parseCommandFindings } from '#cli/runs/command/output.ts';
 
 import type {
-    CopyRun,
+    FolderRun,
     CommandRun,
     CommandGroup,
     CommandSetup,
@@ -42,10 +45,17 @@ async function runCommands(
     planned: PlannedCheck,
     {
         cancelSignal,
+        verbose,
         tool,
         launch,
         base,
-    }: { cancelSignal: AbortSignal | undefined; tool: Tool; launch: CommandLaunch; base: CheckResult },
+    }: {
+        cancelSignal: AbortSignal | undefined;
+        verbose: boolean | undefined;
+        tool: Tool;
+        launch: CommandLaunch;
+        base: CheckResult;
+    },
 ): Promise<CheckResult> {
     const { check } = planned;
     const { cwd, commandArguments } = launch;
@@ -59,13 +69,18 @@ async function runCommands(
             name: tool.name,
         });
         if (failure !== undefined)
-            return { ...base, ...failure, duration: performance.now() - started, command: commandArguments };
-        const parsed = parseCommandFindings(planned, result, { cwd, root: state.root });
+            return {
+                ...base,
+                ...failure,
+                duration: Math.round(performance.now() - started),
+                command: commandArguments,
+            };
+        const parsed = parseCommandFindings(planned, result, { cwd, root: state.root }, { verbose });
         if (parsed.findings === undefined)
             return {
                 ...base,
                 status: 'error',
-                duration: performance.now() - started,
+                duration: Math.round(performance.now() - started),
                 note: parsed.note,
                 command: commandArguments,
             };
@@ -85,10 +100,9 @@ function findMissingConfigFile(
 ): CheckResult | undefined {
     const paths = options.listConfigFiles?.(session, planned) ?? [];
     using files = openFiles(session.root);
-    const missing = [...paths, ...listCommandConfigFiles(session, planned, command)].find((path) =>
-        path.startsWith(`${DOT_GSPOT}/`)
-            ? files.read(path) === undefined
-            : findCachedText(session.reads, path) === undefined,
+    const missing = [...paths, ...listCommandConfigFiles(session, planned, command)].find(
+        (path) =>
+            (path.startsWith(`${DOT_GSPOT}/`) ? files.read(path) : findCachedText(session.reads, path)) === undefined,
     );
     if (missing === undefined) return undefined;
     return {
@@ -98,7 +112,7 @@ function findMissingConfigFile(
     };
 }
 
-async function runInCopy(run: CopyRun): Promise<CheckResult> {
+async function runInFolder(run: FolderRun): Promise<CheckResult> {
     const { session, planned, tool, command, toolPath, setup, base, options } = run;
     using copy =
         options.copyRoot === undefined && planned.check.run_in_copy === true
@@ -114,7 +128,13 @@ async function runInCopy(run: CopyRun): Promise<CheckResult> {
         listOtherTools(planned.scope, planned.check, command),
         commandSetup.env,
     );
-    const result = await runCommands(planned, { cancelSignal: session.cancelSignal, tool, launch: commandSetup, base });
+    const result = await runCommands(planned, {
+        cancelSignal: session.cancelSignal,
+        verbose: options.verbose,
+        tool,
+        launch: commandSetup,
+        base,
+    });
     if (folder === undefined) return result;
     const reported = expandCommand(session, planned, command, setup.substitutions).with(0, toolPath);
     return { ...result, command: reported.filter((argument) => typeof argument === 'string') };
@@ -219,8 +239,8 @@ Resolves the working folder and expands the tool environment values.
 */
 export function buildCommandSetup(session: Session, planned: PlannedCheck, options: CheckRunOptions): CommandSetup {
     const { check, scope } = planned;
-    const runsInScope = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
-    const cwd = runsInScope ? join(session.root, scope.folder.path) : session.root;
+    const usesScopeFolder = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
+    const cwd = usesScopeFolder ? join(session.root, scope.folder.path) : session.root;
     const substitutions = buildCommandSubstitutions(session, planned, cwd);
     const files = substitutions.files;
     if (options.listFileArguments !== undefined) substitutions.files = options.listFileArguments(session, planned);
@@ -294,6 +314,17 @@ export function prepareCommand(
     };
 }
 
+function findMissingProjectEnvironment(session: Session, planned: PlannedCheck): ProcessFailure | undefined {
+    if (!PYTHON_ENVIRONMENT_CHECKS.has(planned.check.id)) return undefined;
+    const scope = planned.scope.folder.path;
+    const project = joinScope(scope, PYPROJECT_TOML);
+    if (session.repository.files.every((file) => file.path !== project)) return undefined;
+    using files = openFiles(session.installedRoot);
+    return files.readStats(joinScope(scope, PYTHON_ENVIRONMENT_FOLDER))?.isDirectory() === true
+        ? undefined
+        : { status: 'missing', note: 'The project environment .venv is missing. Run uv sync, then check again.' };
+}
+
 /**
 Finds the tool and runs the expanded commands of a check.
 
@@ -309,6 +340,8 @@ export async function runCheckCommand(
 ): Promise<CheckResult> {
     const tool = planned.tool as Tool;
     const base = buildBaseResult(planned, session);
+    const environment = findMissingProjectEnvironment(session, planned);
+    if (environment !== undefined) return { ...base, ...environment };
     const { setup } = prepareToolEnvironment(session, planned, tool.name, options);
     const command = [
         ...(stripCoverageArguments(planned, options) as string[]),
@@ -320,8 +353,9 @@ export async function runCheckCommand(
     const availability = findTool(session, cwd, tool);
     if ('status' in availability) return { ...base, ...availability };
     const companion = findMissingOtherTool(session, planned, command, cwd);
-    if (companion !== undefined) return { ...base, ...companion };
-    return runInCopy({ session, planned, tool, command, toolPath: availability.path, setup, base, options });
+    return companion === undefined
+        ? runInFolder({ session, planned, tool, command, toolPath: availability.path, setup, base, options })
+        : { ...base, ...companion };
 }
 
 /**

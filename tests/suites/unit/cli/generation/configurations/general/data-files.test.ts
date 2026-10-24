@@ -6,7 +6,6 @@ import { stringify } from '@decimalturn/toml-patch';
 import { generate } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
-import { MISE_SCHEMA, SETTINGS_SCHEMA } from '#cli/config/generation/configurations/general/data-files/v8r.ts';
 import { MAPPED_SCHEMAS, MAPPED_SCHEMA_RECORDS } from '#tests/config/generation/configurations/general/data-files.ts';
 
 test.each([true, false])(
@@ -24,7 +23,30 @@ test.each([true, false])(
         const v8rFile = generate(session).files.find((file) => file.path === findConfigFilePath(session, 'v8r'))!;
         expect(parse(v8rFile.content)).toStrictEqual({
             ignoreErrors: true,
-            customCatalog: { schemas: [MISE_SCHEMA, SETTINGS_SCHEMA, ...(hasSchemas ? MAPPED_SCHEMA_RECORDS : [])] },
+            customCatalog: {
+                schemas: [
+                    {
+                        name: 'mise',
+                        description: 'The mise settings file',
+                        fileMatch: [
+                            'mise.toml',
+                            '.mise.toml',
+                            '.mise/conf.d/*.toml',
+                            '.config/mise/config.toml',
+                            '.config/mise/conf.d/*.toml',
+                            '.gspot/mise.toml',
+                        ],
+                        location: 'https://mise.jdx.dev/schema/mise.json',
+                    },
+                    {
+                        name: 'gspot',
+                        description: 'The gspot settings file',
+                        fileMatch: ['gspot.toml'],
+                        location: '.gspot/gspot.schema.json',
+                    },
+                    ...(hasSchemas ? MAPPED_SCHEMA_RECORDS : []),
+                ],
+            },
         });
     },
 );

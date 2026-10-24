@@ -1,19 +1,11 @@
 export const PACKAGE_STYLE_CASES = [
     {
-        rule: 'gspot.ampm',
-        sample: 'Meet at 1 pm.',
-    },
-    {
         rule: 'gspot.date-ordinals',
         sample: 'Released July first.',
     },
     {
         rule: 'gspot.jargon',
         sample: 'Select a glyph.',
-    },
-    {
-        rule: 'gspot.militaristic-language',
-        sample: 'Reduce the blast radius.',
     },
     {
         rule: 'gspot.ordinal-adverbs',
@@ -69,7 +61,7 @@ export const PACKAGE_STYLE_CASES = [
     },
     {
         rule: 'gspot.straight-quotes',
-        sample: 'Use \u2018native\u2019 text.',
+        sample: 'Use \u{2018}native\u{2019} text.',
         findings: [
             [0, 'gspot.straight-quotes'],
             [0, 'gspot.straight-quotes'],

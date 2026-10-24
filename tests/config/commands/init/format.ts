@@ -106,26 +106,6 @@ export const SCOPE_FORMAT_FILES = {
     'sibling/source.js': 'export const sibling = 1;\n',
 } as const;
 
-const ROOT_INDENT_WIDTH = 2;
-
-const SCOPE_INDENT_WIDTH = 6;
-
-const ROOT_PRINT_WIDTH = 90;
-
-const SCOPE_PRINT_WIDTH = 100;
-
-export const SCOPE_FORMAT_CASES = [
-    {
-        name: 'repository configuration',
-        expected: [
-            ['', ROOT_INDENT_WIDTH, ROOT_PRINT_WIDTH, 'double'],
-            ['app', SCOPE_INDENT_WIDTH, SCOPE_PRINT_WIDTH, 'single'],
-            ['app/deep', SCOPE_INDENT_WIDTH, SCOPE_PRINT_WIDTH, 'single'],
-            ['sibling', ROOT_INDENT_WIDTH, ROOT_PRINT_WIDTH, 'double'],
-        ],
-    },
-] as const;
-
 export const PRETTIER_FORMAT_OPTIONS = {
     quotes: 'double',
     override: [

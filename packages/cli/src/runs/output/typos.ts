@@ -83,11 +83,7 @@ export function parseTyposFindings(output: ToolOutput): Finding[] {
     const linesByPath = new Map<string, Buffer[]>();
     return typos.map((typo) => {
         const path = resolve(cwd, typo.path);
-        return buildTypoFinding(
-            output,
-            typo,
-            path,
-            getTypoPosition(root, convertToPosixPath(relative(root, path)), typo, linesByPath),
-        );
+        const local = convertToPosixPath(relative(root, path));
+        return buildTypoFinding(output, typo, path, getTypoPosition(root, local, typo, linesByPath));
     });
 }

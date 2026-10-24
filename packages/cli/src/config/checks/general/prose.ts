@@ -1,10 +1,12 @@
+import type { ProseRoute } from '#cli/types/checks/general/prose.ts';
+
 export const VALE_TOOL = 'vale';
 
 export const VALE_ARGUMENTS = ['--output', 'JSON', '--no-exit'] as const;
 
 export const SCRIPT_GRAMMAR = { mode: 'stdin', extension: '.py' } as const;
 
-export const PROSE_GRAMMARS = {
+export const PROSE_GRAMMARS: Readonly<Record<string, Omit<ProseRoute, 'path'> & { format?: string }>> = {
     '.md': { mode: 'path', extension: '.md' },
     '.mdx': { mode: 'path', extension: '.md' },
     '.ts': { mode: 'path', extension: '.ts', format: 'md' },

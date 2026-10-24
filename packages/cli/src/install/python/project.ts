@@ -10,6 +10,7 @@ import { runInstallStep } from '#cli/install/steps.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import { compareText, formatCount } from '#cli/system/text.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
+import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -22,8 +23,8 @@ import type { UvLockfile } from '#cli/types/parsers/projects/lockfiles.ts';
 import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
 import { type UvCommand, type PythonIndexSettings } from '#cli/types/install/python.ts';
 import { readPythonSettings, writePythonSettings } from '#cli/install/python/settings.ts';
+import { UV_TOOL, UV_PROJECT_FLAGS, UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/python.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
-import { UV_TOOL, UV_PROJECT_FLAGS, UV_ENVIRONMENT_VARIABLE } from '#cli/config/tools/python.ts';
 import { PYPROJECT_TOML, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 
 import {
@@ -36,22 +37,6 @@ import {
     PYTHON_DEFAULT_INDEX_ORIGIN,
     UV_LOCKFILE_CREDENTIAL_MESSAGE,
 } from '#cli/config/install/python/project.ts';
-
-function readPythonLockfile(
-    runFolder: string,
-    credentials: string[],
-    project: ToolPyproject,
-    indexes: PythonIndexSettings['settings'],
-): string {
-    const lockfile = readFileSync(join(runFolder, PROJECT_UV_LOCKFILE), 'utf8');
-    assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
-    if (!isPythonLockfileFresh(project, lockfile, indexes))
-        throw new GspotError(
-            'install',
-            'The uv lockfile does not match the tool project. gspot kept the existing files.',
-        );
-    return lockfile;
-}
 
 async function runUv(
     install: ToolInstall,
@@ -69,7 +54,7 @@ async function runUv(
     ];
     const result = await runInstallStep(install, command, {
         cwd: runFolder,
-        env: { [UV_ENVIRONMENT_VARIABLE]: join(runFolder, PYTHON_ENVIRONMENT_FOLDER), UV_PYTHON: undefined },
+        env: { [UV_PROJECT_ENVIRONMENT]: join(runFolder, PYTHON_ENVIRONMENT_FOLDER), UV_PYTHON: undefined },
     });
     if (result.missing)
         throw new GspotError(
@@ -105,17 +90,7 @@ function parsePythonToolLockfile(lockfile: string): UvLockfile | undefined {
         if (!(error instanceof Error && 'line' in error && typeof error.line === 'number')) throw error;
         return undefined;
     }
-    if (!parsed.success || parsed.data.version !== 1) return undefined;
-    if (
-        parsed.data.package.some(
-            (lockedPackage) =>
-                lockedPackage.version === undefined ||
-                lockedPackage.source === undefined ||
-                lockedPackage.metadata?.['requires-dist']?.some(({ specifier }) => specifier === undefined) === true,
-        )
-    )
-        return undefined;
-    return parsed.data;
+    return parsed.success && parsed.data.version === 1 ? parsed.data : undefined;
 }
 
 /**
@@ -131,7 +106,7 @@ export async function preparePythonLockfile(
     toolProjectFile: GeneratedFile,
 ): Promise<GeneratedFile> {
     const { root } = install.session;
-    const owner = install.writer.files;
+    const owner = install.writer;
     const project = toolPyprojectSchema.parse(parse(toolProjectFile.content));
     const original = owner.read(GSPOT_PATHS.uvLockfile);
     const recorded = original?.bytes.toString('utf8');
@@ -144,16 +119,22 @@ export async function preparePythonLockfile(
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PYPROJECT_TOML), toolProjectFile.content);
 
-    const credentials = writePythonSettings(root, runFolder);
+    const credentials = writePythonSettings(
+        root,
+        runFolder,
+        getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days,
+    );
     await runUv(install, {
         runFolder,
         commandArguments: UV_LOCKFILE_ARGUMENTS,
         executable: getUvPath(install.session),
         credentials,
     });
+    const lockfile = readFileSync(join(runFolder, PROJECT_UV_LOCKFILE), 'utf8');
+    assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
     return {
         path: GSPOT_PATHS.uvLockfile,
-        content: readPythonLockfile(runFolder, credentials, project, indexes),
+        content: lockfile,
         kind: 'lock',
         read: original,
     };
@@ -169,13 +150,17 @@ Install the frozen Python tool project in .gspot.
 */
 export async function installPythonTools(install: ToolInstall, executable: string): Promise<string> {
     const { root } = install.session;
-    const owner = install.writer.files;
+    const owner = install.writer;
     const toolProjectFile = owner.read(GSPOT_PATHS.pythonProject);
     if (toolProjectFile === undefined) return '';
     const runFolder = join(root, DOT_GSPOT);
 
     using settings = createTemporaryFolder();
-    const credentials = writePythonSettings(root, settings.path);
+    const credentials = writePythonSettings(
+        root,
+        settings.path,
+        getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days,
+    );
     for (const commandArguments of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
         await runUv(install, {
             runFolder,
@@ -236,17 +221,13 @@ function hasAllowedPythonOrigins(lockfile: UvLockfile, indexes: PythonIndexSetti
         }
         return [];
     });
-    const configuredIndexes = indexes['index'];
     const hasDefaultIndexOverride =
-        indexes['index-url'] !== undefined ||
-        (Array.isArray(configuredIndexes) &&
-            configuredIndexes.some((index: unknown) => isTable(index) && index['default'] === true));
+        indexes['index-url'] !== undefined || indexes.index?.some((index) => index['default'] === true) === true;
     const origins = new Set(
         [...PYTHON_PACKAGE_ORIGINS, ...(hasDefaultIndexOverride ? [] : [PYTHON_DEFAULT_INDEX_ORIGIN]), ...configured]
             .filter((url) => URL.canParse(url))
             .map((url) => new URL(url).origin),
     );
-
     return lockfile.package.every((lockedPackage) => {
         const addresses = [
             lockedPackage.source?.['registry'],

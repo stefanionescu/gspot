@@ -47,8 +47,8 @@ export const OUTPUT_PARSE_RESULTS = {
         foreign: { findings: [] },
     },
     json: {
-        empty: { error: 'JSON returned no structured findings.' },
-        foreign: { error: 'JSON printed output that gspot cannot read.' },
+        empty: { error: 'The command printed nothing; it should print a JSON report.' },
+        foreign: { error: 'The output is not JSON. It starts with: not the output of any tool {' },
     },
     sarif: {
         empty: { error: 'SARIF printed output that gspot cannot read.' },

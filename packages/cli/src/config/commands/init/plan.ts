@@ -26,3 +26,6 @@ export const CI_FILE_NOTES = {
 export const DETECTION_LABEL_WIDTH = 20;
 
 export const DETECTION_GAP_WIDTH = 3;
+
+export const UNCHECKED_FILES_SHOWN = 5;
+export const ANY_FILE_GLOB = /^\*+(?:\/\*+)*$/u;

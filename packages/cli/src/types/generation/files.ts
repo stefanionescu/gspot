@@ -5,8 +5,15 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { BlockStyle } from '#cli/types/parsers/formats/managed-blocks.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
-import type { Tool, Level, ConfigFile, Configuration } from '#cli/types/configurations.ts';
 import type { IGNORE_SECTION_TITLES } from '#cli/config/generation/config-files/ignore-files.ts';
+
+import {
+    type Tool,
+    type Level,
+    type ConfigFile,
+    type Configuration,
+    type SourcedConfigFile,
+} from '#cli/types/configurations.ts';
 
 type ManagedBlock = { path: string; block: string; style: BlockStyle };
 
@@ -42,13 +49,18 @@ export type PlannedNpmProject = {
     packageManager: PackageManager['name'];
 };
 
-export type PlannedConfigFile = ConfigFileOwner & { targetPath: string; level: Level; configFile: ConfigFile };
+export type PlannedConfigFile = ConfigFileOwner & {
+    targetPath: string;
+    level: Level;
+    configFile: SourcedConfigFile;
+};
 
 export type RuleOptionsRun = {
     chosen: string[];
     running: ReadonlySet<string>;
     higher: ReadonlySet<string>;
     level: Level;
+    suffix?: string;
 };
 
 export type ConfigFileOutput = { content: string; companions: GeneratedFile[] };
@@ -69,8 +81,9 @@ export type IgnoreSection = { key: keyof typeof IGNORE_SECTION_TITLES | 'setting
 
 export type OwnedConfigFile = { configFile: ConfigFile; owner: ConfigFileOwner };
 
-export type BuiltConfigFile = OwnedConfigFile & {
-    configFile: ConfigFile;
+export type OwnedSourceFile = OwnedConfigFile & { configFile: SourcedConfigFile };
+
+export type BuiltConfigFile = OwnedSourceFile & {
     file: GeneratedFile;
     companions: GeneratedFile[];
 };

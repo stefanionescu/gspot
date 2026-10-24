@@ -29,7 +29,18 @@ export type LinterJsonFinding = {
 export type RuffRule = { code: string | null; preview: boolean };
 
 export type RuffConfigFile = {
-    lint: { select: string[]; pylint: { 'max-statements': number }; 'per-file-ignores'?: Record<string, string[]> };
+    lint: {
+        select: string[];
+        pylint: {
+            'max-statements': number;
+            'max-args': number;
+            'max-positional-args': number;
+            'max-branches': number;
+            'max-returns': number;
+        };
+        mccabe: { 'max-complexity': number };
+        'per-file-ignores'?: Record<string, string[]>;
+    };
     format: { 'quote-style': string };
 };
 
@@ -38,3 +49,10 @@ export type KnipConfigFile = { ignore: string[]; workspaces: Record<string, { en
 export type StylelintConfigFile = Required<Pick<Config, 'rules'>> & Pick<Config, 'overrides'>;
 
 export type SemgrepRuleFile = { rules: { id: string; paths?: { include?: string[]; exclude?: string[] } }[] };
+
+export type Tsconfig = {
+    extends?: string | undefined;
+    include?: string[] | undefined;
+    exclude?: string[] | undefined;
+    compilerOptions?: { typeRoots?: string[] | undefined } | undefined;
+};

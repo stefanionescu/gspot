@@ -1,14 +1,14 @@
 import { test, expect } from 'bun:test';
 import { assertWritablePath } from '#cli/system/files/names.ts';
-import { PORTABLE_PATHS } from '#tests/config/system/files/names.ts';
+import { REFUSED_PORTABLE_PATHS } from '#tests/config/system/files/names.ts';
 
-test.each([...PORTABLE_PATHS])('portable paths refuse $path: $refused', ({ path, refused }) => {
-    if (refused)
-        expect(() => {
-            assertWritablePath(path);
-        }).toThrow('is not a safe repository-relative path');
-    else
-        expect(() => {
-            assertWritablePath(path);
-        }).not.toThrow();
+test.each([...REFUSED_PORTABLE_PATHS])('portable paths refuse %p', (path) => {
+    expect(() => {
+        assertWritablePath(path);
+    }).toThrow('is not a safe repository-relative path');
+});
+test('portable paths accept a relative document with Unicode, spaces and percent signs', () => {
+    expect(() => {
+        assertWritablePath('documents/équipe 50%.md');
+    }).not.toThrow();
 });

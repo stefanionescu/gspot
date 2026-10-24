@@ -1,5 +1,6 @@
 import { createRule } from '../create-rule.ts';
 import type { RuleContext } from '../types/rules.ts';
+import type { ImportBlock } from '../types/syntax.ts';
 import { type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {
@@ -14,8 +15,10 @@ import {
 
 function isToolDirective(value: string): boolean {
     const text = value.replace(LEADING_STAR, '').trim();
-    if (TYPESCRIPT_DIRECTIVE.test(text)) return true;
-    return TOOL_DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
+    return (
+        TYPESCRIPT_DIRECTIVE.test(text) ||
+        TOOL_DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix))
+    );
 }
 
 function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languageOptions']['sourceType']): boolean {
@@ -41,35 +44,32 @@ function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
 function groupImportBlocks(
     body: TSESTree.Statement[],
     sourceType: RuleContext['languageOptions']['sourceType'],
-): [TSESTree.Statement, ...TSESTree.Statement[]][] {
-    const blocks: [TSESTree.Statement, ...TSESTree.Statement[]][] = [];
-    let block: [TSESTree.Statement, ...TSESTree.Statement[]] | undefined;
+): ImportBlock[] {
+    const blocks: ImportBlock[] = [];
+    let block: ImportBlock | undefined;
     for (const statement of body) {
         if (!isImportLike(statement, sourceType)) {
             block = undefined;
             continue;
         }
         if (block === undefined) {
-            block = [statement];
+            block = { first: statement, last: statement };
             blocks.push(block);
-        } else block.push(statement);
+        } else block.last = statement;
     }
     return blocks;
 }
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function isFirstOnLine(text: string, comment: TSESTree.Comment): boolean {
+    return BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0]));
+}
+
 function mergeCommentLines(source: TSESLint.SourceCode): TSESTree.Comment[] {
     const text = source.getText();
     const blocks: TSESTree.Comment[] = [];
     let previous: TSESTree.Comment | undefined;
     for (const comment of source.getAllComments()) {
-        if (
-            comment.type !== AST_TOKEN_TYPES.Line ||
-            isToolDirective(comment.value) ||
-            !BLANK.test(
-                source
-                    .getText()
-                    .slice(source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 }), comment.range[0]),
-            )
-        ) {
+        if (comment.type !== AST_TOKEN_TYPES.Line || isToolDirective(comment.value) || !isFirstOnLine(text, comment)) {
             blocks.push(comment);
             previous = undefined;
             continue;
@@ -108,17 +108,10 @@ function isLeading(
     node: TSESTree.Node,
     comments: TSESTree.Comment[],
 ): boolean {
+    const text = source.getText();
     const start = getStatementOffset(node);
-    if (
-        comment.range[1] > start ||
-        !BLANK.test(
-            source
-                .getText()
-                .slice(source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 }), comment.range[0]),
-        )
-    )
-        return false;
-    let between = source.getText().slice(comment.range[1], start);
+    if (comment.range[1] > start || !isFirstOnLine(text, comment)) return false;
+    let between = text.slice(comment.range[1], start);
     const directives = comments.filter(
         (directive) =>
             directive.range[0] >= comment.range[1] && directive.range[1] <= start && isToolDirective(directive.value),
@@ -136,14 +129,7 @@ function buildRemovalRange(source: TSESLint.SourceCode, comment: TSESTree.Commen
     const lineStart = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });
     const newline = text.indexOf('\n', comment.range[1]);
     const end = newline === -1 ? text.length : newline;
-    if (
-        BLANK.test(
-            source
-                .getText()
-                .slice(source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 }), comment.range[0]),
-        ) &&
-        BLANK.test(text.slice(comment.range[1], end))
-    )
+    if (isFirstOnLine(text, comment) && BLANK.test(text.slice(comment.range[1], end)))
         return [lineStart, newline === -1 ? end : end + 1];
     let start = comment.range[0];
     while (start > 0 && (text[start - 1] === ' ' || text[start - 1] === '\t')) start -= 1;
@@ -174,9 +160,7 @@ export const noCommentsInImports = createRule<[], 'comment'>({
         const comments = mergeCommentLines(source);
         return {
             Program(node) {
-                for (const block of groupImportBlocks(node.body, context.languageOptions.sourceType)) {
-                    const [first] = block;
-                    const last = block.at(-1) ?? first;
+                for (const { first, last } of groupImportBlocks(node.body, context.languageOptions.sourceType)) {
                     const other = node.body[node.body.indexOf(last) + 1];
                     const end = other === undefined ? text.length : getStatementOffset(other);
                     const violating = comments.find(
@@ -184,16 +168,16 @@ export const noCommentsInImports = createRule<[], 'comment'>({
                             comment.range[0] > first.range[0] &&
                             comment.range[1] <= end &&
                             !isToolDirective(comment.value) &&
-                            !(other !== undefined && isLeading(source, comment, other, comments)),
+                            (other === undefined || !isLeading(source, comment, other, comments)),
                     );
                     if (violating === undefined) continue;
-                    const followsImports = violating.loc.start.line > last.loc.end.line;
+                    const isAfterImports = violating.loc.start.line > last.loc.end.line;
                     context.report({
                         loc: violating.loc,
                         messageId: 'comment',
                         fix(fixer) {
                             const removal = buildRemovalRange(source, violating);
-                            if (followsImports) {
+                            if (isAfterImports) {
                                 const rest = text.slice(removal[1]);
                                 removal[1] += rest.length - rest.trimStart().length;
                             }
@@ -201,7 +185,7 @@ export const noCommentsInImports = createRule<[], 'comment'>({
                                 fixer.removeRange(removal),
                                 fixer.insertTextBefore(
                                     first,
-                                    `${source.getText(violating)}${followsImports ? '\n\n' : '\n'}`,
+                                    `${source.getText(violating)}${isAfterImports ? '\n\n' : '\n'}`,
                                 ),
                             ];
                         },

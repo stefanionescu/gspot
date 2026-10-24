@@ -6,11 +6,19 @@ import { listEnclosingFolders } from '#cli/system/paths.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { LEADING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import type { LockfileName } from '#cli/types/parsers/projects/lockfiles.ts';
 import { PACKAGE_JSON, PYTHON_NAME_SEPARATORS } from '#cli/config/parsers/projects/dependencies.ts';
 
+import {
+    PNPM_PEER_START,
+    PNPM_ROOT_IMPORTER,
+    DEPENDENCY_SECTIONS,
+    type IMPORTER_LOCKFILES,
+    type LOCKED_PACKAGE_LOCKFILES,
+} from '#cli/config/parsers/projects/lockfiles.ts';
 import {
     uvLockSchema,
     bunLockSchema,
@@ -20,20 +28,13 @@ import {
     yarnPackageSchema,
     dependencySectionsSchema,
 } from '#cli/schemas/parsers/projects/lockfiles.ts';
-import {
-    PNPM_PEER_START,
-    NPM_PACKAGE_FOLDER,
-    PNPM_ROOT_IMPORTER,
-    DEPENDENCY_SECTIONS,
-    type IMPORTER_LOCKFILES,
-    type LOCKED_PACKAGE_LOCKFILES,
-} from '#cli/config/parsers/projects/lockfiles.ts';
 
 function parseNpmPackages(path: string, text: string): string[] {
     return Object.entries(parseJsonFile(path, text, npmLockSchema).packages).flatMap(([folder, lockedPackage]) => {
         const index = folder.lastIndexOf(NPM_PACKAGE_FOLDER);
-        if (index === -1 || lockedPackage.version === undefined) return [];
-        return [`${folder.slice(index + NPM_PACKAGE_FOLDER.length)}@${lockedPackage.version}`];
+        return index === -1 || lockedPackage.version === undefined
+            ? []
+            : `${folder.slice(index + NPM_PACKAGE_FOLDER.length)}@${lockedPackage.version}`;
     });
 }
 
@@ -49,8 +50,8 @@ function parseYarnPackages(_path: string, text: string): string[] {
     return Object.entries(yarnLockSchema.parse(parseSyml(text))).flatMap(([descriptors, yarnPackage]) => {
         const version = yarnPackageSchema.safeParse(yarnPackage);
         const name = splitIdentity(descriptors.split(',', 1)[0]?.trim() ?? '')?.[0];
-        return version.success && version.data.version !== undefined && name !== undefined
-            ? [`${name}@${version.data.version}`]
+        return name !== undefined && version.success && version.data.version !== undefined
+            ? `${name}@${version.data.version}`
             : [];
     });
 }
@@ -68,7 +69,7 @@ const PACKAGE_PARSERS: Readonly<
     'yarn.lock': parseYarnPackages,
     'uv.lock': (path, text) =>
         parseTomlFile(path, text, uvLockSchema).package.flatMap(({ name, version }) =>
-            version === undefined ? [] : [`${name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${version}`],
+            version === undefined ? [] : `${name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-')}@${version}`,
         ),
 };
 
@@ -92,7 +93,7 @@ function parseNpmVersions(path: string, text: string, folder: string): Map<strin
     const { packages } = parseJsonFile(path, text, npmLockSchema);
     const specifiers = listSpecifiers(packages[folder]);
     return new Map(
-        [...specifiers.keys()].flatMap((name): [string, string][] => {
+        specifiers.keys().flatMap((name): [string, string][] => {
             const version = listEnclosingFolders(folder)
                 .map((base) => packages[posix.join(base, NPM_PACKAGE_FOLDER, name)]?.version)
                 .find((lockedVersion) => lockedVersion !== undefined);
@@ -106,11 +107,13 @@ function parseBunVersions(path: string, text: string, folder: string): Map<strin
     const workspace = lockfile.workspaces[folder];
     const importer = isTable(workspace) && typeof workspace['name'] === 'string' ? workspace['name'] : folder;
     return new Map(
-        [...listSpecifiers(workspace).keys()].flatMap((name): [string, string][] => {
-            const identity = (lockfile.packages[posix.join(importer, name)] ?? lockfile.packages[name])?.[0];
-            const version = typeof identity === 'string' ? splitIdentity(identity)?.[1] : undefined;
-            return version === undefined ? [] : [[name, version]];
-        }),
+        listSpecifiers(workspace)
+            .keys()
+            .flatMap((name): [string, string][] => {
+                const identity = (lockfile.packages[posix.join(importer, name)] ?? lockfile.packages[name])?.[0];
+                const version = typeof identity === 'string' ? splitIdentity(identity)?.[1] : undefined;
+                return version === undefined ? [] : [[name, version]];
+            }),
     );
 }
 
@@ -165,6 +168,29 @@ export function splitIdentity(identity: string): [string, string] | undefined {
 }
 
 /**
+Find the first lockfile from a folder up to the repository root.
+
+@param reads the repository cache.
+@param folder the starting project folder.
+@param lockfiles the lockfile names in preference order.
+@returns the first lockfile and its contents, or undefined.
+*/
+export function findNearestLockfile<Name extends string>(
+    reads: ReadCache,
+    folder: string,
+    lockfiles: readonly Name[],
+): { lockfile: Name; path: string; base: string; text: string } | undefined {
+    for (const base of listEnclosingFolders(folder)) {
+        for (const lockfile of lockfiles) {
+            const path = posix.join(base, lockfile);
+            const text = findCachedText(reads, path);
+            if (text !== undefined) return { lockfile, path, base, text };
+        }
+    }
+    return undefined;
+}
+
+/**
 Find the nearest lockfile of a project, from its folder up to the repository root, and list what it holds.
 
 @param reads the run cache, rooted at the repository.
@@ -172,19 +198,14 @@ Find the nearest lockfile of a project, from its folder up to the repository roo
 @param lockfiles the lockfile names of the project's package manager family, in the order to try.
 @returns each locked package as `name@version`, or undefined when no lockfile sits on the way to the root.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function readLockedPackages(
     reads: ReadCache,
     folder: string,
     lockfiles: readonly (typeof LOCKED_PACKAGE_LOCKFILES)[number][],
 ): Set<string> | undefined {
-    for (const base of listEnclosingFolders(folder)) {
-        for (const lockfile of lockfiles) {
-            const path = posix.join(base, lockfile);
-            const text = findCachedText(reads, path);
-            if (text !== undefined) return new Set(PACKAGE_PARSERS[lockfile](path, text));
-        }
-    }
-    return undefined;
+    const found = findNearestLockfile(reads, folder, lockfiles);
+    return found === undefined ? undefined : new Set(PACKAGE_PARSERS[found.lockfile](found.path, found.text));
 }
 
 /**

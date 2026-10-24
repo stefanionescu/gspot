@@ -1,28 +1,27 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { readSettings } from '#cli/settings/read.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/apply/files/generated.ts';
+import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test.each(['api', './api'])('settings commands resolve scope %s from the calling folder', async (scope) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'packages/api', configurations: [] }] }),
         'packages/api/run.sh': 'printf "example\\n"\n',
     });
     const cwd = join(sandbox.path, 'packages');
     const added = await runGspot(cwd, ['add', 'bash', '--scope', scope]);
     expect(added.code, added.stdout + added.stderr).toBe(0);
-    expect(readSettings(sandbox.path).settings.scopes['packages/api']?.configurations).toStrictEqual(['bash']);
+    expect(readSandboxSettings(sandbox.path).scopes['packages/api']?.configurations).toStrictEqual(['bash']);
     const set = await runGspot(cwd, ['set', 'limits.function_lines', '30', '--scope', scope]);
     expect(set.code, set.stdout + set.stderr).toBe(0);
-    expect(readSettings(sandbox.path).settings.scopes['packages/api']?.limits?.function_lines).toBe(30);
+    expect(readSandboxSettings(sandbox.path).scopes['packages/api']?.limits?.function_lines).toBe(30);
     const unset = await runGspot(cwd, ['unset', 'limits.function_lines', '--scope', scope]);
     expect(unset.code, unset.stdout + unset.stderr).toBe(0);
-    expect(readSettings(sandbox.path).settings.scopes['packages/api']?.limits?.function_lines).toBeUndefined();
+    expect(readSandboxSettings(sandbox.path).scopes['packages/api']?.limits?.function_lines).toBeUndefined();
     const removed = await runGspot(cwd, [
         'remove',
         'bash',
@@ -32,12 +31,12 @@ test.each(['api', './api'])('settings commands resolve scope %s from the calling
         'The scope no longer contains shell scripts.',
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(readSettings(sandbox.path).settings.scopes['packages/api']?.configurations).toStrictEqual([]);
-    expect(readSettings(sandbox.path).settings.scopes['packages/api']?.removed_configurations).toStrictEqual(['bash']);
+    expect(readSandboxSettings(sandbox.path).scopes['packages/api']?.configurations).toStrictEqual([]);
+    expect(readSandboxSettings(sandbox.path).scopes['packages/api']?.removed_configurations).toStrictEqual(['bash']);
 });
 
 test('apply prints no managed-key warning while it still manages the Bun scanner', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: 'dependencies.bun_scanner = "@socketsecurity/bun-security-scanner"\n',
         }),
@@ -51,7 +50,7 @@ test('apply prints no managed-key warning while it still manages the Bun scanner
 });
 
 test('unset warns when the Bun scanner remains after its setting goes', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: 'dependencies.bun_scanner = "@socketsecurity/bun-security-scanner"\n',
         }),

@@ -60,17 +60,7 @@ Runs svelte-check on the scope for compiler warnings, accessibility warnings, an
 export async function checkSvelteCheck(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     using runtime = createTemporaryFolder();
     const target = join(runtime.path, TSCONFIG_COPY_FOLDER, planned.scope.folder.path, TSCONFIG_FILE);
-    const tsconfigPath = writeScopeTsconfig(
-        {
-            root: session.root,
-            installedRoot: session.installedRoot,
-            reads: session.reads,
-            repository: { files: session.repository.files, scopeFolders: session.repository.scopeFolders },
-            settingsFile: session.settingsFile,
-        },
-        planned.scope,
-        target,
-    );
+    const tsconfigPath = writeScopeTsconfig(session, planned.scope, target);
     const command = [...SVELTE_CHECK_COMMAND, SVELTE_TSCONFIG_FLAG, tsconfigPath];
     const result = await runCheckTool(session, planned, command, {
         cwd: join(session.root, planned.scope.folder.path),

@@ -9,7 +9,7 @@ import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { COVERAGE_DIMENSIONS } from '#cli/config/planning/checks.ts';
 import type { Check, ScopeCheck } from '#cli/types/configurations.ts';
 import type { PlanOptions, PlannedScope, PlannedCheck } from '#cli/types/planning.ts';
-import { isRootOnlyCheck, listChildScopes, selectCheckFiles, stripToolIgnoredFiles } from '#cli/planning/files.ts';
+import { isRootOnlyCheck, listChildScopes, selectCheckFiles } from '#cli/planning/files.ts';
 
 function listScopeChecks(session: Session, scope: Scope): ScopeCheck[] {
     const isRoot = scope.folder.path === '';
@@ -54,8 +54,7 @@ function planCheck(planned: PlannedScope, scopeCheck: ScopeCheck): PlannedCheck 
         }),
     };
     const skip = findFirstSkip(plannedCheck, planned);
-    const result = skip === undefined ? plannedCheck : { ...plannedCheck, skip };
-    return options.forConfiguration === true ? result : stripToolIgnoredFiles(session, result);
+    return skip === undefined ? plannedCheck : { ...plannedCheck, skip };
 }
 
 function buildNarrowedPaths(options: PlanOptions): Set<string> | undefined {
@@ -138,7 +137,7 @@ pushed history lacks commits.
 */
 export function planChecks(session: Session, options: PlanOptions): PlannedCheck[] {
     const checks = planScopes(session, options).flatMap((planned) => skipReplacedChecks(planned));
-    if (options.historyComplete === false) {
+    if (options.shallow === true) {
         const historyChecks = checks.filter((check) => check.skip === undefined && check.check.runs === 'history');
         if (historyChecks.length > 0)
             throw new GspotError(

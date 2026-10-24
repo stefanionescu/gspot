@@ -14,7 +14,7 @@ mise = "vale"
 name = "vale"
 replace = [".vale.ini", "_vale.ini", "vale.ini"]
 suppression = { marker = "^<!--\\s*vale\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
-version = "3.21.0"
+version = "3.24.0"
 
 [[config_file]]
 target = "vale.ini"
@@ -41,10 +41,6 @@ target = "styles/gspot/item-length.yml"
 [[config_file]]
 level = "all"
 target = "styles/gspot/paragraph-length.yml"
-
-[[config_file]]
-level = "all"
-target = "styles/gspot/possessives.yml"
 
 [[config_file]]
 level = "all"
@@ -124,10 +120,6 @@ target = "styles/gspot/percentage-numbers.yml"
 
 [[config_file]]
 level = "all"
-target = "styles/gspot/militaristic-language.yml"
-
-[[config_file]]
-level = "all"
 target = "styles/gspot/currency.yml"
 
 [[config_file]]
@@ -192,10 +184,6 @@ target = "styles/gspot/version-range.yml"
 
 [[config_file]]
 level = "all"
-target = "styles/gspot/ampm.yml"
-
-[[config_file]]
-level = "all"
 target = "styles/gspot/time-ranges.yml"
 
 [[config_file]]
@@ -205,6 +193,15 @@ target = "styles/gspot/conscious-language.yml"
 [[config_file]]
 level = "all"
 target = "styles/gspot/idioms.yml"
+
+[[config_file]]
+target = "styles/LICENSES.md"
+
+[[config_file]]
+target = "styles/gspot/link-text.yml"
+
+[[config_file]]
+target = "styles/gspot/dates.yml"
 
 [[check]]
 example = "`Release on 03/04/2026.` reports an ambiguous date. Write `Release on March 4, 2026.` instead."

@@ -1,42 +1,33 @@
 import { GspotError } from '#cli/system/errors.ts';
+import { parseTomlText } from '#cli/settings/file.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { limitsSchema } from '#cli/schemas/settings/limits.ts';
-import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/read.ts';
-import { parseTomlText, readSettingsFile } from '#cli/settings/file.ts';
+import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { validateSettings, formatSettingsIssue } from '#cli/settings/validation/schema.ts';
-import { type Settings, type TomlTable, type SettingsFile, type ParsedSettings } from '#cli/types/settings/file.ts';
+import { type Settings, type TomlTable, type ParsedSettings } from '#cli/types/settings/file.ts';
 
 /**
 Parse and validate gspot.toml. Throw a GspotError with every settings error.
 
 @param text the gspot.toml contents.
-@param repositoryRoot the optional folder for validating declared scope paths.
+@param repositoryRoot the folder for validating declared scope paths.
 @returns the normalized settings.
 */
-export function parseSettings(text: string, repositoryRoot: string | undefined): Settings {
+export function parseSettings(text: string, repositoryRoot: string): Settings {
     const written = parseTomlText(text, SETTINGS_FILE);
+    const syntax = parseTomlSyntax(text, written);
     const result = settingsSchema.safeParse(written);
     if (!result.success)
-        throw new GspotError('settings', result.error.issues.flatMap((issue) => formatSettingsIssue(issue)).join('\n'));
+        throw new GspotError(
+            'settings',
+            result.error.issues.flatMap((issue) => formatSettingsIssue(issue, syntax)).join('\n'),
+        );
     const settings = buildSettings(result.data, written);
-    validateSettings(settings, repositoryRoot);
+    validateSettings(settings, repositoryRoot, syntax);
     return settings;
-}
-
-/**
-Read gspot.toml from a repository root.
-
-@param repositoryRoot the folder that contains gspot.toml.
-@returns the settings and the file text.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 8 calls in 6 files share it.
-export function readSettings(repositoryRoot: string): SettingsFile {
-    const { text } = readSettingsFile(repositoryRoot);
-    return { settings: parseSettings(text, repositoryRoot), text };
 }
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
@@ -48,9 +39,9 @@ function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settin
                 id,
                 {
                     ...definition,
-                    ...(outputs === undefined
-                        ? {}
-                        : { generator_outputs: outputs.map((path) => ({ kind: 'path' as const, path })) }),
+                    ...(outputs !== undefined && {
+                        generator_outputs: outputs.map((path) => ({ kind: 'path' as const, path })),
+                    }),
                     id,
                     ...COMMAND_CHECK_DEFAULTS,
                     summary: commandCheck.summary ?? `Runs the repository's own check ${id}.`,
@@ -73,36 +64,24 @@ into a check.
 */
 export function buildSettings(parsed: ParsedSettings, written: TomlTable): Settings {
     const { command_check: commandChecks, ...document } = parsed;
-    const tables = stripUndefined({
-        rules: parsed.rules,
-        hooks: parsed.hooks,
-        ci: parsed.ci,
-    });
     const writtenScopes = (written['scope'] ?? []) as TomlTable[];
-    const scopes = (parsed.scope ?? []).map((scope) => [scope.path, scope] as const);
     const scopeTables = Object.fromEntries(
-        scopes.map(([path, scope], index) => [
-            trimTrailingSlashes(path),
+        (parsed.scope ?? []).map((scope, index) => [
+            trimTrailingSlashes(scope.path),
             stripUndefined({ ...scope, written: writtenScopes[index] as TomlTable }),
         ]),
     );
     return {
         ...stripUndefined(document),
         written,
-        level: parsed.level,
-        configurations: parsed.configurations,
-        removed_configurations: parsed.removed_configurations,
-        limits: parsed.limits ?? limitsSchema.parse({}),
-        naming: parsed.naming ?? namingSchema.parse({}),
-        import_rule: parsed.import_rule,
-        structure: settingsSchema.shape.structure.unwrap().prefault({}).parse(parsed.structure),
+        limits: parsed.limits,
+        naming: parsed.naming,
+        structure: parsed.structure,
         format: stripUndefined({ ...parsed.format }),
         tools: stripUndefined({ ...parsed.tools }),
-        test_files: parsed.test_files,
         ignore: (parsed.ignore ?? []).map((ignore) => stripUndefined(ignore)),
         commandChecks: normalizeCommandChecks(commandChecks),
 
-        ...tables,
         scopes: scopeTables,
     };
 }

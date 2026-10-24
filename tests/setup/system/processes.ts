@@ -8,40 +8,23 @@ import { TEST_TIMEOUT_MILLISECONDS } from '#tests/config/setup/environment.ts';
 import type { CapturedChild, CapturedProcess } from '#tests/types/processes.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 
-let timeoutAt: number | undefined;
-
 /**
-Limit a child command to the time the test has left, and build the text a timeout error shows.
+Limit a child command and build the text a timeout error shows.
 
 @param command the child executable and arguments.
 @param options how to run it, including its own time limit.
 @returns the limited options and text that names the command.
 */
-export function limitToTestDeadline(
+export function limitCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
 ): { options: AsyncSpawnOptions & { timeoutSeconds: number }; context: string } {
-    const remaining = timeoutAt === undefined ? TEST_TIMEOUT_MILLISECONDS : Math.ceil(timeoutAt - performance.now());
     const context = `Command: ${command.join(' ')}\nWorking directory: ${options.cwd}`;
-    if (remaining <= 0)
-        throw new Error(`The test timeout has elapsed.\n${context}\nOutput: the command was not started.`);
-    const timeoutSeconds = Math.min(options.timeoutSeconds ?? Infinity, remaining / MILLISECONDS_PER_SECOND);
+    const timeoutSeconds = Math.min(
+        options.timeoutSeconds ?? Infinity,
+        TEST_TIMEOUT_MILLISECONDS / MILLISECONDS_PER_SECOND,
+    );
     return { options: { ...options, timeoutSeconds }, context };
-}
-
-/**
-Open one test's timeout.
-
-@returns a disposable that clears the test deadline.
-*/
-export function startTestTimeout(): Disposable {
-    timeoutAt = performance.now() + TEST_TIMEOUT_MILLISECONDS;
-    return {
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `using` calls it when the scope ends.
-        [Symbol.dispose]() {
-            timeoutAt = undefined;
-        },
-    };
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
@@ -56,14 +39,14 @@ function buildTimeoutError(
 }
 
 /**
-Run a command within its requested limit and the remaining test timeout.
+Run a command within its requested limit and the command timeout.
 
 @param command the executable and its arguments.
 @param options the subprocess environment and working directory.
 @returns the captured subprocess result.
 */
 export async function runCommand(command: readonly string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
-    const limited = limitToTestDeadline(command, options);
+    const limited = limitCommand(command, options);
     const result = await spawnProcess(command, limited.options);
     if (result.timedOut)
         throw buildTimeoutError(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND, limited.context, result);
@@ -71,14 +54,14 @@ export async function runCommand(command: readonly string[], options: AsyncSpawn
 }
 
 /**
-Run a synchronous command within the remaining test timeout.
+Run a synchronous command within the command timeout.
 
 @param command the executable and its arguments.
 @param options the working directory and environment.
 @returns captured output and process status.
 */
 export function runCommandBlocking(command: readonly string[], options: AsyncSpawnOptions): SpawnResult {
-    const limited = limitToTestDeadline(command, options);
+    const limited = limitCommand(command, options);
     const result = spawnProcessBlocking(command, limited.options);
     if (result.timedOut)
         throw buildTimeoutError(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND, limited.context, result);
@@ -86,18 +69,18 @@ export function runCommandBlocking(command: readonly string[], options: AsyncSpa
 }
 
 /**
-Wait within the remaining test time, then kill a child that remains alive.
+Wait within the command timeout, then kill a child that remains alive.
 
 @param pid child that the test started.
 */
 export async function waitForExit(pid: number): Promise<void> {
     if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid child PID: ${String(pid)}.`);
-    const deadline = timeoutAt ?? performance.now() + TEST_TIMEOUT_MILLISECONDS;
+    const deadline = performance.now() + TEST_TIMEOUT_MILLISECONDS;
     while (performance.now() < deadline) {
         try {
             process.kill(pid, 0);
         } catch (error) {
-            if ((error as NodeJS.ErrnoException).code === 'ESRCH') return;
+            if (hasErrorCode(error, 'ESRCH')) return;
             throw error;
         }
         await Bun.sleep(POLL_MILLISECONDS);
@@ -107,14 +90,14 @@ export async function waitForExit(pid: number): Promise<void> {
 }
 
 /**
-Wait until a child writes its ready file, or the test runs out of time. A child creates the file before it writes the
+Wait until a child writes its ready file, or the command timeout elapses. A child creates the file before it writes the
 content, so the file counts as ready once it holds bytes.
 
 @param path the ready file.
 @returns whether the file holds bytes.
 */
 export async function waitForFile(path: string): Promise<boolean> {
-    const deadline = timeoutAt ?? performance.now() + TEST_TIMEOUT_MILLISECONDS;
+    const deadline = performance.now() + TEST_TIMEOUT_MILLISECONDS;
     while (performance.now() < deadline) {
         try {
             const file = await stat(path);
@@ -127,16 +110,18 @@ export async function waitForFile(path: string): Promise<boolean> {
     return false;
 }
 
-/** Start and capture one test child within the current test deadline. */
+/**
+Start and capture one test child within the command timeout.
+*/
 export function startCommand(
     command: readonly string[],
     options: AsyncSpawnOptions,
 ): CapturedChild & { child: CapturedProcess & Pick<Bun.Subprocess, 'pid'> } {
-    const limited = limitToTestDeadline(command, options);
+    const limited = limitCommand(command, options);
     const child = Bun.spawn([...command], {
         cwd: limited.options.cwd,
-        ...(limited.options.env === undefined ? {} : { env: limited.options.env }),
-        ...(limited.options.stdin === undefined ? {} : { stdin: Buffer.from(limited.options.stdin) }),
+        ...(limited.options.env !== undefined && { env: limited.options.env }),
+        ...(limited.options.stdin !== undefined && { stdin: Buffer.from(limited.options.stdin) }),
         stdout: 'pipe',
         stderr: 'pipe',
         timeout: Math.ceil(limited.options.timeoutSeconds * MILLISECONDS_PER_SECOND),
@@ -167,7 +152,10 @@ export function stopOnSignals(stop: (code: number) => void): Disposable {
     };
 }
 
-/** A process result for check tests, with these fields changed. */
+/**
+A process result for check tests, with these fields changed.
+*/
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 89 calls in 31 files share it.
 export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnResult {
     return {
@@ -183,7 +171,9 @@ export function buildProcessResult(overrides: Partial<SpawnResult> = {}): SpawnR
     };
 }
 
-/** Drain the output of a child process, and end it when a test leaves its scope. */
+/**
+Drain the output of a child process, and end it when a test leaves its scope.
+*/
 export function captureChild(child: CapturedProcess): CapturedChild {
     const output = new Response(child.stdout).text();
     const errors = new Response(child.stderr).text();

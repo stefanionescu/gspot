@@ -1,10 +1,11 @@
+import { formatCount } from '#cli/system/text.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
+import type { Repository, TrackedFile } from '#cli/types/repository/files.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
-import { type Repository, type TrackedFile } from '#cli/types/repository/files.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/files/classify.ts';
 import { isInScope, joinScope, findProjectFolder } from '#cli/repository/scopes.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/files/matchers.ts';
@@ -60,7 +61,7 @@ function findExtensionEvidence(
     const extensions = detect.extensions.filter((extension) => contents.extensionCounts.has(extension));
     if (extensions.length === 0) return undefined;
     const count = extensions.reduce((sum, extension) => sum + (contents.extensionCounts.get(extension) ?? 0), 0);
-    return { evidence: `${String(count)} ${extensions.join(', ')} file${count === 1 ? '' : 's'}`, count };
+    return { evidence: formatCount(count, `${extensions.join(', ')} file`), count };
 }
 
 function findContentEvidence(
@@ -200,7 +201,7 @@ export function detectConditions(
     return new Set(
         conditions.filter(
             (condition) =>
-                !condition.absent_dependencies.some((name) => contents.dependencies.has(name)) &&
+                condition.absent_dependencies.every((name) => !contents.dependencies.has(name)) &&
                 EVIDENCE_FINDERS.some((source) => source(condition, contents) !== undefined),
         ),
     );

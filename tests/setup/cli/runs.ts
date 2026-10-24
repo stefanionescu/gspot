@@ -9,6 +9,7 @@ Options for an in-process run of every stage, with no fixes.
 @param overrides what the test changes.
 @returns the defaults with the overrides applied.
 */
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 115 calls in 43 files share it.
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
     return { stage: 'all', fix: false, isDryRun: false, cwd: process.cwd(), pathArguments: [], ...overrides };
@@ -33,6 +34,7 @@ Build fixer settings that run the executable of this test process.
 @param paths files the fixer covers.
 @returns the gspot.toml text.
 */
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 2 files share it.
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {
     return `configurations = []

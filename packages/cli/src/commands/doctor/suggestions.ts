@@ -9,9 +9,9 @@ import { type Configuration } from '#cli/types/configurations.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { type GenerationResult } from '#cli/types/generation/files.ts';
 import { BANNER_BYTES } from '#cli/config/repository/files/classify.ts';
-import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
 import { type Suggestions, type SuggestionRow } from '#cli/types/commands/doctor.ts';
+import { expandSuggestions, listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { type RepositorySetup, type ConflictingConfigFile } from '#cli/types/repository/setup.ts';
 import { readLintJobs, isEditedInPlace, readRepositorySetup } from '#cli/repository/setup/tools.ts';
 
@@ -25,7 +25,7 @@ function listDetectedConfigurations(session: Session): ConfigurationEvidence[] {
             .filter(([, table]) => table.removed_configurations.includes(detection.configuration))
             .map(([path]) => path);
         if (removedScopes.length === 0) return [detection];
-        const files = repository.files.filter((file) => !removedScopes.some((path) => isInScope(file.path, path)));
+        const files = repository.files.filter((file) => removedScopes.every((path) => !isInScope(file.path, path)));
         const paths = new Set(files.map((file) => file.path));
         return detectConfigurations(
             { root, files, dependencyFiles: dependencyFiles.filter((file) => paths.has(file.path)) },
@@ -50,33 +50,37 @@ function listConfigurationSuggestions(session: Session): Pick<Suggestions, 'dete
             const evidence = path === '' ? detected : detectConfigurations(repository, configurations, path);
             const found = new Set(evidence.map((detection) => detection.configuration));
             const scopeArgument = path === '' ? '' : ` --scope ${quoteArgument(path)}`;
-            return names.flatMap((name) => {
-                const configuration = configurations.get(name);
-                if (
-                    configuration === undefined ||
-                    configuration.group === 'general' ||
-                    found.has(name) ||
-                    !Object.values(configuration.detect).some((patterns) => Object.keys(patterns).length > 0)
-                )
-                    return [];
-                return [
-                    {
+            return names
+                .values()
+                .map((name) => {
+                    const configuration = configurations.get(name);
+                    if (
+                        configuration === undefined ||
+                        configuration.group === 'general' ||
+                        found.has(name) ||
+                        Object.values(configuration.detect).every((patterns) => Object.keys(patterns).length === 0)
+                    )
+                        return undefined;
+                    return {
                         configuration: name,
                         evidence: `no detection evidence in ${path === '' ? ROOT_SCOPE_LABEL : path}; remove it if you no longer need it`,
                         command: `gspot remove ${name}${scopeArgument} --reason "<why>"`,
-                    },
-                ];
-            });
+                    };
+                })
+                .filter((suggestion) => suggestion !== undefined)
+                .toArray();
         });
     const rows = new Map<string, Suggestions['suggested'][number]>();
-    for (const configuration of selectedConfigurations)
-        for (const name of configuration.suggests)
+    for (const configuration of selectedConfigurations) {
+        const suggested = expandSuggestions([configuration.name], configurations, new Set());
+        for (const name of suggested)
             if (!selected.has(name) && !rows.has(name))
                 rows.set(name, {
                     configuration: name,
                     evidence: `suggested by ${configuration.name}`,
                     command: `gspot add ${name}`,
                 });
+    }
     return {
         detected: detected
             .filter((detection) => detection.group !== 'general' && !selected.has(detection.configuration))

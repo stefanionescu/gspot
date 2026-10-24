@@ -23,3 +23,5 @@ export const OPTIONS_SCHEMA = {
     },
     additionalProperties: false,
 } satisfies JSONSchema4;
+
+export const QUERY = /\?[\s\S]*/u;

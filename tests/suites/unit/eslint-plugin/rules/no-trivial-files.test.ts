@@ -39,11 +39,13 @@ createRuleTester().run<
         'export type Settings = { enabled: boolean };',
         'import type { z } from "zod"; import type { schema } from "./schema"; export type Settings = z.infer<typeof schema>;',
         {
+            name: 'index forwarding allowed by allowIndex',
             code: 'export * from "./owner";',
             filename: '/repo/src/index.ts',
             options: [{ allowIndex: true }],
         },
         {
+            name: 'named index forwarding allowed by allowIndex',
             code: 'export { value } from "./owner";',
             filename: '/repo/src/nested/index.ts',
             options: [{ allowIndex: true }],
@@ -56,6 +58,7 @@ createRuleTester().run<
     ],
     invalid: [
         {
+            name: 'non-index forwarding despite allowIndex',
             code: 'export * from "./owner";',
             filename: '/repo/src/owner-list.ts',
             options: [{ allowIndex: true }] as [{ allowIndex: boolean }],
@@ -64,14 +67,18 @@ createRuleTester().run<
         'import { run } from "./owner"; export const alias = run;',
         'import { owner } from "./owner"; export const name = owner.name;',
         'import { owner } from "./owner"; const alias = owner; export default alias;',
-        'export { value } from "./owner";',
-        'export * from "./owner";',
+        { name: 'named forwarding without allowIndex', code: 'export { value } from "./owner";' },
+        { name: 'forwarding without a named filename', code: 'export * from "./owner";' },
         'import { value } from "./owner"; export { value };',
         'import { owner } from "./owner"; export default (owner as Owner)!;',
         'import { owner } from "./owner"; export default (owner satisfies Owner);',
         'export type Alias = Owner;',
         'export type Alias<T> = Owner<T>;',
-        { code: 'export * from "./owner";', filename: '/repo/src/index.ts' },
+        {
+            name: 'index forwarding without allowIndex',
+            code: 'export * from "./owner";',
+            filename: '/repo/src/index.ts',
+        },
     ].map((row) => ({
         ...(typeof row === 'string' ? { code: row } : row),
         errors: [{ messageId: 'trivial' as const }],

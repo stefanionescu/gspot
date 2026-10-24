@@ -15,7 +15,7 @@ import {
 
 function addPattern(found: FileIdentifiers, node: Node | null, category: NamedCategory): void {
     if (node === null) return;
-    const patternFields: Readonly<Record<string, string>> = TYPESCRIPT_PATTERN_FIELDS;
+    const field = TYPESCRIPT_PATTERN_FIELDS[node.type];
     if (TYPESCRIPT_NAME_NODES.has(node.type))
         addIdentifier(
             found,
@@ -23,8 +23,7 @@ function addPattern(found: FileIdentifiers, node: Node | null, category: NamedCa
             category,
             node.type === 'private_property_identifier' ? node.text.slice(1) : node.text,
         );
-    else if (patternFields[node.type] !== undefined)
-        addPattern(found, node.childForFieldName(patternFields[node.type] ?? ''), category);
+    else if (field !== undefined) addPattern(found, node.childForFieldName(field), category);
     else if (TYPESCRIPT_PATTERN_LISTS.has(node.type))
         for (const child of node.namedChildren) addPattern(found, child, category);
 }
@@ -54,10 +53,12 @@ function isImportedName(node: Node): boolean {
     return callee?.type === 'import' || callee?.text === 'require';
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isComponentFactory(declarator: Node): boolean {
     const value = declarator.childForFieldName('value');
-    if (value?.type !== 'call_expression') return false;
-    return COMPONENT_FACTORY.test(value.childForFieldName('function')?.text ?? '');
+    return value?.type === 'call_expression'
+        ? COMPONENT_FACTORY.test(value.childForFieldName('function')?.text ?? '')
+        : false;
 }
 
 function addDeclarator(found: FileIdentifiers, declarator: Node): void {

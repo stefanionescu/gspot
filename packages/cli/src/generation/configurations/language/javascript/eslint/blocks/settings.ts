@@ -7,18 +7,18 @@ import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getLimit, getTable, findParentScope } from '#cli/settings/scopes.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 
+import type {
+    EslintRuleBlock,
+    EslintBlockFields,
+    EslintRuleOptions,
+    PlannedEslintFile,
+    ScopeEslintSettings,
+} from '#cli/types/generation/eslint.ts';
 import {
     CODE_LANGUAGES,
     PACKAGE_JSON_PATTERN,
     ESLINT_SETTINGS_TABLE,
 } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
-import {
-    type EslintRuleBlock,
-    type EslintBlockFields,
-    type EslintRuleOptions,
-    type PlannedEslintFile,
-    type ScopeEslintSettings,
-} from '#cli/types/generation/eslint.ts';
 import {
     splitGlobs,
     buildScopeFiles,
@@ -64,26 +64,26 @@ Build the lint rule options and the path overrides in order, each for its own pr
 @returns one option block per scope and path override, in the order they apply.
 */
 export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRuleOptions[] {
+    const scopesByPath = new Map(scopes.map((scope) => [scope.folder.path, scope]));
     const tables = listSettingsTables(settings).toSorted((first, second) =>
         compareScopeDepth(first.scope ?? '', second.scope ?? ''),
     );
-    const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) =>
-        table.tools?.['eslint'] === undefined ? [] : [{ scope, settings: table.tools['eslint'] }],
-    );
-    const eslintScopes = new Set(scopeSettings.map(({ scope }) => scope));
-    const restrictedImports = new Map(
-        scopes
-            .filter((scope) => eslintScopes.has(scope.folder.path))
-            .map((scope) => [scope.folder.path, getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports]),
-    );
+    const scopeSettings = tables.flatMap<ScopeEslintSettings>(({ scope = '', table }) => {
+        const owner = scopesByPath.get(scope);
+        const options = table.tools?.['eslint'];
+        return owner === undefined || options === undefined ? [] : { scope: owner, settings: options };
+    });
     const scopeOptions = scopeSettings.flatMap(({ scope, settings }): EslintRuleOptions[] =>
         settings.rules === undefined
             ? []
             : [
                   {
-                      scope,
+                      scope: scope.folder.path,
                       ...splitGlobs(['**/*']),
-                      rules: mergeRestrictedImports(settings.rules, restrictedImports.get(scope) ?? []),
+                      rules: mergeRestrictedImports(
+                          settings.rules,
+                          getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
+                      ),
                   },
               ],
     );
@@ -91,13 +91,14 @@ export function buildRuleOptions(settings: Settings, scopes: Scope[]): EslintRul
         (settings.override ?? []).flatMap(({ paths, rules }) =>
             rules === undefined
                 ? []
-                : [
-                      {
-                          scope,
-                          ...splitGlobs(paths),
-                          rules: mergeRestrictedImports(rules, restrictedImports.get(scope) ?? []),
-                      },
-                  ],
+                : {
+                      scope: scope.folder.path,
+                      ...splitGlobs(paths),
+                      rules: mergeRestrictedImports(
+                          rules,
+                          getTable(scope.settings, ESLINT_SETTINGS_TABLE).restricted_imports,
+                      ),
+                  },
         ),
     );
     return [...scopeOptions, ...overrides];
@@ -222,21 +223,19 @@ export function buildEnvironmentRuleBlocks(
         const owners = scope.settings.values.structure?.environment_readers ?? [];
         return owners.length === 0
             ? []
-            : [
-                  {
-                      scope: scope.folder.path,
-                      ...splitGlobs([
-                          buildSourcePattern(...ENVIRONMENT_LANGUAGES),
-                          ...buildNodePatterns(nodeFiles, scope.folder.path),
-                          ...owners.map((path) => `!${path}`),
-                          ...listNestedScopeGlobs(
-                              environmentScopes.map(({ folder }) => folder.path),
-                              scope.folder.path,
-                          ).map((path) => `!${path}`),
-                      ]),
-                      rules: ENVIRONMENT_RULES,
-                  },
-              ];
+            : {
+                  scope: scope.folder.path,
+                  ...splitGlobs([
+                      buildSourcePattern(...ENVIRONMENT_LANGUAGES),
+                      ...buildNodePatterns(nodeFiles, scope.folder.path),
+                      ...owners.map((path) => `!${path}`),
+                      ...listNestedScopeGlobs(
+                          environmentScopes.map(({ folder }) => folder.path),
+                          scope.folder.path,
+                      ).map((path) => `!${path}`),
+                  ]),
+                  rules: ENVIRONMENT_RULES,
+              };
     });
 }
 
@@ -252,8 +251,9 @@ export function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session
     if (session.settingsFile.settings.level !== 'all') return [];
     const { scopes } = session;
     const blocks: EslintRuleBlock[] = [];
-    const allowIndex = session.settingsFile.settings.structure.reexports === 'index-only';
-    for (const scope of scopes.toSorted((a, b) => compareScopeDepth(a.folder.path, b.folder.path))) {
+    const isAllowIndex = session.settingsFile.settings.structure.reexports === 'index-only';
+    const orderedScopes = scopes.toSorted((a, b) => compareScopeDepth(a.folder.path, b.folder.path));
+    for (const scope of orderedScopes) {
         const parent = findParentScope(scopes, scope.folder.path);
         const limits = CODE_LANGUAGES.map((language) => ({
             language,
@@ -268,13 +268,13 @@ export function buildTrivialRuleBlocks(planned: Pick<PlannedEslintFile, 'session
             const patterns = languages.flatMap((language) =>
                 language === 'javascript'
                     ? [buildSourcePattern('javascript'), ...buildNodePatterns(nodeFiles, scope.folder.path)]
-                    : [buildSourcePattern(...TYPED_LANGUAGES)],
+                    : buildSourcePattern(...TYPED_LANGUAGES),
             );
             blocks.push({
                 scope: scope.folder.path,
                 ...splitGlobs(patterns),
                 rules: {
-                    [TRIVIAL_FILES_RULE]: ['error', { allowIndex }],
+                    [TRIVIAL_FILES_RULE]: ['error', { allowIndex: isAllowIndex }],
                     [TRIVIAL_FUNCTIONS_RULE]: ['error', { trivialFunctionStatements }],
                 },
             });

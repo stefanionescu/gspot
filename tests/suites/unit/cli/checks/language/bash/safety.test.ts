@@ -5,35 +5,41 @@ import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
 import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
+import { BASH_SAFETY_CASES } from '#tests/config/checks/language/bash/safety.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/samples.ts';
-import { runCheckSample, expectedSummary, shareBashSandbox, buildSampleSummary } from '#tests/setup/cli/samples.ts';
-
-import {
-    SAFETY_SOURCES,
-    BASH_SAFETY_CASES,
-    RIGHT_CLEANUP_SOURCE,
-    WRONG_CLEANUP_SOURCE,
-} from '#tests/config/checks/language/bash/safety.ts';
+import { runCheckSample, expectedSummary, shareBashSandbox } from '#tests/setup/cli/samples.ts';
 
 const bashSandbox = shareBashSandbox();
-test.each([...SAFETY_SOURCES])(
-    'a recursive removal in the trap that cleans up a mktemp path passes, and any other is reported: $source',
-    async ({ source, unsafeLines }) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['bash']),
-            'source.sh': '#!/usr/bin/env bash\nset -euo pipefail\n' + source,
-        });
-        const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['bash/safety'] }));
 
-        expect(result.report.checks[0]?.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual(
-            unsafeLines.map((line) => ({ file: 'source.sh', line, rule: 'recursive-remove' })),
-        );
-    },
-);
+test('a recursive removal outside a mktemp cleanup trap is reported', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['bash']),
+        'source.sh': '#!/usr/bin/env bash\nset -euo pipefail\nrm -rf /etc\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'bash/safety');
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'source.sh', line: 3, rule: 'recursive-remove' },
+    ]);
+});
+
 test('a trap that removes another path is reported by script-layout as mktemp-trap and by safety as recursive-remove, and the right trap passes both', async () => {
+    const RIGHT_CLEANUP_SOURCE = `#!/usr/bin/env bash
+set -euo pipefail
+tmp=$(mktemp -d)
+trap 'rm -rf -- "$tmp"' EXIT
+`;
+
+    const WRONG_CLEANUP_SOURCE = `#!/usr/bin/env bash
+set -euo pipefail
+tmp=$(mktemp -d)
+trap 'rm -rf /etc' EXIT
+`;
+
+    const options = buildRunOptions({ only: ['bash/script-layout', 'bash/safety'] });
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
         'source.sh': WRONG_CLEANUP_SOURCE,
@@ -41,10 +47,7 @@ test('a trap that removes another path is reported by script-layout as mktemp-tr
     commitAll(sandbox.path);
     await markExecutable(sandbox.path, 'source.sh');
 
-    const wrong = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['bash/script-layout', 'bash/safety'] }),
-    );
+    const wrong = await runChecks(await openSession(sandbox.path), options);
 
     expect(
         wrong.report.checks.flatMap(({ findings }) => findings.map(({ rule, line }) => ({ rule, line }))),
@@ -53,17 +56,16 @@ test('a trap that removes another path is reported by script-layout as mktemp-tr
         { rule: 'recursive-remove', line: 4 },
     ]);
     await writeFile(join(sandbox.path, 'source.sh'), RIGHT_CLEANUP_SOURCE);
-    const corrected = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['bash/script-layout', 'bash/safety'] }),
-    );
+    const corrected = await runChecks(await openSession(sandbox.path), options);
 
-    expect(corrected.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual(
-        PASSED_BASH_RESULTS,
-    );
+    expect(corrected.report.checks).toMatchObject([...PASSED_BASH_RESULTS]);
 });
 
-test.each([...BASH_SAFETY_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
-    const result = await runCheckSample(bashSandbox(), sample, BASH_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
-});
+test.each([...BASH_SAFETY_CASES])(
+    '$check reports $expected.rule in $expected.file and passes after the fix',
+    async (sample) => {
+        expect(await runCheckSample(bashSandbox(), sample, BASH_SANDBOX.cleanSource)).toStrictEqual(
+            expectedSummary(sample),
+        );
+    },
+);

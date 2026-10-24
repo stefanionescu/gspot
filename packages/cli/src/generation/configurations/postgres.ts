@@ -15,9 +15,7 @@ export function buildSquawkFile(planned: PlannedConfigFile): string {
     const { files } = planned.session.repository;
 
     const isAll = planned.level === 'all';
-    const migrations = files.flatMap((file) =>
-        file.path.endsWith('.sql') && file.kind === 'source' ? [file.path] : [],
-    );
+    const migrations = files.flatMap((file) => (file.path.endsWith('.sql') && file.kind === 'source' ? file.path : []));
     const document = {
         assume_in_transaction: getTable(planned.scope.settings, 'tools.squawk').assume_in_transaction,
         excluded_rules: [

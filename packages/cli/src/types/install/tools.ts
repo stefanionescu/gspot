@@ -1,13 +1,15 @@
-import type { Writer } from '#cli/types/apply.ts';
 import type { Session } from '#cli/types/session.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
+import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
 export type InstallResult = { note: string; steps: readonly (readonly string[])[] };
 
 export type ToolInstall = {
     session: Session;
-    writer: Writer;
+    packageManager: PackageManager | undefined;
+    writer: Files;
     generated: GenerationResult;
     tools: Tool[];
     misePath: string | null;

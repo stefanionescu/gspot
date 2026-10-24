@@ -21,7 +21,7 @@ test('a fix run rereads the repository and keeps the package scopes it found', a
         'app/main.js': 'export const ready = true;\n',
     });
     const session = await openSession(sandbox.path);
-    expect(session.repository.scopeFolders.map(({ path }) => path)).toContain('app');
+    expect(session.repository.scopeFolders.map(({ path }) => path)).toStrictEqual(['', 'app']);
     const options = buildRunOptions({ only: ['docs/missing-paths'] });
     const unchanged = await runChecks(session, options);
     const fixed = await runChecks(await openSession(session.root), { ...options, fix: true });
@@ -62,10 +62,10 @@ test('checks refresh the file inventory after a fixer creates a source', async (
     const result = await runChecks(session, options);
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks[0]!.fileCount).toBe(2);
-    expect(session.repository.files.map((file) => file.path)).toContain('added.txt');
+    expect(session.repository.files.map((file) => file.path)).toStrictEqual(['added.txt', 'gspot.toml', 'source.txt']);
 });
 
-test('a fix run leaves the session of its caller and the dependencies of each package unchanged', async () => {
+test('a fix run rereads the package.json it changed and keeps the dependencies of the other packages', async () => {
     await using sandbox = await testdir({
         ...REACT_VUE_PACKAGES,
         'gspot.toml': buildSandboxSettings(['javascript'], {

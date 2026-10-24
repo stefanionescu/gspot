@@ -1,7 +1,6 @@
 {
     "package": "eslint",
-    "version": "9.39.5",
-    "source": "builtinRules",
+    "version": "10.13.0",
     "names": [
         "accessor-pairs",
         "array-bracket-newline",

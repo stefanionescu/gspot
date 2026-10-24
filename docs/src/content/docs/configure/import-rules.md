@@ -73,6 +73,7 @@ rule:
 
 - test files, from `test_files`;
 - tool settings files, such as `vite.config.ts`, `.eslintrc.cjs`, `Package.swift`, and `setup.py`;
+- the files that `[[tools.eslint.plugins]]` records name;
 - the script files of `javascript.script_files`, and `mise` task scripts;
 - scripts that start with a Node.js shebang, and files under `.gspot/`.
 
@@ -100,7 +101,7 @@ A Python name also covers its submodules. TypeScript still needs a declaration f
 ## Python
 
 `structure/import-rules` reads `import` and `from ... import` statements, relative imports included. It finds an
-absolute module from the scope folder, from `src/`, and from each folder in `python.extra_paths`. For each dotted
+absolute module from the scope folder, from `src/`, and from each folder in `python.import_folders`. For each dotted
 name, it tries the module file, then its `.pyi` stub, then the `__init__.py` of a package folder. A module that matches
 no file counts as a third-party package, and the check skips it.
 

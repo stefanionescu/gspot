@@ -1,17 +1,16 @@
 {
     "recommended": {
         "package": "eslint-plugin-vue",
-        "version": "10.11.0",
+        "version": "10.11.1",
         "source": "configs.flat/recommended",
         "blocks": [
             { "parser": false },
             {
                 "files": ["*.vue", "**/*.vue"],
-                "parser": true,
-                "rules": { "vue/comment-directive": "error", "vue/jsx-uses-vars": "error" }
+                "rules": { "vue/comment-directive": "error", "vue/jsx-uses-vars": "error" },
+                "parser": true
             },
             {
-                "parser": false,
                 "rules": {
                     "vue/multi-word-component-names": "error",
                     "vue/no-arrow-functions-in-watch": "error",
@@ -96,10 +95,10 @@
                     "vue/valid-v-show": "error",
                     "vue/valid-v-slot": "error",
                     "vue/valid-v-text": "error"
-                }
+                },
+                "parser": false
             },
             {
-                "parser": false,
                 "rules": {
                     "vue/attribute-hyphenation": "warn",
                     "vue/component-definition-name-casing": "warn",
@@ -126,10 +125,10 @@
                     "vue/v-on-event-hyphenation": ["warn", "always", { "autofix": true }],
                     "vue/v-on-style": "warn",
                     "vue/v-slot-style": "warn"
-                }
+                },
+                "parser": false
             },
             {
-                "parser": false,
                 "rules": {
                     "vue/attributes-order": "warn",
                     "vue/block-order": "warn",
@@ -139,19 +138,19 @@
                     "vue/no-v-html": "warn",
                     "vue/order-in-components": "warn",
                     "vue/this-in-template": "warn"
-                }
+                },
+                "parser": false
             }
         ]
     },
     "accessibility": {
         "package": "eslint-plugin-vuejs-accessibility",
-        "version": "2.6.0",
+        "version": "2.6.2",
         "source": "configs.flat/recommended",
         "blocks": [
             { "parser": false },
             {
                 "files": ["*.vue", "**/*.vue"],
-                "parser": true,
                 "rules": {
                     "vuejs-accessibility/alt-text": "error",
                     "vuejs-accessibility/anchor-has-content": "error",
@@ -173,7 +172,8 @@
                     "vuejs-accessibility/no-static-element-interactions": "error",
                     "vuejs-accessibility/role-has-required-aria-props": "error",
                     "vuejs-accessibility/tabindex-no-positive": "error"
-                }
+                },
+                "parser": true
             }
         ]
     }

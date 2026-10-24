@@ -18,15 +18,24 @@ test.each([...SCRIPT_TYPE_CASES])(
 
 test.each([...URL_MARKUP_CASES])(
     'html/inline-scripts reports each URL in $markup that runs code, at its attribute column',
-    async ({ markup, columns }) => {
+    async ({ markup, columns, scheme }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['html'], { level: 'all' }),
             'page.html': markup,
         });
 
         const findings = await runSandboxCheck(sandbox.path, 'html/inline-scripts', { paths: ['page.html'] });
-        expect(findings.map(({ file, line, rule, column }) => ({ file, line, rule, column }))).toStrictEqual(
-            columns.map((column) => ({ file: 'page.html', line: 1, rule: 'script-link', column })),
+        expect(findings).toStrictEqual(
+            columns.map((column) => ({
+                check: 'html/inline-scripts',
+                file: 'page.html',
+                line: 1,
+                rule: 'script-link',
+                column,
+                message: `A ${scheme} URL embeds executable content. Use an external file.`,
+                fixable: false,
+                help: 'Move the script into its own file, and attach the handler there. Structured data of type `application/ld+json` stays inline.',
+            })),
         );
     },
 );

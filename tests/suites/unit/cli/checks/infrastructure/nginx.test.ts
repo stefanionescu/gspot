@@ -52,12 +52,11 @@ test.each(['stdout', 'stderr'])(
         const session = await openSession(sandbox.path);
 
         using resources = new DisposableStack();
-        resources.use(
-            fakeToolExecutables([
-                getTool(session.configurations.values(), 'openssl'),
-                getTool(session.configurations.values(), 'docker'),
-            ]),
-        );
+        const observed = fakeToolExecutables([
+            getTool(session.configurations.values(), 'openssl'),
+            getTool(session.configurations.values(), 'docker'),
+        ]);
+        resources.use(observed);
         const folders: string[] = [];
         const message = 'The temporary key could not be written.';
         using spawn = spyOn(processes, 'spawnProcess').mockImplementation((_command, options) => {
@@ -71,7 +70,8 @@ test.each(['stdout', 'stderr'])(
             );
         });
 
-        expect(await captureRejection(runSandboxCheck(session.root, 'nginx/syntax'))).toBe(
+        const runSandboxCheckError = await captureRejection(runSandboxCheck(session.root, 'nginx/syntax'));
+        expect(runSandboxCheckError.message).toBe(
             `The openssl command could not write the temporary certificate: ${message}`,
         );
         expect(spawn).toHaveBeenCalledTimes(1);

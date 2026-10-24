@@ -36,12 +36,18 @@ function formatConfigurationChange(changed: string[], unchanged: string[], where
     return summary;
 }
 
-function removeUnusedSettings(context: ReturnType<typeof prepareConfigurationEdit>, scope: string | undefined): string {
+function removeUnusedSettings(
+    context: ReturnType<typeof prepareConfigurationEdit>,
+    scope: string | undefined = '',
+): string {
     const { input, configurations } = context;
     const edited = buildSettings(settingsSchema.parse(input.table), input.table);
-    const general = [...configurations.values()].filter((configuration) => configuration.group === 'general');
+    const general = configurations
+        .values()
+        .filter((configuration) => configuration.group === 'general')
+        .toArray();
     const removed: string[] = [];
-    const affected = listSettingsTables(edited).filter((table) => isInScope(table.scope ?? '', scope ?? ''));
+    const affected = listSettingsTables(edited).filter((table) => isInScope(table.scope ?? '', scope));
     for (const table of affected) {
         const selected = selectForScope(edited, table.scope ?? '', configurations);
         const available = buildAvailableSettings([...general, ...selected], edited.level);
@@ -57,7 +63,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const { root, input, scopeSettings, selected, configurations } = context;
     const kept = selected.filter((name) => !options.configurations.includes(name));
     assertNotRequired(options.configurations, kept, configurations);
-    if (!options.configurations.some((name) => selected.includes(name))) {
+    if (options.configurations.every((name) => !selected.includes(name))) {
         return {
             text: `No change: ${options.configurations.join(' and ')} ${options.configurations.length === 1 ? 'is' : 'are'} not selected.\n`,
             json: { changed: false },
@@ -97,8 +103,9 @@ function findRequirementChain(
         if (start === required) return [start];
         if (seen.has(start)) return undefined;
         seen.add(start);
-        for (const required of configurations.get(start)?.requires ?? []) {
-            const rest = findChain(required);
+        const requirements = configurations.get(start)?.requires ?? [];
+        for (const next of requirements) {
+            const rest = findChain(next);
             if (rest !== undefined) return [start, ...rest];
         }
         return undefined;
@@ -118,10 +125,9 @@ export function registerRemove(program: Command, onResult: CommandCompletion): v
         .argument('<configuration...>', COMMAND_HELP.remove.arguments['configuration'])
         .summary(COMMAND_HELP.remove.summary)
         .description(COMMAND_HELP.remove.description)
-        .option('--reason <text>', COMMAND_HELP.remove.options['--reason <text>'])
+        .requiredOption('--reason <text>', COMMAND_HELP.remove.options['--reason <text>'])
         .option('--scope <path>', COMMAND_HELP.remove.options['--scope <path>'], trimTrailingSlashes)
         .action(async (configurations, flags) => {
-            if (flags.reason === undefined) throw new GspotError('arguments', 'gspot remove needs --reason "<why>".');
             const invalid = validateReason(
                 'gspot remove',
                 flags.reason,

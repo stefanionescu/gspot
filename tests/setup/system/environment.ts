@@ -27,14 +27,16 @@ export function overrideEnvironment(variables: Record<string, string | undefined
     const previous = Object.fromEntries(Object.keys(variables).map((name) => [name, process.env[name]]));
     applyEnvironment(process.env, variables);
     return {
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `using` calls it when the scope ends.
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
         [Symbol.dispose]() {
             applyEnvironment(process.env, previous);
         },
     };
 }
 
-/** Make the terminal look interactive and not CI, until the caller disposes the returned resource. */
+/**
+Make the terminal look interactive and not CI, until the caller disposes the returned resource.
+*/
 export async function simulateInteractiveTerminal(): Promise<AsyncDisposable> {
     const resources = new AsyncDisposableStack();
     const previousEnvironment = { ...systemEnvironment };

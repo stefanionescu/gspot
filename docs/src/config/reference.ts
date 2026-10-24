@@ -1,3 +1,5 @@
+import type { GuideSlug } from '../types/reference.ts';
+
 const CODE_SPAN = /(?<!`)(?<delimiter>`+)(?!`)[\s\S]+?(?<!`)\k<delimiter>(?!`)/u;
 const KEPT_TAG = /<\/?(?:h[2-6]|code)(?:\s[^<>]*)?>/u;
 
@@ -83,7 +85,7 @@ export const HEADING_ID_DROPPED = /[^\p{L}\p{N} _-]/gu;
 export const LANGUAGE_PLACEHOLDER = '<language>';
 export const CATEGORY_PLACEHOLDER = '<category>';
 
-export const CONFIGURATION_GUIDES: Readonly<Record<string, string>> = {
+export const CONFIGURATION_GUIDES: Readonly<Partial<Record<string, GuideSlug>>> = {
     javascript: GUIDES.javascript,
     typescript: GUIDES.javascript,
     nextjs: GUIDES.javascript,
@@ -106,3 +108,5 @@ export const CONFIGURATION_GUIDES: Readonly<Record<string, string>> = {
 export const ENVIRONMENT_VARIABLES: readonly [name: string, meaning: string][] = [
     ['`NO_COLOR`', 'Any nonempty value turns color off.'],
 ];
+
+export const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });

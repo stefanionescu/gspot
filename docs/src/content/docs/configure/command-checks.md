@@ -3,12 +3,13 @@ title: Command checks
 description: Run your own command as a gspot check, with its findings in the same report.
 ---
 
-A command check runs your own command on the files you select. gspot reads its output as
-findings, so they appear in the same report as every other check.
+A command check runs your own command on the files you select. gspot reads its output as findings, so they appear in the
+same report as every other check.
 
 ## Example: find unfinished notes
 
-This check reports `FIXME` lines in the files under `notes/`. It needs Node.js on your `PATH`.
+This check reports `FIXME` lines in the files under `notes/`. It needs Node.js on your `PATH`, and in a JavaScript or
+TypeScript project `@types/node` in `devDependencies`, so `javascript/tsc` knows `process` and `node:fs`.
 
 Save this checker under the example filename:
 
@@ -51,8 +52,8 @@ gspot apply
 gspot check --only notes
 ```
 
-The check exits with `1` and reports a finding on the first line of the note. Replace that line with
-the finished instruction:
+The check exits with `1` and reports a finding on the first line of the note. Replace that line with the finished
+instruction:
 
 ```text
 Run the deployment command documented in the release guide.
@@ -62,15 +63,13 @@ Run the same check again. It exits with `0` and reports no findings.
 
 ## How the command runs
 
-`command` lists arguments; gspot runs them without a shell. `{files}` expands to the
-selected files, one argument each. File names with spaces need no extra quoting. To run the
-command once for each file, use `{file}` instead. Then a regular expression match without a `file` group
-uses the file of that run.
+`command` lists arguments; gspot runs them without a shell. `{files}` expands to the selected files, one argument each.
+File names with spaces need no extra quoting. To run the command once for each file, use `{file}` instead. Then a
+regular expression match without a `file` group uses the file of that run.
 
-By default, any nonzero exit fails the check. When your tool uses one exit code for findings,
-set `exit_codes = [1]`. Any other nonzero exit then counts as a failed run, exit code
-`2`, even when the tool printed findings first. An empty list makes every nonzero exit a failed
-run.
+By default, any nonzero exit fails the check. When your tool uses one exit code for findings, set `exit_codes = [1]`.
+Any other nonzero exit then counts as a failed run, exit code `2`, even when the tool printed findings first. An empty
+list makes every nonzero exit a failed run.
 
 ## Read the output
 
@@ -97,11 +96,11 @@ Malformed output makes the run incomplete with exit code `2`.
 
 ## Add a fix command
 
-For `gspot check --fix`, set `fix` to a list of arguments.
-`--fix` runs every fixer, then runs them again on the files that changed, so a formatter
-reads what another fixer wrote. Then it runs the checks again. The fix commands change your working tree, not the staging area.
+For `gspot check --fix`, set `fix` to a list of arguments. `--fix` runs every fixer, then runs them again on the files
+that changed, so a formatter reads what another fixer wrote. Then it runs the checks again. The fix commands change your
+working tree, not the staging area.
 
-If the fix command exits with one of the `exit_codes`, gspot reports remaining findings.
-Other nonzero exits count as a failed run.
+If the fix command exits with one of the `exit_codes`, gspot reports remaining findings. Other nonzero exits count as a
+failed run.
 
 [Command check settings](/reference/gspot-toml/#command_check) lists the keys and the values they accept.

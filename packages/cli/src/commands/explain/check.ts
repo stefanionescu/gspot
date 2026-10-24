@@ -23,10 +23,10 @@ function findRulePage(tool: string, rule: string, configurations: Map<string, Co
     const prefix = extractRulePrefix(rule);
     if (prefix === undefined) {
         const pin = getTool(configurations.values(), tool);
-        return pin.rule_url?.replace(RULE_PLACEHOLDER, rule);
+        return pin.rule_url?.replace(RULE_PLACEHOLDER, () => rule);
     }
     const plugin = findRulePlugin(prefix, configurations);
-    return plugin?.rule_url?.replace(RULE_PLACEHOLDER, rule.slice(prefix.length + 1));
+    return plugin?.rule_url?.replace(RULE_PLACEHOLDER, () => rule.slice(prefix.length + 1));
 }
 
 function buildCheckFacts(
@@ -136,7 +136,7 @@ export function explainCheck(session: Session | undefined, checkId: string): Exp
         kind: 'check',
         subject: checkId,
         text: formatCheckExplanation(session, found, commandCheck, facts),
-        data: {
+        facts: {
             check: checkId,
             ...(configuration === undefined
                 ? { command: check.command, paths: check.files?.paths }
@@ -181,11 +181,11 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
     const page = findRulePage(ruleTool, identifier, configurations);
     const key = quoteArgument(`tools.${ruleTool}.rules`);
     const ruleExample = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
-    const optionLines = listSettings(configuration.name)
-        .filter((setting) => setting.name === `tools.${ruleTool}.rules`)
-        .map(() => `Change its options: gspot set ${key} ${ruleExample}`);
-    let description = `Read the ${ruleTool} documentation for ${identifier}.`;
-    if (page !== undefined) description = `The tool's page: ${page}`;
+    const optionLines = listSettings(configuration.name).some((setting) => setting.name === `tools.${ruleTool}.rules`)
+        ? [`Change its options: gspot set ${key} ${ruleExample}`]
+        : [];
+    const description =
+        page === undefined ? `Read the ${ruleTool} documentation for ${identifier}.` : `The tool's page: ${page}`;
     const lines = [
         `${ruleTool}/${identifier}  (run by ${check.id})`,
         '',
@@ -199,6 +199,6 @@ export function explainLintRule(tool: string, rule: string): Explanation | undef
         kind: 'lint-rule',
         subject: `${ruleTool}/${identifier}`,
         text: `${lines.join('\n')}\n`,
-        data: { tool: ruleTool, rule: identifier, check: check.id, page: page ?? null },
+        facts: { tool: ruleTool, rule: identifier, check: check.id, page: page ?? null },
     };
 }

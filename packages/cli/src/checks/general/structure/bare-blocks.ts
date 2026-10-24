@@ -17,7 +17,7 @@ export async function checkStructureBareBlocks(session: Session, planned: Planne
     const parsed = await parseCached({ ...session, files: planned.files, scope: planned.scope }, PARSED_SOURCES);
     return parsed.flatMap((source) =>
         (source.captures.get('block') ?? [])
-            .filter((node) => !node.namedChildren.some((child) => child.type === 'catch_block'))
+            .filter((node) => node.namedChildren.every((child) => child.type !== 'catch_block'))
             .map((node) =>
                 buildFinding(
                     planned,

@@ -28,9 +28,9 @@ function addClasses(found: FileIdentifiers, root: Node): void {
     }
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function unwrapSplat(node: Node | null): Node | null {
-    if (node === null || !PYTHON_SPLAT_NODES.has(node.type)) return node;
-    return node.namedChildren[0] ?? null;
+    return node === null || !PYTHON_SPLAT_NODES.has(node.type) ? node : (node.namedChildren[0] ?? null);
 }
 
 function findParameterName(parameter: Node): Node | null {
@@ -67,9 +67,9 @@ function classifyName(node: Node, name: string): NamedCategory {
 function isTypeOperand(operand: Node | null): boolean {
     if (operand === null) return false;
     if (operand.type === 'none') return true;
-    if (operand.type === 'identifier' || operand.type === 'attribute')
-        return PYTHON_TYPE_NAME.test(operand.text.slice(operand.text.lastIndexOf('.') + 1));
-    return isTypeForm(operand);
+    return operand.type === 'identifier' || operand.type === 'attribute'
+        ? PYTHON_TYPE_NAME.test(operand.text.slice(operand.text.lastIndexOf('.') + 1))
+        : isTypeForm(operand);
 }
 
 function isTypeForm(node: Node | null): boolean {
@@ -78,15 +78,20 @@ function isTypeForm(node: Node | null): boolean {
         const value = node.childForFieldName('value');
         return value !== null && PYTHON_TYPE_FORMS.has(value.text.slice(value.text.lastIndexOf('.') + 1));
     }
-    if (node.type !== 'binary_operator' || node.childForFieldName('operator')?.text !== '|') return false;
-    return isTypeOperand(node.childForFieldName('left')) && isTypeOperand(node.childForFieldName('right'));
+    return (
+        node.type === 'binary_operator' &&
+        node.childForFieldName('operator')?.text === '|' &&
+        isTypeOperand(node.childForFieldName('left')) &&
+        isTypeOperand(node.childForFieldName('right'))
+    );
 }
 
 function isTypeAlias(node: Node): boolean {
     if (getHolderType(node.parent ?? node) !== 'module') return false;
     const annotation = node.childForFieldName('type');
-    if (annotation !== null) return PYTHON_TYPE_ALIAS_ANNOTATION.test(annotation.text);
-    return isTypeForm(node.childForFieldName('right'));
+    return annotation === null
+        ? isTypeForm(node.childForFieldName('right'))
+        : PYTHON_TYPE_ALIAS_ANNOTATION.test(annotation.text);
 }
 
 function addAssignment(found: FileIdentifiers, node: Node): void {

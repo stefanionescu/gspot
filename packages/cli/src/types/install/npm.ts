@@ -1,10 +1,14 @@
+import type { ToolInstall } from '#cli/types/install/tools.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
+
+export type NpmToolInstall = ToolInstall & { packageManager: PackageManager };
 
 export type PackageManagerCommand = {
     runFolder: string;
     packageManager: PackageManager;
     commandArguments: string[];
     failure: string;
+    days: number;
 };
 
 export type PackageManagerRun = {

@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { readBlobs, listHeadFiles } from '#cli/repository/revisions/files.ts';
+import { readHead, readBlobs, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 
 test.skipIf(isWindows)('committed blobs keep unusual file names and bytes', async () => {
     await using sandbox = await testdir();
@@ -14,7 +14,8 @@ test.skipIf(isWindows)('committed blobs keep unusual file names and bytes', asyn
     await createFileTree(sandbox.path, { [path]: 'select 1;\n' });
     runGitStep(sandbox.path, ['add', '.']);
     runGitStep(sandbox.path, ['commit', '-m', 'Fixture']);
-    const files = await listHeadFiles(sandbox.path);
+    const head = await readHead(sandbox.path);
+    const files = await listRevisionFiles(sandbox.path, { kind: 'commit', hash: head! });
     expect(files.map((file) => file.path)).toStrictEqual([path]);
     const blobs = await readBlobs(
         sandbox.path,
@@ -25,9 +26,8 @@ test.skipIf(isWindows)('committed blobs keep unusual file names and bytes', asyn
 test('unborn history is empty, and a broken HEAD refuses committed history', async () => {
     await using sandbox = await testdir();
     runGitStep(sandbox.path, ['init']);
-    expect(await listHeadFiles(sandbox.path)).toStrictEqual([]);
+    expect(await readHead(sandbox.path)).toBeUndefined();
     await writeFile(join(sandbox.path, '.git', 'HEAD'), 'broken');
-    expect(await captureRejection(listHeadFiles(sandbox.path))).toContain(
-        'Cannot read committed Git history. Restore HEAD and check again.',
-    );
+    const historyError = await captureRejection(readHead(sandbox.path));
+    expect(historyError.message).toContain('Cannot read committed Git history. Restore HEAD and check again.');
 });

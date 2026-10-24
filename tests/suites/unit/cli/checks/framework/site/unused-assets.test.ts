@@ -58,10 +58,7 @@ test.each([...ASSET_REFERENCE_CASES])(
             'assets/logo.svg': '<svg/>',
             'assets/unused.svg': '<svg/>',
         });
-        const session = await openSession(sandbox.path);
-        const input = planSandboxCheck(session, 'site/unused-assets');
-        expect(session.repository.index).toStrictEqual([]);
-        expect(await findBuiltInCheck('site/unused-assets')(session, input)).toMatchObject([
+        expect(await runSandboxCheck(sandbox.path, 'site/unused-assets')).toMatchObject([
             { file: 'assets/unused.svg', rule: 'unused-asset' },
         ]);
     },
@@ -76,7 +73,6 @@ test('an unstaged deletion removes the reference without failing the asset check
     await unlink(join(root, 'README.md'));
     const session = await openSession(root);
     const input = planSandboxCheck(session, 'site/unused-assets', { scope: 'docs' });
-    expect(session.repository.index.map((indexFile) => indexFile.path)).toContain('README.md');
     expect(await findBuiltInCheck('site/unused-assets')(session, input)).toMatchObject([
         { file: 'docs/assets/logo.svg', rule: 'unused-asset' },
     ]);

@@ -5,7 +5,7 @@ export const COMMAND_HELP = {
         summary: 'Find what this repository needs, then write gspot.toml and the generated files',
         group: 'Set up a repository:',
         description:
-            'Find the configurations this repository needs and print a plan. When you accept the plan, gspot writes `gspot.toml`, the config files, the rules for coding agents, the Git hooks, and the CI workflow.\n\ninit deletes the config files that gspot replaces. Git keeps their old content. init installs no tools and runs no checks. Run `gspot install` next.',
+            'Find the configurations this repository needs and print a plan. When you accept the plan, gspot writes `gspot.toml`, the config files, the rules for coding agents, the Git hooks, and, when `origin` is on GitHub or GitLab, the CI workflow.\n\ninit deletes or replaces the config files that gspot replaces. Git must hold each one unchanged at HEAD; read the old one with git show HEAD:<path>. init installs no tools and runs no checks. Run `gspot install` next.',
         arguments: {},
         options: {
             '--yes': 'Accept the plan without a question (needed without a terminal)',

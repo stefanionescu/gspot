@@ -6,5 +6,3 @@ export const BUN_SCANNER_KEYS: ManagedKeys[] = [
         keys: [{ key: ['install', 'security', 'scanner'], value: '@socketsecurity/bun-security-scanner' }],
     },
 ];
-
-export const TWO_WEEKS_SECONDS = 1_209_600;

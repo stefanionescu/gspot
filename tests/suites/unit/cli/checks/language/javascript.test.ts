@@ -63,8 +63,10 @@ test('javascript/tsc excludes type roots inherited from folders above the reposi
         expect(config.compilerOptions?.['typeRoots']).toStrictEqual([join(path, '../../../../../node_modules/@types')]);
         return buildProcessResult();
     });
-    const result = await runChecks(await openSession(root), buildRunOptions({ only: ['javascript/tsc'] }));
-    expect(result.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    const session = await openSession(root);
+    const planned = planChecks(session, buildRunOptions({ only: ['javascript/tsc'] }))[0]!;
+    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    expect(result.findings).toStrictEqual([]);
     expect(boundary).toHaveBeenCalledTimes(1);
 });
 
@@ -79,7 +81,10 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
 
     const session = await openSession(sandbox.path);
     const projects = generate(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
-    expect(projects.map(({ path }) => path)).toStrictEqual([findConfigFilePath(session, 'jsconfig')]);
+    expect(projects.map(({ path }) => path)).toStrictEqual([
+        findConfigFilePath(session, 'jsconfig'),
+        findConfigFilePath(session, 'jsconfig', 'site'),
+    ]);
     await applyGeneratedFiles(sandbox.path);
     const reopened = await openSession(sandbox.path);
     const site = planChecks(reopened, {
@@ -87,5 +92,5 @@ test('a scope whose jsconfig lists no JavaScript file passes with nothing to com
         only: ['javascript/tsc'],
         staged: ['gspot.toml'],
     }).find((check) => check.scope.folder.path === 'site')!;
-    expect(await runCheckCode(reopened, site, findCheckCode(site.check))).toMatchObject(EMPTY_PROJECT_RESULT);
+    expect(await runCheckCode(reopened, site, findCheckCode(site.check))).toStrictEqual(EMPTY_PROJECT_RESULT);
 });

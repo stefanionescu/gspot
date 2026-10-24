@@ -60,12 +60,14 @@ Get the fields of a PostgreSQL parse tree node when the node has the given kind.
 @param kind the node kind to select.
 @returns the fields of that kind, or undefined for another kind.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function getNodeFields<Kind extends keyof SqlNodeFields>(
     node: Node | undefined,
     kind: Kind,
 ): SqlNodeFields[Kind] | undefined {
-    if (node === undefined || !(kind in node)) return undefined;
-    return (node as Record<Kind, SqlNodeFields[Kind]>)[kind];
+    return node === undefined || !Reflect.has(node, kind)
+        ? undefined
+        : (node as Record<Kind, SqlNodeFields[Kind]>)[kind];
 }
 
 /**

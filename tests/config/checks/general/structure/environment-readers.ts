@@ -36,12 +36,6 @@ main "$@"
     },
 ] as const;
 
-export const SWIFT_ENVIRONMENT_SOURCE = `let live = ProcessInfo.processInfo.environment["KEY"]
-// ProcessInfo.processInfo.environment
-let literal = "ProcessInfo.processInfo.environment"
-let spaced = ProcessInfo . processInfo . environment
-`;
-
 export const PYTHON_ENVIRONMENT_SOURCE = `import os as system
 from os import environ as values, getenv as read
 first = system.environ["KEY"]

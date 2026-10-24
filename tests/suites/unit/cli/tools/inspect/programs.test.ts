@@ -28,8 +28,8 @@ test('tool inspection finds the project compiler, and the original repository co
 
     const work = join(sandbox.path, 'work');
     const snapshot = join(sandbox.path, 'snapshot');
-    await linkTypescript(work, join(work, GSPOT_PATHS.nodeModules));
-    await linkTypescript(work);
+    await linkTypescript(join(work, GSPOT_PATHS.nodeModules));
+    await linkTypescript(join(work, 'node_modules'));
     const compiler = getTool(readConfigurations().values(), 'tsc');
     const projectPath = join(work, 'node_modules/typescript/package.json');
     const project = parseJsonFile(projectPath, await readFile(projectPath, 'utf8'), packageJsonSchema);

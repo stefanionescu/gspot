@@ -27,7 +27,7 @@ test('vulture reads every Python file of the scope and reports unused definition
     const executed = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),
     );
-    const checked = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['python/vulture'] }));
+    const checked = await runChecks(session, buildRunOptions({ only: ['python/vulture'] }));
     const findings = checked.report.checks.flatMap((check) => check.findings);
     expect(findings.map(({ file, line, rule, name }) => ({ file, line, rule, name }))).toStrictEqual([
         { file: 'app/nodes.py', line: 1, rule: 'unused-function', name: 'helper' },

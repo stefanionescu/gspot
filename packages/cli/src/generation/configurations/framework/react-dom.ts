@@ -25,11 +25,9 @@ export function buildReactDomBlocks(scope: Pick<EslintScope, 'presets' | 'settin
         blocks.push({
             fields: {
                 files: REACT_FILES,
-                ...(preset.blocks[0].rules === undefined
-                    ? {}
-                    : { rules: allowFocusableRegions(preset.blocks[0].rules) }),
+                ...(preset.blocks[0].rules !== undefined && { rules: allowFocusableRegions(preset.blocks[0].rules) }),
             },
-            properties: "plugins: { 'jsx-a11y': accessibility }",
+            properties: "plugins: { 'jsx-a11y-x': accessibility }",
             preset: buildPresetRuleExpression([['accessibility', preset]]),
         });
     }

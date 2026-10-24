@@ -1,14 +1,14 @@
 import { formatCount } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
 import { writePlans } from '#cli/apply/write/writer.ts';
-import type { FileContents } from '#cli/types/system/files.ts';
 import { listExpectedPaths } from '#cli/apply/files/outdated.ts';
 import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
 import { planSettingsWrite } from '#cli/apply/write/managed-keys.ts';
+import type { Files, FileContents } from '#cli/types/system/files.ts';
+import { type WritePlan, type ApplyReport } from '#cli/types/apply.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
-import { GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
-import { type Writer, type WritePlan, type ApplyReport } from '#cli/types/apply.ts';
+import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { planBlock, planRemoval, listStrayPaths, planReplacement } from '#cli/apply/write/plans.ts';
 import { HOOKS_CHANGED_NOTE, INSTALL_FIRST_NOTE, INSTALL_MISSING_NOTE } from '#cli/config/apply/files/generated.ts';
 
@@ -31,22 +31,22 @@ Format generated file changes and notes for command output.
 */
 export function formatApplyReport(report: ApplyReport): string {
     const lines = [
-        ...report.written.map((path) => `wrote    ${path}`),
-        ...report.updated.map((path) => `updated  ${path}`),
-        ...report.removed.map((path) => `removed  ${path}`),
+        ...formatGeneratedChanges('wrote', report.written),
+        ...formatGeneratedChanges('updated', report.updated),
+        ...formatGeneratedChanges('removed', report.removed),
     ];
     if (lines.length === 0 && report.notes.length === 0) lines.push(formatUpToDate(report.unchanged.length));
     lines.push(...report.notes.map((note) => `note     ${note}`));
     return `${lines.join('\n')}\n`;
 }
 
-function removeUnusedToolFolders(writer: Writer, paths: ReadonlySet<string>): void {
+function removeUnusedToolFolders(writer: Files, paths: ReadonlySet<string>): void {
     for (const [path, keep] of [
         [INSTALLED_TOOL_FOLDERS.npm, paths.has(GSPOT_PATHS.npmProject)],
         [INSTALLED_TOOL_FOLDERS.python, paths.has(GSPOT_PATHS.pythonProject)],
         [INSTALLED_TOOL_FOLDERS.vale, paths.has(GSPOT_PATHS.valeConfigFile)],
     ] as const) {
-        if (!keep) writer.files.deleteTree(path);
+        if (!keep) writer.deleteTree(path);
     }
 }
 
@@ -67,7 +67,7 @@ async function addInstallationNote(session: Session, generated: GenerationResult
 
 function buildReplacementPlans(
     generated: GenerationResult,
-    writer: Writer,
+    writer: Files,
     reviewedOriginals: ReadonlyMap<string, FileContents | undefined> | undefined,
 ): WritePlan[] {
     const authorized = new Map(reviewedOriginals);
@@ -99,7 +99,7 @@ Plan, write, and report generated file changes under the repository writer lock.
 export async function writeGeneratedFiles(
     session: Session,
     generated: GenerationResult,
-    writer: Writer,
+    writer: Files,
     options?: { reviewedOriginals?: ReadonlyMap<string, FileContents | undefined> | undefined },
 ): Promise<ApplyReport> {
     const reviewedOriginals = options?.reviewedOriginals;
@@ -129,9 +129,21 @@ export async function writeGeneratedFiles(
     report.updated.push(
         ...[...blocks, ...managedKeyPlans].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
     );
-    report.removed.push(...pruning.map(({ path }) => path));
+    const pruned = pruning.filter((plan) => plan.status === 'changed');
+    report.removed.push(...pruned.filter((plan) => plan.after === undefined).map(({ path }) => path));
+    report.updated.push(...pruned.filter((plan) => plan.after !== undefined).map(({ path }) => path));
     if ([...report.removed, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`)))
         report.notes.push(HOOKS_CHANGED_NOTE);
     await addInstallationNote(session, generated, report);
     return report;
+}
+
+function formatGeneratedChanges(action: string, paths: string[]): string[] {
+    const internal = paths.filter((path) => path.startsWith(`${DOT_GSPOT}/`)).length;
+    const outside = paths.filter((path) => !path.startsWith(`${DOT_GSPOT}/`));
+    const label = action.padEnd('updated  '.length);
+    return [
+        ...(internal === 0 ? [] : [`${label}${formatCount(internal, 'generated file')}`]),
+        ...outside.map((path) => `${label}${path}`),
+    ];
 }

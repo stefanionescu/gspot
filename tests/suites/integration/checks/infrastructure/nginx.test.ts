@@ -17,7 +17,7 @@ import {
     NGINX_INCLUDE_FILES,
 } from '#tests/config/integration/checks/infrastructure/nginx.ts';
 
-test.skipIf(!isLinux)(
+test.skipIf(!isLinux || Bun.which('docker') === null)(
     'nginx/syntax follows include globs to the source line and tells invalid configuration from an unavailable image',
     async () => {
         await using sandbox = await testdir({
@@ -46,7 +46,7 @@ test.skipIf(!isLinux)(
             { check: 'nginx/syntax', scope: '', status: 'skipped', fileCount: 0 },
             { check: 'nginx/syntax', scope: 'proxy', status: 'passed', fileCount: 3 },
         ]);
-        expect(report.checks[1]!.files?.toSorted()).toStrictEqual([
+        expect(report.checks[1]!.files?.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
             'proxy/conf.d/server.conf',
             'proxy/nginx.conf',
             'proxy/tls#local.conf',
@@ -80,17 +80,13 @@ test.skipIf(!hasToolBuild('gixy'))(
         await using sandbox = await testdir({ 'proxy/nginx.conf': CLEAN_NGINX_CONF });
 
         commitAll(sandbox.path);
-        await initSandbox(
-            { root: sandbox.path, environment: {}, run: spawnGspot },
-            { configurations: ['nginx'], level: 'all' },
-        );
+        await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['nginx'], level: 'all' });
         const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy']);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         const result = parseCheckReport(
             await runCheckOnChanges(
-                sandbox.path,
+                { root: sandbox.path, run: spawnGspot },
                 { check: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED_NGINX_CONF } },
-                {},
             ),
         );
         expect(result.code, result.stdout + result.stderr).toBe(1);

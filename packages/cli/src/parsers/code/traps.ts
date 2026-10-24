@@ -31,10 +31,10 @@ export async function readTrapScripts(
                 .childrenForFieldName('argument')
                 .filter((argument) => argument.text !== END_OF_OPTIONS);
             if (body === undefined || signals.length === 0) return [];
-            const literal =
+            const isLiteral =
                 body.type === 'raw_string' ||
                 (body.type === 'string' && body.descendantsOfType(TRAP_EXPANSION_NODES).length === 0);
-            return literal ? [{ trap, body }] : [];
+            return isLiteral ? [{ trap, body }] : [];
         });
     const scripts: TrapScript[] = [];
     for (const { trap, body } of bodies) {

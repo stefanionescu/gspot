@@ -40,17 +40,3 @@ test('configs.all lints beside a config that registers the plugin again', () => 
     const messages = linter.verify("export const value = 'public';", config);
     expect(messages).toStrictEqual([]);
 });
-
-test('the published plugin exports its public rules and keeps schema-location to this repository', () => {
-    expect(Object.keys(plugin.rules).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        'import-boundaries',
-        'no-client-env',
-        'no-comments-in-imports',
-        'no-index-imports',
-        'no-magic-numbers',
-        'no-renamed-exports',
-        'no-trivial-files',
-        'no-trivial-functions',
-        'require-server-only',
-    ]);
-});

@@ -3,7 +3,6 @@ import { DESCRIPTION } from './config/site.ts';
 import { AGENT_STEPS } from './config/setup.ts';
 import type { AgentSkillsIndex } from './types/agents.ts';
 import { mkdir, copyFile, writeFile } from 'node:fs/promises';
-import { DIGEST_ALGORITHM } from '#cli/config/files/hashes.ts';
 
 import {
     LLMS_FILE,
@@ -49,7 +48,7 @@ export async function writeAgentFiles(siteFolder: URL): Promise<void> {
                 ...SETUP_SKILL,
                 type: 'skill-md',
                 url: `/${SKILLS_FOLDER}${SETUP_SKILL.name}/${SKILL_FILE}`,
-                digest: `sha256:${createHash(DIGEST_ALGORITHM).update(skill).digest('hex')}`,
+                digest: `sha256:${createHash('sha256').update(skill).digest('hex')}`,
             },
         ],
     };

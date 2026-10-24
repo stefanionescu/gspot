@@ -20,13 +20,13 @@ kind = "library"
 name = "eslint-plugin-astro"
 npm = "eslint-plugin-astro"
 rule_prefix = "astro"
-version = "1.7.0"
+version = "3.2.1"
 
 [tool.eslint]
 extensions = [".astro"]
 
 [[tool]]
-name = "eslint-plugin-jsx-a11y"
+name = "eslint-plugin-jsx-a11y-x"
 
 [[tool]]
 name = "astro-check"
@@ -38,7 +38,7 @@ version_command = ["astro", "check", "--version"]
 kind = "library"
 name = "prettier-plugin-astro"
 npm = "prettier-plugin-astro"
-version = "1.0.1"
+version = "1.1.1"
 
 [tool.prettier]
 module = "dist/index.js"
@@ -51,7 +51,7 @@ files = "*.astro"
 parser = "astro"
 
 [eslint]
-required_tools = ["eslint-plugin-astro", "eslint-plugin-jsx-a11y"]
+required_tools = ["eslint-plugin-astro", "eslint-plugin-jsx-a11y-x"]
 all_level_rules = ["astro/no-unused-css-selector", "astro/prefer-class-list-directive", "astro/prefer-object-class-list", "astro/prefer-split-class-list"]
 
 [[eslint.rules_off]]
@@ -60,7 +60,6 @@ reason = "A component is markup, never a file that only forwards: a script that 
 rules = ["gspot/no-trivial-files"]
 
 [[check]]
-# astro-check drops its first two arguments, the ones that `astro check` passes, so the command repeats them.
 command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--minimumFailingSeverity", "warning"]
 cwd = "scope"
 example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."

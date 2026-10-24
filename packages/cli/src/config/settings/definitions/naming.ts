@@ -15,7 +15,7 @@ export const NAMING_DEFINITIONS = {
     'naming.max_characters': {
         configurations: ['naming'],
         description: 'The most characters one identifier may have.',
-        reason_needed: 'raising',
+        reason_when: 'raising',
         languages: SETTING_LANGUAGES,
         language_defaults: { swift: 40, sql: 55 },
         default: 35,
@@ -23,7 +23,7 @@ export const NAMING_DEFINITIONS = {
     'naming.max_words': {
         configurations: ['naming'],
         description: 'The most words one identifier may have.',
-        reason_needed: 'raising',
+        reason_when: 'raising',
         languages: SETTING_LANGUAGES,
         language_defaults: { swift: 5, sql: 7 },
         default: 4,
@@ -32,7 +32,7 @@ export const NAMING_DEFINITIONS = {
         configurations: ['naming'],
         description:
             'The case patterns that one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift), or timestamp-snake (20260103120000_create_users.sql). Ruff checks the case of Python classes, functions, and parameters, and SwiftLint checks Swift types, variables, parameters, and enum cases; this setting covers the rest.',
-        reason_needed: 'adding',
+        reason_when: 'adding',
         languages: SETTING_LANGUAGES,
         default: [] as [],
     },

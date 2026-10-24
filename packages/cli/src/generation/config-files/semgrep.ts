@@ -17,7 +17,7 @@ export function buildSemgrepFile(planned: PlannedConfigFile): string {
     const { scopes } = planned.session;
     const { dependencyFiles } = planned.session.repository;
     const document = parse(
-        readFileSync(buildAssetPath(`${planned.configuration.folder}/${configFile.source ?? configFile.file}`), 'utf8'),
+        readFileSync(buildAssetPath(`${planned.configuration.folder}/${configFile.source}`), 'utf8'),
     ) as SemgrepDocument;
     const scopeDependencies = new Set(listProjectDependencyNames(dependencyFiles, scope.folder.path));
     const conditions = configFile.rule_dependencies;
@@ -25,9 +25,9 @@ export function buildSemgrepFile(planned: PlannedConfigFile): string {
         conditions === undefined
             ? []
             : Object.entries(conditions)
-                  .filter(([, packages]) => !packages.some((name) => scopeDependencies.has(name)))
+                  .filter(([, packages]) => packages.every((name) => !scopeDependencies.has(name)))
                   .map(([prefix]) => prefix);
-    document.rules = document.rules.filter((rule) => !dropped.some((prefix) => rule.id.startsWith(prefix)));
+    document.rules = document.rules.filter((rule) => dropped.every((prefix) => !rule.id.startsWith(prefix)));
     const setting = configFile.paths_setting;
     if (setting !== undefined) {
         const configuration = planned.configuration.name;

@@ -1,8 +1,32 @@
 export const BASH_SIZE_CASES = [
-    { file: 'scripts/tall.sh', rule: 'function-lines', line: 9 },
-    { file: 'scripts/branchy.sh', rule: 'function-branches', line: 9 },
-    { file: 'scripts/deep.sh', rule: 'block-nesting', line: 9 },
-    { file: 'scripts/mutable.sh', rule: 'function-assignments', line: 9 },
+    {
+        file: 'scripts/tall.sh',
+        rule: 'function-lines',
+        line: 9,
+        limit: 40,
+        message: 'main has 41 code lines, over the limit of 40.',
+    },
+    {
+        file: 'scripts/branchy.sh',
+        rule: 'function-branches',
+        line: 9,
+        limit: 8,
+        message: 'main has 9 branches, over the limit of 8.',
+    },
+    {
+        file: 'scripts/deep.sh',
+        rule: 'block-nesting',
+        line: 9,
+        limit: 3,
+        message: 'main has 4 levels of nesting, over the limit of 3.',
+    },
+    {
+        file: 'scripts/mutable.sh',
+        rule: 'function-assignments',
+        line: 9,
+        limit: 8,
+        message: 'main has 9 assignments, over the limit of 8.',
+    },
 ] as const;
 
 export const COUNTED_LOOPS = `main() {
@@ -29,11 +53,5 @@ export const CORRECTED_LOOPS = `main() {
     done
 }
 `;
-
-export const LOOP_COUNTS = [
-    { rule: 'function-branches', message: 'main has 4 branches, over the limit of 3.' },
-    { rule: 'block-nesting', message: 'main has 4 levels of nesting, over the limit of 3.' },
-    { rule: 'function-assignments', message: 'main has 2 assignments, over the limit of 1.' },
-] as const;
 
 export const NESTED_CONDITION = 'if [[ -n "$1" ]]; then';

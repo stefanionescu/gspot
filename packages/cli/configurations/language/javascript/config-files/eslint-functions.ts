@@ -1,17 +1,14 @@
 import picomatch from 'picomatch';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { sep, relative } from 'node:path';
+import { createRequire } from 'node:module';
+import { sep, dirname, relative } from 'node:path';
 import type { EslintRuntime } from '#cli/types/generation/eslint.ts';
 import type { EslintGlobals, ComponentParser, JavascriptBlock } from '#cli/types/generation/eslint-functions.ts';
 
 export const root = fileURLToPath(new URL('../../../../..', import.meta.url)).replace(/[\\/]$/u, '');
 
 const componentParserOptions = { tsconfigRootDir: root, ecmaVersion: 'latest', sourceType: 'module' };
-
-const runtimeGlobalNames = new WeakMap<object, Set<string>>();
-
-const runtimeMatcherGroups = new WeakMap<object, ((path: string) => boolean)[]>();
 
 /**
 Remove host runtime globals and keep framework compiler and test names. Runtime APIs get their globals from blocks with
@@ -27,20 +24,15 @@ export function stripRuntimeGlobals(
 ): JavascriptBlock {
     const blockGlobals = block.languageOptions?.globals;
     if (blockGlobals === undefined) return block;
-    let runtimeNames = runtimeGlobalNames.get(globalsByRuntime);
-    if (runtimeNames === undefined) {
-        runtimeNames = new Set(
-            Object.keys({
-                ...globalsByRuntime['node'],
-                ...globalsByRuntime['browser'],
-                ...globalsByRuntime['worker'],
-                ...globalsByRuntime['serviceworker'],
-                ...globalsByRuntime['react-native'],
-            }),
-        );
-        runtimeGlobalNames.set(globalsByRuntime, runtimeNames);
-    }
-    const names = runtimeNames;
+    const names = new Set(
+        Object.keys({
+            ...globalsByRuntime['node'],
+            ...globalsByRuntime['browser'],
+            ...globalsByRuntime['worker'],
+            ...globalsByRuntime['serviceworker'],
+            ...globalsByRuntime['react-native'],
+        }),
+    );
     return {
         ...block,
         languageOptions: {
@@ -58,20 +50,15 @@ Select the files that one runtime declaration covers: a later declaration that c
 @returns whether a file belongs to this declaration after later ones apply.
 */
 export function runtimeMatches(index: number, runtimes: EslintRuntime[]): (file: string) => boolean {
-    let matchers = runtimeMatcherGroups.get(runtimes);
-    if (matchers === undefined) {
-        matchers = runtimes.map(({ scope, includes, excludes }) => {
-            const included = includes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));
-            const excluded = excludes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));
-            return (path: string) =>
-                (scope === '' || path.startsWith(`${scope}/`)) &&
-                included.some((pattern) => pattern(path)) &&
-                !excluded.some((pattern) => pattern(path));
-        });
-        runtimeMatcherGroups.set(runtimes, matchers);
-    }
-    const ordered = matchers;
-    return (file) => ordered.findLastIndex((matches) => matches(relative(root, file).split(sep).join('/'))) === index;
+    const matchers = runtimes.map(({ scope, includes, excludes }) => {
+        const included = includes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));
+        const excluded = excludes.map((glob) => picomatch(glob, { dot: true, flags: 's' }));
+        return (path: string) =>
+            (scope === '' || path.startsWith(`${scope}/`)) &&
+            included.some((pattern) => pattern(path)) &&
+            excluded.every((pattern) => !pattern(path));
+    });
+    return (file) => matchers.findLastIndex((matches) => matches(relative(root, file).split(sep).join('/'))) === index;
 }
 
 /**
@@ -110,5 +97,46 @@ export function componentMatches(parser: ComponentParser, typescriptParser?: unk
             if (error instanceof SyntaxError || (error instanceof Error && error.name === 'TSError')) return false;
             throw error;
         }
+    };
+}
+
+/**
+Load Astro and its accessibility peer from the generated tool project.
+
+@param moduleUrl the generated configuration module URL.
+@returns the rules, processors, and recommended component configurations.
+*/
+export function importAstroPlugin(moduleUrl: string): unknown {
+    const previousFolder = process.cwd();
+    try {
+        process.chdir(dirname(fileURLToPath(moduleUrl)));
+        const require = createRequire(moduleUrl);
+        const pluginRequire = createRequire(require.resolve('eslint-plugin-astro/package.json'));
+        const plugin: unknown = pluginRequire('./lib/index.mjs');
+        return typeof plugin === 'object' && plugin !== null && 'default' in plugin ? plugin.default : plugin;
+    } finally {
+        process.chdir(previousFolder);
+    }
+}
+
+/**
+Read Svelte's parser dependencies from the generated tool project.
+
+@param moduleUrl the generated configuration module URL.
+@returns a component parser that restores the working folder after each parse.
+*/
+export function importSvelteParser(moduleUrl: string): ComponentParser {
+    const parser = createRequire(moduleUrl)('svelte-eslint-parser') as ComponentParser;
+    return {
+        ...parser,
+        parseForESLint(code, options) {
+            const previousFolder = process.cwd();
+            try {
+                process.chdir(dirname(fileURLToPath(moduleUrl)));
+                return parser.parseForESLint(code, options);
+            } finally {
+                process.chdir(previousFolder);
+            }
+        },
     };
 }

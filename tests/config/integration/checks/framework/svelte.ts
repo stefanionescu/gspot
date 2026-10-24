@@ -1,15 +1,11 @@
 import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/checks/component-samples.ts';
 
-export const CLEAN_SVELTE = `<script lang="ts">
-    const { name }: { name: string } = $props();
-</script>
-
-<p>{name}</p>
-`;
+export const CLEAN_SVELTE =
+    '<script lang="ts">\n    const { name }: { name: string } = $props();\n</script>\n\n<p>{name}</p>\n';
 
 export const SVELTE_SANDBOX = {
     configurations: ['typescript', 'svelte', 'css', 'format'],
-    tsconfig: COMPONENT_TSCONFIG,
+    json: { 'tsconfig.json': COMPONENT_TSCONFIG },
     files: {
         'src/answer.ts': ANSWER_MODULE,
         'src/Greeting.svelte': CLEAN_SVELTE,
@@ -57,55 +53,33 @@ function shout(text: string): string { return text.toUpperCase(); }
         expected: { file: 'src/SharedPolicy.svelte', rule: 'gspot/no-trivial-functions', line: 2 },
         corrected: {
             files: {
-                'src/SharedPolicy.svelte': `<script lang="ts">
-const answer = 42;
-</script>
-<p>{answer}</p>
-`,
+                'src/SharedPolicy.svelte': '<script lang="ts">\nconst answer = 42;\n</script>\n<p>{answer}</p>\n',
             },
         },
     },
     {
         check: 'svelte/svelte-check',
         files: {
-            'src/Product.svelte': `<script lang="ts">
-    const { source }: { source: string } = $props();
-</script>
-
-<img src={source} />
-`,
+            'src/Product.svelte':
+                '<script lang="ts">\n    const { source }: { source: string } = $props();\n</script>\n\n<img src={source} />\n',
         },
         expected: { file: 'src/Product.svelte', rule: 'a11y_missing_attribute', line: 5 },
         corrected: {
             files: {
-                'src/Product.svelte': `<script lang="ts">
-    const { source }: { source: string } = $props();
-</script>
-
-<img src={source} alt="The product" />
-`,
+                'src/Product.svelte':
+                    '<script lang="ts">\n    const { source }: { source: string } = $props();\n</script>\n\n<img src={source} alt="The product" />\n',
             },
         },
     },
     {
         check: 'svelte/svelte-check',
         files: {
-            'src/Count.svelte': `<script lang="ts">
-    const count: number = 'one';
-</script>
-
-<p>{count}</p>
-`,
+            'src/Count.svelte': '<script lang="ts">\n    const count: number = \'one\';\n</script>\n\n<p>{count}</p>\n',
         },
         expected: { file: 'src/Count.svelte', rule: 'TS2322', line: 2 },
         corrected: {
             files: {
-                'src/Count.svelte': `<script lang="ts">
-    const count: number = 1;
-</script>
-
-<p>{count}</p>
-`,
+                'src/Count.svelte': '<script lang="ts">\n    const count: number = 1;\n</script>\n\n<p>{count}</p>\n',
             },
         },
     },

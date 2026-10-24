@@ -4,14 +4,15 @@ import { type ReasonedValue } from '#cli/types/settings/values.ts';
 import { type SettingLanguage } from '#cli/types/settings/naming.ts';
 import type { REASON_DESCRIPTIONS } from '#cli/config/settings/fields.ts';
 
-export type ReasonedSettingDefinition = Required<Pick<SettingDefinition, 'description' | 'reason_needed'>>;
+export type ReasonedSettingDefinition = Required<Pick<SettingDefinition, 'description' | 'reason_when'>>;
 
 export type ReasonRequirement = keyof typeof REASON_DESCRIPTIONS;
 
 export type SettingDefinition = {
     description?: string;
+    minimum?: number;
     configurations?: readonly string[];
-    reason_needed?: ReasonRequirement;
+    reason_when?: ReasonRequirement;
     reason_values?: boolean;
     languages?: readonly string[];
     language_defaults?: Readonly<Record<string, unknown>>;

@@ -4,7 +4,7 @@ description = "Tracked files: large files outside Git LFS, and paths that a conf
 title = "Repository"
 
 [[check]]
-example = "A tracked `notes/big.txt` of 1,100 KiB, over the default limit of 1,024, reports `size`. Delete the file, or store it through Git LFS."
+example = "A tracked `notes/big.txt` over `repository.max_file_kilobytes` reports `size`. Delete the file, or store it through Git LFS."
 help = "Track the file with Git LFS, classify it as generated or vendored in .gitattributes, or raise repository.max_file_kilobytes with a reason."
 level = "recommended"
 name = "large-files"
@@ -22,3 +22,13 @@ runs = "once"
 stage = "commit"
 summary = "Reports a tracked file at a path that a configuration keeps out of Git."
 why = "Machine-local values and installed packages belong outside shared Git history."
+
+[[check]]
+example = "A tracked Latin-1 notes.md reports encoding. Save the file as UTF-8."
+help = "Save the reported file as UTF-8, then run the check again."
+level = "recommended"
+name = "encoding"
+runs = "once"
+stage = "commit"
+summary = "Checks that tracked text files use UTF-8."
+why = "Every text check must read the same characters."

@@ -8,6 +8,7 @@ import { isWindows } from '#tests/setup/system/platform.ts';
 import { parseCommandFindings } from '#cli/runs/command/output.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -19,7 +20,7 @@ import {
 } from '#tests/config/integration/checks/language/bash.ts';
 
 test('ShellCheck reports a finding in a filename that starts with a dash', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         '-f.sh': '#!/bin/sh\necho $1\n',
         'ok.sh': '#!/bin/sh\necho ok\n',
@@ -33,6 +34,7 @@ test('ShellCheck reports a finding in a filename that starts with a dash', async
 
 test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/safety accepts a trap that removes a temporary folder, and no file changes', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['bash'], { level: 'all', scopes: [{ path: 'app' }] }),
         ...DIALECT_SOURCES,
@@ -72,6 +74,7 @@ test('ShellCheck reports dialect findings by shebang and an unchecked cd, bash/s
 
 test('partial ShellCheck output beside an unreadable file is an execution error', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const source = '#!/usr/bin/env bash\necho $unquoted\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['bash']),
@@ -107,7 +110,7 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
 test.skipIf(isWindows).each([...SYNTAX_CASES])(
     '$check accepts clean files and reports a syntax error in $path',
     async (row) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
             ...SYNTAX_FILES,
         });
@@ -118,32 +121,27 @@ test.skipIf(isWindows).each([...SYNTAX_CASES])(
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         expect(clean.report.checks).toMatchObject([{ status: 'passed', fileCount: row.files.length, findings: [] }]);
         const path = join(sandbox.path, row.path);
-        const original = await readFile(path);
-        try {
-            await writeFile(path, row.broken);
-            const broken = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', row.check, '--json']));
-            expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-            expect(broken.report.checks).toMatchObject([
-                {
-                    check: row.check,
-                    status: 'failed',
-                    findings: [
-                        {
-                            file: row.path,
-                            line: row.line,
-                            message: expect.stringContaining(row.message) as string,
-                        },
-                    ],
-                },
-            ]);
-        } finally {
-            await writeFile(path, original);
-        }
+        await writeFile(path, row.broken);
+        const broken = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', row.check, '--json']));
+        expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+        expect(broken.report.checks).toMatchObject([
+            {
+                check: row.check,
+                status: 'failed',
+                findings: [
+                    {
+                        file: row.path,
+                        line: row.line,
+                        message: expect.stringContaining(row.message) as string,
+                    },
+                ],
+            },
+        ]);
     },
 );
 
 test('shfmt reports a syntax error as a finding and passes after the script is repaired', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash', 'format']),
         'broken script.sh': 'if then\n',
     });

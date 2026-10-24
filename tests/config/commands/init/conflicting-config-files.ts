@@ -2,6 +2,7 @@ import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
+import { TOOL_PLAN_CHANGES, MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/plan.ts';
 
 export const REPLACED_PYPROJECT_TABLES = [
     {
@@ -134,9 +135,9 @@ export const LINT_FOLDER_NOTE = {
 } as const;
 
 export const HOOKS_PATH_CASES = [
-    { hooksPath: '', line: 'hooks                none' },
-    { hooksPath: 'hooks', line: 'hooks                hooks/  pre-commit, use-thing.ts (your own)' },
-    { hooksPath: '.husky', line: 'hooks                .husky/  pre-commit (husky)' },
+    { hooksPath: '', line: 'existing hooks       none' },
+    { hooksPath: 'hooks', line: 'existing hooks       hooks/  pre-commit, use-thing.ts (your own)' },
+    { hooksPath: '.husky', line: 'existing hooks       .husky/  pre-commit (husky)' },
 ] as const;
 
 export const HOOK_NAMED_SOURCE = 'export function useThing() { return true; }\n';
@@ -153,3 +154,12 @@ export const UNCOMMITTED_FORMAT_CASES = [
     'staged changes',
     'unstaged changes',
 ].flatMap((state) => UNCOMMITTED_FORMAT_FILES.map((file) => ({ ...file, state })));
+
+export const INACTIVE_PLAN_CHANGES = [
+    ...MANAGED_PLAN_CHANGES,
+    {
+        path: '.gspot/package.json',
+        note: '3 pinned npm tools; matching lockfile',
+    },
+    ...TOOL_PLAN_CHANGES,
+] as const;

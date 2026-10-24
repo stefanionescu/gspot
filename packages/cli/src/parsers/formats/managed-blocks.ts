@@ -27,8 +27,7 @@ export function findBlockSpan(text: string, file: BlockFile): BlockSpan | undefi
     }
     const end = closing + markersForStyle.end.length;
     const newline = LEADING_NEWLINE.exec(text.slice(end));
-    if (newline !== null) return { start, end: end + newline[0].length };
-    return { start, end };
+    return { start, end: newline === null ? end : end + newline[0].length };
 }
 
 /**

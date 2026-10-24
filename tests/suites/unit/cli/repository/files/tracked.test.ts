@@ -83,7 +83,8 @@ test('a broken Git index is reported instead of a folder walk', async () => {
     const files = await listTrackedFiles(cwd, await readIndexFiles(cwd), { hasGit: true });
     expect(files.map((file) => file.path)).toStrictEqual(['source.ts']);
     await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
-    expect(await captureRejection(readIndexFiles(cwd))).toStartWith('Git ls-files failed');
+    const readIndexFilesError = await captureRejection(readIndexFiles(cwd));
+    expect(readIndexFilesError.message).toStartWith('Git ls-files failed');
 });
 test('a .git file that points at a missing folder is reported, not read as a folder without Git', async () => {
     await using sandbox = await testdir({
@@ -91,7 +92,8 @@ test('a .git file that points at a missing folder is reported, not read as a fol
         'source.ts': 'export {};\n',
     });
 
-    expect(await captureRejection(readIndexFiles(sandbox.path))).toStartWith('Git ls-files failed');
+    const listError = await captureRejection(readIndexFiles(sandbox.path));
+    expect(listError.message).toStartWith('Git ls-files failed');
     expect(() => findRoot(sandbox.path)).toThrow(`Git could not open ${sandbox.path}:`);
     expect(() => isGitRepository(sandbox.path)).toThrow('is a work tree (exit 128)');
 });
@@ -101,9 +103,8 @@ test('a missing git program is reported instead of a successful walk', async () 
     await using empty = await testdir();
     using resources = new DisposableStack();
     resources.use(overrideEnvironment({ PATH: empty.path }));
-    expect(await captureRejection(readIndexFiles(sandbox.path))).toMatch(
-        /Git ls-files failed.*(?:not found|not recognized)/su,
-    );
+    const missingGitError = await captureRejection(readIndexFiles(sandbox.path));
+    expect(missingGitError.message).toMatch(/Git ls-files failed.*(?:not found|not recognized)/su);
     expect(() => findRoot(sandbox.path)).toThrow(/Git could not open [^:]*:.*(?:not found|not recognized)/su);
     expect(() => isGitRepository(sandbox.path)).toThrow(
         /Git could not tell whether .* is a work tree.*(?:not found|not recognized)/su,
@@ -146,8 +147,9 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
     expect(await listTrackedFiles(sandbox.path, index, { hasGit: true })).toStrictEqual([
         { path: 'source.txt', size: Buffer.byteLength('working content\n'), executable: false, symlink: false },
     ]);
-    expect(await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }))).toContain(
-        'Resolve index conflicts',
+    const listRevisionFilesError = await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }));
+    expect(listRevisionFilesError.message).toBe(
+        'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.',
     );
 });
 test('the index keeps deleted tracked paths and encoded names and leaves out untracked files', async () => {

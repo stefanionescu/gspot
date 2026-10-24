@@ -1,15 +1,15 @@
 export const LINTER_PACKAGES = {
     eslint: {
         module: 'eslint/use-at-your-own-risk',
-        nameList: { file: 'configurations/language/javascript/eslint-rule-names.json', source: 'builtinRules' },
+        nameList: { file: 'configurations/language/javascript/eslint-rule-names.json' },
     },
     globals: {
         module: 'globals',
-        nameList: { file: 'configurations/language/javascript/eslint-global-names.json', source: 'default' },
+        nameList: { file: 'configurations/language/javascript/eslint-global-names.json' },
     },
     stylelint: {
         module: 'stylelint',
-        nameList: { file: 'configurations/language/css/stylelint-rule-names.json', source: 'resolveConfig.rules' },
+        nameList: { file: 'configurations/language/css/stylelint-rule-names.json' },
     },
     standard: { module: 'stylelint-config-standard' },
     prettier: { module: 'prettier' },

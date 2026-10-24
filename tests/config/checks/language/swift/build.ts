@@ -8,12 +8,6 @@ import PackageDescription
 let package = Package(name: "Example", targets: [.target(name: "Example", path: ".")])
 `;
 
-export const NESTED_SWIFTLINT_FILES = [
-    'app/.swiftlint.yml',
-    'app/Sources/.swiftlint.yml',
-    'app/Sources/Feature/.swiftlint.yml',
-] as const;
-
 export const PRIVATE_OTHER_FINDING = {
     file: '/var/folders/project/Other.swift',
     line: 5,
@@ -52,5 +46,8 @@ export const ANALYZER_EXIT_CASES = [
     },
 ] as const;
 
-export const PRIVATE_PREFIX_STDERR =
-    '/private/var/folders/project/Main.swift:4:2: error: Missing value\n/var/folders/project/Other.swift:5:3: error: Unknown name';
+export const SWIFT_REPLACEMENT_CASES = [
+    { checkId: 'swift/build', rule: 'compiler' },
+    { checkId: 'swift/swiftlint-analyze', rule: 'analyzer' },
+    { checkId: 'swift/periphery', rule: 'unused' },
+] as const;

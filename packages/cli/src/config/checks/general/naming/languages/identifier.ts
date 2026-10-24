@@ -1,3 +1,5 @@
+export const NAME_QUOTE = '`';
+
 export const CATEGORY_LABELS = {
     schemas: 'schema',
     tables: 'table',

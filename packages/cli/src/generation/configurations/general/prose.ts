@@ -4,7 +4,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
@@ -20,51 +19,33 @@ import {
     VALE_STYLES_PATH,
     VALE_MARKUP_FILES,
     VALE_MARKUP_RULES,
+    VALE_COMMENT_RULES,
     VALE_REGEX_SYMBOLS,
     VALE_SKIPPED_SCOPES,
+    CAPITALIZATION_STYLES,
     VALE_PACKAGE_RELEASES,
     VALE_PACKAGE_REPOSITORY,
 } from '#cli/config/generation/configurations/general/prose.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])].map((word) =>
-        word.replaceAll(VALE_REGEX_SYMBOLS, BACKSLASH_BEFORE_MATCH),
+        word.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => '\\' + symbol),
     );
 }
 
 /**
-Build the Vale sentence-case rule for headings below the title.
+Build the title or heading capitalization rule with the accepted vocabulary.
 
-@param planned the config file with its scope, level, and target path.
-@returns the heading capitalization rule.
+@param planned the generated config file and scope.
+@param name whether to check heading or title case.
+@returns the Vale capitalization rule.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
-export function buildHeadingCaseStyle(planned: PlannedConfigFile): string {
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function buildCapitalizationStyle(planned: PlannedConfigFile, name: keyof typeof CAPITALIZATION_STYLES): string {
     return stringify({
+        ...CAPITALIZATION_STYLES[name],
         extends: 'capitalization',
-        message: "Headings below the title use sentence case: '%s'.",
         level: 'error',
-        scope: 'heading.h2',
-        match: '$sentence',
-        exceptions: listExceptions(listAllowedWords(planned.session)),
-    });
-}
-
-/**
-Build the Vale title-case rule for the document title.
-
-@param planned the config file with its scope, level, and target path.
-@returns the title capitalization rule.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
-export function buildTitleCaseStyle(planned: PlannedConfigFile): string {
-    return stringify({
-        extends: 'capitalization',
-        message: "The document title uses title case: '%s'.",
-        level: 'error',
-        scope: 'heading.h1',
-        match: '$title',
         exceptions: listExceptions(listAllowedWords(planned.session)),
     });
 }
@@ -101,7 +82,8 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
     const folders = isAll ? [VALE_STYLES_PATH, GSPOT_PATHS.valePackages] : [VALE_STYLES_PATH];
     const styles = folders.map((path) => relative(dirname(planned.targetPath), path));
     const packages = VALE_PACKAGES.map(
-        (name) => `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name]}/${name}.zip`,
+        (name) =>
+            `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name].version}/${name}.zip`,
     );
     const lines = [
         ...(isAll ? ['# Vale reads both StylesPath lines in order and installs packages in the last folder.'] : []),
@@ -121,6 +103,10 @@ export function buildValeIniFile(planned: PlannedConfigFile): string {
         '# Markup checks read markup only.',
         'gspot.alt-text = NO',
         ...(isAll ? VALE_MARKUP_RULES.map((rule) => `${rule} = NO`) : []),
+        '',
+        `[*.{${PROSE_FORMATS.map(([extension]) => extension).join(',')}}]`,
+        'BasedOnStyles =',
+        ...VALE_COMMENT_RULES.map((rule) => `${rule} = YES`),
         '',
         `[${VALE_MARKUP_FILES}]`,
         'gspot.alt-text = YES',
@@ -165,80 +151,23 @@ export function buildBannedHeadingsStyle(planned: PlannedConfigFile): string {
         scope: 'heading',
         nonword: true,
         tokens: headings.map(
-            (heading) => String.raw`(?:\b|^)${heading.replaceAll(VALE_REGEX_SYMBOLS, BACKSLASH_BEFORE_MATCH)}(?:\b|$)`,
+            (heading) =>
+                String.raw`(?:\b|^)${heading.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => '\\' + symbol)}(?:\b|$)`,
         ),
     });
 }
 
 /**
-Build the `item-length` style of Vale: the Vale rule for the longest list item, in words.
+Build a prose length rule with its configured ceiling.
 
-@param planned the config file with its scope, level, and target path.
-@returns the Vale list-item length rule.
+@param planned the generated config file and scope.
+@param name the prose unit that the rule limits.
+@returns the Vale occurrence rule.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
-export function buildBulletLengthStyle(planned: PlannedConfigFile): string {
-    const max = getTable(planned.scope.settings, 'prose').max_list_item_words;
-    return stringify({
-        ...LENGTH_STYLES.item,
-        message: `A list item longer than ${String(max)} words. Split it or make it a paragraph.`,
-        level: 'error',
-        max,
-    });
-}
-
-/**
-Build the `paragraph-length` style of Vale: the Vale paragraph length rule with the configured ceiling.
-
-@param planned the config file with its scope, level, and target path.
-@returns the Vale paragraph length rule with the configured ceiling.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
-export function buildParagraphLengthStyle(planned: PlannedConfigFile): string {
-    const max = getTable(planned.scope.settings, 'prose').max_paragraph_sentences;
-    return stringify({
-        ...LENGTH_STYLES.paragraph,
-        message: `A paragraph longer than ${String(max)} sentences. Split it.`,
-        level: 'error',
-        max,
-    });
-}
-
-/**
-Build the `sentence-length` style of Vale: the Vale sentence length rule with the configured ceiling.
-
-@param planned the config file with its scope, level, and target path.
-@returns the Vale sentence length rule with the configured ceiling.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
-export function buildSentenceLengthStyle(planned: PlannedConfigFile): string {
-    const max = getTable(planned.scope.settings, 'prose').max_sentence_words;
-    return stringify({
-        ...LENGTH_STYLES.sentence,
-        message: `A sentence longer than ${String(max)} words. Split it.`,
-        level: 'error',
-        max,
-    });
-}
-
-/**
-Build the `possessives` style of Vale: the Vale possessive-form rule.
-
-@param planned the config file with its scope, level, and target path.
-@returns the Vale possessive-form rule.
-*/
-export function buildPossessivesStyle(planned: PlannedConfigFile): string {
-    const names = listProductNames(planned.session);
-
-    return stringify({
-        extends: 'existence',
-        message: "Possessive on a product or code name: '%s'. Rephrase with 'of' or 'the'.",
-        level: 'error',
-        nonword: true,
-        tokens: [
-            String.raw`\b(?:${names.map((name) => name.replaceAll(VALE_REGEX_SYMBOLS, BACKSLASH_BEFORE_MATCH)).join('|')})'s\b`,
-        ],
-    });
+export function buildLengthStyle(planned: PlannedConfigFile, name: keyof typeof LENGTH_STYLES): string {
+    const { setting, message, ...style } = LENGTH_STYLES[name];
+    const max = getTable(planned.scope.settings, 'prose')[setting];
+    return stringify({ ...style, message: message.replace('{{max}}', () => String(max)), level: 'error', max });
 }
 
 /**

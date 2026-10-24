@@ -1,5 +1,4 @@
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import type { TRIVY_SCHEMA_VERSION } from '#cli/config/checks/infrastructure/docker/trivy-image.ts';
 
 export type ComposeDeclaration = { name: string; path: string; service: ComposeService };
 
@@ -18,7 +17,6 @@ export type ComposeService = {
 export type ComposeConfiguration = { services?: Record<string, ComposeService> | undefined };
 
 export type TrivyImageReport = {
-    SchemaVersion: typeof TRIVY_SCHEMA_VERSION;
     Results?:
         | {
               Vulnerabilities?: { VulnerabilityID: string; PkgName: string }[] | undefined;

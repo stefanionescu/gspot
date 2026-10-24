@@ -1,3 +1,5 @@
+import type { Pipeline } from '#cli/types/generation/ci.ts';
+
 export const FAKE_MISE_SCRIPT = `#!/bin/sh
 [ "$1" = exec ] || exit 2
 shift
@@ -39,16 +41,15 @@ printf 'setup err\n' >&2
 exit "$GSPOT_SETUP_EXIT"
 `;
 
-export const LINUX_PIPELINE = {
+export const LINUX_PIPELINE: Omit<Pipeline, 'manualChecks' | 'manualTools'> = {
     version: '1.2.3',
     packageManager: { name: 'npm', version: '11.10.1' },
     operatingSystems: ['linux'],
     linuxRunner: 'ubuntu-24.04',
     lockfiles: ['package-lock.json', 'web/pnpm-lock.yaml'],
     hasSwift: false,
-    manualChecks: ['docs/lychee-external'],
     projectInstall: [],
-} as const;
+};
 
 export const LINT_STEPS = [
     'Check out source',

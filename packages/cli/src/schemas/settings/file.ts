@@ -4,6 +4,7 @@ import { type SchemaShape } from '#cli/types/shapes.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { hooksSchema } from '#cli/schemas/settings/hooks.ts';
 import { rulesSchema } from '#cli/schemas/settings/rules.ts';
+import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { namingSchema } from '#cli/schemas/settings/naming.ts';
 import { importRulesSchema } from '#cli/schemas/settings/import-rules.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
@@ -27,7 +28,7 @@ const ignoreSchema = z
     .strictObject({
         check: z.string().optional().describe(SETTING_DEFINITIONS['ignore.check'].description),
         rule: z.string().optional().describe(SETTING_DEFINITIONS['ignore.rule'].description),
-        names: z.array(z.string().min(1)).min(1).optional().describe(SETTING_DEFINITIONS['ignore.names'].description),
+        names: z.string().min(1).array().min(1).optional().describe(SETTING_DEFINITIONS['ignore.names'].description),
         paths: relativePaths.optional().describe(SETTING_DEFINITIONS['ignore.paths'].description),
         reason: z
             .string({ error: 'needs a reason. Add `reason = "..."` to this record.' })
@@ -146,14 +147,12 @@ const scopeBody = {
 export const scopeSchema = z.strictObject({
     path: relativePath.describe(SETTING_DEFINITIONS['scope.path'].description),
     configurations: z
-        .array(z.string())
+        .string()
+        .array()
         .default(SETTING_DEFINITIONS['scope.configurations'].default)
         .describe(SETTING_DEFINITIONS['scope.configurations'].description),
-    removed_configurations: allowReasonedValue(
-        z.array(z.string()),
-        SETTING_DEFINITIONS['scope.removed_configurations'],
-    ),
-    test_files: z.array(relativePath).optional().describe(SETTING_DEFINITIONS['scope.test_files'].description),
+    removed_configurations: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['scope.removed_configurations']),
+    test_files: relativePath.array().optional().describe(SETTING_DEFINITIONS['scope.test_files'].description),
     ...scopeBody,
 }) satisfies z.ZodType<NonNullable<ParsedSettings['scope']>[number], WrittenScope>;
 
@@ -165,8 +164,8 @@ export const rootSettingSchemas = {
         .positive()
         .default(SETTING_DEFINITIONS['tool_timeout_seconds'].default)
         .meta(SETTING_DEFINITIONS['tool_timeout_seconds']),
-    test_files: z
-        .array(relativePath)
+    test_files: relativePath
+        .array()
         .default(SETTING_DEFINITIONS['test_files'].default)
         .meta(SETTING_DEFINITIONS['test_files']),
 };
@@ -175,16 +174,20 @@ export const settingsSchema = z
     .strictObject({
         ...rootSettingSchemas,
         configurations: z
-            .array(z.string())
+            .string()
+            .array()
             .default(SETTING_DEFINITIONS['configurations'].default)
             .describe(SETTING_DEFINITIONS['configurations'].description),
-        removed_configurations: allowReasonedValue(z.array(z.string()), SETTING_DEFINITIONS['removed_configurations']),
-        scope: z.array(scopeSchema).optional(),
+        removed_configurations: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['removed_configurations']),
+        scope: scopeSchema.array().optional(),
         ...rootBody,
         import_rule: importRulesSchema,
-        ignore: z.array(ignoreSchema).optional(),
-        command_check: z.array(commandCheckSchema).optional(),
-        structure: rootStructure,
+        ignore: ignoreSchema.array().optional(),
+        command_check: commandCheckSchema.array().optional(),
+        format: formatSchema.prefault({}),
+        limits: limitsSchema.prefault({}),
+        naming: namingSchema.prefault({}),
+        structure: rootStructure.unwrap().prefault({}),
         hooks: hooksSchema.optional(),
         ci: ciSchema.optional(),
         rules: rulesSchema.prefault({}),
@@ -224,36 +227,31 @@ export const settingsSchema = z
     })
     .meta({ examples: SETTINGS_EXAMPLES }) satisfies z.ZodType<ParsedSettings, WrittenSettings>;
 
-/**
-Derive the written field order of the record lists from their schemas.
+export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
+    Object.entries({
+        scope: scopeSchema.pick({
+            path: true,
+            configurations: true,
+            removed_configurations: true,
+            test_files: true,
+        }).shape,
+        command_check: commandCheckSchema.shape,
+        ignore: ignoreSchema.shape,
+        import_rule: importRulesSchema.unwrap().element.shape,
+        'format.override': formatSchema.shape.override.unwrap().element.shape,
+        'naming.override': namingSchema.shape.override.unwrap().element.shape,
+        'coverage.swift_target': configurationTableSchemas.coverage.unwrap().shape.swift_target.unwrap().element.shape,
+        'licenses.allowed_package': configurationTableSchemas.licenses.unwrap().shape.allowed_package.unwrap().element
+            .shape,
+        'site.size_limit': configurationTableSchemas.site.unwrap().shape.size_limit.unwrap().element.shape,
+        'tools.eslint.override': publicToolsSchema.shape.eslint.unwrap().shape.override.unwrap().element.shape,
+        'tools.v8r.schema': publicToolsSchema.shape.v8r.unwrap().shape.schema.unwrap().element.shape,
+    }).map(([name, fields]) => [name, Object.keys(fields)]),
+);
 
-@returns record paths and their ordered field names; scopes retain their leading fields only.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 4 files share it.
-export function listRecordFields(): Record<string, string[]> {
-    return Object.fromEntries(
-        Object.entries({
-            scope: scopeSchema.pick({
-                path: true,
-                configurations: true,
-                removed_configurations: true,
-                test_files: true,
-            }).shape,
-            command_check: commandCheckSchema.shape,
-            ignore: ignoreSchema.shape,
-            import_rule: importRulesSchema.unwrap().element.shape,
-            'format.override': formatSchema.shape.override.unwrap().element.shape,
-            'naming.override': namingSchema.shape.override.unwrap().element.shape,
-            'coverage.swift_target': configurationTableSchemas.coverage.unwrap().shape.swift_target.unwrap().element
-                .shape,
-            'licenses.allowed_package': configurationTableSchemas.licenses.unwrap().shape.allowed_package.unwrap()
-                .element.shape,
-            'site.size_limit': configurationTableSchemas.site.unwrap().shape.size_limit.unwrap().element.shape,
-            'tools.eslint.override': publicToolsSchema.shape.eslint.unwrap().shape.override.unwrap().element.shape,
-            'tools.v8r.schema': publicToolsSchema.shape.v8r.unwrap().shape.schema.unwrap().element.shape,
-        }).map(([name, fields]) => [name, Object.keys(fields)]),
-    );
-}
+const schemas = new Map<string, z.ZodType>(Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }));
+const toolSchemas = new Map<string, z.ZodType>(Object.entries(publicToolsSchema.shape));
+const configurationSchemas = new Map<string, z.ZodType>(Object.entries(configurationTableSchemas));
 
 /**
 Locate one setting in the root, configuration, and tool schemas.
@@ -262,15 +260,15 @@ Locate one setting in the root, configuration, and tool schemas.
 @returns its schema, or undefined when the key names no setting.
 */
 export function findSettingSchema(key: string): z.ZodType | undefined {
-    const direct = Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).find(([name]) => name === key);
-    if (direct !== undefined) return direct[1];
+    const direct = schemas.get(key);
+    if (direct !== undefined) return direct;
     const segments = key.split('.');
     const table = segments.shift();
     let schema: z.ZodType | undefined;
     if (table === 'tools') {
         const tool = segments.shift();
-        schema = Object.entries(publicToolsSchema.shape).find(([name]) => name === tool)?.[1];
-    } else schema = Object.entries(configurationTableSchemas).find(([name]) => name === table)?.[1];
+        schema = toolSchemas.get(tool ?? '');
+    } else schema = configurationSchemas.get(table ?? '');
     for (const segment of segments) {
         if (schema !== undefined) schema = unwrapSettingSchema(schema);
         if (!(schema instanceof z.ZodObject)) return undefined;

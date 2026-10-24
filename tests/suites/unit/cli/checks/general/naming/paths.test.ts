@@ -9,12 +9,11 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { readNamingDefaults } from '#cli/configurations/naming.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { FORCED_NAME_CASES } from '#tests/config/checks/general/naming/forced-names.ts';
 import { buildFileIdentifier, buildFolderIdentifiers } from '#cli/checks/general/naming/paths.ts';
 
 import {
-    NUMBERED_FILES,
     FILE_NAME_CASES,
-    MIGRATION_FILES,
     NEXTJS_FOLDER_NAMES,
     NUMBERED_FILE_FINDINGS,
     NUMBERED_PREFIX_OVERRIDE,
@@ -57,6 +56,11 @@ test.each([...FILE_NAME_CASES])('$name', async ({ configurations, files, invalid
 test.each(['', 'app'].flatMap((scope) => ['sql', 'postgres'].map((configuration) => ({ scope, configuration }))))(
     'migration timestamps pass with $configuration while other numeric folders are reported (scope "$scope")',
     async ({ scope, configuration }) => {
+        const MIGRATION_FILES = {
+            'migrations/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
+            'other/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
+        } as const;
+
         const prefix = scope === '' ? '' : `${scope}/`;
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['naming', configuration], { level: 'all', scopes: [{ path: 'app' }] }),
@@ -71,6 +75,11 @@ test.each(['', 'app'].flatMap((scope) => ['sql', 'postgres'].map((configuration)
 );
 
 test('a numbered file name needs an ignored_prefix override', async () => {
+    const NUMBERED_FILES = {
+        '.mise/tasks/01-build.sh': 'echo example\n',
+        'scripts/steps/01-build.sh': 'echo example\n',
+    } as const;
+
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['bash', 'naming'], { level: 'all' });
     await createFileTree(sandbox.path, { 'gspot.toml': settings, ...NUMBERED_FILES });
@@ -134,6 +143,7 @@ test.each(['', 'apps/api'])(
         expect(findings.map(({ file }) => file)).toStrictEqual([`${prefix}supabase/functions/shared/entry.ts`]);
     },
 );
+
 test('a bracketed file name is a path parameter, and other punctuation stays in the name', () => {
     const containers = readNamingDefaults().path_containers;
     expect(buildFileIdentifier('app/[...slug].ts', 'typescript', containers)).toMatchObject({
@@ -153,11 +163,13 @@ test('a bracketed file name is a path parameter, and other punctuation stays in 
         buildFolderIdentifiers('app/(group)/@slot/_private/[id]/page.ts', 'typescript', []).map(({ name }) => name),
     ).toStrictEqual(['app', '(group)', '@slot', '_private', '[id]']);
 });
+
 test('a file name loses one extension or the whole .d.ts suffix, and a SQL migration keeps its full name', () => {
     expect(buildFileIdentifier('src/a-b.test.ts', 'typescript', []).name).toBe('a-b.test');
     expect(buildFileIdentifier('types/modules.d.ts', 'typescript', []).name).toBe('modules');
     expect(buildFileIdentifier('db/20240101010101_add_users.sql', 'sql', []).name).toBe('20240101010101_add_users.sql');
 });
+
 test('Next.js route segments are unwrapped and dot folders are skipped', () => {
     const containers = readNamingDefaults().path_containers;
     const names = buildFolderIdentifiers(
@@ -182,8 +194,19 @@ test('double underscore tool folders keep their inner names and a shared folder 
         'app/_components/button.js': 'export const button = 1;\n',
         'app/_shared/port.js': 'export const port = 1;\n',
     });
-    const checked = await runSandboxCheck(sandbox.path, 'naming/paths');
-    expect(checked.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+    const findings = await runSandboxCheck(sandbox.path, 'naming/paths');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'app/_shared/port.js', rule: 'banned-word' },
     ]);
 });
+
+test.each(FORCED_NAME_CASES.filter(({ check }) => check === 'naming/paths'))(
+    '$check uses shipped defaults for $path',
+    async ({ configurations, path, source, findings: expected }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([...configurations, 'naming'], { level: 'all' }),
+            [path]: source,
+        });
+        expect(await runSandboxCheck(sandbox.path, 'naming/paths')).toMatchObject([...expected]);
+    },
+);

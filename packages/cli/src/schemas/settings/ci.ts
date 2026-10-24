@@ -15,8 +15,8 @@ export const ciFields = {
         .default(SETTING_DEFINITIONS['ci.provider'].default)
         .describe(SETTING_DEFINITIONS['ci.provider'].description),
     setup_command: commandSchema.optional().describe(SETTING_DEFINITIONS['ci.setup_command'].description),
-    operating_systems: z
-        .array(operatingSystemSchema)
+    operating_systems: operatingSystemSchema
+        .array()
         .min(1)
         .default(SETTING_DEFINITIONS['ci.operating_systems'].default)
         .meta(SETTING_DEFINITIONS['ci.operating_systems']),

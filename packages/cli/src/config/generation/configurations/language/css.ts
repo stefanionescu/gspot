@@ -15,7 +15,7 @@ const SVELTE_STYLELINT_OVERRIDE = {
 
 export const STYLELINT_RULE_NAMES_FILE = 'configurations/language/css/stylelint-rule-names.json';
 
-export const STYLELINT_BASE_RULES = { 'no-descending-specificity': true, 'import-notation': 'string' } as const;
+export const STYLELINT_BASE_RULES = { 'import-notation': 'string', 'function-no-unknown': true } as const;
 
 export const TAILWIND_AT_RULES = [
     'tailwind',

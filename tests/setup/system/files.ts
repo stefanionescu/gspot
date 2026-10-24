@@ -34,9 +34,11 @@ Check whether a filesystem path exists, following symbolic links.
 @param path the file or folder.
 @returns whether the path exists; false when access fails.
 */
-export function isOnDisk(path: string): Promise<boolean> {
-    return access(path).then(
-        () => true,
-        () => false,
-    );
+export async function isOnDisk(path: string): Promise<boolean> {
+    try {
+        await access(path);
+        return true;
+    } catch {
+        return false;
+    }
 }

@@ -2,15 +2,17 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import testsPackage from '#tests/package.json';
+import { parse } from '@decimalturn/toml-patch';
 import { getTool } from '#cli/configurations/tools.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildNpmProject } from '#cli/generation/tool-projects.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import testsPackage from '#tests/package.json' with { type: 'json' };
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
-import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
+import { toolPyprojectSchema } from '#cli/schemas/install/python/project.ts';
 import { REACT_NATIVE_DEPENDENCIES } from '#tests/config/generation/samples.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
 
 import {
     YARN_CLIENTS,
@@ -18,7 +20,6 @@ import {
     NEXT_REQUIREMENTS,
     LICENSE_TOOL_CASES,
     NEXTJS_API_SETTINGS,
-    REACT_NATIVE_TSCONFIG,
 } from '#tests/config/generation/tool-projects.ts';
 
 test.each([...STYLESHEET_CASES])(
@@ -33,14 +34,23 @@ test.each([...STYLESHEET_CASES])(
         const packageJsonFile = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
         expect(
             Object.keys(
-                parseToolPackageJson(packageJsonFile.content, assertPackageManager(session.packageManager).name)
-                    .dependencies,
+                parseToolPackageJson(packageJsonFile.content, session.packageManager!.name).dependencies,
             ).includes('postcss-html'),
         ).toBe(row.needsHtmlParser);
     },
 );
 
 test('a React Native project without Expo installs no Expo or DOM lint plugins', async () => {
+    const REACT_NATIVE_TSCONFIG = {
+        compilerOptions: {
+            ...STRICT_COMPILER_OPTIONS,
+            module: 'ESNext',
+            moduleResolution: 'Bundler',
+            jsx: 'react-jsx',
+        },
+        include: ['src'],
+    } as const;
+
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript', 'react-native']),
         'package.json': JSON.stringify({
@@ -53,11 +63,12 @@ test('a React Native project without Expo installs no Expo or DOM lint plugins',
 
     const session = await openSession(sandbox.path);
     const generated = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
-    const project = parseToolPackageJson(generated.content, assertPackageManager(session.packageManager).name);
-    expect(project.dependencies).toHaveProperty('eslint-plugin-react-native');
+    const project = parseToolPackageJson(generated.content, session.packageManager!.name);
+    expect(project.dependencies).not.toHaveProperty('eslint-plugin-react-native');
+    expect(project.dependencies).toHaveProperty('@react-native/eslint-plugin');
     expect(project.dependencies).not.toHaveProperty('eslint-plugin-expo');
     expect(project.dependencies).not.toHaveProperty('expo-doctor');
-    expect(project.dependencies).not.toHaveProperty('eslint-plugin-jsx-a11y');
+    expect(project.dependencies).not.toHaveProperty('eslint-plugin-jsx-a11y-x');
 });
 
 test.each([...LICENSE_TOOL_CASES])(
@@ -73,10 +84,15 @@ test.each([...LICENSE_TOOL_CASES])(
         const session = await openSession(sandbox.path);
         const generated = generate(session);
         const npmProject = generated.files.find(({ path }) => path === GSPOT_PATHS.npmProject)!;
+        expect(parseToolPackageJson(npmProject.content, session.packageManager!.name).dependencies).toHaveProperty(
+            'license-checker-rseidelsohn',
+        );
+        const pythonProject = generated.files.find(({ path }) => path === GSPOT_PATHS.pythonProject)!;
         expect(
-            parseToolPackageJson(npmProject.content, assertPackageManager(session.packageManager).name).dependencies,
-        ).toHaveProperty('license-checker-rseidelsohn');
-        expect(generated.files.find(({ path }) => path === GSPOT_PATHS.pythonProject)).toBeUndefined();
+            toolPyprojectSchema
+                .parse(parse(pythonProject.content))
+                .project.dependencies.some((dependency) => dependency.startsWith('pip-licenses')),
+        ).toBe(false);
     },
 );
 
@@ -107,36 +123,30 @@ test.each([...NEXT_REQUIREMENTS])(
             'project/package.json': JSON.stringify({ private: true, dependencies: { next: row.rootRange } }),
             'project/app/client/source.ts': 'export const count = 1;\n',
             'node_modules/next/package.json': '{"name":"next","version":"17.0.0"}',
-            ...(row.childRange === undefined
-                ? {}
-                : {
-                      'project/app/package.json': JSON.stringify({
-                          private: true,
-                          dependencies: { next: row.childRange },
-                      }),
-                  }),
-            ...(row.rootVersion === undefined
-                ? {}
-                : {
-                      'project/node_modules/next/package.json': JSON.stringify({
-                          name: 'next',
-                          version: row.rootVersion,
-                      }),
-                  }),
-            ...(row.childVersion === undefined
-                ? {}
-                : {
-                      'project/app/node_modules/next/package.json': JSON.stringify({
-                          name: 'next',
-                          version: row.childVersion,
-                      }),
-                  }),
+            ...(row.childRange !== undefined && {
+                'project/app/package.json': JSON.stringify({
+                    private: true,
+                    dependencies: { next: row.childRange },
+                }),
+            }),
+            ...(row.rootVersion !== undefined && {
+                'project/node_modules/next/package.json': JSON.stringify({
+                    name: 'next',
+                    version: row.rootVersion,
+                }),
+            }),
+            ...(row.childVersion !== undefined && {
+                'project/app/node_modules/next/package.json': JSON.stringify({
+                    name: 'next',
+                    version: row.childVersion,
+                }),
+            }),
         });
 
         const session = await openSession(join(sandbox.path, 'project'));
         const generated = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
         expect(
-            parseToolPackageJson(generated!.content, assertPackageManager(session.packageManager).name).dependencies[
+            parseToolPackageJson(generated!.content, session.packageManager!.name).dependencies[
                 '@next/eslint-plugin-next'
             ],
         ).toBe(getTool(session.configurations.values(), '@next/eslint-plugin-next').version);
@@ -156,8 +166,6 @@ test('Next.js scopes keep one manifest plugin pin', async () => {
     const session = await openSession(sandbox.path);
     const output = generate(session).files.find(({ path }) => path === GSPOT_PATHS.npmProject);
     expect(
-        parseToolPackageJson(output!.content, assertPackageManager(session.packageManager).name).dependencies[
-            '@next/eslint-plugin-next'
-        ],
+        parseToolPackageJson(output!.content, session.packageManager!.name).dependencies['@next/eslint-plugin-next'],
     ).toBe(getTool(session.configurations.values(), '@next/eslint-plugin-next').version);
 });

@@ -51,12 +51,13 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
     for (const scope of scopes) {
         const command = commands.find((commandArguments) => commandArguments.includes(join(sandbox.path, scope)))!;
         expect(command.slice(1, 5)).toStrictEqual(['run', '--no-sync', '--project', join(sandbox.path, scope)]);
-        const patterns = command.flatMap((value, index) => (value === '--extend-exclude' ? [command[index + 1]!] : []));
+        const patterns = command.flatMap((value, index) => (value === '--extend-exclude' ? command[index + 1]! : []));
         expect(patterns.at(-1)).toBe('authored');
         expect(patterns.some((pattern) => new RegExp(pattern).test(GSPOT_PATHS.pythonProject))).toBe(true);
-        for (const nestedScope of scopes.filter(
+        const nestedScopes = scopes.filter(
             (path) => path !== scope && path.startsWith(scope === '' ? '' : `${scope}/`),
-        )) {
+        );
+        for (const nestedScope of nestedScopes) {
             const relative = nestedScope.slice(scope === '' ? 0 : scope.length + 1);
             expect(patterns.some((pattern) => new RegExp(pattern).test(`${relative}/.venv/sample.py`))).toBe(true);
         }
@@ -71,7 +72,7 @@ async function runFakeDeptry(root: string) {
     const executed = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })),
     );
-    const checked = await runChecks(await openSession(root), buildRunOptions({ only: ['python/deptry'] }));
+    const checked = await runChecks(session, buildRunOptions({ only: ['python/deptry'] }));
     expect(checked.report.failed).toStrictEqual([]);
     return { checked, commands: executed.mock.calls.map(([command]) => command) };
 }
@@ -85,8 +86,6 @@ test('deptry counts python.externals as first party beside the known_first_party
     });
     const { commands } = await runFakeDeptry(sandbox.path);
     const command = commands.find((command) => command.includes('deptry'))!;
-    const firstParty = command.flatMap((value, index) =>
-        value === '--known-first-party' ? [command[index + 1]!] : [],
-    );
+    const firstParty = command.flatMap((value, index) => (value === '--known-first-party' ? command[index + 1]! : []));
     expect(firstParty).toStrictEqual(['nodes', 'folder_paths', 'comfy']);
 });

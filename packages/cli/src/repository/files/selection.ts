@@ -1,13 +1,11 @@
 import { posix } from 'node:path/posix';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { extractExtension } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
+import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { filterSourceConfigurations } from '#cli/configurations/select.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { TEST_FILES_PLACEHOLDER } from '#cli/config/repository/files/selection.ts';
 import type { FileMatch, CoveredFilesOptions } from '#cli/types/repository/detect.ts';
 import { buildPathMatcher, buildFilenameMatcher } from '#cli/repository/files/matchers.ts';
@@ -58,15 +56,10 @@ export function listCoveredFiles(
     const defaults: FileMatch[] = [];
     const settingPatterns = table.paths.flatMap((path) => {
         if (path === TEST_FILES_PLACEHOLDER) return [];
-        const name = [...path.matchAll(SETTING_PLACEHOLDER)][0]?.groups?.['name'];
+        const name = path.matchAll(SETTING_PLACEHOLDER).toArray()[0]?.groups?.['name'];
         if (name === undefined) return [];
         const value = settings.settings[name];
-        if (typeof value === 'string')
-            return [
-                path.replace(SETTING_PLACEHOLDER, () =>
-                    value.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH),
-                ),
-            ];
+        if (typeof value === 'string') return [path.replace(SETTING_PLACEHOLDER, () => escapeGlob(value))];
         defaults.push(
             ...configurations
                 .filter((configuration) => configuration.name === name.split('.', 1)[0])
@@ -79,7 +72,7 @@ export function listCoveredFiles(
         {
             ...table,
             paths: table.paths.filter(
-                (path) => path !== TEST_FILES_PLACEHOLDER && [...path.matchAll(SETTING_PLACEHOLDER)].length === 0,
+                (path) => path !== TEST_FILES_PLACEHOLDER && path.matchAll(SETTING_PLACEHOLDER).toArray().length === 0,
             ),
         },
         configurations,

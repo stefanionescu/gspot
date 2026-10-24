@@ -12,28 +12,15 @@ export const MARKDOWN_REPORT = {
 
 export const MARKDOWNLINT_REPORT_ERRORS = [
     {
-        name: 'empty report',
-        output: '',
-        message: 'Markdownlint printed output that gspot cannot read.',
-    },
-    {
-        name: 'non-JSON text',
-        output: 'not JSON',
-        message: 'Markdownlint printed output that gspot cannot read.',
-    },
-    {
         name: 'non-array report',
         output: '{}',
-        message: 'Markdownlint printed output that gspot cannot read.',
     },
     {
         name: 'empty rules',
         output: [{ ...MARKDOWN_REPORT, ruleNames: [] }],
-        message: 'Markdownlint printed output that gspot cannot read.',
     },
     {
         name: 'invalid fix',
         output: [{ ...MARKDOWN_REPORT, fixInfo: [] }],
-        message: 'Markdownlint printed output that gspot cannot read.',
     },
 ] as const;

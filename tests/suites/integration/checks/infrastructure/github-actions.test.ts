@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GITHUB_WORKFLOW } from '#cli/config/generation/ci.ts';
@@ -9,7 +8,8 @@ import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import type { Explanation } from '#cli/types/commands/explain.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
-import { spawnGspot, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { spawnGspot, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { CI_SOURCE_WORKFLOW, CI_INJECTION_SETTINGS } from '#tests/config/checks/infrastructure/github-actions.ts';
 
 import {
@@ -19,11 +19,11 @@ import {
 } from '#tests/config/integration/checks/infrastructure/github-actions.ts';
 
 test('workflow security checks report an injectable setting in the generated workflow', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['github-actions'], { tables: CI_INJECTION_SETTINGS }),
         '.github/workflows/source.yml': CI_SOURCE_WORKFLOW,
     });
-    await installGeneratedTools(sandbox.path);
+    await applyThenInstall(sandbox.path);
     const result = parseCheckReport(
         await spawnGspot(sandbox.path, [
             'check',
@@ -47,13 +47,10 @@ test('workflow security checks report an injectable setting in the generated wor
 });
 
 test('the generated GitHub workflow passes actionlint', async () => {
-    await using sandbox = await testdir({ 'README.md': '# Workflow test\n' });
+    await using sandbox = await createGitSandbox({ 'README.md': '# Workflow test\n' });
 
     commitAll(sandbox.path);
-    await initSandbox(
-        { root: sandbox.path, environment: {}, run: spawnGspot },
-        { configurations: ['github-actions'], install: false },
-    );
+    await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['github-actions'], install: false });
     const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const ci = await spawnGspot(sandbox.path, ['set', 'ci.enabled', 'true']);
@@ -65,10 +62,9 @@ test('the generated GitHub workflow passes actionlint', async () => {
     expect(generated.subarray(0, headerEnd).toString('utf8')).toBe(`# ${GENERATED_HEADER_TEXT}`);
     const payload = generated.subarray(headerEnd + 1);
     await createFileTree(sandbox.path, { '.github/workflows/accepted.yml': payload.toString('utf8') });
-    expect(await readFile(join(sandbox.path, '.github/workflows/accepted.yml'))).toStrictEqual(payload);
     const explained = await spawnGspot(sandbox.path, ['explain', './.github/workflows/accepted.yml', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(JSON.parse(explained.stdout) as Explanation['data']).toMatchObject({
+    expect(JSON.parse(explained.stdout) as Explanation['facts']).toMatchObject({
         kind: 'path',
         fileKind: 'source',
     });
@@ -84,6 +80,7 @@ test('the generated GitHub workflow passes actionlint', async () => {
 
 test('actionlint reports a missing required input of a same-repository reusable workflow and keeps your files', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const workflow = `on: workflow_dispatch
 jobs:
   caller:
@@ -133,7 +130,7 @@ test('zizmor checks composite actions in the root and a scope', async () => {
         'app/.github/actions/greet/action.yaml': COMPOSITE_ACTION,
     });
 
-    await installGeneratedTools(sandbox.path);
+    await applyThenInstall(sandbox.path);
     const failed = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'github-actions/zizmor', '--json']),
     ).report;

@@ -4,11 +4,20 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
-import { LIST_SCOPE_ROWS, LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/list.ts';
+
+import {
+    LIST_SCOPE_ROWS,
+    LIST_SCOPE_SETTINGS,
+    SHFMT_IGNORE_SETTINGS,
+    SCOPE_CHECK_LIST_ROWS,
+    CONFIGURATION_LIST_TEXT,
+} from '#tests/config/commands/list.ts';
 
 test('list shows selected settings and available configurations', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings(['bash', 'nextjs'], SHFMT_IGNORE_SETTINGS);
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
@@ -19,7 +28,6 @@ test('list shows selected settings and available configurations', async () => {
     const listed = await runGspot(sandbox.path, ['list', 'configurations', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const result = JSON.parse(listed.stdout) as ConfigurationsListJson;
-    expect(Object.keys(result)).toStrictEqual(['selected', 'available']);
     const checks = result.selected.flatMap((configuration) => configuration.checks);
     const named = new Set(['bash/shellcheck', 'bash/shfmt', 'structure/shared-prefixes']);
     expect(checks.filter(({ name }) => named.has(name))).toStrictEqual([
@@ -31,7 +39,12 @@ test('list shows selected settings and available configurations', async () => {
         [...result.selected, ...result.available]
             .map(({ name }) => name)
             .toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual([...readConfigurations().keys()].toSorted((left, right) => left.localeCompare(right)));
+    ).toStrictEqual(
+        readConfigurations()
+            .keys()
+            .toArray()
+            .toSorted((left, right) => left.localeCompare(right)),
+    );
     const defaults = await runGspot(sandbox.path, ['list', '--json']);
     expect(defaults.code, defaults.stdout + defaults.stderr).toBe(0);
     expect(JSON.parse(defaults.stdout)).toStrictEqual(result);
@@ -48,7 +61,7 @@ test('list shows selected settings and available configurations', async () => {
 });
 
 test('the text configuration list shows the selected names of the JSON list', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
     });
@@ -57,17 +70,15 @@ test('the text configuration list shows the selected names of the JSON list', as
     const structured = await runGspot(sandbox.path, ['list', 'configurations', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
-    const result = JSON.parse(structured.stdout) as ConfigurationsListJson;
     const human = await runGspot(sandbox.path, ['list', 'configurations']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout).toStartWith('selected\n');
-    for (const configuration of result.selected) expect(human.stdout).toContain(`  ${configuration.name}\n`);
+    expect(human.stdout).toBe(CONFIGURATION_LIST_TEXT);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('the text check list puts the states of all scopes in one row', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             tables: '[[ignore]]\ncheck = "bash/shfmt"\npaths = ["api/**"]\nreason = "Review scoped syntax separately."\n',
             scopes: [{ path: 'api' }, { path: 'api/worker' }],
@@ -91,14 +102,14 @@ test('the text check list puts the states of all scopes in one row', async () =>
     const human = await runGspot(sandbox.path, ['list']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout).toContain('    bash/shfmt  root: on, api: off (ignore), api/worker: off (ignore)\n');
-    for (const name of new Set(checks.map((check) => check.name)))
-        expect(human.stdout.split('\n').filter((line) => line.trimStart().startsWith(`${name} `))).toHaveLength(1);
+    expect(human.stdout.split('\n').filter((line) => line.startsWith(' '.repeat(4)))).toStrictEqual([
+        ...SCOPE_CHECK_LIST_ROWS,
+    ]);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('checks that run at the root appear once when selected in several child scopes', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             scopes: [
                 { path: 'app', configurations: ['docker'] },
@@ -124,7 +135,7 @@ test('checks that run at the root appear once when selected in several child sco
 });
 
 test('the text settings list shows scope values while JSON keeps inherited values', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': LIST_SCOPE_SETTINGS,
         'api/entry.sh': 'echo api\n',
         'api/worker/query.sql': 'SELECT 1;\n',
@@ -143,8 +154,8 @@ test('the text settings list shows scope values while JSON keeps inherited value
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
     const { settings } = JSON.parse(structured.stdout) as SettingsListJson;
-    expect(settings.find((row) => row.key === 'test_files')?.reason_needed).toBeUndefined();
-    expect(settings.find((row) => row.key === 'limits.file_lines')?.reason_needed).toBe('raising');
+    expect(settings.find((row) => row.key === 'test_files')?.reason_when).toBeUndefined();
+    expect(settings.find((row) => row.key === 'limits.file_lines')?.reason_when).toBe('raising');
     expect(settings.find((row) => row.scope === 'api/worker' && row.key === 'limits.file_lines')).toMatchObject({
         value: 200,
         source: '[scope "api"]',
@@ -153,7 +164,7 @@ test('the text settings list shows scope values while JSON keeps inherited value
 });
 
 test('the text settings list shortens long values', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             tables: '[naming]\nbanned_words = ["generated-long-name-one/**", "generated-long-name-two/**"]\n',
         }),
@@ -173,6 +184,5 @@ test('the text settings list shortens long values', async () => {
         'generated-long-name-one/**',
         'generated-long-name-two/**',
     ]);
-    expect(Object.keys(report)).toStrictEqual(['settings']);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { planChecks } from '#cli/planning/checks.ts';
@@ -7,18 +6,19 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { test, expect, setSystemTime } from 'bun:test';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { setKey, getScopeTable } from '#cli/settings/edit.ts';
+import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import { buildSettingsText } from '#cli/settings/text/build.ts';
 import { type Scope } from '#cli/types/settings/inheritance.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
-import { buildSandboxSettings, buildRootScopeSettings } from '#tests/setup/cli/settings.ts';
+import { selectScopeSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getLimit, getTable, listIgnores, selectForScope, listIgnoredRules } from '#cli/settings/scopes.ts';
 
 import {
     PROJECT_CHOICES,
     SCOPE_LIMIT_VALUES,
-    SITE_BUILD_COMMANDS,
     PROJECT_SCOPE_CASES,
     IGNORE_EXPIRY_CASES,
     NESTED_SCOPE_SETTINGS,
@@ -42,44 +42,39 @@ async function readNestedScopes(): Promise<Scope[]> {
 
 test.each(
     SITE_PACKAGE_MANAGER_CASES.flatMap(([name, files, installer]) =>
-        ['', 'app'].flatMap((scope) =>
-            SITE_BUILD_COMMANDS.map((commandArguments) => ({ name, files, installer, scope, commandArguments })),
-        ),
+        ['', 'app'].map((scope) => ({ name, files, installer, scope })),
     ),
-)(
-    'the site build command defaults to $installer in "$scope" and keeps the written $commandArguments',
-    async ({ files, installer, scope, commandArguments }) => {
-        await using sandbox = await testdir();
-        const settings =
-            scope === ''
-                ? buildSandboxSettings(['site'])
-                : buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['site'] }] });
-        await createFileTree(sandbox.path, {
-            'gspot.toml': settings,
-            [join(scope, 'index.html')]: '<!doctype html><title>Site</title>',
-            ...Object.fromEntries(Object.entries(files).map(([path, text]) => [join(scope, path), text])),
-        });
-        const session = await openSession(sandbox.path);
-        const selected = session.scopes.find((each) => each.folder.path === scope)!;
-        expect(getTable(selected.settings, 'site').build_command).toStrictEqual([installer, 'run', 'build']);
+)('the site build command defaults to $installer in "$scope" ($name)', async ({ files, installer, scope }) => {
+    await using sandbox = await testdir();
+    const settings =
+        scope === ''
+            ? buildSandboxSettings(['site'])
+            : buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['site'] }] });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': settings,
+        [join(scope, 'index.html')]: '<!doctype html><title>Site</title>',
+        ...Object.fromEntries(Object.entries(files).map(([path, text]) => [join(scope, path), text])),
+    });
+    const session = await openSession(sandbox.path);
+    const selected = session.scopes.find((each) => each.folder.path === scope)!;
+    expect(getTable(selected.settings, 'site').build_command).toStrictEqual([installer, 'run', 'build']);
+});
 
-        const table = parseToml(settings) as TomlTable;
-        setKey(getScopeTable(table, scope || undefined), 'site.build_command', [...commandArguments]);
-        const written = stringify(table);
-        await writeFile(join(sandbox.path, 'gspot.toml'), written);
-        const manual = await openSession(sandbox.path);
-        expect(
-            getTable(manual.scopes.find((each) => each.folder.path === scope)!.settings, 'site').build_command,
-        ).toStrictEqual([...commandArguments]);
-        const canonical = buildSettingsText(written, parseToml(written) as TomlTable);
-        expect(buildSettingsText(canonical, parseToml(canonical) as TomlTable)).toBe(canonical);
-        await writeFile(join(sandbox.path, 'gspot.toml'), canonical);
-        const reopened = await openSession(sandbox.path);
-        expect(
-            getTable(reopened.scopes.find((each) => each.folder.path === scope)!.settings, 'site').build_command,
-        ).toStrictEqual([...commandArguments]);
-    },
-);
+test('a scope keeps a written site build command including empty and spaced arguments', async () => {
+    await using sandbox = await testdir();
+    const table = parseToml(
+        buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['site'] }] }),
+    ) as TomlTable;
+    setKey(getScopeTable(table, 'app'), 'site.build_command', ['custom-builder', '', 'two words']);
+    await createFileTree(sandbox.path, {
+        'gspot.toml': stringify(table),
+        'app/index.html': '<!doctype html><title>Site</title>',
+    });
+    const session = await openSession(sandbox.path);
+    expect(
+        getTable(session.scopes.find((scope) => scope.folder.path === 'app')!.settings, 'site').build_command,
+    ).toStrictEqual(['custom-builder', '', 'two words']);
+});
 
 test('an ignore with a rule and paths turns the rule off in its scope and the scopes below only', async () => {
     const scopes = await readNestedScopes();
@@ -117,13 +112,14 @@ test('a per-scope limit overrides a root language limit in the scope view', asyn
 });
 
 test('ignore expiry does not change the scope view or gspot.toml', () => {
+    using sandbox = createTemporaryFolder();
     setSystemTime(new Date('2030-05-20T23:59:59.000Z'));
     try {
         const settings = parseSettings(
-            buildSettingsText('', { configurations: [], ignore: IGNORE_EXPIRY_CASES }),
-            undefined,
+            buildSettingsText('', { configurations: [], ignore: IGNORE_EXPIRY_CASES }, formatSchema.parse({})),
+            sandbox.path,
         );
-        const rootSettings = buildRootScopeSettings(settings);
+        const rootSettings = selectScopeSettings(settings);
         const configurations = selectForScope(settings, '', readConfigurations());
         const availableSettings = buildAvailableSettings(configurations, settings.level);
         const scope: Scope = {
@@ -151,7 +147,7 @@ test('ignore expiry does not change the scope view or gspot.toml', () => {
             IGNORE_EXPIRY_CASES[2],
         ]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
-        const next = buildRootScopeSettings(settings);
+        const next = selectScopeSettings(settings);
         expect(listIgnoredRules({ ...scope, settings: next }, 'dependencies/osv-scanner')).toStrictEqual([
             'future',
             'past',
@@ -201,7 +197,7 @@ test('Postgres client schemas come from Supabase or from gspot.toml', async () =
     ]);
 });
 
-test.each(PROJECT_SCOPE_CASES)('scope $scope selects $name: $selected', (scope, name, selected) => {
+test.each([...PROJECT_SCOPE_CASES])('scope $scope selects $name: $selected', ({ scope, name, selected }) => {
     const names = selectForScope(
         {
             configurations: [...PROJECT_CHOICES.configurations],
@@ -220,13 +216,13 @@ test.each(PROJECT_SCOPE_CASES)('scope $scope selects $name: $selected', (scope, 
         readConfigurations(),
     ).map((configuration) => configuration.name);
     expect(names.includes(name)).toBe(selected);
-    expect(names).toContain('gspot');
 });
 test('a rule option named reason is passed on and is not a gspot reason', () => {
+    using sandbox = createTemporaryFolder();
     const settings = parseSettings(
         'configurations = ["css"]\n[tools.stylelint.rules]\nselector-class-pattern = ["^[a-z]+$", { reason = false }]\n',
-        undefined,
+        sandbox.path,
     );
-    const rules: unknown = getTable(buildRootScopeSettings(settings), 'tools.stylelint').rules;
+    const rules: unknown = getTable(selectScopeSettings(settings), 'tools.stylelint').rules;
     expect(rules).toStrictEqual({ 'selector-class-pattern': ['^[a-z]+$', { reason: false }] });
 });

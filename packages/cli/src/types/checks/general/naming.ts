@@ -27,11 +27,8 @@ export type CategoryLimits = { caseNames: NamingCase[]; maxChars: number; maxWor
 export type NamingSettings = {
     bannedWords: BannedWord[];
     allowedPhrases: string[][];
-    reserved: Map<string, string[]>;
     overrides: CompiledOverride[];
     limitsFor: (language: string, category: string) => CategoryLimits;
-    isDigitsAllowed: boolean;
-    isRepeatAllowed: boolean;
 };
 
 export type PathContainer = { open: string; close: string; category: NamedCategory };
@@ -48,10 +45,7 @@ export type FileNames = {
 
 export type NamingDefaults = {
     path_containers: PathContainer[];
-    allow_digits: boolean;
-    allow_repeated_words: boolean;
     groups: Record<string, { terms: string[] }>;
-    reserved: Record<string, string[]>;
     allowed_names: string[];
     allowed_phrases: string[];
     languages: Record<string, { categories: Record<string, { cases: NamingCase[] }> }>;

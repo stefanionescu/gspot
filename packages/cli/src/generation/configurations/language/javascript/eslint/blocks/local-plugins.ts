@@ -1,13 +1,11 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { getTable, findParentScope } from '#cli/settings/scopes.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import type { EslintPlugins, EslintBlockFields } from '#cli/types/generation/eslint.ts';
+import { buildScopeGlob } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
 function listPluginRecords(scopes: Scope[]) {
@@ -17,7 +15,7 @@ function listPluginRecords(scopes: Scope[]) {
             const parent = findParentScope(scopes, scope.folder.path);
             const inherited = parent?.settings.values[ESLINT_SETTINGS_TABLE]?.plugins ?? [];
             return getTable(scope.settings, ESLINT_SETTINGS_TABLE)
-                .plugins.filter((plugin) => !inherited.some((record) => isDeepStrictEqual(record, plugin)))
+                .plugins.filter((plugin) => inherited.every((record) => !isDeepStrictEqual(record, plugin)))
                 .map((plugin) => ({ ...plugin, scope: scope.folder.path }));
         });
 }
@@ -67,13 +65,7 @@ Build one block per plugin record that turns its rules on as errors for the code
 */
 export function buildLocalPluginBlocks(scopes: Scope[], codeFiles: string[]): EslintBlockFields[] {
     return listPluginRecords(scopes).map(({ name, rules, scope }) => ({
-        files:
-            scope === ''
-                ? codeFiles
-                : codeFiles.map((pattern) => [
-                      pattern,
-                      joinScope(scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
-                  ]),
+        files: scope === '' ? codeFiles : codeFiles.map((pattern) => [pattern, buildScopeGlob(scope)]),
         rules: Object.fromEntries(
             Object.entries(rules).map(([rule, options]) => [`${name}/${rule}`, ['error', ...options]]),
         ),

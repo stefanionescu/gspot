@@ -5,38 +5,32 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
-import { type DryRunJson } from '#cli/types/commands/apply.ts';
 import { type DoctorReport } from '#cli/types/commands/doctor.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { STYLELINT_FILES } from '#tests/config/checks/language/css.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/checks/general/commits.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { REMOVE_SUGGESTIONS, REMOVED_CONFIGURATION_SUGGESTIONS } from '#tests/config/commands/doctor/suggestions.ts';
 
-import {
-    REMOVE_SUGGESTIONS,
-    STYLELINT_SUGGESTIONS,
-    REMOVED_CONFIGURATION_SUGGESTIONS,
-} from '#tests/config/commands/doctor/suggestions.ts';
-
-test('doctor tells a folder without Git to run git init for a commitlint field, and apply leaves the field', async () => {
+test('doctor names Git setup for commitlint and apply --dry-run refuses outside Git', async () => {
     await using sandbox = await testdir({
         'package.json': COMMITLINT_PACKAGE,
         'gspot.toml': buildSandboxSettings([], { level: 'all' }),
     });
 
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
-    expect(
-        (JSON.parse(preview.stdout) as DryRunJson).outdated.filter(({ path }) => path === 'package.json'),
-    ).toStrictEqual([]);
+    expect(preview.code).toBe(2);
+    expect(JSON.parse(preview.stdout)).toStrictEqual({
+        error: 'git',
+        message: 'gspot needs a Git repository. Run git init, then gspot init.',
+    });
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect(
-        (JSON.parse(doctor.stdout) as DoctorReport).suggestions.unowned.filter((row) =>
-            row.note.includes('commitlint'),
-        ),
-    ).toStrictEqual([{ path: 'package.json', note: 'commitlint requires a Git repository', command: 'git init' }]);
+    expect((JSON.parse(doctor.stdout) as DoctorReport).suggestions.unowned).toStrictEqual([
+        { path: 'package.json', note: 'commitlint requires a Git repository', command: 'git init' },
+    ]);
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(COMMITLINT_PACKAGE);
 });
-test('doctor suggests gspot add css for a selected Next.js scope', async () => {
+test('doctor leaves undetected CSS out of suggestions for a selected Next.js scope', async () => {
     await using sandbox = await testdir({
         'app/.keep': '',
         'gspot.toml': buildSandboxSettings(['javascript'], {
@@ -47,25 +41,25 @@ test('doctor suggests gspot add css for a selected Next.js scope', async () => {
     });
 
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect((JSON.parse(result.stdout) as DoctorReport).suggestions.suggested).toStrictEqual([
-        { configuration: 'css', evidence: 'suggested by react', command: 'gspot add css' },
-    ]);
+    expect((JSON.parse(result.stdout) as DoctorReport).suggestions.suggested).toStrictEqual([]);
 });
 test('doctor suggests gspot set level all for a commitlint field in package.json at level recommended', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'package.json': COMMITLINT_PACKAGE,
         'gspot.toml': buildSandboxSettings([], { level: 'recommended' }),
     });
     commitAll(sandbox.path);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
-    expect(
-        (JSON.parse(result.stdout) as DoctorReport).suggestions.unowned
-            .filter((row) => row.note.includes('commitlint'))
-            .map(({ path, command }) => ({ path, command })),
-    ).toStrictEqual([{ path: 'package.json', command: 'gspot set level all' }]);
+    expect((JSON.parse(result.stdout) as DoctorReport).suggestions.unowned).toStrictEqual([
+        {
+            path: 'package.json',
+            note: 'no applicable commitlint check at level recommended',
+            command: 'gspot set level all',
+        },
+    ]);
 });
-test('doctor suggests moving authored Stylelint fields while excluding managed fields', async () => {
-    await using sandbox = await testdir({
+test('doctor recognizes managed Stylelint fields in every selected scope', async () => {
+    await using sandbox = await createGitSandbox({
         ...STYLELINT_FILES,
         'gspot.toml': buildSandboxSettings(['css'], {
             level: 'all',
@@ -77,15 +71,15 @@ test('doctor suggests moving authored Stylelint fields while excluding managed f
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const doctor = await runGspot(sandbox.path, ['doctor', '--json']);
     const { suggestions } = JSON.parse(doctor.stdout) as DoctorReport;
-    expect(suggestions.unowned.filter((row) => ['package.json', 'app/package.json'].includes(row.path))).toStrictEqual(
-        [],
-    );
-    expect(suggestions.unowned.filter((row) => row.note.includes('stylelint'))).toStrictEqual([
-        ...STYLELINT_SUGGESTIONS,
-    ]);
+    expect(suggestions.unowned).toStrictEqual([]);
+    for (const path of ['package.json', 'app/package.json', 'app/child/package.json', 'other/package.json']) {
+        const document = JSON.parse(await readFile(join(sandbox.path, path), 'utf8')) as { stylelint: unknown };
+        expect(document.stylelint).toStrictEqual({ extends: './.stylelintrc.json' });
+    }
 });
 test('doctor leaves the tool projects in .gspot out of detection, detects python from your pyproject.toml, and lists a submodule', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([]),
@@ -115,6 +109,7 @@ test('doctor leaves the tool projects in .gspot out of detection, detects python
 });
 test('doctor detects installed test frameworks and suggests no other runner', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings(['nestjs']);
     const dependencies = { '@nestjs/core': '11.2.3', jest: '30.2.0' };
     await createFileTree(sandbox.path, {
@@ -142,6 +137,7 @@ test('doctor detects installed test frameworks and suggests no other runner', as
 });
 test('doctor suggests a remove command per scope after detection evidence goes, and changes nothing', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings(['bash'], {
         level: 'all',
         scopes: [{ path: 'api app', configurations: ['python'] }, { path: 'api app/deep' }],
@@ -174,12 +170,20 @@ test('doctor suggests a remove command per scope after detection evidence goes, 
     await writeFile(join(sandbox.path, 'api app/service.py'), 'print("ready")\n');
     const restored = await runGspot(sandbox.path, ['doctor', '--json']);
     expect((JSON.parse(restored.stdout) as DoctorReport).suggestions.undetected).toStrictEqual([]);
+    const suggestion = (JSON.parse(missing.stdout) as DoctorReport).suggestions.undetected.find(
+        ({ configuration }) => configuration === 'bash',
+    )!;
+    const command = suggestion.command.split(' ').slice(1);
+    command[command.length - 1] = 'The project no longer uses this language.';
+    const removed = await runGspot(sandbox.path, command);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
 });
 
 test.each([...REMOVED_CONFIGURATION_SUGGESTIONS])(
     'doctor skips removed configurations and keeps detection evidence outside their scopes: $name',
     async ({ project, expected }) => {
         await using sandbox = await testdir(project);
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const result = await runGspot(sandbox.path, ['doctor', '--json']);
         const { suggestions } = JSON.parse(result.stdout) as DoctorReport;
         expect(suggestions.detected.filter(({ configuration }) => configuration === 'bash')).toStrictEqual([

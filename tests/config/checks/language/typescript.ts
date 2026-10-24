@@ -31,7 +31,7 @@ export const TSCONFIG_READ_ERRORS = [
     {
         name: 'a missing inherited configuration',
         tsconfig: '{"extends":"./missing.json","compilerOptions":{"strict":true}}',
-        error: /Cannot read file '.*\/missing\.json'/u,
+        error: "Cannot read the compiler settings in tsconfig.json: Cannot read file '{root}/missing.json'.",
         fixed: 'missing.json',
     },
 ] as const;

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
-import { stringMap, stringList } from '#cli/schemas/parsers/projects/dependencies/strings.ts';
+import { stringList } from '#cli/schemas/parsers/projects/dependencies/strings.ts';
 
 import type {
     Pipfile,
@@ -20,24 +20,18 @@ const groupInclude = z.object({
     'include-group': z.string(),
 } satisfies SchemaShape<PythonGroupInclude>);
 
-const dependencyGroup = z.array(z.union([z.string(), groupInclude])) satisfies z.ZodType<PythonDependencyGroup>;
+const dependencyGroup = z.union([z.string(), groupInclude]).array() satisfies z.ZodType<PythonDependencyGroup>;
 
 const projectTable = z.object({
     dependencies: stringList.optional(),
     'optional-dependencies': dependencyGroups.optional(),
-    scripts: stringMap.optional(),
-    'requires-python': z.string().optional(),
 } satisfies SchemaShape<PythonProject>);
 
 const pythonDependencyDetail = z.record(z.string(), z.unknown()) satisfies z.ZodType<Record<string, unknown>>;
 
 const pythonDependencyMap = z.record(
     z.string(),
-    z.union([
-        z.string(),
-        pythonDependencyDetail,
-        z.array(pythonDependencyDetail),
-    ]) satisfies z.ZodType<PythonDependency>,
+    z.union([z.string(), pythonDependencyDetail, pythonDependencyDetail.array()]) satisfies z.ZodType<PythonDependency>,
 ) satisfies z.ZodType<Record<string, PythonDependency>>;
 
 const poetryGroup = z.object({

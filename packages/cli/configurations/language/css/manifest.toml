@@ -1,7 +1,7 @@
 allowed_words = ["CSS"]
 
 [configuration]
-description = "Style sheets and the style blocks of components: the standard rules, one layout, and module classes that are defined and used. SCSS gets formatting only."
+description = "Style sheets and the style blocks of components: the standard stylelint rules and one layout. SCSS gets formatting only."
 title = "CSS"
 
 [detect]
@@ -18,7 +18,7 @@ name = "stylelint"
 npm = "stylelint"
 replace = [".stylelintrc", ".stylelintrc.json", ".stylelintrc.js", ".stylelintrc.cjs", ".stylelintrc.mjs", ".stylelintrc.yml", ".stylelintrc.yaml", "stylelint.config.js", "stylelint.config.cjs", "stylelint.config.mjs"]
 suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?(?=\\s|$)", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:\\*/)?$", example = "/* stylelint-disable-next-line declaration-no-important -- reason: the vendor widget sets its own color */" }
-version = "16.23.1"
+version = "17.16.0"
 
 [[tool.replace_key]]
 file = "package.json"
@@ -29,7 +29,7 @@ pointer = true
 kind = "library"
 name = "stylelint-config-standard"
 npm = "stylelint-config-standard"
-version = "39.0.0"
+version = "40.0.0"
 
 [[tool]]
 kind = "library"
@@ -39,7 +39,7 @@ version = "2.0.0"
 
 [[config_file]]
 per_scope = true
-pointer = { path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n" }
+pointer = { path = ".stylelintrc.json", body = "{\n    \"extends\": {target_json}\n}\n" }
 target = "stylelint.json"
 tool = "stylelint"
 

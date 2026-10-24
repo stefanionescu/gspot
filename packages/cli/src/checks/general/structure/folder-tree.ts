@@ -4,6 +4,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import type { FolderChild } from '#cli/types/checks/general/structure.ts';
+import { filterSourceConfigurations } from '#cli/configurations/select.ts';
 
 /**
 Lists the source files that the folder checks read: no Markdown.
@@ -44,5 +45,18 @@ export function buildFolderTree(files: readonly { path: string }[]): Map<string,
             folder,
             [...children].map(([name, kind]) => ({ name, kind })).toSorted((a, b) => compareText(a.name, b.name)),
         ]),
+    );
+}
+
+/**
+List the source extensions of the scope's language configurations.
+
+@param planned the scope and its configurations.
+@returns the filename endings used by the selected languages.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function listSourceExtensions(planned: PlannedCheck): string[] {
+    return filterSourceConfigurations(planned.scope.configurations).flatMap(
+        (configuration) => configuration.files.extensions,
     );
 }

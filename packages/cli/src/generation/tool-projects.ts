@@ -32,7 +32,10 @@ export function buildMiseProject(configurations: Configuration[]): GeneratedFile
     );
     return {
         path: GSPOT_PATHS.miseProject,
-        content: stringify({ tools }, { ...CONFIG_FILE_TOML_FORMAT, inlineTableStart: 1 }),
+        content: stringify(
+            { tools, settings: { lockfile: true } },
+            { ...CONFIG_FILE_TOML_FORMAT, inlineTableStart: 1 },
+        ),
     };
 }
 
@@ -41,7 +44,7 @@ Build the npm tools as a tool project, and add no dependencies to the repository
 
 @param project what the tool project holds.
 @param project.configurations the configurations with npm tools.
-@param project.packageManager true for Yarn 2 or later as the repository package manager.
+@param project.packageManager the package manager of the tool project after mapping Yarn Classic to npm.
 
 @returns the tool project files.
 */

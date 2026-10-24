@@ -6,7 +6,6 @@ import { listCodeLines } from '#cli/parsers/code/bash.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readScripts } from '#cli/checks/language/bash/scripts.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
-import type { ScriptFunction } from '#cli/types/parsers/code/bash.ts';
 import type { ScriptFile, LayoutIssue } from '#cli/types/checks/language/bash.ts';
 
 import {
@@ -25,7 +24,7 @@ import {
 } from '#cli/config/checks/language/bash/script-layout.ts';
 
 function checkStrictMode(code: NumberedLine[]): LayoutIssue[] {
-    const first = code.findIndex((line) => !BASH_OPTION_COMMANDS.some((command) => line.text.startsWith(command)));
+    const first = code.findIndex((line) => BASH_OPTION_COMMANDS.every((command) => !line.text.startsWith(command)));
     const before = new Set(code.slice(0, first === -1 ? code.length : first).map((line) => line.text));
     return before.has(STRICT_MODE)
         ? []
@@ -43,31 +42,23 @@ function checkMainFunction(file: ScriptFile, code: NumberedLine[]): LayoutIssue[
     return issues;
 }
 
-function findFunctionAtLine(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
-    return functions
-        .filter((scriptFunction) => scriptFunction.start <= line && line <= scriptFunction.end)
-        .toSorted((left, right) => left.end - left.start - (right.end - right.start))[0];
-}
-
-function checkLibraryLine(
-    line: NumberedLine,
-    file: ScriptFile,
-    { isEnvironmentReader }: { isEnvironmentReader: boolean },
-): LayoutIssue[] {
+function checkLibraryLine(line: NumberedLine, file: ScriptFile, isEnvironmentReader: boolean): LayoutIssue[] {
     if (line.text.startsWith(SET_COMMAND))
         return [
             { line: line.number, rule: 'library-options', text: 'A sourced library does not change shell options.' },
         ];
     if (line.text === MAIN_CALL)
         return [{ line: line.number, rule: 'library-main', text: 'A sourced library does not call main.' }];
-    if (findFunctionAtLine(file.functions, line.number) !== undefined) return [];
-    return checkTopLevelLine(line, { isEnvironmentReader });
+    if (
+        file.functions.some(
+            (scriptFunction) => scriptFunction.start <= line.number && line.number <= scriptFunction.end,
+        )
+    )
+        return [];
+    return checkTopLevelLine(line, isEnvironmentReader);
 }
 
-function checkTopLevelLine(
-    line: NumberedLine,
-    { isEnvironmentReader }: { isEnvironmentReader: boolean },
-): LayoutIssue[] {
+function checkTopLevelLine(line: NumberedLine, isEnvironmentReader: boolean): LayoutIssue[] {
     if (EXIT_CALL.test(line.text))
         return [{ line: line.number, rule: 'library-exit', text: 'A sourced library does not exit.' }];
     if (
@@ -86,11 +77,7 @@ function checkTopLevelLine(
     ];
 }
 
-function checkLibraryScript(
-    file: ScriptFile,
-    code: NumberedLine[],
-    { isEnvironmentReader }: { isEnvironmentReader: boolean },
-): LayoutIssue[] {
+function checkLibraryScript(file: ScriptFile, code: NumberedLine[], isEnvironmentReader: boolean): LayoutIssue[] {
     const last = code.at(-1);
     if (last?.text === MAIN_CALL)
         return [
@@ -103,14 +90,10 @@ function checkLibraryScript(
     const issues: LayoutIssue[] = [];
     if (file.functions.some((scriptFunction) => scriptFunction.name === MAIN_FUNCTION))
         issues.push({ line: 1, rule: 'library-main', text: 'A sourced library defines no main.' });
-    return [...issues, ...code.flatMap((line) => checkLibraryLine(line, file, { isEnvironmentReader }))];
+    return [...issues, ...code.flatMap((line) => checkLibraryLine(line, file, isEnvironmentReader))];
 }
 
-function checkScriptFile(
-    planned: PlannedCheck,
-    file: ScriptFile,
-    { isEnvironmentReader }: { isEnvironmentReader: boolean },
-): Finding[] {
+function checkScriptFile(planned: PlannedCheck, file: ScriptFile, isEnvironmentReader: boolean): Finding[] {
     const issues: LayoutIssue[] = [];
     if (!BASH_SHEBANGS.has(file.lines[0] ?? ''))
         issues.push({
@@ -120,7 +103,7 @@ function checkScriptFile(
         });
     const code = listCodeLines(file.code);
     if (file.isExecutable) issues.push(...checkStrictMode(code), ...checkMainFunction(file, code));
-    else issues.push(...checkLibraryScript(file, code, { isEnvironmentReader }));
+    else issues.push(...checkLibraryScript(file, code, isEnvironmentReader));
     for (const temporary of file.temporaryPaths)
         if (temporary.cleanupLines.length === 0)
             issues.push({
@@ -151,5 +134,5 @@ export async function checkBashScriptLayout(session: Session, planned: PlannedCh
     const scripts = await readScripts(session, planned);
     return scripts
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))
-        .flatMap((file) => checkScriptFile(planned, file, { isEnvironmentReader: isEnvironmentReader(file.path) }));
+        .flatMap((file) => checkScriptFile(planned, file, isEnvironmentReader(file.path)));
 }

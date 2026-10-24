@@ -9,11 +9,13 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 import { QUALITY_FIX, QUALITY_COMMAND } from '#tests/config/commands/check/run.ts';
 
 test('an aborted run stops its command and reports cancellation on every system', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const marker = join(sandbox.path, 'command-ready');
     const program = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); setInterval(() => {}, 1000);`;
     await createFileTree(sandbox.path, {
@@ -37,8 +39,9 @@ test('an aborted run stops its command and reports cancellation on every system'
     session.cancelSignal = controller.signal;
     const running = runChecks(session, buildRunOptions({ only: ['project/cancel'] }));
     expect(await waitForFile(marker)).toBe(true);
-    controller.abort();
+    controller.abort(143);
     const result = await running;
+    expect(result.report.exitCode).toBe(143);
     expect(result.report.checks).toMatchObject([
         { check: 'project/cancel', status: 'error', note: `${process.execPath} was canceled.` },
     ]);
@@ -46,6 +49,7 @@ test('an aborted run stops its command and reports cancellation on every system'
 });
 test('a path ignore keeps the check and its fixer off those paths, and a run of only ignored paths is skipped', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings([], {
         tables: stringify({
             command_check: [
@@ -95,6 +99,7 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
 });
 test('a path ignore covers its own paths, not the scopes below or beside it', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings(['bash'], {
         tables: stringify({
             ignore: [
@@ -144,7 +149,7 @@ test('a check with malformed JSON reports an error, and the other checks keep th
         stage: 'commit',
         output: { format: name === 'broken' ? 'json' : 'lines' },
     }));
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: checks }) }),
         'source.txt': 'input\n',
     });
@@ -158,13 +163,13 @@ test('a check with malformed JSON reports an error, and the other checks keep th
         {
             check: 'sandbox/broken',
             status: 'error',
-            note: 'JSON returned no structured findings.',
+            note: 'The output is not JSON. It starts with: source.txt',
         },
         { check: 'sandbox/kept', status: 'failed', findings: [{ message: 'source.txt' }] },
     ]);
 });
 test('progress is reported as soon as each check ends, with ignores applied to the final results', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'source.sh': 'echo example\n',
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
@@ -209,10 +214,9 @@ test('progress is reported as soon as each check ends, with ignores applied to t
             },
         }),
     );
-    const [result] = await Promise.all([
-        running,
-        Promise.race([ready.promise, running]).then(() => writeFile(join(sandbox.path, 'completed'), 'ready')),
-    ]);
+    await Promise.race([ready.promise, running]);
+    await writeFile(join(sandbox.path, 'completed'), 'ready');
+    const result = await running;
     expect(result.report.exitCode).toBe(0);
     expect(finished).toStrictEqual([1, 2]);
     expect(result.report.checks.map((each) => each.check)).toStrictEqual(['project/fast', 'project/waiting']);
@@ -224,7 +228,7 @@ test('progress is reported as soon as each check ends, with ignores applied to t
 
 test('an ignore with names keeps them in the run report and in the verbose ignore line', async () => {
     const reason = 'The public hook serves the script caller.';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             level: 'all',
             tables: stringify({ ignore: [{ check: 'structure/trivial-functions', names: ['useThing'], reason }] }),

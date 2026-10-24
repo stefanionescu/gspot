@@ -1,6 +1,4 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { symlink } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
@@ -10,6 +8,7 @@ import { type CommandArgument } from '#cli/types/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { prepareCommand, buildCommandSetup } from '#cli/runs/command/check.ts';
 import { expandCommand, listCopyFiles, buildFileCommandLines } from '#cli/runs/command/placeholders.ts';
 
@@ -31,6 +30,7 @@ async function writeListSetting(root: string, command: readonly string[], genera
 
 test('a whole list setting expands into separate command arguments, keeping empty and multiword ones', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await writeListSetting(
         sandbox.path,
         [...ARGUMENT_RUNNER, '{setting:openapi.generate_command}'],
@@ -45,6 +45,7 @@ test('a whole list setting expands into separate command arguments, keeping empt
 
 test('a list setting inside one command argument is refused', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await writeListSetting(
         sandbox.path,
         [...ARGUMENT_RUNNER, 'prefix{setting:openapi.generate_command}'],
@@ -63,18 +64,21 @@ test('a list setting inside one command argument is refused', async () => {
 
 test('an empty list setting is refused as a settings error', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await writeListSetting(sandbox.path, [...ARGUMENT_RUNNER, '{setting:openapi.generate_command}'], []);
     const empty = await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']);
     expect(empty.code).toBe(2);
     expect(JSON.parse(empty.stdout)).toStrictEqual({
         error: 'settings',
-        message: 'gspot.toml: openapi.generate_command: Too small: expected array to have >=1 items',
+        message:
+            'gspot.toml:5: openapi.generate_command: The value [] is not valid for openapi.generate_command. Use a valid list value: The command that writes the OpenAPI document from the code, run in the project scope folder.',
     });
 });
+
 test.each([...WORKSPACE_SCOPE_CASES])(
     'workspace expansion retains arguments only for a package scope: $scope',
     async ({ scope, expected }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift']),
             'Example.swift': 'let example = 1\n',
             'package.json': '{}',
@@ -96,7 +100,7 @@ test.each([...WORKSPACE_SCOPE_CASES])(
 );
 
 test.each([0, 1, 2])(
-    'a {file} placeholder at position %s is replaced without dropping neighboring arguments',
+    'a {file} placeholder at position %p is replaced without dropping neighboring arguments',
     (slot) => {
         const command: CommandArgument[] = ['before', 'after'];
         command.splice(slot, 0, { file: true });
@@ -110,7 +114,7 @@ test.each([0, 1, 2])(
 );
 
 test('a Markdown command run in a copy keeps the config files its manifest writes', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown']),
         'README.md': '# Example\n',
     });
@@ -127,28 +131,20 @@ test('a Markdown command run in a copy keeps the config files its manifest write
     );
 });
 
-test('per-file commands keep expanded flags and the arguments after the file', async () => {
-    await using sandbox = await testdir({
+test('per-file commands keep the arguments after the file', async () => {
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
                 command_check: [
                     {
                         id: 'sandbox/arguments',
-                        command: [
-                            process.execPath,
-                            'echo.cjs',
-                            '{existing:--config:settings.txt}',
-                            '{file}',
-                            'config',
-                            '--quiet',
-                        ],
+                        command: [process.execPath, 'echo.cjs', '{file}', 'config', '--quiet'],
                         paths: ['inputs/**'],
                         stage: 'commit',
                     },
                 ],
             }),
         }),
-        'settings.txt': '',
         'inputs/café source.txt': '',
         'echo.cjs': 'process.stdout.write(JSON.stringify([process.env.TOOL_RELEASE, ...process.argv.slice(2)]));',
     });
@@ -168,20 +164,13 @@ test('per-file commands keep expanded flags and the arguments after the file', a
         env: setup.env,
     });
     expect(result.code, result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toStrictEqual([
-        'v3.4.0',
-        '--config',
-        join(sandbox.path, 'settings.txt'),
-        'inputs/café source.txt',
-        'config',
-        '--quiet',
-    ]);
+    expect(JSON.parse(result.stdout)).toStrictEqual(['v3.4.0', 'inputs/café source.txt', 'config', '--quiet']);
 });
 
 test.each([...SHFMT_INDENT_CASES])(
     'format $style indentation supplies shfmt -i $expected',
     async ({ style, width, expected }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['format', 'bash'], {
                 level: 'all',
                 tables: stringify({ format: { indent_style: style, indent_width: width } }),
@@ -200,30 +189,3 @@ test.each([...SHFMT_INDENT_CASES])(
         expect(command.commandArguments[command.commandArguments.indexOf('-i') + 1]).toBe(expected);
     },
 );
-test('a command check accepts an {existing} config file that links to a file inside the repository', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/linked-config',
-                        paths: ['*.swift'],
-                        stage: 'commit',
-                        command: [process.execPath, '-e', 'process.exitCode = 0', '{existing:--config:.swiftlint.yml}'],
-                        output: { format: 'lines' },
-                    },
-                ],
-            }),
-        }),
-        'source.swift': 'let value = 1\n',
-        'settings/swiftlint.yml': 'disabled_rules: []\n',
-    });
-
-    await symlink('settings/swiftlint.yml', join(sandbox.path, '.swiftlint.yml'));
-    const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'project/linked-config', '--json']),
-    );
-    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(checked.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-});

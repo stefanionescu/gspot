@@ -2,7 +2,6 @@ import { BASH_HEADER } from '#tests/config/checks/samples.ts';
 
 export const UNREAD_ARGUMENT_CASES = [
     {
-        check: 'bash/unread-arguments',
         files: {
             'scripts/deaf.sh': `${BASH_HEADER}# _deaf: reads nothing.
 _deaf() {
@@ -23,7 +22,6 @@ main "$@"
         expected: { file: 'scripts/deaf.sh', rule: 'unread-arguments', line: 9 },
     },
     {
-        check: 'bash/unread-arguments',
         files: {
             'scripts/half.sh': `${BASH_HEADER}# _half: reads the first argument only.
 _half() {

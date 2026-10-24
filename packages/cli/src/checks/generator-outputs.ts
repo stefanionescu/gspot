@@ -103,7 +103,7 @@ function listGeneratorOutputs(
     return { listed: generatorOutputs, named };
 }
 
-function listGeneratorSources(session: Session, planned: PlannedCheck): GeneratorRun | undefined {
+function planGeneratorRun(session: Session, planned: PlannedCheck): GeneratorRun | undefined {
     const values = buildCommandSubstitutions(session, planned, join(session.root, planned.scope.folder.path));
     const declaration = planned.check.command ?? [];
     const command = expandCommand(session, planned, declaration, values);
@@ -130,11 +130,11 @@ Runs the declared generator in a copy and reports missing or changed generator o
 @returns one finding per missing or stale file.
 */
 export async function checkGeneratorOutputs(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const sources = listGeneratorSources(session, planned);
-    if (sources === undefined) return [];
-    const { values, commandText, declaration, patterns, targets, selected } = sources;
+    const run = planGeneratorRun(session, planned);
+    if (run === undefined) return [];
+    const { values, commandText, declaration, patterns, targets, selected } = run;
     const excluded = [...GENERATOR_IGNORED_FOLDERS, DOT_GSPOT].map((name) => `!**/${name}/**`);
-    const untracked = listUntrackedOutputs(session, planned, sources.named, excluded);
+    const untracked = listUntrackedOutputs(session, planned, run.named, excluded);
     if (untracked.length > 0) return untracked;
     if (targets.length + selected.length === 0) return [];
     const missing = listMissingOutputs(session, planned, targets, commandText);

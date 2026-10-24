@@ -16,8 +16,7 @@ Runs ShellCheck, and passes a dialect only for scripts without a shebang.
 export async function checkBashShellcheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const groups = Map.groupBy(planned.files, (file) => {
         if (file.path.endsWith(BATS_EXTENSION) || file.path.endsWith(`.${DEFAULT_DIALECT}`)) return undefined;
-        if (readCachedText(session.reads, file.path).startsWith('#!')) return undefined;
-        return DEFAULT_DIALECT;
+        return readCachedText(session.reads, file.path).startsWith('#!') ? undefined : DEFAULT_DIALECT;
     });
     return runCommandGroups(
         session,

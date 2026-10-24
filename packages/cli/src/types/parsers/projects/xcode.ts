@@ -12,7 +12,6 @@ export type PbxElement = {
     exceptions?: string[] | undefined;
     membershipExceptions?: string[] | undefined;
     target?: string | undefined;
-    productType?: string | undefined;
     mainGroup?: string | undefined;
     targets?: string[] | undefined;
     projectDirPath?: string | undefined;

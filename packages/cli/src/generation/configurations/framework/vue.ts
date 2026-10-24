@@ -21,9 +21,8 @@ export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>)
     const { presets, settings } = scope;
     const recommended = getPreset(presets, 'recommended');
     const accessibility = getPreset(presets, 'accessibility');
-    const blocks: ConfigurationBlocks['blocks'] = [];
-    const typed = settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
-    blocks.push(
+    const isTyped = settings.configurations.includes(TYPESCRIPT_CONFIGURATION);
+    const blocks: ConfigurationBlocks['blocks'] = [
         ...buildArrayPresetBlocks(recommended, 'vuePlugin', convertPresetWarnings),
         ...buildArrayPresetBlocks(accessibility, 'vueAccessibility', (block) => {
             const { parser: _parser, ...fields } = block;
@@ -33,17 +32,18 @@ export function buildVueBlocks(scope: Pick<EslintScope, 'presets' | 'settings'>)
             fields: {
                 files: VUE_FILES,
                 rules: {
-                    ...(typed
-                        ? { 'vue/define-props-declaration': 'error', 'vue/define-emits-declaration': 'error' }
-                        : {}),
+                    ...(isTyped && {
+                        'vue/define-props-declaration': 'error',
+                        'vue/define-emits-declaration': 'error',
+                    }),
                     ...VUE_RULES,
                 },
             },
-            properties: `languageOptions: { parser: vueParser, parserOptions: { ${typed ? 'parser: { ts: tseslint.parser, typescript: tseslint.parser },' : ''} extraFileExtensions: ['.vue'], sourceType: 'module' } }`,
+            properties: `languageOptions: { parser: vueParser, parserOptions: { ${isTyped ? 'parser: { ts: tseslint.parser, typescript: tseslint.parser },' : ''} extraFileExtensions: ['.vue'], sourceType: 'module' } }`,
         },
-    );
+    ];
     return {
-        imports: CONFIGURATION_PLUGINS['vue'],
+        imports: CONFIGURATION_PLUGINS.vue,
         blocks,
     };
 }

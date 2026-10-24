@@ -29,7 +29,7 @@ export const noIndexImports = createRule<[], 'index'>({
             const source = ASTUtils.getStringIfConstant(node);
             if (
                 source === null ||
-                !INTERNAL_PREFIXES.some((prefix) => source.startsWith(prefix)) ||
+                INTERNAL_PREFIXES.every((prefix) => !source.startsWith(prefix)) ||
                 !INDEX_BASENAMES.has(posix.basename(source))
             )
                 return;

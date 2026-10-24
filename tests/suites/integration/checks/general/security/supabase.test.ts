@@ -13,7 +13,7 @@ describe.skipIf(!hasToolBuild('deno') || !hasToolBuild('semgrep'))('Supabase sec
     const installedSandbox = shareInstalledSandbox(SUPABASE_SANDBOX);
 
     test('a selected supabase configuration brings the JavaScript secret-log rule to Deno code in the root and a child scope', async () => {
-        const { root, environment } = installedSandbox();
+        const { root } = installedSandbox();
         const files = {
             'gspot.toml': buildSandboxSettings(['supabase', 'security'], {
                 level: 'all',
@@ -26,9 +26,9 @@ describe.skipIf(!hasToolBuild('deno') || !hasToolBuild('semgrep'))('Supabase sec
             buildSandboxChanges(SUPABASE_SANDBOX.files, files),
         );
 
-        await runGspotStep({ root, environment, run: spawnGspot }, ['install']);
+        await runGspotStep({ root, run: spawnGspot }, ['install']);
         const command = ['check', '--only', 'security/semgrep', '--json'];
-        const failed = parseCheckReport(await spawnGspot(root, command, environment));
+        const failed = parseCheckReport(await spawnGspot(root, command));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(listFindingRows(failed.report)).toStrictEqual(
             SECRET_LOG_FILES.map((file) => ({ file, line: 1, rule: 'gspot.javascript.secret-in-log' })),
@@ -37,7 +37,7 @@ describe.skipIf(!hasToolBuild('deno') || !hasToolBuild('semgrep'))('Supabase sec
             expect(await readFile(join(root, path), 'utf8')).toBe('console.log(Deno.env.get("API_SECRET"));\n');
             await writeFile(join(root, path), 'console.log("Unable to load the record");\n');
         }
-        const corrected = parseCheckReport(await spawnGspot(root, command, environment));
+        const corrected = parseCheckReport(await spawnGspot(root, command));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(listFindingRows(corrected.report)).toStrictEqual([]);
     });

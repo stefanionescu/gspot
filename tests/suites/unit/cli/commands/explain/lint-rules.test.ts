@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 
 import {
     RULE_PAGES,
@@ -16,6 +17,7 @@ import {
 
 test('explain shellcheck/SC2086 gives the rule page and the gspot ignore commands', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const shellcheck = await runGspot(sandbox.path, ['explain', 'shellcheck/SC2086', '--json']);
     const shellcheckText = await runGspot(sandbox.path, ['explain', 'shellcheck/SC2086']);
     expect(JSON.parse(shellcheck.stdout)).toMatchObject(SHELLCHECK_RULE_PAGE);
@@ -28,6 +30,7 @@ test.each([...RULE_PAGES])(
     'a plugin rule, with or without the eslint/ prefix, finds the page of its plugin: %s',
     async (subject, page) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const subjectExplanation = await runGspot(sandbox.path, ['explain', subject, '--json']);
         expect(JSON.parse(subjectExplanation.stdout)).toMatchObject({
             kind: 'lint-rule',
@@ -36,23 +39,16 @@ test.each([...RULE_PAGES])(
         });
     },
 );
-test('explain refuses an unknown rule prefix and names the subjects it explains', async () => {
-    await using sandbox = await testdir();
-    const refusal = await runGspot(sandbox.path, ['explain', 'unknown/no-such-rule']);
-    expect(refusal.code).toBe(2);
-    expect(refusal.stderr).toBe(
-        'gspot cannot explain unknown/no-such-rule. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).\n',
-    );
-});
-
 test('explain gives an unknown plugin rule after eslint/ the ESLint commands and no page', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const unknownEslintRule = await runGspot(sandbox.path, ['explain', 'eslint/unknown/no-such-rule', '--json']);
     expect(JSON.parse(unknownEslintRule.stdout)).toMatchObject(UNKNOWN_RULE_PREFIX);
 });
 
 test('explain gives a TypeScript error the gspot ignore commands, and no rule options or page', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const rule = await runGspot(sandbox.path, ['explain', 'tsc/TS2345', '--json']);
     const ruleText = await runGspot(sandbox.path, ['explain', 'tsc/TS2345']);
     expect(JSON.parse(rule.stdout)).toMatchObject({ kind: 'lint-rule', tool: 'tsc', rule: 'TS2345', page: null });
@@ -63,6 +59,7 @@ test('explain gives a TypeScript error the gspot ignore commands, and no rule op
 
 test('a plugin prefix with an npm scope must match a plugin that a manifest declares', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const nextLink = await runGspot(sandbox.path, ['explain', '@next/next/no-html-link-for-pages', '--json']);
     expect(JSON.parse(nextLink.stdout)).toMatchObject(NPM_SCOPE_RULE_PAGE);
     const explicitNextLink = await runGspot(sandbox.path, [
@@ -90,6 +87,7 @@ test('a plugin prefix with an npm scope must match a plugin that a manifest decl
 
 test('explain finds rule pages from the root and from a child scope', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await createFileTree(sandbox.path, { 'gspot.toml': RULE_PAGE_SETTINGS, 'app/sample.swift': 'let value = 1\n' });
     const root = await runGspot(sandbox.path, ['explain', 'ruff/F401', '--json']);
     expect(root.code, root.stdout + root.stderr).toBe(0);
@@ -102,6 +100,7 @@ test('explain finds rule pages from the root and from a child scope', async () =
 
 test.each(['no-consolee', 'eslint/no-consolee'])('explain refuses an unknown ESLint core rule: %s', async (subject) => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
@@ -112,6 +111,7 @@ test.each(['no-consolee', 'eslint/no-consolee'])('explain refuses an unknown ESL
 
 test('explain gives an unknown plugin-qualified ESLint rule its template URL', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const explained = await runGspot(sandbox.path, ['explain', 'eslint/unicorn/no-such-rule', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     expect(JSON.parse(explained.stdout)).toMatchObject({

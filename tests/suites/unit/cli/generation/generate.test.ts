@@ -1,36 +1,32 @@
 import { join } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { JSON_INDENT } from '#cli/config/text.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { generate } from '#cli/generation/generate.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
-import { buildJsonSchema } from '#cli/settings/json-schema.ts';
-import { runGit, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { runGit, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 test.each(['absent', 'authored', 'managed'])(
     '%s attributes keep LF in generated files, also in a scope folder with a space',
     async (source) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['security', 'format'], {
                 scopes: [{ path: 'web app', configurations: ['security', 'javascript', 'css'] }],
             }),
             'web app/page.js': 'export const page = 1;\n',
             'web app/style.css': 'a { color: red; }\n',
-            ...(source === 'absent'
-                ? {}
-                : {
-                      '.gitattributes':
-                          source === 'authored'
-                              ? '* text=auto eol=lf\n'
-                              : '# >>> gspot managed >>>\n* text=auto eol=lf\n# <<< gspot managed <<<\n',
-                  }),
+            ...(source !== 'absent' && {
+                '.gitattributes':
+                    source === 'authored'
+                        ? '* text=auto eol=lf\n'
+                        : '# >>> gspot managed >>>\n* text=auto eol=lf\n# <<< gspot managed <<<\n',
+            }),
         });
 
         runGitStep(sandbox.path, ['init', '-q']);
@@ -68,33 +64,29 @@ test('generated attributes keep LF through an autocrlf checkout', async () => {
     const checkedBytes = await readFile(join(sandbox.path, path));
     expect(checkedBytes).toStrictEqual(bytes);
 });
-test.each([true, false])('apply writes the .gitignore block only once Git exists ($name)', async (authored) => {
-    await using sandbox = await testdir();
-    const original = '# Authored entries\nprivate.tmp\n';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings([]),
-        ...(authored ? { '.gitignore': original } : {}),
-    });
-    await applyGeneratedFiles(sandbox.path);
-    const path = join(sandbox.path, '.gitignore');
-    expect((await isOnDisk(path)) ? await readFile(path, 'utf8') : undefined).toBe(authored ? original : undefined);
-    const initialized = runGit(sandbox.path, ['init', '--quiet']);
-    expect(initialized.code, initialized.stderr).toBe(0);
-    await applyGeneratedFiles(sandbox.path);
-    const installed = await readFile(path, 'utf8');
-    expect(installed.startsWith(original)).toBe(authored);
-    expect(installed).toContain(`${GSPOT_PATHS.state}/`);
-    await applyGeneratedFiles(sandbox.path);
-    expect(await readFile(path, 'utf8')).toBe(installed);
-});
-test('generate writes the JSON Schema of gspot.toml for this gspot version', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-
-    const schema = generate(await openSession(sandbox.path)).files.find(
-        ({ path }) => path === GSPOT_PATHS.settingsSchema,
-    );
-    expect(schema?.content).toBe(`${JSON.stringify(buildJsonSchema(), null, JSON_INDENT)}\n`);
-});
+test.each([true, false])(
+    'apply refuses a folder outside Git and writes its ignore block after Git init (%p)',
+    async (authored) => {
+        await using sandbox = await testdir();
+        const original = '# Authored entries\nprivate.tmp\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildSandboxSettings([]),
+            ...(authored && { '.gitignore': original }),
+        });
+        const refused = await runGspot(sandbox.path, ['apply']);
+        expect(refused.code).toBe(2);
+        const path = join(sandbox.path, '.gitignore');
+        expect((await isOnDisk(path)) ? await readFile(path, 'utf8') : undefined).toBe(authored ? original : undefined);
+        const initialized = runGit(sandbox.path, ['init', '--quiet']);
+        expect(initialized.code, initialized.stderr).toBe(0);
+        await applyGeneratedFiles(sandbox.path);
+        const installed = await readFile(path, 'utf8');
+        expect(installed.startsWith(original)).toBe(authored);
+        expect(installed).toContain(`${GSPOT_PATHS.state}/`);
+        await applyGeneratedFiles(sandbox.path);
+        expect(await readFile(path, 'utf8')).toBe(installed);
+    },
+);
 
 test('generated scope settings stay identical across process collations', async () => {
     await using sandbox = await testdir({
@@ -114,4 +106,21 @@ test('generated scope settings stay identical across process collations', async 
     const session = await openSession(sandbox.path);
     expect(session.scopes.map(({ folder }) => folder.path)).toStrictEqual(['', 'jam', 'yam']);
     expect(generate(session)).toStrictEqual(expected);
+});
+
+test('adding the first Markdown and LFS files leaves generated output unchanged', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], { tables: '[hooks]\nenabled = true\n' }),
+        'package.json': '{"packageManager":"npm@11.0.0"}',
+        'source.ts': 'export {};\n',
+    });
+    runGitStep(sandbox.path, ['init', '-q']);
+    const before = generate(await openSession(sandbox.path));
+    await createFileTree(sandbox.path, {
+        'README.md': '# Notes\n',
+        '.gitattributes': '*.bin filter=lfs diff=lfs merge=lfs -text\n',
+        'blob.bin': Buffer.from([0]),
+    });
+    runGitStep(sandbox.path, ['add', '-A']);
+    expect(generate(await openSession(sandbox.path))).toStrictEqual(before);
 });

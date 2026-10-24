@@ -7,9 +7,9 @@ import { PRIVATE_FILE } from '#cli/config/files/modes.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { parseToolReport } from '#cli/parsers/formats/json.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
-import { getTable, findRootScope } from '#cli/settings/scopes.ts';
 import { addEnvironmentReference } from '#cli/install/npm/registry.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
+import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
 import { GSPOT_PACKAGES, MINUTES_PER_DAY } from '#cli/config/install/npm/release-age.ts';
 import { yarnSettingsSchema, yarnConfigSettingSchema } from '#cli/schemas/install/npm/yarn.ts';
 
@@ -64,14 +64,17 @@ settings, and add those variables to env.
 @param install what install needs for this step.
 @param runFolder the folder where the isolated project runs.
 @param env variables for the install; the settings go here too.
+@param days the minimum release age in days.
 @returns the credential values the lockfile must not contain.
 */
 export async function writeYarnSettings(
     install: ToolInstall,
     runFolder: string,
     env: Record<string, string>,
+    days: number,
 ): Promise<string[]> {
     const { root } = install.session;
+    const yarnPackageManager = { name: 'yarn', version: install.session.packageManager?.version };
     const settings = parseYamlFile(
         join(runFolder, YARN_SETTINGS_FILE),
         readFileSync(join(runFolder, YARN_SETTINGS_FILE), 'utf8'),
@@ -90,7 +93,11 @@ export async function writeYarnSettings(
         if (url.protocol === 'http:') settings[YARN_SETTING_KEYS.unsafeHttpWhitelist] = [url.hostname];
     }
     Object.assign(settings, buildEnvironmentSettings(env, secrets));
-    const listed = await runInstallStep(install, YARN_CONFIG_LIST_ARGUMENTS, { cwd: root, env });
+    const listed = await runInstallStep(
+        install,
+        buildPackageManagerCommand(yarnPackageManager, YARN_CONFIG_LIST_ARGUMENTS.slice(1)),
+        { cwd: root, env },
+    );
     if (listed.code !== 0)
         throw new GspotError('install', 'Cannot read the Yarn connection settings. Check .yarnrc.yml.');
     const connectionSettings = listed.stdout
@@ -100,7 +107,10 @@ export async function writeYarnSettings(
         .filter((setting) => YARN_CONNECTION_KEYS.has(setting.key));
     for (const setting of connectionSettings) {
         const command = [...YARN_CONFIG_GET_ARGUMENTS, setting.key, ...YARN_CONFIG_GET_FLAGS];
-        const read = await runInstallStep(install, command, { cwd: root, env });
+        const read = await runInstallStep(install, buildPackageManagerCommand(yarnPackageManager, command.slice(1)), {
+            cwd: root,
+            env,
+        });
         if (read.code !== 0) throw new GspotError('install', `Cannot read Yarn setting ${setting.key}.`);
         settings[setting.key] = convertToReference(
             parseToolReport('yarn config get', read.stdout),
@@ -109,8 +119,7 @@ export async function writeYarnSettings(
             secrets,
         );
     }
-    settings[YARN_SETTING_KEYS.npmMinimalAgeGate] =
-        getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days * MINUTES_PER_DAY;
+    settings[YARN_SETTING_KEYS.npmMinimalAgeGate] = days * MINUTES_PER_DAY;
     settings[YARN_SETTING_KEYS.npmPreapprovedPackages] = [...GSPOT_PACKAGES];
     writeFileSync(join(runFolder, YARN_INSTALL_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return secrets.filter((value) => value.length > 0);

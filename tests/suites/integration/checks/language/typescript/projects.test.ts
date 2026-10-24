@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
@@ -10,6 +9,7 @@ import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { stat, chmod, readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -84,8 +84,7 @@ test.each([...LEVELS])(
     async (level) => {
         const { root } = installedSandbox();
         const scope = 'apps/web';
-        const authored = AUTHORED_TSCONFIG.replace(
-            '%BUILD_INFO%',
+        const authored = AUTHORED_TSCONFIG.replace('%BUILD_INFO%', () =>
             JSON.stringify(join(root, scope, 'build/cache.tsbuildinfo')),
         );
         const sourceFiles = {
@@ -132,9 +131,11 @@ test.each([...LEVELS])(
 
 test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await using outside = await testdir({ 'value.js': 'authored output\n' });
+    runGitStep(outside.path, ['init', '--quiet']);
 
-    await linkTypescript(sandbox.path, outside.path);
+    await linkTypescript(outside.path);
     const outsideFiles = await readdir(outside.path);
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
@@ -152,9 +153,9 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
     });
     await (kind === 'symlink'
         ? symlink(outside.path, join(sandbox.path, 'node_modules'), 'dir')
-        : linkTypescript(sandbox.path));
+        : linkTypescript(join(sandbox.path, 'node_modules')));
     commitAll(sandbox.path);
-    await runGspotStep({ root: sandbox.path, environment: {}, run: spawnGspot }, ['apply']);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['apply']);
     const checked = await runTscCheck(sandbox.path);
     expect(checked.code, checked.output).toBe(0);
     expect(await readdir(outside.path)).toStrictEqual(outsideFiles);
@@ -175,7 +176,7 @@ test.each([...OUTDIR_CASES])('$name', async ({ kind }) => {
 });
 
 test('typescript/tsc builds a referenced project with its imported declarations and extended config and ignores other folders', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         ...REFERENCE_BUILD_FILES,
         'gspot.toml': buildSandboxSettings(['typescript'], REFERENCE_BUILD_SETTINGS),
     });
@@ -187,7 +188,7 @@ test('typescript/tsc builds a referenced project with its imported declarations 
         join(sandbox.path, 'app/tsconfig.json'),
         JSON.stringify({ extends: join(sandbox.path, 'config/base.json'), include: ['src/**/*.ts'] }),
     );
-    await linkTypescript(sandbox.path);
+    await linkTypescript(join(sandbox.path, 'node_modules'));
     commitAll(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);

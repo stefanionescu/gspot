@@ -10,7 +10,8 @@ export const rulesSchema = z.strictObject({
         .default(SETTING_DEFINITIONS['rules.enabled'].default)
         .meta(SETTING_DEFINITIONS['rules.enabled']),
     exclude: z
-        .array(z.string())
+        .string()
+        .array()
         .default(SETTING_DEFINITIONS['rules.exclude'].default)
         .meta(SETTING_DEFINITIONS['rules.exclude']),
 } satisfies SchemaShape<ParsedRules, NonNullable<WrittenSettings['rules']>>);

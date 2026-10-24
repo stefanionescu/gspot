@@ -1,9 +1,6 @@
-import { joinScope } from '#cli/repository/scopes.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { serializeBlock } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
-import { buildScopeFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { ESLINT_INDENT } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
+import { buildScopeGlob, buildScopeFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
 import type {
     BlockWriter,
@@ -46,11 +43,15 @@ function formatBlocks(blocks: EslintBlockFields[], planned: PlannedEslintBlock, 
                 selectedPreset = planned.preset;
                 if (planned.preset !== undefined) note += ': ' + planned.preset.expression;
             } else note += ': your own rule options';
-            const source = serializeBlock(block, {
-                properties: runtimeText,
-                preset: selectedPreset,
-                level: planned.scope === undefined ? level : undefined,
-            });
+            const { ignores, ...fields } = block;
+            const source = serializeBlock(
+                { ...fields, ...(ignores !== undefined && ignores.length > 0 && { ignores }) },
+                {
+                    properties: runtimeText,
+                    preset: selectedPreset,
+                    level: planned.scope === undefined ? level : undefined,
+                },
+            );
             const value = planned.scope === undefined ? source : `stripRuntimeGlobals(${source}, globals)`;
             return `// ${note}\n${value}`
                 .split('\n')
@@ -76,15 +77,16 @@ export function writeEslintBlock(writer: BlockWriter, block: PlannedEslintBlock)
             level !== 'all' && allLevelRules.has(name) ? 'off' : value,
         ]),
     );
+    const ignores = [...(payload.ignores ?? []), ...(scope?.excluded ?? [])];
     const nested =
         scope === undefined
             ? {}
             : {
                   files: (payload.files ?? codeFiles).map((pattern) => [
                       ...(Array.isArray(pattern) ? pattern : [pattern]),
-                      joinScope(scope.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
+                      buildScopeGlob(scope.path),
                   ]),
-                  ignores: [...(payload.ignores ?? []), ...scope.excluded],
+                  ...(ignores.length > 0 && { ignores }),
               };
     const fields = { ...payload, ...nested, rules };
     return formatBlocks([fields, ...buildOptionBlocks(fields, writer)], block, level);

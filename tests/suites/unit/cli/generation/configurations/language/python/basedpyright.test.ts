@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { generateFile, findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
-test('python.extra_paths reach the basedpyright search paths', async () => {
+test('python.import_folders reach the basedpyright search paths', async () => {
     const config = JSON.parse(
         await generateFile(
-            buildSandboxSettings(['python'], { tables: '[python]\nextra_paths = ["vendor/host"]\n' }),
+            buildSandboxSettings(['python'], { tables: '[python]\nimport_folders = ["vendor/host"]\n' }),
             findManifestTarget('python', 'basedpyright.json'),
             { 'main.py': 'VALUE = 1\n' },
         ),
@@ -43,4 +43,10 @@ test('basedpyright reads the uv environment of a project with a tracked uv.lock,
         }),
     ) as { venv?: string };
     expect(unlocked.venv).toBeUndefined();
+});
+
+test('the removed Python import path setting is refused', () => {
+    expect(validateSettingsText('configurations = ["python"]\n[python]\nextra_paths = []\n')).toStrictEqual([
+        'gspot.toml:3: python.extra_paths: `extra_paths` is not a gspot.toml setting. See generativespotting.com/reference/gspot-toml/ for every key.',
+    ]);
 });

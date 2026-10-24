@@ -73,10 +73,24 @@ function formatSuggestions(suggestions: Suggestions): string[] {
 }
 
 function formatGspotVersion(report: DoctorReport): string {
-    const { running, pinned } = report.version;
-    const runningText = pinned === running ? 'running' : `running ${running}`;
-    const pin = pinned === undefined ? `${running} running, no pin` : `${pinned} pinned and ${runningText}`;
-    return `gspot      ${pin}`;
+    const { running, pin } = report.version;
+    const runningText = pin === running ? 'running' : `running ${running}`;
+    const version = pin === undefined ? `${running} running, no pin` : `${pin} pinned and ${runningText}`;
+    const install =
+        report.version.installCommand === undefined
+            ? ''
+            : `\nInstall the pinned version: ${report.version.installCommand}`;
+    return `gspot      ${version}${install}`;
+}
+
+function buildDoctorVersion(session: Session, pin: string | undefined): DoctorReport['version'] {
+    const version: DoctorReport['version'] = {
+        running: cliPackage.version,
+        ...(pin !== undefined && { pin }),
+    };
+    if (pin !== undefined && pin !== cliPackage.version)
+        version.installCommand = session.startRunner.installCommand.replace('<version>', () => pin);
+    return version;
 }
 
 function buildDoctorReport(session: Session, versionPin: string | undefined): DoctorReport {
@@ -89,7 +103,8 @@ function buildDoctorReport(session: Session, versionPin: string | undefined): Do
         const toolNames = new Set(
             configurations.flatMap((configuration) => configuration.tools).map((tool) => tool.name),
         );
-        for (const tool of pins.filter((pin) => toolNames.has(pin.name))) {
+        for (const tool of pins) {
+            if (!toolNames.has(tool.name)) continue;
             const inspection = inspectTool(
                 { ...session, cwd: join(session.root, folder.path), miseBinPaths: getMiseBinPaths(session) },
                 tool,
@@ -97,10 +112,18 @@ function buildDoctorReport(session: Session, versionPin: string | undefined): Do
             inspections.set(JSON.stringify(inspection), inspection);
         }
     }
-    const tools = [...inspections.values()].toSorted((left, right) => compareText(left.name, right.name));
+    const tools = inspections
+        .values()
+        .toArray()
+        .toSorted((left, right) => compareText(left.name, right.name));
     const { settings } = session.settingsFile;
     const hooks = readHookStatus(session, session.repository);
-    const isBroken = !hooks.ready || tools.some((tool) => !isToolAvailable(tool));
+    const version = buildDoctorVersion(session, versionPin);
+    const isBroken = [
+        !hooks.ready,
+        tools.some((tool) => !isToolAvailable(tool)),
+        version.installCommand !== undefined,
+    ].some(Boolean);
     return {
         submodules: listSubmodulePaths(session.repository.index),
         tools,
@@ -108,10 +131,7 @@ function buildDoctorReport(session: Session, versionPin: string | undefined): Do
         hooks: hooks.text,
         ci: settings.ci?.enabled === true ? CI_FILE_LABELS[settings.ci.provider] : 'none',
         ruleFiles: selectRuleFiles(session).length,
-        version: {
-            running: cliPackage.version,
-            ...(versionPin === undefined ? {} : { pinned: versionPin }),
-        },
+        version,
         exitCode: isBroken ? EXIT_FINDINGS : 0,
     };
 }

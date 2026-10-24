@@ -1,6 +1,7 @@
-import type { JSONSchema } from 'zod/v4/core';
+import type { GUIDES } from '../config/reference.ts';
 import type { Setting } from '#cli/types/settings/inheritance.ts';
-import type { Configuration, ConfigurationCheck } from '#cli/types/configurations.ts';
+import type { buildJsonSchema } from '#cli/settings/json-schema.ts';
+import type { Tool, Configuration, ConfigurationCheck } from '#cli/types/configurations.ts';
 
 export type CommandReference = {
     name: string;
@@ -20,7 +21,7 @@ export type CliReference = {
     configurations: Configuration[];
     checks: ConfigurationCheck[];
     settings: SettingVariant[];
-    schema: JSONSchema.JSONSchema;
+    schema: SettingsSchema;
     ruleFiles: Record<string, string[]>;
     configurationSettings: Record<string, Setting[]>;
 };
@@ -38,3 +39,9 @@ export type ReferencePage = {
 export type PluginRule = { name: string; link: string; configs: string[]; summary: string };
 
 export type GuideCheck = { name: string; link: string; stage: string; summary: string };
+
+export type SettingsSchema = ReturnType<typeof buildJsonSchema>;
+
+export type GuideSlug = (typeof GUIDES)[keyof typeof GUIDES];
+
+export type Suppression = NonNullable<Tool['suppression']>;

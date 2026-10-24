@@ -2,6 +2,7 @@ import { getLimit } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { countCodeLines } from '#cli/checks/code-lines.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
@@ -18,9 +19,10 @@ async function listLongFunctions(
     const tree = await parseSource('python', text);
     try {
         return tree.rootNode.descendantsOfType('function_definition').flatMap((node) => {
-            const count = lines
-                .slice(node.startPosition.row, node.endPosition.row + 1)
-                .filter((line) => line.trim() !== '' && !line.trimStart().startsWith(COMMENT_MARKERS.python)).length;
+            const count = countCodeLines(
+                lines.slice(node.startPosition.row, node.endPosition.row + 1),
+                COMMENT_MARKERS.python,
+            );
             if (count <= limit) return [];
             const name = node.childForFieldName('name')?.text ?? 'function';
             return [

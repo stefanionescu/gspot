@@ -22,7 +22,7 @@ export function buildPathMatcher(patterns: string[]): (path: string) => boolean 
         .filter((pattern) => pattern.startsWith(GLOB_EXCLUDE))
         .map((pattern) => new RegExp(picomatch.makeRe(pattern.slice(1), { dot: true }).source, 's'));
     const isMatch = (path: string): boolean =>
-        includes.some((pattern) => pattern.test(path)) && !excludes.some((pattern) => pattern.test(path));
+        includes.some((pattern) => pattern.test(path)) && excludes.every((pattern) => !pattern.test(path));
     matcherCache.set(key, isMatch);
     return isMatch;
 }

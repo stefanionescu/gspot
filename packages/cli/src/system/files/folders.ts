@@ -30,7 +30,8 @@ Use the real system path, which on Windows expands short folder names, as the pa
 @returns the folder, which the caller disposes, as `using` does.
 */
 export function createTemporaryFolder(): TemporaryFolder {
-    const path = realpathSync.native(mkdtempSync(join(tmpdir(), 'gspot-')));
+    const folder = mkdtempSync(join(tmpdir(), 'gspot-'));
+    const path = realpathSync.native(folder);
     return {
         path,
         [Symbol.dispose]: () => {

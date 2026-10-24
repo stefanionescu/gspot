@@ -1,7 +1,6 @@
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import type { Settings } from '#cli/types/settings/file.ts';
 import type { HookName, GeneratedFile } from '#cli/types/generation/files.ts';
 import type { StartRunner } from '#cli/types/repository/npm/package-manager.ts';
 
@@ -16,15 +15,15 @@ import {
     COMMIT_MESSAGE_PATH_LINES,
 } from '#cli/config/generation/hooks.ts';
 
-function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { usesLfs: boolean }): string {
+function buildHookScript(name: HookName, runner: StartRunner, usesLfs: boolean): string {
     const program = runner.name;
     const { missing } = runner;
-    const installCommand = runner.installCommand.replace('<version>', cliPackage.version);
+    const installCommand = runner.installCommand.replace('<version>', () => cliPackage.version);
     const absolutePath = name === 'commit-msg' ? COMMIT_MESSAGE_PATH_LINES : [];
-    const lfs = usesLfs && (LFS_HOOKS as readonly string[]).includes(name);
-    const replay = lfs ? PUSH_INPUT_REPLAY : '';
+    const isLfs = usesLfs && (LFS_HOOKS as readonly string[]).includes(name);
+    const replay = isLfs ? PUSH_INPUT_REPLAY : '';
     const body = [
-        ...(lfs
+        ...(isLfs
             ? [
                   PUSH_INPUT_SAVE,
                   `if command -v git-lfs >/dev/null 2>&1; then ${replay}git lfs ${name} "$@" || exit $?; fi`,
@@ -32,7 +31,7 @@ function buildHookScript(name: HookName, runner: StartRunner, { usesLfs }: { use
             : []),
         ...absolutePath,
         `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${missing} Install gspot with: ${installCommand}' >&2; exit 2; }`,
-        `${lfs ? replay : 'exec '}${runner.command} ${HOOK_CHECKS[name].arguments}`,
+        `${isLfs ? replay : 'exec '}${runner.command} ${HOOK_CHECKS[name].arguments}`,
         '',
     ].join('\n');
     return `${HOOK_SHEBANG}\n${body}`;
@@ -51,25 +50,17 @@ export function listHookNames(checks: PlannedCheck[]): HookName[] {
 }
 
 /**
-Build a script for each hook, when the settings turn hooks on.
+Build a script for each hook.
 
-@param settings the parsed gspot.toml.
 @param runner the command that starts gspot.
-@param hooks the hooks to write.
-@param hooks.names the hooks that run a configured check.
-@param hooks.usesLfs whether the tracked files use Git Large File Storage, which needs every hook in LFS_HOOKS.
+@param names the hooks that run a configured check.
+@param usesLfs whether Git Large File Storage needs every hook in LFS_HOOKS.
 @returns the hook scripts.
 */
-export function buildHookFiles(
-    settings: Settings,
-    runner: StartRunner,
-    hooks: { names: HookName[]; usesLfs: boolean },
-): GeneratedFile[] {
-    if (settings.hooks?.enabled !== true) return [];
-    const { names, usesLfs } = hooks;
+export function buildHookFiles(runner: StartRunner, names: HookName[], usesLfs: boolean): GeneratedFile[] {
     const lfsOnly = usesLfs ? LFS_HOOKS.filter((name) => !(names as readonly string[]).includes(name)) : [];
     return [
-        ...names.map((name) => ({ name, content: buildHookScript(name, runner, { usesLfs }) })),
+        ...names.map((name) => ({ name, content: buildHookScript(name, runner, usesLfs) })),
         ...lfsOnly.map((name) => ({
             name,
             content: `${HOOK_SHEBANG}\n${LFS_GUARD_PREFIX}exit 0\nexec git lfs ${name} "$@"\n`,

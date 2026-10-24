@@ -1,38 +1,29 @@
 import { posix } from 'node:path';
 import picomatch from 'picomatch';
 import { createRule } from '../create-rule.ts';
+import { convertToPosixPath } from '../syntax.ts';
+import { TRAILING_SLASH } from '../config/paths.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
 import { IMPORT_SELECTOR } from '../config/syntax.ts';
 import type { ImportSource } from '../types/syntax.ts';
-import { STDIN_NAMES, TRAILING_SLASH } from '../config/paths.ts';
-import { OPTIONS_SCHEMA } from '../config/rules/import-boundaries.ts';
+import { QUERY, OPTIONS_SCHEMA } from '../config/rules/import-boundaries.ts';
 import type { RuleContext, ImportBoundariesOptions } from '../types/rules.ts';
 import { RELATIVE_PREFIXES, DEFAULT_BOUNDARY_FOLDERS } from '../config/imports.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-const matchersByGlob = new Map<string, (path: string) => boolean>();
-function isGlobMatch(path: string, glob: string): boolean {
-    let isMatch = matchersByGlob.get(glob);
-    if (isMatch === undefined) {
-        isMatch = picomatch(glob, { dot: true });
-        matchersByGlob.set(glob, isMatch);
-    }
-    return isMatch(path);
-}
-
 function getLintedPath(context: RuleContext): string | undefined {
-    const absolute = context.physicalFilename.replaceAll('\\', '/').replace(/^[a-z]:/u, (drive) => drive.toUpperCase());
-    if (STDIN_NAMES.has(absolute)) return undefined;
-    const root = ((context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd)
-        .replaceAll('\\', '/')
-        .replace(/^[a-z]:/u, (drive) => drive.toUpperCase())
-        .replace(TRAILING_SLASH, '');
+    const absolute = convertToPosixPath(context.physicalFilename);
+    const root = convertToPosixPath(
+        (context.settings[PLUGIN_PREFIX] as { root?: string } | undefined)?.root ?? context.cwd,
+    ).replace(TRAILING_SLASH, '');
     return absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : undefined;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function getImportedPath(importer: string, source: string): string | undefined {
-    if (!RELATIVE_PREFIXES.some((prefix) => source.startsWith(prefix))) return undefined;
-    return posix.join(posix.dirname(importer), source.split('?', 1)[0] ?? source);
+    return RELATIVE_PREFIXES.every((prefix) => !source.startsWith(prefix))
+        ? undefined
+        : posix.join(posix.dirname(importer), source.replace(QUERY, ''));
 }
 
 function matchAlias(importedPath: string, pattern: string, target: string): string | undefined {
@@ -41,8 +32,9 @@ function matchAlias(importedPath: string, pattern: string, target: string): stri
     if (keyStar === -1 || targetStar === -1) return importedPath === target ? pattern : undefined;
     const targetStart = target.slice(0, targetStar);
     const targetEnd = target.slice(targetStar + 1);
-    if (!importedPath.startsWith(targetStart) || !importedPath.endsWith(targetEnd)) return undefined;
-    return `${pattern.slice(0, keyStar)}${importedPath.slice(targetStart.length, importedPath.length - targetEnd.length)}${pattern.slice(keyStar + 1)}`;
+    return importedPath.startsWith(targetStart) && importedPath.endsWith(targetEnd)
+        ? `${pattern.slice(0, keyStar)}${importedPath.slice(targetStart.length, importedPath.length - targetEnd.length)}${pattern.slice(keyStar + 1)}`
+        : undefined;
 }
 
 function findAlias(importedPath: string, aliases: Record<string, string>): string | undefined {
@@ -53,17 +45,17 @@ function findAlias(importedPath: string, aliases: Record<string, string>): strin
     return undefined;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isWithinFolder(path: string, folder: string): boolean {
-    if (folder === '.') return path !== '..' && !path.startsWith('../');
-    return path === folder || path.startsWith(`${folder}/`);
+    return folder === '.' ? path !== '..' && !path.startsWith('../') : path === folder || path.startsWith(`${folder}/`);
 }
 
-function findBoundary(parentFolder: string, folders: readonly string[]): string | undefined {
+function findBoundary(parentFolder: string, isBoundary: (path: string) => boolean): string | undefined {
     if (!isWithinFolder(parentFolder, '.')) return undefined;
     const segments = parentFolder.split('/');
     const ancestors = segments.map((_segment, index) => segments.slice(0, index + 1).join('/'));
     ancestors.unshift('.');
-    return ancestors.findLast((ancestor) => folders.some((glob) => isGlobMatch(ancestor, glob)));
+    return ancestors.findLast((ancestor) => isBoundary(ancestor));
 }
 
 export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'escape'>({
@@ -92,21 +84,21 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
         if (relative === undefined) return {};
         const { folders, aliases, externals } = options;
         const isExternal = picomatch([...externals], { dot: true });
-        const folder = findBoundary(posix.dirname(relative), folders);
+        const isBoundary = picomatch([...folders], { dot: true });
+        const folder = findBoundary(posix.dirname(relative), isBoundary);
         if (folder === undefined) return {};
         const check = (node: TSESTree.Node | null): void => {
             if (node === null) return;
             const source = ASTUtils.getStringIfConstant(node);
             if (source === null || isExternal(source)) return;
             const target = getImportedPath(relative, source);
-            if (target === undefined) return;
-            if (isWithinFolder(target, folder)) return;
+            if (target === undefined || isWithinFolder(target, folder)) return;
             const alias = findAlias(target, aliases);
             if (alias === undefined) {
                 context.report({
                     node,
                     messageId: 'escape',
-                    data: { source, folder, target: findBoundary(posix.dirname(target), folders) ?? target },
+                    data: { source, folder, target: findBoundary(posix.dirname(target), isBoundary) ?? target },
                 });
             } else {
                 context.report({

@@ -6,6 +6,7 @@ import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import type { PlannedTsconfig } from '#cli/types/checks/tsc.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/checks/tsc/compiler.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
@@ -22,17 +23,15 @@ import {
 
 function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
     const { root, typeRootsFolder, reads, target, scope, files, scopes, options } = planned;
+    const scopeFiles = files.filter(
+        (file) =>
+            (file.tags.includes(TYPESCRIPT_TAG) || DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
+            findScopeFolder(file.path, scopes).path === scope,
+    );
     const authored = readTsconfigProject(
         root,
         scope,
-        files
-            .filter(
-                (file) =>
-                    (file.tags.includes('typescript') ||
-                        DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
-                    findScopeFolder(file.path, scopes).path === scope,
-            )
-            .map((file) => file.path),
+        scopeFiles.map((file) => file.path),
         reads,
     );
     const projectRoots =
@@ -50,15 +49,10 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
             extends: convertToPosixPath(relative(folder, authored.path)),
             files: authored.config.fileNames.map((path) => convertToPosixPath(relative(folder, path))),
             compilerOptions: {
-                ...(authored.config.options.typeRoots === undefined ? { typeRoots } : {}),
+                ...(authored.config.options.typeRoots === undefined && { typeRoots }),
             },
         };
-    const sources = files.filter(
-        (file) =>
-            file.kind === 'source' &&
-            (file.tags.includes('typescript') || DECLARATION_EXTENSIONS.includes(extractExtension(file.path))) &&
-            findScopeFolder(file.path, scopes).path === scope,
-    );
+    const sources = scopeFiles.filter((file) => file.kind === 'source');
     const components = files.filter(
         (file) =>
             file.kind === 'source' && file.tags.includes('svelte') && findScopeFolder(file.path, scopes).path === scope,
@@ -70,9 +64,9 @@ function buildTsconfig(planned: PlannedTsconfig): Record<string, unknown> {
             typeRoots,
         },
         files: sources.map((file) => convertToPosixPath(relative(folder, join(root, file.path)))),
-        ...(components.length === 0
-            ? {}
-            : { include: components.map((file) => convertToPosixPath(relative(folder, join(root, file.path)))) }),
+        ...(components.length > 0 && {
+            include: components.map((file) => convertToPosixPath(relative(folder, join(root, file.path)))),
+        }),
     };
 }
 

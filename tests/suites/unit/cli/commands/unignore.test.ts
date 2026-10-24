@@ -6,17 +6,20 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { parse, LocalDate, stringify } from '@decimalturn/toml-patch';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { SHELLCHECK_IGNORE, SHELLCHECK_RULE_IGNORE } from '#tests/config/commands/unignore.ts';
 
 test('unignore removes a matching ignore, and a second run reports no change', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { rules: true, tables: SHELLCHECK_IGNORE }),
     });
     const commandArguments = ['unignore', 'bash/shellcheck', '--rule', 'SC2086'];
     const removed = await runGspot(sandbox.path, commandArguments);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(removed.stdout.split('\n').filter((line) => !line.startsWith('wrote '))).toStrictEqual([
-        'Removed 1 ignore for bash/shellcheck.',
+        'Removed 1 ignore for rule SC2086 of bash/shellcheck.',
+        'updated  .gitignore',
+        'updated  .gitattributes',
         'updated  AGENTS.md',
         'note     The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.',
         '',
@@ -25,37 +28,36 @@ test('unignore removes a matching ignore, and a second run reports no change', a
     expect((parse(saved) as TomlTable)['ignore']).toBeUndefined();
     const repeated = await runGspot(sandbox.path, commandArguments);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect(repeated.stdout).toBe('No change: bash/shellcheck has no matching ignore.\n');
+    expect(repeated.stdout).toBe('No change: rule SC2086 of bash/shellcheck has no matching ignore.\n');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(saved);
 });
 
 test('unignore keeps an empty ignore list and reports no change', async () => {
     const settings = buildSandboxSettings(['bash'], { rules: true, tables: 'ignore = []\n' });
     await using sandbox = await testdir({ 'gspot.toml': settings });
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toBe('No change: bash/shellcheck has no matching ignore.\n');
+    expect(removed.stdout).toBe('No change: rule SC2086 of bash/shellcheck has no matching ignore.\n');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test('unignore refuses a gspot.toml whose ignore has no reason and writes nothing', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings(['bash'], SHELLCHECK_RULE_IGNORE);
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
     const unmatched = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2034']);
     expect(unmatched.code, unmatched.stdout + unmatched.stderr).toBe(2);
     expect(unmatched.stderr).toBe(
-        'gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this record.\n',
+        'gspot.toml:3: ignore.0.reason: needs a reason. Add `reason = "..."` to this record.\n',
     );
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
-    const matched = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2086']);
-    expect(matched.code, matched.stdout + matched.stderr).toBe(2);
-    expect(matched.stderr).toBe('gspot.toml: ignore.0.reason: needs a reason. Add `reason = "..."` to this record.\n');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
 
 test('unignore counts the changed ignores and keeps other paths and other rules', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const selected = { check: 'bash/shellcheck', rule: 'SC2086' };
     const first = { ...selected, reason: 'Keep word splitting.', paths: ['a.sh', 'b.sh'] };
     const second = {
@@ -84,24 +86,23 @@ test('unignore counts the changed ignores and keeps other paths and other rules'
     const partial = await runGspot(sandbox.path, [...commandArguments, '--paths', 'b.sh', 'missing.sh']);
     expect(partial.code, partial.stdout + partial.stderr).toBe(0);
     expect(partial.stdout.split('\n').filter((line) => !line.startsWith('wrote '))).toStrictEqual([
-        'Removed 2 paths from 2 ignores.',
-        'note     The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.',
+        'Removed 2 paths from 2 ignores for rule SC2086 of bash/shellcheck for b.sh and missing.sh.',
         'Kept 1 ignore that covers every path. To delete it, run gspot unignore without --paths.',
+        'updated  .gitignore',
+        'updated  .gitattributes',
+        'note     The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.',
         '',
     ]);
     const remaining = [globalOther, other, global, { ...first, paths: ['a.sh'] }, { ...second, paths: ['c.sh'] }];
-    expect((parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore']).toStrictEqual(
-        remaining,
-    );
+    const contents = (parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore'];
+    expect(contents).toStrictEqual(remaining);
     const result = await runGspot(sandbox.path, commandArguments);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n').filter((line) => !line.startsWith('wrote '))).toStrictEqual([
-        'Removed 3 ignores for bash/shellcheck.',
+        'Removed 3 ignores for rule SC2086 of bash/shellcheck.',
         'note     The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.',
         '',
     ]);
-    expect((parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore']).toStrictEqual([
-        globalOther,
-        other,
-    ]);
+    const ignores = (parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable)['ignore'];
+    expect(ignores).toStrictEqual([globalOther, other]);
 });

@@ -85,7 +85,8 @@ function listLimitVariants(
     settings: Settings,
     scope: string,
 ): EffectiveSetting[] {
-    return [...availableSettings.settings.values()]
+    return availableSettings.settings
+        .values()
         .filter((setting) => setting.name.startsWith('limits.') && setting.type === 'number')
         .flatMap((setting) =>
             (setting.languages ?? []).map(
@@ -94,7 +95,8 @@ function listLimitVariants(
         )
         .filter((key) => !availableSettings.settings.has(key))
         .map((key) => getSettingValue(availableSettings, settings, key, scope))
-        .filter((row) => row !== undefined);
+        .filter((row) => row !== undefined)
+        .toArray();
 }
 
 /**
@@ -157,7 +159,7 @@ export function getLimit(scopeSettings: ScopeSettings, key: string, language?: s
         getValueAt(scopeSettings.values.limits, [language ?? '', key]) ??
         getValueAt(scopeSettings.values.limits, [key]);
     if (typeof value !== 'number')
-        throw new Error(
+        throw new TypeError(
             `The selected scope has no ${[language, key].filter((name) => name !== undefined).join('.')} limit.`,
         );
     return value;
@@ -218,11 +220,13 @@ function fillTableValues(tables: Record<string, unknown>, rows: EffectiveSetting
             const path = segments.slice(name.split('.').length);
             return { row, name, path: path.slice(0, -1), field: path.slice(-1).join('') };
         });
-    for (const { row, name } of valueRows.filter(({ row }) => row.value === undefined)) {
+    const empty = valueRows.filter(({ row }) => row.value === undefined);
+    for (const { row, name } of empty) {
         if (createTable(tables, [name]) === undefined)
             throw new Error(`The setting ${row.key} runs through a non-table value.`);
     }
-    for (const { row, name, path, field } of valueRows.filter(({ row }) => row.value !== undefined)) {
+    const written = valueRows.filter(({ row }) => row.value !== undefined);
+    for (const { row, name, path, field } of written) {
         const table = createTable(tables, [name, ...path]);
         if (table === undefined) throw new Error(`The setting ${row.key} runs through a non-table value.`);
         table[field] = row.reason === undefined ? row.value : { value: row.value, reason: row.reason };

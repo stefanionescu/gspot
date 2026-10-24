@@ -1,11 +1,10 @@
 {
     "recommended": {
         "package": "@tanstack/eslint-plugin-query",
-        "version": "5.91.2",
+        "version": "5.104.3",
         "source": "configs.flat/recommended",
         "blocks": [
             {
-                "parser": false,
                 "rules": {
                     "@tanstack/query/exhaustive-deps": "error",
                     "@tanstack/query/no-rest-destructuring": "warn",
@@ -14,7 +13,8 @@
                     "@tanstack/query/infinite-query-property-order": "error",
                     "@tanstack/query/no-void-query-fn": "error",
                     "@tanstack/query/mutation-property-order": "error"
-                }
+                },
+                "parser": false
             }
         ]
     }

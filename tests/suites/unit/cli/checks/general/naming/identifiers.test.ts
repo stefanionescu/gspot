@@ -4,10 +4,10 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import type { RunResult } from '#cli/types/runs/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { FORCED_NAME_CASES } from '#tests/config/checks/general/naming/forced-names.ts';
 
 import {
     FRAMEWORK_NAMES,
@@ -18,13 +18,8 @@ import {
     REACT_COMPONENT_SOURCE,
 } from '#tests/config/checks/general/naming/identifiers.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
-async function checkIdentifiers(root: string): Promise<RunResult> {
-    return runChecks(await openSession(root), buildRunOptions({ only: ['naming/identifiers'] }));
-}
-
 test.each([...FRAMEWORK_NAMES])(
-    `a framework's allowed function name passes only inside the framework's scope`,
+    `$configuration's allowed function name $name passes only inside its scope`,
     async ({ configuration, name, bannedWords }) => {
         const source = `export function ${name}() { return null; }\n`;
         const variables = `export const ${name} = () => null;\n`;
@@ -44,7 +39,10 @@ test.each([...FRAMEWORK_NAMES])(
             'sibling/entry.ts': source,
         });
 
-        const failed = await checkIdentifiers(sandbox.path);
+        const failed = await runChecks(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['naming/identifiers'] }),
+        );
 
         expect(
             failed.report.checks.flatMap(({ findings }) =>
@@ -62,7 +60,10 @@ test.each([...FRAMEWORK_NAMES])(
             join(sandbox.path, 'app/parameters.ts'),
             'export function readValue(value: string) { return null; }\n',
         );
-        const corrected = await checkIdentifiers(sandbox.path);
+        const corrected = await runChecks(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['naming/identifiers'] }),
+        );
 
         expect(corrected.report.failed).toStrictEqual([]);
     },
@@ -78,11 +79,9 @@ test('SwiftLint owns the case and length of Swift types; banned words are still 
         'Entry.swift': sourceText + 'let helperCount = 1\nfunc readValue(URLSession: String) {}\n',
     });
 
-    const failed = await checkIdentifiers(sandbox.path);
+    const failed = await runSandboxCheck(sandbox.path, 'naming/identifiers');
 
-    expect(
-        failed.report.checks.flatMap(({ findings }) => findings.map(({ line, rule }) => ({ line, rule }))),
-    ).toStrictEqual([
+    expect(failed.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
         { line: 1, rule: 'banned-word' },
         { line: 2, rule: 'banned-word' },
         { line: 3, rule: 'banned-word' },
@@ -91,9 +90,9 @@ test('SwiftLint owns the case and length of Swift types; banned words are still 
         join(sandbox.path, 'Entry.swift'),
         'typealias URL = String\nlet entryCount = 1\nfunc readValue(client: String) {}\n',
     );
-    const corrected = await checkIdentifiers(sandbox.path);
+    const corrected = await runSandboxCheck(sandbox.path, 'naming/identifiers');
 
-    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(corrected).toStrictEqual([]);
 });
 
 test('with pytest selected, the test_ prefix does not count as a word', async () => {
@@ -108,7 +107,7 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
         'sibling/test_entry.py': source,
     });
 
-    const failed = await checkIdentifiers(sandbox.path);
+    const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
 
     expect(
         failed.report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),
@@ -119,10 +118,14 @@ test('with pytest selected, the test_ prefix does not count as a word', async ()
     for (const file of ['test_entry.py', 'sibling/test_entry.py']) {
         await writeFile(join(sandbox.path, file), 'def read_account_summary_columns():\n    pass\n');
     }
-    const corrected = await checkIdentifiers(sandbox.path);
+    const corrected = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['naming/identifiers'] }),
+    );
 
     expect(corrected.report.failed).toStrictEqual([]);
 });
+
 test('an allowed property name does not hide a bad name on the next line', async () => {
     const source =
         'export type Template = {\n    external_key: string;\n    user_name: string;\n    USER_COUNT: number;\n};\n';
@@ -134,22 +137,20 @@ test('an allowed property name does not hide a bad name on the next line', async
         'source.ts': source,
     });
 
-    const failed = await checkIdentifiers(sandbox.path);
+    const failed = await runSandboxCheck(sandbox.path, 'naming/identifiers');
 
-    expect(
-        failed.report.checks.flatMap(({ findings }) =>
-            findings.map(({ file, line, column, rule }) => ({ file, line, column, rule })),
-        ),
-    ).toStrictEqual([{ file: 'source.ts', line: 3, column: 5, rule: 'case' }]);
+    expect(failed.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual([
+        { file: 'source.ts', line: 3, column: 5, rule: 'case' },
+    ]);
     await writeFile(join(sandbox.path, 'source.ts'), source.replace('user_name', 'userName'));
-    const corrected = await checkIdentifiers(sandbox.path);
-    expect(corrected.report.failed).toStrictEqual([]);
+    const corrected = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+    expect(corrected).toStrictEqual([]);
 });
 
 test(`test-file exemptions follow each scope's test_files and Swift test names`, async () => {
     await using sandbox = await testdir({ 'gspot.toml': TEST_PATH_SETTINGS, ...TEST_PATH_FILES });
 
-    const result = await checkIdentifiers(sandbox.path);
+    const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
 
     expect(
         result.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
@@ -188,8 +189,8 @@ test('domain names customer, news and supported pass while whole banned terms ar
         'orders.js':
             'export const customerId = 1;\nexport const newsFeed = 1;\nexport const supportedLocales = [];\nexport const finalScore = 1;\nexport const objectStore = {};\n',
     });
-    const checked = await runSandboxCheck(sandbox.path, 'naming/identifiers');
-    expect(checked.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
+    const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+    expect(findings.map(({ line, rule }) => ({ line, rule }))).toStrictEqual([
         { line: 4, rule: 'banned-word' },
         { line: 5, rule: 'banned-word' },
     ]);
@@ -210,8 +211,8 @@ test('cors stays a domain word while core and its word forms remain banned', asy
         'cors.js':
             'export const corsHeaders = {};\nexport const coreCount = 1;\nexport const cores = [];\nexport const cored = 1;\n',
     });
-    const checked = await runSandboxCheck(sandbox.path, 'naming/identifiers');
-    expect(checked.map(({ line }) => line)).toStrictEqual([2, 3, 4]);
+    const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
+    expect(findings.map(({ line }) => line)).toStrictEqual([2, 3, 4]);
 });
 
 test('snapshot names describe storage and subscription concepts outside tests', async () => {
@@ -222,3 +223,14 @@ test('snapshot names describe storage and subscription concepts outside tests', 
     });
     expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
 });
+
+test.each(FORCED_NAME_CASES.filter(({ check }) => check === 'naming/identifiers'))(
+    '$check uses shipped defaults for $path',
+    async ({ configurations, path, source, findings: expected }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([...configurations, 'naming'], { level: 'all' }),
+            [path]: source,
+        });
+        expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toMatchObject([...expected]);
+    },
+);

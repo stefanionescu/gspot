@@ -1,7 +1,5 @@
 export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
 
-export const MACOS_PRIVATE_REPLACEMENT = '$<before>/$<folder>/';
-
 export const MESSAGE_LINE =
     /^(?<file>(?:[A-Za-z]:)?[\\/][^\r\n]+?):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
 

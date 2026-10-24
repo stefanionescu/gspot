@@ -23,8 +23,8 @@ test('a Yarn 1 repository plans an npm tool lockfile without Yarn settings', asy
     const generated = generate(session);
     expect(generated.files.some(({ path }) => path === GSPOT_PATHS.yarnSettings)).toBe(false);
     const lockfiles = await listStaleLockfiles(session, generated.files);
-    expect(lockfiles.filter(({ path }) => path !== GSPOT_PATHS.uvLockfile)).toStrictEqual([
-        { path: '.gspot/package-lock.json', kind: 'missing' },
-    ]);
+    expect(
+        lockfiles.filter(({ path }) => path !== GSPOT_PATHS.uvLockfile && path !== GSPOT_PATHS.miseLockfile),
+    ).toStrictEqual([{ path: '.gspot/package-lock.json', kind: 'missing' }]);
     expect(session.packageManager).toStrictEqual({ name: 'yarn', version: '1.22.22' });
 });

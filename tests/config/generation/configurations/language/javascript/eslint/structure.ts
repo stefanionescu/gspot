@@ -21,12 +21,6 @@ export const IMPORT_CASES = [
     ['alias dynamic import', 'const owner = await import("#lib/owner");\n', 'no-restricted-syntax', 1],
 ] as const;
 
-export const REEXPORT_CASES = [
-    ['export * from "./owner.js";\n', 1],
-    ['export { value } from "./owner.js";\n', 1],
-    ['const value = 1; export { value };\n', 0],
-] as const;
-
 export const BARREL_CASES = [
     ['at threshold', 'export { value as a } from "./owner.js"; export { value as b } from "./owner.js";', 0],
     [
@@ -55,13 +49,6 @@ configurations = ["javascript"]
 
 tools.knip.entry = ["api/src/main.js"]
 `;
-
-export const ENTRYPOINT_SOURCE = "export { start } from './start.js';\n";
-
-export const STARTER_SOURCE =
-    'export function start() { const target = document.querySelector("#app"); if (!target) throw new Error("Missing application target"); target.textContent = "Started"; }\n';
-
-export const TRIVIAL_ENTRYPOINT_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/task.js'] as const;
 
 export const ENTRYPOINT_FOLDERS = ['src', 'api/src'] as const;
 

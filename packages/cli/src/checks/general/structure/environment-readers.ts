@@ -24,8 +24,7 @@ Reports each line that reads an environment variable outside the files that stru
 @returns one finding per reading line.
 */
 export async function checkStructureEnvironmentReaders(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const readerPaths = planned.scope.settings.values.structure?.environment_readers ?? [];
-    if (readerPaths.length === 0) return [];
+    const readerPaths = getTable(planned.scope.settings, 'structure').environment_readers;
     const isReader = buildPathMatcher(readerPaths);
     const environmentFunctions = planned.scope.settings.configurations.includes('secrets')
         ? getTable(planned.scope.settings, 'secrets').environment_functions
@@ -37,7 +36,7 @@ export async function checkStructureEnvironmentReaders(session: Session, planned
             .flatMap((source) =>
                 (source.captures.get('assignment') ?? []).flatMap((node) => {
                     const name = node.childForFieldName('name')?.text;
-                    return findFunctionNode(node) === undefined && name !== undefined && ENV_NAME.test(name)
+                    return name !== undefined && findFunctionNode(node) === undefined && ENV_NAME.test(name)
                         ? [name]
                         : [];
                 }),

@@ -7,18 +7,14 @@ import { formatHeader } from '#cli/generation/header.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { listCheckTools, listScopeChecks } from '#cli/planning/tools.ts';
+import { listCheckTools, listConfiguredChecks } from '#cli/planning/tools.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { convertToPosixPath, extractParentFolder, includeParentFolders } from '#cli/system/paths.ts';
 import type { GeneratedFile, ConfigFileOwner, PlannedPointerField } from '#cli/types/generation/files.ts';
-
-import {
-    TARGET_PLACEHOLDER,
-    TARGET_JSON_PLACEHOLDER,
-    TARGET_MODULE_PLACEHOLDER,
-} from '#cli/config/generation/config-files/pointers.ts';
+import { TARGET_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER } from '#cli/config/generation/config-files/pointers.ts';
 
 function fillTarget(body: string, pointerPath: string, targetPath: string): string {
     const target = buildRelativeTarget(pointerPath, targetPath);
@@ -31,7 +27,7 @@ function fillTarget(body: string, pointerPath: string, targetPath: string): stri
                     .join('/'),
             );
         }
-        return placeholder === TARGET_JSON_PLACEHOLDER ? JSON.stringify(target) : target;
+        return JSON.stringify(target);
     });
 }
 
@@ -47,11 +43,10 @@ function buildPointerFile(
     targetPath: string,
 ): GeneratedFile {
     const body = fillTarget(pointer.body, pointerPath, targetPath);
-    const ended = body.endsWith('\n') ? body : `${body}\n`;
     const notes = [`The config file is ${targetPath}.`, ...(pointer.note === undefined ? [] : [pointer.note])];
     return {
         path: pointerPath,
-        content: `${formatHeader(pointerPath, notes)}${ended}`,
+        content: `${formatHeader(pointerPath, notes)}${body}`,
     };
 }
 
@@ -75,7 +70,7 @@ export function listPointerPaths(owner: ConfigFileOwner, configFile: ConfigFile)
         scopes.map((each) => each.folder.path),
         scopePath,
     );
-    const matches = buildPathMatcher(pointer.folders);
+    const isMatch = buildPathMatcher(pointer.folders);
     const owned = listCoveredFiles(configuration.files, repository.files, {
         configurations: scope.configurations,
         scopePath: '',
@@ -84,7 +79,7 @@ export function listPointerPaths(owner: ConfigFileOwner, configFile: ConfigFile)
     const folders = new Set(
         owned.flatMap(({ path }) =>
             [...includeParentFolders([extractParentFolder(path)])]
-                .filter((folder) => folder !== '' && matches(folder))
+                .filter((folder) => folder !== '' && isMatch(folder))
                 .toSorted((left, right) => right.length - left.length)
                 .map((folder) => (isInScope(folder, scopePath) ? folder : scopePath)),
         ),
@@ -114,12 +109,11 @@ function listPointerFieldTargets({
                     const scopePath = file.per_scope ? scope.folder.path : '';
                     const children = file.per_scope ? listNestedScopes(scopePaths, scopePath) : [];
                     const pointerPath = file.pointer === undefined ? target : joinScope(scopePath, file.pointer.path);
-                    const pointerTarget = paths.has(pointerPath) ? pointerPath : (file.pointer?.path ?? target);
                     return {
                         key: replacement.key,
                         scope: scopePath,
                         children,
-                        target: pointerTarget,
+                        target: pointerPath,
                     };
                 }),
         );
@@ -142,10 +136,13 @@ export function buildPointerFieldEdits(
     const paths = new Set(generated.map(({ path }) => path));
     const scopePaths = scopes.map(({ folder }) => folder.path);
     const tools = scopes.flatMap((scope) => {
-        const required = new Set(listScopeChecks(session, scope).flatMap((check) => listCheckTools(check)));
-        return scope.configurations.flatMap((configuration) =>
-            configuration.tools.map((tool) => ({ scope, configuration, tool, consumed: required.has(tool.name) })),
-        );
+        const required = new Set(listConfiguredChecks(session, scope).flatMap((check) => listCheckTools(check)));
+        return readConfigurations()
+            .values()
+            .flatMap((configuration) =>
+                configuration.tools.map((tool) => ({ scope, configuration, tool, consumed: required.has(tool.name) })),
+            )
+            .toArray();
     });
     const pointerTargets = tools.flatMap((selected) =>
         listPointerFieldTargets({ ...selected, paths, targets, scopePaths }),
@@ -159,11 +156,13 @@ export function buildPointerFieldEdits(
             .map(({ path }) => path),
     ]);
     using files = openFiles(root);
-    return [...packages].flatMap((path) => {
+    const edits: ManagedKeys[] = [];
+    for (const path of packages) {
         const source = files.read(path);
-        if (source === undefined) return [];
+        if (source === undefined) continue;
         const document = parseJsonFile(path, source.bytes.toString('utf8'));
-        const keys = [...pointerFields.values()]
+        const keys = pointerFields
+            .values()
             .filter(
                 (row) =>
                     Object.hasOwn(document, row.key) &&
@@ -175,9 +174,11 @@ export function buildPointerFieldEdits(
             .map((row) => ({
                 key: [row.key],
                 value: paths.has(row.target) ? { extends: buildRelativeTarget(path, row.target) } : undefined,
-            }));
-        return keys.length === 0 ? [] : [{ path, keys }];
-    });
+            }))
+            .toArray();
+        if (keys.length > 0) edits.push({ path, keys });
+    }
+    return edits;
 }
 
 /**
@@ -190,6 +191,7 @@ Build the pointers of one generated config file.
 */
 export function buildPointerFiles(owner: ConfigFileOwner, configFile: ConfigFile, target: string): GeneratedFile[] {
     const { pointer } = configFile;
-    if (pointer === undefined) return [];
-    return listPointerPaths(owner, configFile).map((path) => buildPointerFile(pointer, path, target));
+    return pointer === undefined
+        ? []
+        : listPointerPaths(owner, configFile).map((path) => buildPointerFile(pointer, path, target));
 }

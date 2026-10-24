@@ -16,7 +16,7 @@ Reports a project whose react and react-dom resolve to different versions.
 @param planned the scope and the run cache.
 @returns a finding when the versions differ.
 */
-export function checkReactVersions(session: Session, planned: PlannedCheck): Finding[] {
+export function checkReactDomReactVersions(session: Session, planned: PlannedCheck): Finding[] {
     const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const specifiers = readDependencySpecifiers(session.reads, packageJsonPath);

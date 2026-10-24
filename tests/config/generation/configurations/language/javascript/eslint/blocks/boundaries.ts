@@ -53,7 +53,7 @@ export const IMPORT_RULE_FILES = {
     'apps/api/app/value.ts': 'export const value = 2;\n',
 } as const;
 
-export const CAN_IMPORT_TABLES = `[[import_rule]]
+export const BOUNDARY_IMPORT_TABLES = `[[import_rule]]
 name = "core"
 paths = ["core/**"]
 
@@ -67,8 +67,6 @@ paths = ["app/**"]
 can_import = ["storage"]
 `;
 
-export const IMPORT_RULE_CORRECTED_SOURCE = "import { value } from './value.js';\nexport const result = value;\n";
-
 export const TEST_IMPORT_CASES = [
     { folder: 'src', source: "import { value } from '../tests/value.js';", rejected: true },
     { folder: 'src', source: "import type { Value } from '../tests/value.js';", rejected: true },
@@ -76,20 +74,6 @@ export const TEST_IMPORT_CASES = [
     { folder: 'tests', source: "import { value } from '../src/value.js';", rejected: false },
     { folder: 'tests', source: "import type { Value } from '../src/value.js';", rejected: false },
 ] as const;
-
-export const TEST_IMPORT_TABLES = `[[scope]]
-path = "app"
-configurations = ["typescript"]
-`;
-
-export const TEST_IMPORT_TSCONFIG =
-    '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","baseUrl":".","paths":{"@/*":["./*"]},"types":[]},"include":["**/*.ts"]}';
-
-export const TEST_IMPORT_PATHS = {
-    'src/value.ts': 'export const value = 1;\nexport type Value = number;\n',
-    'tests/value.ts': 'export const value = 1;\nexport type Value = number;\n',
-    'other/value.test.ts': 'export const value = 1;\n',
-} as const;
 
 export const ENVIRONMENT_TABLES = `[structure]
 environment_readers = ["config/**", "app/src/env/**", "literal/config/**"]
@@ -117,8 +101,6 @@ export const ENVIRONMENT_CASES = [
     { source: "const port = Deno.env.get('PORT');\n", rule: 'no-restricted-properties' },
     { source: 'const port = import.meta.env.PORT;\n', rule: 'no-restricted-syntax' },
 ] as const;
-
-export const ENVIRONMENT_COMPOSED = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";
 
 export const TEST_IMPORT_RULE_TABLES = `test_files = ["app/qa/**"]
 

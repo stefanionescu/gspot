@@ -1,14 +1,13 @@
 export const NAME_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'] as const;
 
-export const NAMING_LANGUAGES = ['typescript', 'javascript', 'python', 'swift', 'bash', 'sql'] as const;
-
-export const UPPER_SNAKE_OVERRIDE = `[[naming.override]]
-paths = ["source"]
-cases = ["upper-snake"]
-reason = "The authored interface selects this case."
-`;
-
-export const BANNED_WORD_TABLES = '[naming]\nbanned_words = ["widget", "paper trail", "cross-cutting"]\n';
+export const NAMING_LIMIT_CASES = [
+    { language: 'typescript', category: 'variables', characters: 35, words: 4 },
+    { language: 'javascript', category: 'variables', characters: 35, words: 4 },
+    { language: 'python', category: 'variables', characters: 35, words: 4 },
+    { language: 'swift', category: 'functions', characters: 40, words: 5 },
+    { language: 'bash', category: 'variables', characters: 35, words: 4 },
+    { language: 'sql', category: 'functions', characters: 55, words: 7 },
+] as const;
 
 export const HANDLE_ROUTE_IDENTIFIER = {
     file: 'src/routes/auth.ts',
@@ -27,12 +26,6 @@ paths = ["src/hooks/**"]
 categories = ["functions"]
 ignored_prefix = "^use(?=[A-Z])"
 reason = "A hook starts with use."
-`;
-
-export const ACCEPTANCE_DIGIT_TABLES = `[[naming.override]]
-paths = ["tests/acceptance/**"]
-allow_digits = true
-reason = "Acceptance fixtures number their steps."
 `;
 
 export const ALLOWED_NAME_TABLES = `[[naming.override]]
@@ -55,19 +48,102 @@ ignored_prefix = "^handle(?=[A-Z])"
 reason = "Event handlers start with handle."
 `;
 
-export const OVERLONG_NAME = 'helperValue2UserUserWithMoreWordsHere';
-
 export const OVERLONG_NAME_FINDINGS = [
-    { rule: 'digits', message: `typescript functions "${OVERLONG_NAME}": a digit is not a word.` },
-    { rule: 'length', message: `typescript functions "${OVERLONG_NAME}": 37 characters is over the limit of 35.` },
-    { rule: 'words', message: `typescript functions "${OVERLONG_NAME}": 8 words is over the limit of 4.` },
-    { rule: 'duplicate-words', message: `typescript functions "${OVERLONG_NAME}": "user" repeats.` },
-    { rule: 'banned-word', message: `typescript functions "${OVERLONG_NAME}": "helper" is banned (roles group).` },
+    { rule: 'digits', message: `typescript functions "helperValue2UserUserWithMoreWordsHere": a digit is not a word.` },
+    {
+        rule: 'length',
+        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": 37 characters is over the limit of 35.`,
+    },
+    {
+        rule: 'words',
+        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": 8 words is over the limit of 4.`,
+    },
+    {
+        rule: 'duplicate-words',
+        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": "user" repeats.`,
+    },
+    {
+        rule: 'banned-word',
+        message: `typescript functions "helperValue2UserUserWithMoreWordsHere": "helper" is banned (roles group).`,
+    },
 ] as const;
 
 export const LINTER_LIMIT_CASES = [
-    { language: 'swift', category: 'types', expected: [], wordy: ['words'] },
-    { language: 'swift', category: 'functions', expected: ['case', 'length'], wordy: ['case', 'words'] },
-    { language: 'python', category: 'classes', expected: ['length'], wordy: ['length', 'words'] },
-    { language: 'python', category: 'exceptions', expected: ['length'], wordy: ['length', 'words'] },
+    {
+        language: 'swift',
+        category: 'types',
+        expected: [],
+        wordy: [
+            {
+                rule: 'words',
+                message: 'types "one_two_three_four_five_six_seven_eight": 8 words is over the limit of 5.',
+            },
+        ],
+    },
+    {
+        language: 'swift',
+        category: 'functions',
+        expected: [
+            {
+                rule: 'case',
+                message: 'functions "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": expected upper-snake case.',
+            },
+            {
+                rule: 'length',
+                message:
+                    'functions "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 41 characters is over the limit of 40.',
+            },
+        ],
+        wordy: [
+            {
+                rule: 'case',
+                message: 'functions "one_two_three_four_five_six_seven_eight": expected upper-snake case.',
+            },
+            {
+                rule: 'words',
+                message: 'functions "one_two_three_four_five_six_seven_eight": 8 words is over the limit of 5.',
+            },
+        ],
+    },
+    {
+        language: 'python',
+        category: 'classes',
+        expected: [
+            {
+                rule: 'length',
+                message: 'classes "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 41 characters is over the limit of 35.',
+            },
+        ],
+        wordy: [
+            {
+                rule: 'length',
+                message: 'classes "one_two_three_four_five_six_seven_eight": 39 characters is over the limit of 35.',
+            },
+            {
+                rule: 'words',
+                message: 'classes "one_two_three_four_five_six_seven_eight": 8 words is over the limit of 4.',
+            },
+        ],
+    },
+    {
+        language: 'python',
+        category: 'exceptions',
+        expected: [
+            {
+                rule: 'length',
+                message:
+                    'exceptions "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 41 characters is over the limit of 35.',
+            },
+        ],
+        wordy: [
+            {
+                rule: 'length',
+                message: 'exceptions "one_two_three_four_five_six_seven_eight": 39 characters is over the limit of 35.',
+            },
+            {
+                rule: 'words',
+                message: 'exceptions "one_two_three_four_five_six_seven_eight": 8 words is over the limit of 4.',
+            },
+        ],
+    },
 ] as const;

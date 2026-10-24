@@ -27,15 +27,15 @@ function captureSource(source: ParsedSource): void {
 }
 
 async function readParsedSources(
-    session: Pick<Session, 'root' | 'reads' | 'resources'>,
-    planned: Pick<PlannedCheck, 'files' | 'scope'>,
+    input: Pick<Session, 'root' | 'reads' | 'resources'> & Pick<PlannedCheck, 'files' | 'scope'>,
 ): Promise<ParsedSource[]> {
     const sources: ParsedSource[] = [];
     try {
-        for (const file of planned.files.filter((each) => each.kind === 'source')) {
+        for (const file of input.files) {
+            if (file.kind !== 'source') continue;
             const language = detectLanguage(file);
-            if (language === undefined || !planned.scope.settings.configurations.includes(language)) continue;
-            const tree = await parseSource(language, readCachedText(session.reads, file.path), session);
+            if (language === undefined || !input.scope.settings.configurations.includes(language)) continue;
+            const tree = await parseSource(language, readCachedText(input.reads, file.path), input);
             const source = { path: file.path, language, tree, captures: new Map<string, Node[]>() };
             sources.push(source);
             captureSource(source);
@@ -51,15 +51,4 @@ function releaseParsedSources(sources: ParsedSource[]): void {
     for (const source of sources) source.tree.delete();
 }
 
-export const PARSED_SOURCES = {
-    read: ({
-        root,
-        reads,
-        resources,
-        files,
-        scope,
-    }: Pick<Session, 'root' | 'reads' | 'resources'> & Pick<PlannedCheck, 'files' | 'scope'>): Promise<
-        ParsedSource[]
-    > => readParsedSources({ root, reads, resources }, { files, scope }),
-    dispose: releaseParsedSources,
-};
+export const PARSED_SOURCES = { read: readParsedSources, dispose: releaseParsedSources };

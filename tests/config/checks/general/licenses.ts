@@ -86,12 +86,6 @@ export const ALLOWED_PACKAGE_CASES = [
     },
 ] as const;
 
-export const EXPECTED_SCAN_FINDINGS = [
-    { file: 'package.json', message: 'unknown@1.0.0 uses UNKNOWN, which is not allowed.' },
-    { file: 'package.json', message: 'python.package@2.0.0 uses GPL-3.0-only, which is not allowed.' },
-    { file: 'pyproject.toml', message: 'prohibited-python@2.0.0 uses GPL-3.0-only, which is not allowed.' },
-] as const;
-
 export const SAMPLE_PYPROJECT = `[project]
 name = "sample"
 version = "0.0.0"
@@ -108,24 +102,6 @@ name = "Python_Package"
 version = "2.0.0"
 reason = "Reviewed the installed Python package."
 `;
-
-export const LICENSE_PACKAGE_JSON = '{"name":"example","private":true,"dependencies":{"choice":"1.0.0"}}';
-
-export const LICENSE_DEPENDENCY_FILES = [
-    { dependencyFile: 'package.json', text: LICENSE_PACKAGE_JSON, installedFolder: 'node_modules' },
-    { dependencyFile: 'pyproject.toml', text: SAMPLE_PYPROJECT, installedFolder: '.venv' },
-] as const;
-
-export const NPM_LICENSE_REPORT = {
-    'choice@1.0.0': { licenses: ['MIT', 'GPL-3.0-only'] },
-    'unknown@1.0.0': {},
-    'python.package@2.0.0': { licenses: 'GPL-3.0-only' },
-} as const;
-
-export const PYTHON_LICENSE_REPORT = [
-    { Name: 'python-package', Version: '2.0.0', 'License-Expression': 'GPL-3.0-only' },
-    { Name: 'prohibited-python', Version: '2.0.0', 'License-Expression': 'GPL-3.0-only' },
-] as const;
 
 export const LICENSE_TOOL_PROJECT_FILES = {
     [`${DOT_GSPOT}/probe/pyproject.toml`]: `[project]

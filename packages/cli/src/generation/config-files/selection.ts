@@ -1,7 +1,7 @@
 import type { Session } from '#cli/types/session.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { listCheckTools, listScopeChecks } from '#cli/planning/tools.ts';
+import { listCheckTools, listConfiguredChecks } from '#cli/planning/tools.ts';
 import { buildMarkdownlintFile } from '#cli/generation/configurations/language/markdown.ts';
 import type { UsedNames, OwnedConfigFile, ConfigFileGeneration } from '#cli/types/generation/files.ts';
 
@@ -21,9 +21,7 @@ export function isRootTextShared(selected: OwnedConfigFile, configFiles: OwnedCo
     if (root === undefined) return false;
     const texts = [selected, root].map((owned) =>
         buildMarkdownlintFile({
-            ...owned.owner,
-            configFile: owned.configFile,
-            targetPath: owned.configFile.target,
+            scope: owned.owner.scope,
             level: owned.owner.session.settingsFile.settings.level,
         }),
     );
@@ -53,13 +51,13 @@ function isConfigFileWritten(session: Session, file: ConfigFile, used: UsedNames
         [file.tool, used.tools],
         [file.check, used.checks],
     ] as const;
-    if (constraints.some(([names, available]) => names.length > 0 && !names.some((name) => available.has(name))))
-        return false;
-    return true;
+    return constraints.every(
+        ([names, available]) => !(names.length > 0 && names.every((name) => !available.has(name))),
+    );
 }
 
 function listScopeConfigFiles(session: Session, scope: Scope, repositoryNames: UsedNames): OwnedConfigFile[] {
-    const checks = listScopeChecks(session, scope);
+    const checks = listConfiguredChecks(session, scope);
     const used = {
         tools: new Set(checks.flatMap((planned) => listCheckTools(planned))),
         checks: new Set(checks.map((planned) => planned.check.id)),

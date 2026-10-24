@@ -1,14 +1,13 @@
 import { z } from 'zod';
 import { isTable } from '#cli/system/tables.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-import { RULE_TOKEN, RULE_OPTIONS_REFUSAL } from '#cli/config/settings/tools/rules.ts';
 
 function formatRuleHelp(issue: z.core.$ZodIssue, check: string): string {
+    if (issue.code === 'invalid_key') return issue.issues.map(({ message }) => message).join(' ');
     const path = issue.path;
     const rule = path[path.indexOf('rules') + 1];
-    const template =
-        issue.code === 'invalid_key' ? issue.issues.map(({ message }) => message).join(' ') : RULE_OPTIONS_REFUSAL;
-    return template.replaceAll(RULE_TOKEN, quoteArgument(String(rule))).replaceAll('{check}', check);
+    const quoted = quoteArgument(String(rule));
+    return `This table holds options only, without a severity; the level decides which rules run. To turn ${quoted} off, run gspot ignore ${check} --rule ${quoted} --reason "<why>".`;
 }
 
 /**

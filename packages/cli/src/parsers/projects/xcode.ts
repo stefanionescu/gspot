@@ -1,10 +1,9 @@
 import { posix } from 'node:path';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { SWIFT_EXTENSION } from '#cli/config/files/names.ts';
+import { PBXPROJ, SWIFT_EXTENSION } from '#cli/config/files/names.ts';
 import { pbxprojSchema } from '#cli/schemas/parsers/projects/xcode.ts';
 
 import {
-    PBXPROJ,
     PROJECT_TOKENS,
     PROJECT_ESCAPE,
     PROJECT_ESCAPES,
@@ -27,8 +26,9 @@ function parseProjectString(token: string | undefined): string {
     if (!token.startsWith('"')) return token;
     return token.slice(1, -1).replace(PROJECT_ESCAPE, (escape: string, sequence: string) => {
         if (sequence.startsWith('U')) return String.fromCodePoint(Number.parseInt(sequence.slice(1), 16));
-        if (/^[0-7]/u.test(sequence)) return String.fromCodePoint(Number.parseInt(sequence, 8));
-        return PROJECT_ESCAPES[sequence] ?? escape;
+        return /^[0-7]/u.test(sequence)
+            ? String.fromCodePoint(Number.parseInt(sequence, 8))
+            : (PROJECT_ESCAPES[sequence] ?? escape);
     });
 }
 
@@ -63,8 +63,7 @@ function parseProjectDictionary(tokens: ProjectTokens): Record<string, unknown> 
 function parseProjectValue(tokens: ProjectTokens): unknown {
     const text = tokens.tokens[tokens.index++];
     if (text === '{') return parseProjectDictionary(tokens);
-    if (text === '(') return parseProjectArray(tokens);
-    return parseProjectString(text);
+    return text === '(' ? parseProjectArray(tokens) : parseProjectString(text);
 }
 
 function parseProjectDocument(text: string): unknown {
@@ -93,26 +92,28 @@ function getElement(project: Pick<XcodeProject, 'objects'>, id: string): PbxElem
 
 function buildParentGroups(elements: Record<string, PbxElement>): Map<string, string> {
     const parents = new Map<string, string>();
-    for (const [id, element] of Object.entries(elements))
-        for (const child of element.children ?? []) {
+    for (const [id, element] of Object.entries(elements)) {
+        const children = element.children ?? [];
+        for (const child of children) {
             if (parents.has(child))
                 throw new Error(`The Xcode project gives an object multiple parent groups: ${child}.`);
             parents.set(child, id);
         }
+    }
     return parents;
 }
 
-function findGroupBase(project: XcodeProject, id: string): string {
+function findGroupFolder(project: XcodeProject, id: string): string {
     if (id === project.root.mainGroup) return posix.join(project.folder, project.root.projectDirPath ?? '');
     const parent = project.parents.get(id);
     if (parent === undefined) throw new Error(`The Xcode project has no parent group for ${id}.`);
     return findElementPath(project, parent);
 }
 
-function findTreeBase(project: XcodeProject, id: string, tree: string): string {
+function findTreeFolder(project: XcodeProject, id: string, tree: string): string {
     if (tree === 'SOURCE_ROOT') return project.folder;
     if (tree === '<absolute>') return '/';
-    if (tree === '<group>') return findGroupBase(project, id);
+    if (tree === '<group>') return findGroupFolder(project, id);
     throw new Error(`Cannot find the folder of Xcode source tree ${tree} without build settings.`);
 }
 
@@ -120,11 +121,11 @@ function findElementPath(project: XcodeProject, id: string): string {
     if (project.visiting.has(id)) throw new Error('The Xcode project contains a group cycle.');
     project.visiting.add(id);
     const element = getElement(project, id);
-    const base = findTreeBase(project, id, element.sourceTree ?? '<group>');
+    const folder = findTreeFolder(project, id, element.sourceTree ?? '<group>');
     const path = element.path ?? '';
     if (SETTING_REFERENCE.test(path)) throw new Error(`Cannot find Xcode source path ${path} without build settings.`);
     project.visiting.delete(id);
-    return posix.normalize(posix.isAbsolute(path) ? path : posix.join(base, path));
+    return posix.normalize(posix.isAbsolute(path) ? path : posix.join(folder, path));
 }
 
 function listTargetSources(project: XcodeProject, target: PbxElement): string[] {
@@ -136,7 +137,7 @@ function listTargetSources(project: XcodeProject, target: PbxElement): string[] 
             const build = getElement(project, buildId);
             if (build.fileRef === undefined) throw new Error('An Xcode source build entry has no file reference.');
             const file = getElement(project, build.fileRef);
-            return file.path?.endsWith(SWIFT_EXTENSION) === true ? [findElementPath(project, build.fileRef)] : [];
+            return file.path?.endsWith(SWIFT_EXTENSION) === true ? findElementPath(project, build.fileRef) : [];
         });
 }
 

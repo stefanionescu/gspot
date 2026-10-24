@@ -1,19 +1,18 @@
-import { joinScope } from '#cli/repository/scopes.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { listAllowedRules, formatRefusedImport } from '#cli/settings/import-rules.ts';
 import { CODE_LANGUAGES } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
-import {
-    buildNodePatterns,
-    buildSourcePattern,
-} from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import type {
     EslintBlock,
     ScopeBoundaries,
     PlannedEslintFile,
     EslintBoundaryPolicy,
 } from '#cli/types/generation/eslint.ts';
+import {
+    buildScopeGlob,
+    buildNodePatterns,
+    listCodeTestFiles,
+    buildSourcePattern,
+} from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import {
     TEMPLATE_OPEN,
     TRPC_CONFIGURATION,
@@ -43,7 +42,7 @@ function buildDependencyPolicies({
         const from = { file: { categories: `${IMPORT_RULE_CATEGORY}${rule.name}` } };
         const allowed = listAllowedRules(importRules, index);
         const message = formatRefusedImport(
-            allowed.map((name) => name.replaceAll(TEMPLATE_OPEN, TEMPLATE_OPEN_ESCAPED)),
+            allowed.map((name) => name.replaceAll(TEMPLATE_OPEN, () => TEMPLATE_OPEN_ESCAPED)),
             BOUNDARY_SOURCE_TEMPLATE,
             BOUNDARY_OWNER_TEMPLATE,
         );
@@ -123,35 +122,30 @@ Build one boundary block from the root modules and the project tests.
 @returns one classification block and its ordered dependency policies.
 */
 export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' | 'nodeFiles'>): EslintBlock[] {
+    const { session, nodeFiles } = planned;
     const {
-        session: {
-            settingsFile: { settings },
-            scopes,
-        },
-        nodeFiles,
-    } = planned;
+        settingsFile: { settings },
+        scopes,
+    } = session;
     const importRules = settings.import_rule;
     const codeLanguages: readonly string[] = CODE_LANGUAGES;
     const javascriptScopes = scopes.filter(({ configurations }) =>
         configurations.some((configuration) => codeLanguages.includes(configuration.name)),
     );
-    const enforceTests = settings.level === 'all' && javascriptScopes.length > 0;
+    const isEnforceTests = settings.level === 'all' && javascriptScopes.length > 0;
     const trpcScopes = scopes.filter(({ configurations }) =>
         configurations.some((configuration) => configuration.name === TRPC_CONFIGURATION),
     );
     const serverFiles = [
         ...new Set(trpcScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.values.trpc?.server_files ?? [])),
     ];
-    const trpcPaths =
-        serverFiles.length === 0
-            ? []
-            : trpcScopes.map(({ folder }) =>
-                  joinScope(folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
-              );
-    if (importRules.length === 0 && !enforceTests && trpcPaths.length === 0) return [];
-    const tests = [...new Set(javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.test_files))];
-    const hasFixedPolicies = trpcPaths.length > 0 || enforceTests;
-    const input = { importRules, tests, enforceTests, hasFixedPolicies, trpcPaths, serverFiles };
+    const trpcPaths = serverFiles.length === 0 ? [] : trpcScopes.map(({ folder }) => buildScopeGlob(folder.path));
+    if (!isEnforceTests && importRules.length === 0 && trpcPaths.length === 0) return [];
+    const tests = listCodeTestFiles([
+        ...new Set(javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.test_files)),
+    ]);
+    const hasFixedPolicies = trpcPaths.length > 0 || isEnforceTests;
+    const input = { importRules, tests, enforceTests: isEnforceTests, hasFixedPolicies, trpcPaths, serverFiles };
     return [
         {
             files: [buildSourcePattern(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, '')],

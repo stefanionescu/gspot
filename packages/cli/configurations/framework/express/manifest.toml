@@ -8,7 +8,7 @@ title = "Express"
 dependencies = ["express"]
 
 [[eslint.selectors]]
-message = "A message a client reads names no identifier; put the value in its own field."
+message = "Keep values out of the message a client reads; send each value in its own field."
 selector = "CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]"
 
 [[config_file]]

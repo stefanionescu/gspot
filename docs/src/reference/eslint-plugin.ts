@@ -2,8 +2,8 @@ import plugin from '#eslint-plugin/plugin.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import type { PluginRule, ReferencePage } from '../types/reference.ts';
-import { FIRST_SENTENCE, REFERENCE_FOLDERS, SCHEMA_TYPE_LABELS } from '../config/reference.ts';
-import { formatList, formatTable, buildReferencePage, formatReferencePath } from './markdown.ts';
+import { formatTable, buildReferencePage, formatReferencePath } from './markdown.ts';
+import { LIST_FORMAT, FIRST_SENTENCE, REFERENCE_FOLDERS, SCHEMA_TYPE_LABELS } from '../config/reference.ts';
 
 function formatRuleOptions(schemas: unknown, defaults: unknown): string {
     const labels: Readonly<Record<string, string>> = SCHEMA_TYPE_LABELS;
@@ -22,7 +22,7 @@ function formatRuleOptions(schemas: unknown, defaults: unknown): string {
         });
     });
     const descriptions = schemaList.flatMap((schema) =>
-        isTable(schema) && typeof schema['description'] === 'string' ? [schema['description']] : [],
+        isTable(schema) && typeof schema['description'] === 'string' ? schema['description'] : [],
     );
     return (
         formatTable(['Option', 'Type', 'Default', 'What it does'], rows) ||
@@ -39,7 +39,7 @@ function listRuleConfigs(name: string): string[] {
 
 function formatRuleConfigs(configs: string[]): string {
     if (configs.length === 0) return 'No config turns it on; turn it on in your ESLint config.';
-    const names = formatList(configs.map((config) => `\`${config}\``));
+    const names = LIST_FORMAT.format(configs.map((config) => `\`${config}\``));
     return configs.length === 1 ? `The ${names} config turns it on.` : `The ${names} configs turn it on.`;
 }
 

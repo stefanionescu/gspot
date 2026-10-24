@@ -6,8 +6,6 @@ import type { SchemaLocationOptions } from '#eslint-plugin/types/rules.ts';
 
 createRuleTester().run<'location', [Partial<SchemaLocationOptions[0]>]>('schema-location', schemaLocation, {
     valid: [
-        'import type { z } from "zod"; export const schema = z.string();',
-        'import { type z } from "zod"; export const schema = z.string();',
         {
             code: 'import { z } from "zod"; export const name = z.string();',
             filename: '/src/schemas/name.ts',

@@ -8,9 +8,10 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isProjectChecked } from '#cli/checks/tsc/compiler.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects/tsconfig.ts';
+import { TSCONFIG_NAME } from '#cli/config/checks/language/typescript.ts';
 import { selectRequiredTsconfigOptions } from '#cli/checks/tsc/scope-tsconfig.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { TSCONFIG_NAME, TYPESCRIPT_TAG } from '#cli/config/checks/language/typescript.ts';
+import { TYPESCRIPT_TAG, PARENT_TSCONFIG_SKIP } from '#cli/config/checks/tsc/compiler.ts';
 
 /**
 Reports each required compiler option that a scope tsconfig leaves off.
@@ -30,6 +31,15 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
         project === undefined
             ? joinScope(planned.scope.folder.path, TSCONFIG_FILE)
             : convertToPosixPath(relative(session.root, project.path));
+    if (project === undefined && planned.files.some((file) => file.tags.includes(TYPESCRIPT_TAG)))
+        return [
+            buildFinding(
+                planned,
+                { file: scopeTsconfig },
+                'missing',
+                'Add a tsconfig.json to this scope. ESLint and tsc read the TypeScript files through it.',
+            ),
+        ];
     const tsconfigPaths = new Set([
         scopeTsconfig,
         ...planned.files.map((file) => file.path).filter((path) => TSCONFIG_NAME.test(posix.basename(path))),
@@ -37,7 +47,9 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
     const required = selectRequiredTsconfigOptions(session.settingsFile.settings.level, planned.scope.configurations);
     const projects = [...tsconfigPaths].flatMap((path) => {
         const parsed = readTsconfig(session.root, join(session.root, path), session.reads);
-        return parsed === undefined ? [] : [{ path, parsed }];
+        return parsed === undefined || (parsed.fileNames.length === 0 && (parsed.projectReferences?.length ?? 0) > 0)
+            ? []
+            : { path, parsed };
     });
     const unchecked = projects.filter(
         ({ path }) =>
@@ -48,8 +60,7 @@ export function checkTypescriptTsconfig(session: Session, planned: PlannedCheck)
                 required,
             }),
     );
-    if (projects.length > 0 && unchecked.length === 0)
-        throw new GspotError('skip', 'The tsconfig of a parent folder covers this project, and gspot checks it there.');
+    if (projects.length > 0 && unchecked.length === 0) throw new GspotError('skip', PARENT_TSCONFIG_SKIP);
     return unchecked.flatMap(({ path, parsed }) =>
         Object.keys(required)
             .filter((option) => parsed.options[option] !== true)

@@ -42,14 +42,14 @@ The `cause` of a skip takes one of `level`, `system`, `replaced`, `setting`, `co
 
 `gspot check --hook pre-push --json` checks each pushed tree and prints one object:
 
-| Field                  | Meaning                                                                                 |
-| ---------------------- | --------------------------------------------------------------------------------------- |
-| `revisions`            | One item per distinct tree: `hash`, `refs`, `commits`, `historyComplete`, and `report`. |
-| `skipped`              | Pushed refs that gspot did not check, with `ref`, `hash`, and `reason`.                 |
-| `exitCode`             | The process exit code.                                                                  |
-| `canceled.pendingRefs` | When a signal stopped the run, the refs that gspot did not check.                       |
+| Field                  | Meaning                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| `revisions`            | One item per distinct tree: `hash`, `refs`, `commits`, `shallow`, and `report`. |
+| `skipped`              | Pushed refs that gspot did not check, with `ref`, `hash`, and `reason`.         |
+| `exitCode`             | The process exit code.                                                          |
+| `canceled.pendingRefs` | When a signal stopped the run, the refs that gspot did not check.               |
 
-Each `report` holds the report fields above. `historyComplete` holds `false` when the pushed history reaches the
+Each `report` holds the report fields above. `shallow` holds `true` when the pushed history reaches the
 boundary of a shallow clone. Checks that read history then refuse to run.
 
 ## Command errors

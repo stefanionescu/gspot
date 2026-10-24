@@ -21,7 +21,8 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     runGitStep(sandbox.path, ['branch', '--set-upstream-to=upstream']);
     expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([]);
     runGitStep(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
-    expect(await captureRejection(readPushedCommits(sandbox.path, undefined))).toStartWith('Git merge-base failed');
+    const readPushedCommitsError = await captureRejection(readPushedCommits(sandbox.path, undefined));
+    expect(readPushedCommitsError.message).toStartWith('Git merge-base failed');
 });
 test('push comparison reports an unborn or broken HEAD instead of inventing a base', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
@@ -30,12 +31,11 @@ test('push comparison reports an unborn or broken HEAD instead of inventing a ba
     expect(await readPushedCommits(sandbox.path, undefined)).toStrictEqual([]);
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, '.git/HEAD'), 'broken head');
-    expect(await captureRejection(readPushedCommits(sandbox.path, undefined))).toContain(
-        'Cannot read committed Git history',
-    );
+    const historyError = await captureRejection(readPushedCommits(sandbox.path, undefined));
+    expect(historyError.message).toContain('Cannot read committed Git history');
 });
 test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(
-    'the pre-push remote %s picks the remote-tracking branch that a new branch compares with',
+    'the pre-push remote %p picks the remote-tracking branch that a new branch compares with',
     async (remote) => {
         await using sandbox = await testdir();
         const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
@@ -75,13 +75,13 @@ test('a shallow clone reports incomplete history and skips commits the remote al
     runGitStep(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]);
     const protocol = `refs/heads/reviewed ${reviewed} refs/heads/new ${'0'.repeat(reviewed.length)}\n`;
     const unobserved = await selectPush(checkout, protocol, 'unseen');
-    expect(unobserved.revisions[0]).toMatchObject({ commits: [reviewed], historyComplete: false });
+    expect(unobserved.revisions[0]).toMatchObject({ commits: [reviewed], shallow: true });
     expect(unobserved.revisions[0]?.paths).toStrictEqual(['changed.sh', 'gspot.toml', 'legacy.sh']);
     const advertised = await selectPush(checkout, protocol);
-    expect(advertised.revisions[0]).toMatchObject({ commits: [], paths: [], historyComplete: true });
+    expect(advertised.revisions[0]).toMatchObject({ commits: [], paths: [], shallow: false });
     runGitStep(checkout, ['fetch', '--unshallow']);
     const unseen = await selectPush(checkout, protocol, 'unseen');
-    expect(unseen.revisions[0]).toMatchObject({ commits: [reviewed, base], historyComplete: true });
+    expect(unseen.revisions[0]).toMatchObject({ commits: [reviewed, base], shallow: false });
     expect(runGitStep(source, ['branch', '--show-current'])).toBe(branch);
 });
 test('a gspot.toml below the Git root keeps paths relative to its folder for updated and new branches', async () => {

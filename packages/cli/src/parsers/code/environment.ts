@@ -95,9 +95,11 @@ function findDeclarationScope(node: Node): Node {
     return scope;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function getImportAlias(node: Node) {
-    if (node.type !== 'aliased_import') return { name: node.text, target: node.text };
-    return { name: node.childForFieldName('alias')?.text, target: node.childForFieldName('name')?.text };
+    return node.type === 'aliased_import'
+        ? { name: node.childForFieldName('alias')?.text, target: node.childForFieldName('name')?.text }
+        : { name: node.text, target: node.text };
 }
 
 function listBoundNames(node: Node): string[] {
@@ -179,20 +181,21 @@ function isPythonEnvironmentRead(node: Node, names: EnvironmentNames, environmen
     if (receiver?.type !== 'identifier') return false;
     const kind = findEnvironmentKind(node, receiver.text, names);
     if (kind === OS_MODULE) return environment.has(node.id);
-    if (kind === 'getenv') return node.type === 'call';
-    return kind === 'environ';
+    return kind === 'getenv' ? node.type === 'call' : kind === 'environ';
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isEnvironmentRead(
     node: Node,
     environmentFunctions: readonly string[],
     names: EnvironmentNames,
     environment: Set<number>,
 ): boolean {
-    if (node.type === 'call' && environmentFunctions.includes(node.childForFieldName('function')?.text ?? ''))
-        return true;
-    if (node.type === 'identifier' && node.parent?.type !== 'subscript') return false;
-    return isPythonEnvironmentRead(node, names, environment);
+    return (
+        (node.type === 'call' && environmentFunctions.includes(node.childForFieldName('function')?.text ?? '')) ||
+        ((node.type !== 'identifier' || node.parent?.type === 'subscript') &&
+            isPythonEnvironmentRead(node, names, environment))
+    );
 }
 
 function expandEnvironmentExpression(node: Node): Node {
@@ -206,8 +209,7 @@ function expandEnvironmentExpression(node: Node): Node {
 function findEnvironmentKeyNode(node: Node): Node | null | undefined {
     const expression = expandEnvironmentExpression(node);
     if (expression.type === 'subscript') return expression.childForFieldName('subscript');
-    if (expression.type === 'call') return expression.childForFieldName('arguments')?.namedChildren[0];
-    return undefined;
+    return expression.type === 'call' ? expression.childForFieldName('arguments')?.namedChildren[0] : undefined;
 }
 
 /**

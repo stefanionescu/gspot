@@ -8,5 +8,5 @@ export const reportedTypoSchema = z.object({
     line_num: z.number().int().positive().optional(),
     byte_offset: z.number().int().nonnegative(),
     typo: z.string().min(1),
-    corrections: z.array(z.string()).nullable(),
+    corrections: z.string().array().nullable(),
 } satisfies SchemaShape<ReportedTypo>);

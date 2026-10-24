@@ -12,4 +12,4 @@ export const UV_PROJECT_FLAGS = {
     configFile: '--config-file',
 } as const;
 
-export const UV_ENVIRONMENT_VARIABLE = 'UV_PROJECT_ENVIRONMENT';
+export const UV_PROJECT_ENVIRONMENT = 'UV_PROJECT_ENVIRONMENT';

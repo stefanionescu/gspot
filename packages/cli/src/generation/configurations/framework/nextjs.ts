@@ -29,10 +29,9 @@ export function buildNextjsBlocks(
     const { presets, eslintFiles, scopePath, sourceFiles } = scope;
     const recommended = getPreset(presets, 'recommended');
     const refresh = getPreset(presets, 'refresh');
-    const blocks: ConfigurationBlocks['blocks'] = [];
     const prefix = scopePath === '' ? '' : `${scopePath}/`;
     const hasPages = sourceFiles.some((path) => NEXT_PAGES_FOLDERS.some((folder) => path.startsWith(prefix + folder)));
-    blocks.push(
+    const blocks: ConfigurationBlocks['blocks'] = [
         {
             fields: {
                 files: REACT_FILES,
@@ -60,9 +59,9 @@ export function buildNextjsBlocks(
                 rules: { 'gspot/require-server-only': NEXT_RULES['gspot/require-server-only'] },
             },
         },
-    );
+    ];
     return {
-        imports: CONFIGURATION_PLUGINS['nextjs'],
+        imports: CONFIGURATION_PLUGINS.nextjs,
         blocks,
     };
 }

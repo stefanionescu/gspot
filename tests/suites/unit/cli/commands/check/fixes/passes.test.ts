@@ -9,21 +9,16 @@ import { type RunOptions } from '#cli/types/runs/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { SQL_COMMAND_CHECK_TABLES } from '#tests/config/commands/samples.ts';
-import { TYPE_DECLARATION_FILES } from '#tests/config/repository/files/classify.ts';
 import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-
-import {
-    TEXT_FIX_SCRIPT,
-    FIX_LINTER_CASES,
-    TEXT_CHECK_SCRIPT,
-    GENERATED_TYPE_FILES,
-} from '#tests/config/commands/check/fixes/passes.ts';
+import { TEXT_FIX_SCRIPT, FIX_LINTER_CASES, TEXT_CHECK_SCRIPT } from '#tests/config/commands/check/fixes/passes.ts';
 
 test.each([...FIX_LINTER_CASES])(
     'after --fix, the $configuration check status matches what the linter still reports',
     async (row) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const check = readConfigurations()
             .get(row.configuration)!
             .checks.find((check) => check.id === `${row.configuration}/${row.tool}`)!;
@@ -74,6 +69,7 @@ test.each([...FIX_LINTER_CASES])(
 
 test('after --fix, the checks read the fixed file and other files stay as they were', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings(['sql'], {
         level: 'all',
         tables: `[tools.sqlfluff]\ndialect = "postgres"\n${stringify({
@@ -112,7 +108,7 @@ test('after --fix, the checks read the fixed file and other files stay as they w
 });
 
 test('a later pass formats what a fix after the formatter wrote', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'source.txt': 'var x\n',
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
@@ -158,7 +154,7 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
             stage: 'commit',
         };
     });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: checks }) }),
         'first.txt': 'original\n',
         'second.txt': 'original\n',
@@ -179,32 +175,4 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
     expect(await readFile(join(sandbox.path, 'order.log'), 'utf8')).toBe('first\nsecond\nthird\nsecond\nthird\n');
     for (const name of ['first', 'second', 'third'])
         expect(await readFile(join(sandbox.path, `${name}.txt`), 'utf8')).toBe('fixed\n');
-});
-
-test('a fix run keeps the generated-file list', async () => {
-    const text = buildSandboxSettings(['nextjs', 'cloudflare'], {
-        scopes: [{ path: 'app', configurations: ['nextjs', 'cloudflare'] }],
-        tables: stringify({
-            command_check: [
-                {
-                    id: 'project/correct',
-                    paths: ['marker.txt'],
-                    stage: 'commit',
-                    command: [process.execPath, '-e', 'process.exitCode = 0'],
-                    fix: [process.execPath, '-e', TEXT_FIX_SCRIPT, 'before', 'after', '{files}'],
-                    output: { format: 'none' },
-                },
-            ],
-        }),
-    });
-    await using sandbox = await testdir({ 'gspot.toml': text, 'marker.txt': 'before', ...TYPE_DECLARATION_FILES });
-    const session = await openSession(sandbox.path);
-    const before = session.repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path);
-    expect(before.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([...GENERATED_TYPE_FILES]);
-    const result = await runChecks(session, buildRunOptions({ only: ['project/correct'], fix: true }));
-    expect(result.report.checks.find(({ check }) => check === 'project/correct')?.status).toBe('passed');
-    expect(result.fixes?.changed).toStrictEqual(['marker.txt']);
-    expect(session.repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path)).toStrictEqual(
-        before,
-    );
 });

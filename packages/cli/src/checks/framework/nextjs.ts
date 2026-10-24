@@ -8,10 +8,10 @@ import { type PlannedCheck } from '#cli/types/planning.ts';
 import { type CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { listChecksById } from '#cli/configurations/manifests.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/checks/tsc/compiler.ts';
 import type { ConfigurationCheck } from '#cli/types/configurations.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { runTsc, restoreCommandPaths } from '#cli/checks/tsc/compiler.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/checks/language/typescript.ts';
 
 import {
     TSC_TOOL,
@@ -64,6 +64,6 @@ export async function checkNextjsTsc(session: Session, planned: PlannedCheck): P
             scratchSession.reads,
         ),
     );
-    result.duration = performance.now() - started;
+    result.duration = Math.round(performance.now() - started);
     return restoreCommandPaths(result, root, session.root);
 }

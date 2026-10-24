@@ -10,10 +10,10 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { fakeNpmTool, writeScriptCommand } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     TSC_PUSH_OPTIONS,
@@ -24,7 +24,7 @@ import {
 } from '#tests/config/planning/files.ts';
 
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': TYPESCRIPT_SCOPES_SETTINGS,
         'api/source.ts': 'export {};\n',
         'api/caller.ts': 'export {};\n',
@@ -56,16 +56,17 @@ test.each([...PROJECT_PATH_IGNORES])(
     '$name, and the TypeScript check plans only the files that the ignore leaves',
     async ({ changed, present, check, rule, files }) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const ignore = {
             check,
-            ...(rule === undefined ? {} : { rule }),
+            ...(rule !== undefined && { rule }),
             paths: ['api/ignored.ts'],
             reason: 'This input is evaluated by its owning pipeline.',
         };
         await createFileTree(sandbox.path, {
             'gspot.toml': `${TYPESCRIPT_SCOPES_SETTINGS}\n${stringify({ ignore: [ignore] })}`,
             'api/kept.ts': 'export {};\n',
-            ...(present ? { 'api/ignored.ts': 'export {};\n' } : {}),
+            ...(present && { 'api/ignored.ts': 'export {};\n' }),
         });
         const session = await openSession(sandbox.path);
         const planned = planChecks(session, {
@@ -79,7 +80,7 @@ test.each([...PROJECT_PATH_IGNORES])(
     },
 );
 test('EditorConfig checks source files beyond the Prettier extensions and skips binary files', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['format']),
         ...EDITORCONFIG_FILES,
         'binary.dat': Buffer.from([0, 255, 0]),
@@ -93,7 +94,7 @@ test('EditorConfig checks source files beyond the Prettier extensions and skips 
     expect(planned!.skip).toBeUndefined();
 });
 test('a project-wide TypeScript check counts its source file and tsconfig.json, not unrelated files', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
         'source.ts': 'export const value = 1;\n',
@@ -144,7 +145,7 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
     ]);
 });
 test('Xcode plutil and general xmllint checks select their Apple and XML files', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             level: 'recommended',
             rules: true,
@@ -170,8 +171,9 @@ test('Xcode plutil and general xmllint checks select their Apple and XML files',
         ['xcode/plutil', ['api/app.plist']],
     ]);
 });
-test('Prettier filters its files through a linked ignore file inside the repository', async () => {
+test('Prettier receives all matching files and applies its own linked ignore file', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const ignored = 'ignored.md\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['markdown']),
@@ -183,10 +185,10 @@ test('Prettier filters its files through a linked ignore file inside the reposit
     await symlink('settings/format.ignore', join(sandbox.path, '.prettierignore'));
     const session = await openSession(sandbox.path);
     const plans = planChecks(session, { stage: 'commit', only: ['format/prettier'] });
-    expect(plans[0]!.files.map((file) => file.path)).toStrictEqual(['kept.md']);
+    expect(plans[0]!.files.map((file) => file.path)).toStrictEqual(['ignored.md', 'kept.md']);
 });
 test('a command check reads each matching file once across nested scopes', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': LAYERED_SCOPE_SETTINGS + BASH_SYNTAX_CHECK,
         'api/entry.sh': 'if then\n',
         'api/worker/entry.sh': 'if then\n',

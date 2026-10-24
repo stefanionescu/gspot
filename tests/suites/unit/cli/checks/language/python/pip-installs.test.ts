@@ -9,7 +9,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { LOCKED_SCOPE_SETTINGS } from '#tests/config/checks/language/python/pip-installs.ts';
 
-test.each([...LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].includes(packageManager))])(
+test.each(LOCKFILES.filter(({ packageManager }) => ['uv', 'poetry', 'pdm'].includes(packageManager)))(
     'a requirements file is reported only in a scope with a $file lockfile and passes once removed',
     async ({ file }) => {
         await using sandbox = await testdir({

@@ -17,17 +17,14 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { open, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { type SpawnResult, type AsyncSpawnOptions } from '#cli/types/system/processes.ts';
-import { TSC_BUILD_COMMAND, TSC_UNFORMATTED_OUTPUT } from '#cli/config/checks/tsc/compiler.ts';
 
 import {
     NEXT_LAUNCHER,
     UNRELATED_FILE,
     NEXT_CACHE_BYTES,
     AUTHORED_NEXT_ENV,
-    TSC_FAILURE_OUTPUT,
     NEXT_VERSION_OUTPUT,
     RETAINED_ROUTE_TYPES,
-    OUTPUT_PRESERVATION_CASES,
     TYPESCRIPT_VERSION_OUTPUT,
 } from '#tests/config/checks/framework/nextjs.ts';
 
@@ -62,39 +59,29 @@ function fakeNextjsCommands(fakeRun: (command: readonly string[], options: Async
     const folders: string[] = [];
     const commands: string[][] = [];
     resources.use(fakeExecutableLookup(process.execPath));
-    const runBlocking = processes.spawnProcessBlocking;
     resources.use(
-        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command, options) => {
-            if (command[0] === 'git') return runBlocking(command, options);
+        spyOn(processes, 'spawnProcessBlocking').mockImplementation((command) => {
             return buildProcessResult({
                 stdout: basename(command[0] ?? '') === 'next' ? NEXT_VERSION_OUTPUT : TYPESCRIPT_VERSION_OUTPUT,
             });
         }),
     );
-    const nativeRun = processes.spawnProcess;
     resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation(async (command, options) => {
-            if (command[0] === 'git') return await nativeRun(command, options);
             const cwd = options.cwd;
             folders.push(cwd);
             commands.push([...command]);
             return await fakeRun(command, options);
         }),
     );
-    const owned = resources.move();
-    return {
-        folders,
-        commands,
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `using` calls it when the scope ends.
-        [Symbol.dispose]() {
-            owned.dispose();
-        },
-    };
+    return Object.assign(resources.move(), { folders, commands });
 }
 
-test.each([...OUTPUT_PRESERVATION_CASES])(
-    'nextjs/tsc in the $name scope reports its finding, passes after the fix, and leaves tsconfig.json, .next, and next-env.d.ts unchanged',
-    async ({ scope }) => {
+test.each(['', 'app'])(
+    'nextjs/tsc in scope %j reports its finding, passes after the fix, and leaves tsconfig.json, .next, and next-env.d.ts unchanged',
+    async (scope) => {
+        const TSC_FAILURE_OUTPUT = 'src/app/page.ts(1,1): error TS2322: Type mismatch\n';
+
         await using sandbox = await testdir();
         const session = await prepareNextjsBuild(sandbox.path, scope);
 
@@ -117,11 +104,11 @@ test.each([...OUTPUT_PRESERVATION_CASES])(
                 await mkdir(join(cwd, '.next/types'), { recursive: true });
                 await writeFile(join(cwd, '.next/types/routes.d.ts'), '// Generated routes\n');
             } else routesSeen.push(await readFile(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
-            const failed = isBad && command[1] !== 'typegen';
-            return buildProcessResult({ code: failed ? 1 : 0, stdout: failed ? TSC_FAILURE_OUTPUT : '' });
+            const isFailed = isBad && command[1] !== 'typegen';
+            return buildProcessResult({ code: isFailed ? 1 : 0, stdout: isFailed ? TSC_FAILURE_OUTPUT : '' });
         }
-        using read = fakeNextjsCommands(fakeNextjsBuild);
-        const { folders } = read;
+        using fakes = fakeNextjsCommands(fakeNextjsBuild);
+        const { folders } = fakes;
         const { findings: found } = await runCheckCode(session, planned, findCheckCode(planned.check));
         expect(
             found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })),
@@ -144,10 +131,10 @@ test.each([...OUTPUT_PRESERVATION_CASES])(
         const afterStats = await currentFile.stat();
         expect(afterStats.mode).toBe(mode);
         expect(await readFile(untracked)).toStrictEqual(Buffer.from(NEXT_CACHE_BYTES));
-        expect(await readFile(join(sandbox.path, join(scope, 'next-env.d.ts')), 'utf8')).toBe(AUTHORED_NEXT_ENV);
-        expect(await readFile(join(sandbox.path, join(scope, '.next/types/routes.d.ts')), 'utf8')).toBe(
-            RETAINED_ROUTE_TYPES,
-        );
+        const contents = await readFile(join(sandbox.path, join(scope, 'next-env.d.ts')), 'utf8');
+        expect(contents).toBe(AUTHORED_NEXT_ENV);
+        const routeTypes = await readFile(join(sandbox.path, join(scope, '.next/types/routes.d.ts')), 'utf8');
+        expect(routeTypes).toBe(RETAINED_ROUTE_TYPES);
         expect(await readFile(join(sandbox.path, UNRELATED_FILE.path), 'utf8')).toBe(UNRELATED_FILE.text);
     },
 );
@@ -170,9 +157,8 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
         await writeFile(join(sandbox.path, 'tsconfig.json'), 'Concurrent developer edit\n');
         return buildProcessResult({ code: 1, stderr: `Error: ${message}` });
     });
-    expect(await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)))).toBe(
-        `The next typegen command failed: Error: ${message}`,
-    );
+    const runCheckCodeError = await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)));
+    expect(runCheckCodeError.message).toBe(`The next typegen command failed: Error: ${message}`);
     expect(scratch).not.toBe('');
     expect(await isOnDisk(scratch)).toBe(false);
     expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
@@ -194,22 +180,18 @@ test.each(['', 'apps/web'])(
         const planned = planChecks(session, { stage: 'push', only: ['nextjs/tsc'] }).find(
             (check) => check.scope.folder.path === scope,
         )!;
-        using read = fakeNextjsCommands(async (command, options) => {
+        using fakes = fakeNextjsCommands(async (command, options) => {
             if (command[1] === 'typegen')
                 await writeFile(join(options.cwd, 'next-env.d.ts'), '// Generated in this copy\n');
             else expect(await readFile(join(options.cwd, 'next-env.d.ts'), 'utf8')).toBe('// Generated in this copy\n');
             return buildProcessResult();
         });
-        const { folders, commands } = read;
+        const { folders, commands } = fakes;
         const result = await runCheckCode(session, planned, findCheckCode(planned.check));
         expect(result).toMatchObject({ status: 'passed', findings: [] });
         const copy = folders[0]!;
         expect(folders).toStrictEqual([copy, copy]);
-        expect(commands[1]?.slice(1)).toStrictEqual([
-            ...TSC_BUILD_COMMAND.slice(1),
-            join(copy, 'tsconfig.json'),
-            ...TSC_UNFORMATTED_OUTPUT,
-        ]);
+        expect(commands[1]?.slice(1)).toStrictEqual(['-b', join(copy, 'tsconfig.json'), '--pretty', 'false']);
         expect(await isOnDisk(copy)).toBe(false);
         expect(await readFile(join(sandbox.path, scope, 'tsconfig.json'), 'utf8')).toBe(authored);
         expect(await readFile(join(sandbox.path, scope, 'next-env.d.ts'), 'utf8')).toBe(AUTHORED_NEXT_ENV);

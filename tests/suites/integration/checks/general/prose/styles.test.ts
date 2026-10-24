@@ -1,4 +1,3 @@
-import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
@@ -6,6 +5,7 @@ import { writeFile } from 'node:fs/promises';
 import { buildAssetPath } from '#cli/system/assets.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { TYPO } from '#tests/config/checks/general/spelling.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -28,7 +28,7 @@ import {
 const installedSandbox = shareProseSandbox();
 
 test(`Vale's em-dashes rule checks the reason text of ESLint comments and skips the -- separator`, async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose', 'typescript']),
         [GSPOT_PATHS.valeConfigFile]: VALE_INI,
         [`${EXAMPLE_STYLE_FOLDER}/Dashes.yml`]: readFileSync(
@@ -50,7 +50,7 @@ test(`Vale's em-dashes rule checks the reason text of ESLint comments and skips 
 });
 
 test("Vale's version-range rule accepts a minimum version and reports vague ranges", async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose', 'markdown']),
         [GSPOT_PATHS.valeConfigFile]: VALE_INI,
         [`${EXAMPLE_STYLE_FOLDER}/Versions.yml`]: readFileSync(
@@ -68,7 +68,6 @@ test("Vale's version-range rule accepts a minimum version and reports vague rang
 test("Vale's heading-case rule accepts a reviewed product name and reports title case", async () => {
     const { root } = installedSandbox();
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-        check: '',
         files: {
             'gspot.toml': buildSandboxSettings(['prose'], {
                 level: 'all',
@@ -85,7 +84,6 @@ test("Vale's heading-case rule accepts a reviewed product name and reports title
 test('the generated vale.ini at level recommended reports link text such as here', async () => {
     const { root } = installedSandbox();
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-        check: '',
         files: {
             'gspot.toml': buildSandboxSettings(['prose']),
             'guide.md': LINK_TEXT_GUIDE,
@@ -94,10 +92,7 @@ test('the generated vale.ini at level recommended reports link text such as here
     });
     const failed = await spawnRootCheck(root, 'prose/vale');
     expect(failed.status, failed.note).toBe('failed');
-    expect(failed.findings).toStrictEqual([
-        matchFields({ file: 'guide.md', line: 3, rule: 'gspot.link-text' }),
-        matchFields({ file: 'source.ts', line: 2, rule: 'gspot.link-text' }),
-    ]);
+    expect(failed.findings).toStrictEqual([matchFields({ file: 'guide.md', line: 3, rule: 'gspot.link-text' })]);
     await writeFile(join(root, 'guide.md'), CORRECTED_LINK_TEXT_GUIDE);
     await writeFile(
         join(root, 'source.ts'),
@@ -113,7 +108,6 @@ test.each([...STYLE_CASES])(
     async (row) => {
         const { root } = installedSandbox();
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-            check: '',
             files: {
                 'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
                 [row.path]: row.source,
@@ -136,7 +130,6 @@ test.each([...SCOPE_SPELLING_CASES])(
             tables: '[spelling]\nallowed_words = { NebulaProduct = "The project product." }\n',
         });
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-            check: '',
             files: { 'gspot.toml': settings, [join(scope, 'guide.md')]: VOCABULARY_SOURCE },
         });
         const result = parseCheckReport(
@@ -146,11 +139,7 @@ test.each([...SCOPE_SPELLING_CASES])(
             result.report.checks.flatMap(({ check, findings }) =>
                 findings.map(({ file, line, rule }) => ({ check, file, line, rule })),
             ),
-        ).toStrictEqual([
-            { check: 'prose/vale', file: posix.join(scope, 'guide.md'), line: 7, rule: 'gspot.possessives' },
-            { check: 'prose/vale', file: posix.join(scope, 'guide.md'), line: 7, rule: 'gspot.possessives' },
-            { check: 'spelling/typos', file: posix.join(scope, 'guide.md'), line: 5, rule: undefined },
-        ]);
+        ).toStrictEqual([{ check: 'spelling/typos', file: posix.join(scope, 'guide.md'), line: 5, rule: undefined }]);
         await writeFile(
             join(root, scope, 'guide.md'),
             VOCABULARY_SOURCE.replace(TYPO.receive, 'receive').replace("Avoid vale's and ajv's.", 'Use Vale and ajv.'),
@@ -161,3 +150,20 @@ test.each([...SCOPE_SPELLING_CASES])(
         expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     },
 );
+
+test('Vale accepts passive code comments and reports passive prose in Markdown', async () => {
+    const { root } = installedSandbox();
+    await using _sourceChange = await applySandboxChanges(installedSandbox(), {
+        files: {
+            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+            'source.ts': "// The file is generated by ESLint's parser.\nexport const value = 1;\n",
+            'guide.md': "# Guide\n\nThe file is generated by ESLint's parser.\n",
+        },
+    });
+    const result = await spawnRootCheck(root, 'prose/vale');
+    expect(result.status, result.note).toBe('failed');
+    expect(result.findings.filter(({ file }) => file === 'source.ts')).toStrictEqual([]);
+    expect(result.findings.filter(({ rule }) => rule === 'Google.Passive')).toStrictEqual([
+        matchFields({ file: 'guide.md', line: 3, rule: 'Google.Passive' }),
+    ]);
+});

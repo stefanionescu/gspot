@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
@@ -11,9 +12,7 @@ import {
     TRPC_MODULES,
     TRPC_FAILURES,
     ZUSTAND_FILES,
-    ZUSTAND_TABLES,
     ROUTER_ROLE_FILES,
-    TRANSLATION_SOURCE,
     DRIZZLE_SCOPE_SETTINGS,
     UNCHECKED_ROUTER_FILES,
 } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/libraries.ts';
@@ -37,9 +36,12 @@ test('Drizzle reports delete and update without where only for its client names'
     });
     expect(await listLintFindings(eslint, sandbox.path, ['app/source.js'], rules)).toStrictEqual([]);
 });
+
 test.each([...LEVELS])(
     'the translations configuration reports literal UI text outside the test files of each scope at %s',
     async (level) => {
+        const TRANSLATION_SOURCE = 'export const element = <p>Hello there</p>;\n';
+
         await using sandbox = await testdir();
         const tested = ['qa/entry.jsx', 'app/qa/entry.jsx', 'app/verification/entry.jsx', 'app/deep/qa/entry.jsx'];
         const ordinary = new Set(['source.jsx', 'app/source.jsx', 'app/deep/source.jsx']);
@@ -64,9 +66,16 @@ test.each([...LEVELS])(
         }
     },
 );
+
 test.each([...LEVELS])(
     'at %s, Zustand store files keep your import restrictions and other files get the Zustand restriction',
     async (level) => {
+        const ZUSTAND_TABLES = `[tools.eslint]
+restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
+[zustand]
+store_files = ["**/store.js"]
+`;
+
         await using sandbox = await testdir({
             ...ZUSTAND_FILES,
             'gspot.toml': buildSandboxSettings(['javascript', 'zustand'], {
@@ -82,13 +91,15 @@ test.each([...LEVELS])(
             { file: 'src/widget.js', rule: 'no-restricted-imports', line: 1 },
             { file: 'src/widget.js', rule: 'no-restricted-imports', line: 2 },
         ]);
-        for (const result of await eslint.lintFiles(files)) {
+        const results = await eslint.lintFiles(files);
+        for (const result of results) {
             expect(
                 result.messages.find(({ ruleId, line }) => ruleId === 'no-restricted-imports' && line === 2)?.message,
             ).toBe("'node:fs' import is restricted from being used. Use the storage service.");
         }
     },
 );
+
 test('a file outside tRPC server_files may not import a server value, and type-only imports pass', async () => {
     await using sandbox = await testdir();
     const settings = buildSandboxSettings(['trpc', 'typescript'], {
@@ -133,7 +144,8 @@ path = "flat"
             .map(([file, line]) => ({ file, rule: 'boundaries/dependencies', line }))
             .toSorted((left, right) => left.file.localeCompare(right.file) || left.line - right.line),
     );
-    for (const file of TRPC_IMPORTS.map((_, index) => `form${String(index)}.ts`)) {
+    for (const index of TRPC_IMPORTS.keys()) {
+        const file = `form${String(index)}.ts`;
         await createFileTree(sandbox.path, { [file]: TRPC_TYPES });
         expect(await listLintFindings(eslint, sandbox.path, [file], ['boundaries/dependencies'])).toStrictEqual([]);
     }
@@ -142,6 +154,7 @@ path = "flat"
         { file: 'form0.ts', rule: null, line: 1 },
     ]);
 });
+
 test.each([...LEVELS])(
     'tRPC procedures need an input schema in router role files of each scope at %s',
     async (level) => {
@@ -170,3 +183,26 @@ test.each([...LEVELS])(
         }
     },
 );
+
+test('TanStack Query rules report as errors in the scope that selects tanstack-query', async () => {
+    const source =
+        "import { useQuery } from '@tanstack/react-query';\nconst { data, ...rest } = useQuery({ queryKey: ['todos'], queryFn: load });\n";
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            scopes: [{ path: 'app', configurations: ['tanstack-query'] }],
+        }),
+        'source.js': source,
+        'app/source.js': source,
+    });
+    const eslint = await createEslint(sandbox.path);
+    expect(
+        await listLintFindings(
+            eslint,
+            sandbox.path,
+            ['source.js', 'app/source.js'],
+            ['@tanstack/query/no-rest-destructuring'],
+        ),
+    ).toStrictEqual([{ file: 'app/source.js', rule: '@tanstack/query/no-rest-destructuring', line: 2 }]);
+    const configuration = (await eslint.calculateConfigForFile('app/source.js')) as EslintConfiguration;
+    expect(configuration.rules['@tanstack/query/no-rest-destructuring']![0]).toBe(2);
+});

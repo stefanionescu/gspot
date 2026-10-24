@@ -1,5 +1,4 @@
 import pc from 'picocolors';
-import { EXIT_ERROR } from '#cli/config/terminal.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { SIGNAL_EXIT_CODES, RESULT_JSON_INDENT } from '#cli/config/system/terminal.ts';
 import type { CommandResult, OutputOptions, CommandFailureJson, CanceledCommandJson } from '#cli/types/terminal.ts';
@@ -21,10 +20,10 @@ Check whether both streams go to terminals and NO_COLOR leaves color on.
 
 @returns whether to use color.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function isColorAllowed(): boolean {
     const noColor = readEnvironmentVariable('NO_COLOR');
-    if (noColor !== undefined && noColor !== '') return false;
-    return process.stderr.isTTY && process.stdout.isTTY;
+    return noColor === undefined || noColor === '' ? process.stderr.isTTY && process.stdout.isTTY : false;
 }
 
 /**
@@ -83,12 +82,10 @@ export async function runCancelableCommand<Json extends object>(
     canceledMessage: string,
 ): Promise<CommandResult<Json | CanceledCommandJson>> {
     const controller = new AbortController();
-    let canceledCode: number | undefined;
     const cancellations = Object.entries(SIGNAL_EXIT_CODES).map(([signal, code]) => ({
         signal,
         onSignal: (): void => {
-            canceledCode = code;
-            controller.abort();
+            controller.abort(code);
         },
     }));
     for (const { signal, onSignal } of cancellations) process.on(signal, onSignal);
@@ -99,12 +96,11 @@ export async function runCancelableCommand<Json extends object>(
         if (!controller.signal.aborted) throw error;
         result = {
             text: `${canceledMessage}\n`,
-            json: { error: 'canceled', message: canceledMessage, exitCode: EXIT_ERROR },
-            exitCode: EXIT_ERROR,
+            json: { error: 'canceled', message: canceledMessage, exitCode: Number(controller.signal.reason) },
+            exitCode: Number(controller.signal.reason),
         };
     } finally {
         for (const { signal, onSignal } of cancellations) process.removeListener(signal, onSignal);
     }
-    if (canceledCode === undefined) return result;
-    return { ...result, exitCode: canceledCode, json: { ...result.json, exitCode: canceledCode } };
+    return result;
 }

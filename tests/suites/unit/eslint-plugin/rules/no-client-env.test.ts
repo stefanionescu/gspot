@@ -16,11 +16,14 @@ createRuleTester().run<
             code: 'if (import.meta.env.DEV) console.log(import.meta.env.MODE);',
             options: [{ client: true, publicPrefixes: ['VITE_'] }],
         },
-        "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",
+        {
+            name: 'Next public prefix allowed by default',
+            code: "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",
+        },
         "'use client';\nconst mode = process.env.NODE_ENV;",
         "'use client';\nconst { NODE_ENV } = process.env;",
         { code: 'const url = import.meta.env.VITE_URL;', options: [{ client: true, publicPrefixes: ['VITE_'] }] },
-        'const key = process.env.SECRET;',
+        { name: 'private environment value outside a client module', code: 'const key = process.env.SECRET;' },
         "'use client';\nconst process = { env: { SECRET: 1 } };\nconst key = process.env.SECRET;",
         { code: 'const url = process.env.NEXT_PUBLIC_URL;', options: [{ client: true }] },
         "'use client';\nconst url = process.env['NEXT_PUBLIC_URL'];",
@@ -35,10 +38,12 @@ createRuleTester().run<
             errors: [{ messageId: 'private' }],
         },
         {
+            name: 'client directive without declared environment globals',
             code: "'use client';\nconst key = process.env.SECRET;",
             errors: [{ messageId: 'private', line: 2, column: 13 }],
         },
         {
+            name: 'client directive with declared environment globals',
             code: "'use client';\nconst key = process.env.SECRET;",
             languageOptions: { globals: ENVIRONMENT_GLOBALS },
             errors: [{ messageId: 'private' }],
@@ -61,6 +66,7 @@ createRuleTester().run<
         { code: "'use client';\nconst { env } = process;", errors: [{ messageId: 'private' }] },
         { code: "'use client';\nconst all = process.env;", errors: [{ messageId: 'private' }] },
         {
+            name: 'private environment value with client option',
             code: 'const key = process.env.SECRET;',
             options: [{ client: true }],
             errors: [{ messageId: 'private' }],
@@ -71,6 +77,7 @@ createRuleTester().run<
             errors: [{ messageId: 'private' }],
         },
         {
+            name: 'Next public prefix replaced with Vite prefixes',
             code: "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",
             options: [{ publicPrefixes: ['VITE_'] }],
             errors: [{ messageId: 'private' }],

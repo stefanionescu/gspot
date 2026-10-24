@@ -5,12 +5,12 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { changeAppliedSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { STRICT_TSCONFIG_TEXT } from '#tests/config/checks/language/typescript.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -32,7 +32,6 @@ test.each([...LEVELS])(
     async (level) => {
         const { root } = installedSandbox();
         await using _sourceChange = await changeAppliedSandbox(installedSandbox(), {
-            check: '',
             files: {
                 ...STANDALONE_TYPESCRIPT_FILES,
                 '.gitignore': `${DOT_GSPOT}/\nnode_modules/\n`,
@@ -62,13 +61,14 @@ test.each([...LEVELS])(
 
 test('typescript/tsc runs a covering parent tsconfig once for nested scopes', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const authored = JSON.stringify(ANCESTOR_TYPESCRIPT_PROJECT);
     await createFileTree(sandbox.path, {
         ...ANCESTOR_TYPESCRIPT_FILES,
         'tsconfig.json': authored,
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all', tables: ANCESTOR_SCOPE_TABLES }),
     });
-    await linkTypescript(sandbox.path);
+    await linkTypescript(join(sandbox.path, 'node_modules'));
     const applied = await spawnGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const command = ['check', '--only', 'typescript/tsconfig,typescript/tsc', '--json'];
@@ -98,7 +98,7 @@ test('typescript/tsc runs a covering parent tsconfig once for nested scopes', as
 
 test('typescript/tsc checks a scope through the parent tsconfig, alone when named, and in staged files', async () => {
     const tsconfig = STRICT_TSCONFIG_TEXT.replace('}}', '},"include":["root.ts","app/**/*.ts"]}');
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['typescript'] }],
@@ -109,7 +109,7 @@ test('typescript/tsc checks a scope through the parent tsconfig, alone when name
         'app/source.ts': 'export const active: boolean = 3;\n',
     });
 
-    await linkTypescript(sandbox.path);
+    await linkTypescript(join(sandbox.path, 'node_modules'));
     const selection = ['--only', 'typescript/tsc', '--json'];
     const { mode } = await stat(join(sandbox.path, 'tsconfig.json'));
     const applied = await spawnGspot(sandbox.path, ['apply']);

@@ -5,22 +5,21 @@ import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
 import { NODE_TOOL } from '#cli/config/install/npm/project.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
-import { PYTHON_CONFIGURATION } from '#cli/config/configurations/names.ts';
-import { readConfigurations, buildManifestError } from '#cli/configurations/manifests.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 
 import type {
     Tool,
     Check,
     MisePin,
-    InstallerPin,
     Configuration,
     ToolProjectPins,
+    VersionedInstaller,
     ToolProjectPackage,
 } from '#cli/types/configurations.ts';
 
-function findMiseInstaller(tool: Tool): InstallerPin | undefined {
-    if (tool.system === true) return undefined;
-    return tool.installers['mise'];
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function findMiseInstaller(tool: Tool): VersionedInstaller | undefined {
+    return tool.system === true ? undefined : tool.installers['mise'];
 }
 
 /**
@@ -58,15 +57,22 @@ export function listMisePins(configurations: Configuration[]): MisePin[] {
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
     if (
         tools.some((tool) => findToolProjectPackage(tool)?.kind === 'python') &&
-        !tools.some((tool) => tool.name === UV_TOOL)
+        tools.every((tool) => tool.name !== UV_TOOL)
     ) {
-        const tool = getTool(readConfigurations().values(), UV_TOOL);
-        const pin = findMisePin(tool);
-        if (pin === undefined)
-            throw buildManifestError(PYTHON_CONFIGURATION, ['tool uv requires a pinned mise installer version.']);
-        pins.push(pin);
+        pins.push(getUvPin());
     }
     return pins;
+}
+
+/**
+Get the mise pin that the shipped Python configuration declares for uv.
+
+@returns the uv installer pin.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function getUvPin(): MisePin {
+    const pin = getTool(readConfigurations().values(), UV_TOOL).installers['mise'] as VersionedInstaller;
+    return { name: pin.name, version: pin.version, ...stripUndefined({ options: pin.options }) };
 }
 
 /**
@@ -76,10 +82,11 @@ Find the mise pin of one tool: its version, its systems, and its backend options
 @returns the mise pin, or undefined when mise does not install the tool.
 */
 export function findMisePin(tool: Tool): MisePin | undefined {
-    const excluded = findToolProjectPackage(tool) !== undefined;
-    const pin = excluded ? undefined : findMiseInstaller(tool);
-    if (pin?.version === undefined) return undefined;
-    return { name: pin.name, version: pin.version, ...stripUndefined({ options: pin.options }) };
+    const isExcluded = findToolProjectPackage(tool) !== undefined;
+    const pin = isExcluded ? undefined : findMiseInstaller(tool);
+    return pin === undefined
+        ? undefined
+        : { name: pin.name, version: pin.version, ...stripUndefined({ options: pin.options }) };
 }
 
 /**
@@ -178,7 +185,7 @@ export function listNpmToolNames(configurations: Iterable<Configuration>): Set<s
         [...configurations].flatMap((configuration) =>
             configuration.tools.flatMap((tool) => {
                 const npm = tool.installers['npm'];
-                return npm === undefined ? [] : [npm.name];
+                return npm === undefined ? [] : npm.name;
             }),
         ),
     );

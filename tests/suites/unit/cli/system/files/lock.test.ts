@@ -7,16 +7,17 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { stat, mkdir, rmdir, readFile } from 'node:fs/promises';
+import { WRITER_LOCK_FILE } from '#cli/config/apply/write/writer.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { stat, link, mkdir, rmdir, readFile } from 'node:fs/promises';
 
 test('a lock released while its create fails is taken on the retry', async () => {
     await using sandbox = await testdir({
-        [`${GSPOT_PATHS.state}/writer.lock`]: `${String(process.pid)}:first`,
+        [WRITER_LOCK_FILE]: `${String(process.pid)}:first`,
         source: 'kept',
     });
 
-    const target = join(sandbox.path, `${GSPOT_PATHS.state}/writer.lock`);
+    const target = join(sandbox.path, WRITER_LOCK_FILE);
     const files = openFiles(sandbox.path);
     const publish = fs.linkSync;
     const boundaries = new DisposableStack();
@@ -30,7 +31,7 @@ test('a lock released while its create fails is taken on the retry', async () =>
             }
         }),
     );
-    files.createLock(`${GSPOT_PATHS.state}/writer.lock`);
+    files.createLock(WRITER_LOCK_FILE);
     expect(await readFile(target, 'utf8')).toStartWith(`${String(process.pid)}:`);
     boundaries[Symbol.dispose]();
     files[Symbol.dispose]();
@@ -41,8 +42,8 @@ test('a live lock written during the dead-holder check survives', async () => {
     await using sandbox = await testdir();
     const stale = `${readExitedProcessId()}:stale`;
     const live = `${String(process.pid)}:live`;
-    await createFileTree(sandbox.path, { [`${GSPOT_PATHS.state}/writer.lock`]: stale, source: 'kept' });
-    const target = join(sandbox.path, `${GSPOT_PATHS.state}/writer.lock`);
+    await createFileTree(sandbox.path, { [WRITER_LOCK_FILE]: stale, source: 'kept' });
+    const target = join(sandbox.path, WRITER_LOCK_FILE);
     const files = openFiles(sandbox.path);
     const kill = process.kill.bind(process);
     const boundaries = new DisposableStack();
@@ -57,7 +58,7 @@ test('a live lock written during the dead-holder check survives', async () => {
         }),
     );
     expect(() => {
-        files.createLock(`${GSPOT_PATHS.state}/writer.lock`);
+        files.createLock(WRITER_LOCK_FILE);
     }).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
@@ -81,12 +82,12 @@ function readExitedProcessId(): string {
 test('the recovery folder refuses a second recovery until the first one ends', async () => {
     await using sandbox = await testdir();
     const stale = `${readExitedProcessId()}:stale`;
-    await createFileTree(sandbox.path, { [`${GSPOT_PATHS.state}/writer.lock`]: stale, source: 'kept' });
-    const target = join(sandbox.path, `${GSPOT_PATHS.state}/writer.lock`);
+    await createFileTree(sandbox.path, { [WRITER_LOCK_FILE]: stale, source: 'kept' });
+    const target = join(sandbox.path, WRITER_LOCK_FILE);
     await mkdir(`${target}.reclaim`);
     const files = openFiles(sandbox.path);
     expect(() => {
-        files.createLock(`${GSPOT_PATHS.state}/writer.lock`);
+        files.createLock(WRITER_LOCK_FILE);
     }).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
@@ -99,7 +100,7 @@ test('the recovery folder refuses a second recovery until the first one ends', a
     const attributes = await stat(`${target}.reclaim`);
     expect(attributes.isDirectory()).toBe(true);
     await rmdir(`${target}.reclaim`);
-    files.createLock(`${GSPOT_PATHS.state}/writer.lock`);
+    files.createLock(WRITER_LOCK_FILE);
     expect(await readFile(target, 'utf8')).toStartWith(`${String(process.pid)}:`);
     expect(await isOnDisk(`${target}.reclaim`)).toBe(false);
     files[Symbol.dispose]();
@@ -109,7 +110,7 @@ test('the recovery folder refuses a second recovery until the first one ends', a
 test('a second writer is refused until the first releases the lock', async () => {
     await using sandbox = await testdir({ source: 'kept' });
 
-    const path = `${GSPOT_PATHS.state}/writer.lock`;
+    const path = WRITER_LOCK_FILE;
     const second = openFiles(sandbox.path);
     const first = openFiles(sandbox.path);
     first.createLock(path);
@@ -138,7 +139,7 @@ test.each(['garbage', '0'])(
     'a lock whose holder field is not a process ID is refused with the live-holder message (%s)',
     async (holder) => {
         await using sandbox = await testdir();
-        const path = `${GSPOT_PATHS.state}/writer.lock`;
+        const path = WRITER_LOCK_FILE;
         await createFileTree(sandbox.path, { [path]: holder, source: 'kept' });
         using files = openFiles(sandbox.path);
         expect(() => {
@@ -154,3 +155,15 @@ test.each(['garbage', '0'])(
         expect(await readFile(join(sandbox.path, 'source'), 'utf8')).toBe('kept');
     },
 );
+
+test('a dead-process writer lock with another hard link is recovered without changing its peer', async () => {
+    const path = WRITER_LOCK_FILE;
+    const stale = `${readExitedProcessId()}:stale`;
+    await using sandbox = await testdir({ [path]: stale });
+    const peer = join(sandbox.path, 'previous-lock');
+    await link(join(sandbox.path, path), peer);
+    using files = openFiles(sandbox.path);
+    files.createLock(path);
+    expect(files.read(path)?.bytes.toString('utf8')).toStartWith(`${String(process.pid)}:`);
+    expect(await readFile(peer, 'utf8')).toBe(stale);
+});

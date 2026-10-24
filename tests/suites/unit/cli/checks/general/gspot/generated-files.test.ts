@@ -23,6 +23,7 @@ test('gspot/generated-files reports an edited file with the apply help and passe
     const initial = await runChecks(session, buildRunOptions({ only: ['gspot/generated-files'] }));
     const missingLocks = initial.report.checks[0]!.findings;
     expect(missingLocks).toMatchObject([
+        { file: GSPOT_PATHS.miseLockfile, rule: 'missing' },
         { file: `${DOT_GSPOT}/package-lock.json`, rule: 'missing' },
         { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
     ]);
@@ -38,7 +39,7 @@ test('gspot/generated-files reports an edited file with the apply help and passe
             file: shellcheckrc,
             rule: 'changed',
             message: 'This generated file differs from what gspot.toml generates.',
-            help: 'Change settings in gspot.toml, then run gspot apply. gspot replaces the generated files that it owns.',
+            help: 'Run gspot apply to write it again; to change what it holds, change gspot.toml.',
         },
     ]);
     await applyGeneratedFiles(sandbox.path);

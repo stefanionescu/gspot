@@ -11,24 +11,18 @@ jobs:
       - run: echo authored-job
 `;
 
-export const CI_SETTINGS = `configurations = []
-[rules]
-enabled = false
-[ci]
-enabled = true
-provider = "%PROVIDER%"
-[[command_check]]
-id = "project/syntax"
-stage = "commit"
-paths = ["*.sh"]
-command = %SYNTAX_COMMAND%
-output = { format = "lines" }
-[[command_check]]
-id = "project/audit"
-stage = "manual"
-paths = ["*.sh"]
-command = %AUDIT_COMMAND%
-[[ignore]]
-check = "data-files/v8r"
-reason = "The jobs test the generated workflow; without an npm check, each install runs mise only."
-`;
+export const CI_CHECKS = {
+    syntax: {
+        id: 'project/syntax',
+        stage: 'commit',
+        paths: ['*.sh'],
+        output: { format: 'lines' },
+    },
+    audit: { id: 'project/audit', stage: 'manual', paths: ['*.sh'] },
+    ignore: [
+        {
+            check: 'data-files/v8r',
+            reason: 'The jobs test the generated workflow; without an npm check, each install runs mise only.',
+        },
+    ],
+} as const;

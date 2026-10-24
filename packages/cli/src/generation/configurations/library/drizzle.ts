@@ -10,17 +10,18 @@ Require safe changes in Drizzle queries.
 */
 export function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;
-    const blocks: ConfigurationBlocks['blocks'] = [];
     const rule = ['error', { drizzleObjectName: settings.settings['drizzle.client_names'] }];
-    blocks.push({
-        fields: {
-            files: eslintFiles.code,
-            rules: Object.fromEntries(DRIZZLE_RULES.map((name) => [name, rule])),
+    const blocks: ConfigurationBlocks['blocks'] = [
+        {
+            fields: {
+                files: eslintFiles.code,
+                rules: Object.fromEntries(DRIZZLE_RULES.map((name) => [name, rule])),
+            },
+            properties: 'plugins: { drizzle: drizzlePlugin }',
         },
-        properties: 'plugins: { drizzle: drizzlePlugin }',
-    });
+    ];
     return {
-        imports: CONFIGURATION_PLUGINS['drizzle'],
+        imports: CONFIGURATION_PLUGINS.drizzle,
         blocks,
     };
 }

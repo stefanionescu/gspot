@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
+import { getPosition } from '#cli/system/text.ts';
 import { JSONC_OPTIONS } from '#cli/config/parsers/formats/json.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 import type { EditableFile } from '#cli/types/parsers/editable-file.ts';
@@ -19,19 +20,15 @@ Read a JSON object, and validate it against the schema, if any.
 @returns the parsed object.
 */
 export function parseJsonFile(path: string, text: string, schema?: z.ZodType): unknown {
-    let value: unknown;
-    try {
-        const errors: ParseError[] = [];
-        value = parse(text, errors, JSONC_OPTIONS);
-        const error = errors[0];
-        if (error !== undefined)
-            throw new SyntaxError(
-                `Invalid JSON at offset ${String(error.offset)}: ${printParseErrorCode(error.error)}`,
-            );
-    } catch (error) {
-        if (!(error instanceof Error)) throw error;
-        const detail = error.message.split('\n', 1).join('').replace(/\.$/u, '');
-        throw new GspotError('filesystem', `${path} is not valid JSON: ${detail}. Fix the file.`, { cause: error });
+    const errors: ParseError[] = [];
+    const value: unknown = parse(text, errors, JSONC_OPTIONS);
+    const error = errors[0];
+    if (error !== undefined) {
+        const { line, column } = getPosition(text, error.offset);
+        throw new GspotError(
+            'filesystem',
+            `${path}:${String(line)}:${String(column)} is not valid JSON: ${printParseErrorCode(error.error)}. Fix the file.`,
+        );
     }
     if (!isTable(value)) throw new GspotError('filesystem', `${path} must contain a JSON object. Fix the file.`);
     return schema === undefined ? value : parseFileFields(path, value, schema);

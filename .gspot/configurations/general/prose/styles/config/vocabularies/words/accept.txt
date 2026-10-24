@@ -90,6 +90,7 @@ udid
 v8r
 vale
 Vale
+vertica
 Windows
 wrangler
 xmllint

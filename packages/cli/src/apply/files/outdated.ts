@@ -13,19 +13,26 @@ import { listStaleLockfiles } from '#cli/install/tool-projects.ts';
 import { findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
-import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
 import { MODE_RADIX, DIFF_CONTEXT_LINES } from '#cli/config/apply/files/outdated.ts';
 
+/**
+Build a source diff with the shared Git context.
+
+@param path the changed repository path.
+@param before the previous text.
+@param after the next text.
+@param names labels for the previous and next text.
+@returns the unified diff.
+*/
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-function buildDiff(path: string, before: string, after: string, beforeName: string): string {
+export function buildDiff(path: string, before: string, after: string, names: [string, string]): string {
     return createTwoFilesPatch(
         `a/${convertToPosixPath(path)}`,
         `b/${convertToPosixPath(path)}`,
         before,
         after,
-        beforeName,
-        'generated',
+        ...names,
         {
             context: DIFF_CONTEXT_LINES,
         },
@@ -46,7 +53,7 @@ function listOutdatedOutputs(files: Files, generated: GenerationResult): Outdate
                 diff:
                     disk === file.content
                         ? `old mode ${onDisk.mode.toString(MODE_RADIX)}\nnew mode ${mode.toString(MODE_RADIX)}\n`
-                        : buildDiff(file.path, disk, file.content, 'on disk'),
+                        : buildDiff(file.path, disk, file.content, ['on disk', 'generated']),
             },
         ];
     });
@@ -63,7 +70,7 @@ function listOutdatedBlocks(files: Files, generated: GenerationResult): Outdated
             outdated.push({
                 path: block.path,
                 kind: 'changed',
-                diff: buildDiff(block.path, onDisk, wanted, 'managed block on disk'),
+                diff: buildDiff(block.path, onDisk, wanted, ['managed block on disk', 'generated']),
             });
     }
     return outdated;
@@ -110,11 +117,13 @@ List every managed path, with the lockfiles of the tool projects in use.
 */
 export function listExpectedPaths(session: Pick<Session, 'packageManager'>, generated: GenerationResult): Set<string> {
     const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));
+    if (session.packageManager !== undefined) {
+        const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
+        if (project !== undefined)
+            paths.add(parseToolPackageJson(project.content, session.packageManager.name).lockfilePath);
+    }
     for (const file of generated.files) {
-        if (file.path === GSPOT_PATHS.npmProject)
-            paths.add(
-                parseToolPackageJson(file.content, assertPackageManager(session.packageManager).name).lockfilePath,
-            );
+        if (file.path === GSPOT_PATHS.miseProject) paths.add(GSPOT_PATHS.miseLockfile);
         if (file.path === GSPOT_PATHS.pythonProject) paths.add(GSPOT_PATHS.uvLockfile);
     }
     return paths;

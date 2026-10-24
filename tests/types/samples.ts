@@ -10,25 +10,21 @@ export type SampleFix = {
     removed?: readonly string[] | undefined;
 };
 
-export type CheckSample = SampleChanges & {
+export type CheckSample = SandboxChanges & {
+    check: string;
     expected: SampleFinding;
     findings?: readonly SampleFinding[];
     corrected?: SampleFix;
 };
 
-export type GspotCall = (
-    cwd: string,
-    commandArguments: readonly string[],
-    environment?: Record<string, string>,
-) => Promise<ProcessOutput>;
+export type GspotCall = (cwd: string, commandArguments: readonly string[]) => Promise<ProcessOutput>;
 
 export type SampleResult = {
     failed: ProcessOutput & { report: RunReport };
     passed: ProcessOutput & { report: RunReport };
 };
 
-export type SampleChanges = {
-    check: string;
+export type SandboxChanges = {
     files: Record<string, string>;
     settings?: string | undefined;
     removed?: readonly string[] | undefined;
@@ -36,6 +32,14 @@ export type SampleChanges = {
 };
 
 export type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
+
+export type SandboxWrite = {
+    files: Record<string, string>;
+    settings: string;
+    originals: Map<string, OriginalFile | undefined>;
+    removed: readonly string[];
+    executable: readonly string[];
+};
 
 export type SampleSummary = {
     failed: { code: number; reported: readonly CheckResult[] };

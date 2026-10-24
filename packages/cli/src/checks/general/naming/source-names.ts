@@ -1,5 +1,6 @@
 import type { Session } from '#cli/types/session.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { getCachedMapValue } from '#cli/system/files/cache.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { parseSource, selectGrammar } from '#cli/parsers/code/grammars.ts';
 import { extractSqlIdentifiers } from '#cli/checks/general/naming/languages/sql.ts';
@@ -31,6 +32,8 @@ export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
         .filter((named): named is NamedFile => named.language !== undefined);
 }
 
+const IDENTIFIERS = { create: () => new Map<string, Promise<IdentifierRead>>() };
+
 /**
 Lists the identifiers a file declares, or none when no extractor reads its language.
 
@@ -40,7 +43,17 @@ Lists the identifiers a file declares, or none when no extractor reads its langu
 @param session the read cache and parser resources.
 @returns the identifiers in source order, or a syntax error.
 */
-export async function parseIdentifiers(
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function parseIdentifiers(
+    file: string,
+    text: string,
+    language: string,
+    session: Pick<Session, 'reads' | 'resources'>,
+): Promise<IdentifierRead> {
+    return getCachedMapValue(session.reads, IDENTIFIERS, file, () => readIdentifiers(file, text, language, session));
+}
+
+async function readIdentifiers(
     file: string,
     text: string,
     language: string,

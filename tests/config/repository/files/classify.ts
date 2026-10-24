@@ -124,12 +124,6 @@ export const LICENSE_FILES = [
 export const GENERATED_HEADERS = [
     '# {generated-header}\n',
     '// {generated-header}\n',
-    '-- {generated-header}\n',
-    '<!-- {generated-header} -->\n',
-    `<!--
-  {generated-header}
--->
-`,
     '#!/bin/sh\r\n# {generated-header}\r\n',
     `#!/bin/sh
 

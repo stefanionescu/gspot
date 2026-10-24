@@ -1,13 +1,12 @@
 import { zipSync } from 'fflate';
 import { testdir } from 'testdirs';
-import { test, expect } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { openSession } from '#cli/session.ts';
 import { join, basename, delimiter } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { listMisePins } from '#cli/configurations/tools.ts';
+import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { DIGEST_ALGORITHM } from '#cli/config/files/hashes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
@@ -17,8 +16,8 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { IndexedPythonProject } from '#tests/types/packages.ts';
 import { PYTHON_VERSION } from '#cli/config/install/python/project.ts';
 import { chmod, readFile, realpath, writeFile } from 'node:fs/promises';
+import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
-import { spawnGspot, installGeneratedTools } from '#tests/setup/cli/commands.ts';
 import { REGISTRY_HOST, ZIP_FILE_OPTIONS } from '#tests/config/setup/sandboxes.ts';
 
 import {
@@ -28,12 +27,22 @@ import {
     PYTHON_INDEX_CREDENTIALS,
 } from '#tests/config/integration/install/python.ts';
 
+const resources = new AsyncDisposableStack();
+const pythonIndex = Promise.withResolvers<{ url: string }>();
+beforeAll(async () => {
+    const work = resources.use(await testdir());
+    pythonIndex.resolve(resources.use(await createPythonIndex(work.path)));
+});
+afterAll(() => resources.disposeAsync());
+
 test.each([...PYTHON_PROJECTS])(
     'Python tool project install keeps your own and generated files with %s',
     async (configuration) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         await using artifacts = await testdir();
-        await using prepared = await createIndexedPythonProject(sandbox.path, artifacts.path, configuration);
+        runGitStep(artifacts.path, ['init', '--quiet']);
+        await using prepared = await createIndexedPythonProject(sandbox.path, configuration);
         const { projectFile, lockfilePath, lockfile } = prepared.projectFiles;
         const { rootProject, rootConfiguration } = prepared;
         expect(lockfile.toString('utf8')).not.toContain(PYTHON_INDEX_CREDENTIALS.password);
@@ -45,6 +54,13 @@ test.each([...PYTHON_PROJECTS])(
         expect(command.code, command.stdout + command.stderr).toBe(0);
         const steps = (JSON.parse(command.stdout) as { steps: string[][] }).steps;
         const session = await openSession(sandbox.path);
+        const installSteps = [];
+        for (const step of PYTHON_INSTALL_STEPS) {
+            const argumentsForStep = Array.from(step, (argument) =>
+                argument.replaceAll('{python-version}', () => PYTHON_VERSION),
+            );
+            installSteps.push(argumentsForStep);
+        }
         const miseTools = listMisePins(session.toolConfigurations).map(({ name }) => name);
         expect(
             steps.map((step) => (step[0] === 'mise' ? step : ['uv', ...step.slice(1, step.indexOf('--project'))])),
@@ -52,11 +68,10 @@ test.each([...PYTHON_PROJECTS])(
             ['mise', 'trust', GSPOT_PATHS.miseProject],
             ['mise', 'install', ...miseTools],
             ['mise', 'bin-paths', ...miseTools],
-            ...PYTHON_INSTALL_STEPS.map((step) =>
-                step.map((argument) => argument.replaceAll('{python-version}', PYTHON_VERSION)),
-            ),
+            ...installSteps,
         ]);
-        for (const step of steps.filter((step) => step[0] !== 'mise')) {
+        for (const step of steps) {
+            if (step[0] === 'mise') continue;
             expect(step[step.indexOf('--project') + 1]).toBe(join(sandbox.path, DOT_GSPOT));
         }
         expect(await readFile(join(sandbox.path, 'pyproject.toml'))).toStrictEqual(rootProject);
@@ -71,9 +86,11 @@ test.each([...PYTHON_PROJECTS])(
     'a fresh Python clone with %s installs the locked tools twice without changing tracked files, and its Python runs from .gspot/.venv',
     async (configuration) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         await using artifacts = await testdir();
+        runGitStep(artifacts.path, ['init', '--quiet']);
         await using prepared = await createPythonProject(sandbox.path, { indexFile: configuration });
-        await installGeneratedTools(sandbox.path);
+        await applyThenInstall(sandbox.path);
         const { projectFile, lockfile } = await readToolProjectFiles(sandbox.path, 'uv');
         const { rootConfiguration } = prepared;
         const clone = join(artifacts.path, 'clone');
@@ -109,8 +126,8 @@ test.each([...PYTHON_PROJECTS])(
 test('apply keeps a conflicted Python lockfile and install repairs it', async () => {
     const configuration = 'uv.toml';
     await using sandbox = await testdir();
-    await using artifacts = await testdir();
-    await using prepared = await createIndexedPythonProject(sandbox.path, artifacts.path, configuration);
+    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using prepared = await createIndexedPythonProject(sandbox.path, configuration);
     const { lockfilePath, lockfile } = prepared.projectFiles;
     const { rootConfiguration } = prepared;
     const conflict = '<<<<<<< interrupted lockfile\n';
@@ -125,9 +142,9 @@ test('apply keeps a conflicted Python lockfile and install repairs it', async ()
     expect(await readFile(join(sandbox.path, configuration))).toStrictEqual(rootConfiguration);
 });
 
-async function createPythonIndex(work: string): Promise<AsyncDisposable & { url: string }> {
-    await using source = await createPythonProject(work, { indexFile: 'uv.toml' });
-    await installGeneratedTools(source.root);
+async function createPythonIndex(work: string): Promise<Disposable & { url: string }> {
+    await using _source = await createPythonProject(work, { indexFile: 'uv.toml' });
+    await applyThenInstall(work);
     const binary = buildVenvExecutablePath(join(work, GSPOT_PATHS.pythonEnvironment), 'ruff');
     const inspected = await runCommand([binary, '--version'], { cwd: work });
     if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
@@ -143,7 +160,7 @@ async function createPythonIndex(work: string): Promise<AsyncDisposable & { url:
             ]),
         ),
     );
-    const digest = createHash(DIGEST_ALGORITHM).update(archive).digest('hex');
+    const digest = createHash('sha256').update(archive).digest('hex');
     const { user, password } = PYTHON_INDEX_CREDENTIALS;
     const credentials = `${user}:${password}`;
     const authentication = `Basic ${Buffer.from(credentials).toString('base64')}`;
@@ -161,10 +178,7 @@ async function createPythonIndex(work: string): Promise<AsyncDisposable & { url:
     });
     return {
         url: `http://${user}:${password}@${REGISTRY_HOST}:${String(server.port)}/simple`,
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
-        async [Symbol.asyncDispose]() {
-            await server.stop(true);
-        },
+        [Symbol.dispose]: server[Symbol.dispose].bind(server),
     };
 }
 
@@ -200,13 +214,12 @@ Tag: py3-none-any
 
 async function createIndexedPythonProject(
     root: string,
-    work: string,
     indexFile: 'pyproject.toml' | 'uv.toml',
 ): Promise<IndexedPythonProject> {
     await using resources = new AsyncDisposableStack();
-    const registry = resources.use(await createPythonIndex(work));
-    const project = resources.use(await createPythonProject(root, { indexFile, indexUrl: registry.url }));
-    await installGeneratedTools(root);
+    const index = await pythonIndex.promise;
+    const project = resources.use(await createPythonProject(root, { indexFile, indexUrl: index.url }));
+    await applyThenInstall(root);
     const projectFiles = await readToolProjectFiles(root, 'uv');
     const owned = resources.move();
     return {

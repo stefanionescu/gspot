@@ -1,9 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
-import type { Session } from '#cli/types/session.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { buildVitestBlocks } from '#cli/generation/configurations/vitest.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { buildVueBlocks } from '#cli/generation/configurations/framework/vue.ts';
@@ -14,16 +11,20 @@ import { buildNextjsBlocks } from '#cli/generation/configurations/framework/next
 import { buildSvelteBlocks } from '#cli/generation/configurations/framework/svelte.ts';
 import { buildDrizzleBlocks } from '#cli/generation/configurations/library/drizzle.ts';
 import { buildZustandBlocks } from '#cli/generation/configurations/library/zustand.ts';
+import { isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildReactDomBlocks } from '#cli/generation/configurations/framework/react-dom.ts';
 import { buildTypescriptBlocks } from '#cli/generation/configurations/language/typescript.ts';
-import { buildTestFiles } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import { buildTanstackQueryBlocks } from '#cli/generation/configurations/library/tanstack-query.ts';
 import { buildTestingLibraryBlocks } from '#cli/generation/configurations/library/testing-library.ts';
-import { joinScope, isInScope, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { buildPluginRuleBlocks } from '#cli/generation/configurations/language/javascript/eslint/plugin-rules.ts';
 import { buildSelectorGroups } from '#cli/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 import { PLUGIN_RULE_BLOCKS } from '#cli/config/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
+import {
+    buildScopeGlob,
+    buildTestFiles,
+    listCodeTestFiles,
+} from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import type {
     EslintScope,
     EslintPlugins,
@@ -33,18 +34,18 @@ import type {
 } from '#cli/types/generation/eslint.ts';
 
 function buildConfigurationBlocks(
-    session: Session,
     configuration: Configuration,
     builder: (scope: EslintScope, configuration: string) => ConfigurationBlocks,
     scope: Scope,
     planned: PlannedEslintFile,
 ): ConfigurationBlocks {
+    const { session } = planned;
     const scopePath = scope.folder.path;
     const children = listNestedScopes(
         planned.session.scopes.map((each) => each.folder.path),
         scopePath,
     );
-    const testFiles = scope.settings.test_files.map((pattern) =>
+    const testFiles = listCodeTestFiles(scope.settings.test_files).map((pattern) =>
         scopePath !== '' && pattern.startsWith(`${scopePath}/**/`) ? pattern.slice(scopePath.length + 1) : pattern,
     );
     return builder(
@@ -86,7 +87,6 @@ function listMatchingScopes(
 }
 
 function buildScopeConfigurationBlocks(
-    session: Session,
     configurations: {
         configuration: Configuration;
         builder: (scope: EslintScope, configuration: string) => ConfigurationBlocks;
@@ -99,16 +99,17 @@ function buildScopeConfigurationBlocks(
             .filter((each) => each.configurations.includes(configuration))
             .map((scope) => ({
                 path: scope.folder.path,
-                blocks: buildConfigurationBlocks(session, configuration, builder, scope, planned),
+                blocks: buildConfigurationBlocks(configuration, builder, scope, planned),
             }));
         const matching = listMatchingScopes(scopeBlocks, planned.session.scopes);
-        for (const { path, blocks } of scopeBlocks.filter((each) => !matching.has(each.path))) {
+        for (const { path, blocks } of scopeBlocks) {
+            if (matching.has(path)) continue;
             const excluded = listNestedScopes(
                 planned.session.scopes.map((each) => each.folder.path),
                 path,
             )
                 .filter((child) => !matching.has(child))
-                .map((child) => joinScope(child.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**'));
+                .map((child) => buildScopeGlob(child, '**'));
             result.push({
                 configuration,
                 imports: blocks.imports,
@@ -126,14 +127,10 @@ function buildScopeConfigurationBlocks(
 /**
 Collect imported bindings, the scoped blocks of each configuration, and configuration selectors.
 
-@param session the repository.
 @param planned the source facts and resolved scopes.
 @returns the configuration data before serialization, with the blocks of each configuration in plan order.
 */
-export function listConfigurationBlocks(
-    session: Session,
-    planned: PlannedEslintFile,
-): {
+export function listConfigurationBlocks(planned: PlannedEslintFile): {
     configurationBlocks: Map<Configuration, PlannedEslintBlock[]>;
     configurationImports: EslintPlugins;
     configurationSelectors: ReturnType<typeof buildSelectorGroups>;
@@ -142,9 +139,9 @@ export function listConfigurationBlocks(
         const builder = Object.hasOwn(CONFIGURATION_BUILDERS, configuration.name)
             ? CONFIGURATION_BUILDERS[configuration.name]
             : undefined;
-        return builder === undefined ? [] : [{ configuration, builder }];
+        return builder === undefined ? [] : { configuration, builder };
     });
-    const selected = buildScopeConfigurationBlocks(session, configurations, planned);
+    const selected = buildScopeConfigurationBlocks(configurations, planned);
     return {
         configurationBlocks: new Map(
             Map.groupBy(selected, ({ configuration }) => configuration)

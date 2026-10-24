@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import jestPackage from 'jest/package.json' with { type: 'json' };
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
@@ -28,7 +29,7 @@ function prepareJest(root: string, testSource: string) {
 }
 
 test("jest/coverage at level all uses the scope's coverage limits and runs only that scope's tests", async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
             scopes: [{ path: 'app', configurations: ['jest'] }],
@@ -69,6 +70,7 @@ test("jest/coverage at level all uses the scope's coverage limits and runs only 
 
 test('jest/coverage at level all reports uncovered functions and failed tests and keeps your files', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await prepareJest(sandbox.path, MATH_TEST_SOURCE);
     const command = ['check', '--only', 'jest/coverage', '--json'];
     const uncovered = parseCheckReport(await spawnGspot(sandbox.path, command));
@@ -96,6 +98,7 @@ test('jest/coverage at level all reports uncovered functions and failed tests an
 
 test('jest/coverage reports a test file with a missing import as an error and passes after the fix', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await prepareJest(sandbox.path, 'require("./missing-test-dependency.cjs");\n');
     const command = ['check', '--only', 'jest/coverage', '--json'];
     const unavailable = parseCheckReport(await spawnGspot(sandbox.path, command));

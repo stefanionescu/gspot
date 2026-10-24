@@ -5,12 +5,13 @@ import { chmod, readFile } from 'node:fs/promises';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { captureRejectedError } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
-import { limitToTestDeadline } from '#tests/setup/system/processes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 import { detectPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
@@ -23,11 +24,13 @@ import {
 
 test('without a packageManager field or Bun on PATH, the tool project uses npm at the version it prints', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await using bin = await testdir({ npm: '#!/bin/sh\necho 10.9.0\n', 'npm.cmd': '@echo 10.9.0\r\n' });
+    runGitStep(bin.path, ['init', '--quiet']);
 
     await chmod(join(bin.path, 'npm'), 0o755);
     using _environment = overrideEnvironment({ PATH: bin.path });
-    const installer = await detectPackageManager(sandbox.path, []);
+    const installer = detectPackageManager(sandbox.path, []);
     expect(installer).toStrictEqual({ name: 'npm' });
     expect(
         readPackageManagerVersion(
@@ -46,8 +49,9 @@ test.each([...PACKAGE_MANAGER_PIN_CASES])(
     '%s names the package manager and its version',
     async (_, files, expected) => {
         await using sandbox = await testdir(files);
+        runGitStep(sandbox.path, ['init', '--quiet']);
 
-        const { name, version } = await detectPackageManager(sandbox.path, []);
+        const { name, version } = detectPackageManager(sandbox.path, []);
         expect([name, version]).toStrictEqual(expected.split('@'));
     },
 );
@@ -55,11 +59,11 @@ test.each([...PACKAGE_MANAGER_PIN_CASES])(
 test.each([...NON_EXACT_PNPM_VERSIONS])(
     'a pnpm version that is not exact is refused with the version to write: %s',
     async (packageJson, message) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'package.json': packageJson,
         });
 
-        expect(await captureRejectedError(detectPackageManager(sandbox.path, []))).toMatchObject({
+        expect(await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])))).toMatchObject({
             name: 'GspotError',
             code: 'install',
             message,
@@ -67,37 +71,34 @@ test.each([...NON_EXACT_PNPM_VERSIONS])(
     },
 );
 
-test('install runs the real bun version check when package.json declares bun@0.0.0', async () => {
+test('a refused pinned package manager keeps project files and gives no install loop', async () => {
     const files = { 'package.json': OUTDATED_BUN_PACKAGE_JSON };
-    await using sandbox = await testdir({ ...files, source: 'kept\n', 'gspot.toml': buildSandboxSettings([]) });
-
+    await using sandbox = await createGitSandbox({
+        ...files,
+        source: 'kept\n',
+        'gspot.toml': buildSandboxSettings([]),
+    });
     await runGspot(sandbox.path, ['apply']);
     const original = await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8');
-    const identity = await detectPackageManager(sandbox.path, []);
-    const installer = readPackageManagerVersion(
-        sandbox.path,
-        identity,
-        SETTING_DEFINITIONS['tool_timeout_seconds'].default,
-        createReadCache(sandbox.path),
-    );
-    expect(installer).toStrictEqual({ name: 'bun', version: '0.0.0' });
     const run = processes.spawnProcess;
-    let observed: ReturnType<typeof run> | undefined;
-    using boundary = spyOn(processes, 'spawnProcess').mockImplementation((commandArguments, options) => {
-        if (commandArguments[0] === 'bun' && commandArguments[1] !== '--version')
-            throw new Error('Unexpected native package operation before version refusal.');
-        const limited = limitToTestDeadline(commandArguments, options);
-        observed = run(commandArguments, limited.options);
-        return observed;
-    });
+    using boundary = spyOn(processes, 'spawnProcess').mockImplementation((command, options) =>
+        command[0] === 'mise'
+            ? Promise.resolve(buildProcessResult({ code: 1, stderr: 'The requested version is not available.' }))
+            : run(command, options),
+    );
     const failure = await runGspot(sandbox.path, ['install']);
-    expect(boundary).toHaveBeenCalledTimes(1);
-    const version = await observed;
-    expect(version?.code, version?.stderr).toBe(0);
-    expect(version?.stdout.trim()).not.toBe('0.0.0');
+    expect(boundary.mock.calls[0]![0]).toStrictEqual([
+        'mise',
+        'exec',
+        'node@24',
+        'bun@0.0.0',
+        '--',
+        'bun',
+        '--version',
+    ]);
     expect(failure.code).toBe(2);
     expect(failure.stderr).toBe(
-        `The tool project requires bun@0.x, and found ${version?.stdout.trim() ?? ''}. Install that package manager version first.\nTool installation is incomplete. Run gspot install.\n`,
+        'The tool project requires bun@0.x, and `bun --version` exited with 1: The requested version is not available.. Install that package manager version first.\n',
     );
     for (const [path, content] of Object.entries(files))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
@@ -111,7 +112,8 @@ test.each([...UNSUPPORTED_PACKAGE_MANAGERS])(
     'unsupported $field values identify the package.json field',
     async ({ field, written, packageJson }) => {
         await using sandbox = await testdir({ 'package.json': JSON.stringify(packageJson) });
-        expect(await captureRejectedError(detectPackageManager(sandbox.path, []))).toMatchObject({
+        runGitStep(sandbox.path, ['init', '--quiet']);
+        expect(await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])))).toMatchObject({
             code: 'install',
             message: `package.json: ${field} is "${written}"; gspot supports npm, bun, pnpm, yarn with an exact version, such as pnpm@9.0.0. Change the field.`,
         });
@@ -124,7 +126,7 @@ test('a lockfile beside a later nested package selects its manager', async () =>
         'web/package.json': '{"private":true}',
         'web/pnpm-lock.yaml': 'lockfileVersion: "9.0"\n',
     });
-    expect(await detectPackageManager(sandbox.path, ['web/package.json', 'apps/admin/package.json'])).toStrictEqual({
+    expect(detectPackageManager(sandbox.path, ['web/package.json', 'apps/admin/package.json'])).toStrictEqual({
         name: 'pnpm',
     });
 });

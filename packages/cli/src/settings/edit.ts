@@ -5,7 +5,7 @@ import { parseSettings } from '#cli/settings/read.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { buildSettingsText } from '#cli/settings/text/build.ts';
+import { mergeIgnores, buildSettingsText } from '#cli/settings/text/build.ts';
 import { parseTomlText, isReasonedValue, readSettingsFile } from '#cli/settings/file.ts';
 import { isTable, getValueAt, createTable, normalizeTables } from '#cli/system/tables.ts';
 import type { SettingKey, SettingsEdit, EditedSettings } from '#cli/types/settings/edits.ts';
@@ -26,9 +26,11 @@ input.table in place.
 */
 export function buildEditedSettings(repositoryRoot: string, edit: SettingsEdit): EditedSettings {
     const { text, table } = edit;
-    parseSettings(stringify(table), repositoryRoot);
-    const next = isDeepStrictEqual(table, parseTomlText(text, SETTINGS_FILE)) ? text : buildSettingsText(text, table);
-    const settings = parseSettings(next, repositoryRoot);
+    if (Array.isArray(table['ignore'])) table['ignore'] = mergeIgnores(table['ignore'] as TomlTable[]);
+    const settings = parseSettings(stringify(table), repositoryRoot);
+    const next = isDeepStrictEqual(table, parseTomlText(text, SETTINGS_FILE))
+        ? text
+        : buildSettingsText(text, table, settings.format);
     return { text: next, settings, changed: next !== text };
 }
 
@@ -89,9 +91,15 @@ export function addToList(table: TomlTable, key: string, values: unknown[]): voi
     const list = [...writtenList];
     for (const added of values) {
         const normalized = normalizeTables(added);
-        if (!list.some((listed) => isDeepStrictEqual(listed, normalized))) list.push(normalized);
+        if (list.every((listed) => !isDeepStrictEqual(listed, normalized))) list.push(normalized);
     }
     parent[name] = replaceWrittenValue(written, list);
+}
+
+function removeRecordPaths(listed: unknown, gone: Set<string | undefined>): unknown[] {
+    if (!isTable(listed) || !Array.isArray(listed['paths'])) return [listed];
+    const paths = listed['paths'].filter((path) => !gone.has(JSON.stringify(path)));
+    return paths.length === 0 ? [] : [{ ...listed, paths }];
 }
 
 /**
@@ -118,10 +126,7 @@ export function removeFromList(table: TomlTable, key: string, values: unknown[])
     );
     const kept = writtenList.flatMap((listed) => {
         const identity = JSON.stringify(isTable(listed) && 'name' in listed ? listed['name'] : listed);
-        if (gone.has(identity) || gone.has(JSON.stringify(listed))) return [];
-        if (!isTable(listed) || !Array.isArray(listed['paths'])) return [listed];
-        const paths = listed['paths'].filter((path) => !gone.has(JSON.stringify(path)));
-        return paths.length === 0 ? [] : [{ ...listed, paths }];
+        return gone.has(identity) || gone.has(JSON.stringify(listed)) ? [] : removeRecordPaths(listed, gone);
     });
     if (kept.length === 0) deleteKey(table, key);
     else parent[name] = replaceWrittenValue(written, kept);
@@ -171,12 +176,12 @@ Read a written setting value from its reasoned value or its plain value.
 @param written the setting as written.
 @returns the value that a settings edit changes.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function getWrittenValue(written: unknown): unknown {
-    if (isReasonedValue(written)) return written.value;
-    return written;
+    return isReasonedValue(written) ? written.value : written;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function replaceWrittenValue(written: unknown, value: unknown): unknown {
-    if (isReasonedValue(written)) return { ...written, value };
-    return value;
+    return isReasonedValue(written) ? { ...written, value } : value;
 }

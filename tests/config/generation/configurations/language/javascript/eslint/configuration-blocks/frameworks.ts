@@ -16,11 +16,7 @@ export const SERVER_FILES = {
 export const COMPONENT_FILES = {
     'Card.vue': '<template><p>{{ count }}</p></template>\n<script setup lang="ts">const count: number = 1;</script>\n',
     'Card.svelte': '<script lang="ts">const count: number = 1;</script>\n<p>{count}</p>\n',
-    'Card.astro': `---
-const count: number = 1;
----
-<p>{count}</p>
-`,
+    'Card.astro': '---\nconst count: number = 1;\n---\n<p>{count}</p>\n',
     'source.ts': 'export const count: number = 1;\n',
     'source.js': 'export const count = 1;\n',
 } as const;
@@ -29,7 +25,7 @@ export const HTML_INJECTION_CASES = [
     {
         configuration: 'react',
         path: 'src/Greeting.jsx',
-        rule: 'react/no-danger',
+        rule: '@eslint-react/dom-no-dangerously-set-innerhtml',
         sample: 'export const Greeting = () => <div dangerouslySetInnerHTML={{ __html: "<b>Hello</b>" }} />;\n',
         corrected: 'export const Greeting = () => <div>{"<b>Hello</b>"}</div>;\n',
     },
@@ -76,18 +72,6 @@ const MOBILE_SOURCE_FILES = {
     'expo-app/source.js': 'const { EXPO_PUBLIC_URL } = process.env;\n',
 } as const;
 
-export const RESPONSE_MESSAGES =
-    'response.json({ message: `Item ${identifier}` });\ncustom.info(`Item ${identifier}`);\n';
-
-export const ALIAS_IMPORT = 'import value from "#lib/owner";\n';
-
-export const EXPRESS_SAMPLE_LINES = { aliasImport: 1, responseMessage: 2, logMessage: 3 } as const;
-
-const EXPO_DEPENDENCIES = {
-    expo: '54.0.0',
-    'react-native': '0.81.4',
-} as const;
-
 export const MOBILE_FILES: Record<string, string> = {
     ...MOBILE_SOURCE_FILES,
     'bare/package.json': JSON.stringify({
@@ -96,7 +80,7 @@ export const MOBILE_FILES: Record<string, string> = {
     }),
     'expo-app/package.json': JSON.stringify({
         private: true,
-        dependencies: { react: testsPackage.devDependencies.react, ...EXPO_DEPENDENCIES },
+        dependencies: { react: testsPackage.devDependencies.react, ...REACT_NATIVE_DEPENDENCIES, expo: '54.0.0' },
     }),
 };
 

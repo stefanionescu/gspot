@@ -14,5 +14,3 @@ export const TRIVY_IMAGE_COMMAND = [
 ] as const;
 
 export const TRIVY_CONFIG_FILE = 'trivy';
-
-export const TRIVY_SCHEMA_VERSION = 2;

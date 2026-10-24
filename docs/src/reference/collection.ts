@@ -4,9 +4,9 @@ import { buildSettingsPage } from './settings.ts';
 import { buildPluginPages } from './eslint-plugin.ts';
 import type { Loader, DataStore } from 'astro/loaders';
 import { docsLoader } from '@astrojs/starlight/loaders';
-import type { ReferencePage } from '../types/reference.ts';
 import { buildConfigurationPages } from './configurations.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
+import type { GuideSlug, ReferencePage } from '../types/reference.ts';
 import { buildCheckPage, buildCheckIndex, listSuppressions } from './checks.ts';
 
 import {
@@ -19,27 +19,26 @@ import {
     REFERENCE_IDS_KEY,
 } from '../config/reference.ts';
 
-function readGuideTitles(store: DataStore): Map<string, string> {
-    const titles = new Map<string, string>();
+function readGuideTitles(store: DataStore): Record<GuideSlug, string> {
+    const titles = {} as Record<GuideSlug, string>;
     for (const slug of Object.values(GUIDES)) {
         const title = store.get(slug)?.data['title'];
-        if (typeof title !== 'string') throw new Error(`The guide ${slug} has no loaded page title.`);
-        titles.set(slug, title);
+        if (typeof title !== 'string') throw new TypeError(`The guide ${slug} has no loaded page title.`);
+        titles[slug] = title;
     }
     return titles;
 }
 
-function buildReferencePages(guideTitles: Map<string, string>): Map<string, ReferencePage> {
-    const facts = CLI_REFERENCE;
+function buildReferencePages(guideTitles: Record<GuideSlug, string>): Map<string, ReferencePage> {
     const pages = new Map([
-        [`${REFERENCE_FOLDERS.commands}/index.md`, buildCommandPage(facts)],
-        ...buildConfigurationPages(facts, guideTitles),
-        [`${REFERENCE_FOLDERS.settings}/index.md`, buildSettingsPage(facts)],
+        [`${REFERENCE_FOLDERS.commands}/index.md`, buildCommandPage(CLI_REFERENCE)],
+        ...buildConfigurationPages(CLI_REFERENCE, guideTitles),
+        [`${REFERENCE_FOLDERS.settings}/index.md`, buildSettingsPage(CLI_REFERENCE)],
         ...buildPluginPages(),
-        [`${REFERENCE_FOLDERS.checks}/index.md`, buildCheckIndex(facts.checks, GROUP_LABELS)],
+        [`${REFERENCE_FOLDERS.checks}/index.md`, buildCheckIndex(CLI_REFERENCE.checks, GROUP_LABELS)],
     ]);
-    const suppressions = listSuppressions(facts.configurations);
-    for (const { check, configuration } of facts.checks)
+    const suppressions = listSuppressions(CLI_REFERENCE.configurations);
+    for (const { check, configuration } of CLI_REFERENCE.checks)
         pages.set(`${REFERENCE_FOLDERS.checks}/${check.id}.md`, buildCheckPage(check, configuration, suppressions));
     return pages;
 }
@@ -60,7 +59,6 @@ export function createDocsSource(): Loader {
             const pages = [];
             for (const [path, page] of buildReferencePages(guideTitles)) {
                 const id = `${REFERENCE_PATH.slice(1)}${path.slice(0, -'.md'.length)}`;
-                if (context.store.has(id)) throw new Error(`Two docs pages have the ID ${id}.`);
                 const { body } = page;
                 const metadata = await context.parseData({
                     id,

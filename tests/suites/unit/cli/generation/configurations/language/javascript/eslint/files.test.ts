@@ -2,8 +2,11 @@ import picomatch from 'picomatch';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { buildFilePatterns } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 
+import {
+    buildFilePatterns,
+    listCodeTestFiles,
+} from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import {
     NESTED_ESLINT_FILES,
     NESTED_ESLINT_PATHS,
@@ -34,4 +37,27 @@ test('Node file patterns match a filename with a backslash and not its neighbor'
     const matches = picomatch(patterns, { dot: true, windows: false });
     expect(matches(file)).toBe(true);
     expect(matches('scripts/runname')).toBe(false);
+});
+
+test('ESLint test patterns omit foreign extensions and retain components and shared globs', () => {
+    expect(
+        listCodeTestFiles([
+            '**/test_*.py',
+            '**/*_test.py',
+            '**/*Tests.swift',
+            '**/*.test.ts',
+            '**/*.spec.vue',
+            '**/*.test.svelte',
+            '**/*.test.astro',
+            '**/tests/**',
+            '**/*.{js,ts}',
+        ]),
+    ).toStrictEqual([
+        '**/*.test.ts',
+        '**/*.spec.vue',
+        '**/*.test.svelte',
+        '**/*.test.astro',
+        '**/tests/**',
+        '**/*.{js,ts}',
+    ]);
 });

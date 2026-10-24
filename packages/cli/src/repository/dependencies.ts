@@ -1,6 +1,5 @@
 import { posix } from 'node:path';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
-import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { type ReadCache } from '#cli/types/system/files.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { REQUIREMENTS_FILE } from '#cli/config/files/names.ts';
@@ -10,9 +9,9 @@ import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/dependencies.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { DEPENDENCY_SECTIONS } from '#cli/config/parsers/projects/lockfiles.ts';
+import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { PARSERS, parseRequirements } from '#cli/parsers/projects/dependencies.ts';
 import { findText, findCachedText, readCachedText } from '#cli/system/files/reads.ts';
-import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/tracked.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers/projects/dependencies/package-json.ts';
 import { type PackageJson, type DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
 
@@ -32,14 +31,8 @@ Read the supported dependency files for dependency and runtime detection.
 */
 export async function readDependencyFiles(reads: ReadCache, files: TrackedFile[]): Promise<DependencyFile[]> {
     const dependencies: DependencyFile[] = [];
-    for (const file of files.filter(
-        (file) =>
-            file.kind === 'source' &&
-            !(
-                file.path.startsWith(`${DOT_GSPOT}/`) ||
-                file.path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
-            ),
-    )) {
+    for (const file of files) {
+        if (file.kind !== 'source' || file.path.startsWith(`${DOT_GSPOT}/`) || isInInstalledFolder(file.path)) continue;
         const dependencyFile = await readDependencyFile(reads, file);
         if (dependencyFile !== undefined) dependencies.push(dependencyFile);
     }
@@ -53,10 +46,10 @@ Read and validate the package.json fields that gspot uses.
 @param path the repository-relative package.json.
 @returns the validated package fields, or undefined when the file does not exist.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function readPackageJson(repositoryRoot: string, path: string): PackageJson | undefined {
     const text = findText(repositoryRoot, path);
-    if (text === undefined) return undefined;
-    return parseJsonFile(path, text, packageJsonSchema);
+    return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 
 /**

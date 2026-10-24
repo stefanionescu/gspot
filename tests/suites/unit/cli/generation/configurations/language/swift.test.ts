@@ -42,9 +42,7 @@ test('SwiftFormat uses the Xcode project you choose in each scope', async () => 
     expect(
         outputs.find((file) => file.path === findConfigFilePath(session, 'swiftformat', 'nested'))?.content,
     ).toContain('--swiftversion 5.5\n');
-    expect(() => findConfigFilePath(session, 'swiftformat', 'disabled')).toThrow(
-        'The sandbox generates no swiftformat file for disabled.',
-    );
+    expect(outputs.map(({ path }) => path).filter((path) => path.includes('disabled'))).toStrictEqual([]);
 });
 
 test.each(['lf', 'crlf'] as const)('SwiftFormat writes the %s line ending you set in each scope', async (ending) => {

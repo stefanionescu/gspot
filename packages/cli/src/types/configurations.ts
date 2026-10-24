@@ -103,6 +103,8 @@ export type ConfigFile = {
       }
 );
 
+export type SourcedConfigFile = Extract<ConfigFile, { source: string }>;
+
 export type Check = Omit<ParsedCheck, 'example' | 'name'> & {
     id: string;
     example?: string;
@@ -163,14 +165,16 @@ export type Level = (typeof LEVELS)[number];
 
 export type ToolProjectPins = { npm: Record<string, string>; python: string[] };
 
-export type InstallerPin = {
+type InstallerPin = {
     name: string;
     version?: string | undefined;
     options?: Record<string, string | boolean> | undefined;
 };
 
+export type VersionedInstaller = InstallerPin & { version: string };
+
 export type Tool = {
-    installers: Record<string, InstallerPin>;
+    installers: Record<string, InstallerPin> & { pypi?: VersionedInstaller; mise?: VersionedInstaller };
     name: string;
     install_help?: string;
     kind: (typeof TOOL_KINDS)[number];
@@ -220,4 +224,4 @@ export type ConditionFields = Pick<
     'dependencies' | 'absent_dependencies' | 'filenames' | 'tags' | 'runtimes'
 > & { configuration: string; level: Level; setting: string; git: true };
 
-export type NameList = { package: string; version: string; source: string; names: string[] };
+export type NameList = { package: string; version: string; names: string[] };

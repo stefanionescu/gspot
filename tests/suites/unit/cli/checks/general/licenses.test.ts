@@ -21,16 +21,11 @@ import {
     LICENSE_TABLES,
     SAMPLE_PYPROJECT,
     SCANNER_FAILURES,
-    NPM_LICENSE_REPORT,
-    LICENSE_PACKAGE_JSON,
     ALLOWED_PACKAGE_CASES,
     LICENSE_PROJECT_FILES,
-    PYTHON_LICENSE_REPORT,
     SCAN_ALLOWED_PACKAGES,
     ALLOWED_PACKAGE_REASON,
-    EXPECTED_SCAN_FINDINGS,
     PYTHON_LICENSE_SOURCES,
-    LICENSE_DEPENDENCY_FILES,
     LICENSE_TOOL_PROJECT_FILES,
     ALLOWED_PACKAGE_SCOPE_CASES,
 } from '#tests/config/checks/general/licenses.ts';
@@ -49,7 +44,7 @@ test.each([...ALLOWED_PACKAGE_SCOPE_CASES])(
                 ([folder]) => interpreter === buildVenvExecutablePath(join(sandbox.path, folder, '.venv'), 'python'),
             )!;
             scanned.push(scope);
-            const [name, version] = identity.split('@');
+            const [name, version] = identity.split('@', 2);
             return Promise.resolve(
                 buildProcessResult({
                     stdout: JSON.stringify([
@@ -83,18 +78,31 @@ test.each([...ALLOWED_PACKAGE_CASES])(
         );
 
         using resources = new DisposableStack();
-        resources.use(
-            spyOn(processes, 'spawnProcess').mockResolvedValue(
-                buildProcessResult({
-                    stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', 'License-Expression': license }]),
-                }),
-            ),
+        const observed = spyOn(processes, 'spawnProcess').mockResolvedValue(
+            buildProcessResult({
+                stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', 'License-Expression': license }]),
+            }),
         );
+        resources.use(observed);
         const found = await runSandboxCheck(sandbox.path, 'licenses/allowed');
         expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([...findings]);
     },
 );
-test.each(['', 'apps/example'].flatMap((scope) => LICENSE_DEPENDENCY_FILES.map((row) => ({ scope, ...row }))))(
+
+test.each(
+    ['', 'apps/example'].flatMap((scope) =>
+        (
+            [
+                {
+                    dependencyFile: 'package.json',
+                    text: '{"name":"example","private":true,"dependencies":{"choice":"1.0.0"}}',
+                    installedFolder: 'node_modules',
+                },
+                { dependencyFile: 'pyproject.toml', text: SAMPLE_PYPROJECT, installedFolder: '.venv' },
+            ] as const
+        ).map((row) => ({ scope, ...row })),
+    ),
+)(
     'scan: a scan in scope "$scope" stops before any scanner when $dependencyFile dependencies are not installed',
     async ({ scope, dependencyFile, text, installedFolder }) => {
         await using sandbox = await testdir();
@@ -108,7 +116,8 @@ test.each(['', 'apps/example'].flatMap((scope) => LICENSE_DEPENDENCY_FILES.map((
         });
 
         using spawn = spyOn(processes, 'spawnProcess');
-        expect(await captureRejection(runSandboxCheck(sandbox.path, 'licenses/allowed'))).toBe(
+        const runSandboxCheckError = await captureRejection(runSandboxCheck(sandbox.path, 'licenses/allowed'));
+        expect(runSandboxCheckError.message).toBe(
             `Install the project dependencies first: ${installedFolder} is missing in ${scope === '' ? 'the root' : scope}.`,
         );
         expect(spawn).not.toHaveBeenCalled();
@@ -132,14 +141,17 @@ test.each([...SCANNER_FAILURES])(
             spyOn(processes, 'spawnProcess').mockImplementation((_argv, options) => {
                 folders.push(options.cwd);
                 return Promise.resolve(
-                    folders.length === 1
-                        ? buildProcessResult({ stdout: '[{"Name":"present","Version":"1.0.0","License":"MIT"}]' })
-                        : buildProcessResult({ code, stderr: 'sample diagnostic', stdout }),
+                    buildProcessResult(
+                        folders.length === 1
+                            ? { stdout: '[{"Name":"present","Version":"1.0.0","License":"MIT"}]' }
+                            : { code, stderr: 'sample diagnostic', stdout },
+                    ),
                 );
             }),
         );
         const python = buildVenvExecutablePath(join(await realpath(sandbox.path), 'app/.venv'), 'python');
-        expect(await captureRejection(runSandboxCheck(sandbox.path, 'licenses/allowed'))).toBe(message(python));
+        const pythonError = await captureRejection(runSandboxCheck(sandbox.path, 'licenses/allowed'));
+        expect(pythonError.message).toBe(message(python));
         expect(folders).toHaveLength(2);
         for (const folder of folders) {
             expect(folder).not.toBe(sandbox.path);
@@ -149,6 +161,25 @@ test.each([...SCANNER_FAILURES])(
 );
 
 test('scan: one scan reads package.json and pyproject.toml, accepts a license choice, and reports unknown licenses', async () => {
+    const PYTHON_LICENSE_REPORT = [
+        { Name: 'python-package', Version: '2.0.0', 'License-Expression': 'GPL-3.0-only' },
+        { Name: 'prohibited-python', Version: '2.0.0', 'License-Expression': 'GPL-3.0-only' },
+    ] as const;
+
+    const NPM_LICENSE_REPORT = {
+        'choice@1.0.0': { licenses: ['MIT', 'GPL-3.0-only'] },
+        'unknown@1.0.0': {},
+        'python.package@2.0.0': { licenses: 'GPL-3.0-only' },
+    } as const;
+
+    const LICENSE_PACKAGE_JSON = '{"name":"example","private":true,"dependencies":{"choice":"1.0.0"}}';
+
+    const EXPECTED_SCAN_FINDINGS = [
+        { file: 'package.json', message: 'unknown@1.0.0 uses UNKNOWN, which is not allowed.' },
+        { file: 'package.json', message: 'python.package@2.0.0 uses GPL-3.0-only, which is not allowed.' },
+        { file: 'pyproject.toml', message: 'prohibited-python@2.0.0 uses GPL-3.0-only, which is not allowed.' },
+    ] as const;
+
     await using sandbox = await testdir();
     await writeLicenseSandbox(sandbox.path, LICENSE_TABLES + SCAN_ALLOWED_PACKAGES);
     await fakeNpmTool(sandbox.path, 'license-checker-rseidelsohn');
@@ -162,15 +193,14 @@ test('scan: one scan reads package.json and pyproject.toml, accepts a license ch
     using output = spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
         if (command[0] === 'git') return nativeRun(command, options);
         folders.push(options.cwd);
-        return Promise.resolve(
-            buildProcessResult({
-                stdout: JSON.stringify(
-                    command.some((argument) => argument.includes('license-checker-rseidelsohn'))
-                        ? NPM_LICENSE_REPORT
-                        : PYTHON_LICENSE_REPORT,
-                ),
-            }),
-        );
+        const observed = buildProcessResult({
+            stdout: JSON.stringify(
+                command.some((argument) => argument.includes('license-checker-rseidelsohn'))
+                    ? NPM_LICENSE_REPORT
+                    : PYTHON_LICENSE_REPORT,
+            ),
+        });
+        return Promise.resolve(observed);
     });
     const findings = await runSandboxCheck(sandbox.path, 'licenses/allowed');
     expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual(
@@ -235,6 +265,7 @@ test('scan: the check skips with a note while licenses.allowed is empty', async 
         { check: 'licenses/allowed', status: 'skipped', note: 'Set licenses.allowed to check licenses.' },
     ]);
 });
+
 async function writeScopeLicenseSandbox(
     root: string,
     scenario: (typeof ALLOWED_PACKAGE_SCOPE_CASES)[number],
@@ -264,9 +295,7 @@ async function writeLicenseSandbox(
     await createFileTree(root, { 'gspot.toml': buildSandboxSettings(['licenses'], { tables: settings }), ...files });
     const version = getTool(readConfigurations().values(), 'pip-licenses').version;
     if (version === undefined) throw new Error('The pip-licenses test requires a pinned version.');
-    await writeScriptCommand(
-        root,
-        relative(root, join(buildVenvBinPath(join(root, GSPOT_PATHS.pythonEnvironment)), 'pip-licenses')),
-        `console.log(${JSON.stringify('pip-licenses ' + version)});`,
-    );
+    const scannerPath = join(buildVenvBinPath(join(root, GSPOT_PATHS.pythonEnvironment)), 'pip-licenses');
+    const observed = relative(root, scannerPath);
+    await writeScriptCommand(root, observed, `console.log(${JSON.stringify('pip-licenses ' + version)});`);
 }

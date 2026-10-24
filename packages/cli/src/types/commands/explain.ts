@@ -6,7 +6,7 @@ export type Explanation = {
     kind: 'check' | 'lint-rule' | 'configuration' | 'setting' | 'path';
     subject: string;
     text: string;
-    data: Record<string, unknown>;
+    facts: Record<string, unknown>;
 };
 
 export type PathExplanation = {
@@ -17,12 +17,17 @@ export type PathExplanation = {
     tags: string[];
     configurations: string[];
     checks: { check: string; stage: string; configuration?: string }[];
-    ignores: { check?: string; rule?: string; reason?: string }[];
+    ignores: { check?: string; rule?: string; reason: string }[];
     unchecked?: string;
     remedy?: string;
 };
 
-export type SettingScope = { scope: string; shipped: unknown; effective: EffectiveSetting | undefined };
+export type SettingScope = {
+    scope: string;
+    shipped: unknown;
+    effective: EffectiveSetting | undefined;
+    readBy: string[];
+};
 
 export type ConfigurationExplanation = {
     name: string;
@@ -44,3 +49,6 @@ export type CheckFacts = {
     crashPattern: string | undefined;
     minVersions: Record<string, string>;
 };
+
+export type LimitCheck = { check: string; languages: readonly string[]; limits: readonly string[] };
+export type SettingReader = { check: string; enabled: boolean; note?: string };

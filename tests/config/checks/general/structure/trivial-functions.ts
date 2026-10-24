@@ -15,7 +15,6 @@ const SWIFT_ACCESSORS = `struct A {
 
 export const BASH_TRIVIAL_FUNCTION_CASES = [
     {
-        check: 'structure/trivial-functions',
         files: {
             'scripts/tiny.sh': `${BASH_HEADER}# _tiny: one line, one caller.
 _tiny() {
@@ -35,7 +34,6 @@ main "$@"
         expected: { file: 'scripts/tiny.sh', rule: 'trivial-function', line: 9 },
     },
     {
-        check: 'structure/trivial-functions',
         files: {
             'scripts/forward.sh': `${BASH_HEADER}# _forward: hands everything on.
 _forward() {
@@ -231,9 +229,6 @@ export const STATEMENT_COUNT_CASES = [
     ['swift', 'func example() { /* comment */ work(); work() }'],
     ['bash', 'example() { # comment\necho value; echo value\n}'],
 ] as const;
-
-export const TRIVIAL_EXAMPLE_MESSAGE =
-    'example has 2 statements. Functions with 2 or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.';
 
 export const NESTED_PYTHON_FUNCTIONS = `class A:
     @decorator

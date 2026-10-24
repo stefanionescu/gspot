@@ -12,9 +12,9 @@ const failedChecks = [...new Set(example.findings.map(({ check }) => check))].ma
         .filter((finding) => finding.check === check)
         .map((finding) => ({
             ...finding,
-            problem: example.problems.findIndex(({ rules }) => rules.includes(finding.rule)) + 1,
+            issue: example.issues.findIndex(({ rules }) => rules.includes(finding.rule)) + 1,
             location: [finding.file, finding.line, 'column' in finding ? finding.column : undefined]
-                .filter((part) => part !== undefined)
+                .filter((field) => field !== undefined)
                 .join(':'),
         })),
 }));
@@ -37,11 +37,11 @@ const failedChecks = [...new Set(example.findings.map(({ check }) => check))].ma
                         <span class="failed">failed</span>
                     </p>
                     <ol class="findings">
-                        {findings.map(({ problem, location, rule, message }) => (
+                        {findings.map(({ issue, location, rule, message }) => (
                             <li>
                                 <span class="badge">
                                     <span class="sr-only">Problem </span>
-                                    {problem}
+                                    {issue}
                                 </span>
                                 <span class="where">
                                     <span class="loc">{location}</span>

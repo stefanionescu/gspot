@@ -11,7 +11,7 @@ paths = ["**/nginx.conf", "**/nginx/**/*.conf"]
 builds = ["macos", "linux"]
 name = "gixy"
 pypi = "gixy-ng"
-version = "0.2.53"
+version = "0.2.55"
 version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 
 [[tool]]

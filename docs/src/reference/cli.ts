@@ -11,10 +11,12 @@ import { listRuleFiles, listChecksById, readConfigurations } from '#cli/configur
 function groupSettingVariants(configurations: CliReference['configurations']): SettingVariant[] {
     const settings = new Map<string, SettingVariant[]>();
     const ownedSettings = [
-        ...[...buildAvailableSettings([], 'recommended').settings.values()].map((setting) => ({
-            setting,
-            owner: 'gspot',
-        })),
+        ...buildAvailableSettings([], 'recommended')
+            .settings.values()
+            .map((setting) => ({
+                setting,
+                owner: 'gspot',
+            })),
         ...configurations.flatMap((configuration) =>
             listSettings(configuration.name).map((setting) => ({
                 setting,
@@ -31,7 +33,9 @@ function groupSettingVariants(configurations: CliReference['configurations']): S
         else if (!variant.owners.includes(owner)) variant.owners.push(owner);
         settings.set(setting.name, variants);
     }
-    return [...settings.values()]
+    return settings
+        .values()
+        .toArray()
         .flat()
         .toSorted((first, second) => first.setting.name.localeCompare(second.setting.name));
 }
@@ -47,8 +51,8 @@ function buildCommandReference(command: ReturnType<typeof buildProgram>['command
             name: argument.name(),
             description: argument.description,
             required: argument.required,
-            ...(argument.argChoices === undefined ? {} : { choices: argument.argChoices }),
-            ...(argument.defaultValue === undefined ? {} : { default: argument.defaultValue as unknown }),
+            ...(argument.argChoices !== undefined && { choices: argument.argChoices }),
+            ...(argument.defaultValue !== undefined && { default: argument.defaultValue as unknown }),
         })),
         options: command
             .createHelp()
@@ -56,27 +60,23 @@ function buildCommandReference(command: ReturnType<typeof buildProgram>['command
             .map((option) => ({
                 flags: option.flags,
                 description: option.description,
-                ...(option.argChoices === undefined ? {} : { choices: option.argChoices }),
-                ...(option.defaultValue === undefined ? {} : { default: option.defaultValue as unknown }),
+                ...(option.argChoices !== undefined && { choices: option.argChoices }),
+                ...(option.defaultValue !== undefined && { default: option.defaultValue as unknown }),
             })),
         exitCodes: help.exitCodes,
         example: help.example,
     };
 }
 
-/**
-Build the reference facts that the docs pages read.
-
-@returns the facts for the reference pages.
-*/
-export function readCliReference(): CliReference {
-    const configurations = [...readConfigurations().values()].toSorted((first, second) =>
-        first.name.localeCompare(second.name),
-    );
+function readCliReference(): CliReference {
+    const configurations = readConfigurations()
+        .values()
+        .toArray()
+        .toSorted((first, second) => first.name.localeCompare(second.name));
     return {
         commands: buildProgram(() => {}).commands.map((command) => buildCommandReference(command)),
         configurations,
-        checks: [...listChecksById(configurations).values()],
+        checks: listChecksById(configurations).values().toArray(),
         settings: groupSettingVariants(configurations),
         schema: buildJsonSchema(),
         ruleFiles: Object.fromEntries(

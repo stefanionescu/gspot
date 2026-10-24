@@ -32,8 +32,6 @@ export const FUNCTION_SELECTOR = ':matches(FunctionDeclaration, FunctionExpressi
 
 export const IMPORT_SELECTOR = 'ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression';
 
-export const IMPORT_SPECIFIER_NODES = new Set<string>([
-    'ImportSpecifier',
-    'ImportDefaultSpecifier',
-    'ImportNamespaceSpecifier',
-]);
+export const FUNCTION_MEMBER_PARENTS = new Set<string>(['Property', 'MethodDefinition', 'PropertyDefinition']);
+
+export const PASSED_VALUE_TYPES = new Set<string>(['Identifier', 'Literal', 'ThisExpression', 'Super']);

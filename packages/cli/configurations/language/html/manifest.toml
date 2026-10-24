@@ -12,7 +12,7 @@ name = "html-validate"
 npm = "html-validate"
 replace = [".htmlvalidate.json", ".htmlvalidate.js", ".htmlvalidate.cjs"]
 suppression = { marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=\\s|\\]|$)", reason = "(?: -- |: )(?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*\\]?\\s*(?:--!?>)?$", example = "<!-- [html-validate-disable-next no-inline-style -- reason: the email client strips classes] -->" }
-version = "11.6.1"
+version = "11.16.2"
 
 [[config_file]]
 check = "html/html-validate"

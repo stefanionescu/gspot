@@ -5,8 +5,8 @@ import type { PythonIndex, PythonIndexSettings, PythonProjectSettings } from '#c
 const uvIndexSchema = z.looseObject({ url: z.string() } satisfies SchemaShape<Pick<PythonIndex, 'url'>>);
 
 export const uvSettingsSchema = z.looseObject({
-    'find-links': z.array(z.string()).optional(),
-    index: z.array(uvIndexSchema).optional(),
+    'find-links': z.string().array().optional(),
+    index: uvIndexSchema.array().optional(),
 } satisfies SchemaShape<Pick<PythonIndexSettings['settings'], 'find-links' | 'index'>>);
 
 export const uvProjectSettingsSchema = z.object({

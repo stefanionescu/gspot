@@ -7,7 +7,7 @@ type SettingRow = {
     source: string;
     origin: EffectiveSetting['origin'];
     originScope?: string;
-    reason_needed: Setting['reason_needed'];
+    reason_when: Setting['reason_when'];
     scope: string;
 };
 

@@ -1,9 +1,37 @@
 import { resolve } from 'node:path';
 import { createRule } from '../create-rule.ts';
-import { findZodSchemaConstructors } from '../syntax.ts';
-import { DEFAULT_SCHEMA_FOLDERS } from '../config/schemas.ts';
+import { convertToPosixPath } from '../syntax.ts';
 import type { SchemaLocationOptions } from '../types/rules.ts';
-import { OPTIONS_SCHEMA } from '../config/rules/schema-location.ts';
+import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+
+import {
+    ZOD_MODULES,
+    OPTIONS_SCHEMA,
+    ZOD_SCHEMA_FACTORIES,
+    ZOD_SCHEMA_NAMESPACES,
+    DEFAULT_SCHEMA_FOLDERS,
+} from '../config/rules/schema-location.ts';
+
+function findZodSchemaConstructors(source: TSESLint.SourceCode): TSESTree.Node[] {
+    const factories = Object.fromEntries(
+        ZOD_SCHEMA_FACTORIES.map((name) => [name, { [ASTUtils.ReferenceTracker.CALL]: true }]),
+    );
+    const namespaces = Object.fromEntries(
+        Object.entries(ZOD_SCHEMA_NAMESPACES).map(([name, methods]) => [
+            name,
+            Object.fromEntries(methods.map((method) => [method, { [ASTUtils.ReferenceTracker.CALL]: true }])),
+        ]),
+    );
+    const constructors = { ...factories, ...namespaces };
+    const imports = Object.fromEntries(
+        ZOD_MODULES.map((name) => [
+            name,
+            { [ASTUtils.ReferenceTracker.ESM]: true, ...constructors, z: constructors, default: constructors },
+        ]),
+    );
+    const tracker = new ASTUtils.ReferenceTracker(source.getScope(source.ast));
+    return [...tracker.iterateEsmReferences(imports)].map((reference) => reference.node);
+}
 
 export const schemaLocation = createRule<SchemaLocationOptions, 'location'>({
     name: 'schema-location',
@@ -21,14 +49,8 @@ export const schemaLocation = createRule<SchemaLocationOptions, 'location'>({
         messages: { location: 'Declare this Zod schema in a configured schema folder: {{folders}}.' },
     },
     create(context, [options]) {
-        const path = resolve(context.cwd, context.physicalFilename)
-            .replaceAll('\\', '/')
-            .replace(/^[a-z]:/u, (drive) => drive.toUpperCase());
-        const folders = options.folders.map((folder) =>
-            resolve(context.cwd, folder)
-                .replaceAll('\\', '/')
-                .replace(/^[a-z]:/u, (drive) => drive.toUpperCase()),
-        );
+        const path = convertToPosixPath(resolve(context.cwd, context.physicalFilename));
+        const folders = options.folders.map((folder) => convertToPosixPath(resolve(context.cwd, folder)));
         if (folders.some((folder) => path === folder || path.startsWith(`${folder}/`))) return {};
         return {
             Program() {

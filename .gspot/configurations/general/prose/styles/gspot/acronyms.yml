@@ -87,13 +87,14 @@ exceptions:
   - eslint\-plugin\-jsx\-a11y
   - astro\-check
   - prettier\-plugin\-astro
-  - eslint\-plugin\-zod
-  - Zod
   - wrangler
   - Cloudflare
   - html\-validate
   - HTML
   - purgecss
+  - eslint\-plugin\-zod
+  - Zod
+  - vertica
   - axe
   - optin
   - IIF

@@ -49,8 +49,6 @@
     --sl-mobile-toc-height: 2.75rem;
 
     scrollbar-color: color-mix(in srgb, var(--sl-color-gray-3) 70%, transparent) transparent;
-
-    /* Keep the page width the same on pages that do not scroll, so nothing moves on a page change. */
     scrollbar-gutter: stable;
 }
 
@@ -138,18 +136,15 @@ html[data-has-hero] h1 {
     margin-top: 0;
 }
 
-/* Header: one row, centered controls, no space kept for Starlight's floating menu button. */
 header.header {
     padding-block: 0;
     padding-inline-end: var(--sl-nav-pad-x);
 }
 
-/* The theme switch sits in the header row, so the menu footer does not repeat it. */
 .mobile-preferences theme-toggle {
     display: none;
 }
 
-/* Docs bar: Starlight's "On this page" bar; MobileMenuToggle.astro sits over its start. */
 mobile-starlight-toc summary {
     justify-content: flex-end;
     padding: 0 calc(var(--sl-content-pad-x) - 8px) 0 0;
@@ -177,7 +172,6 @@ mobile-starlight-toc .display-current {
 }
 
 @media (width < 50rem) {
-    /* Every docs page keeps the bar on a phone, because the Menu button lives in it. */
     :root[data-has-sidebar] {
         --sl-mobile-toc-height: 2.75rem;
     }
@@ -210,7 +204,6 @@ mobile-starlight-toc .display-current {
 }
 
 .sidebar-content {
-    /* Links pad 8 px, so labels and links start at the header gutter, under the logo. */
     padding-inline: calc(var(--sl-nav-pad-x) - 8px);
 }
 
@@ -285,7 +278,6 @@ mobile-starlight-toc .display-current {
     }
 }
 
-/* Page title and article. */
 :root[data-has-sidebar] main > .content-panel + .content-panel {
     border-top: 0;
     padding-top: 0;
@@ -334,7 +326,6 @@ mobile-starlight-toc .display-current {
     text-decoration-color: color-mix(in srgb, currentcolor 40%, transparent);
 }
 
-/* Preserve the longest code word as the minimum table column width. */
 .sl-markdown-content:where(:not(:has(> .landing))) :not(pre) > code {
     display: inline-block;
     max-width: 100%;
@@ -356,7 +347,6 @@ mobile-starlight-toc .display-current {
     margin-block: 20px;
 }
 
-/* The copy button sits over the end of the first line, and a phone always shows it: keep that line clear. */
 .expressive-code .ec-line:first-child .code {
     padding-inline-end: 3rem;
 }
@@ -385,14 +375,12 @@ mobile-starlight-toc .display-current {
     font-size: 0.8125rem;
 }
 
-/* Tabs: 44 px targets that fit five labels on a phone. */
 starlight-tabs .tab > [role='tab'] {
     min-height: var(--target-size);
     padding: 0 12px;
     font-size: var(--sl-text-sm);
 }
 
-/* Callouts. */
 .starlight-aside {
     padding: 14px 16px;
     border: 1px solid var(--sl-color-gray-5);
@@ -412,7 +400,6 @@ starlight-tabs .tab > [role='tab'] {
     font-size: 1rem;
 }
 
-/* Previous and next, then the Edit link as a 44 px target. */
 .pagination-links a {
     padding: 12px 16px;
     box-shadow: none;
@@ -427,12 +414,10 @@ footer .meta a {
     min-height: var(--target-size);
 }
 
-/* Search: Pagefind draws its own border, so the focus ring sits on it. */
 site-search input:focus-visible {
     outline-offset: 0;
 }
 
-/* The menu footer: Starlight's GitHub link as a 44 px target. */
 .mobile-preferences .social-icons a {
     display: inline-grid;
     place-items: center;

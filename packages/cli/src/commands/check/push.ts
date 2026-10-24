@@ -15,13 +15,14 @@ async function checkRevision(
     try {
         using copy = await copyRevision(root, { kind: 'commit', hash: revision.hash }, cancelSignal);
         return await checkTree(copy.root, options, cancelSignal, {
+            ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
             base: revision.base,
             commits: revision.commits,
-            historyComplete: revision.historyComplete,
+            shallow: revision.shallow,
             content: 'commit',
             installedRoot: root,
             reference: revision.hash,
-            ...(revision.paths === undefined ? {} : { changed: revision.paths }),
+            ...(revision.paths !== undefined && { changed: revision.paths }),
         });
     } catch (error) {
         if (!cancelSignal.aborted) throw error;
@@ -35,12 +36,14 @@ function buildPushReport(
     cancelSignal: AbortSignal,
 ): PushReport {
     const pendingRefs = selected.revisions.slice(revisions.length).flatMap((revision) => revision.refs);
-    const exitCode = Math.max(0, ...revisions.map((revision) => revision.report.exitCode));
+    const exitCode = cancelSignal.aborted
+        ? Number(cancelSignal.reason)
+        : Math.max(0, ...revisions.map((revision) => revision.report.exitCode));
     return {
         revisions,
         skipped: selected.skipped,
         exitCode,
-        ...(cancelSignal.aborted ? { canceled: { pendingRefs } } : {}),
+        ...(cancelSignal.aborted && { canceled: { pendingRefs } }),
     };
 }
 
@@ -70,7 +73,7 @@ export async function checkPush(
             hash: revision.hash,
             refs: revision.refs,
             commits: revision.commits,
-            historyComplete: revision.historyComplete,
+            shallow: revision.shallow,
             report: result.json,
         });
         text.push(`${revision.refs.join(', ')} at ${revision.hash}\n${result.text}`);

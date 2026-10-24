@@ -8,16 +8,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-
-import {
-    GRANT_FILES,
-    FROZEN_GRANTS,
-    DEFINER_REPAIRS,
-    ROW_SECURITY_SQL,
-    DEFINER_FUNCTION_SQL,
-    DEFINER_SEARCH_PATH_SQL,
-    SECURED_ROW_SECURITY_SQL,
-} from '#tests/config/checks/database/postgres/access.ts';
+import { DEFINER_REPAIRS, DEFINER_FUNCTION_SQL } from '#tests/config/checks/database/postgres/access.ts';
 
 test('grants reports GRANT ALL in both direct and default privileges', async () => {
     await using sandbox = await testdir({
@@ -26,10 +17,18 @@ test('grants reports GRANT ALL in both direct and default privileges', async () 
             'GRANT ALL ON TABLE orders TO app_reader;\nALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO app_reader;\nALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app_reader;\nALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM app_reader;\n',
     });
     const findings = await runSandboxCheck(sandbox.path, 'postgres/grants');
-    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-        { file: 'migrations/1_grants.sql', line: 1, rule: 'grant-all' },
-        { file: 'migrations/1_grants.sql', line: 2, rule: 'grant-all' },
-    ]);
+    expect(findings).toStrictEqual(
+        [1, 2].map((line) => ({
+            check: 'postgres/grants',
+            file: 'migrations/1_grants.sql',
+            line,
+            column: 1,
+            rule: 'grant-all',
+            message: 'GRANT ALL gives every privilege, present and future; name the privileges.',
+            fixable: false,
+            help: 'Name the privileges the role needs, such as `SELECT` alone.',
+        })),
+    );
 });
 
 test.each([...DEFINER_REPAIRS])('definer-search-path accepts a later $name migration', async ({ sql }) => {
@@ -52,12 +51,34 @@ test('definer-search-path keeps an unsafe overload when another signature is rep
             'CREATE FUNCTION public.grant_access(account_id int) RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;\n',
         'migrations/3_repair.sql': "ALTER FUNCTION public.grant_access() SET search_path = '';\n",
     });
-    expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toMatchObject([
-        { file: 'migrations/2_overload.sql', rule: 'definer-search-path' },
+    expect(await runSandboxCheck(sandbox.path, 'postgres/definer-search-path')).toStrictEqual([
+        {
+            check: 'postgres/definer-search-path',
+            file: 'migrations/2_overload.sql',
+            line: 1,
+            column: 1,
+            rule: 'definer-search-path',
+            message:
+                'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.',
+            fixable: false,
+            help: 'Give the function an empty `search_path` in its definition, and qualify every name inside it.',
+        },
     ]);
 });
 
 test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the newer ones', async (scope) => {
+    const FROZEN_GRANTS = [
+        { through: 'none', files: ['migrations/V1_before.sql', 'migrations/V2_at.sql', 'migrations/V3_after.sql'] },
+        { through: '2', files: ['migrations/V3_after.sql'] },
+        { through: 'all', files: [] },
+    ] as const;
+
+    const GRANT_FILES = {
+        'migrations/V1_before.sql': 'GRANT ALL ON TABLE before_table TO authenticated;\n',
+        'migrations/V2_at.sql': 'GRANT ALL ON TABLE at_table TO authenticated;\n',
+        'migrations/V3_after.sql': 'GRANT ALL ON TABLE after_table TO authenticated;\n',
+    } as const;
+
     const prefix = scope === '' ? '' : `${scope}/`;
     await using sandbox = await testdir(
         Object.fromEntries(Object.entries(GRANT_FILES).map(([path, text]) => [`${prefix}${path}`, text])),
@@ -82,6 +103,16 @@ test.each(['', 'app'])('grants in scope %j skip frozen migrations and report the
 test.each(['', 'app'])(
     'row security in scope %j reports a table without row level security and passes after the fix',
     async (scope) => {
+        const SECURED_ROW_SECURITY_SQL = `CREATE TABLE private_data (id int);
+CREATE TABLE client_data (id int);
+ALTER TABLE client_data ENABLE ROW LEVEL SECURITY;
+ALTER TABLE private_data ENABLE ROW LEVEL SECURITY;\n`;
+
+        const ROW_SECURITY_SQL = `CREATE TABLE private_data (id int);
+CREATE TABLE client_data (id int);
+ALTER TABLE client_data ENABLE ROW LEVEL SECURITY;
+`;
+
         const path = posix.join(scope, 'migrations/1_tables.sql');
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['postgres'], {
@@ -102,6 +133,9 @@ test.each(['', 'app'])(
 );
 
 test('definer-search-path reports a SECURITY DEFINER function without search_path and passes once it sets one', async () => {
+    const DEFINER_SEARCH_PATH_SQL =
+        "CREATE FUNCTION grant_access() RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = '' AS $$ SELECT 1 $$;\n";
+
     const path = 'migrations/1_access.sql';
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),

@@ -1,16 +1,16 @@
 import * as os from 'node:os';
-import { sep, join } from 'node:path';
+import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
+import { limitCommand } from '#tests/setup/system/processes.ts';
 import { type CommandFailureJson } from '#cli/types/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { limitToTestDeadline } from '#tests/setup/system/processes.ts';
 import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 import {
@@ -50,6 +50,7 @@ test('check refuses the commitlint check outside the commit-msg hook and names t
 
 test('--only refuses a check disabled by the selected level', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const result = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
@@ -60,6 +61,7 @@ test('--only refuses a check disabled by the selected level', async () => {
 
 test('--only names the configuration that an unselected check needs', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const result = await runGspot(sandbox.path, ['check', '--only', 'python/ruff', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
@@ -82,7 +84,7 @@ test.each(['--changed', '--staged', '--hook'])(
         expect(result.code).toBe(2);
         expect(JSON.parse(result.stdout)).toStrictEqual({
             error: 'git',
-            message: `${flag === '--hook' ? '--hook pre-push' : flag} needs a Git repository.`,
+            message: 'gspot needs a Git repository. Run git init, then gspot init.',
         });
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(OUTSIDE_GIT_SETTINGS);
         expect(await readFile(join(sandbox.path, 'api/source.txt'), 'utf8')).toBe('before');
@@ -140,7 +142,7 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no co
     const name = Buffer.concat([Buffer.from('bad-'), Buffer.from([0xff]), Buffer.from('.txt')]);
     const line = Buffer.concat([Buffer.from(`100644 ${hash}\t`), name, Buffer.from('\n')]);
     const command = ['git', 'update-index', '--index-info'];
-    const limited = limitToTestDeadline(command, { cwd: sandbox.path });
+    const limited = limitCommand(command, { cwd: sandbox.path });
     const indexed = Bun.spawn(command, {
         cwd: sandbox.path,
         stdin: line,
@@ -164,12 +166,13 @@ test.each([...ARGUMENT_REFUSALS])(
         await using sandbox = await createFixableSandbox();
         const refused = await runGspot(sandbox.path, [...commandArguments]);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(refused.stdout + refused.stderr).toBe(`${expected.replace('<root>/', sandbox.path + sep)}\n`);
+        expect(refused.stdout + refused.stderr).toBe(`${expected}\n`);
     },
 );
 
 test('check reports an unreadable message file as a filesystem error and writes nothing', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['commits']) });
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const before = await readTree(sandbox.path);
     const message = `gspot cannot read the commit message file ${join(sandbox.path, 'missing-message.txt')}.`;
     const human = await runGspot(sandbox.path, ['check', '--hook', 'commit-msg', '--', 'missing-message.txt']);
@@ -208,13 +211,15 @@ test('a linked .gspot folder stops check, and nothing outside changes', async ()
         'outside/sentinel': 'authored outside\n',
     });
     const project = join(sandbox.path, 'project');
+    runGitStep(project, ['init', '--quiet']);
     const outside = join(sandbox.path, 'outside');
     await symlink(outside, join(project, DOT_GSPOT));
-    const refused = parseCheckReport(await runGspot(project, ['check', '--json']));
+    const refused = await runGspot(project, ['check', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.report.checks.find((result) => result.check === 'gspot/generated-files')?.note).toBe(
-        'The gspot/generated-files check failed: A parent of .gspot/package-lock.json is a link or is not a folder. Choose a folder without links.',
-    );
+    expect(JSON.parse(refused.stdout)).toStrictEqual({
+        error: 'filesystem',
+        message: 'A parent of .gspot/version is a link or is not a folder. Choose a folder without links.',
+    });
     expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored outside\n');
     expect(await readdir(outside)).toStrictEqual(['sentinel']);
 });

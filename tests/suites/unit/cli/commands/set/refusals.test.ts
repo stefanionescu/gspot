@@ -1,12 +1,20 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { SET_REFUSALS, SET_SETTINGS, SETTING_REASON, UNKNOWN_SETTING_KEYS } from '#tests/config/commands/set.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { runGspot, expectRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
+
+import {
+    SET_REFUSALS,
+    SET_SETTINGS,
+    REFUSAL_FILES,
+    SET_VALUE_REFUSALS,
+    UNKNOWN_SETTING_KEYS,
+} from '#tests/config/commands/set.ts';
 
 test.each([...SET_REFUSALS])('set refuses %s', async (_, commandArguments, expected) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': SET_SETTINGS,
         'api/entry.sh': 'echo api\n',
         'web/index.md': '# Web\n',
@@ -28,7 +36,7 @@ test.each([...SET_REFUSALS])('set refuses %s', async (_, commandArguments, expec
 test.each([...UNKNOWN_SETTING_KEYS])(
     'set refuses the unknown or unavailable key $key and writes nothing',
     async ({ key, message }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['data-files']),
             'settings.toml': 'enabled = true\n',
         });
@@ -41,22 +49,9 @@ test.each([...UNKNOWN_SETTING_KEYS])(
     },
 );
 
-test('set reports a structured-value parser failure as an argument error', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
-    const before = await readTree(sandbox.path);
-    const failure = await runGspot(sandbox.path, ['set', 'ci.setup_command', '[', '--json']);
-    expect(failure.code).toBe(2);
-    expect(failure.stderr).toBe('');
-    expect(JSON.parse(failure.stdout)).toStrictEqual({
-        error: 'arguments',
-        message:
-            'The value [ is not a TOML inline value. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.',
-    });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
 test('set leaves existing malformed settings classified as settings errors', async () => {
     await using sandbox = await testdir({ 'gspot.toml': 'configurations = [' });
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const before = await readTree(sandbox.path);
     const failure = await runGspot(sandbox.path, ['set', 'level', 'all', '--json']);
     expect(failure.code).toBe(2);
@@ -68,16 +63,10 @@ test('set leaves existing malformed settings classified as settings errors', asy
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('a reason on a value that does not loosen the default is refused before writing', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript']),
-        'entry.ts': 'export const port = 8080;\n',
-    });
-    const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['set', 'spelling.locale', 'en-gb', '--reason', SETTING_REASON]);
-    expect(result.code, result.stdout + result.stderr).toBe(2);
-    expect(result.stderr).toBe(
-        'spelling.locale takes no reason here: the value does not loosen the shipped default. Run the command without --reason.\n',
-    );
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
+test.each([...SET_VALUE_REFUSALS])(
+    'set refuses $name in text and JSON without writing',
+    async ({ arguments: commandArguments, message }) => {
+        await using sandbox = await createGitSandbox(REFUSAL_FILES);
+        await expectRefusalWithoutWrites(sandbox.path, commandArguments, { error: 'arguments', message });
+    },
+);

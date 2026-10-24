@@ -32,4 +32,6 @@ export type CopyPaths = Omit<CopyPlan, 'target' | 'files'> & {
 
 export type DeclarationDependencies = { copies: DependencyCopy[]; configurationPaths: Set<string> };
 
-export type RevisionCopy = TemporaryFolder & { root: string; tree: string };
+export type RevisionCopy = TemporaryFolder & { root: string; tree: string; dependencyNote?: string };
+
+export type RevisionDependencies = { dependencies: DependencyCopy[]; dependencyNote?: string };

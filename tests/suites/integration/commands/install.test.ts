@@ -10,7 +10,7 @@ import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 import { INIT_FILES } from '#tests/config/commands/init/conflicting-config-files.ts';
-import { spawnGspot, buildInitArguments, installGeneratedTools } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, applyThenInstall, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 test('after init and install, apply has nothing to write', async () => {
     await using sandbox = await testdir(INIT_FILES);
@@ -18,7 +18,7 @@ test('after init and install, apply has nothing to write', async () => {
     commitAll(sandbox.path);
     const init = await spawnGspot(sandbox.path, buildInitArguments([]));
     expect(init.code, init.stdout + init.stderr).toBe(0);
-    await installGeneratedTools(sandbox.path);
+    await applyThenInstall(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect((JSON.parse(applied.stdout) as DryRunJson).outdated).toStrictEqual([]);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -30,8 +30,8 @@ test('install refuses an npm tool project edited to run scripts, before it conta
     const packageJsonPath = join(root, GSPOT_PATHS.npmProject);
     const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8')) as object;
     await chmod(packageJsonPath, 0o644);
-    const hasScript = JSON.stringify({ ...packageJson, scripts: { postinstall: 'exit 42' } });
-    await writeFile(packageJsonPath, hasScript);
+    const scriptedPackage = JSON.stringify({ ...packageJson, scripts: { postinstall: 'exit 42' } });
+    await writeFile(packageJsonPath, scriptedPackage);
     const requests = registry.requests;
     const refused = await spawnGspot(root, ['install', '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
@@ -40,7 +40,7 @@ test('install refuses an npm tool project edited to run scripts, before it conta
         message: 'The tool projects in .gspot do not match gspot.toml. Run gspot apply first.',
     });
     expect(registry.requests).toBe(requests);
-    expect(await readFile(packageJsonPath, 'utf8')).toBe(hasScript);
+    expect(await readFile(packageJsonPath, 'utf8')).toBe(scriptedPackage);
 });
 
 test.each([true, false])(
@@ -70,7 +70,7 @@ test.each([true, false])(
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(await isOnDisk(join(sandbox.path, 'gspot.toml'))).toBe(true);
-        await installGeneratedTools(sandbox.path);
+        await applyThenInstall(sandbox.path);
         const checked = await spawnGspot(sandbox.path, ['check', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(await readFile(join(sandbox.path, 'scripts/a.sh'), 'utf8')).toBe(CLEAN_BASH_SCRIPT + '\n\n');

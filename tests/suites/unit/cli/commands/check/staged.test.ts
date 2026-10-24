@@ -19,6 +19,7 @@ import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promise
 
 async function createCaseClashingSandbox(): Promise<TestdirResult> {
     const sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     try {
         const check = {
             command: [
@@ -57,6 +58,7 @@ async function createCaseClashingSandbox(): Promise<TestdirResult> {
 
 test('a staged check reads index bytes and file modes, converts no line endings, and writes nothing into the working tree', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const command = [
         process.execPath,
         '-e',
@@ -64,8 +66,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
         import { statSync } from 'node:fs';
         const bytes = Buffer.from(await Bun.file('payload.dat').arrayBuffer());
         await Bun.write('created.txt', 'snapshot output');
-        // Windows file systems keep no executable bit to compare.
-        const isExecutable = ${String(isWindows)} || (statSync('task.sh').mode & 0o111) !== 0;
+                const isExecutable = ${String(isWindows)} || (statSync('task.sh').mode & 0o111) !== 0;
         process.exit(bytes.equals(Buffer.from([255, 10, 0])) && isExecutable ? 0 : 1);
     `,
     ];
@@ -100,6 +101,7 @@ test('a staged check reads index bytes and file modes, converts no line endings,
 
 test('a staged check copies the locked dependencies and leaves the working tree as it was', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const lockfile = JSON.stringify({
         name: STAGED_PACKAGE_JSON.name,
         lockfileVersion: 3,
@@ -141,8 +143,9 @@ test('a staged check copies the locked dependencies and leaves the working tree 
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('authored input');
 });
 
-test('a staged check keeps the generated basedpyright.json of each Python scope and refuses an unstaged pyproject.toml change', async () => {
+test('a staged check keeps each Python scope config and reports the installed dependency note for an unstaged pyproject.toml change', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const project = '[project]\nname = "example"\nversion = "0.0.0"\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['python'], {
@@ -166,23 +169,23 @@ test('a staged check keeps the generated basedpyright.json of each Python scope 
     expect(
         checked.report.checks.flatMap((check) => check.findings).map(({ file, rule }) => ({ file, rule })),
     ).toStrictEqual([
+        { file: GSPOT_PATHS.miseLockfile, rule: 'missing' },
         { file: `${DOT_GSPOT}/package-lock.json`, rule: 'missing' },
         { file: GSPOT_PATHS.uvLockfile, rule: 'missing' },
     ]);
-    expect(await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')))).toStrictEqual(
-        original,
-    );
+    const contents = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
+    expect(contents).toStrictEqual(original);
     await writeFile(join(sandbox.path, 'child/pyproject.toml'), project + '# Unstaged project change.\n');
-    const refused = await runGspot(sandbox.path, commandArguments);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout) as CommandFailureJson).toStrictEqual({
-        error: 'copy',
-        message:
-            'Installed dependencies do not match the dependency files and lockfiles of the revision or its compiler configurations. Check this commit in its own clone after installing its project dependencies and running gspot install there.',
-    });
-    expect(await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')))).toStrictEqual(
-        original,
+    const rerun = parseCheckReport(await runGspot(sandbox.path, commandArguments));
+    expect(rerun.code, rerun.stdout + rerun.stderr).toBe(1);
+    expect(rerun.report.notes).toStrictEqual([
+        'The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.',
+    ]);
+    expect(rerun.report.checks.flatMap((check) => check.findings)).toStrictEqual(
+        checked.report.checks.flatMap((check) => check.findings),
     );
+    const compilerSettings = await readFile(join(sandbox.path, findManifestTarget('python', 'basedpyright.json')));
+    expect(compilerSettings).toStrictEqual(original);
 });
 
 test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep both spellings and bytes', async () => {
@@ -220,6 +223,7 @@ test.skipIf(!isCaseFolding())(
 
 test('staged checks use index bytes and settings on an unborn branch while preserving unstaged edits', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK });
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'script with spaces.sh': 'if then\n' });
     runGitStep(sandbox.path, ['init', '-q']);

@@ -1,30 +1,18 @@
-# Operating system and editor files
-.DS_Store
-Thumbs.db
-*.swp
-*~
-.idea/
-.vscode/
-
-# Dependencies
 node_modules/
 
-# Local environment
 .env
 .env.*
 
-# Logs and crash output
 *.log
 
-# Build output
-/.wrangler/
 /packages/*/dist/
+/packages/*/LICENSE.md
+/packages/cli/README.md
 /packages/cli/grammars/
 /docs/dist/
 /docs/.astro/
 /docs/.wrangler/
 
-# Local cleanup findings
 /findings/
 
 # >>> gspot managed >>>

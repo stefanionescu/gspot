@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import type { NamedCategory } from '#cli/types/settings/naming.ts';
 import type { Identifier, FileIdentifiers } from '#cli/types/checks/general/naming.ts';
-import { CATEGORY_LABELS } from '#cli/config/checks/general/naming/languages/identifier.ts';
+import { NAME_QUOTE, CATEGORY_LABELS } from '#cli/config/checks/general/naming/languages/identifier.ts';
 
 /**
 Builds an identifier with its file and the label that findings show.
@@ -27,7 +27,12 @@ Adds an identifier at its source place, except an empty name or `_`.
 @param category the kind of declared name.
 @param name the name as written, after any language change.
 */
-export function addIdentifier(found: FileIdentifiers, node: Node, category: NamedCategory, name = node.text): void {
+export function addIdentifier(
+    found: FileIdentifiers,
+    node: Node,
+    category: NamedCategory,
+    name = node.text.replaceAll(NAME_QUOTE, ''),
+): void {
     if (name === '' || name === '_') return;
     found.out.push(
         createIdentifier(found, {

@@ -9,6 +9,13 @@ import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.t
 import { writtenNamingOverrideSchema } from '#cli/schemas/configurations/naming.ts';
 import { NAME_PATTERN, RULE_FILE_PATTERN } from '#cli/config/configurations/manifest.ts';
 
+import type {
+    ConfigFile,
+    ParsedCheck,
+    ParsedManifest,
+    ConditionFields,
+    GeneratorOutput,
+} from '#cli/types/configurations.ts';
 import {
     GROUPS,
     CHECK_RUNS,
@@ -16,13 +23,6 @@ import {
     CHECK_WORKING_FOLDERS,
     SHIPPED_CONFIG_FILES_FOLDER,
 } from '#cli/config/configurations/names.ts';
-import {
-    type ConfigFile,
-    type ParsedCheck,
-    type ParsedManifest,
-    type ConditionFields,
-    type GeneratorOutput,
-} from '#cli/types/configurations.ts';
 import {
     levelSchema,
     regexSchema,
@@ -34,7 +34,7 @@ import {
 
 const fileKindSchema = z.enum(FILE_KINDS) satisfies z.ZodType<FileKind>;
 
-const optionalStringList = z.array(z.string()).default([]);
+const optionalStringList = z.string().array().default([]);
 
 const filesSchema = z.strictObject({
     extensions: optionalStringList,
@@ -44,7 +44,7 @@ const filesSchema = z.strictObject({
     languages: z.boolean().default(false),
     prettier_plugins: z.boolean().default(false),
     eslint_plugins: z.boolean().default(false),
-    kinds: z.array(fileKindSchema).default(['source']),
+    kinds: fileKindSchema.array().default(['source']),
 } satisfies SchemaShape<ParsedManifest['files']>);
 
 const selectorSchema = z.strictObject({
@@ -56,14 +56,14 @@ const selectorSchema = z.strictObject({
 
 const pointerSchema = z.strictObject({
     path: z.string(),
-    folders: z.array(z.string().min(1)).min(1).optional(),
+    folders: z.string().min(1).array().min(1).optional(),
     body: z.string(),
     note: z.string().min(1).optional(),
     inherit: z.boolean().optional(),
 } satisfies SchemaShape<NonNullable<ConfigFile['pointer']>>);
 
 const consumerNamesSchema = z
-    .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+    .union([z.string().min(1), z.string().min(1).array().min(1)])
     .transform((names) => (typeof names === 'string' ? [names] : names))
     .default([]) satisfies z.ZodType<string[], string | string[] | undefined>;
 
@@ -77,10 +77,9 @@ const configFileSchema = z
         check: consumerNamesSchema,
         pointer: pointerSchema.optional(),
         per_scope: z.boolean().default(false),
-        rule_dependencies: z.record(z.string().min(1), z.array(z.string().min(1)).min(1)).optional(),
+        rule_dependencies: z.record(z.string().min(1), z.string().min(1).array().min(1)).optional(),
         paths_setting: z.string().min(1).optional(),
     })
-    // Copied files use the same relative path beneath config-files and the generated configuration folder.
     .transform((configFile) => {
         if (configFile.pointer?.folders !== undefined)
             return {
@@ -94,31 +93,27 @@ const configFileSchema = z
             source: posix.join(SHIPPED_CONFIG_FILES_FOLDER, configFile.source ?? configFile.target),
         };
     }) satisfies z.ZodType<ConfigFile>;
+const generatorOutputSchema = z.union([
+    z
+        .strictObject({ path: z.string() })
+        .transform(({ path }) => ({ kind: 'path' as const, path })) satisfies z.ZodType<GeneratorOutput>,
+    z.strictObject({ pattern: z.string().min(1) }).transform(({ pattern }) => ({
+        kind: 'pattern' as const,
+        path: pattern,
+    })) satisfies z.ZodType<GeneratorOutput>,
+    z.strictObject({ stdout: z.string() }).transform(({ stdout }) => ({
+        kind: 'stdout' as const,
+        path: stdout,
+    })) satisfies z.ZodType<GeneratorOutput>,
+]) satisfies z.ZodType<GeneratorOutput>;
 
 const checkFields = z.strictObject({
     ...commandCheckFields,
     name: z.string().regex(NAME_PATTERN),
     level: levelSchema,
     runs: z.enum(CHECK_RUNS).default('files'),
-    generator_outputs: z
-        .array(
-            z.union([
-                z
-                    .strictObject({ path: z.string() })
-                    .transform(({ path }) => ({ kind: 'path' as const, path })) satisfies z.ZodType<GeneratorOutput>,
-                z.strictObject({ pattern: z.string().min(1) }).transform(({ pattern }) => ({
-                    kind: 'pattern' as const,
-                    path: pattern,
-                })) satisfies z.ZodType<GeneratorOutput>,
-                z.strictObject({ stdout: z.string() }).transform(({ stdout }) => ({
-                    kind: 'stdout' as const,
-                    path: stdout,
-                })) satisfies z.ZodType<GeneratorOutput>,
-            ]),
-        )
-        .min(1)
-        .optional(),
-    coverage_arguments: z.array(z.string().min(1)).optional(),
+    generator_outputs: generatorOutputSchema.array().min(1).optional(),
+    coverage_arguments: z.string().min(1).array().optional(),
     run_in_copy: z.boolean().optional(),
     env: z.record(z.string(), z.string()).optional(),
     instead_of: z.string().optional(),
@@ -133,9 +128,9 @@ const checkFields = z.strictObject({
     )
         .partial()
         .optional(),
-    needs: z.array(z.enum(CHECK_NEEDS)).min(1).optional(),
-    operating_systems: z.array(operatingSystemSchema).optional(),
-    tool: z.union([z.string().min(1), z.array(z.string().min(1)).min(1)]).optional(),
+    needs: z.enum(CHECK_NEEDS).array().min(1).optional(),
+    operating_systems: operatingSystemSchema.array().optional(),
+    tool: z.union([z.string().min(1), z.string().min(1).array().min(1)]).optional(),
     files: filesSchema.optional(),
     cwd: z.enum(CHECK_WORKING_FOLDERS).optional(),
     summary: nonemptyString,
@@ -149,8 +144,8 @@ const checkSchema = checkFields.transform(({ tool, ...check }) => {
     const executable = Array.isArray(tool) ? first : tool;
     return {
         ...check,
-        ...(executable === undefined ? {} : { tool: executable }),
-        ...(others.length === 0 ? {} : { other_tools: others }),
+        ...(executable !== undefined && { tool: executable }),
+        ...(others.length > 0 && { other_tools: others }),
     };
 }) satisfies z.ZodType<ParsedCheck>;
 
@@ -161,15 +156,22 @@ const detectionSchema = z.strictObject({
     dependencies: optionalStringList,
     absent_dependencies: optionalStringList,
     shebangs: optionalStringList,
-    runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).default([]),
+    runtimes: z.enum(JAVASCRIPT_RUNTIMES).array().default([]),
     tags: optionalStringList,
     paths: optionalStringList,
     project_files: optionalStringList,
 } satisfies SchemaShape<ParsedManifest['detect']>);
 
-const allLevelRulesSchema = z.array(z.string().min(1)).transform((rules) => new Set(rules)) satisfies z.ZodType<
-    Set<string>
->;
+const allLevelRulesSchema = z
+    .string()
+    .min(1)
+    .array()
+    .transform((rules) => new Set(rules)) satisfies z.ZodType<Set<string>>;
+const rulesOffSchema = z.strictObject({
+    rules: z.string().min(1).array().min(1),
+    reason: nonemptyString,
+    files: z.string().min(1).array().min(1).optional(),
+} satisfies SchemaShape<ParsedManifest['eslint']['rules_off'][number]>);
 
 export const manifestSchema = z
     .strictObject({
@@ -178,17 +180,9 @@ export const manifestSchema = z
         eslint: z
             .strictObject({
                 all_level_rules: allLevelRulesSchema.prefault([]),
-                selectors: z.array(selectorSchema).default([]),
-                rules_off: z
-                    .array(
-                        z.strictObject({
-                            rules: z.array(z.string().min(1)).min(1),
-                            reason: nonemptyString,
-                            files: z.array(z.string().min(1)).min(1).optional(),
-                        } satisfies SchemaShape<ParsedManifest['eslint']['rules_off'][number]>),
-                    )
-                    .default([]),
-                required_tools: z.array(z.string().min(1)).default([]),
+                selectors: selectorSchema.array().default([]),
+                rules_off: rulesOffSchema.array().default([]),
+                required_tools: z.string().min(1).array().default([]),
             } satisfies SchemaShape<ParsedManifest['eslint']>)
             .prefault({}),
         shared_prefixes: z
@@ -196,9 +190,9 @@ export const manifestSchema = z
                 ParsedManifest['shared_prefixes']
             >)
             .prefault({}),
-        ignored_paths: z.array(z.string().min(1)).default([]),
-        route_files: z.array(z.string().min(1)).default([]),
-        generated: z.array(z.string().min(1)).default([]),
+        ignored_paths: z.string().min(1).array().default([]),
+        route_files: z.string().min(1).array().default([]),
+        generated: z.string().min(1).array().default([]),
         allowed_words: optionalStringList,
         configuration: z.strictObject({
             name: z.string().regex(NAME_PATTERN),
@@ -212,12 +206,12 @@ export const manifestSchema = z
         } satisfies SchemaShape<ParsedManifest['configuration']>),
         detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
-        tool: z.array(manifestToolSchema).default([]),
-        config_file: z.array(configFileSchema).default([]),
-        check: z.array(checkSchema).default([]),
+        tool: manifestToolSchema.array().default([]),
+        config_file: configFileSchema.array().default([]),
+        check: checkSchema.array().default([]),
         naming: z
             .strictObject({
-                override: z.array(writtenNamingOverrideSchema).default([]),
+                override: writtenNamingOverrideSchema.array().default([]),
             } satisfies SchemaShape<NonNullable<ParsedManifest['naming']>>)
             .optional(),
         rules: z
@@ -247,7 +241,6 @@ export const manifestSchema = z
             >)
             .prefault({}),
     })
-    // A manifest writes one [[tool]], [[config_file]], or [[check]] record for each item; the code reads them as lists.
     .transform(({ tool, config_file: configFiles, check, detect, ...rest }) => ({
         ...rest,
         detect: detect ?? detectionSchema.strip().parse(rest.files),

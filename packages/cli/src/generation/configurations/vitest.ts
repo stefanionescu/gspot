@@ -17,22 +17,23 @@ Apply the typed presets and the project files.
 */
 export function buildVitestBlocks(scope: Pick<EslintScope, 'presets' | 'eslintFiles'>): ConfigurationBlocks {
     const { presets, eslintFiles } = scope;
-    const blocks: ConfigurationBlocks['blocks'] = [];
     const preset = getPreset(presets, 'recommended');
-    blocks.push({
-        fields: {
-            files: eslintFiles.tests,
-            rules: {
-                ...preset.blocks[0].rules,
-                ...Object.fromEntries(TEST_RULE_NAMES.map((name) => [`vitest/${name}`, 'error'])),
-                'vitest/no-focused-tests': ['error', { fixable: false }],
+    const blocks: ConfigurationBlocks['blocks'] = [
+        {
+            fields: {
+                files: eslintFiles.tests,
+                rules: {
+                    ...preset.blocks[0].rules,
+                    ...Object.fromEntries(TEST_RULE_NAMES.map((name) => [`vitest/${name}`, 'error'])),
+                    'vitest/no-focused-tests': ['error', { fixable: false }],
+                },
             },
+            properties: 'plugins: { vitest }',
+            preset: buildPresetRuleExpression([['vitest', preset]]),
         },
-        properties: 'plugins: { vitest }',
-        preset: buildPresetRuleExpression([['vitest', preset]]),
-    });
+    ];
     return {
-        imports: CONFIGURATION_PLUGINS['vitest'],
+        imports: CONFIGURATION_PLUGINS.vitest,
         blocks,
     };
 }

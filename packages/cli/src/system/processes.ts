@@ -6,7 +6,7 @@ import type { ChildProcess } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/units.ts';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
-import { buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import type {
     SpawnResult,
@@ -32,14 +32,14 @@ import {
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env: Record<string, string | undefined> = { ...buildSpawnEnvironment(options.env), PWD: options.cwd };
-    const path = Object.keys(env).find((name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH');
-    if (isAbsolute(executable) && path !== undefined)
+    const path = Object.keys(env).find((name) => foldVariableName(name) === 'PATH');
+    if (path !== undefined && isAbsolute(executable))
         env[path] = [dirname(executable), env[path]].filter((value) => value !== '').join(delimiter);
     return {
         cwd: options.cwd,
         env,
         extendEnv: false,
-        ...(options.stdin === undefined ? {} : { input: options.stdin }),
+        ...(options.stdin !== undefined && { input: options.stdin }),
         stdio: [options.stdin === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'] as const,
         encoding: 'utf8' as const,
         buffer: true,
@@ -54,7 +54,7 @@ function buildExecaOptions(options: SpawnOptions, executable: string) {
 function buildAsyncExecaOptions(options: AsyncSpawnOptions, executable: string) {
     return {
         ...buildExecaOptions(options, executable),
-        ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
+        ...(options.cancelSignal !== undefined && { cancelSignal: options.cancelSignal }),
         detached: process.platform !== 'win32',
     };
 }
@@ -69,37 +69,37 @@ function isExecutableAbsent(executable: string, cwd: string): boolean {
     );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isUnfinished(result: SpawnCompletion): boolean {
-    if (result.exitCode === undefined) return true;
-    if (result.code !== undefined) return true;
-    return result.cause !== undefined;
+    return result.exitCode === undefined || result.code !== undefined || result.cause !== undefined;
 }
 
 function buildSpawnResult(result: SpawnCompletion, started: number): SpawnResult {
-    const missing = result.code === 'ENOENT';
-    const unfinished = isUnfinished(result);
-    const errored = result.failed && unfinished;
-    const code = missing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
+    const isMissing = result.code === 'ENOENT';
+    const isUnfinishedResult = isUnfinished(result);
+    const errored = result.failed && isUnfinishedResult;
+    const code = isMissing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
     const messages: (string | undefined)[] = [result.stderr];
-    if (unfinished) messages.push(result.shortMessage);
+    if (isUnfinishedResult) messages.push(result.shortMessage);
     return {
         code: errored && code === 0 ? FAILED_CODE : code,
         stdout: result.stdout ?? '',
         stderr: messages.filter(Boolean).join('\n'),
-        missing,
-        duration: performance.now() - started,
+        missing: isMissing,
+        duration: Math.round(performance.now() - started),
         timedOut: result.timedOut,
         canceled: result.isCanceled,
         errored,
     };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isGroupGone(error: Error, child: ChildProcess): boolean {
     const hasExited = child.exitCode !== null || child.signalCode !== null;
-    if (error instanceof GspotError) return process.platform === 'win32' && hasExited;
-    if (!('code' in error)) return false;
-    if (error.code === 'ESRCH') return true;
-    return error.code === 'EPERM' && process.platform === 'darwin' && hasExited;
+    return error instanceof GspotError
+        ? process.platform === 'win32' && hasExited
+        : 'code' in error &&
+              (error.code === 'ESRCH' || (error.code === 'EPERM' && process.platform === 'darwin' && hasExited));
 }
 
 function stopProcessTree(child: ChildProcess, termination: ProcessTermination): void {
@@ -148,10 +148,11 @@ function trackProcessTree(child: ChildProcess, options: AsyncSpawnOptions): Proc
     let exitCleanup: Promise<void> | undefined;
     const startExitCleanup = () => {
         clearTimeout(timer);
-        exitCleanup = delay(EXIT_CLEANUP_MILLISECONDS).then(() => {
+        exitCleanup = (async () => {
+            await delay(EXIT_CLEANUP_MILLISECONDS);
             if (process.platform !== 'win32') stopTree();
             termination.stopped = true;
-        });
+        })();
     };
     const streams = child.stdio.filter((stream) => stream !== null && stream !== undefined);
     child.once('exit', startExitCleanup);
@@ -208,7 +209,7 @@ async function readProcessOutput(
     readStdout: StdoutReader,
 ): Promise<SpawnCompletion> {
     await readStdout({
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `for await` reads the output through it.
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
         async *[Symbol.asyncIterator]() {
             yield* child.stdout;
             options.cancelSignal?.throwIfAborted();

@@ -1,27 +1,18 @@
-import ignore from 'ignore';
-import type { Session } from '#cli/types/session.ts';
-import { listIgnores } from '#cli/settings/scopes.ts';
+import { isUtf8 } from 'node:buffer';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
-import { findCachedText } from '#cli/system/files/reads.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/units.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { readCachedBytes } from '#cli/system/files/reads.ts';
+import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
-import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
-import { TOOL_IGNORE_ARGUMENT } from '#cli/config/planning/files.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import type { PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
+import { isInScope, joinScope, findScopeFolder } from '#cli/repository/scopes.ts';
 import type { Check, ScopeCheck, Configuration } from '#cli/types/configurations.ts';
-import type { ToolIgnore, PlannedCheck, PlannedScope } from '#cli/types/planning.ts';
-
-function readToolIgnore(session: Session, check: PlannedCheck): ToolIgnore | undefined {
-    const argument = check.check.command?.indexOf(TOOL_IGNORE_ARGUMENT) ?? -1;
-    const file = argument < 0 ? undefined : check.check.command?.[argument + 1];
-    if (file === undefined) return undefined;
-    const matcher = ignore().add(findCachedText(session.reads, file) ?? '');
-    return { file, matches: matcher.ignores.bind(matcher) };
-}
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const prefix = joinScope(scopePath, '');
@@ -146,23 +137,6 @@ export function listCheckedFiles(scopes: Scope[], check: PlannedCheck): TrackedF
 }
 
 /**
-Drop the files of a per-file check that its --ignore-path file ignores, and skip the check when no file remains.
-
-@param session the repository with its file cache.
-@param check the plan to narrow.
-@returns the check with fewer files, or skipped.
-*/
-export function stripToolIgnoredFiles(session: Session, check: PlannedCheck): PlannedCheck {
-    if (check.skip !== undefined || check.check.runs !== 'files' || check.files.length === 0) return check;
-    const toolIgnore = readToolIgnore(session, check);
-    if (toolIgnore === undefined) return check;
-    const files = check.files.filter((file) => !toolIgnore.matches(file.path));
-    return files.length === 0
-        ? { ...check, skip: { cause: 'ignore', note: `every selected path is ignored by ${toolIgnore.file}` } }
-        : { ...check, files };
-}
-
-/**
 List the scopes nested inside a scope. Their files belong to them, not to it.
 
 @param scopes the scopes of this run.
@@ -193,6 +167,25 @@ export function isRootOnlyCheck(configuration: Configuration | undefined, check:
     );
 }
 
+function filterReadableFiles(planned: PlannedScope, check: Check, files: TrackedFile[]): TrackedFile[] {
+    if (check.id === 'repository/large-files') return files;
+    const scopes = planned.session.scopes;
+    return files.filter((file) => {
+        const owner = findScopeFolder(
+            file.path,
+            scopes.map((scope) => scope.folder),
+        );
+        const scope = scopes.find((scope) => scope.folder.path === owner.path) as Scope;
+        if (file.size > getTable(scope.settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE) return false;
+        return (
+            check.id === 'repository/encoding' ||
+            !file.tags.includes('text') ||
+            file.tags.includes('symlink') ||
+            isUtf8(readCachedBytes(planned.session.reads, file.path))
+        );
+    });
+}
+
 /**
 Select the files and deleted trigger paths of a planned check.
 
@@ -215,6 +208,7 @@ export function selectCheckFiles(
         triggerPaths.length === 0
             ? listCheckFiles(planned, scopeCheck, scopePath)
             : listScopeFiles(planned, scopePath, check.runs);
+    if (planned.options.forConfiguration !== true) files = filterReadableFiles(planned, check, files);
     if (!keepsChildScopes) files = files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     if (check.runs === 'files')
         return { ...stripIgnoredFiles(filterNarrowedFiles(planned, scopeCheck, files), check, scope), triggerPaths };

@@ -13,7 +13,6 @@ import { type TomlTable, type FormatSettings } from '#cli/types/settings/file.ts
 
 import {
     FORMAT_FILE_CASES,
-    SCOPE_FORMAT_CASES,
     SCOPE_FORMAT_FILES,
     FORMAT_WORKSPACE_FILES,
     PRETTIER_FORMAT_OPTIONS,
@@ -44,7 +43,7 @@ async function readInitFormatOptions(root: string, commandArguments: string[]): 
     const result = await runGspot(root, [...commandArguments, '--dry-run', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const text = (JSON.parse(result.stdout) as InitJson).settings;
-    const session = await openSession(root, { settingsFile: { settings: parseSettings(text, undefined), text } });
+    const session = await openSession(root, { settingsFile: { settings: parseSettings(text, root), text } });
     return session.scopes.map(({ settings }) => getTable(settings, 'format'));
 }
 
@@ -58,14 +57,27 @@ test.each([...FORMAT_FILE_CASES])('init reads the format settings from $name', a
     expect(await isOnDisk(`${sandbox.path}/gspot.toml`)).toBe(false);
 });
 
-test.each([...SCOPE_FORMAT_CASES])('init reads the format settings of each scope with $name', async ({ expected }) => {
+test('init reads the format settings of each scope', async () => {
     await using sandbox = await testdir(SCOPE_FORMAT_FILES);
     await createFileTree(sandbox.path, FORMAT_WORKSPACE_FILES);
     commitAll(sandbox.path);
-    const options = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
-    expect(options.map(({ indent_width, print_width, quotes }) => [indent_width, print_width, quotes])).toStrictEqual(
-        expected.map(([, ...options]) => options),
-    );
+    const result = await runGspot(sandbox.path, [...buildInitArguments(['format']), '--dry-run', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const text = (JSON.parse(result.stdout) as InitJson).settings;
+    const session = await openSession(sandbox.path, {
+        settingsFile: { settings: parseSettings(text, sandbox.path), text },
+    });
+    expect(
+        session.scopes.map(({ folder, settings }) => {
+            const { indent_width, print_width, quotes } = getTable(settings, 'format');
+            return [folder.path, indent_width, print_width, quotes];
+        }),
+    ).toStrictEqual([
+        ['', 2, 90, 'double'],
+        ['app', 6, 100, 'single'],
+        ['app/deep', 6, 100, 'single'],
+        ['sibling', 2, 90, 'double'],
+    ]);
     for (const [path, source] of Object.entries(SCOPE_FORMAT_FILES))
         expect(await readFile(`${sandbox.path}/${path}`, 'utf8')).toBe(source);
 });
@@ -103,3 +115,17 @@ test.each(['prettier.config.mjs', '.prettierrc.cjs'])(
         expect(parse(settings) as TomlTable).not.toHaveProperty('format');
     },
 );
+
+test('init preserves tabs, semicolons and trailing commas from Prettier', async () => {
+    await using sandbox = await testdir({
+        '.prettierrc.json': '{"useTabs":true,"semi":false,"trailingComma":"none"}',
+        'source.ts': 'export {};\n',
+    });
+    commitAll(sandbox.path);
+    const formats = await readInitFormatOptions(sandbox.path, buildInitArguments(['format']));
+    expect(formats[0]).toMatchObject({
+        indent_style: 'tab',
+        semicolons: false,
+        trailing_commas: 'none',
+    });
+});

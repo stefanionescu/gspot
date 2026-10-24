@@ -1,6 +1,6 @@
 import 'zod/v4/core';
+import type { PATH_ROLES } from '#cli/config/settings/available.ts';
 
-// The runtime provides RegExp.escape before the standard TypeScript declarations include it.
 declare global {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: TypeScript extends the built-in RegExp constructor through an interface.
     interface RegExpConstructor {
@@ -8,10 +8,9 @@ declare global {
     }
 }
 
-// Zod reads the path role from schema metadata.
 declare module 'zod/v4/core' {
     // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: Zod reads extra metadata types only from an interface.
     interface GlobalMeta {
-        path_role?: 'source' | 'destination' | 'build';
+        path_role?: (typeof PATH_ROLES)[number];
     }
 }

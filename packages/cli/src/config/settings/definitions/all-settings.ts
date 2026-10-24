@@ -20,37 +20,37 @@ export const SETTING_DEFINITIONS = {
         configurations: ['repository'],
         description:
             'The largest file, in kilobytes, that Git may track without Git LFS or a linguist-generated or linguist-vendored mark in .gitattributes.',
-        reason_needed: 'raising',
+        reason_when: 'raising',
         default: 1024,
     },
     'prose.max_sentence_words': {
         configurations: ['prose'],
         description: 'The most words one sentence of documentation may have.',
-        reason_needed: 'raising',
+        reason_when: 'raising',
         default: 30,
     },
     'prose.max_list_item_words': {
         configurations: ['prose'],
         description: 'The most words one list item may have.',
-        reason_needed: 'raising',
+        reason_when: 'raising',
         default: 45,
     },
     'prose.max_paragraph_sentences': {
         configurations: ['prose'],
         description: 'The most sentences one paragraph may have.',
-        reason_needed: 'raising',
+        reason_when: 'raising',
         default: 6,
     },
     'duplication.min_lines': {
         configurations: ['duplication'],
         description: 'The fewest lines a copied block has before it counts.',
-        reason_needed: 'raising',
+        reason_when: 'raising',
         default: 8,
     },
     'duplication.min_tokens': {
         configurations: ['duplication'],
         description: 'The fewest tokens a copied block has before it counts.',
-        reason_needed: 'raising',
+        reason_when: 'raising',
         default: 40,
     },
     'swift.xcode_project': {
@@ -79,7 +79,7 @@ export const SETTING_DEFINITIONS = {
     },
     'structure.reexports': {
         configurations: ['structure'],
-        reason_needed: 'adding',
+        reason_when: 'adding',
         description: 'Where re-exports may go: none, or an index file that re-exports other files.',
         default: 'none',
     },
@@ -97,40 +97,40 @@ export const SETTING_DEFINITIONS = {
         configurations: ['jest', 'pytest', 'vitest', 'swift'],
         description: 'The minimum percentage of source lines covered by tests.',
         default_all: 80,
-        reason_needed: 'lowering',
+        reason_when: 'lowering',
         default: 0,
     },
     'coverage.branches': {
         configurations: ['jest', 'pytest', 'vitest', 'swift'],
         description: 'The minimum percentage of source branches covered by tests.',
         default_all: 80,
-        reason_needed: 'lowering',
+        reason_when: 'lowering',
         default: 0,
     },
     'coverage.functions': {
         configurations: ['jest', 'pytest', 'vitest', 'swift'],
         description: 'The minimum percentage of source functions covered by tests.',
         default_all: 80,
-        reason_needed: 'lowering',
+        reason_when: 'lowering',
         default: 0,
     },
     'coverage.statements': {
         configurations: ['jest', 'pytest', 'vitest', 'swift'],
         description: 'The minimum percentage of source statements covered by tests.',
         default_all: 80,
-        reason_needed: 'lowering',
+        reason_when: 'lowering',
         default: 0,
     },
     'dependencies.min_release_age_days': {
         configurations: ['dependencies'],
         description: 'How many days a new release waits before gspot installs it as one of its tools in .gspot.',
-        reason_needed: 'lowering',
+        reason_when: 'lowering',
         default: 7,
     },
     'dependencies.allowed_registries': {
         configurations: ['dependencies'],
         description: 'The hosts a lockfile may resolve packages from.',
-        reason_needed: 'adding',
+        reason_when: 'adding',
         default: ['registry.npmjs.org', 'registry.yarnpkg.com'] as ['registry.npmjs.org', 'registry.yarnpkg.com'],
     },
     'dependencies.bun_scanner': {
@@ -145,7 +145,7 @@ export const SETTING_DEFINITIONS = {
     'docs.allowed_urls': {
         configurations: ['docs'],
         description: 'Allowed URL patterns; additions need a reason for the whole list.',
-        reason_needed: 'adding',
+        reason_when: 'adding',
         default: [] as [],
     },
     'drizzle.client_names': {
@@ -209,7 +209,7 @@ export const SETTING_DEFINITIONS = {
     'site.allowed_unlisted_pages': {
         configurations: ['site'],
         description: 'Built pages the sitemap leaves out on purpose.',
-        reason_needed: 'adding',
+        reason_when: 'adding',
         default: ['404.html'] as ['404.html'],
     },
     'spelling.allowed_words': {

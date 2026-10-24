@@ -1,13 +1,13 @@
-import { testdir } from 'testdirs';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('an unexpected error during install prints the internal error once and changes nothing', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown']),
         'README.md': '# Example\n',
     });
@@ -18,8 +18,9 @@ test('an unexpected error during install prints the internal error once and chan
     using resources = new DisposableStack();
     resources.use(
         spyOn(processes, 'spawnProcess').mockImplementation((command) => {
-            if (command[0] !== 'npm') return Promise.resolve(buildProcessResult());
-            return Promise.reject(new Error('Unexpected process failure.'));
+            return command[0] === 'npm'
+                ? Promise.reject(new Error('Unexpected process failure.'))
+                : Promise.resolve(buildProcessResult());
         }),
     );
     const human = await runGspot(sandbox.path, ['install']);

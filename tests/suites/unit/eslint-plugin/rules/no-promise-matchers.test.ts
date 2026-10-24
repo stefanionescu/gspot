@@ -3,7 +3,7 @@ import { noPromiseMatchers } from '#eslint-plugin/rules/no-promise-matchers.ts';
 
 createRuleTester().run('no-promise-matchers', noPromiseMatchers, {
     valid: [
-        'expect(await captureRejectedError(run())).toMatchObject({ code: "settings" });',
+        'expect(await captureRejection(run())).toMatchObject({ code: "settings" });',
         'expect(value).toStrictEqual({ rejects: true });',
         'assert.rejects(run());',
     ],

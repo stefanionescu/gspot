@@ -88,7 +88,7 @@ export function listUnknownConfigurations<Written extends Pick<WrittenConfigurat
     written: readonly Written[],
     configurations: ReadonlyMap<string, Configuration>,
 ): (Written & { message: string })[] {
-    const available = [...configurations.keys()];
+    const available = configurations.keys().toArray();
     return written
         .filter(({ name }) => !configurations.has(name))
         .map((missing) => ({
@@ -155,4 +155,32 @@ export function assertConfigurationsExist(names: string[], configurations: Map<s
         configurations,
     );
     if (unknown.length > 0) throw new GspotError('arguments', unknown.map(({ message }) => message).join('\n'));
+}
+
+/**
+Include suggested configurations when their detection has evidence or they need none.
+
+@param names the configurations already chosen.
+@param configurations every shipped configuration.
+@param detected the configurations with detection evidence.
+@returns chosen names and applicable suggestions, once each.
+*/
+export function expandSuggestions(
+    names: string[],
+    configurations: Map<string, Configuration>,
+    detected: Set<string>,
+): string[] {
+    const suggestions = names.flatMap((name) => configurations.get(name)?.suggests ?? []);
+    return [
+        ...new Set([
+            ...names,
+            ...suggestions.filter((name) => {
+                const configuration = configurations.get(name);
+                const hasDetection =
+                    configuration !== undefined &&
+                    Object.values(configuration.detect).some((patterns) => Object.keys(patterns).length > 0);
+                return !hasDetection || detected.has(name);
+            }),
+        ]),
+    ];
 }

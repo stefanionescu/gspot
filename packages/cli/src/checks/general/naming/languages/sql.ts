@@ -23,7 +23,7 @@ function buildColumnName(column: ColumnDef): SqlNamed {
     return {
         category: 'columns',
         name: column.colname ?? '',
-        ...(column.location === undefined ? {} : { location: column.location }),
+        ...(column.location !== undefined && { location: column.location }),
     };
 }
 
@@ -43,7 +43,7 @@ const NAME_READERS: SqlStatementVisitors<SqlNamed[]> = {
         {
             category: 'tables',
             name: fields.relation?.relname ?? '',
-            ...(fields.relation?.location === undefined ? {} : { location: fields.relation.location }),
+            ...(fields.relation?.location !== undefined && { location: fields.relation.location }),
         },
         ...listNodeFields(fields.tableElts, 'ColumnDef').map((column) => buildColumnName(column)),
     ],
@@ -51,7 +51,7 @@ const NAME_READERS: SqlStatementVisitors<SqlNamed[]> = {
         {
             category: 'tables',
             name: fields.view?.relname ?? '',
-            ...(fields.view?.location === undefined ? {} : { location: fields.view.location }),
+            ...(fields.view?.location !== undefined && { location: fields.view.location }),
         },
     ],
     AlterTableStmt: listAddedColumns,
@@ -62,14 +62,14 @@ const NAME_READERS: SqlStatementVisitors<SqlNamed[]> = {
 
 function scanParameterList(source: string, start: number): { spans: number[]; span: number; end: number } {
     const spans: number[] = [];
-    const literals = new Map(
+    const tokens = new Map(
         [...listSqlTokens(source.slice(start))].map((token) => [token.start + start, token.end + start]),
     );
     let span = start;
     let depth = 0;
     let at = start;
     while (at < source.length) {
-        const next = literals.get(at) ?? at + 1;
+        const next = tokens.get(at) ?? at + 1;
         const character = source.slice(at, next);
         if (character === ')' && depth === 0) break;
         depth += SQL_PARAMETER_DEPTH.get(character) ?? 0;
@@ -88,14 +88,24 @@ function parseParameterSpans(source: string, start: number): { spans: number[]; 
     return { spans: scanned.spans, end: scanned.end + 1 };
 }
 
-function findFunctionName(statement: SqlStatement<'CreateFunctionStmt'>, source: string) {
-    let start = statement.start;
+function skipCreateWords(source: string, start: number): number {
+    let offset = start;
     for (const pattern of [SQL_CREATE_PREFIX, SQL_CREATE_MODIFIER, SQL_CREATE_KIND])
-        start += pattern.exec(source.slice(start))?.[0].length ?? 0;
+        offset += pattern.exec(source.slice(offset))?.[0].length ?? 0;
+    return offset;
+}
+
+function findLastNameOffset(source: string, start: number): number {
+    const qualified = SQL_QUALIFIED_NAME.exec(source.slice(start))?.[0] ?? '';
+    const lastToken = qualified.matchAll(SQL_NAME_TOKEN).toArray().at(-1);
+    return start + (lastToken?.index ?? 0);
+}
+
+function findFunctionName(statement: SqlStatement<'CreateFunctionStmt'>, source: string) {
+    let start = skipCreateWords(source, statement.start);
     start += source.slice(start).length - source.slice(start).trimStart().length;
     const qualified = SQL_QUALIFIED_NAME.exec(source.slice(start))?.[0] ?? '';
-    const lastToken = [...qualified.matchAll(SQL_NAME_TOKEN)].at(-1);
-    return { start, qualified, offset: start + (lastToken?.index ?? 0) };
+    return { start, qualified, offset: findLastNameOffset(source, start) };
 }
 
 function listFunctionNames(statement: SqlStatement<'CreateFunctionStmt'>, source: string): SqlNamed[] {
@@ -130,10 +140,13 @@ function listFunctionNames(statement: SqlStatement<'CreateFunctionStmt'>, source
 }
 
 function findNamedToken(source: string, name: string, offset: number): number {
-    const token = [...source.slice(offset).matchAll(SQL_NAME_TOKEN)].find((match) => {
-        const text = match[0];
-        return text.startsWith('"') ? text.slice(1, -1).replaceAll('""', '"') === name : text.toLowerCase() === name;
-    });
+    const token = source
+        .slice(offset)
+        .matchAll(SQL_NAME_TOKEN)
+        .find((match) => {
+            const text = match[0];
+            return (text.startsWith('"') ? text.slice(1, -1).replaceAll('""', '"') : text.toLowerCase()) === name;
+        });
     return token === undefined ? -1 : offset + token.index;
 }
 
@@ -141,11 +154,7 @@ function findIdentifierOffset(named: SqlNamed, parsed: SqlFile, source: string, 
     if (named.offset !== undefined) return named.offset;
     if (named.location === undefined || named.location < 0) return findNamedToken(source, named.name, offset);
     let found = Buffer.from(parsed.source).subarray(0, named.location).toString('utf8').length;
-    if (named.category === 'tables') {
-        const qualified = SQL_QUALIFIED_NAME.exec(source.slice(found))?.[0] ?? '';
-        const last = [...qualified.matchAll(SQL_NAME_TOKEN)].at(-1);
-        if (last !== undefined) found += last.index;
-    }
+    if (named.category === 'tables') found = findLastNameOffset(source, found);
     return found;
 }
 
@@ -166,12 +175,9 @@ function extractStatementIdentifiers({
         statement.kind === 'CreateFunctionStmt'
             ? listFunctionNames(statement, lexicalSource)
             : (visitStatement(statement, NAME_READERS) ?? []);
-    let offset = statement.start;
-    for (const pattern of [SQL_CREATE_PREFIX, SQL_CREATE_MODIFIER, SQL_CREATE_KIND])
-        offset += pattern.exec(lexicalSource.slice(offset))?.[0].length ?? 0;
+    let offset = skipCreateWords(lexicalSource, statement.start);
     return named
         .filter((sqlName) => sqlName.name !== '')
-
         .flatMap((sqlName): Identifier[] => {
             const found = findIdentifierOffset(sqlName, parsed, lexicalSource, offset);
             if (found !== -1)

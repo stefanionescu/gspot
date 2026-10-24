@@ -1,5 +1,5 @@
 [configuration]
-description = "Jest suites: test lint rules, and minimum coverage before every push."
+description = "Jest suites: test lint rules, and passing tests before every push. Level all adds a coverage minimum."
 requires = ["javascript"]
 title = "Jest"
 
@@ -20,7 +20,7 @@ kind = "library"
 name = "eslint-plugin-jest"
 npm = "eslint-plugin-jest"
 rule_prefix = "jest"
-version = "29.16.6"
+version = "29.17.0"
 
 [eslint]
 required_tools = ["eslint-plugin-jest"]
@@ -38,7 +38,6 @@ name = "coverage"
 runs = "scope"
 stage = "push"
 summary = "Runs Jest with coverage, and fails on a failed test or when lines, branches, functions, or statements fall under their minimums."
-tool = "jest"
 why = "A coverage minimum keeps new code from arriving untested."
 
 [check.files]

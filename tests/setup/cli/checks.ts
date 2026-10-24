@@ -62,7 +62,7 @@ export function planSandboxCheck(
         check,
         files,
         triggerPaths: [],
-        ...(tool === undefined ? {} : { tool: getTool(session.configurations.values(), tool) }),
+        ...(tool !== undefined && { tool: getTool(session.configurations.values(), tool) }),
     };
 }
 
@@ -82,7 +82,12 @@ export async function prepareSwiftCheck(
     await using resources = new AsyncDisposableStack();
     resources.use(spyOn(environment, 'getOperatingSystem').mockReturnValue('macos'));
     resources.use(
-        fakeToolExecutables([...readConfigurations().values()].flatMap((configuration) => configuration.tools)),
+        fakeToolExecutables(
+            readConfigurations()
+                .values()
+                .flatMap((configuration) => configuration.tools)
+                .toArray(),
+        ),
     );
     resources.use(await redirectCacheFolder());
     await createFileTree(sandbox.path, {
@@ -94,7 +99,9 @@ export async function prepareSwiftCheck(
     return Object.assign(resources.move(), { session, planned: planSandboxCheck(session, checkId) });
 }
 
-/** Open the sandbox, run one built-in check, and return its findings. */
+/**
+Open the sandbox, run one built-in check, and return its findings.
+*/
 export async function runSandboxCheck(
     root: string,
     checkId: string,
@@ -107,7 +114,9 @@ export async function runSandboxCheck(
     return result.findings;
 }
 
-/** Open a session with fake pinned versions of these tools. */
+/**
+Open a session with fake pinned versions of these tools.
+*/
 export async function openFakeToolSession(
     root: string,
     toolNames: string[],

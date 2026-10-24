@@ -38,19 +38,24 @@ test('format.indent_width reaches EditorConfig, Prettier and each config file', 
     expect(editor?.tabWidth).toBe(width);
     const configuration = JSON.parse(generated.get(findManifestTarget('format', 'prettier.json'))!) as Options;
     expect(configuration.tabWidth).toBe(width);
-    expect(parseJsonc(generated.get(findManifestTarget('markdown', 'markdownlint.jsonc'))!)).toMatchObject({
-        MD007: { indent: width },
+    const observed: unknown = parseJsonc(generated.get(findManifestTarget('markdown', 'markdownlint.jsonc'))!);
+    expect(observed).not.toHaveProperty('MD007');
+    const parsed: unknown = parseYaml(generated.get(findManifestTarget('data-files', 'yamllint.yml'))!);
+    expect(parsed).toMatchObject({
+        rules: { anchors: {}, 'key-duplicates': {}, truthy: { 'check-keys': false } },
     });
-    expect(parseYaml(generated.get(findManifestTarget('data-files', 'yamllint.yml'))!)).toMatchObject({
-        rules: { indentation: { spaces: 'consistent' } },
-    });
-    expect(parseToml(generated.get(findManifestTarget('python', 'ruff.toml'))!)).toHaveProperty('indent-width', width);
-    expect(parseToml(generated.get(findManifestTarget('data-files', 'taplo.toml'))!)).toMatchObject({
+    const yamllint: unknown = parseYaml(generated.get(findManifestTarget('data-files', 'yamllint.yml'))!);
+    expect(yamllint).not.toHaveProperty('rules.indentation');
+    const ruff: unknown = parseToml(generated.get(findManifestTarget('python', 'ruff.toml'))!);
+    expect(ruff).toHaveProperty('indent-width', width);
+    const taplo: unknown = parseToml(generated.get(findManifestTarget('data-files', 'taplo.toml'))!);
+    expect(taplo).toMatchObject({
         formatting: { indent_string: ' '.repeat(width) },
     });
     expect(generated.get(findManifestTarget('sql', 'sqlfluff.cfg'))).toContain(`tab_space_size = ${String(width)}`);
     expect(generated.get(findManifestTarget('swift', 'swiftformat'))).toContain(`--indent ${String(width)}\n`);
 });
+
 test('a YAML indent override gives EditorConfig and Prettier the same width', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['format', 'javascript'], {
@@ -71,6 +76,7 @@ test('a YAML indent override gives EditorConfig and Prettier the same width', as
     expect(editor?.tabWidth).toBe(2);
     expect(configuration?.tabWidth).toBe(2);
 });
+
 test('Prettier overrides agree in the root pointer and editor lookup', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;

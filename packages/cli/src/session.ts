@@ -1,10 +1,11 @@
-import { readSettings } from '#cli/settings/read.ts';
+import { planChecks } from '#cli/planning/checks.ts';
 import type { Session } from '#cli/types/session.ts';
+import { parseSettings } from '#cli/settings/read.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { readSettingsFile } from '#cli/settings/file.ts';
 import type { ReadCache } from '#cli/types/system/files.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { isActive, planChecks } from '#cli/planning/checks.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import type { Repository } from '#cli/types/repository/files.ts';
 import { selectToolConfigurations } from '#cli/planning/tools.ts';
@@ -20,30 +21,26 @@ import { findRootScope, selectForScope, buildScopeSettings } from '#cli/settings
 import { selectStartRunner, detectPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { classifyFile, listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 
-async function buildScopes(
+function buildScopes(
     settings: Settings,
     repository: Repository,
     configurations: Map<string, Configuration>,
-    readPackageManager: () => Promise<PackageManagerPin>,
-): Promise<Scope[]> {
+    readPackageManager: () => PackageManagerPin,
+): Scope[] {
     const { scopeFolders: scopes } = repository;
     const automatic = listAutomaticConfigurations(configurations, repository);
     const effective = { ...settings, configurations: [...new Set([...settings.configurations, ...automatic])] };
-    return await Promise.all(
-        scopes.map(async (scope) => {
-            const selected = selectForScope(effective, scope.path, configurations);
-            const available = buildAvailableSettings(selected, settings.level);
-            const packageManager = available.defaults.has('site.build_command')
-                ? await readPackageManager()
-                : undefined;
-            applyDetectedDefaults(available, {
-                packageManagerName: packageManager?.name,
-                dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
-            });
-            const view = buildScopeSettings(available, effective, selected, scope.path);
-            return { folder: scope, configurations: selected, availableSettings: available, settings: view };
-        }),
-    );
+    return scopes.map((scope) => {
+        const selected = selectForScope(effective, scope.path, configurations);
+        const available = buildAvailableSettings(selected, settings.level);
+        const packageManager = available.defaults.has('site.build_command') ? readPackageManager() : undefined;
+        applyDetectedDefaults(available, {
+            packageManagerName: packageManager?.name,
+            dependencyNames: listProjectDependencyNames(repository.dependencyFiles, scope.path),
+        });
+        const view = buildScopeSettings(available, effective, selected, scope.path);
+        return { folder: scope, configurations: selected, availableSettings: available, settings: view };
+    });
 }
 
 /**
@@ -81,6 +78,7 @@ export async function readSessionRepository({
     });
     if (!repository.files.some((file) => file.path === SETTINGS_FILE)) {
         const bytes = Buffer.from(text);
+        reads.sources.set(SETTINGS_FILE, bytes);
         repository.files.push(
             classifyFile(
                 reads.root,
@@ -115,7 +113,7 @@ export async function openSession(
     {
         installedRoot = rootPath,
         reads = createReadCache(rootPath),
-        settingsFile = readSettings(rootPath),
+        settingsFile: requestedSettings,
         resources = new DisposableStack(),
         cancelSignal,
     }: {
@@ -126,17 +124,19 @@ export async function openSession(
         cancelSignal?: AbortSignal | undefined;
     } = {},
 ): Promise<Session> {
+    const file = requestedSettings ?? readSettingsFile(rootPath);
+    const settingsFile = requestedSettings ?? { text: file.text, settings: parseSettings(file.text, rootPath) };
     const root = reads.root;
     const configurations = readConfigurations();
     const settings = settingsFile.settings;
     const repository = await readSessionRepository({ settings, text: settingsFile.text, configurations, reads });
-    let pin: Promise<PackageManagerPin> | undefined;
+    let pin: PackageManagerPin | undefined;
     const readPackageManager = () =>
         (pin ??= detectPackageManager(
             root,
             repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
         ));
-    const scopes = await buildScopes(settings, repository, configurations, readPackageManager);
+    const scopes = buildScopes(settings, repository, configurations, readPackageManager);
     const timeoutSeconds = Number(findRootScope(scopes).settings.settings['tool_timeout_seconds']);
     const session: Session = {
         toolConfigurations: [],
@@ -147,7 +147,7 @@ export async function openSession(
         packageManager: undefined,
         root,
         installedRoot,
-        startRunner: await selectStartRunner(root),
+        startRunner: selectStartRunner(root),
         settingsFile,
         configurations,
         repository,
@@ -156,10 +156,10 @@ export async function openSession(
         reads,
     };
     session.configuredChecks = planChecks(session, { stage: 'any', forConfiguration: true }).filter(
-        (check) => isActive(check) && check.skip === undefined,
+        (check) => check.skip === undefined,
     );
     session.toolConfigurations = selectToolConfigurations(session, session.configuredChecks);
     if (Object.keys(listToolProjectPins(session.toolConfigurations).npm).length > 0)
-        session.packageManager = await readPackageManager();
+        session.packageManager = readPackageManager();
     return session;
 }

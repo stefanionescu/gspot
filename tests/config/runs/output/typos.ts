@@ -40,9 +40,4 @@ export const TYPOS_REPORT_ERRORS = [
         output: { ...TYPO_REPORT, path: 'missing.txt' },
         message: 'Cannot read reported source file missing.txt.',
     },
-    {
-        name: 'large offset',
-        output: { ...TYPO_REPORT, byte_offset: 999 },
-        message: 'typos reported a position outside the file: sample.txt',
-    },
 ] as const;

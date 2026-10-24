@@ -14,12 +14,12 @@ kind = "library"
 name = "eslint-plugin-expo"
 npm = "eslint-plugin-expo"
 rule_prefix = "expo"
-version = "1.1.0"
+version = "1.2.1"
 
 [[tool]]
 name = "expo-doctor"
 npm = "expo-doctor"
-version = "1.20.4"
+version = "1.21.5"
 
 [eslint]
 required_tools = ["eslint-plugin-expo"]

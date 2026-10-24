@@ -7,3 +7,7 @@ export const VALE_INSTALL_ARGUMENTS = ['sync'] as const;
 export const VALE_INSTALL_PREFIX = 'vale-';
 
 export const VALE_STYLES_PATH_PATTERN = /^StylesPath[\t ]*=([^\r\n]*)$/gmu;
+
+export const VALE_PACKAGES_PATTERN = /^Packages[\t ]*=[^\r\n]*$/gmu;
+
+export const VALE_ARCHIVE_LIMIT = 8 * 1024 * 1024;

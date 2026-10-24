@@ -4,18 +4,24 @@ import { type Optional, type JsonValue } from '#cli/types/shapes.ts';
 
 import {
     type RULE_CONDITIONS,
+    type TRIVY_SEVERITIES,
+    type SQLFLUFF_DIALECTS,
     type DOCSTRING_CONVENTIONS,
     type IMPORT_EXTENSION_STYLES,
 } from '#cli/config/settings/tools/tables.ts';
+
+type SqlfluffDialect = (typeof SQLFLUFF_DIALECTS)[number];
+
+type TrivySeverity = (typeof TRIVY_SEVERITIES)[number];
 
 export type WrittenTools = {
     hadolint?: { trusted_registries?: string[] | undefined } | undefined;
     nginx?: { image?: string | undefined } | undefined;
     ruff?: { docstring_convention?: (typeof DOCSTRING_CONVENTIONS)[number] | undefined } | undefined;
     semgrep?: { registry_packs?: string[] | undefined; rule_files?: string[] | undefined } | undefined;
-    sqlfluff?: { dialect?: string | undefined } | undefined;
+    sqlfluff?: { dialect?: SqlfluffDialect | undefined } | undefined;
     swiftlint?: { always_keep_imports?: string[] | undefined } | undefined;
-    trivy?: { severity?: string[] | undefined } | undefined;
+    trivy?: { severity?: TrivySeverity[] | undefined } | undefined;
     eslint?: Optional<ParsedEslint> | undefined;
     commitlint?:
         | {
@@ -46,11 +52,11 @@ type ParsedRuff = { docstring_convention?: (typeof DOCSTRING_CONVENTIONS)[number
 
 type ParsedSemgrep = { registry_packs: string[]; rule_files: string[] };
 
-type ParsedSqlfluff = { dialect: string };
+type ParsedSqlfluff = { dialect: SqlfluffDialect };
 
 type ParsedSwiftlint = { always_keep_imports: string[] };
 
-type ParsedTrivy = { severity: string[] };
+type ParsedTrivy = { severity: TrivySeverity[] };
 
 type ParsedEslint = {
     import_extension: (typeof IMPORT_EXTENSION_STYLES)[number];

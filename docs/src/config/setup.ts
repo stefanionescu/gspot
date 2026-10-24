@@ -9,21 +9,21 @@ import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/generation/ci.t
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/definitions/root.ts';
 
 const PACKAGE_MANAGER_DOCS = {
+    bun: { label: 'Bun', lockfile: 'bun.lock' },
     npm: { label: 'npm', lockfile: 'package-lock.json' },
     pnpm: { label: 'pnpm', lockfile: 'pnpm-lock.yaml' },
     yarn: { label: 'Yarn', lockfile: 'yarn.lock' },
-    bun: { label: 'Bun', lockfile: 'bun.lock' },
     mise: { label: 'mise', lockfile: undefined },
 } as const;
 
-export const SETUP_COMMANDS = Object.entries(START_RUNNERS).map(([name, { command, installCommand }]) => {
-    const { label, lockfile } = PACKAGE_MANAGER_DOCS[name as keyof typeof START_RUNNERS];
+export const SETUP_COMMANDS = Object.entries(PACKAGE_MANAGER_DOCS).map(([name, { label, lockfile }]) => {
+    const { command, installCommand } = START_RUNNERS[name as keyof typeof START_RUNNERS];
     const frozen = lockfile === 'yarn.lock' ? YARN_BERRY_INSTALL : lockfile && FROZEN_INSTALLS[lockfile];
     return {
         label,
         start: command,
         lines: [
-            installCommand.replace('<package>@<version>', cliPackage.name),
+            installCommand.replace('<package>@<version>', () => cliPackage.name),
             `${command} init`,
             `${command} install`,
         ] as const,
@@ -31,7 +31,7 @@ export const SETUP_COMMANDS = Object.entries(START_RUNNERS).map(([name, { comman
     };
 });
 
-export const YARN_CLASSIC_INSTALL = FROZEN_INSTALLS['yarn.lock']?.join(' ');
+export const YARN_CLASSIC_INSTALL = FROZEN_INSTALLS['yarn.lock'].join(' ');
 
 export const LOCKFILE_INSTALLS = [
     { lockfile: 'yarn.lock', note: 'Yarn 2 on', command: YARN_BERRY_INSTALL.join(' ') },

@@ -16,8 +16,8 @@ export function parseYamlFile(path: string, text: string, schema?: z.ZodType): u
     let value: unknown;
     try {
         value = parse(text, { merge: true }) as unknown;
-    } catch (error) {
-        if (!(error instanceof Error)) throw error;
+    } catch (error_) {
+        const error = error_ as Error;
         const detail = error.message.split('\n', 1).join('').replace(/[.:]$/u, '');
         throw new GspotError('filesystem', `${path} is not valid YAML: ${detail}. Fix the file.`, { cause: error });
     }

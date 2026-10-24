@@ -21,9 +21,8 @@ import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { listCheckIds, readConfigurations } from '#cli/configurations/manifests.ts';
 
-const eslintRuleNames = new Set(
-    nameListSchema.parse(JSON.parse(readFileSync(buildAssetPath(ESLINT_RULE_NAMES_FILE), 'utf8'))).names,
-);
+const eslintRuleText = readFileSync(buildAssetPath(ESLINT_RULE_NAMES_FILE), 'utf8');
+const eslintRuleNames = new Set(nameListSchema.parse(JSON.parse(eslintRuleText)).names);
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     const subjects = [
@@ -57,8 +56,7 @@ function explainSlashed(
 function explainNamed(session: Session | undefined, subject: string): Explanation | undefined {
     const named = explainSetting(session, subject) ?? explainConfiguration(session, subject);
     if (named !== undefined) return named;
-    if (!eslintRuleNames.has(subject)) return undefined;
-    return explainLintRule(ESLINT_MANIFEST_TOOL, subject);
+    return eslintRuleNames.has(subject) ? explainLintRule(ESLINT_MANIFEST_TOOL, subject) : undefined;
 }
 
 async function runExplainCommand(cwd: string, subject: string): Promise<CommandResult> {
@@ -69,7 +67,7 @@ async function runExplainCommand(cwd: string, subject: string): Promise<CommandR
     const result = explain(session, subject, cwd);
     return {
         text: result.text,
-        json: { ...result.data, kind: result.kind, subject: result.subject },
+        json: { ...result.facts, kind: result.kind, subject: result.subject },
         exitCode: 0,
     };
 }

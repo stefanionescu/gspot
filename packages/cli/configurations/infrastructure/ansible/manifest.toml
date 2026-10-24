@@ -10,12 +10,11 @@ builds = ["macos", "linux"]
 min_version = "24.0.0"
 name = "ansible-lint"
 pypi = "ansible-lint"
-version = "26.8.0"
+version = "26.10.1"
 
 [[config_file]]
 per_scope = true
 target = "ansible-lint.yml"
-tool = "ansible-lint"
 
 [[check]]
 command = ["ansible-lint", "-c", "{config_file:ansible-lint}", "--offline", "--nocolor", "-f", "pep8", "--profile", "{level:moderate:production}"]
@@ -27,5 +26,4 @@ name = "ansible-lint"
 runs = "scope"
 stage = "commit"
 summary = "Runs the moderate ansible-lint profile at recommended and production at all, beside each ansible.cfg or at the scope root."
-tool = "ansible-lint"
 why = "Playbooks run as root on production hosts, and a non-idempotent task changes them each time."

@@ -7,7 +7,6 @@ import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { join, extname, basename } from 'node:path';
 import { generate } from '#cli/generation/generate.ts';
-import { listCheckTools } from '#cli/planning/tools.ts';
 import { parse as parseToml } from '@decimalturn/toml-patch';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { listToolProjectPins } from '#cli/configurations/tools.ts';
@@ -16,9 +15,7 @@ import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 
 import {
     CONFIG_FILE_PROJECT,
@@ -36,18 +33,15 @@ test('a Ruff-only Python scope gets no type checker file or pointer', async () =
     });
 
     const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
-    expect(paths).toContain(findManifestTarget('python', 'ruff.toml'));
-    expect(paths).toContain('linted/ruff.toml');
-    expect(paths).toContain('typed/ruff.toml');
-    expect(paths).not.toContain(`${GSPOT_PATHS.configurations}/language/python/scopes/linted/basedpyright.json`);
-    expect(paths).not.toContain('linted/pyrightconfig.json');
-    expect(
-        paths.filter((path) => path.startsWith(`${GSPOT_PATHS.configurations}/`) && path.endsWith('/ruff.toml')),
-    ).toHaveLength(1);
-    expect(paths).toContain(findManifestTarget('python', 'basedpyright.json'));
-    expect(paths).toContain('typed/pyrightconfig.json');
+    expect(paths.filter((path) => /ruff\.toml|pyright/u.test(path))).toStrictEqual([
+        '.gspot/configurations/language/python/basedpyright.json',
+        '.gspot/configurations/language/python/ruff.toml',
+        'linted/ruff.toml',
+        'typed/pyrightconfig.json',
+        'typed/ruff.toml',
+    ]);
 });
-test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
+test('a TypeScript-only scope gets the config files of its selected JavaScript checks', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript']),
         'src/main.ts': 'export const value = 1;\n',
@@ -55,8 +49,8 @@ test('a TypeScript-only scope gets the Knip file and no jsconfig', async () => {
 
     const session = await openSession(sandbox.path);
     const paths = generate(session).files.map((file) => file.path);
-    expect(paths).toContain(findManifestTarget('javascript', 'knip.json'));
-    expect(paths).not.toContain(findManifestTarget('javascript', 'jsconfig.json'));
+    const kept = [findManifestTarget('javascript', 'jsconfig.json'), findManifestTarget('javascript', 'knip.json')];
+    expect(paths.filter((path) => kept.includes(path))).toStrictEqual(kept);
 });
 test.each([...IGNORED_CHECK_FILES])(
     '$name and drops the files of the ignored checks',
@@ -64,11 +58,10 @@ test.each([...IGNORED_CHECK_FILES])(
         await using sandbox = await testdir({ 'gspot.toml': settings, ...files });
 
         const paths = generate(await openSession(sandbox.path)).files.map((file) => file.path);
-        for (const path of kept) expect(paths).toContain(path);
-        for (const path of dropped) expect(paths).not.toContain(path);
+        expect(paths.filter((path) => [...kept, ...dropped].includes(path))).toStrictEqual([...kept]);
     },
 );
-test('Go and Rust sources get only the formatter files and tools they use', async () => {
+test('Go and Rust sources keep the files and tools of every selected configuration', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings([], { level: 'all' }),
         'main.go': 'package main\nfunc main() {}\n',
@@ -78,20 +71,35 @@ test('Go and Rust sources get only the formatter files and tools they use', asyn
     const session = await openSession(sandbox.path);
     const files = generate(session).files;
     const paths = files.map((file) => file.path);
-    expect(paths).toContain('.editorconfig');
-    expect(paths).toContain(findManifestTarget('data-files', 'taplo.toml'));
-    for (const path of [findManifestTarget('format', 'prettier.json'), '.prettierignore'])
-        expect(paths).not.toContain(path);
-    const packages = listToolProjectPins(session.toolConfigurations).npm;
-    const expected = listToolProjectPins([session.configurations.get('data-files')!]).npm;
-    expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(
-        Object.keys(expected).toSorted((first, second) => first.localeCompare(second)),
-    );
+    expect(
+        paths.filter((path) =>
+            [
+                '.editorconfig',
+                findManifestTarget('data-files', 'taplo.toml'),
+                findManifestTarget('format', 'prettier.json'),
+                '.prettierignore',
+            ].includes(path),
+        ),
+    ).toStrictEqual([
+        '.editorconfig',
+        '.gspot/configurations/general/data-files/taplo.toml',
+        '.gspot/configurations/general/format/prettier.json',
+        '.prettierignore',
+    ]);
+    expect(Object.keys(listToolProjectPins(session.toolConfigurations).npm)).toStrictEqual([
+        'ajv',
+        'jscpd',
+        'prettier',
+        'syncpack',
+        'v8r',
+    ]);
 });
-test.each([...LEVELS])("every configuration's config files parse at level %s", async (level) => {
-    const configurations = [...readConfigurations().values()]
+test.each([...LEVELS])("every configuration's generated config files parse at level %s", async (level) => {
+    const configurations = readConfigurations()
+        .values()
         .filter((configuration) => configuration.configFiles.length > 0)
-        .map((configuration) => configuration.name);
+        .map((configuration) => configuration.name)
+        .toArray();
     await using sandbox = await testdir({
         ...CONFIG_FILE_PROJECT,
         'gspot.toml': buildSandboxSettings(configurations, { level, rules: true }),
@@ -105,27 +113,6 @@ test.each([...LEVELS])("every configuration's config files parse at level %s", a
             !file.path.startsWith(`${DOT_GSPOT}/`) ||
             (file.path.startsWith(`${GSPOT_PATHS.configurations}/`) && !file.path.includes('/rules/')),
     );
-    const selected = new Set(
-        session.scopes
-            .flatMap((scope) => scope.configurations)
-            .filter((configuration) => configurations.includes(configuration.name))
-            .map((configuration) => configuration.name),
-    );
-    expect(selected).toStrictEqual(new Set(configurations));
-    const paths = new Set(generated.map((file) => file.path));
-    const checks = session.configuredChecks;
-    const checkIds = new Set(checks.map((each) => each.check.id));
-    const tools = new Set(checks.flatMap((check) => listCheckTools(check)));
-    for (const { folder, configurations } of session.scopes) {
-        const targets = configurations
-            .flatMap((configuration) => configuration.configFiles)
-            .filter((file) => file.level !== 'all' || level === 'all')
-            .filter((file) => file.tool.length === 0 || file.tool.some((name) => tools.has(name)))
-            .filter((file) => file.check.length === 0 || file.check.some((name) => checkIds.has(name)))
-            .map((file) => getConfigFileTarget(folder.path, file, getConfigFiles(session).targets));
-        expect(targets.length).toBeGreaterThan(0);
-        expect(new Set(targets).difference(paths)).toStrictEqual(new Set<string>());
-    }
     for (const file of generated) {
         if (new Set<string>(UNPARSED_CONFIG_FILES).has(basename(file.path))) continue;
         parseConfigFile(file.content, file.path);

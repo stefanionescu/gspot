@@ -41,7 +41,11 @@ export const INVALID_DEPENDENCY_FILES = [
         '{"workspaces":[7]}',
         'package.json: workspaces: Invalid input; workspaces.0: Invalid input: expected string, received number; workspaces: Invalid input: expected object, received array. Fix the field.',
     ],
-    ['pyproject.toml', '[project', 'pyproject.toml:1:9 is not valid TOML: Error parsing TOML (1, 9). Fix the file.'],
+    [
+        'pyproject.toml',
+        '[project',
+        'pyproject.toml:1:9 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
+    ],
     [
         'pyproject.toml',
         '[project]\ndependencies = [7]\n',

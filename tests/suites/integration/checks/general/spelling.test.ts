@@ -92,7 +92,7 @@ test('typos reports Unicode columns in files whose names hold a space, a typo, o
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function buildTypoFinding(path: string) {
     return { file: `nested/${path}`, line: 1, column: 6, fixable: true, message: `\`${TYPO.the}\` should be \`the\`` };
 }
@@ -103,7 +103,7 @@ async function runTyposCheck(sourceFiles: Record<string, string>) {
         sandbox,
         buildSandboxChanges(SPELLING_SANDBOX.files, sourceFiles),
     );
-    const checked = parseCheckReport(await spawnGspot(sandbox.root, SPELLING_CHECK_ARGUMENTS, sandbox.environment));
+    const checked = parseCheckReport(await spawnGspot(sandbox.root, SPELLING_CHECK_ARGUMENTS));
     return {
         ...checked,
         files: checked.report.checks
@@ -114,14 +114,13 @@ async function runTyposCheck(sourceFiles: Record<string, string>) {
 }
 
 test('typos keeps its excluded paths for a file named on the command line', async () => {
-    const { root, environment } = installedSandbox();
+    const { root } = installedSandbox();
     await using _change = await changeAppliedSandbox(installedSandbox(), {
-        check: 'spelling/typos',
         files: { 'assets/mark.svg': `<svg><title>${TYPO.the}</title></svg>\n` },
     });
 
     const excluded = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'spelling/typos', '--json', '--', 'assets/mark.svg'], environment),
+        await spawnGspot(root, ['check', '--only', 'spelling/typos', '--json', '--', 'assets/mark.svg']),
     );
     expect(excluded.code, excluded.stdout + excluded.stderr).toBe(0);
     expect(excluded.report.checks).toMatchObject([{ check: 'spelling/typos', status: 'passed', fileCount: 1 }]);

@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict';
 import { CODE_TOKENS } from '../../config/home.ts';
 import type { ExampleLine, ExampleToken } from '../../types/home.ts';
 
@@ -8,9 +7,8 @@ function tokenizeExampleLine(text: string): ExampleToken[] {
     let offset = 0;
     for (const token of text.matchAll(CODE_TOKENS)) {
         tokens.push({ text: text.slice(offset, token.index), kind: '' });
-        assert.ok(token.groups !== undefined, 'The syntax pattern must name its token groups.');
-        const kind = Object.entries(token.groups).find(([, value]) => value === token[0])?.[0];
-        assert.ok(kind !== undefined, 'The syntax token must have a token group.');
+        const kind =
+            Object.entries(token.groups as Record<string, string>).find(([, value]) => value === token[0])?.[0] ?? '';
         tokens.push({ text: token[0], kind });
         offset = token.index + token[0].length;
     }

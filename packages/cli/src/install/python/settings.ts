@@ -9,7 +9,13 @@ import { parseTomlFile } from '#cli/parsers/formats/toml/document.ts';
 import type { PythonIndexSettings } from '#cli/types/install/python.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects/dependencies.ts';
 import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/install/python/settings.ts';
-import { URL_SCHEME, INDEX_SETTINGS, UV_SETTINGS_FILE } from '#cli/config/install/python/settings.ts';
+
+import {
+    URL_SCHEME,
+    INDEX_SETTINGS,
+    UV_SETTINGS_FILE,
+    MILLISECONDS_PER_DAY,
+} from '#cli/config/install/python/settings.ts';
 
 function normalizeIndexLocation(root: string, location: string): string {
     if (URL_SCHEME.test(location)) return location;
@@ -22,10 +28,12 @@ credentials.
 
 @param repositoryRoot the base folder for reading uv settings and resolving local index paths.
 @param settingsFolder the folder where the resolution runs.
+@param days the minimum age of a release, in days.
 @returns index credentials that must stay out of generated lockfiles.
 */
-export function writePythonSettings(repositoryRoot: string, settingsFolder: string): string[] {
+export function writePythonSettings(repositoryRoot: string, settingsFolder: string, days: number): string[] {
     const { settings, credentials } = readPythonSettings(repositoryRoot);
+    settings['exclude-newer'] = new Date(Date.now() - days * MILLISECONDS_PER_DAY).toISOString();
     writeFileSync(join(settingsFolder, UV_SETTINGS_FILE), stringify(settings), { mode: PRIVATE_FILE });
     return credentials;
 }

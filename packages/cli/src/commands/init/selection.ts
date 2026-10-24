@@ -3,11 +3,9 @@ import { detectConfigurations } from '#cli/repository/detect.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import type { ScopeFolder } from '#cli/types/repository/files.ts';
 import { type ConfigurationEvidence } from '#cli/types/repository/detect.ts';
-import { type SelectedConfigurations } from '#cli/types/settings/inheritance.ts';
-import { selectConfigurations, assertConfigurationsExist } from '#cli/configurations/select.ts';
+import { expandSuggestions, selectConfigurations, assertConfigurationsExist } from '#cli/configurations/select.ts';
 
 import {
-    type SettingsDraft,
     type InitRepository,
     type InitConfigurations,
     type ConfigurationOrigin,
@@ -17,8 +15,7 @@ import {
 function findInitConfiguration(init: InitRepository, name: string): Configuration | undefined {
     const configuration = init.configurations.get(name);
     if (!configuration) return undefined;
-    if (configuration.when?.git === true && !init.repository.hasGit) return undefined;
-    return configuration;
+    return configuration.when?.git === true && !init.repository.hasGit ? undefined : configuration;
 }
 
 function selectRootConfigurations(
@@ -62,26 +59,6 @@ function hasSourceOutsideScopes(
     );
 }
 
-function expandSuggestions(
-    names: string[],
-    configurations: Map<string, Configuration>,
-    detected: Set<string>,
-): string[] {
-    const suggestions = names.flatMap((name) => configurations.get(name)?.suggests ?? []);
-    return [
-        ...new Set([
-            ...names,
-            ...suggestions.filter((name) => {
-                const configuration = configurations.get(name);
-                const hasDetection =
-                    configuration !== undefined &&
-                    Object.values(configuration.detect).some((patterns) => Object.keys(patterns).length > 0);
-                return !hasDetection || detected.has(name);
-            }),
-        ]),
-    ];
-}
-
 function getConfigurationOrigin(name: string, sources: ConfigurationChoices): ConfigurationOrigin {
     if (sources.named.has(name)) return 'named';
     if (sources.detected.has(name)) return 'detected';
@@ -111,7 +88,8 @@ export function selectForInit(init: InitRepository): InitConfigurations {
     const inScopes = new Set(scopeConfigurations.values().toArray().flat());
     const named = new Set(options.configurations);
     const automatic = new Set(
-        [...configurations.values()]
+        configurations
+            .values()
             .filter((configuration) => configuration.group === 'general' && configuration.always_selected)
             .map((configuration) => configuration.name),
     );
@@ -131,20 +109,5 @@ export function selectForInit(init: InitRepository): InitConfigurations {
         written: new Set([...rootNames, ...inScopes]),
     };
     const origins = new Map([...selectedNames].map((name) => [name, getConfigurationOrigin(name, sources)]));
-    return { scopes, rootNames, scopeConfigurations, selectedNames, detected, origins };
-}
-
-/**
-Build the configuration selection that selectForScope reads, from the draft.
-
-@param draft the choices.
-@returns the configuration choices for the root and each scope.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export function buildSelectedConfigurations(draft: SettingsDraft): SelectedConfigurations {
-    return {
-        configurations: draft.configurations,
-        removed_configurations: [],
-        scopes: Object.fromEntries(draft.scopes.map((scope) => [scope.path, { ...scope, removed_configurations: [] }])),
-    };
+    return { scopes, rootNames, scopeConfigurations, detected, origins };
 }

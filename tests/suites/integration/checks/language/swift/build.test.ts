@@ -2,6 +2,7 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, basename } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
@@ -9,8 +10,8 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { isMacos, hasToolBuild } from '#tests/setup/system/platform.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { SWIFT_LANGUAGE_PACKAGE } from '#tests/config/checks/language/swift/build.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     XCODE_TOOL_SCHEME,
@@ -24,6 +25,7 @@ import {
 
 test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await using _cache = await redirectCacheFolder();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['swift']),
@@ -56,6 +58,7 @@ test.skipIf(!isMacos)(
     'swift/build reuses the compiled objects of an Xcode project and reports source errors without changing the project',
     async () => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         await using _cache = await redirectCacheFolder();
         const source = 'let value: Int = 1\nprint(value)\n';
         await createFileTree(sandbox.path, {
@@ -73,14 +76,20 @@ test.skipIf(!isMacos)(
             compiledFiles.map((file) => basename(dirname(file))).toSorted((left, right) => left.localeCompare(right)),
         ).toStrictEqual(['arm64', 'x86_64']);
         const times = await Promise.all(
-            compiledFiles.map((file) => stat(join(readCacheFolder(), file)).then(({ mtimeMs }) => mtimeMs)),
+            compiledFiles.map(async (file) => {
+                const { mtimeMs } = await stat(join(readCacheFolder(), file));
+                return mtimeMs;
+            }),
         );
         const unchangedBuild = parseCheckReport(await runGspot(sandbox.path, command));
         expect(unchangedBuild.code, unchangedBuild.stdout + unchangedBuild.stderr).toBe(0);
         expect(unchangedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
         expect(
             await Promise.all(
-                compiledFiles.map((file) => stat(join(readCacheFolder(), file)).then(({ mtimeMs }) => mtimeMs)),
+                compiledFiles.map(async (file) => {
+                    const { mtimeMs } = await stat(join(readCacheFolder(), file));
+                    return mtimeMs;
+                }),
             ),
         ).toStrictEqual(times);
         expect(await readFile(join(sandbox.path, 'main.swift'), 'utf8')).toBe(source);
@@ -109,8 +118,7 @@ describe.skipIf(!isMacos)('Swift package samples', () => {
         test.skipIf(!hasToolBuild(sample.check === 'swift/swiftlint-analyze' ? 'swiftlint' : 'periphery'))(
             `${sample.check} reports ${sample.expected.rule} in a Swift package and passes after the fix`,
             async () => {
-                const result = await runCheckSample(installedSandbox(), sample, SWIFT_PACKAGE_SANDBOX);
-                expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
+                expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
             },
         );
     }

@@ -18,8 +18,6 @@ import {
     SERVICE_KEY_READERS,
     SERVICE_KEY_SETTINGS,
     SERVICE_ROLE_CLIENTS,
-    AVATARS_BUCKET_CONFIG,
-    INVALID_BUCKETS_CONFIG,
     SERVICE_ROLE_CLIENT_FILES,
 } from '#tests/config/checks/platform/supabase.ts';
 
@@ -52,18 +50,22 @@ test('supabase/storage-policies reports a syntax finding for malformed TOML', as
         'gspot.toml': buildSandboxSettings(['supabase'], { scopes: [{ path: 'apps/api' }] }),
         'apps/api/supabase/config.toml': '[broken',
     });
-    expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope: 'apps/api' })).toMatchObject([
+    expect(await runSandboxCheck(sandbox.path, 'supabase/storage-policies', { scope: 'apps/api' })).toStrictEqual([
         {
+            check: 'supabase/storage-policies',
             file: 'apps/api/supabase/config.toml',
             line: 1,
             rule: 'syntax',
-            message: expect.stringContaining('TOML') as string,
+            message:
+                'apps/api/supabase/config.toml:1:8 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
+            fixable: false,
+            help: 'Add a policy on storage.objects for the bucket in a migration.',
         },
     ]);
 });
 
 test.each([1, 2])(
-    "supabase/deno-lint fails with Deno's error text when Deno exits %s without a JSON report",
+    "supabase/deno-lint fails with Deno's error text when Deno exits %i without a JSON report",
     async (code) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['supabase']),
@@ -78,15 +80,16 @@ test.each([1, 2])(
                 buildProcessResult({ code, stderr: 'The project configuration is invalid.' }),
             ),
         );
-        expect(await captureRejection(runSandboxCheck(session.root, 'supabase/deno-lint'))).toBe(
-            'The project configuration is invalid.',
-        );
+        const runSandboxCheckError = await captureRejection(runSandboxCheck(session.root, 'supabase/deno-lint'));
+        expect(runSandboxCheckError.message).toBe('The project configuration is invalid.');
     },
 );
 
 test.each([...STORAGE_POLICIES])(
     "a storage policy counts only a real bucket_id = 'name' condition on storage.objects: $name",
     async ({ sql, allowed }) => {
+        const AVATARS_BUCKET_CONFIG = '[storage.buckets.avatars]\npublic = false\n';
+
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['supabase'], {
             level: 'all',
@@ -199,6 +202,8 @@ test.each([...SECRET_KEY_READS])('a secret Supabase key read as %s is refused in
 test.each(['', 'apps/api'])(
     'supabase/storage-policies reports invalid bucket settings as a syntax finding in scope %j',
     async (scope) => {
+        const INVALID_BUCKETS_CONFIG = '[storage]\nbuckets = "avatars"\n';
+
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['supabase'], {
                 scopes: scope === '' ? [] : [{ path: scope }],

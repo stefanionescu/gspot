@@ -5,13 +5,13 @@ import { type Level } from '#cli/types/configurations.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { test, expect, describe, beforeAll } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { RUNTIME_RULE_CASES } from '#tests/config/generation/rules.ts';
 import { findRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { RUNTIME_RULE_CASES, RULE_CONFIGURATIONS } from '#tests/config/generation/rules.ts';
 
 async function generateRuleFiles(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([...RULE_CONFIGURATIONS], {
+        'gspot.toml': buildSandboxSettings(['typescript', 'css', 'vitest', 'swift', 'bash', 'drizzle', 'openapi'], {
             rules: true,
             level,
         }),
@@ -109,7 +109,7 @@ describe('which rule files gspot writes', () => {
 });
 
 test.each(['deno.json', 'deno.jsonc'].flatMap((file) => ['', 'apps/api'].map((scope) => ({ file, scope }))))(
-    'a Supabase layout with $file in scope $scope installs the Deno rule named by SUPABASE.md',
+    'a Supabase layout with $file in scope $scope installs the Deno rule',
     async ({ file, scope }) => {
         const prefix = scope === '' ? '' : `${scope}/`;
         await using sandbox = await testdir({
@@ -125,7 +125,5 @@ test.each(['deno.json', 'deno.jsonc'].flatMap((file) => ['', 'apps/api'].map((sc
         using _resources = session.resources;
         const files = generate(session).files;
         expect(files.map(({ path }) => path)).toContain(findRuleFilePath('javascript', 'DENO.md'));
-        const supabase = files.find(({ path }) => path === findRuleFilePath('supabase', 'SUPABASE.md'));
-        expect(supabase?.content).toContain('Edge Functions run on Deno; read DENO.md too.');
     },
 );

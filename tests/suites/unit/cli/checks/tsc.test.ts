@@ -1,12 +1,14 @@
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { join, parse, dirname, resolve, relative } from 'node:path';
 import { writeScopeTsconfig } from '#cli/checks/tsc/scope-tsconfig.ts';
+import { DEFAULT_TSCONFIG_PROJECTS } from '#tests/config/checks/tsc.ts';
 import { STRICT_TSCONFIG_TEXT, IMPLICIT_RETURNS_IGNORE } from '#tests/config/checks/language/typescript.ts';
 
 test('a project with its own tsconfig.json gets a tsconfig that extends it and adds only typeRoots', async () => {
@@ -38,7 +40,8 @@ test('projects without tsconfig.json get required options and framework options 
         'source.ts': 'export const port = 8080;\n',
         'service/source.ts': 'export const port = 3000;\n',
     });
-    const session = await openSession(sandbox.path);
+    const installedRoot = parse(sandbox.path).root;
+    const session = await openSession(sandbox.path, { installedRoot });
     const projects = await Promise.all(
         session.scopes.map(async (scope) => {
             const path = writeScopeTsconfig(
@@ -46,18 +49,14 @@ test('projects without tsconfig.json get required options and framework options 
                 scope,
                 join(sandbox.path, GSPOT_PATHS.state, scope.folder.path, 'tsconfig.json'),
             );
-            return { scope: scope.folder.path, config: parseJsonFile(path, await readFile(path, 'utf8')) };
+            const config = parseJsonFile(path, await readFile(path, 'utf8'));
+            const compilerOptions = config['compilerOptions'] as Record<string, unknown>;
+            compilerOptions['typeRoots'] = (compilerOptions['typeRoots'] as string[]).map((root) => {
+                const observed = relative(installedRoot, resolve(dirname(path), root));
+                return convertToPosixPath(observed);
+            });
+            return { scope: scope.folder.path, config };
         }),
     );
-    for (const { config } of projects) {
-        expect(config).toHaveProperty('compilerOptions.strict', true);
-        expect(config).not.toHaveProperty('compilerOptions.noImplicitReturns');
-    }
-    expect(projects.find(({ scope }) => scope === 'service')?.config).toHaveProperty(
-        'compilerOptions.experimentalDecorators',
-        true,
-    );
-    expect(projects.find(({ scope }) => scope === '')?.config).not.toHaveProperty(
-        'compilerOptions.experimentalDecorators',
-    );
+    expect(projects).toStrictEqual([...DEFAULT_TSCONFIG_PROJECTS]);
 });

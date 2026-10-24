@@ -9,7 +9,6 @@ import { ROOT_SCOPE_LABEL } from '#cli/config/terminal.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/locate.ts';
 import { parseMiseTasks } from '#cli/parsers/projects/mise.ts';
-import { SETTING_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { TRAILING_SLASH } from '#cli/config/files/path-patterns.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/runs/output/text.ts';
@@ -22,6 +21,7 @@ import { buildGitignoreTest } from '#cli/repository/files/gitignore.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { findCachedText, readCachedText } from '#cli/system/files/reads.ts';
 import type { PathIndex, TaskNames } from '#cli/types/checks/general/docs.ts';
+import { replaceSettingPlaceholders } from '#cli/runs/command/placeholders.ts';
 import { listExecutableNames, includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
 
 import {
@@ -51,10 +51,7 @@ function listGeneratorPaths(planned: PlannedCheck): string[] {
     );
     for (const output of generatorOutputs) {
         if (output.kind === 'pattern') continue;
-        const path = output.path.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-            const value = planned.scope.settings.settings[name];
-            return typeof value === 'string' ? value : '';
-        });
+        const path = replaceSettingPlaceholders(planned.scope.settings, output.path);
         if (path !== '') paths.push(path);
     }
     return paths;
@@ -62,21 +59,21 @@ function listGeneratorPaths(planned: PlannedCheck): string[] {
 
 function listRepositoryPaths(session: Session, planned: PlannedCheck): Set<string> {
     const repositoryPaths = includeParentFolders(session.repository.files.map((file) => file.path));
-    for (const path of includeParentFolders([...listGeneratedPaths(session.repository.files)]))
-        repositoryPaths.add(path);
-    for (const configFile of planned.scope.configurations.flatMap((configuration) => configuration.configFiles))
-        repositoryPaths.add(configFile.target);
+    const generatedPaths = includeParentFolders([...listGeneratedPaths(session.repository.files)]);
+    for (const path of generatedPaths) repositoryPaths.add(path);
+    const configFiles = planned.scope.configurations.flatMap((configuration) => configuration.configFiles);
+    for (const configFile of configFiles) repositoryPaths.add(configFile.target);
     for (const path of listGeneratorPaths(planned)) repositoryPaths.add(path);
-    for (const check of session.configurations.values().flatMap((configuration) => configuration.checks))
-        repositoryPaths.add(check.id);
+    const checks = session.configurations.values().flatMap((configuration) => configuration.checks);
+    for (const check of checks) repositoryPaths.add(check.id);
     for (const check of Object.values(session.settingsFile.settings.commandChecks)) repositoryPaths.add(check.id);
     return repositoryPaths;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function readMiseTasks(session: Session, file: string): string[] {
     const text = findCachedText(session.reads, file);
-    if (text === undefined) return [];
-    return parseMiseTasks(text, file);
+    return text === undefined ? [] : parseMiseTasks(text, file);
 }
 
 function isMissing(token: string, file: string, index: PathIndex): boolean {
@@ -104,7 +101,7 @@ function checkProseLine(planned: PlannedCheck, file: string, prose: NumberedLine
             if (names.has(name)) return false;
             return (
                 !command.startsWith(BUN_RUN) ||
-                !listExecutableNames(name).some((binary) => index.tasks.binaries.has(binary))
+                listExecutableNames(name).every((binary) => !index.tasks.binaries.has(binary))
             );
         })
         .map((match) =>
@@ -161,12 +158,10 @@ function extractProseLines(text: string): NumberedLine[] {
     for (const fence of listCodeFences(text)) {
         const titled = fence.meta.split(/\s+/u).some((attribute) => attribute.startsWith(TITLE_ATTRIBUTE));
         for (let line = fence.startLine; line <= fence.endLine; line += 1)
-            if ([fence.startLine, fence.endLine].includes(line) || !COMMAND_FENCES.has(fence.language) || titled)
+            if (titled || [fence.startLine, fence.endLine].includes(line) || !COMMAND_FENCES.has(fence.language))
                 ignored.add(line);
     }
-    return text
-        .split('\n')
-        .flatMap((line, index) => (ignored.has(index + 1) ? [] : [{ number: index + 1, text: line }]));
+    return text.split('\n').flatMap((line, index) => (ignored.has(index + 1) ? [] : { number: index + 1, text: line }));
 }
 
 function extractPathTokens(line: string): string[] {
@@ -179,8 +174,7 @@ function extractPathTokens(line: string): string[] {
         })
         .map((token) => {
             const marker = EMPHASIS_MARKERS.find((marker) => token.startsWith(marker));
-            if (marker !== undefined && token.endsWith(marker)) return token.slice(marker.length, -marker.length);
-            return token;
+            return marker !== undefined && token.endsWith(marker) ? token.slice(marker.length, -marker.length) : token;
         })
         .filter(
             (token) =>
@@ -236,7 +230,7 @@ export function checkDocsRequiredFiles(session: Session, planned: PlannedCheck):
         );
     if (
         planned.scope.folder.path === '' &&
-        ![...repositoryPaths].some((path) => !path.includes('/') && LICENSE_FILE.test(path))
+        [...repositoryPaths].every((path) => !(!path.includes('/') && LICENSE_FILE.test(path)))
     )
         findings.push(
             buildFinding(planned, { file: LICENSE_PATH }, 'missing-license', 'The root has no LICENSE file.'),

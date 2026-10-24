@@ -1,9 +1,9 @@
 import { resolve } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { spawnProcess, streamProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 import type { GitLookup, GitRepository, GitEnvironment, GitVariableGroups } from '#cli/types/system/git.ts';
+import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import {
     type SpawnResult,
@@ -94,7 +94,7 @@ export function readGitEnvironment(
 ): GitEnvironment {
     if (
         !Object.keys(buildSpawnEnvironment()).some((key) => {
-            const name = process.platform === 'win32' ? key.toUpperCase() : key;
+            const name = foldVariableName(key);
             return name.startsWith(GIT_VARIABLE_PREFIX) && !GIT_NONLOCAL_ENVIRONMENT_NAME.test(name);
         })
     )
@@ -113,18 +113,17 @@ export function readGitEnvironment(
         inheritedGit = { localVariables };
     }
     const { localVariables } = inheritedGit;
-    if (!localVariables.some((name) => readEnvironmentVariable(name) !== undefined)) return { env: explicit };
+    if (localVariables.every((name) => readEnvironmentVariable(name) === undefined)) return { env: explicit };
     const isolated = Object.fromEntries(localVariables.map((name) => [name, undefined]));
     if ([GIT_EXECUTABLE, GIT_CLONE_COMMAND].every((word, index) => commandArguments[index] === word))
         return { env: { ...isolated, ...explicit } };
     const overrides = Object.fromEntries(
-        Object.entries(explicit).filter(
-            ([name]) => !localVariables.includes(process.platform === 'win32' ? name.toUpperCase() : name),
-        ),
+        Object.entries(explicit).filter(([name]) => !localVariables.includes(foldVariableName(name))),
     );
     const repository = (inheritedGit.repository ??= readInheritedGitEnvironment(origin));
-    if ('failure' in repository) return repository;
-    return readFolderGitEnvironment(workingFolder, repository, { isolated, overrides, explicit });
+    return 'failure' in repository
+        ? repository
+        : readFolderGitEnvironment(workingFolder, repository, { isolated, overrides, explicit });
 }
 
 /**

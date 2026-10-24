@@ -3,6 +3,3 @@ exact = true
 
 [install.security]
 scanner = "@socketsecurity/bun-security-scanner"
-
-[test]
-preload = ["./tests/setup/runner/timeouts.ts"]

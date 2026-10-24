@@ -25,7 +25,7 @@ async function parseMigrations(session: Session, paths: Pick<Migration, 'path' |
     const migrations: Migration[] = [];
     for (const { path, version } of paths) {
         const original = readCachedText(session.reads, path);
-        const text = original.split(MIGRATION_DOWN, 1)[0] ?? '';
+        const text = readForwardText(original);
         const name = posix.basename(path);
         const parsed = await parseSqlFile(text, session.reads);
         migrations.push({
@@ -34,7 +34,7 @@ async function parseMigrations(session: Session, paths: Pick<Migration, 'path' |
             version,
             text,
             statements: parsed.statements,
-            ...(parsed.error === undefined ? {} : { error: parsed.error }),
+            ...(parsed.error !== undefined && { error: parsed.error }),
         });
     }
     return migrations;
@@ -96,4 +96,15 @@ export async function readParsedMigrations(session: Session, planned: PlannedChe
     const { migrations, findings } = await readMigrations(session, planned);
     if (findings.length > 0) throw new GspotError('skip', MIGRATION_SYNTAX_SKIP);
     return migrations;
+}
+
+/**
+Read only the forward statements of a migration.
+
+@param text the migration source.
+@returns the text before the down-migration marker.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function readForwardText(text: string): string {
+    return text.split(MIGRATION_DOWN, 1)[0] ?? '';
 }

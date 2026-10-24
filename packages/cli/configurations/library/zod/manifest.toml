@@ -13,7 +13,7 @@ kind = "library"
 name = "eslint-plugin-zod"
 npm = "eslint-plugin-zod"
 rule_prefix = "zod"
-version = "4.12.0"
+version = "5.2.0"
 
 [eslint]
 required_tools = ["eslint-plugin-zod"]

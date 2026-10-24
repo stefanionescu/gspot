@@ -19,8 +19,7 @@ import { THEME_SWITCH_LABELS } from '../../config/site.ts';
 
     class ThemeToggle extends HTMLElement {
         connectedCallback(): void {
-            const button = this.querySelector('button');
-            if (button === null) throw new Error('The theme toggle has no button.');
+            const button = this.querySelector('button') as HTMLButtonElement;
             const root = document.documentElement;
             const updateLabel = (): void => {
                 const text = THEME_SWITCH_LABELS[root.dataset['theme'] === 'light' ? 'light' : 'dark'];
@@ -31,8 +30,8 @@ import { THEME_SWITCH_LABELS } from '../../config/site.ts';
             button.addEventListener('click', () => {
                 const next = root.dataset['theme'] === 'light' ? 'dark' : 'light';
                 root.dataset['theme'] = next;
-                localStorage.setItem(THEME_STORAGE_KEY, next);
                 updateLabel();
+                localStorage.setItem(THEME_STORAGE_KEY, next);
             });
         }
     }

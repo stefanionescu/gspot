@@ -2,19 +2,17 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
-import type { Level } from '#cli/types/configurations.ts';
+import { type Level } from '#cli/types/configurations.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, compareFindings, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import type { LintFinding, ScriptFindingCase, EslintConfiguration } from '#tests/types/tools.ts';
+import { type LintFinding, type ScriptFindingCase, type EslintConfiguration } from '#tests/types/tools.ts';
 
 import {
     ENGINE_PATHS,
     ENGINE_PHASES,
     ENGINE_SCOPES,
-    ENGINE_SOURCE,
     UNLINTED_FILES,
-    ENGINE_FINDINGS,
     ENGINE_PACKAGES,
     NODE_SCRIPT_CASES,
     NODE_SCRIPT_FILES,
@@ -28,6 +26,13 @@ import {
 test.each([...ENGINE_PHASES])(
     `ESLint reports Node APIs newer than the engines of each file's package ($name)`,
     async (phase) => {
+        const ENGINE_FINDINGS = [
+            { ruleId: 'n/no-unsupported-features/es-builtins', line: 1 },
+            { ruleId: 'n/no-unsupported-features/node-builtins', line: 2 },
+        ] as const;
+
+        const ENGINE_SOURCE = 'export const grouped = Object.groupBy([1], String);\nprocess.loadEnvFile();\n';
+
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: ENGINE_SCOPES }),
             ...ENGINE_PACKAGES,
@@ -77,8 +82,8 @@ test.each([...LEVELS])(
 
         const eslint = await createEslint(sandbox.path);
         const paths = NODE_SCRIPT_CASES.map(({ file }) => file);
-        for (const corrected of [false, true]) {
-            if (corrected)
+        for (const isCorrected of [false, true]) {
+            if (isCorrected)
                 for (const { file, corrected } of NODE_SCRIPT_CASES)
                     await writeFile(join(sandbox.path, file), corrected);
             const configurations = await Promise.all(
@@ -92,7 +97,7 @@ test.each([...LEVELS])(
                 configurations,
             };
             expect(findings).toStrictEqual({
-                results: corrected ? [] : listScriptFindings(NODE_SCRIPT_CASES, level),
+                results: isCorrected ? [] : buildExpectedFindings(NODE_SCRIPT_CASES, level),
                 configurations: UNLINTED_FILES.map((file) => ({ file, matched: false })),
             });
         }
@@ -110,13 +115,13 @@ test.each([...LEVELS])(
         });
 
         const eslint = await createEslint(sandbox.path);
-        for (const corrected of [false, true]) {
-            if (corrected)
+        for (const isCorrected of [false, true]) {
+            if (isCorrected)
                 for (const contract of EXTENSIONLESS_SCRIPT_CASES)
                     await writeFile(join(sandbox.path, contract.file), contract.corrected);
             const paths = EXTENSIONLESS_SCRIPT_CASES.map(({ file }) => file);
             const findings = await listLintFindings(eslint, sandbox.path, paths, EXTENSIONLESS_SCRIPT_RULES);
-            expect(findings).toStrictEqual(corrected ? [] : listScriptFindings(EXTENSIONLESS_SCRIPT_CASES, level));
+            expect(findings).toStrictEqual(isCorrected ? [] : buildExpectedFindings(EXTENSIONLESS_SCRIPT_CASES, level));
         }
     },
 );
@@ -183,11 +188,11 @@ test.each([...PACKAGE_MANAGER_LEVELS])(
     },
 );
 
-function listScriptFindings(cases: readonly ScriptFindingCase[], level: Level): LintFinding[] {
+function buildExpectedFindings(cases: readonly ScriptFindingCase[], level: Level): LintFinding[] {
     return cases
-        .flatMap((cas) =>
-            [...cas.recommended, ...(level === 'all' ? (cas.all ?? []) : [])].map(({ ruleId, line }) => ({
-                file: cas.file,
+        .flatMap((row) =>
+            [...row.recommended, ...(level === 'all' ? (row.all ?? []) : [])].map(({ ruleId, line }) => ({
+                file: row.file,
                 rule: ruleId,
                 line,
             })),

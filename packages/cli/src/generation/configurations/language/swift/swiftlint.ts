@@ -62,8 +62,8 @@ export function buildSwiftlintFile(planned: PlannedConfigFile): string {
             ...SWIFTLINT_ALWAYS_OFF,
             ...off.filter((rule) => !SWIFTLINT_OPT_IN.has(rule) && !SWIFTLINT_ANALYZER.has(rule)),
         ],
-        opt_in_rules: [...SWIFTLINT_OPT_IN].filter((rule) => !offSet.has(rule)),
-        analyzer_rules: [...SWIFTLINT_ANALYZER].filter((rule) => !offSet.has(rule)),
+        opt_in_rules: [...SWIFTLINT_OPT_IN.difference(offSet)],
+        analyzer_rules: [...SWIFTLINT_ANALYZER.difference(offSet)],
     };
 
     return Object.entries(document)

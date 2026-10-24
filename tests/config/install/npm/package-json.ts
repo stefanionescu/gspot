@@ -1,22 +1,10 @@
-export const TOOL_REQUIREMENTS = [
-    {
-        name: 'a Next major range is refused',
-        dependency: '@next/eslint-plugin-next',
-        version: '^15',
-        accepted: false,
-    },
-    {
-        name: 'an exact Next manifest pin is accepted',
-        dependency: '@next/eslint-plugin-next',
-        version: '16.3.6',
-        accepted: true,
-    },
-    {
-        name: 'a Next minor range is refused',
-        dependency: '@next/eslint-plugin-next',
-        version: '^16.3.6',
-        accepted: false,
-    },
-    { name: 'a non-Next range is refused', dependency: 'eslint', version: '^9', accepted: false },
-    { name: 'a non-Next exact pin is accepted', dependency: 'eslint', version: '9.39.5', accepted: true },
+export const ACCEPTED_TOOL_REQUIREMENTS = [
+    { name: 'an exact Next manifest pin', dependency: '@next/eslint-plugin-next', version: '16.3.6' },
+    { name: 'a non-Next exact pin', dependency: 'eslint', version: '9.39.5' },
+] as const;
+
+export const REFUSED_TOOL_REQUIREMENTS = [
+    { name: 'a Next major range', dependency: '@next/eslint-plugin-next', version: '^15' },
+    { name: 'a Next minor range', dependency: '@next/eslint-plugin-next', version: '^16.3.6' },
+    { name: 'a non-Next range', dependency: 'eslint', version: '^9' },
 ] as const;

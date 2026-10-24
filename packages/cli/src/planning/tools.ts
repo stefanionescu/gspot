@@ -98,7 +98,7 @@ List the configured checks of one scope: its own checks and the checks that run 
 @returns the checks whose tools the scope needs.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
-export function listScopeChecks(session: Session, scope: Scope): PlannedCheck[] {
+export function listConfiguredChecks(session: Session, scope: Scope): PlannedCheck[] {
     return session.configuredChecks.filter(
         (planned) => planned.scope.folder.path === scope.folder.path || planned.check.runs === 'once',
     );
@@ -136,9 +136,9 @@ export function selectToolConfigurations(session: Session, checks: PlannedCheck[
     const unselected = [...toolNames].flatMap((name) =>
         selectedTools.has(name)
             ? []
-            : [...session.configurations.values()]
-                  .filter((configuration) => configuration.tools.some((tool) => tool.name === name))
-                  .slice(0, 1),
+            : ([...session.configurations.values()].find((configuration) =>
+                  configuration.tools.some((tool) => tool.name === name),
+              ) ?? []),
     );
     const owners = new Set([...configurations, ...unselected]);
     return [...owners].map((configuration) => ({

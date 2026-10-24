@@ -4,6 +4,7 @@ import { runTool } from '#cli/tools/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { ApplyReport } from '#cli/types/apply.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import type { DryRunJson } from '#cli/types/commands/apply.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
@@ -14,12 +15,12 @@ import { readRegistryEnvironment } from '#cli/install/npm/registry.ts';
 import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { spawnGspot, applyThenInstall } from '#tests/setup/cli/commands.ts';
 import { PACKAGE_MANAGER_CASES } from '#tests/config/integration/samples.ts';
-import { spawnGspot, installGeneratedTools } from '#tests/setup/cli/commands.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import { TOOL_PROJECT_BYTE_ATTRIBUTES } from '#tests/config/integration/install/npm.ts';
 import { stat, chmod, unlink, readFile, writeFile, appendFile } from 'node:fs/promises';
 import { REGISTRY_HOST, PNPM_WORKSPACE, NPM_REGISTRY_TOKEN } from '#tests/config/setup/sandboxes.ts';
+import { TOOL_PROJECT_BYTE_ATTRIBUTES, PACKAGE_MANAGER_AGE_REFUSALS } from '#tests/config/integration/install/npm.ts';
 
 function createAuthenticatedRegistry(token: string) {
     const requests = { rejected: 0, authenticated: 0 };
@@ -42,10 +43,7 @@ function createAuthenticatedRegistry(token: string) {
     return {
         url: `http://${REGISTRY_HOST}:${String(server.port)}/`,
         requests,
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
-        async [Symbol.asyncDispose]() {
-            await server.stop(true);
-        },
+        [Symbol.dispose]: server[Symbol.dispose].bind(server),
     };
 }
 
@@ -53,9 +51,11 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     '%s from %s: apply keeps a stale lockfile and install repairs it',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
-        const { root, registry } = sandbox;
-        await installGeneratedTools(root);
-        const { lockfilePath, lockfile } = await readToolProjectFiles(root, packageManager);
+        const { root, registry, yarnConfiguration } = sandbox;
+        const toolPackageManager =
+            packageManager === 'yarn' && yarnConfiguration === undefined ? 'npm' : packageManager;
+        await applyThenInstall(root);
+        const { lockfilePath, lockfile } = await readToolProjectFiles(root, toolPackageManager);
         expect(Buffer.from(lockfile).toString('utf8')).not.toContain(NPM_REGISTRY_TOKEN);
         for (let attempt = 0; attempt < 2; attempt++) {
             const applied = await spawnGspot(root, ['apply', '--json']);
@@ -71,20 +71,14 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         expect(await readFile(lockfilePath, 'utf8')).toBe(stale);
         const preview = await spawnGspot(root, ['apply', '--dry-run', '--json']);
         expect((JSON.parse(preview.stdout) as DryRunJson).outdated).toContainEqual({
-            path: `${DOT_GSPOT}/${selectLockfileName(packageManager)}`,
+            path: `${DOT_GSPOT}/${selectLockfileName(toolPackageManager)}`,
             kind: 'changed',
         });
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(JSON.parse(installed.stdout)).toStrictEqual({
-            steps: expect.arrayContaining([[packageManager, '--version']]) as unknown,
-        });
-        expect(await readFile(lockfilePath, 'utf8')).not.toBe(stale);
+        expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
         const repaired = await spawnGspot(root, ['apply', '--dry-run', '--json']);
-        expect((JSON.parse(repaired.stdout) as DryRunJson).outdated).not.toContainEqual({
-            path: `${DOT_GSPOT}/${selectLockfileName(packageManager)}`,
-            kind: 'changed',
-        });
+        expect((JSON.parse(repaired.stdout) as DryRunJson).outdated).toStrictEqual([]);
     },
 );
 
@@ -92,16 +86,21 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     '%s from %s keeps a conflicted lockfile through apply until the packageManager pin is fixed, and install repairs it',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
-        const { root, rootPackage } = sandbox;
-        await installGeneratedTools(root);
-        const { lockfilePath, lockfile } = await readToolProjectFiles(root, packageManager);
+        const { root, rootPackage, yarnConfiguration } = sandbox;
+        const toolPackageManager =
+            packageManager === 'yarn' && yarnConfiguration === undefined ? 'npm' : packageManager;
+        await applyThenInstall(root);
+        const { lockfilePath, lockfile } = await readToolProjectFiles(root, toolPackageManager);
         const stale = Buffer.from(lockfile).toString('utf8').replaceAll(prettierPackage.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
         const conflict = `<<<<<<< edited\n${stale}\n=======\n${Buffer.from(lockfile).toString('utf8')}\n>>>>>>> generated\n`;
         await writeFile(lockfilePath, conflict);
         await writeFile(
             join(root, projectPath),
-            JSON.stringify({ ...JSON.parse(rootPackage), packageManager: `${packageManager}@99.0.0` }),
+            JSON.stringify({
+                ...JSON.parse(rootPackage),
+                packageManager: `${toolPackageManager}@${PACKAGE_MANAGER_AGE_REFUSALS[toolPackageManager].version}`,
+            }),
         );
         const reapplied = await spawnGspot(root, ['apply', '--json']);
         expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
@@ -109,9 +108,9 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         const refused = await spawnGspot(root, ['install', '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         const { message } = JSON.parse(refused.stdout) as CommandFailureJson;
-        expect(message).toStartWith(`The tool project requires ${packageManager}@99.x, and `);
-        expect(message).toEndWith(
-            '. Install that package manager version first.\nTool installation is incomplete. Run gspot install.',
+        const refusal = PACKAGE_MANAGER_AGE_REFUSALS[toolPackageManager];
+        expect(message).toBe(
+            `gspot install needs ${toolPackageManager} ${refusal.minimum} or later, which holds back new releases for dependencies.min_release_age_days. Found ${refusal.version}.`,
         );
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         expect(await readFile(join(root, GSPOT_PATHS.npmProject))).toStrictEqual(appliedPackageJson);
@@ -119,15 +118,12 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         const applied = await spawnGspot(root, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const repaired = JSON.parse(applied.stdout) as ApplyReport;
-        expect(repaired.written).not.toContain(`${DOT_GSPOT}/${selectLockfileName(packageManager)}`);
+        expect(repaired.written).not.toContain(`${DOT_GSPOT}/${selectLockfileName(toolPackageManager)}`);
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);
         const installed = await spawnGspot(root, ['install', '--json']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(JSON.parse(installed.stdout)).toStrictEqual({
-            steps: expect.arrayContaining([[packageManager, '--version']]) as unknown,
-        });
         expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
-        expect(await readFile(lockfilePath, 'utf8')).not.toContain('<<<<<<<');
+        expect(await readFile(lockfilePath)).toStrictEqual(Buffer.from(lockfile));
     },
 );
 
@@ -136,11 +132,16 @@ test.each([...PACKAGE_MANAGER_CASES])(
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
         const { root, rootPackage, yarnConfiguration } = sandbox;
-        await installGeneratedTools(root);
-        const { projectFile, lockfilePath, lockfile, mode } = await readToolProjectFiles(root, packageManager);
+        const toolPackageManager =
+            packageManager === 'yarn' && yarnConfiguration === undefined ? 'npm' : packageManager;
+        await applyThenInstall(root);
+        const { projectFile, lockfilePath, lockfile, mode } = await readToolProjectFiles(root, toolPackageManager);
         const installed = await spawnGspot(root, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        expect(installed.stdout).toStartWith(`installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${packageManager} `);
+        const version = await runCommand([toolPackageManager, '--version'], { cwd: root });
+        expect(installed.stdout.split('\n', 1)[0]).toBe(
+            `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
+        );
         const workspace = join(root, 'pnpm-workspace.yaml');
         const yarnrc = join(root, '.yarnrc.yml');
         const attributes = await stat(lockfilePath);
@@ -187,9 +188,11 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
     'a fresh clone of a %s project from %s installs the committed lockfile twice and leaves tracked files unchanged',
     async (packageManager, projectPath) => {
         await using sandbox = await createNpmProject(packageManager, projectPath);
-        const { root, artifacts } = sandbox;
-        await installGeneratedTools(root);
-        const { projectFile, lockfile, lockfilePath } = await readToolProjectFiles(root, packageManager);
+        const { root, artifacts, yarnConfiguration } = sandbox;
+        const toolPackageManager =
+            packageManager === 'yarn' && yarnConfiguration === undefined ? 'npm' : packageManager;
+        await applyThenInstall(root);
+        const { projectFile, lockfile, lockfilePath } = await readToolProjectFiles(root, toolPackageManager);
         const clone = join(artifacts, 'clone');
         await appendFile(join(root, '.gitattributes'), TOOL_PROJECT_BYTE_ATTRIBUTES);
         commitAll(root);
@@ -198,12 +201,14 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
         for (let attempt = 0; attempt < 2; attempt++) {
             const cloneInstall = await spawnGspot(clone, ['install']);
             expect(cloneInstall.code, cloneInstall.stdout + cloneInstall.stderr).toBe(0);
-            expect(cloneInstall.stdout).toStartWith(
-                `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${packageManager} `,
+            const version = await runCommand([toolPackageManager, '--version'], { cwd: clone });
+            expect(cloneInstall.stdout.split('\n', 1)[0]).toBe(
+                `installed 1 npm tool in ${GSPOT_PATHS.nodeModules} (${toolPackageManager} ${version.stdout.trim()})`,
             );
             const status = runGit(clone, ['status', '--porcelain']);
             expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
-            expect(await readFile(join(clone, DOT_GSPOT, basename(lockfilePath)))).toStrictEqual(Buffer.from(lockfile));
+            const contents = await readFile(join(clone, DOT_GSPOT, basename(lockfilePath)));
+            expect(contents).toStrictEqual(Buffer.from(lockfile));
             expect(await readFile(join(clone, GSPOT_PATHS.npmProject))).toStrictEqual(Buffer.from(projectFile));
         }
         const diagnosed = await spawnGspot(clone, ['doctor', '--json']);
@@ -215,9 +220,11 @@ test.each(PACKAGE_MANAGER_CASES.filter(([, path]) => path === 'package.json'))(
 
 test('registry settings from the repository .npmrc authenticate an isolated project and leave the .npmrc unchanged', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await using isolated = await testdir();
+    runGitStep(isolated.path, ['init', '--quiet']);
     const token = 'synthetic-registry-credential';
-    await using registry = createAuthenticatedRegistry(token);
+    using registry = createAuthenticatedRegistry(token);
     const requests = registry.requests;
     const url = registry.url;
     await createFileTree(sandbox.path, {

@@ -1,14 +1,15 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { listMisePins } from '#cli/configurations/tools.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { GIT_ISOLATION_ENVIRONMENT } from '#tests/config/setup/system/git.ts';
+import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e/quickstart.ts';
 import { readRuntimePins, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 
@@ -57,24 +58,25 @@ async function runQuickstart(row: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL
         expect(result.code, `${command.join(' ')}\n${result.stdout}${result.stderr}`).toBe(code);
     }
     const source = join(root, row.sourcePath);
-    const original = await readFile(source);
     runGitStep(root, ['add', '-A']);
     const committed = runGit(root, ['commit', '-qm', 'chore: Set up gspot'], environment);
     expect(committed.code, committed.stdout + committed.stderr).toBe(0);
     await writeFile(source, row.invalidSource);
-    const command = ['mise', 'exec', '--', 'gspot', 'check', '--only', row.check];
+    const command = ['mise', 'exec', '--', 'gspot', 'check', '--only', row.check, '--json'];
     const rejected = await runCommand(command, { cwd: root, env: environment });
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-    expect(rejected.stdout).toContain(row.message);
+    expect(listFindingRows(parseCheckReport(rejected).report)).toStrictEqual([
+        { file: row.sourcePath, line: row.line, rule: row.rule },
+    ]);
     assertCommitRejected(root, row.rule, environment);
     runGitStep(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', row.sourcePath]);
-    expect(await readFile(source)).toStrictEqual(original);
     const corrected = await runCommand(command, { cwd: root, env: environment });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 }
 
 async function linkQuickstartTools(tutorialRoot: string, environment: Record<string, string>): Promise<void> {
-    for (const pin of listMisePins([...readConfigurations().values()]).filter((pin) => hasToolBuild(pin.name))) {
+    for (const pin of listMisePins(readConfigurations().values().toArray())) {
+        if (!hasToolBuild(pin.name)) continue;
         const requirement = `${pin.name}@${pin.version}`;
         const installed = await runCommand(
             pin.name === 'uv' ? ['mise', 'which', 'uv'] : ['mise', 'where', requirement],

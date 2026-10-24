@@ -1,25 +1,31 @@
 import { posix } from 'node:path';
 import { linkSetting } from './settings.ts';
 import { formatCheckTable } from './checks.ts';
-import type { readCliReference } from './cli.ts';
 import { isInstalledByGspot } from '#cli/configurations/tools.ts';
+import type { Configuration } from '#cli/types/configurations.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
-import type { CliReference, ReferencePage } from '../types/reference.ts';
-import { DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../config/reference.ts';
-import { formatList, formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
+import type { GuideSlug, CliReference, ReferencePage } from '../types/reference.ts';
+import { formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
+import { LIST_FORMAT, DETECTION_LABELS, REFERENCE_FOLDERS, CONFIGURATION_GUIDES } from '../config/reference.ts';
 
 const DETECTION_LIST_FORMAT = new Intl.ListFormat('en', { type: 'disjunction' });
 
 function formatDetectionConditions(detect: Configuration['detect']): string[] {
-    return Object.entries(detect).flatMap(([kind, patterns]) => {
-        if (kind === 'absent_dependencies') return [];
-        if (Array.isArray(patterns)) {
-            const names = patterns.map((name) => `\`${name}\``);
-            const label = DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS];
-            return names.length === 0 ? [] : [`${label} ${DETECTION_LIST_FORMAT.format(names)}`];
+    const conditions: string[] = [];
+    for (const [kind, patterns] of Object.entries(detect)) {
+        if (kind === 'absent_dependencies') continue;
+        if (!Array.isArray(patterns)) {
+            conditions.push(
+                ...Object.entries(patterns).map(([path, pattern]) => `file \`${path}\` matches \`${pattern}\``),
+            );
+            continue;
         }
-        return Object.entries(patterns).map(([path, pattern]) => `file \`${path}\` matches \`${pattern}\``);
-    });
+        const names = patterns.map((name) => `\`${name}\``);
+        if (names.length === 0) continue;
+        const label = DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS];
+        conditions.push(`${label} ${DETECTION_LIST_FORMAT.format(names)}`);
+    }
+    return conditions;
 }
 
 function formatAbsentDependencies(detect: Configuration['detect']): string {
@@ -75,23 +81,22 @@ function listInstalledSections(configuration: Configuration): [string, string][]
     const ignored = configuration.ignored_paths.map((path) => `\`${path}\``);
     return [
         ['Tools and versions', formatTable(['Tool', 'Version'], tools)],
-        ['Files gspot writes', targets.length === 0 ? '' : `gspot writes ${formatList(targets)}.`],
-        ['Kept out of Git', ignored.length === 0 ? '' : `${formatList(ignored)}.`],
+        ['Files gspot writes', targets.length === 0 ? '' : `gspot writes ${LIST_FORMAT.format(targets)}.`],
+        ['Kept out of Git', ignored.length === 0 ? '' : `${LIST_FORMAT.format(ignored)}.`],
     ];
 }
 
-function formatConfigurationGuide(name: string, guideTitles: Map<string, string>): string {
+function formatConfigurationGuide(name: string, guideTitles: Record<GuideSlug, string>): string {
     const slug = CONFIGURATION_GUIDES[name];
     if (slug === undefined) return '';
-    const title = guideTitles.get(slug);
-    if (title === undefined) throw new Error(`The guide ${slug} has no loaded page title.`);
+    const title = guideTitles[slug];
     return `The [${title} guide](/${slug}/) explains the setup.`;
 }
 
 function buildConfigurationPage(
     configuration: Configuration,
     facts: CliReference,
-    guideTitles: Map<string, string>,
+    guideTitles: Record<GuideSlug, string>,
 ): ReferencePage {
     const selection = formatSelection(configuration, facts);
     const defaults = Object.entries(configuration.defaults).map(([name, value]) => [
@@ -134,7 +139,7 @@ Build the grouped configuration index and its pages.
 */
 export function buildConfigurationPages(
     facts: CliReference,
-    guideTitles: Map<string, string>,
+    guideTitles: Record<GuideSlug, string>,
 ): Map<string, ReferencePage> {
     const pages = new Map<string, ReferencePage>([
         [
@@ -165,5 +170,3 @@ export function buildConfigurationPages(
         );
     return pages;
 }
-
-type Configuration = ReturnType<typeof readCliReference>['configurations'][number];

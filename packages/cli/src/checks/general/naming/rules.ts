@@ -3,18 +3,19 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import { SQL_EXTENSION } from '#cli/config/files/names.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { findParentCategory } from '#cli/settings/naming.ts';
 import type { NamingCase } from '#cli/types/settings/naming.ts';
 import { splitWords } from '#cli/checks/general/naming/settings.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
-import { NUMERIC_WORDS, CATEGORY_PARENTS } from '#cli/config/checks/general/naming/settings.ts';
+import { NUMERIC_WORDS } from '#cli/config/checks/general/naming/settings.ts';
 
-import {
-    type Identifier,
-    type FileNaming,
-    type CategoryLimits,
-    type NamingSettings,
-    type CompiledOverride,
-    type CheckedIdentifier,
+import type {
+    Identifier,
+    FileNaming,
+    CategoryLimits,
+    NamingSettings,
+    CompiledOverride,
+    CheckedIdentifier,
 } from '#cli/types/checks/general/naming.ts';
 import {
     DIGIT,
@@ -103,10 +104,8 @@ function checkCase(checked: CheckedIdentifier, name: string, limits: CategoryLim
 }
 
 function checkDigits(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
-    const { settings } = checked;
     if (
-        settings.isDigitsAllowed ||
-        !words.some((segment) => DIGIT.test(segment) && !NUMERIC_WORDS.has(segment)) ||
+        words.every((segment) => !(DIGIT.test(segment) && !NUMERIC_WORDS.has(segment))) ||
         overrides.some((override) => override.isDigitsAllowed)
     )
         return undefined;
@@ -134,8 +133,7 @@ function checkWordCount(checked: CheckedIdentifier, words: string[], limits: Cat
 }
 
 function checkRepeatedWords(checked: CheckedIdentifier, words: string[], overrides: CompiledOverride[]) {
-    const { settings } = checked;
-    if (settings.isRepeatAllowed || overrides.some((override) => override.isRepeatAllowed)) return undefined;
+    if (overrides.some((override) => override.isRepeatAllowed)) return undefined;
     const repeated = findRepeatedWord(words);
     return repeated === undefined
         ? undefined
@@ -187,17 +185,6 @@ function checkBannedWords(checked: CheckedIdentifier, nameWords: string[]): Find
                 `${checked.prefix}"${banned.word}" is banned (${banned.setting}).`,
             ),
         );
-    for (const [term, allowedFor] of settings.reserved) {
-        if (!nameWords.includes(term) || allowedFor.includes(checked.identifier.category)) continue;
-        findings.push(
-            buildFinding(
-                checked,
-                checked.place,
-                'reserved-term',
-                `${checked.prefix}"${term}" is reserved for ${allowedFor.join(', ')}; this is a ${checked.identifier.label}.`,
-            ),
-        );
-    }
     return findings;
 }
 
@@ -226,12 +213,11 @@ function buildIdentifierLimits(
     overrides: CompiledOverride[],
 ): CategoryLimits {
     const base = settings.limitsFor(identifier.language, identifier.category);
-    const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
-    const parent = parents[identifier.category] ?? identifier.category;
+    const parent = findParentCategory(identifier.category);
     if (identifier.language === 'python' && RUFF_CATEGORIES.has(identifier.category)) return { ...base, caseNames: [] };
-    if (identifier.language === 'swift' && SWIFTLINT_PARENTS.has(parent))
-        return { ...base, caseNames: [], maxChars: 0 };
-    return { ...base, caseNames: listCaseNames(base, identifier, overrides) };
+    return identifier.language === 'swift' && SWIFTLINT_PARENTS.has(parent)
+        ? { ...base, caseNames: [], maxChars: 0 }
+        : { ...base, caseNames: listCaseNames(base, identifier, overrides) };
 }
 
 function listCaseNames(base: CategoryLimits, identifier: Identifier, overrides: CompiledOverride[]): NamingCase[] {

@@ -11,11 +11,13 @@ import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { NGINX_COMPOSE } from '#tests/config/checks/infrastructure/docker/samples.ts';
-import { DOCKER_VERSION, COMPOSE_PAIRING_CASES } from '#tests/config/checks/infrastructure/docker/compose.ts';
+import { COMPOSE_PAIRING_CASES } from '#tests/config/checks/infrastructure/docker/compose.ts';
 
 test.each([...COMPOSE_PAIRING_CASES])(
     'Compose $override runs after $base in one docker compose call',
     async ({ base, override }) => {
+        const DOCKER_VERSION = '29.0.0';
+
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['docker']),
             [base]: NGINX_COMPOSE,
@@ -23,15 +25,15 @@ test.each([...COMPOSE_PAIRING_CASES])(
         });
         const session = await openSession(sandbox.path);
         using resources = new DisposableStack();
-        resources.use(
-            fakeToolExecutables([{ ...getTool(session.configurations.values(), 'docker'), version: DOCKER_VERSION }]),
-        );
+        const observed = fakeToolExecutables([
+            { ...getTool(session.configurations.values(), 'docker'), version: DOCKER_VERSION },
+        ]);
+        resources.use(observed);
         const toolRun = resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult()));
         const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-        expect(await runCheckCode(session, planned, findCheckCode(planned.check))).toMatchObject({
-            status: 'passed',
-            findings: [],
-        });
+        const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+        expect(result.findings).toStrictEqual([]);
+        expect(result.status).toBe('passed');
         expect(toolRun.mock.calls.map(([command]) => command.slice(1))).toStrictEqual([
             ['compose', '-f', base, '-f', override, 'config', '--quiet', '--no-env-resolution'],
         ]);

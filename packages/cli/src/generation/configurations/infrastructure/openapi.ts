@@ -13,6 +13,6 @@ export function buildSpectralFile(planned: PlannedConfigFile): string {
 
     return stringifyYaml({
         extends: ['spectral:oas'],
-        ...(isAll ? {} : { rules: Object.fromEntries(SPECTRAL_RECOMMENDED_OFF.map((name) => [name, 'off'])) }),
+        ...(!isAll && { rules: Object.fromEntries(SPECTRAL_RECOMMENDED_OFF.map((name) => [name, 'off'])) }),
     });
 }

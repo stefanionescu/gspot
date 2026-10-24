@@ -9,8 +9,9 @@ Refuse options for rules that do not run at the selected level.
 @param options.running the rules that run.
 @param options.higher the rules reserved for level all.
 @param options.level the selected checking level.
+@param options.suffix the tool-specific help after an unknown rule.
 */
-export function assertRuleOptionsRun({ chosen, running, higher, level }: RuleOptionsRun): void {
+export function assertRuleOptionsRun({ chosen, running, higher, level, suffix = '' }: RuleOptionsRun): void {
     const refused = chosen.filter((rule) => !running.has(rule));
     if (refused.length === 0) return;
     throw new GspotError(
@@ -19,7 +20,7 @@ export function assertRuleOptionsRun({ chosen, running, higher, level }: RuleOpt
             .map((rule) =>
                 higher.has(rule)
                     ? `${rule} runs only at level all. gspot sets options only for the rules that run at level ${level}.`
-                    : `gspot runs ${rule} at no level, so it takes no options.`,
+                    : `gspot runs ${rule} at no level, so it takes no options.${suffix}`,
             )
             .join('\n'),
     );

@@ -9,11 +9,11 @@ import {
     LOCKFILE_REGISTRY_CASES,
 } from '#tests/config/install/npm/lockfiles.ts';
 
-test.each(ROOT_DEPENDENCIES)(
-    'a %s lockfile is current only with the root development dependencies',
-    (name, source, expected) => {
-        expect(isLockfileFresh(name, source, expected, LOCKFILE_REGISTRY)).toBe(true);
-        expect(isLockfileFresh(name, source, { ...expected, unrelated: '1.0.0' }, LOCKFILE_REGISTRY)).toBe(false);
+test.each([...ROOT_DEPENDENCIES])(
+    'a $name lockfile is current only with the root development dependencies',
+    ({ manager, source, expected }) => {
+        expect(isLockfileFresh(manager, source, expected, LOCKFILE_REGISTRY)).toBe(true);
+        expect(isLockfileFresh(manager, source, { ...expected, unrelated: '1.0.0' }, LOCKFILE_REGISTRY)).toBe(false);
     },
 );
 

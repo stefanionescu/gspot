@@ -96,8 +96,9 @@ function formatSettingsCommands(startCommand: string): string {
 
 function parseHeadingSections(text: string): RuleSection[] {
     const nodes = fromMarkdown(text).children;
-    const headings = nodes.flatMap((node, index) => {
-        if (node.type !== 'heading') return [];
+    const headings: Omit<RuleSection, 'end'>[] = [];
+    for (const [index, node] of nodes.entries()) {
+        if (node.type !== 'heading') continue;
         const start = (node.position as SourcePosition).start.offset;
         const next = nodes[index + 1];
         const marker =
@@ -107,8 +108,8 @@ function parseHeadingSections(text: string): RuleSection[] {
                       end: (next.position as SourcePosition).end.offset,
                   }
                 : undefined;
-        return [{ start, depth: node.depth, marker }];
-    });
+        headings.push({ start, depth: node.depth, marker });
+    }
     return headings.map((heading, index) => ({
         ...heading,
         end: headings.slice(index + 1).find((next) => next.depth <= heading.depth)?.start ?? text.length,
@@ -129,35 +130,28 @@ and the ones that the level leaves empty.
 @returns each rule with its content and path.
 */
 export function selectRuleFiles(session: Pick<Session, 'settingsFile' | 'scopes' | 'repository'>): RuleFile[] {
-    const {
-        settingsFile: {
-            settings: { rules, level },
-        },
-        repository,
-    } = session;
+    const { repository } = session;
+    const { rules, level } = session.settingsFile.settings;
     if (!rules.enabled) return [];
     const configurations = listSelectedConfigurations(session.scopes);
     const scopeRules = session.scopes.map((scope) => ({
         path: scope.folder.path,
         rules: listScopeRules(scope),
     }));
-    const sources = new Map(listConfigurationRules(configurations, repository).map((file) => [file.path, file]));
-    return sources
-        .values()
-        .filter(
-            ({ path }) =>
-                !rules.exclude.some((excluded) =>
-                    isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(excluded)),
-                ),
-        )
-        .flatMap(({ source, path, group }) => {
-            const text = readFileSync(buildAssetPath(source), 'utf8');
-            const content = buildLevelRuleText(text, level);
-            if (content !== text && !parseHeadingSections(content).some((section) => section.depth > 1)) return [];
-            const scopes = scopeRules.filter((scope) => scope.rules.has(path)).map((scope) => scope.path);
-            return [{ path, target: `${GSPOT_PATHS.configurations}/${path}`, content, group, scopes }];
-        })
-        .toArray();
+    const selected: RuleFile[] = [];
+    const shipped = listConfigurationRules(configurations, repository).filter(({ path }) =>
+        rules.exclude.every(
+            (excluded) => !isInScope(`${GSPOT_PATHS.configurations}/${path}`, trimTrailingSlashes(excluded)),
+        ),
+    );
+    for (const { source, path, group } of shipped) {
+        const text = readFileSync(buildAssetPath(source), 'utf8');
+        const content = buildLevelRuleText(text, level);
+        if (content !== text && parseHeadingSections(content).every((section) => section.depth <= 1)) continue;
+        const scopes = scopeRules.filter((scope) => scope.rules.has(path)).map((scope) => scope.path);
+        selected.push({ path, target: `${GSPOT_PATHS.configurations}/${path}`, content, group, scopes });
+    }
+    return selected;
 }
 
 /**
@@ -219,9 +213,9 @@ Check whether Markdown text has a top heading, outside code blocks.
 @returns whether a level-one heading exists.
 */
 export function hasTopHeading(text: string): boolean {
-    let found = false;
+    let isFound = false;
     visit(fromMarkdown(text), 'heading', (node) => {
-        if (node.depth === 1) found = true;
+        if (node.depth === 1) isFound = true;
     });
-    return found;
+    return isFound;
 }

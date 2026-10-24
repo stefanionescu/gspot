@@ -21,7 +21,6 @@ Apply the React, hooks, and refresh lint rules for the JSX mode.
 export function buildReactBlocks(scope: Pick<EslintScope, 'presets'>): ConfigurationBlocks {
     const { presets } = scope;
     const recommended = getPreset(presets, 'recommended');
-    const jsx = getPreset(presets, 'jsx');
     const hooks = getPreset(presets, 'hooks');
     const refresh = getPreset(presets, 'refresh');
     const blocks: ConfigurationBlocks['blocks'] = [
@@ -29,17 +28,16 @@ export function buildReactBlocks(scope: Pick<EslintScope, 'presets'>): Configura
             fields: {
                 files: REACT_FILES,
                 rules: {
-                    ...recommended.blocks[0].rules,
-                    ...jsx.blocks[0].rules,
-                    ...(hooks.blocks[0].rules === undefined ? {} : convertWarningsToErrors(hooks.blocks[0].rules)),
+                    ...(recommended.blocks[0].rules !== undefined &&
+                        convertWarningsToErrors(recommended.blocks[0].rules)),
+                    ...(hooks.blocks[0].rules !== undefined && convertWarningsToErrors(hooks.blocks[0].rules)),
                     ...refresh.blocks[0].rules,
                     ...REACT_RULES,
                 },
             },
-            properties: `plugins: { 'react-hooks': reactHooks, react, 'react-refresh': reactRefresh }, languageOptions: ${serializePresetAccess('react', recommended.source)}.languageOptions, settings: { react: { version: 'detect' } }`,
+            properties: `plugins: { 'react-hooks': reactHooks, '@eslint-react': react, 'react-refresh': reactRefresh }, languageOptions: ${serializePresetAccess('react', recommended.source)}.languageOptions, settings: ${serializePresetAccess('react', recommended.source)}.settings`,
             preset: buildPresetRuleExpression([
                 ['react', recommended],
-                ['react', jsx],
                 ['reactHooks', hooks],
                 ['reactRefresh', refresh],
             ]),

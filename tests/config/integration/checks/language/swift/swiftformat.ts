@@ -58,3 +58,14 @@ export const SOURCE_HEADER = `// Greeting.swift
 // Copyright 2026 Example Contributors.
 
 `;
+
+export const FORMATTED_DOCS_SOURCE = `/// Parses a sample value.
+public func parsed(_ value: String) -> Int {
+    Int(value) ?? 0
+}
+
+/// The literal /** example */ is documentation syntax.
+public let example = "/** not documentation */"
+
+// Ordinary comment with a nested* comment inside.
+`;

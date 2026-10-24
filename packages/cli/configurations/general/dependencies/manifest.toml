@@ -1,6 +1,6 @@
 [configuration]
 always_selected = true
-description = "Dependencies: known advisories, one version per package, exact pins, one package manager, and a lockfile that matches its dependency file."
+description = "Dependencies: known advisories, allowed registries, one package manager, a lockfile that matches its dependency file, and one package manager version. Level all adds one version of each package across a workspace."
 title = "Dependencies"
 
 [files]
@@ -15,7 +15,7 @@ min_version = "2.0.0"
 mise = "osv-scanner"
 name = "osv-scanner"
 replace = ["osv-scanner.toml"]
-version = "2.6.0"
+version = "2.7.0"
 
 [[tool]]
 name = "syncpack"
@@ -39,7 +39,6 @@ name = "osv-scanner"
 needs = ["network"]
 runs = "once"
 stage = "push"
-# The tool project lockfiles under .gspot stay out: a repository cannot upgrade a package that a gspot tool pins.
 command = ["osv-scanner", "scan", "source", "--config", "{config_file:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "--recursive", "--experimental-exclude", ".gspot", "{root}"]
 help = "Upgrade the package the finding names. When no fix exists, accept the advisory until a recheck date with `gspot ignore dependencies/osv-scanner --rule <advisory-id> --reason \"<why>\" --until <YYYY-MM-DD>`."
 output = { format = "json", list = "results", children = "packages.vulnerabilities", fields = { file = "source.path", rule = "id", message = "package.name package.version summary" } }
@@ -57,7 +56,6 @@ output = { format = "lines" }
 runs = "once"
 stage = "push"
 summary = "Checks that every workspace package resolves each dependency to one version."
-tool = "syncpack"
 why = "Two versions of a dependency in one workspace behave differently, so a bug shows in only one package."
 
 [[check]]

@@ -19,7 +19,6 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { PYPROJECT } from '#tests/config/checks/language/python/project.ts';
 
 import {
-    TYPE_FLAG_NAMES,
     FAILED_STYLE_BATCH,
     NUMPY_DOCSTRING_MODULE,
     GOOGLE_DOCSTRING_MODULE,
@@ -27,6 +26,8 @@ import {
 } from '#tests/config/checks/language/python/pydoclint.ts';
 
 test.each(PYDOCLINT_PROJECT_CASES)('pydoclint $name', async ({ project, setting, expected, typeFlags }) => {
+    const TYPE_FLAG_NAMES = ['--arg-type-hints-in-docstring', '--check-return-types', '--check-yield-types'] as const;
+
     await using sandbox = await testdir();
     using prepared = await preparePydoclintCheck(
         sandbox.path,
@@ -63,9 +64,11 @@ async function preparePydoclintCheck(
     const session = await openSession(root, { resources });
     const [planned] = planChecks(session, { stage: 'all', only: ['python/pydoclint'] });
     if (planned === undefined) throw new Error('The Python sandbox does not plan pydoclint.');
-    resources.use(fakeToolExecutables([getTool(session.configurations.values(), 'pydoclint')]));
+    const observed = fakeToolExecutables([getTool(session.configurations.values(), 'pydoclint')]);
+    resources.use(observed);
     return Object.assign(cleanup.move(), { session, planned });
 }
+
 test('pydoclint keeps earlier style findings when a later style batch fails', async () => {
     await using sandbox = await testdir();
     using prepared = await preparePydoclintCheck(sandbox.path, {

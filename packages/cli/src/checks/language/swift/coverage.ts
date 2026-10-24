@@ -47,7 +47,8 @@ async function measurePackageCoverage(
     const described = await runCheckTool(session, planned, SWIFT_DESCRIBE_COMMAND, { cwd });
     if (described.code !== 0)
         throw new Error(formatOutputTail(described, 'Swift could not describe its package targets'));
-    const coverage = files.read(convertToPosixPath(relative(plan.folder, reported.stdout.trim())));
+    const reportPath = reported.stdout.trim();
+    const coverage = files.read(convertToPosixPath(relative(plan.folder, reportPath)));
     const text = coverage === undefined ? undefined : decodeUtf8(coverage.bytes);
     if (text === undefined) throw new Error('Swift produced no UTF-8 coverage report at its reported path.');
     return parseSwiftCoverage(text, described.stdout, cwd);
@@ -76,7 +77,7 @@ async function measureXcodeCoverage(
 }
 
 async function measureCoverage(session: Session, planned: PlannedCheck): Promise<CoverageReport> {
-    const plan = buildPlan(session, planned, { purpose: 'coverage' });
+    const plan = buildPlan(session, planned, 'coverage');
     const setup = prepareBuild(session.root, planned.files, plan.folder);
     using files = setup.files;
     const cwd = join(setup.source, planned.scope.folder.path);
@@ -93,11 +94,10 @@ function listCoverageShortfalls(
     const limits = [
         ...settings.swift_target,
         ...report.targets
-            .filter(
-                (target) =>
-                    !settings.swift_target.some(
-                        (limit) => target.name === limit.name || target.name === `${limit.name}${APP_TARGET_SUFFIX}`,
-                    ),
+            .filter((target) =>
+                settings.swift_target.every(
+                    (limit) => !(target.name === limit.name || target.name === `${limit.name}${APP_TARGET_SUFFIX}`),
+                ),
             )
             .map((target) => ({ name: target.name, lines: settings.lines })),
     ];
@@ -134,7 +134,7 @@ function parseSwiftCoverage(text: string, packageText: string, folder: string): 
                     throw new Error(`The Swift coverage report has no source lines for target ${target.name}.`);
                 const count = lines.reduce((total, line) => total + line.count, 0);
                 const covered = lines.reduce((total, line) => total + line.covered, 0);
-                return [{ name: target.name, lineCoverage: count === 0 ? 1 : covered / count }];
+                return { name: target.name, lineCoverage: count === 0 ? 1 : covered / count };
             }),
     };
 }

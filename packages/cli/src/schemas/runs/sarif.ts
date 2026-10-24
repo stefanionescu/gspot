@@ -42,7 +42,7 @@ const resultLocationSchema = z.object({
 const sarifResultSchema = z.object({
     ruleId: z.string().optional(),
     message: messageSchema.optional(),
-    locations: z.array(resultLocationSchema).optional(),
+    locations: resultLocationSchema.array().optional(),
 } satisfies SchemaShape<SarifResult>);
 
 const artifactSchema = z.object({
@@ -56,17 +56,17 @@ const notificationSchema = z.object({
 
 const analysisSchema = z.object({
     executionSuccessful: z.boolean().optional(),
-    toolExecutionNotifications: z.array(notificationSchema).optional(),
+    toolExecutionNotifications: notificationSchema.array().optional(),
 } satisfies SchemaShape<SarifAnalysis>);
 
 const runSchema = z.object({
-    results: z.array(sarifResultSchema),
-    artifacts: z.array(artifactSchema).optional(),
+    results: sarifResultSchema.array(),
+    artifacts: artifactSchema.array().optional(),
     originalUriBaseIds: z.record(z.string(), locationSchema).optional(),
-    invocations: z.array(analysisSchema).optional(),
+    invocations: analysisSchema.array().optional(),
 } satisfies SchemaShape<SarifRun>);
 
 export const sarifLogSchema = z.object({
     version: z.literal('2.1.0'),
-    runs: z.array(runSchema).min(1),
+    runs: runSchema.array().min(1),
 } satisfies SchemaShape<SarifLog>);

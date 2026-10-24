@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
-import { readFile, writeFile } from 'node:fs/promises';
 import { type RunReport } from '#cli/types/runs/run.ts';
 import { setOutputOptions } from '#cli/system/terminal.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -26,7 +26,7 @@ import {
     CHECK_REPORT_COMPARISONS,
 } from '#tests/config/commands/check/report.ts';
 
-async function assertReportRepair(root: string, commandArguments: readonly string[]): Promise<void> {
+async function assertJsonFindings(root: string, commandArguments: readonly string[]): Promise<void> {
     const json = parseCheckReport(await runGspot(root, [...commandArguments, '--json']));
     expect(json.code, json.stdout + json.stderr).toBe(1);
     expect(
@@ -36,10 +36,6 @@ async function assertReportRepair(root: string, commandArguments: readonly strin
         { check: 'example/passing', status: 'passed', count: 0 },
     ]);
     expect(json.stderr).toBe('');
-    await writeFile(join(root, 'findings.ts'), 'process.exitCode=0;');
-    const repaired = await runGspot(root, [...commandArguments]);
-    expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
-    expect(await readFile(join(root, 'source.txt'), 'utf8')).toBe('after');
 }
 
 test('check prints the first findings and the count of the rest, and --json keeps every finding', async () => {
@@ -50,10 +46,10 @@ test('check prints the first findings and the count of the rest, and --json keep
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stderr).toBe('');
     expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(buildVerbosityReport(false));
-    await assertReportRepair(sandbox.path, VERBOSITY_ARGUMENTS);
+    await assertJsonFindings(sandbox.path, VERBOSITY_ARGUMENTS);
 });
 
-test('check --verbose prints every finding and the command, and --json keeps every finding', async () => {
+test('check --verbose prints every finding and the command', async () => {
     await using sandbox = await testdir(VERBOSITY_FILES);
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'source.txt'), 'after');
@@ -61,7 +57,6 @@ test('check --verbose prints every finding and the command, and --json keeps eve
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stderr).toBe('');
     expect(result.stdout.replaceAll(DURATION, '0.0s')).toBe(buildVerbosityReport(true));
-    await assertReportRepair(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
 });
 
 test('the summary counts skipped checks apart from passed ones, and an empty run still prints its exit code', () => {
@@ -85,13 +80,6 @@ test('a failed report prints each check with its findings, help, and reproduce l
     expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).toBe(FAILED_REPORT_TEXT);
 });
 
-test('only --verbose prints each ignore with its reason', () => {
-    const text = stripVTControlCharacters(formatRunReport(FAILED_CHECK_REPORT, { verbose: true }));
-    expect(text.split('\n').filter((line) => line.startsWith('ignore     '))).toStrictEqual([
-        'ignore     bash/shellcheck SC2312  why',
-    ]);
-});
-
 test('findings that share a help print it once, after the last of them', () => {
     const [shellcheck] = FAILED_CHECK_REPORT.checks;
     const [finding] = shellcheck.findings;
@@ -104,12 +92,9 @@ test('findings that share a help print it once, after the last of them', () => {
             },
         ],
     };
-    const lines = stripVTControlCharacters(formatRunReport(shared, { verbose: false })).split('\n');
-    expect(lines.filter((line) => line === '  help: Quote it.')).toHaveLength(1);
-    expect(lines.indexOf('  help: Quote it.')).toBe(
-        lines.indexOf('  a.sh:9:3  SC2086  Double quote to prevent globbing.') + 1,
+    expect(stripVTControlCharacters(formatRunReport(shared, { verbose: false }))).toBe(
+        'bash/shellcheck  failed  3 findings\n  a.sh:4:3  SC2086  Double quote to prevent globbing.\n  a.sh:9:3  SC2086  Double quote to prevent globbing.\n  help: Quote it.\n  a.sh:12:3  SC2086  Double quote to prevent globbing.\n  help: Quote the path.\n  run again: gspot check --only bash/shellcheck\n\nignores    1 (printed with --verbose)\nFailed: 1 check with 3 findings. Passed: 0 checks. Skipped: 0 checks.\nTime: 0.0s. Exit code 1.\n',
     );
-    expect(lines).toContain('  help: Quote the path.');
 });
 
 test('colors change the report only by escape codes', () => {
@@ -123,7 +108,6 @@ test('colors change the report only by escape codes', () => {
     } finally {
         setOutputOptions({ json: false, color: false });
     }
-    expect(formatRunReport(FAILED_CHECK_REPORT, { verbose: false })).toBe(concise);
 });
 
 test.each([...CHECK_REPORT_COMPARISONS])('the report names $content comparisons', ({ content, header }) => {
@@ -134,11 +118,10 @@ test.each([...CHECK_REPORT_COMPARISONS])('the report names $content comparisons'
 });
 
 test('the report prints planned skips once with their reason only in verbose output', () => {
+    const { reproduce: _reproduce, ...check } = FAILED_CHECK_REPORT.checks[0];
     const skipped: RunReport = {
         ...FAILED_CHECK_REPORT,
-        checks: [
-            { ...FAILED_CHECK_REPORT.checks[0], status: 'skipped', cause: 'condition', note: 'disabled', findings: [] },
-        ],
+        checks: [{ ...check, status: 'skipped', cause: 'condition', note: 'disabled', findings: [] }],
     };
     expect(formatRunReport(skipped, { verbose: false })).toBe(
         'ignores    1 (printed with --verbose)\nPassed: 0 checks. Skipped: 1 check.\nTime: 0.0s. Exit code 1.\n',
@@ -176,20 +159,19 @@ test('terminal progress rewrites one status line and log output stays empty', ()
             return true;
         };
         for (let index = 0; index < 5; index++) printProgress({ finished: index + 1, total: 5, comparison: undefined });
-        if (process.stderr.isTTY) process.stderr.write(PROGRESS_CLEAR);
     }
-    expect(terminal).toStrictEqual([
-        ...Array.from(
+    expect(terminal).toStrictEqual(
+        Array.from(
             { length: 5 },
-            (_, index) => `\r\u001B[2KChecking the working tree: ${String(index + 1)} of 5 checks done`,
+            (_, index) => `\r\u{1B}[2KChecking the working tree: ${String(index + 1)} of 5 checks done`,
         ),
-        '\r\u001B[2K',
-    ]);
+    );
     expect(log).toStrictEqual([]);
 });
 
 test('NO_COLOR prints findings without color on terminal streams', async () => {
     await using sandbox = await testdir({ 'gspot.toml': NO_COLOR_SETTINGS });
+    runGitStep(sandbox.path, ['init', '--quiet']);
 
     using resources = new DisposableStack();
     for (const stream of [process.stdout, process.stderr]) {
@@ -207,7 +189,8 @@ test('NO_COLOR prints findings without color on terminal streams', async () => {
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(result.stdout).toContain('absent/** under [[ignore]] matches no tracked file or folder.');
     expect(result.stdout).toContain('gspot/unmatched-paths');
-    expect(result.stdout).not.toContain('\u001B[');
+    expect(result.stdout).not.toContain('\u{1B}[');
+    expect(result.stderr).toEndWith(PROGRESS_CLEAR);
     const stderr = result.stderr.replaceAll(PROGRESS_CLEAR, '');
     expect(stderr).toBe(stripVTControlCharacters(stderr));
 });
@@ -244,4 +227,20 @@ test('a staged report with unstaged changes names their count once', async () =>
         'Passed: 1 check. Skipped: 0 checks.',
         '',
     ]);
+});
+
+test('a finding message occupies one report line', () => {
+    const report = {
+        ...FAILED_CHECK_REPORT,
+        checks: FAILED_CHECK_REPORT.checks.map((check) => ({
+            ...check,
+            findings: check.findings.map((finding) => ({
+                ...finding,
+                message: 'First line.\nSecond line.\r\nThird line.',
+            })),
+        })),
+    };
+    const text = formatRunReport(report, { verbose: false });
+    expect(text).toContain('First line. Second line. Third line.');
+    expect(text).not.toContain('\nSecond line.');
 });

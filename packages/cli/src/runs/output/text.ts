@@ -45,10 +45,9 @@ export function parseRegexFindings(output: ToolOutput): Finding[] {
     const findings = new Map<string, Finding>();
     for (const line of text.split(/\r?\n/u)) {
         const groups = pattern.exec(line)?.groups;
-        if (groups) {
-            const finding = buildMatchedFinding(output, fixable, line, groups);
-            findings.set(JSON.stringify(finding), finding);
-        }
+        if (!groups) continue;
+        const finding = buildMatchedFinding(output, fixable, line, groups);
+        findings.set(JSON.stringify(finding), finding);
     }
     return findings.values().toArray();
 }
@@ -72,10 +71,9 @@ export function parseGroupedFindings(output: ToolOutput): Finding[] {
             continue;
         }
         const groups = pattern.exec(line)?.groups;
-        if (groups) {
-            const message = (groups['message'] ?? line).trim();
-            findings.push(setMatchedFields({ check, file, message, help, fixable: false }, groups));
-        }
+        if (!groups) continue;
+        const message = (groups['message'] ?? line).trim();
+        findings.push(setMatchedFields({ check, file, message, help, fixable: false }, groups));
     }
     return findings;
 }

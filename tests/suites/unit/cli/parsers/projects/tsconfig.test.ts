@@ -3,8 +3,8 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import { captureRejectedError } from '#tests/setup/matchers.ts';
 import { symlink, realpath, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { TSCONFIG_PARSE_ERRORS } from '#tests/config/parsers/projects/tsconfig.ts';
@@ -24,8 +24,8 @@ test.each([...TSCONFIG_PARSE_ERRORS])(
     async ({ json, message }) => {
         await using sandbox = await testdir({ 'tsconfig.json': json });
         const path = join(sandbox.path, 'tsconfig.json');
-        const error = await captureRejectedError(
-            Promise.resolve().then(() => readTsconfig(sandbox.path, path, createReadCache(sandbox.path))),
+        const error = await captureRejection(
+            Promise.try(() => readTsconfig(sandbox.path, path, createReadCache(sandbox.path))),
         );
         expect(error).toBeInstanceOf(GspotError);
         expect(error).toMatchObject({ code: 'configuration', message });

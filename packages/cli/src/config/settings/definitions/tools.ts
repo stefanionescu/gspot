@@ -128,9 +128,8 @@ export const TOOL_SETTING_DEFINITIONS = {
     },
     'tools.squawk.assume_in_transaction': {
         configurations: ['postgres'],
-        description:
-            'Whether the migration runner wraps every migration in a transaction; the supabase configuration turns it on.',
-        default: false,
+        description: 'Whether the migration runner wraps every migration in a transaction.',
+        default: true,
     },
     'tools.knip.entry': {
         configurations: ['javascript'],
@@ -141,13 +140,13 @@ export const TOOL_SETTING_DEFINITIONS = {
         configurations: ['javascript'],
         description:
             'Exact package names that knip does not report as unused; new names need a reason, and a scope list applies to that project only.',
-        reason_needed: 'adding',
+        reason_when: 'adding',
         default: [] as [],
     },
     'tools.purgecss.safelist': {
         configurations: ['site'],
         description: 'Class names a script adds at run time: the names and the reason.',
-        reason_needed: 'adding',
+        reason_when: 'adding',
         default: [] as [],
     },
     'tools.v8r.schema': {

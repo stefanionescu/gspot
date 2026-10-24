@@ -14,7 +14,9 @@ import {
     GSPOT_PACKAGE_SCOPE,
 } from '#tests/config/setup/sandboxes.ts';
 
-/** Pack the local npm packages once for the current integration run. */
+/**
+Pack these npm packages into the folder and write the list the registry serves.
+*/
 export async function runNpmPack(work: string, declarations: readonly RegistryPackage[]): Promise<string> {
     const packages: PackedPackage[] = [];
     for (const { source, ...declaration } of declarations) {
@@ -43,7 +45,7 @@ async function answerRegistryRequest(
         return Response.json({ error: 'Authentication required' }, { status: 401 });
     const url = new URL(request.url);
     const pathname = decodeURIComponent(url.pathname.slice(1));
-    const name = pathname.split('/-/', 1).join('');
+    const [name = ''] = pathname.split('/-/', 1);
     const packed = registry.packages.get(name);
     if (packed === undefined)
         return name.startsWith(GSPOT_PACKAGE_SCOPE)
@@ -68,43 +70,38 @@ function buildPackageDocument(packed: PackedPackage, tarball: string): Record<st
     };
 }
 
-/** Serve the packed npm packages and any extra packages that a credential test asks for. */
+/**
+Serve the packed npm packages and any extra packages that a credential test asks for.
+*/
 export async function createNpmRegistry(
     work: string,
     options: { packages?: readonly RegistryPackage[]; token?: string } = {},
 ): Promise<NpmRegistry> {
-    const folder = TEST_RUN_FOLDER;
-    const files = [join(folder, PACKED_PACKAGES_FILE)];
+    const files = [join(TEST_RUN_FOLDER, PACKED_PACKAGES_FILE)];
     if (options.packages !== undefined && options.packages.length > 0)
         files.push(await runNpmPack(work, options.packages));
 
     const packages = new Map<string, PackedPackage>();
-    for (const file of files)
-        for (const packed of JSON.parse(await readFile(file, 'utf8')) as PackedPackage[])
-            packages.set(packed.name, packed);
-    let requests = 0;
+    for (const file of files) {
+        const packedPackages = JSON.parse(await readFile(file, 'utf8')) as PackedPackage[];
+        for (const packed of packedPackages) packages.set(packed.name, packed);
+    }
     const server = Bun.serve({
         hostname: REGISTRY_HOST,
         port: 0,
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `Bun.serve` calls it for each request.
-        fetch(request) {
-            requests++;
+        fetch: (request) => {
+            registry.requests++;
             return answerRegistryRequest(request, { packages, token: options.token });
         },
     });
     const url = `http://${REGISTRY_HOST}:${String(server.port)}`;
     const npmrc = join(work, '.npmrc');
     await writeFile(npmrc, `${GSPOT_PACKAGE_SCOPE.slice(0, -1)}:registry=${url}/\n`, { mode: 0o600 });
-    return {
+    const registry: NpmRegistry = {
         url,
         npmrc,
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Callers read the request count as a property.
-        get requests() {
-            return requests;
-        },
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
-        async [Symbol.asyncDispose]() {
-            await server.stop(true);
-        },
+        requests: 0,
+        [Symbol.dispose]: server[Symbol.dispose].bind(server),
     };
+    return registry;
 }

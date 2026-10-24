@@ -8,10 +8,6 @@ import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 const isHome = Astro.url.pathname === '/';
 ---
 
-<!--
-The landing page has no sidebar menu, so its Docs link and GitHub icon stay in the header at every width.
-Docs pages hold search, and the Docs link sits beside the name.
--->
 <div class:list={['site-header', { home: isHome }]}>
     <SiteTitle />
     {!isHome && (

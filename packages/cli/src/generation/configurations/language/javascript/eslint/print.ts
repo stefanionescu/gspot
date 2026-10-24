@@ -7,13 +7,15 @@ import { RUNTIME_DECLARATIONS } from '#cli/config/generation/configurations/lang
 import {
     ESLINT_FUNCTIONS,
     COMPONENT_MATCHERS,
+    ESLINT_PLUGIN_IMPORTERS,
     IMPORT_NAME_PUNCTUATION,
 } from '#cli/config/generation/configurations/language/javascript/eslint/print.ts';
 
 function serializeFileMatcher(matcher: EslintFileMatcher): string {
     if (typeof matcher === 'string') return JSON.stringify(matcher);
-    if ('component' in matcher) return COMPONENT_MATCHERS[matcher.component];
-    return `runtimeMatches(${String(matcher.runtime)}, ${RUNTIME_DECLARATIONS})`;
+    return 'component' in matcher
+        ? COMPONENT_MATCHERS[matcher.component]
+        : `runtimeMatches(${String(matcher.runtime)}, ${RUNTIME_DECLARATIONS})`;
 }
 
 function serializeRules(rules: EslintBlockFields['rules'], level: Level | undefined): string {
@@ -23,7 +25,7 @@ function serializeRules(rules: EslintBlockFields['rules'], level: Level | undefi
             const configured: unknown[] = Array.isArray(value) ? value : [value];
             const [severity, ...options] = configured;
             const source =
-                name.startsWith('gspot/') && level !== undefined && severity !== 'off' && severity !== 0
+                level !== undefined && severity !== 'off' && severity !== 0 && name.startsWith('gspot/')
                     ? `gspot.configs.${level}.rules[${JSON.stringify(name)}] ?? 'off'`
                     : JSON.stringify(severity);
             const suffix =
@@ -89,8 +91,9 @@ function formatSyntaxNode(node: ts.Node, context: ts.TransformationContext): ts.
         const fields = child.properties.map((property) => {
             if (ts.isPropertyAssignment(property))
                 return context.factory.createPropertyAssignment(property.name, property.initializer);
-            if (ts.isSpreadAssignment(property)) return context.factory.createSpreadAssignment(property.expression);
-            return property;
+            return ts.isSpreadAssignment(property)
+                ? context.factory.createSpreadAssignment(property.expression)
+                : property;
         });
         return ts.setTextRange(context.factory.createObjectLiteralExpression(fields, true), child);
     }
@@ -151,7 +154,7 @@ function listReadNames(text: string): Set<string> {
         const isKey =
             (ts.isPropertyAssignment(node.parent) || ts.isPropertyAccessExpression(node.parent)) &&
             node.parent.name === node;
-        if (ts.isIdentifier(node) && !isKey) names.add(node.text);
+        if (!isKey && ts.isIdentifier(node)) names.add(node.text);
         ts.forEachChild(node, visit);
     };
     ts.forEachChild(ts.createSourceFile('eslint.mjs', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS), visit);
@@ -172,18 +175,33 @@ export function serializeImports(
     functionsPath: string,
 ): string {
     const read = listReadNames(text);
-    const functions = ESLINT_FUNCTIONS.filter((name) => read.has(name));
-    const lines =
-        functions.length === 0 ? [] : [`import { ${functions.join(', ')} } from ${JSON.stringify(functionsPath)};`];
-    for (const [importName, source] of new Map(
-        imports.map((importPair) => [JSON.stringify(importPair), importPair]),
-    ).values())
-        if (
-            importName
+    const selected = new Map(imports.map((pair) => [JSON.stringify(pair), pair]))
+        .values()
+        .filter(([name]) =>
+            name
                 .replaceAll(IMPORT_NAME_PUNCTUATION, '')
                 .split(',')
-                .some((name) => read.has(name))
+                .some((importedName) => read.has(importedName)),
         )
-            lines.push(`import ${importName} from ${JSON.stringify(source)};`);
+        .toArray();
+    const functions = [
+        ...new Set([
+            ...ESLINT_FUNCTIONS.filter((name) => read.has(name)),
+            ...selected.flatMap(([, source]) => {
+                const importer = ESLINT_PLUGIN_IMPORTERS.get(source);
+                return importer === undefined ? [] : importer;
+            }),
+        ]),
+    ];
+    const lines =
+        functions.length === 0 ? [] : [`import { ${functions.join(', ')} } from ${JSON.stringify(functionsPath)};`];
+    for (const [importName, source] of selected) {
+        const importer = ESLINT_PLUGIN_IMPORTERS.get(source);
+        lines.push(
+            importer === undefined
+                ? `import ${importName} from ${JSON.stringify(source)};`
+                : `const ${importName} = ${importer}(import.meta.url);`,
+        );
+    }
     return lines.join('\n') + '\n';
 }

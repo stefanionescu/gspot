@@ -7,7 +7,6 @@ import { findScopeFolder } from '#cli/repository/scopes.ts';
 import { findCachedText } from '#cli/system/files/reads.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { readComposeDocuments } from '#cli/checks/infrastructure/docker/compose.ts';
-import { DOCKERFILE_NAME, DOCKERFILE_EXTENSION } from '#cli/config/repository/files/classify.ts';
 
 import {
     DOCKERIGNORE,
@@ -24,9 +23,10 @@ function listMissingPatterns(required: string[], text: string): string[] {
     return required.filter((pattern) => {
         if (IGNORE_PATTERN_FORMS.some(([prefix, suffix]) => lines.includes(`${prefix}${pattern}${suffix}`)))
             return false;
-        if (last < 0) return true;
-        if (!after.some((line) => line.startsWith('!'))) return false;
-        return pattern.startsWith('**/') || after.includes(`!${pattern}`);
+        if (last === -1) return true;
+        return after.every((line) => !line.startsWith('!'))
+            ? false
+            : pattern.startsWith('**/') || after.includes(`!${pattern}`);
     });
 }
 
@@ -40,15 +40,7 @@ Reports each Dockerfile with no ignore file, or with one that misses a required 
 export function checkDockerignore(session: Session, planned: PlannedCheck): Finding[] {
     const { contexts } = readComposeDocuments(session, planned);
     return planned.files
-        .filter((file) => {
-            const name = posix.basename(file.path);
-            return (
-                !name.endsWith(DOCKERIGNORE) &&
-                (name === DOCKERFILE_NAME ||
-                    name.startsWith(`${DOCKERFILE_NAME}.`) ||
-                    name.endsWith(DOCKERFILE_EXTENSION))
-            );
-        })
+        .filter((file) => file.tags.includes('dockerfile') && !file.path.endsWith(DOCKERIGNORE))
         .flatMap(({ path: dockerfile }): Finding[] => {
             const folder = findScopeFolder(dockerfile, session.repository.scopeFolders);
             const scope = session.scopes.find((each) => each.folder.path === folder.path) as Scope;

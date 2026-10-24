@@ -2,7 +2,7 @@ import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/checks/componen
 
 export const VUE_SANDBOX = {
     configurations: ['typescript', 'vue', 'css'],
-    tsconfig: COMPONENT_TSCONFIG,
+    json: { 'tsconfig.json': COMPONENT_TSCONFIG },
     files: {
         'src/answer.ts': ANSWER_MODULE,
         'src/env.d.ts': "import 'vue';\n",

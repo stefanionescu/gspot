@@ -20,3 +20,15 @@ export const NAMING_LANGUAGE_CATEGORIES = {
 } as const;
 
 export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql', 'css', 'html'] as const;
+
+export const CATEGORY_PARENTS: Readonly<Record<string, string>> = {
+    classes: 'types',
+    type_aliases: 'types',
+    exceptions: 'types',
+    methods: 'functions',
+    constants: 'variables',
+    attributes: 'properties',
+    enum_cases: 'properties',
+    modules: 'files',
+    packages: 'folders',
+} as const;

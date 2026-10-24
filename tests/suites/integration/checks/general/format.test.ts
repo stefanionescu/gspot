@@ -4,6 +4,7 @@ import { createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { generateFile } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -58,7 +59,6 @@ const installedSandbox = shareInstalledSandbox({
 test('Prettier writes each file with the tab width, quotes, semicolons, and line ending of its format override', async () => {
     const root = installedSandbox().root;
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-        check: '',
         files: {
             'gspot.toml': FORMAT_OVERRIDES_SETTINGS,
             ...Object.fromEntries(
@@ -75,7 +75,6 @@ test('Prettier writes each file with the tab width, quotes, semicolons, and line
 test('editorconfig-checker leaves indentation to the formatter and checks line endings, the final newline, and trailing spaces', async () => {
     const root = installedSandbox().root;
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-        check: '',
         files: {
             'gspot.toml': buildSandboxSettings(['format'], { level: 'all' }),
             'indented.txt': '\tcontent\n',
@@ -108,13 +107,11 @@ test('editorconfig-checker leaves indentation to the formatter and checks line e
 test('check --staged formats with the staged Prettier config file after a later apply changes it, and leaves the working files and the index unchanged', async () => {
     const root = installedSandbox().root;
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-        check: '',
         files: STAGED_FORMAT_FILES,
     });
 
     expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.rootConfig))).toBe(true);
     expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
-    const originalConfig = await readFile(join(root, STAGED_FORMAT_PATHS.rootConfig), 'utf8');
     await writeFile(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.staged);
     runGitStep(root, ['add', '-A']);
     const index = runGitStep(root, ['write-tree']);
@@ -124,10 +121,17 @@ test('check --staged formats with the staged Prettier config file after a later 
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     await writeFile(join(root, STAGED_FORMAT_PATHS.source), STAGED_FORMAT_SOURCE.working);
     expect(await isOnDisk(join(root, STAGED_FORMAT_PATHS.scopeConfig))).toBe(false);
-    expect(await readFile(join(root, STAGED_FORMAT_PATHS.rootConfig), 'utf8')).not.toBe(originalConfig);
+    const contents = await generateFile(
+        await readFile(join(root, 'gspot.toml'), 'utf8'),
+        STAGED_FORMAT_PATHS.rootConfig,
+        {},
+    );
+    expect(await readFile(join(root, STAGED_FORMAT_PATHS.rootConfig), 'utf8')).toBe(contents);
     const files = new Map<string, string>();
-    for (const path of Object.values(STAGED_FORMAT_PATHS).filter((path) => path !== STAGED_FORMAT_PATHS.scopeConfig))
+    for (const path of Object.values(STAGED_FORMAT_PATHS)) {
+        if (path === STAGED_FORMAT_PATHS.scopeConfig) continue;
         files.set(path, await readFile(join(root, path), 'utf8'));
+    }
     const working = await spawnGspot(
         root,
         STAGED_FORMAT_CHECK_ARGUMENTS.filter((argument) => argument !== '--staged'),

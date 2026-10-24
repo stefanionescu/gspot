@@ -4,8 +4,6 @@ export const HTML_RECOMMENDED_OFF = ['no-inline-style', 'prefer-button', 'prefer
 
 export const HTML_RULES = {
     'doctype-style': ['error', { style: 'lowercase' }],
-    'no-inline-style': 'error',
-    'no-raw-characters': 'error',
     'void-style': ['error', { style: 'selfclosing' }],
 } as const;
 

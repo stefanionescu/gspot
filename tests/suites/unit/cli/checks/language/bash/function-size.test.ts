@@ -4,15 +4,13 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import type { SizeCase } from '#tests/types/samples.ts';
-import { listSettings } from '#cli/settings/available.ts';
+import { type SizeCase } from '#tests/types/samples.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { BASH_HEADER } from '#tests/config/checks/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { PASSED_BASH_RESULTS } from '#tests/config/checks/language/bash/samples.ts';
 
 import {
-    LOOP_COUNTS,
     COUNTED_LOOPS,
     BASH_SIZE_CASES,
     CORRECTED_LOOPS,
@@ -20,6 +18,13 @@ import {
 } from '#tests/config/checks/language/bash/function-size.ts';
 
 test('Bash function-size counts C-style loops as branches and nesting, not their header assignments, in each scope', async () => {
+    const LOOP_COUNTS = [
+        { rule: 'function-branches', message: 'main has 4 branches, over the limit of 3.' },
+        { rule: 'block-nesting', message: 'main has 4 levels of nesting, over the limit of 3.' },
+        { rule: 'function-assignments', message: 'main has 2 assignments, over the limit of 1.' },
+    ] as const;
+
+    const options = buildRunOptions({ only: ['bash/function-size'] });
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash'], {
             level: 'all',
@@ -47,27 +52,21 @@ test('Bash function-size counts C-style loops as branches and nesting, not their
         );
     }
     for (const path of ['source.sh', 'api/source.sh']) await writeFile(join(sandbox.path, path), CORRECTED_LOOPS);
-    const corrected = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['bash/function-size'] }),
-    );
+    const corrected = await runChecks(await openSession(sandbox.path), options);
 
-    expect(corrected.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual(
-        PASSED_BASH_RESULTS,
-    );
+    expect(corrected.report.checks).toMatchObject([...PASSED_BASH_RESULTS]);
 });
+
 test.each(buildSizeCases())(
     '$rule reports $file and passes after the fix',
     async ({ source, corrected: fixedSource, file, rule, line, message }) => {
+        const options = buildRunOptions({ only: ['bash/function-size'] });
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['bash'], { level: 'all' }),
             [file]: source,
         });
 
-        const failed = await runChecks(
-            await openSession(sandbox.path),
-            buildRunOptions({ only: ['bash/function-size'] }),
-        );
+        const failed = await runChecks(await openSession(sandbox.path), options);
 
         expect(
             failed.report.checks.flatMap(({ findings }) =>
@@ -80,18 +79,12 @@ test.each(buildSizeCases())(
             ),
         ).toStrictEqual([{ file, rule, line, message }]);
         await writeFile(join(sandbox.path, file), fixedSource);
-        const corrected = await runChecks(
-            await openSession(sandbox.path),
-            buildRunOptions({ only: ['bash/function-size'] }),
-        );
+        const corrected = await runChecks(await openSession(sandbox.path), options);
 
         expect(corrected.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
     },
 );
-function getDefaultLimit(name: string): number {
-    const setting = listSettings('structure').find(({ name: key }) => key === `limits.${name}`)!;
-    return Number(setting.language_defaults?.['bash'] ?? setting.default);
-}
+
 function buildNestedConditions(depth: number): string {
     const opening = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (index + 1))}${NESTED_CONDITION}`);
     const closing = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (depth - index))}fi`);
@@ -99,11 +92,9 @@ function buildNestedConditions(depth: number): string {
 }
 
 function buildSizeCases(): SizeCase[] {
-    return BASH_SIZE_CASES.map(({ file, rule, line }) => {
-        const limit = getDefaultLimit(rule.replaceAll('-', '_'));
+    return BASH_SIZE_CASES.map(({ file, rule, line, limit, message }) => {
         let body: string;
         let correctedBody: string;
-        let measure: string;
         switch (rule) {
             case 'function-lines': {
                 correctedBody = Array.from(
@@ -111,7 +102,6 @@ function buildSizeCases(): SizeCase[] {
                     (_, index) => `    echo "line ${String(index)}"`,
                 ).join('\n');
                 body = `${correctedBody}\n    echo "$1"`;
-                measure = 'code lines';
                 break;
             }
             case 'function-branches': {
@@ -120,13 +110,11 @@ function buildSizeCases(): SizeCase[] {
                     (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo "$1"; fi`,
                 ).join('\n');
                 body = `${correctedBody}\n    if [[ -n "$1" ]]; then echo "$1"; fi`;
-                measure = 'branches';
                 break;
             }
             case 'block-nesting': {
                 correctedBody = buildNestedConditions(limit);
                 body = buildNestedConditions(limit + 1);
-                measure = 'levels of nesting';
                 break;
             }
             case 'function-assignments': {
@@ -136,7 +124,6 @@ function buildSizeCases(): SizeCase[] {
                 ).join('\n');
                 correctedBody = `${assignments}\n    echo "\${total}"`;
                 body = `${assignments}\n    total="$1"\n    echo "\${total}"`;
-                measure = 'assignments';
                 break;
             }
         }
@@ -146,7 +133,7 @@ function buildSizeCases(): SizeCase[] {
             line,
             source: `${BASH_HEADER}# main: runs the sample.\nmain() {\n${body}\n}\n\nmain "$@"\n`,
             corrected: `${BASH_HEADER}# main: runs the sample.\nmain() {\n${correctedBody}\n}\n\nmain "$@"\n`,
-            message: `main has ${String(limit + 1)} ${measure}, over the limit of ${String(limit)}.`,
+            message,
         };
     });
 }

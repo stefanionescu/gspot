@@ -41,16 +41,14 @@ function buildComponentOverrides(
             const functions = override.functions === undefined ? [] : [...override.functions, ...tailwindFunctions];
             const rules: Record<string, unknown> = {
                 'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses }],
-                ...(functions.length === 0
-                    ? {}
-                    : {
-                          'function-no-unknown': [true, { ignoreFunctions: functions }],
-                          'value-keyword-case': ['lower', { ignoreFunctions: override.functions }],
-                          'declaration-property-value-no-unknown': [
-                              true,
-                              { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
-                          ],
-                      }),
+                ...(functions.length > 0 && {
+                    'function-no-unknown': [true, { ignoreFunctions: functions }],
+                    'value-keyword-case': ['lower', { ignoreFunctions: override.functions }],
+                    'declaration-property-value-no-unknown': [
+                        true,
+                        { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } },
+                    ],
+                }),
             };
             return {
                 files,
@@ -98,9 +96,8 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
     const options = getTable(scope.settings, 'tools.stylelint');
     const isAll = level === 'all';
     const scopeDependencies = listProjectDependencyNames(dependencyFiles, scope.folder.path);
-    const stylelintRuleNames = nameListSchema.parse(
-        JSON.parse(readFileSync(buildAssetPath(STYLELINT_RULE_NAMES_FILE), 'utf8')),
-    ).names;
+    const ruleNamesFile = buildAssetPath(STYLELINT_RULE_NAMES_FILE);
+    const stylelintRuleNames = nameListSchema.parse(JSON.parse(readFileSync(ruleNamesFile, 'utf8'))).names;
 
     const off = listIgnoredRules(planned.scope, 'css/stylelint');
     const activeRules = new Set(
@@ -113,19 +110,15 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
         level,
     });
     const chosen = options.rules;
-    const tailwind = scopeDependencies.includes('tailwindcss');
-    const tailwindAtRules = tailwind ? TAILWIND_AT_RULES : [];
-    const tailwindFunctions = tailwind ? ['theme'] : [];
+    const isTailwind = scopeDependencies.includes('tailwindcss');
+    const tailwindAtRules = isTailwind ? TAILWIND_AT_RULES : [];
+    const tailwindFunctions = isTailwind ? ['theme'] : [];
     const overrides = [
         ...buildComponentOverrides(configurations, tailwindFunctions, chosen, off),
         ...buildCssModulesOverrides(planned, tailwindAtRules, chosen, off),
     ];
-    const syntaxRules: Record<string, unknown> = {
-        'at-rule-no-unknown': true,
-        'function-no-unknown': true,
-        'declaration-property-value-no-unknown': true,
-    };
-    if (tailwind) {
+    const syntaxRules: Record<string, unknown> = {};
+    if (isTailwind) {
         syntaxRules['at-rule-no-unknown'] = [true, { ignoreAtRules: tailwindAtRules }];
         syntaxRules['function-no-unknown'] = [true, { ignoreFunctions: tailwindFunctions }];
         syntaxRules['declaration-property-value-no-unknown'] = [
@@ -141,7 +134,7 @@ export function buildStylelintFile(planned: PlannedConfigFile): string {
             chosen,
             Object.fromEntries(off.map((rule) => [rule, null])),
         ),
-        ...(overrides.length === 0 ? {} : { overrides }),
+        ...(overrides.length > 0 && { overrides }),
     };
 
     return JSON.stringify(document, null, JSON_INDENT);

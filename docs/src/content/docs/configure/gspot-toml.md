@@ -23,12 +23,12 @@ language or framework, by name:
 
 ```shell
 gspot add vitest
-gspot remove nextjs
+gspot remove nextjs --reason "The app no longer uses Next.js."
 ```
 
-`gspot remove nextjs --reason "…"` writes `nextjs` into `removed_configurations` with your reason, so `gspot doctor`
-does not suggest it again; `gspot add nextjs` reverses that. gspot does not remove a configuration that another selected configuration needs. When
-the tools change, gspot prints a reminder to run `gspot install`.
+`gspot remove` needs `--reason`. It writes `nextjs` into `removed_configurations` with that reason, so `gspot doctor`
+does not suggest it again; `gspot add nextjs` reverses that. gspot does not remove a configuration that another
+selected configuration needs. When the tools change, gspot prints a reminder to run `gspot install`.
 
 gspot always selects most general configurations, such as `secrets`, `spelling`, and `security`, even when you write the
 list yourself, and `gspot add` and `gspot remove` refuse them. To run fewer of their checks, change the level, or turn
@@ -49,7 +49,8 @@ Swagger lint rules.
 Copy the `gspot.toml` of a repository whose setup you want, and the files that its settings name: ESLint plugin
 modules, Semgrep rule files, and command check scripts. Delete the `[[scope]]` records of folders that this
 repository does not have. Then run `gspot apply` and `gspot install`. `gspot doctor` lists the configurations that
-this repository needs, and `gspot check` reports old tool settings files and paths that match nothing.
+this repository needs. `gspot check` reports old tool settings files, and each path that matches nothing with its
+line in `gspot.toml`; delete those lines, then run `gspot apply`.
 
 To share lint rules across repositories, publish them as an ESLint plugin package, install it, and name a module that
 re-exports it in `[[tools.eslint.plugins]]`.

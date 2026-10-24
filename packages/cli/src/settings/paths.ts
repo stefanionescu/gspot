@@ -45,9 +45,9 @@ Change the declared path leaves with the schemas that validation uses.
 export function mapSettingPaths(schema: z.ZodType, value: unknown, visit: PathVisitor, keys: KeyPath): unknown {
     const role = schema.meta()?.path_role;
     if (typeof value === 'string' && role !== undefined) return visit(value, keys, role);
-    if (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault)
-        return mapSettingPaths(schema.unwrap() as z.ZodType, value, visit, keys);
-    return mapNestedPaths(schema, value, visit, keys);
+    return schema instanceof z.ZodOptional || schema instanceof z.ZodDefault || schema instanceof z.ZodPrefault
+        ? mapSettingPaths(schema.unwrap() as z.ZodType, value, visit, keys)
+        : mapNestedPaths(schema, value, visit, keys);
 }
 
 /**

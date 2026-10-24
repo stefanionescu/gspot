@@ -9,20 +9,31 @@ import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     BASH_ENV_READ_CASES,
-    SWIFT_ENVIRONMENT_SOURCE,
     PYTHON_ENVIRONMENT_SOURCE,
 } from '#tests/config/checks/general/structure/environment-readers.ts';
 
 test('Swift environment reads outside the env files are reported; comments and strings are not', async () => {
+    const SWIFT_ENVIRONMENT_SOURCE = `let live = ProcessInfo.processInfo.environment["KEY"]
+// ProcessInfo.processInfo.environment
+let literal = "ProcessInfo.processInfo.environment"
+let spaced = ProcessInfo . processInfo . environment
+`;
+
     await using sandbox = await testdir({
         'Sources/Screen.swift': SWIFT_ENVIRONMENT_SOURCE,
         'gspot.toml': buildSandboxSettings(['swift'], { level: 'all' }),
     });
-    expect(await runSandboxCheck(sandbox.path, 'structure/environment-readers')).toStrictEqual([]);
+    const initial = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['structure/environment-readers'] }),
+    );
+    expect(initial.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual([
+        { status: 'skipped', findings: [] },
+    ]);
     await writeFile(
         `${sandbox.path}/gspot.toml`,
         buildSandboxSettings(['swift'], {
@@ -98,8 +109,10 @@ test('each scope uses its own environment readers', async () => {
     ]);
 });
 
-test.each([...BASH_ENV_READ_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
-    await using sandbox = await createSandbox(BASH_SANDBOX);
-    const result = await runCheckSample(sandbox, sample, BASH_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
-});
+test.each([...BASH_ENV_READ_CASES])(
+    '$check reports $expected.rule in $expected.file and passes after the fix',
+    async (sample) => {
+        await using sandbox = await createSandbox(BASH_SANDBOX);
+        expect(await runCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource)).toStrictEqual(expectedSummary(sample));
+    },
+);

@@ -47,7 +47,7 @@ export async function writeCopyFiles(plan: CopyPlan): Promise<void> {
         written += 1;
         plan.cancelSignal?.throwIfAborted();
         const path = typeof file === 'string' ? file : file.indexFile.path;
-        if (!plan.dependencies.some((dependency) => isInScope(path, dependency.path)))
+        if (plan.dependencies.every((dependency) => !isInScope(path, dependency.path)))
             writeCopyFile(files, plan.target, file);
     }
 }

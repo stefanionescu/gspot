@@ -1,13 +1,12 @@
-import { testdir } from 'testdirs';
+import cliPackage from '#cli-package';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
-import { parseSettings } from '#cli/settings/read.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildHookFiles } from '#cli/generation/hooks.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { HOOKS_SETTINGS } from '#tests/config/setup/cli.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
@@ -17,18 +16,10 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { selectStartRunner } from '#cli/repository/npm/package-manager.ts';
 import { createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { chmod, mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
-
-import {
-    CAT_SCRIPT,
-    HOOK_CASES,
-    HOOK_SCRIPT,
-    LOGGING_SCRIPT,
-    START_COMMANDS,
-    HOOK_LEVEL_CASES,
-} from '#tests/config/generation/hooks.ts';
+import { HOOK_CASES, HOOK_SCRIPT, START_COMMANDS, HOOK_LEVEL_CASES } from '#tests/config/generation/hooks.ts';
 
 test.each([...HOOK_LEVEL_CASES])(
-    'at level $level, gspot writes a hook only for a stage with a check',
+    'at level $level, gspot writes check hooks and guarded Git LFS hooks',
     async ({ level, hooks }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([], { level, tables: HOOKS_SETTINGS }),
@@ -65,11 +56,11 @@ test.each(
                     devDependencies: { '@gspothq/cli': '1.2.3' },
                 }),
             );
-        const settings = parseSettings(buildSandboxSettings([], { rules: true, tables: HOOKS_SETTINGS }), undefined);
-        const files = buildHookFiles(settings, await selectStartRunner(root), {
-            names: HOOK_CASES.map(([name]) => name),
-            usesLfs: false,
-        });
+        const files = buildHookFiles(
+            selectStartRunner(root),
+            HOOK_CASES.map(([name]) => name),
+            false,
+        );
         expect(files.map((file) => file.path)).toStrictEqual(
             HOOK_CASES.map(([name]) => `${GSPOT_PATHS.hooks}/${name}`),
         );
@@ -105,11 +96,11 @@ test.each(
 test('a hook says how to install mise when mise is missing', async () => {
     await using sandbox = await testdir();
     runGitStep(sandbox.path, ['init', '-q']);
-    const settings = parseSettings(buildSandboxSettings([], { rules: true, tables: HOOKS_SETTINGS }), undefined);
-    const hook = buildHookFiles(settings, await selectStartRunner(sandbox.path), {
-        names: HOOK_CASES.map(([name]) => name),
-        usesLfs: false,
-    }).find((file) => file.path.endsWith('pre-push'))!;
+    const hook = buildHookFiles(
+        selectStartRunner(sandbox.path),
+        HOOK_CASES.map(([name]) => name),
+        false,
+    ).find((file) => file.path.endsWith('pre-push'))!;
     const path = join(sandbox.path, 'pre-push');
     await writeFile(path, hook.content);
     await chmod(path, 0o755);
@@ -126,6 +117,15 @@ test('a hook says how to install mise when mise is missing', async () => {
 });
 
 test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, and the other LFS hooks run git lfs', async () => {
+    const CAT_SCRIPT = `process.stdout.write(require('node:fs').readFileSync(0));
+`;
+
+    const LOGGING_SCRIPT = String.raw`const fs = require('node:fs');
+const name = require('node:path').basename(process.argv[1], '.js');
+const input = fs.readFileSync(0, 'utf8');
+fs.appendFileSync(process.env.CALLS_LOG, JSON.stringify({ name, argv: process.argv.slice(2), input }) + '\n');
+`;
+
     await using sandbox = await createLfsRepository();
     const hooks = generate(await openSession(sandbox.path)).files.filter((file) =>
         file.path.startsWith(`${GSPOT_PATHS.hooks}/`),
@@ -147,20 +147,18 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
         await writeFile(path, hook.content);
         await chmod(path, 0o755);
     }
-    const shExecutable = Bun.which('sh')!;
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
-    const runHook = (name: string, ...hookArguments: string[]): string[] => {
-        const path = join(sandbox.path, GSPOT_PATHS.hooks, name);
-        return isWindows ? [shExecutable, path, ...hookArguments] : [path, ...hookArguments];
-    };
+    const hookRunner = isWindows ? [Bun.which('sh')!] : [];
+
+    const pushHook = join(sandbox.path, GSPOT_PATHS.hooks, 'pre-push');
+    const checkoutHook = join(sandbox.path, GSPOT_PATHS.hooks, 'post-checkout');
     const input = 'refs/heads/main 123 refs/heads/main 456\n';
-    const pushed = await runCommand(runHook('pre-push', 'origin', 'url'), {
+    const pushed = await runCommand([...hookRunner, pushHook, 'origin', 'url'], {
         cwd: sandbox.path,
         env: environment,
         stdin: input,
     });
     expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
-    const checkedOut = await runCommand(runHook('post-checkout', 'a', 'b', '1'), {
+    const checkedOut = await runCommand([...hookRunner, checkoutHook, 'a', 'b', '1'], {
         cwd: sandbox.path,
         env: environment,
         stdin: '',
@@ -176,7 +174,18 @@ test('with Git LFS, the pre-push hook gives its input to git lfs and to gspot, a
         { name: 'mise', argv: ['exec', '--', 'gspot', 'check', '--hook', 'pre-push', '--', 'origin', 'url'], input },
         { name: 'git', argv: ['lfs', 'post-checkout', 'a', 'b', '1'], input: '' },
     ]);
-    const missing = await runCommand(runHook('post-merge', '0'), {
+});
+
+test('an LFS hook passes when git-lfs is absent', async () => {
+    await using sandbox = await testdir();
+    const hook = buildHookFiles(selectStartRunner(sandbox.path), [], true).find(({ path }) =>
+        path.endsWith('/post-merge'),
+    )!;
+    await createFileTree(sandbox.path, { [hook.path]: hook.content });
+    const path = join(sandbox.path, hook.path);
+    await chmod(path, 0o755);
+    const command = isWindows ? [Bun.which('sh')!, path, '0'] : [path, '0'];
+    const missing = await runCommand(command, {
         cwd: sandbox.path,
         env: { PATH: join(sandbox.path, 'empty') },
         stdin: '',

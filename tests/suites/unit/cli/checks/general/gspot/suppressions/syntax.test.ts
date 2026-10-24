@@ -3,7 +3,6 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { SUPPRESSION_KIND_MESSAGES } from '#cli/config/checks/general/gspot/suppressions.ts';
 
 import {
     JSX_COMMENTS,
@@ -75,14 +74,14 @@ test('eslint comments in JSX text and quoted attributes are not directives; an e
 
 test.each([...LIMIT_SUPPRESSION_CASES])(
     '$configuration refuses a suppression of $name',
-    async ({ configuration, file, directive, code, rule }) => {
+    async ({ configuration, file, directive, code, rule, message }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
             [file]: `${directive}\n${code}\n`,
         });
         const found = await runSandboxCheck(sandbox.path, 'gspot/suppressions');
         expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-            { file, line: 1, rule, message: SUPPRESSION_KIND_MESSAGES[rule.endsWith('-all') ? 'all' : 'limit'] },
+            { file, line: 1, rule, message },
         ]);
     },
 );

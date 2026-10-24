@@ -46,8 +46,10 @@ export function buildImportExtensionTables(
     const reads = createReadCache(repository.root);
     return new Map(
         scopes.flatMap(({ scope, selected: configurations }): [string, TomlTable][] => {
-            if (!configurations.some((configuration) => configuration.name === JAVASCRIPT_CONFIGURATION)) return [];
-            if (configurations.some((configuration) => Object.hasOwn(configuration.defaults, IMPORT_EXTENSION_SETTING)))
+            if (
+                configurations.every((configuration) => configuration.name !== JAVASCRIPT_CONFIGURATION) ||
+                configurations.some((configuration) => Object.hasOwn(configuration.defaults, IMPORT_EXTENSION_SETTING))
+            )
                 return [];
             const style = detectImportExtension(repository, scope, reads);
             if (style === undefined) return [];

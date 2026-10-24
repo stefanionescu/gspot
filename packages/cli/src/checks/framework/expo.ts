@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { createRequire } from 'node:module';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
@@ -10,28 +9,21 @@ import { runCheckTool } from '#cli/runs/command/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import { findInstalledDependency } from '#cli/repository/npm/installed-packages.ts';
 
 import {
     FAILED_CHECK,
+    EXPO_PACKAGE,
     PASSED_CHECKS,
-    EXPO_PACKAGE_JSON,
     BLOCK_END_PREFIXES,
     EXPO_DOCTOR_COMMAND,
 } from '#cli/config/checks/framework/expo.ts';
 
-function hasInstalledExpo(scopeRoot: string): boolean {
-    try {
-        createRequire(join(scopeRoot, PACKAGE_JSON)).resolve(EXPO_PACKAGE_JSON);
-        return true;
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND') return false;
-        throw error;
-    }
-}
-
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isBlockEnd(line: string): boolean {
-    if (line === '' || BLOCK_END_PREFIXES.some((prefix) => line.startsWith(prefix))) return true;
-    return PASSED_CHECKS.test(line);
+    return line === '' || BLOCK_END_PREFIXES.some((prefix) => line.startsWith(prefix))
+        ? true
+        : PASSED_CHECKS.test(line);
 }
 
 function parseExpoDoctor(stdout: string): string[] {
@@ -57,7 +49,7 @@ Runs Expo Doctor in a scope that depends on expo.
 */
 export async function checkExpoDoctor(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const path = joinScope(planned.scope.folder.path, PACKAGE_JSON);
-    if (!hasInstalledExpo(join(session.root, planned.scope.folder.path)))
+    if (findInstalledDependency(session.root, path, EXPO_PACKAGE) === undefined)
         throw new GspotError(
             'tool',
             'Install the project dependencies of this scope; Expo Doctor reads an installed Expo project.',

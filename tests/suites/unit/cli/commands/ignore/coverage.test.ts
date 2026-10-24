@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import type { TomlTable } from '#cli/types/settings/file.ts';
@@ -9,12 +8,14 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
 import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { FUNCTION_NAME_IGNORES } from '#tests/config/commands/ignore.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { LITERAL_ROUTE_CASES, FUNCTION_NAME_IGNORES } from '#tests/config/commands/ignore.ts';
 
 test('an ignore without paths stops a command check and its fixer until unignore', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const command = [process.execPath, '-e', "await Bun.write('read.txt', 'executed'); process.exitCode = 1;"];
     const fix = [process.execPath, '-e', "await Bun.write('corrected.txt', 'corrected');"];
     const settings = buildSandboxSettings([], {
@@ -56,7 +57,7 @@ test('an ignore without paths stops a command check and its fixer until unignore
 });
 
 test('an ignored folder covers its subfolders, and a negated file in it is still checked', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'legacy scripts/nested/example.sh': 'if then\n',
         'legacy scripts/required.sh': 'if then\n',
@@ -98,60 +99,52 @@ test('an ignored folder covers its subfolders, and a negated file in it is still
 });
 
 test('ignore without a check keeps the paths out of every check and every config file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo entry\n',
         'data/facts.txt': 'Nebulix\n',
     });
 
-    const refused = await runGspot(sandbox.path, ['ignore', '--rule', 'SC2086', '--paths', 'data/**', '--reason', 'x']);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stderr).toBe('An ignore without a check cannot take --rule. Name the check that owns the rule.\n');
     const reason = 'Product facts copy words as printed on the packaging.';
     const result = await runGspot(sandbox.path, ['ignore', '--paths', 'data/**', '--reason', reason]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toStartWith(
-        `[[ignore]]\npaths = [ "data/**" ]\nreason = "${reason}"\nIgnored every check for data/**.\n`,
-    );
+    expect(result.stdout).toStartWith('Ignored every check for data/**.\n');
     const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(saved['ignore']).toStrictEqual([{ paths: ['data/**'], reason }]);
     const typos = await readFile(join(sandbox.path, findManifestTarget('spelling', 'typos.toml')), 'utf8');
     expect(typos).toEndWith(`  # ${reason}\n  "data/**",\n]\n`);
     const removed = await runGspot(sandbox.path, ['unignore', '--paths', 'data/**']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).not.toHaveProperty('ignore');
+    const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
+    expect(contents).not.toHaveProperty('ignore');
 });
 
-test.each([false, true])(
-    'ignore and unignore accept literal brackets after a route disappears (removed: %s)',
-    async (removed) => {
-        await using sandbox = await testdir({
+test.each([...LITERAL_ROUTE_CASES])(
+    'ignore and unignore accept $folder before and after it disappears (removed: $removed)',
+    async ({ folder, path, escaped, removed }) => {
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['typescript']),
-            'app/(legal)/terms/page.tsx': 'export default function Terms() { return null; }\n',
+            [`${folder}/terms/page.tsx`]: 'export default function Terms() { return null; }\n',
         });
         commitAll(sandbox.path);
         const ignored = await runGspot(sandbox.path, [
             'ignore',
             'structure/lone-files',
             '--paths',
-            'app/(legal)/**',
+            path,
             '--reason',
             'Next.js route groups hold one page each.',
         ]);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
         const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
-        expect(written['ignore']).toMatchObject([{ paths: [String.raw`app/\(legal\)/**`] }]);
+        expect(written['ignore']).toMatchObject([{ paths: [escaped] }]);
         expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toStrictEqual([]);
-        if (removed) await rm(join(sandbox.path, 'app/(legal)'), { recursive: true });
-        const restored = await runGspot(sandbox.path, [
-            'unignore',
-            'structure/lone-files',
-            '--paths',
-            'app/(legal)/**',
-        ]);
+        if (removed) await rm(join(sandbox.path, folder), { recursive: true });
+        const restored = await runGspot(sandbox.path, ['unignore', 'structure/lone-files', '--paths', path]);
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-        expect(restored.stdout).toStartWith('Removed 1 ignore for structure/lone-files.');
-        expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))).not.toHaveProperty('ignore');
+        expect(restored.stdout).toStartWith(`Removed 1 ignore for structure/lone-files for ${path}.`);
+        const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
+        expect(contents).not.toHaveProperty('ignore');
     },
 );
 

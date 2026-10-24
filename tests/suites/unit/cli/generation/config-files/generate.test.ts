@@ -4,7 +4,7 @@ import { openSession } from '#cli/session.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 
-test('a check copy reads the config files of the repository, not of the copy folder', async () => {
+test('a check copy builds the config files of the repository, not of the copy folder', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['typescript'], {
             scopes: [{ path: 'docs', configurations: ['typescript'] }],
@@ -16,7 +16,6 @@ test('a check copy reads the config files of the repository, not of the copy fol
     });
     await using copy = await testdir({ 'docs/src/index.ts': 'export const value = 1;\n' });
 
-    const session = await openSession(sandbox.path);
-    const copied = getConfigFiles({ ...session, root: copy.path });
-    expect(copied).toBe(getConfigFiles(session));
+    const copied = getConfigFiles({ ...(await openSession(sandbox.path)), root: copy.path });
+    expect(copied).toStrictEqual(getConfigFiles(await openSession(sandbox.path)));
 });

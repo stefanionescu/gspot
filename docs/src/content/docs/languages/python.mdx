@@ -36,7 +36,7 @@ gspot set format.quotes single
 Name the modules that a host application provides in `python.externals`; see
 [modules that the host provides](/configure/import-rules/#modules-that-the-host-provides).
 
-`python.extra_paths` adds folders inside the scope where basedpyright looks for imports. For a host outside the
+`python.import_folders` adds folders inside the scope where basedpyright and the import rules check resolve imports. For a host outside the
 repository, add a `.pth` file to the `site-packages` folder of `.venv` that lists the host folder. Python and
 basedpyright read the folder paths of a `.pth` file, as they do for an editable install:
 

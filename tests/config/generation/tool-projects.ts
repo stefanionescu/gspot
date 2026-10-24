@@ -1,10 +1,3 @@
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/checks/language/typescript.ts';
-
-export const REACT_NATIVE_TSCONFIG = {
-    compilerOptions: { ...STRICT_COMPILER_OPTIONS, module: 'ESNext', moduleResolution: 'Bundler', jsx: 'react-jsx' },
-    include: ['src'],
-} as const;
-
 export const NEXT_REQUIREMENTS = [
     {
         name: 'an uninstalled project',
@@ -12,7 +5,6 @@ export const NEXT_REQUIREMENTS = [
         childRange: undefined,
         rootVersion: undefined,
         childVersion: undefined,
-        expected: '^15',
     },
     {
         name: 'unrelated installed packages',
@@ -20,7 +12,6 @@ export const NEXT_REQUIREMENTS = [
         childRange: undefined,
         rootVersion: '16.3.6',
         childVersion: '16.3.5',
-        expected: '^15',
     },
     {
         name: 'matching declared majors',
@@ -28,7 +19,6 @@ export const NEXT_REQUIREMENTS = [
         childRange: '~16.3.5',
         rootVersion: undefined,
         childVersion: undefined,
-        expected: '^16',
     },
     {
         name: 'conflicting declared majors',
@@ -36,7 +26,6 @@ export const NEXT_REQUIREMENTS = [
         childRange: '^15.5.9',
         rootVersion: undefined,
         childVersion: undefined,
-        expected: 'conflict',
     },
     {
         name: 'a catalog reference',
@@ -44,7 +33,6 @@ export const NEXT_REQUIREMENTS = [
         childRange: undefined,
         rootVersion: '15.5.9',
         childVersion: undefined,
-        expected: undefined,
     },
     {
         name: 'a workspace reference',
@@ -52,7 +40,6 @@ export const NEXT_REQUIREMENTS = [
         childRange: undefined,
         rootVersion: '15.5.9',
         childVersion: undefined,
-        expected: undefined,
     },
     {
         name: 'a tag',
@@ -60,21 +47,16 @@ export const NEXT_REQUIREMENTS = [
         childRange: undefined,
         rootVersion: '15.5.9',
         childVersion: undefined,
-        expected: undefined,
     },
 ] as const;
 
 export const YARN_CLIENTS = [
     {
         packageManager: { name: 'yarn', version: '1.22.22' },
-        lockfile: ['yarn', 'install'],
-        install: ['yarn', 'install', '--frozen-lockfile'],
         settings: false,
     },
     {
         packageManager: { name: 'yarn', version: '4.12.0' },
-        lockfile: ['yarn', 'install', '--mode=update-lockfile'],
-        install: ['yarn', 'install', '--immutable'],
         settings: true,
     },
 ] as const;

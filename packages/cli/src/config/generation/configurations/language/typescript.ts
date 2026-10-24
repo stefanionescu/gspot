@@ -54,7 +54,6 @@ export const TYPESCRIPT_RULES = {
     ],
     'sonarjs/no-duplicate-in-composite': 'error',
     'sonarjs/redundant-type-aliases': 'error',
-    'no-unused-vars': 'off',
 } as const;
 
 export const TYPESCRIPT_TEST_RULES = {

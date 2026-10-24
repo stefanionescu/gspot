@@ -18,17 +18,13 @@ export function buildPluginRuleBlocks(scope: EslintScope, configuration: string)
             {
                 fields: {
                     files,
-                    ...(declaration.ignores === undefined
-                        ? {}
-                        : {
-                              ignores: [
-                                  ...new Set(
-                                      scope.eslintFiles.tests
-                                          .map(([test]) => test)
-                                          .filter((test) => test !== undefined),
-                                  ),
-                              ],
-                          }),
+                    ...(declaration.ignores !== undefined && {
+                        ignores: [
+                            ...new Set(
+                                scope.eslintFiles.tests.map(([test]) => test).filter((test) => test !== undefined),
+                            ),
+                        ],
+                    }),
                     rules: declaration.rules,
                 },
                 properties: declaration.properties,

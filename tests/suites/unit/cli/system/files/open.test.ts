@@ -2,16 +2,16 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { assertWritablePath } from '#cli/system/files/names.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
-import { matchFields, captureThrow } from '#tests/setup/matchers.ts';
 import { OUTSIDE_LINKS, MODE_REPLACEMENTS } from '#tests/config/system/files/open.ts';
 
 test.skipIf(isWindows)(
-    'the system path format keeps POSIX names the portable rules refuse, and refuses links to gspot state',
+    'the system path format keeps POSIX names the portable rules refuse, and reads a link as the link itself',
     async () => {
         await using sandbox = await testdir();
         using root = openFiles(sandbox.path);
@@ -19,12 +19,13 @@ test.skipIf(isWindows)(
         const original = { bytes: Buffer.from('inside'), mode: 0o640 };
         root.write(path, original, undefined);
         expect(root.read(path)).toStrictEqual(original);
-        expect(
-            captureThrow(() => {
-                assertWritablePath(path);
+        expect(() => {
+            assertWritablePath(path);
+        }).toThrow(
+            matchFields({
+                message:
+                    '"folder/a\\n\\"\u{E9}:?.txt" is not a safe repository-relative path. Choose a path inside the repository.',
             }),
-        ).toBe(
-            '"folder/a\\n\\"\u00E9:?.txt" is not a safe repository-relative path. Choose a path inside the repository.',
         );
         const link = { bytes: Buffer.from(path), mode: 0o777, isLink: true as const };
         await symlink(path, join(sandbox.path, 'linked'));
@@ -49,12 +50,18 @@ test('deleteFolder refuses linked and outside parents and keeps folders that are
     using files = openFiles(root);
     expect(() => {
         files.deleteFolder('linked/kept');
-    }).toThrow(new Error('A parent of linked/kept is a link or is not a folder. Choose a folder without links.'));
-    expect(
-        captureThrow(() => {
-            files.deleteFolder('../outside/kept');
+    }).toThrow(
+        matchFields({
+            message: 'A parent of linked/kept is a link or is not a folder. Choose a folder without links.',
         }),
-    ).toBe('"../outside/kept" is not a safe repository-relative path. Choose a path inside the repository.');
+    );
+    expect(() => {
+        files.deleteFolder('../outside/kept');
+    }).toThrow(
+        matchFields({
+            message: '"../outside/kept" is not a safe repository-relative path. Choose a path inside the repository.',
+        }),
+    );
     files.createFolder('cache/empty', 0o700);
     files.deleteFolder('cache/empty');
     expect(files.readStats('cache/empty')).toBeUndefined();
@@ -80,23 +87,17 @@ test.each(MODE_REPLACEMENTS.filter(({ posix }) => !posix || !isWindows))(
         expect(root.read('config/input')).toStrictEqual(original);
         root.write('config/input', replacement, original);
         expect(root.read('config/input')).toStrictEqual(replacement);
-        expect(
-            captureThrow(() => {
-                root.write('config/input', original, original);
-            }),
-        ).toBe('config/input changed while gspot wrote it. Run the command again.');
-        expect(
-            captureThrow(() => {
-                root.deleteFile('config/input', original);
-            }),
-        ).toBe('config/input changed before removal. Run the command again.');
+        expect(() => {
+            root.write('config/input', original, original);
+        }).toThrow(matchFields({ message: 'config/input changed while gspot wrote it. Run the command again.' }));
+        expect(() => {
+            root.deleteFile('config/input', original);
+        }).toThrow(matchFields({ message: 'config/input changed before removal. Run the command again.' }));
         expect(root.read('config/input')).toStrictEqual(replacement);
         root.write('config/input', original, replacement);
-        expect(
-            captureThrow(() => {
-                root.deleteFile('config/input', replacement);
-            }),
-        ).toBe('config/input changed before removal. Run the command again.');
+        expect(() => {
+            root.deleteFile('config/input', replacement);
+        }).toThrow(matchFields({ message: 'config/input changed before removal. Run the command again.' }));
         expect(root.read('config/input')).toStrictEqual(original);
         root.deleteFile('config/input', original);
         expect(root.read('config/input')).toBeUndefined();
@@ -114,7 +115,6 @@ test.skipIf(isWindows).each([...OUTSIDE_LINKS])(
         const project = join(sandbox.path, 'project');
         await symlink(outside, join(project, 'escape'));
         await symlink(join(outside, 'sentinel'), join(project, 'linked'));
-        await link(join(outside, 'sentinel'), join(project, 'hardlinked'));
         using root = openFiles(project);
         expect(() => {
             root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
@@ -123,8 +123,23 @@ test.skipIf(isWindows).each([...OUTSIDE_LINKS])(
             root.deleteFile(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
         }).toThrow(path === 'linked' ? 'changed before removal' : refusal);
         expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
-        root.createFolder(`${GSPOT_PATHS.state}/private`, 0o700);
-        const attributes = await stat(join(project, `${GSPOT_PATHS.state}/private`));
-        expect(attributes.mode & 0o777).toBe(0o700);
     },
 );
+
+test('createFolder sets the folder mode', async () => {
+    await using sandbox = await testdir();
+    using files = openFiles(sandbox.path);
+    files.createFolder(`${GSPOT_PATHS.state}/private`, 0o700);
+    const attributes = await stat(join(sandbox.path, `${GSPOT_PATHS.state}/private`));
+    expect(attributes.mode & 0o777).toBe(0o700);
+});
+
+test('writing one hard link replaces its path and keeps the peer bytes', async () => {
+    await using sandbox = await testdir({ 'peer.txt': 'authored\n' });
+    await link(join(sandbox.path, 'peer.txt'), join(sandbox.path, 'chosen.txt'));
+    using files = openFiles(sandbox.path);
+    const original = files.read('chosen.txt')!;
+    files.write('chosen.txt', { bytes: Buffer.from('replacement\n'), mode: 0o644 }, original);
+    expect(await readFile(join(sandbox.path, 'chosen.txt'), 'utf8')).toBe('replacement\n');
+    expect(await readFile(join(sandbox.path, 'peer.txt'), 'utf8')).toBe('authored\n');
+});

@@ -1,12 +1,10 @@
 import type { ImplementedFunction } from './types/syntax.ts';
-import { ZOD_MODULES, ZOD_SCHEMA_FACTORIES, ZOD_SCHEMA_NAMESPACES } from './config/schemas.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     TYPE_ONLY,
     FUNCTION_TYPES,
     UNWRAPPABLE_NODES,
-    IMPORT_SPECIFIER_NODES,
     EXECUTABLE_DECLARATIONS,
     TRANSPARENT_EXPRESSIONS,
     NON_EXECUTABLE_STATEMENTS,
@@ -25,22 +23,6 @@ function listChildNodes(
         if (Array.isArray(child)) return child.filter((nested: unknown) => nested !== null) as TSESTree.Node[];
         return child !== null && typeof child === 'object' ? [child as TSESTree.Node] : [];
     });
-}
-
-function isTypeImportReference(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    let value = node;
-    while (value.type === AST_NODE_TYPES.CallExpression || value.type === AST_NODE_TYPES.MemberExpression)
-        value = value.type === AST_NODE_TYPES.CallExpression ? value.callee : value.object;
-    if (value.type !== AST_NODE_TYPES.Identifier) return false;
-    return (
-        ASTUtils.findVariable(source.getScope(node), value)?.defs.some(
-            ({ node: declaration }) =>
-                IMPORT_SPECIFIER_NODES.has(declaration.type) &&
-                declaration.parent.type === AST_NODE_TYPES.ImportDeclaration &&
-                (declaration.parent.importKind === 'type' ||
-                    (declaration.type === AST_NODE_TYPES.ImportSpecifier && declaration.importKind === 'type')),
-        ) === true
-    );
 }
 
 /**
@@ -72,39 +54,16 @@ export function countStatements(node: TSESTree.Node, visitorKeys: Readonly<Recor
     return listChildNodes(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);
 }
 
-function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
+/**
+Strip the wrappers that keep the runtime value: type assertions and optional chains.
+
+@param node the expression, or null
+@returns the inner expression
+*/
+export function unwrap(node: TSESTree.Node | null): TSESTree.Node | null {
     let value = node;
     while (value !== null && isUnwrappable(value)) value = value.expression;
     return value;
-}
-
-/**
-Find schema factory calls through their Zod imports, including aliased bindings.
-
-@param source the parsed module and its scopes
-@returns calls that construct runtime validation schemas
-*/
-export function findZodSchemaConstructors(source: TSESLint.SourceCode): TSESTree.Node[] {
-    const factories = Object.fromEntries(
-        ZOD_SCHEMA_FACTORIES.map((name) => [name, { [ASTUtils.ReferenceTracker.CALL]: true }]),
-    );
-    const namespaces = Object.fromEntries(
-        Object.entries(ZOD_SCHEMA_NAMESPACES).map(([name, methods]) => [
-            name,
-            Object.fromEntries(methods.map((method) => [method, { [ASTUtils.ReferenceTracker.CALL]: true }])),
-        ]),
-    );
-    const constructors = { ...factories, ...namespaces };
-    const imports = Object.fromEntries(
-        ZOD_MODULES.map((name) => [
-            name,
-            { [ASTUtils.ReferenceTracker.ESM]: true, ...constructors, z: constructors, default: constructors },
-        ]),
-    );
-    const tracker = new ASTUtils.ReferenceTracker(source.getScope(source.ast));
-    return [...tracker.iterateEsmReferences(imports)]
-        .filter((reference) => !isTypeImportReference(reference.node, source))
-        .map((reference) => reference.node);
 }
 
 /**
@@ -118,4 +77,17 @@ export function isAlias(node: TSESTree.Node | null, scope: TSESLint.Scope.Scope)
     let value = unwrap(node);
     while (value?.type === AST_NODE_TYPES.MemberExpression && !value.computed) value = unwrap(value.object);
     return value?.type === AST_NODE_TYPES.Identifier && (ASTUtils.findVariable(scope, value)?.defs.length ?? 0) > 0;
+}
+
+const DRIVE_LETTER = /^[a-z]:/u;
+
+/**
+Normalize separators and drive casing before comparing repository paths.
+
+@param path the operating system path
+@returns the comparable POSIX path
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function convertToPosixPath(path: string): string {
+    return path.replaceAll('\\', '/').replace(DRIVE_LETTER, (drive) => drive.toUpperCase());
 }

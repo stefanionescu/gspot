@@ -33,8 +33,7 @@ function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();
     const end = trimmed.search(REQUIREMENT_NAME_END);
     const name = end === -1 ? trimmed : trimmed.slice(0, end);
-    if (!REQUIREMENT_NAME.test(name)) return undefined;
-    return name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-');
+    return REQUIREMENT_NAME.test(name) ? name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-') : undefined;
 }
 
 function convertPythonDependencies(maps: Record<string, PythonDependency>[]): DependencyMap {
@@ -92,7 +91,8 @@ function detectPackageRuntimes(path: string, packageJson: PackageJson): Record<s
     const runtimes: Record<string, string> = {};
     for (const runtime of JAVASCRIPT_RUNTIMES)
         if (packageJson.engines?.[runtime] !== undefined) runtimes[runtime] = `${runtime} in ${path} engines`;
-    for (const [name, command] of packageJson.scripts === undefined ? [] : Object.entries(packageJson.scripts)) {
+    const scripts = packageJson.scripts === undefined ? [] : Object.entries(packageJson.scripts);
+    for (const [name, command] of scripts) {
         const runtime = RUNTIME_COMMAND.exec(command)?.[1];
         if (runtime !== undefined) runtimes[runtime] = `${path} script ${name}`;
     }

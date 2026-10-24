@@ -4,12 +4,11 @@ import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff
 import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
 ---
 
-{/* Every visit starts dark, whatever the system theme, unless the reader chose light with the theme switch. */}
 <meta name="color-scheme" content="dark" />
 <link rel="preload" href={geist} as="font" type="font/woff2" crossorigin />
 <link rel="preload" href={geistMono} as="font" type="font/woff2" crossorigin />
 <script is:inline define:vars={{ THEME_STORAGE_KEY }}>
-    const stored = typeof localStorage === 'undefined' ? null : localStorage.getItem(THEME_STORAGE_KEY);
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
     const theme = stored === 'light' ? 'light' : 'dark';
     document.documentElement.dataset.theme = theme;
     document.querySelector('meta[name="color-scheme"]')?.setAttribute('content', theme);

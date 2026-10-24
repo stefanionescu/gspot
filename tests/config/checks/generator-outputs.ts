@@ -33,8 +33,6 @@ generate_command = ["bun", "generate.ts", "openapi.json"]
 
 export const SUPABASE_TYPES_OUTPUT = 'export type Database = { public: { Tables: {} } };\n';
 
-export const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
-
 export const DOCKER_VERSION_OUTPUT = 'Docker version 29.2.1\n';
 
 export const SUPABASE_VERSION_OUTPUT = '2.75.0\n';

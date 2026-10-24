@@ -46,9 +46,12 @@ function listIncludedFiles(planned: PlannedCheck, text: string, base: string): P
     for (const [name, value] of parseNginxDirectives(text)) {
         if (name !== 'include' || value === undefined || value.includes(NGINX_VARIABLE_MARK)) continue;
         const target = posix.resolve(NGINX_FOLDER, value);
-        const isIncluded = picomatch(posix.normalize(posix.join(base, posix.relative(NGINX_FOLDER, target))));
-        for (const file of planned.files.filter((each) => isIncluded(each.path)))
+        const relativeTarget = posix.relative(NGINX_FOLDER, target);
+        const isIncluded = picomatch(posix.normalize(posix.join(base, relativeTarget)));
+        for (const file of planned.files) {
+            if (!isIncluded(file.path)) continue;
             included.push({ path: file.path, target: posix.resolve(NGINX_FOLDER, posix.relative(base, file.path)) });
+        }
     }
     return included;
 }
@@ -58,7 +61,7 @@ function copyNginxFiles(session: Session, planned: PlannedCheck, path: string, w
     const copies = new Map<string, Mount>();
     const pending = [{ path, target: NGINX_MAIN_TARGET }];
     const base = posix.dirname(path);
-    for (const pendingFile of pending) {
+    for (let pendingFile = pending.shift(); pendingFile !== undefined; pendingFile = pending.shift()) {
         if (copies.has(pendingFile.target)) continue;
         const source = join(folder, `${String(copies.size)}.conf`);
         const bytes = readCachedBytes(session.reads, pendingFile.path);
@@ -94,23 +97,29 @@ async function testNginxFile(
 ): Promise<BuiltInCheckResult> {
     const copies = copyNginxFiles(session, planned, path, work);
     const mounts = {
-        configs: [...copies.values()],
+        configs: copies.values().toArray(),
         certificate: join(work, NGINX_CERTIFICATE_FILE),
         key: join(work, NGINX_KEY_FILE),
     };
     const commandArguments = buildNginxTestArguments(
-        [...copies.values()].map((copy) => copy.text).join('\n'),
+        copies
+            .values()
+            .map((copy) => copy.text)
+            .toArray()
+            .join('\n'),
         mounts,
         image,
     );
     const result = await runCheckTool(session, planned, [DOCKER_TOOL, ...commandArguments], { cwd: session.root });
     if (result.code === 0) {
-        const parsed = [...result.stdout.matchAll(NGINX_DUMP_FILE_LINE)]
+        const parsed = result.stdout
+            .matchAll(NGINX_DUMP_FILE_LINE)
             .map((match) => match.groups?.['path'])
-            .filter((path) => path !== undefined);
+            .filter((path) => path !== undefined)
+            .toArray();
         if (!parsed.includes(NGINX_MAIN_TARGET))
             throw new Error(
-                'The output of nginx -T holds no configuration, so gspot cannot tell which file nginx tested.',
+                `The nginx in ${image} did not read ${NGINX_MAIN_TARGET}, so the check tested none of your files. Set tools.nginx.image to an image whose nginx reads ${NGINX_MAIN_TARGET}.`,
             );
         return {
             findings: [],
@@ -121,7 +130,7 @@ async function testNginxFile(
         };
     }
     const errorLine = result.stderr.split('\n').find((line) => line.includes(NGINX_EMERGENCY_MARK));
-    if (result.code !== 1 || errorLine === undefined)
+    if (errorLine === undefined || result.code !== 1)
         throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
     return buildSyntaxResult(planned, path, copies, errorLine);
 }

@@ -1,15 +1,25 @@
 export const FIX_SUMMARY_CASES = [
-    { name: 'no changes', paths: [], preview: 'No fixer changes anything.', applied: 'No fixer changed anything.' },
+    {
+        name: 'no changes',
+        paths: [],
+        previewText:
+            'No fixer changes anything.\n\nPassed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\nDry run: nothing was written.\n',
+        appliedText: 'No fixer changed anything.\nPassed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\n',
+    },
     {
         name: 'one changed file',
         paths: ['source.txt'],
-        preview: '1 file would change.',
-        applied: 'Fixed 1 file: source.txt. The changes are not staged.',
+        previewText:
+            '===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n+corrected\n\n1 file would change.\n\nPassed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\nDry run: nothing was written.\n',
+        appliedText:
+            'Fixed 1 file: source.txt. The changes are not staged.\nPassed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\n',
     },
     {
         name: 'two changed files',
         paths: ['source.txt', 'other.txt'],
-        preview: '2 files would change.',
-        applied: 'Fixed 2 files: other.txt, source.txt. The changes are not staged.',
+        previewText:
+            '===================================================================\n--- a/other.txt\n+++ b/other.txt\n@@ -1,1 +1,1 @@\n-original\n+corrected\n\n===================================================================\n--- a/source.txt\n+++ b/source.txt\n@@ -1,1 +1,1 @@\n-original\n+corrected\n\n2 files would change.\n\nPassed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\nDry run: nothing was written.\n',
+        appliedText:
+            'Fixed 2 files: other.txt, source.txt. The changes are not staged.\nPassed: 1 check. Skipped: 0 checks.\nTime: 0.0s. Exit code 0.\n',
     },
 ] as const;

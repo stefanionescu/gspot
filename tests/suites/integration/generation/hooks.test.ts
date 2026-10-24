@@ -8,16 +8,23 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { readRuntimePins } from '#tests/setup/runner/run-folder.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/runner.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runGspot, spawnGspot, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
 import { INDEX_COMMAND, SAMPLE_COMMAND, UNQUOTED_FINDING_LINE } from '#tests/config/integration/generation/hooks.ts';
+
+import {
+    runGspot,
+    spawnGspot,
+    applyThenInstall,
+    parseCheckReport,
+    buildInitArguments,
+} from '#tests/setup/cli/commands.ts';
 
 async function assertCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
     await using cloneRoot = await testdir();
+    runGitStep(cloneRoot.path, ['init', '--quiet']);
     const clone = join(cloneRoot.path, 'clone');
     runGitStep(source, ['clone', '--quiet', '--no-local', source, clone]);
     await writeRuntimePins(clone);
@@ -70,10 +77,11 @@ test('a commit with a ShellCheck finding fails through the installed hook, in th
 
 test('a commit in a linked worktree runs staged checks and blocks a finding', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const main = join(sandbox.path, 'main');
     const linked = join(sandbox.path, 'linked');
 
-    await createFileTree(main, {
+    const settingsText = {
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
                 hooks: { enabled: true },
@@ -86,20 +94,19 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
             }),
         }),
         'src/kept.txt': 'clean\n',
-    });
+    };
+    await createFileTree(main, settingsText);
     await writeRuntimePins(main);
     commitAll(main);
     const environment = { NO_COLOR: '1' };
-    using _environment = overrideEnvironment(environment);
-    const applied = await spawnGspot(main, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(await spawnGspot(main, ['install'])).toMatchObject({ code: 0 });
+    await applyThenInstall(main);
     const formatted = await spawnGspot(main, ['check', '--only', 'data-files/taplo-format', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     commitAll(main);
     runGitStep(main, ['worktree', 'add', '-q', '-b', 'topic', linked]);
     await writeRuntimePins(linked);
-    expect(await spawnGspot(linked, ['install'])).toMatchObject({ code: 0 });
+    const installed = await spawnGspot(linked, ['install']);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     await writeFile(join(linked, 'src/added.txt'), 'DEFECT\n');
     runGitStep(linked, ['add', 'src/added.txt']);
     const blocked = runGit(linked, ['commit', '-qm', 'Defect'], environment);
@@ -113,6 +120,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
 
 test('a hook ignores a nested gspot.toml and checks the index at the Git root', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const project = join(sandbox.path, 'nested config');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings([], {

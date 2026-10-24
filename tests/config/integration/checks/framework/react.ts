@@ -18,42 +18,16 @@ const CLEAN_COMPONENT =
 import type { ReactNode } from 'react';
 
 ` +
-    `/**
- * Greets one person.
- *
- * @param props display text for the visitor
- * @param props.name text shown inside the paragraph
- * @returns a paragraph addressed to the visitor
- */
-export function Greeting({ name }: Readonly<{ name: string }>): ReactNode {
-    return <p>{name}</p>;
-}
-`;
+    '/**\n * Greets one person.\n *\n * @param props display text for the visitor\n * @param props.name text shown inside the paragraph\n * @returns a paragraph addressed to the visitor\n */\nexport function Greeting({ name }: Readonly<{ name: string }>): ReactNode {\n    return <p>{name}</p>;\n}\n';
 
 export const REACT_SANDBOX = {
     configurations: ['typescript', 'react-dom'],
-    tsconfig: WEB_TSCONFIG,
+    json: { 'tsconfig.json': WEB_TSCONFIG },
     files: { 'src/Greeting.tsx': CLEAN_COMPONENT },
 } as const;
 
-const COUNTER = `// A test component.
-import { useState, type ReactNode } from "react";
-
-/**
- * Counts, some of the time.
- *
- * @param props display controls for this component
- * @param props.isOn whether the counter is visible
- * @returns the current total in a paragraph
- */
-export function Counter({ isOn }: Readonly<{ isOn: boolean }>): ReactNode {
-    if (isOn) {
-        const [count] = useState(0);
-        return <p>{count}</p>;
-    }
-    return <p>off</p>;
-}
-`;
+const COUNTER =
+    '// A test component.\nimport { useState, type ReactNode } from "react";\n\n/**\n * Counts, some of the time.\n *\n * @param props display controls for this component\n * @param props.isOn whether the counter is visible\n * @returns the current total in a paragraph\n */\nexport function Counter({ isOn }: Readonly<{ isOn: boolean }>): ReactNode {\n    if (isOn) {\n        const [count] = useState(0);\n        return <p>{count}</p>;\n    }\n    return <p>off</p>;\n}\n';
 
 export const REACT_CASES = [
     {

@@ -12,7 +12,6 @@ export const SITE_BUILD_SCRIPT = `import { existsSync, mkdirSync, rmSync, writeF
 const hadOutput = existsSync('dist/index.html');
 rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist');
-// Distinguish a fresh build from a rebuild of existing output.
 writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
 `;
 

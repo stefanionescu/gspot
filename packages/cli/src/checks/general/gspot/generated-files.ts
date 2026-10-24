@@ -3,6 +3,7 @@ import { type Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
+import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { listOutdatedFiles } from '#cli/apply/files/outdated.ts';
 import { GENERATED_FILE_FINDINGS } from '#cli/config/checks/general/gspot/generated-files.ts';
 
@@ -22,7 +23,9 @@ export async function checkGspotGeneratedFiles(session: Session, planned: Planne
             outdatedFile.kind,
             GENERATED_FILE_FINDINGS[outdatedFile.kind].message,
             {
-                help: GENERATED_FILE_FINDINGS[outdatedFile.kind].help,
+                help: TOOL_LOCKFILES.has(outdatedFile.path)
+                    ? 'Run gspot install.'
+                    : GENERATED_FILE_FINDINGS[outdatedFile.kind].help,
             },
         ),
     );

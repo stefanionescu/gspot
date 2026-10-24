@@ -10,7 +10,18 @@ export type ToolOutput = OutputPaths & {
 };
 
 export type WrittenOutput = {
-    format: 'regex' | 'grouped' | 'sarif' | 'knip' | 'semgrep' | 'typos' | 'markdownlint' | 'json' | 'lines' | 'none';
+    format:
+        | 'regex'
+        | 'grouped'
+        | 'sarif'
+        | 'knip'
+        | 'semgrep'
+        | 'typos'
+        | 'markdownlint'
+        | 'taplo'
+        | 'json'
+        | 'lines'
+        | 'none';
     list?: string | undefined;
     children?: string | undefined;
     line_base?: 0 | 1 | undefined;

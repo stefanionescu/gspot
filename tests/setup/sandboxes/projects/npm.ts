@@ -1,9 +1,8 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { runGit } from '#tests/setup/system/git.ts';
 import { mkdir, writeFile } from 'node:fs/promises';
-import type { ApplyReport } from '#cli/types/apply.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
@@ -38,7 +37,7 @@ async function writeNpmProject(options: {
     });
     await createFileTree(root, {
         [projectPath]: rootPackage,
-        ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': PNPM_WORKSPACE } : {}),
+        ...(projectPath === 'package.json' && { 'pnpm-workspace.yaml': PNPM_WORKSPACE }),
         '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${NPM_REGISTRY_TOKEN}\n`,
         'gspot.toml': buildSandboxSettings(['format'], {
             ignore: {
@@ -54,55 +53,44 @@ async function writeNpmProject(options: {
             ? `npmRegistryServer: "${registry.url}"\nnpmAuthToken: "${NPM_REGISTRY_TOKEN}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["${REGISTRY_HOST}"]\n`
             : undefined;
     if (yarnConfiguration !== undefined) await writeFile(join(root, '.yarnrc.yml'), yarnConfiguration, { mode: 0o600 });
-    const initialized = runGit(root, ['init', '--quiet']);
-    if (initialized.code !== 0) throw new Error(`Package project Git setup failed: ${initialized.stderr}`);
+    runGitStep(root, ['init', '--quiet']);
     return { rootPackage, yarnConfiguration };
 }
 
-/** Create an authenticated registry and an authored project for a package manager. */
+/**
+Create an authenticated registry and an authored project for a package manager.
+*/
 export async function createNpmProject(
     packageManager: PackageManager['name'],
     projectPath: string,
 ): Promise<NpmProject> {
-    const resources = new AsyncDisposableStack();
-    try {
-        const folder = resources.use(await testdir());
-        const root = join(folder.path, 'repository');
-        const artifacts = join(folder.path, 'artifacts');
-        await mkdir(artifacts);
-        const registry = resources.use(
-            await createNpmRegistry(artifacts, {
-                packages: [
-                    {
-                        name: prettierPackage.name,
-                        source: dirname(fileURLToPath(import.meta.resolve('prettier/package.json'))),
-                        version: prettierPackage.version,
-                        bin: { [prettierPackage.name]: prettierPackage.bin },
-                    },
-                ],
-
-                token: NPM_REGISTRY_TOKEN,
-            }),
-        );
-        const authored = await writeNpmProject({ root, artifacts, registry, packageManager, projectPath });
-        const result = await runGspotStep({ root, environment: {}, run: spawnGspot }, ['apply', '--json']);
-        const preserved = (JSON.parse(result.stdout) as ApplyReport).notes.filter((note) =>
-            note.startsWith('preserved'),
-        );
-        if (preserved.length > 0)
-            throw new Error(`Package sandbox preserved conflicting inputs: ${preserved.join('\n')}`);
-        return {
-            root,
-            artifacts,
-            registry,
-            ...authored,
-            // eslint-disable-next-line gspot/no-trivial-functions -- reason: `await using` calls it when the scope ends.
-            async [Symbol.asyncDispose]() {
-                await resources.disposeAsync();
+    await using resources = new AsyncDisposableStack();
+    const folder = resources.use(await testdir());
+    const root = join(folder.path, 'repository');
+    const artifacts = join(folder.path, 'artifacts');
+    await mkdir(artifacts);
+    const installPlan = {
+        packages: [
+            {
+                name: prettierPackage.name,
+                source: dirname(fileURLToPath(import.meta.resolve('prettier/package.json'))),
+                version: prettierPackage.version,
+                bin: { [prettierPackage.name]: prettierPackage.bin },
             },
-        };
-    } catch (error) {
-        await resources.disposeAsync();
-        throw error;
-    }
+        ],
+
+        token: NPM_REGISTRY_TOKEN,
+    };
+    const observed = await createNpmRegistry(artifacts, installPlan);
+    const registry = resources.use(observed);
+    const authored = await writeNpmProject({ root, artifacts, registry, packageManager, projectPath });
+    await runGspotStep({ root, run: spawnGspot }, ['apply']);
+    const owned = resources.move();
+    return {
+        root,
+        artifacts,
+        registry,
+        ...authored,
+        [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
+    };
 }

@@ -3,15 +3,15 @@ import { readFileSync } from 'node:fs';
 import { openSession } from '#cli/session.ts';
 import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes.ts';
-import { dirname, resolve, relative } from 'node:path';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
+import { tsconfigSchema } from '#tests/schemas/tsconfig.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { sep, parse, dirname, resolve, relative } from 'node:path';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { textSchema, pathsSchema, fieldsSchema } from '#tests/schemas/checks/typescript.ts';
 import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT, SVELTE_CHECK_FINDINGS } from '#tests/config/checks/framework/svelte.ts';
 
@@ -32,7 +32,7 @@ async function runSvelteCheck(stdout: string, options: { scope?: string } = {}):
 
 test.each([...SVELTE_PROJECTS])(
     'svelte-check reads a temporary tsconfig that extends the scope tsconfig or lists the scope files: $name',
-    async ({ scope, settings, files, extends: extended, include }) => {
+    async ({ scope, settings, files, extends: extended, include, typeRoots }) => {
         await using sandbox = await testdir({
             'gspot.toml': settings,
             'Component.svelte': '<p>Root</p>\n',
@@ -40,33 +40,38 @@ test.each([...SVELTE_PROJECTS])(
             ...files,
         });
         await fakeNpmTool(sandbox.path, 'svelte-check');
+        const parentRoots = Array.from(
+            { length: relative(parse(sandbox.path).root, sandbox.path).split(sep).length },
+            (_, index) => `${'../'.repeat(index + 1)}node_modules/@types`,
+        );
 
         let runtimePath = '';
         const seen: unknown[] = [];
         using run = spyOn(processes, 'spawnProcess').mockImplementation((commandArguments, options) => {
-            runtimePath = textSchema.parse(commandArguments[commandArguments.indexOf('--tsconfig') + 1]);
-            const config = fieldsSchema.parse(JSON.parse(readFileSync(runtimePath, 'utf8')));
+            runtimePath = commandArguments[commandArguments.indexOf('--tsconfig') + 1] ?? '';
+            const config = tsconfigSchema.parse(JSON.parse(readFileSync(runtimePath, 'utf8')));
+
             // eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
-            const fromSandbox = (path: string): string =>
-                convertToPosixPath(relative(sandbox.path, resolve(dirname(runtimePath), path)));
-            const compilerOptions = fieldsSchema.parse(config['compilerOptions']);
+            const fromSandbox = (path: string): string => {
+                const observed = relative(sandbox.path, resolve(dirname(runtimePath), path));
+                return convertToPosixPath(observed);
+            };
             seen.push({
                 cwd: convertToPosixPath(relative(sandbox.path, options.cwd)),
                 insideSandbox: runtimePath.startsWith(sandbox.path),
-                typeRoots: pathsSchema.parse(compilerOptions['typeRoots']).map((path) => fromSandbox(path)),
-                extends: 'extends' in config ? fromSandbox(textSchema.parse(config['extends'])) : null,
-                include:
-                    'include' in config ? pathsSchema.parse(config['include']).map((path) => fromSandbox(path)) : null,
+                typeRoots: config.compilerOptions!.typeRoots!.map((path) => fromSandbox(path)),
+                extends: config.extends === undefined ? null : fromSandbox(config.extends),
+                include: config.include === undefined ? null : config.include.map((path) => fromSandbox(path)),
             });
             return Promise.resolve(buildProcessResult());
         });
         expect(await runSandboxCheck(sandbox.path, 'svelte/svelte-check', { scope })).toStrictEqual([]);
         expect(run).toHaveBeenCalledTimes(1);
-        expect(seen).toMatchObject([
+        expect(seen).toStrictEqual([
             {
                 cwd: scope,
                 insideSandbox: false,
-                typeRoots: expect.arrayContaining(['node_modules/@types']) as string[],
+                typeRoots: [...typeRoots, ...parentRoots],
                 extends: extended,
                 include,
             },
@@ -90,7 +95,8 @@ test('file-name separators follow the current platform', async () => {
 });
 
 test('a svelte-check failure line is an error, not a clean result', async () => {
-    expect(
-        await captureRejection(runSvelteCheck('1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"')),
-    ).toBe('The svelte-check run failed: Failed to locate tsconfig or jsconfig');
+    const runSvelteCheckError = await captureRejection(
+        runSvelteCheck('1758823456790 FAILURE "Failed to locate tsconfig or jsconfig"'),
+    );
+    expect(runSvelteCheckError.message).toBe('The svelte-check run failed: Failed to locate tsconfig or jsconfig');
 });

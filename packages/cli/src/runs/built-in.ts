@@ -20,9 +20,9 @@ function buildBuiltInResult(
     return {
         ...buildBaseResult(planned, session),
         findings,
-        ...(files === undefined ? {} : { files, fileCount: files.length }),
+        ...(files !== undefined && { files, fileCount: files.length }),
         status: findings.length > 0 ? 'failed' : 'passed',
-        duration: performance.now() - started,
+        duration: Math.round(performance.now() - started),
     };
 }
 

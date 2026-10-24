@@ -36,10 +36,10 @@ function findBaseFile(path: string, messageFiles: MessageFiles): string {
     const { folder, base, paths } = messageFiles;
     const sibling = posix.join(posix.dirname(path), `${base}${MESSAGE_FILE_SUFFIX}`);
     const [, ...rest] = posix.relative(folder, path).split('/');
-    if (paths.has(sibling) || rest.length === 0) return sibling;
+    if (rest.length === 0 || paths.has(sibling)) return sibling;
     const nested = posix.join(folder, base, ...rest);
     const hasBaseFolder = [...paths].some((each) => each.startsWith(`${posix.join(folder, base)}/`));
-    return paths.has(nested) || hasBaseFolder ? nested : sibling;
+    return hasBaseFolder || paths.has(nested) ? nested : sibling;
 }
 
 function compareMessages(
@@ -55,7 +55,8 @@ function compareMessages(
             ? []
             : [buildFinding(planned, { file: path, line: 1 }, 'message', `${key}: ${message}`)];
     });
-    const missing = [...baseMessages.keys()]
+    const missing = baseMessages
+        .keys()
         .filter((key) => !messages.has(key))
         .map((key) =>
             buildFinding(
@@ -64,7 +65,8 @@ function compareMessages(
                 'missing-key',
                 `The key ${key} of ${base} has no message here.`,
             ),
-        );
+        )
+        .toArray();
     const changed = [...messages].flatMap(([key, text]) => {
         const baseText = baseMessages.get(key);
         const message = baseText === undefined ? undefined : compareMessageArguments(text, baseText, base);
@@ -103,8 +105,8 @@ function compareMessageArguments(text: string, baseText: string, base: string): 
     } catch {
         return undefined;
     }
-    const missing = [...baseArgumentNames].filter((argumentName) => !argumentNames.has(argumentName));
-    const unexpected = [...argumentNames].filter((segment) => !baseArgumentNames.has(segment));
+    const missing = baseArgumentNames.difference(argumentNames).values().toArray();
+    const unexpected = argumentNames.difference(baseArgumentNames).values().toArray();
     if (missing.length === 0 && unexpected.length === 0) return undefined;
     return [
         missing.length === 0 ? '' : `${base} has ${missing.join(', ')}, which this message leaves out.`,
@@ -123,7 +125,8 @@ function readMessageFiles(
     const messagesByPath = new Map<string, Map<string, string>>();
     const findings: Finding[] = [];
     const paths = new Set([...files, ...files.map((file) => findBaseFile(file, messageFiles))]);
-    for (const path of [...paths].filter((each) => messageFiles.paths.has(each))) {
+    for (const path of paths) {
+        if (!messageFiles.paths.has(path)) continue;
         const messages = readParsedFile(planned, path, () =>
             flattenMessages(parseJsonFile(path, readCachedText(session.reads, path), messagesSchema)),
         );
@@ -145,6 +148,7 @@ export function checkTranslationsMessages(session: Session, planned: PlannedChec
     const options = getTable(planned.scope.settings, 'translations');
     const folder = options.messages_folder as string;
     const base = options.base_locale;
+
     // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
     const isMessageFile = (path: string): boolean =>
         path.startsWith(`${folder}/`) && path.endsWith(MESSAGE_FILE_SUFFIX);
@@ -172,10 +176,8 @@ export function checkTranslationsMessages(session: Session, planned: PlannedChec
         );
     return files.flatMap((path) => {
         const basePath = findBaseFile(path, messageFiles);
-        const messages = messagesByPath.get(path);
-        const baseMessages = messagesByPath.get(basePath);
-        if (messages === undefined || baseMessages === undefined)
-            throw new Error(`Missing parsed messages for ${path} or ${basePath}.`);
+        const messages = messagesByPath.get(path) as Map<string, string>;
+        const baseMessages = messagesByPath.get(basePath) as Map<string, string>;
         return compareMessages(planned, path, messages, baseMessages);
     });
 }

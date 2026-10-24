@@ -69,5 +69,5 @@ export function explainConfiguration(session: Session | undefined, configuration
         ...formatList('Settings', row.settings),
         ...formatList('Rules', row.rules),
     ];
-    return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, data: row };
+    return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, facts: row };
 }

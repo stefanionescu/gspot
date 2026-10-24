@@ -13,7 +13,6 @@ import { checkNamingPaths } from '#cli/checks/general/naming/paths.ts';
 import { checkSecuritySemgrep } from '#cli/checks/general/security.ts';
 import { checkNginxSyntax } from '#cli/checks/infrastructure/nginx.ts';
 import { checkMarkdownFences } from '#cli/checks/language/markdown.ts';
-import { checkReactVersions } from '#cli/checks/framework/react-dom.ts';
 import { checkJavascriptTsc } from '#cli/checks/language/javascript.ts';
 import { checkTranslationsMessages } from '#cli/checks/translations.ts';
 import { checkGeneratorOutputs } from '#cli/checks/generator-outputs.ts';
@@ -26,6 +25,7 @@ import { checkSwiftCoverage } from '#cli/checks/language/swift/coverage.ts';
 import { checkTypescriptTsconfig } from '#cli/checks/language/typescript.ts';
 import { checkCommitsCommitlintPushed } from '#cli/checks/general/commits.ts';
 import { checkBashShellcheck } from '#cli/checks/language/bash/shellcheck.ts';
+import { checkReactDomReactVersions } from '#cli/checks/framework/react-dom.ts';
 import { checkPythonPydoclint } from '#cli/checks/language/python/pydoclint.ts';
 import { checkBashDocComments } from '#cli/checks/language/bash/doc-comments.ts';
 import { checkDockerCompose } from '#cli/checks/infrastructure/docker/compose.ts';
@@ -41,7 +41,6 @@ import { checkNamingAllowedNames } from '#cli/checks/general/naming/allowed-name
 import { checkStructureLoneFiles } from '#cli/checks/general/structure/lone-files.ts';
 import { checkStructureLongFiles } from '#cli/checks/general/structure/long-files.ts';
 import { checkDockerignore } from '#cli/checks/infrastructure/docker/dockerignore.ts';
-import { checkFilesWithoutTarget } from '#cli/checks/infrastructure/xcode/project.ts';
 import { checkPythonFunctionSize } from '#cli/checks/language/python/function-size.ts';
 import { checkGspotGeneratedFiles } from '#cli/checks/general/gspot/generated-files.ts';
 import { checkGspotUnmatchedPaths } from '#cli/checks/general/gspot/unmatched-paths.ts';
@@ -51,34 +50,39 @@ import { checkBashUnreadArguments } from '#cli/checks/language/bash/unread-argum
 import { checkBashUnusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
 import { checkStructureImportRules } from '#cli/checks/general/structure/import-rules.ts';
 import { checkDependenciesLockfiles } from '#cli/checks/general/dependencies/lockfiles.ts';
+import { checkXcodeFilesWithoutTarget } from '#cli/checks/infrastructure/xcode/project.ts';
 import { checkDocsMissingPaths, checkDocsRequiredFiles } from '#cli/checks/general/docs.ts';
 import { checkGithubActionsActionlint } from '#cli/checks/infrastructure/github-actions.ts';
-import { checkForeignKeyIndexes } from '#cli/checks/database/postgres/foreign-key-indexes.ts';
-import { checkFileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
-import { checkPassThroughFolders } from '#cli/checks/general/structure/pass-through-folders.ts';
 import { checkStructureSharedPrefixes } from '#cli/checks/general/structure/shared-prefixes.ts';
-import { checkPackageManagerPin } from '#cli/checks/general/dependencies/package-manager-pin.ts';
 import { checkDependenciesStaleLockfile } from '#cli/checks/general/dependencies/stale-lockfile.ts';
-import { checkConflictingConfigFiles } from '#cli/checks/general/gspot/conflicting-config-files.ts';
 import { checkStructureTrivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
 import { checkSecretsEnvExamples, checkSecretsGitleaksPushed } from '#cli/checks/general/secrets.ts';
+import { checkPostgresForeignKeyIndexes } from '#cli/checks/database/postgres/foreign-key-indexes.ts';
 import { checkCloudflareHeaders, checkCloudflareRedirects } from '#cli/checks/platform/cloudflare.ts';
+import { checkStructureFileFolderClashes } from '#cli/checks/general/structure/file-folder-clashes.ts';
 import { checkStructureEnvironmentReaders } from '#cli/checks/general/structure/environment-readers.ts';
-import { checkRepositoryLargeFiles, checkRepositoryLocalFiles } from '#cli/checks/general/repository.ts';
+import { checkGspotConflictingConfigFiles } from '#cli/checks/general/gspot/conflicting-config-files.ts';
+import { checkStructurePassThroughFolders } from '#cli/checks/general/structure/pass-through-folders.ts';
 import { checkPythonPlaceholderDocstrings } from '#cli/checks/language/python/placeholder-docstrings.ts';
-import { checkXcodeEntitlements, checkAppTransportSecurity } from '#cli/checks/infrastructure/xcode/settings.ts';
+import { checkDependenciesPackageManagerPin } from '#cli/checks/general/dependencies/package-manager-pin.ts';
 import { checkPostgresMigrationOrder, checkPostgresEditedMigrations } from '#cli/checks/database/postgres/history.ts';
+import { checkXcodeEntitlements, checkXcodeAppTransportSecurity } from '#cli/checks/infrastructure/xcode/settings.ts';
 
-import {
-    checkPostgresGrants,
-    checkRowLevelSecurity,
-    checkDefinerSearchPath,
-} from '#cli/checks/database/postgres/access.ts';
 import {
     checkXcodeAssets,
     checkXcodeXcstrings,
     checkXcodeUnusedAssets,
 } from '#cli/checks/infrastructure/xcode/resources.ts';
+import {
+    checkRepositoryEncoding,
+    checkRepositoryLargeFiles,
+    checkRepositoryLocalFiles,
+} from '#cli/checks/general/repository.ts';
+import {
+    checkPostgresGrants,
+    checkPostgresRowLevelSecurity,
+    checkPostgresDefinerSearchPath,
+} from '#cli/checks/database/postgres/access.ts';
 import {
     checkSwiftBuild,
     checkSwiftPeriphery,
@@ -86,18 +90,18 @@ import {
     checkSwiftSwiftlintAnalyze,
 } from '#cli/checks/language/swift/build.ts';
 import {
-    checkServiceRoleKey,
-    checkSupabaseDenoLint,
-    checkSupabaseDenoCheck,
-    checkSupabaseStoragePolicies,
-} from '#cli/checks/platform/supabase.ts';
-import {
     checkSiteSize,
     checkSiteLychee,
     checkSiteSitemap,
     checkSitePurgecss,
     checkSiteHtmlValidate,
 } from '#cli/checks/framework/site/pages.ts';
+import {
+    checkSupabaseDenoLint,
+    checkSupabaseDenoCheck,
+    checkSupabaseServiceRoleKey,
+    checkSupabaseStoragePolicies,
+} from '#cli/checks/platform/supabase.ts';
 
 const CHECK_CODE: Record<string, CheckCode> = {
     'ansible/ansible-lint': { check: checkAnsibleLint },
@@ -113,8 +117,7 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'cloudflare/redirects': { check: checkCloudflareRedirects },
     'commits/commitlint-pushed': { run: checkCommitsCommitlintPushed },
     'dependencies/lockfiles': { check: checkDependenciesLockfiles },
-    'dependencies/package-manager-pin': { check: checkPackageManagerPin },
-    'react-dom/react-versions': { check: checkReactVersions },
+    'dependencies/package-manager-pin': { check: checkDependenciesPackageManagerPin },
     'dependencies/stale-lockfile': { check: checkDependenciesStaleLockfile },
     'docker/compose': { run: checkDockerCompose },
     'docker/dockerignore': { check: checkDockerignore },
@@ -125,7 +128,7 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'expo/expo-doctor': { check: checkExpoDoctor },
     'github-actions/actionlint': { run: checkGithubActionsActionlint },
     'gspot/generated-files': { check: checkGspotGeneratedFiles },
-    'gspot/conflicting-config-files': { check: checkConflictingConfigFiles },
+    'gspot/conflicting-config-files': { check: checkGspotConflictingConfigFiles },
     'gspot/suppressions': { check: checkGspotSuppressions },
     'gspot/unmatched-paths': { check: checkGspotUnmatchedPaths },
     'html/inline-scripts': { check: checkHtmlInlineScripts },
@@ -141,12 +144,12 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'naming/paths': { check: checkNamingPaths },
     'nextjs/tsc': { run: checkNextjsTsc },
     'nginx/syntax': { check: checkNginxSyntax },
-    'postgres/definer-search-path': { check: checkDefinerSearchPath },
+    'postgres/definer-search-path': { check: checkPostgresDefinerSearchPath },
     'postgres/edited-migrations': { check: checkPostgresEditedMigrations },
-    'postgres/foreign-key-indexes': { check: checkForeignKeyIndexes },
+    'postgres/foreign-key-indexes': { check: checkPostgresForeignKeyIndexes },
     'postgres/grants': { check: checkPostgresGrants },
     'postgres/migration-order': { check: checkPostgresMigrationOrder },
-    'postgres/row-level-security': { check: checkRowLevelSecurity },
+    'postgres/row-level-security': { check: checkPostgresRowLevelSecurity },
     'prose/vale': { check: checkProseVale },
     'python/deptry': { run: checkPythonDeptry },
     'python/function-size': { check: checkPythonFunctionSize },
@@ -154,6 +157,8 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'python/placeholder-docstrings': { check: checkPythonPlaceholderDocstrings },
     'python/pydoclint': { run: checkPythonPydoclint },
     'python/vulture': { check: checkPythonVulture },
+    'repository/encoding': { check: checkRepositoryEncoding },
+    'react-dom/react-versions': { check: checkReactDomReactVersions },
     'repository/large-files': { check: checkRepositoryLargeFiles },
     'repository/local-files': { check: checkRepositoryLocalFiles },
     'secrets/env-examples': { check: checkSecretsEnvExamples },
@@ -167,17 +172,17 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'site/size': { check: checkSiteSize },
     'site/unused-assets': { check: checkSiteUnusedAssets },
     'structure/environment-readers': { check: checkStructureEnvironmentReaders },
-    'structure/file-folder-clashes': { check: checkFileFolderClashes },
+    'structure/file-folder-clashes': { check: checkStructureFileFolderClashes },
     'structure/import-rules': { check: checkStructureImportRules },
     'structure/bare-blocks': { check: checkStructureBareBlocks },
     'structure/lone-files': { check: checkStructureLoneFiles },
-    'structure/pass-through-folders': { check: checkPassThroughFolders },
+    'structure/pass-through-folders': { check: checkStructurePassThroughFolders },
     'structure/long-files': { check: checkStructureLongFiles },
     'structure/shared-prefixes': { check: checkStructureSharedPrefixes },
     'structure/trivial-functions': { check: checkStructureTrivialFunctions },
     'supabase/deno-check': { check: checkSupabaseDenoCheck },
     'supabase/deno-lint': { check: checkSupabaseDenoLint },
-    'supabase/service-role-key': { check: checkServiceRoleKey },
+    'supabase/service-role-key': { check: checkSupabaseServiceRoleKey },
     'supabase/storage-policies': { check: checkSupabaseStoragePolicies },
     'svelte/svelte-check': { check: checkSvelteCheck },
     'swift/build': { check: checkSwiftBuild },
@@ -190,10 +195,10 @@ const CHECK_CODE: Record<string, CheckCode> = {
     'typescript/tsc': { run: checkTsc },
     'typescript/tsconfig': { check: checkTypescriptTsconfig },
     'vue/vue-tsc': { run: checkTsc },
-    'xcode/app-transport-security': { check: checkAppTransportSecurity },
+    'xcode/app-transport-security': { check: checkXcodeAppTransportSecurity },
     'xcode/assets': { check: checkXcodeAssets },
     'xcode/entitlements': { check: checkXcodeEntitlements },
-    'xcode/files-without-target': { check: checkFilesWithoutTarget },
+    'xcode/files-without-target': { check: checkXcodeFilesWithoutTarget },
     'xcode/unused-assets': { check: checkXcodeUnusedAssets },
     'xcode/xcstrings': { check: checkXcodeXcstrings },
 };
@@ -204,7 +209,7 @@ Find the code of one check: the generator output check, or the code under its ch
 @param check the check to run.
 @returns the check code, or undefined for a check that runs only its declared command.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function findCheckCode(check: Pick<Check, 'id' | 'generator_outputs'>): CheckCode | undefined {
-    if (check.generator_outputs !== undefined) return { check: checkGeneratorOutputs };
-    return CHECK_CODE[check.id];
+    return check.generator_outputs === undefined ? CHECK_CODE[check.id] : { check: checkGeneratorOutputs };
 }

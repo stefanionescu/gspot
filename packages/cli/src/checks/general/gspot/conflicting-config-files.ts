@@ -13,7 +13,7 @@ runs. A level change or a new configuration can make gspot take over a tool afte
 @param planned the repository-wide check.
 @returns one finding per conflicting config file.
 */
-export function checkConflictingConfigFiles(session: Session, planned: PlannedCheck): Finding[] {
+export function checkGspotConflictingConfigFiles(session: Session, planned: PlannedCheck): Finding[] {
     const tools = new Set(
         session.toolConfigurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)),
     );

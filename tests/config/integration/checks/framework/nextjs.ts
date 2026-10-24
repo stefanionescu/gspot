@@ -31,48 +31,29 @@ export default function Page(): string {
 }
 `;
 
-const NEXT_LAYOUT = `// The root layout.
-import type { ReactNode } from 'react';
-
-/**
- * Wraps every page.
- * @param props content to place inside the document body
- * @param props.children route content to render inside the body
- * @returns the HTML wrapper shared by every route
- */
-export default function Layout({ children }: Readonly<{ children: ReactNode }>): ReactNode {
-    return (
-        <html lang="en">
-            <body>{children}</body>
-        </html>
-    );
-}
-`;
+const NEXT_LAYOUT =
+    '// The root layout.\nimport type { ReactNode } from \'react\';\n\n/**\n * Wraps every page.\n * @param props content to place inside the document body\n * @param props.children route content to render inside the body\n * @returns the HTML wrapper shared by every route\n */\nexport default function Layout({ children }: Readonly<{ children: ReactNode }>): ReactNode {\n    return (\n        <html lang="en">\n            <body>{children}</body>\n        </html>\n    );\n}\n';
 
 export const NEXT_MESSAGES = {
-    'messages/en.json': `{
-    "home": { "title": "Home", "greeting": "Hello {name}" }
-}
-`,
-    'messages/de.json': `{
-    "home": { "title": "Start", "greeting": "Hallo {name}" }
-}
-`,
+    'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
+    'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
 } as const;
 
 export const NEXTJS_SANDBOX = {
     configurations: ['nextjs', 'translations'],
-    tsconfig: {
-        compilerOptions: {
-            ...STRICT_COMPILER_OPTIONS,
-            module: 'ESNext',
-            moduleResolution: 'Bundler',
-            jsx: 'react-jsx',
-            lib: ['DOM', 'DOM.Iterable', 'ES2022'],
-            noEmit: true,
-            plugins: [{ name: 'next' }],
+    json: {
+        'tsconfig.json': {
+            compilerOptions: {
+                ...STRICT_COMPILER_OPTIONS,
+                module: 'ESNext',
+                moduleResolution: 'Bundler',
+                jsx: 'react-jsx',
+                lib: ['DOM', 'DOM.Iterable', 'ES2022'],
+                noEmit: true,
+                plugins: [{ name: 'next' }],
+            },
+            include: ['app'],
         },
-        include: ['app'],
     },
     without: ['css'],
     files: {

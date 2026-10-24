@@ -2,12 +2,12 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { openSession } from '#cli/session.ts';
 import { runChecks } from '#cli/commands/check/run.ts';
-import type { Finding } from '#cli/types/runs/check.ts';
+import { type Finding } from '#cli/types/runs/check.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
-import { runCheckSample, expectedSummary, shareBashSandbox, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, expectedSummary, shareBashSandbox } from '#tests/setup/cli/samples.ts';
 
 import {
     TRIVIAL_FILES,
@@ -16,27 +16,26 @@ import {
     STATEMENT_COUNT_CASES,
     TRIVIAL_FUNCTION_CASES,
     NESTED_PYTHON_FUNCTIONS,
-    TRIVIAL_EXAMPLE_MESSAGE,
     BASH_TRIVIAL_FUNCTION_CASES,
 } from '#tests/config/checks/general/structure/trivial-functions.ts';
 
 const bashSandbox = shareBashSandbox();
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 async function runTrivialFunctionsCheck(
     language: 'python' | 'bash' | 'swift',
     file: string,
     source: string,
-    options: { statements?: number } = {},
+    statements = 2,
 ): Promise<readonly Finding[]> {
     await using sandbox = await testdir({
         [file]: source,
         'gspot.toml': buildSandboxSettings([language], {
             level: 'all',
-            tables: `[limits.${language}]\ntrivial_function_statements = ${String(options.statements ?? 2)}\n`,
+            tables: `[limits.${language}]\ntrivial_function_statements = ${String(statements)}\n`,
         }),
     });
-    using resources = new DisposableStack();
-    return await runSandboxCheck(sandbox.path, 'structure/trivial-functions', { resources });
+    return await runSandboxCheck(sandbox.path, 'structure/trivial-functions');
 }
 
 test('Swift reports constructors, accessors, decorated methods, and nested functions, and counts the statements of closures toward their function', async () => {
@@ -44,9 +43,7 @@ test('Swift reports constructors, accessors, decorated methods, and nested funct
     expect(initial.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
         [2, 4, 5, 7].map((line) => ({ rule: 'trivial-function', line })),
     );
-    const increased = await runTrivialFunctionsCheck('swift', 'example.swift', ACCESSOR_DECLARATIONS, {
-        statements: 3,
-    });
+    const increased = await runTrivialFunctionsCheck('swift', 'example.swift', ACCESSOR_DECLARATIONS, 3);
     expect(increased.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
         [2, 4, 5, 7, 9].map((line) => ({ rule: 'trivial-function', line })),
     );
@@ -65,9 +62,7 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
 test('Python counts the statements of nested functions, lambdas, and control flow, and reports decorated methods', async () => {
     const initial = await runTrivialFunctionsCheck('python', 'example.py', NESTED_PYTHON_FUNCTIONS);
     expect(initial.map(({ rule, line }) => ({ rule, line }))).toStrictEqual([{ rule: 'trivial-function', line: 3 }]);
-    const increased = await runTrivialFunctionsCheck('python', 'example.py', NESTED_PYTHON_FUNCTIONS, {
-        statements: 3,
-    });
+    const increased = await runTrivialFunctionsCheck('python', 'example.py', NESTED_PYTHON_FUNCTIONS, 3);
     expect(increased.map(({ rule, line }) => ({ rule, line }))).toStrictEqual(
         [3, 6, 11].map((line) => ({ rule: 'trivial-function', line })),
     );
@@ -100,6 +95,9 @@ test('an ignore with names keeps those functions out of the findings', async () 
 test.each([...STATEMENT_COUNT_CASES])(
     '%s reports a function of two statements, not counting comments and docstrings',
     async (language, source) => {
+        const TRIVIAL_EXAMPLE_MESSAGE =
+            'example has 2 statements. Functions with 2 or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.';
+
         const extension = ({ python: 'py', bash: 'sh', swift: 'swift' } as const)[language];
         const findings = await runTrivialFunctionsCheck(language, `example.${extension}`, source);
         expect(findings.map(({ line, rule, message }) => ({ line, rule, message }))).toStrictEqual([
@@ -114,9 +112,11 @@ test.each([...TRIVIAL_FILES])('$name gets the findings $expected', async ({ lang
 });
 
 test.each([...BASH_TRIVIAL_FUNCTION_CASES])(
-    '$check reports $expected.rule and passes after the fix',
-    async (sample) => {
-        const result = await runCheckSample(bashSandbox(), sample, BASH_SANDBOX);
-        expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
+    'structure/trivial-functions reports $expected.rule in $expected.file and passes after the fix',
+    async (row) => {
+        const sample = { check: 'structure/trivial-functions', ...row };
+        expect(await runCheckSample(bashSandbox(), sample, BASH_SANDBOX.cleanSource)).toStrictEqual(
+            expectedSummary(sample),
+        );
     },
 );

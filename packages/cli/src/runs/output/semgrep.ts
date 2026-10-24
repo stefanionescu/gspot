@@ -27,7 +27,7 @@ export function parseSemgrepFindings(output: ToolOutput): Finding[] {
     for (const error of report.errors) {
         const type = typeof error.type === 'string' ? error.type : error.type[0];
         const span = error.spans?.find((each) => each.file === error.path);
-        if (error.code !== SEMGREP_PARSE_EXIT || !SEMGREP_PARSE_ERRORS.has(type) || span === undefined)
+        if (span === undefined || error.code !== SEMGREP_PARSE_EXIT || !SEMGREP_PARSE_ERRORS.has(type))
             throw new GspotError('output', `Semgrep could not complete the scan: ${error.message}`);
         findings.push({
             check,

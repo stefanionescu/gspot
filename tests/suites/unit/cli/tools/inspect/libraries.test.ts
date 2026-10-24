@@ -66,7 +66,7 @@ test('a system library is read from the chosen project, not from the tool projec
     expect(inspectTool(buildToolSearch(sandbox.path), tool).state).toBe('missing');
     await createFileTree(project.path, { 'app/node_modules/@vitest/coverage-v8/package.json': '{invalid' });
     expect(() => inspectTool(buildToolSearch(project.path, { cwd: join(project.path, 'app') }), tool)).toThrow(
-        'package.json is not valid JSON:',
+        'package.json:1:2 is not valid JSON:',
     );
 });
 
@@ -74,7 +74,7 @@ test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $nam
     await using sandbox = await testdir();
     const tool = {
         ...getTool(readConfigurations().values(), 'pytest-cov'),
-        ...('pattern' in report ? { version_pattern: report.pattern } : {}),
+        ...('pattern' in report && { version_pattern: report.pattern }),
     };
     using _which = fakeExecutableLookup('/native/pytest');
     using versionRun = spyOn(processes, 'spawnProcessBlocking').mockReturnValue(

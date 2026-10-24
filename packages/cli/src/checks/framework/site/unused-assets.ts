@@ -27,16 +27,17 @@ export function checkSiteUnusedAssets(session: Session, planned: PlannedCheck): 
     const texts = paths
         .values()
         .filter((path) => TEXT_SUFFIXES.has(posix.extname(path)))
-        .flatMap((path) => {
+        .map((path) => {
             const text = findCachedText(session.reads, path);
-            return text === undefined ? [] : [{ path, text }];
+            return text === undefined ? undefined : { path, text };
         })
+        .filter((source) => source !== undefined)
         .toArray();
     return files
         .filter(
             (file) =>
                 ASSET_FOLDER.test(file.path) &&
-                !Object.hasOwn(FILENAME_TAGS, posix.basename(file.path)) &&
+                !FILENAME_TAGS.has(posix.basename(file.path)) &&
                 !TEXT_SUFFIXES.has(posix.extname(file.path)),
         )
         .filter((file) => {

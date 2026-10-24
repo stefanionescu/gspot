@@ -20,16 +20,14 @@ import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/c
 function buildHistorySelection(
     revision: RevisionSource | undefined,
     changed: RunFilters['changed'],
-): Pick<RunOptions, 'commits' | 'base' | 'historyComplete'> {
-    let commits = changed?.commits;
-    let base = changed?.reference;
-    let historyComplete: RunOptions['historyComplete'];
-    if (revision?.content === 'commit') {
-        commits = revision.commits;
-        base = revision.base ?? base;
-        historyComplete = revision.historyComplete;
-    } else if (revision !== undefined) commits = undefined;
-    return stripUndefined({ commits, base, historyComplete });
+): Pick<RunOptions, 'commits' | 'base' | 'shallow'> {
+    if (revision?.content === 'commit')
+        return stripUndefined({
+            commits: revision.commits,
+            base: revision.base ?? changed?.reference,
+            shallow: revision.shallow,
+        });
+    return stripUndefined({ commits: changed?.commits, base: changed?.reference });
 }
 
 function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: RevisionSource | undefined): RunOptions {
@@ -42,6 +40,7 @@ function buildRunOptions(options: CheckOptions, filters: RunFilters, revision: R
         ...stripUndefined({
             stage,
             fix: options.fix,
+            verbose: options.verbose,
             isDryRun: options.isDryRun,
             onProgress: options.onProgress,
             staged: staging.staged,
@@ -62,8 +61,7 @@ function buildComparison(
     changed: RunFilters['changed'],
 ): RunOptions['comparison'] {
     if (revision !== undefined) return { content: revision.content, reference: revision.reference };
-    if (changed !== undefined) return { content: 'working-tree', reference: changed.reference };
-    return undefined;
+    return changed === undefined ? undefined : { content: 'working-tree', reference: changed.reference };
 }
 
 function listMatchingFiles(session: Session, cwd: string, path: string, files: string[]): string[] {
@@ -88,7 +86,8 @@ function assertOnlyChecks(session: Session, only: string[] | undefined): void {
     );
     const shipped = listChecksById(session.configurations.values());
     const settings = session.settingsFile.settings;
-    for (const id of only ?? []) {
+    const requested = only ?? [];
+    for (const id of requested) {
         assertCheckExists(id, settings);
         const match = selected.find(({ check }) => check.id === id);
         if (match === undefined) {
@@ -142,6 +141,12 @@ async function readRunFilters(
     return { changed, staging, stage, paths: paths.length === 0 ? undefined : paths };
 }
 
+function formatAllFilesHeader(options: CheckOptions, revision: RevisionSource | undefined): string {
+    if (revision !== undefined || options.allFiles === undefined) return '';
+    const cause = options.allFiles === 'empty-base' ? 'the base ref is empty' : 'the base is a new branch';
+    return `Checked every file: ${cause}.\n`;
+}
+
 /**
 Check the files of one working tree: the repository, or a copy of the staged index or of a pushed commit.
 
@@ -168,7 +173,9 @@ export async function checkTree(
     const { changed, staging, stage, paths } = await readRunFilters(session, options, cancelSignal, revision);
     const result = await runChecks(session, buildRunOptions(options, { changed, staging, stage, paths }, revision));
     if (result.fixes !== undefined) printFailedFixers(result.fixes, { verbose: options.verbose });
-    const reportText = formatRunReport(result.report, { verbose: options.verbose });
+    if (revision?.dependencyNote !== undefined) result.report.notes = [revision.dependencyNote];
+    const reportText =
+        formatAllFilesHeader(options, revision) + formatRunReport(result.report, { verbose: options.verbose });
     const text = result.fixes
         ? `${formatFixes(result.fixes, { isDryRun: options.isDryRun }).join('\n')}\n${reportText}`
         : reportText;

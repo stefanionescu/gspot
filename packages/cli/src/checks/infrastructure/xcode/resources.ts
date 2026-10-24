@@ -44,8 +44,8 @@ export function checkXcodeAssets(session: Session, planned: PlannedCheck): Findi
             const at = { file: path, line: 1 };
             const parsed = readParsedFile(planned, path, () => parseJsonFile(path, text, assetContentsSchema));
             if ('error' in parsed) return [parsed.error];
-            const contents = parsed.value;
             if (!path.endsWith(IMAGE_SET)) return [];
+            const contents = parsed.value;
             const names = (contents.images ?? []).flatMap((image) =>
                 image.filename === undefined ? [] : [image.filename],
             );

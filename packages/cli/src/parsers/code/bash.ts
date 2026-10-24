@@ -33,7 +33,7 @@ function findHighestParameter(node: Node): number {
         if (findFunctionNode(expansion)?.id !== node.id) return [];
         const parameter = expansion.namedChildren[0]?.text;
         if (parameter === undefined) return [];
-        if (ALL_POSITIONAL_PARAMETERS.has(parameter)) return [Number.POSITIVE_INFINITY];
+        if (ALL_POSITIONAL_PARAMETERS.has(parameter)) return [Infinity];
         return POSITIONAL_PARAMETER.test(parameter) ? [Number(parameter)] : [];
     });
     if (
@@ -45,7 +45,7 @@ function findHighestParameter(node: Node): number {
                     command.childForFieldName('name')?.text === SHIFT_COMMAND,
             )
     )
-        return Number.POSITIVE_INFINITY;
+        return Infinity;
     return Math.max(0, ...positions);
 }
 
@@ -90,8 +90,8 @@ function parseBashFunctions(syntaxRoot: Node, codeText: string): ScriptSyntax['f
                     .filter(
                         (write) =>
                             findFunctionNode(write)?.id === node.id &&
-                            !ignored.some(
-                                (range) => range.startIndex <= write.startIndex && range.endIndex >= write.endIndex,
+                            ignored.every(
+                                (range) => !(range.startIndex <= write.startIndex && range.endIndex >= write.endIndex),
                             ),
                     ).length,
             },
@@ -117,9 +117,7 @@ function stripComments(text: string, comments: Node[]): string {
 
 function isTemporaryValue(assignment: Node): boolean {
     const value = assignment.childForFieldName('value');
-    if (value === null) return false;
-    if (!TEMPORARY_VALUE_NODES.has(value.type)) return false;
-    if (value.namedChildCount !== 1) return false;
+    if (value === null || !TEMPORARY_VALUE_NODES.has(value.type) || value.namedChildCount !== 1) return false;
     const substitution = [value, ...value.namedChildren].find(
         (child) => child.type === 'command_substitution' && child.namedChildCount === 1,
     );
@@ -132,7 +130,7 @@ function listLocalNames(root: Node): Set<string> {
         .filter(
             (declaration) =>
                 LOCAL_DECLARATION_WORDS.has(declaration.child(0)?.text ?? '') &&
-                !declaration.namedChildren.some((child) => child.text.startsWith('-') && child.text.includes('g')),
+                declaration.namedChildren.every((child) => !(child.text.startsWith('-') && child.text.includes('g'))),
         );
     return new Set(
         declarations.flatMap((declaration) => {
@@ -166,7 +164,7 @@ function buildScriptTemporaryPaths(root: Node): ScriptTemporaryPaths {
         if (name === undefined || !isTemporaryValue(assignment)) return [];
         const key = JSON.stringify([findFunctionNode(assignment)?.id, name]);
         const path: TemporaryPath = { name, line: assignment.startPosition.row + 1, cleanupLines: [] };
-        const isUnique = locals.has(key) ? counts.get(key) === 1 : names.get(name) === 1;
+        const isUnique = (locals.has(key) ? counts.get(key) : names.get(name)) === 1;
         if (isUnique) targets.set(key, path);
         return [path];
     });
@@ -186,7 +184,7 @@ function findTemporaryPath(
     if (name === undefined) return undefined;
     if (![`$${name}`, `\${${name}}`].includes(reference.text)) return undefined;
     const key = JSON.stringify([owner, name]);
-    const target = temporaryPaths.assigned.has(key) ? key : JSON.stringify([undefined, name]);
+    const target = temporaryPaths.assigned.has(key) ? key : JSON.stringify([null, name]);
     return temporaryPaths.variables.get(target);
 }
 
@@ -293,7 +291,7 @@ Select non-blank code lines after the parser has masked comments.
 export function listCodeLines(lines: string[]): NumberedLine[] {
     return lines.flatMap((line, index) => {
         const code = line.trim();
-        return code === '' ? [] : [{ number: index + 1, text: code }];
+        return code === '' ? [] : { number: index + 1, text: code };
     });
 }
 

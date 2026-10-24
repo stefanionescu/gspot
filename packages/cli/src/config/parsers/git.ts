@@ -18,6 +18,8 @@ export const TREE_LINE = new RegExp(
 
 export const ATTRIBUTE_FIELDS = 3;
 
+export const ATTRIBUTE_ASSIGNMENT_SIDES = 2;
+
 export const ATTRIBUTE_LINE = /^("(?:[^"\\]|\\.)*"|\S+)(?:\s+|$)/u;
 
 export const IGNORED_ATTRIBUTE_LINE = /^(?:#|\[attr\])/u;
@@ -31,7 +33,7 @@ export const QUOTED_PATH_CHUNKS = /\\(?:[0-3][0-7]{2}|[\s\S])|[^\\]+/gu;
 export const OCTAL_PATH_BYTE = /^\\[0-3][0-7]{2}$/u;
 
 export const PATH_ESCAPES: Readonly<Record<string, string>> = {
-    a: '\u0007',
+    a: '\u{7}',
     b: '\b',
     f: '\f',
     n: '\n',
@@ -41,10 +43,6 @@ export const PATH_ESCAPES: Readonly<Record<string, string>> = {
     '\\': '\\',
     '"': '"',
 };
-
-export const BINARY_ATTRIBUTES = { diff: 'unset', merge: 'unset', text: 'unset' } as const;
-
-export const BINARY_MACRO = 'binary';
 
 export const INVALID_GIT_STREAM_MESSAGE = 'The Git object stream is incomplete or invalid.';
 

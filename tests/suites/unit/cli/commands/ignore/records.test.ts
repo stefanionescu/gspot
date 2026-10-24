@@ -4,15 +4,22 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
 import { parseSettings } from '#cli/settings/read.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { REFUSAL_FILES } from '#tests/config/commands/set.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import type { TomlTable, IgnoreRecord } from '#cli/types/settings/file.ts';
+import { runGspot, expectRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 import {
+    IGNORE_REFUSALS,
+    MERGED_IGNORE_TEXT,
+    UNIGNORE_PATH_TEXT,
+    UNIGNORE_RULE_TEXT,
     IGNORE_HOOK_TABLES,
     MERGED_EXPIRY_IGNORES,
     PATH_IGNORE_ARGUMENTS,
+    MERGED_IGNORE_SETTINGS,
     DATED_IGNORE_ARGUMENTS,
     REMAINING_EXPIRY_IGNORES,
     UNKNOWN_IGNORE_ARGUMENTS,
@@ -22,7 +29,7 @@ import {
 async function readIgnoreRecords(
     root: string,
 ): Promise<Array<Omit<IgnoreRecord, 'until'> & { until: string | undefined }>> {
-    return parseSettings(await readFile(join(root, 'gspot.toml'), 'utf8'), undefined).ignore.map((ignore) => ({
+    return parseSettings(await readFile(join(root, 'gspot.toml'), 'utf8'), root).ignore.map((ignore) => ({
         ...ignore,
         until: ignore.until?.toISOString(),
     }));
@@ -30,7 +37,7 @@ async function readIgnoreRecords(
 
 test('ignore of an unknown check exits 2 and leaves gspot.toml byte for byte', async () => {
     const settings = buildSandboxSettings(['bash']);
-    await using sandbox = await testdir({ 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': settings, 'entry.sh': 'echo example\n' });
     const result = await runGspot(sandbox.path, UNKNOWN_IGNORE_ARGUMENTS);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toBe(
@@ -55,22 +62,16 @@ test('ignore merges paths into one record and prints them, and unignore removes 
     expect(first.code, first.stdout + first.stderr).toBe(0);
     const added = await runGspot(sandbox.path, [...PATH_IGNORE_ARGUMENTS, 'b.sh']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
-    expect(added.stdout).toStartWith(
-        '[[ignore]]\ncheck = "bash/shellcheck"\npaths = [ "a.sh", "b.sh" ]\nreason = "The inputs demonstrate word splitting."\nIgnored bash/shellcheck for b.sh.\n',
-    );
+    expect(added.stdout).toBe(MERGED_IGNORE_TEXT);
     const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--paths', 'b.sh']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect(removed.stdout).toBe(UNIGNORE_PATH_TEXT);
     const saved = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect((parse(saved) as TomlTable)['ignore']).toStrictEqual([
-        { check: 'bash/shellcheck', paths: ['a.sh'], reason: 'The inputs demonstrate word splitting.' },
-    ]);
-    expect(saved).toContain('# Comment on configurations.');
-    expect(saved).toContain('# Keep the push selection.');
-    expect(saved.indexOf('[hooks]')).toBeLessThan(saved.indexOf('[[ignore]]'));
+    expect(saved).toBe(MERGED_IGNORE_SETTINGS);
 });
 
 test('ignore merges records with the same --until date, keeps other dates apart, and unignore removes one path', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], {
             rules: true,
             tables: BASH_SYNTAX_CHECK,
@@ -103,7 +104,7 @@ test('ignore merges records with the same --until date, keeps other dates apart,
 });
 
 test('ignore refuses an invalid --until date and leaves gspot.toml unchanged', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'example.sh': 'echo ready\n',
     });
@@ -130,7 +131,7 @@ test('ignore refuses an invalid --until date and leaves gspot.toml unchanged', a
 });
 
 test('ignore merges matching paths, keeps different reasons apart, and an entry without paths covers the scope', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
         'a.sh': 'echo a\n',
         'b.sh': 'echo b\n',
@@ -166,13 +167,14 @@ test('ignore merges matching paths, keeps different reasons apart, and an entry 
     ]);
     const removed = await runGspot(sandbox.path, ['unignore', 'bash/shellcheck', '--rule', 'SC2312']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toStartWith('Removed 2 ignores for bash/shellcheck.\n');
+    expect(removed.stdout).toBe(UNIGNORE_RULE_TEXT);
     expect(parse(await readFile(settingsPath, 'utf8'))).not.toHaveProperty('ignore');
 });
 
 test('a refused ignore reason is an argument error and leaves settings unchanged', async () => {
     const settings = buildSandboxSettings([]);
     await using sandbox = await testdir({ 'gspot.toml': settings });
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const result = await runGspot(sandbox.path, ['ignore', '--paths', 'vendor/**', '--reason', 'x', '--json']);
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toStrictEqual({
@@ -181,3 +183,52 @@ test('a refused ignore reason is an argument error and leaves settings unchanged
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
+
+test.each(['2020-01-01', new Date().toISOString().slice(0, 10)])(
+    'ignore refuses expiry %s without changing settings',
+    async (until) => {
+        const settings = buildSandboxSettings(['bash']);
+        await using sandbox = await testdir({ 'gspot.toml': settings });
+        runGitStep(sandbox.path, ['init', '--quiet']);
+        const result = await runGspot(sandbox.path, [
+            'ignore',
+            'bash/shellcheck',
+            '--reason',
+            'The generated shell has a reviewed exception.',
+            '--until',
+            until,
+            '--json',
+        ]);
+        expect(result.code).toBe(2);
+        expect(JSON.parse(result.stdout)).toStrictEqual({
+            error: 'arguments',
+            message: '--until must be a date after today, such as 2027-01-31.',
+        });
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+    },
+);
+
+test('a rule ignore summary names the rule and its paths', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']), 'entry.sh': 'echo example\n' });
+    runGitStep(sandbox.path, ['init', '--quiet']);
+    const result = await runGspot(sandbox.path, [
+        'ignore',
+        'bash/shellcheck',
+        '--rule',
+        'SC2086',
+        '--paths',
+        'entry.sh',
+        '--reason',
+        'The generated shell preserves splitting.',
+    ]);
+    expect(result.code, result.stderr).toBe(0);
+    expect(result.stdout).toContain('Ignored rule SC2086 of bash/shellcheck for entry.sh.');
+});
+
+test.each([...IGNORE_REFUSALS])(
+    'ignore refuses $name in text and JSON without writing',
+    async ({ arguments: commandArguments, message }) => {
+        await using sandbox = await createGitSandbox(REFUSAL_FILES);
+        await expectRefusalWithoutWrites(sandbox.path, commandArguments, { error: 'arguments', message });
+    },
+);

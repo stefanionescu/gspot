@@ -46,7 +46,7 @@ export const FORMATS_VALE_INI = [
     'StylesPath = styles',
     '[formats]',
     ...Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
-        'format' in grammar ? [`${extension.slice(1)} = ${grammar.format}`] : [],
+        'format' in grammar ? `${extension.slice(1)} = ${grammar.format}` : [],
     ),
     '[*]',
     'BasedOnStyles = Example',

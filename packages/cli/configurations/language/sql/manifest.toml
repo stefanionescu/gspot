@@ -14,7 +14,7 @@ name = "sqlfluff"
 pypi = "sqlfluff"
 replace = [".sqlfluff", ".sqlfluffignore"]
 suppression = { marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)", example = "SELECT * FROM orders -- noqa: AM04 -- reason: the view mirrors every column" }
-version = "4.3.0"
+version = "4.4.0"
 
 [[tool.replace_key]]
 file = "pyproject.toml"
@@ -31,7 +31,6 @@ table = "sqlfluff"
 [[config_file]]
 per_scope = true
 target = "sqlfluff.cfg"
-tool = "sqlfluff"
 
 [[check]]
 command = ["sqlfluff", "lint", "--config", "{config_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]

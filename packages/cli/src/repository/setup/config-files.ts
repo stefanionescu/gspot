@@ -3,7 +3,6 @@ import { posix, extname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
-import { hasIniSection } from '#cli/parsers/formats/ini.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { findProjectFolder } from '#cli/repository/scopes.ts';
@@ -59,8 +58,8 @@ function findConflictingConfigFiles(
             tool,
             path,
             shared: replacement.shared,
-            ...(replacement.table === undefined ? {} : { table: replacement.table }),
-            ...(replacement.key === undefined ? {} : { key: replacement.key }),
+            ...(replacement.table !== undefined && { table: replacement.table }),
+            ...(replacement.key !== undefined && { key: replacement.key }),
         }));
 }
 
@@ -73,7 +72,13 @@ function parseSharedFile(text: string, extension: string, path: string): unknown
 
 function hasToolSection(text: string, path: string, selector: Pick<ConflictingConfigFile, 'key' | 'table'>): boolean {
     const extension = extname(path);
-    if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) return hasIniSection(text, selector.table);
+    if (selector.table !== undefined && INI_EXTENSIONS.has(extension)) {
+        const header = new RegExp(
+            String.raw`^\s*\[${RegExp.escape(selector.table)}(?::[^\]]+)?\]\s*(?:[#;].*)?$`,
+            'mu',
+        );
+        return header.test(text);
+    }
     const segments = selector.key === undefined ? (selector.table as string).split('.') : [selector.key];
     let value = parseSharedFile(text, extension, path);
     for (const segment of segments) {

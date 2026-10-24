@@ -10,3 +10,5 @@ export type ImportSource =
     | TSESTree.ExportAllDeclaration
     | TSESTree.ExportNamedDeclaration
     | TSESTree.ImportExpression;
+
+export type ImportBlock = { first: TSESTree.Statement; last: TSESTree.Statement };

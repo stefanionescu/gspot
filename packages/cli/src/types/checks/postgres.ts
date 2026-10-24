@@ -31,7 +31,7 @@ export type Schema = {
 };
 
 export type DatabaseSchema = Pick<Schema, 'tables' | 'secured'> & {
-    indexes: { table: string; name: string; columns: string[]; constraint: string }[];
+    indexes: { schema: string | undefined; table: string; name: string; columns: string[]; constraint: string }[];
     constraints: Map<string, Map<string, Schema['foreignKeys'][number]>>;
 };
 

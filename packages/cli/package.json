@@ -56,7 +56,6 @@
         "jsonc-parser": "3.3.1",
         "libpg-query": "18.1.4",
         "mdast-util-from-markdown": "2.0.3",
-        "nypm": "0.6.10",
         "p-limit": "7.3.2",
         "picocolors": "1.1.1",
         "picomatch": "4.0.7",

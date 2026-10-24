@@ -12,8 +12,6 @@ export const NAME_HYPHEN = /-(?<letter>[a-z0-9])/gu;
 
 export const ESLINT_BASE_LABEL = 'javascript';
 
-export const RULE_PLUGIN_PREFIX = /^(?<prefix>.+)\/[^/]+$/u;
-
 export const PACKAGE_JSON_PATTERN = '**/package.json';
 
 export const PRESETS_AFTER_CONFIGURATIONS = [
@@ -53,45 +51,25 @@ export const BASE_SELECTORS = [
         message: 'Use a literal union or an as-const object instead of an enum.',
     },
     {
-        selector: 'TSAsExpression[expression.type="TSAsExpression"]',
+        selector:
+            ':matches(TSAsExpression[expression.type="TSAsExpression"], TSTypeAssertion[expression.type="TSTypeAssertion"])',
         message: 'Do not assert twice. Narrow the value, fix its type, or check it at run time.',
     },
     {
-        selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]',
-        message: 'Do not assert twice. Narrow the value, fix its type, or check it at run time.',
-    },
-    {
-        selector: 'TSAsExpression > TSAnyKeyword',
+        selector: ':matches(TSAsExpression, TSTypeAssertion) > TSAnyKeyword',
         message: 'Do not assert to any. Give the value a real type, or check it at run time.',
     },
     {
-        selector: 'TSTypeAssertion > TSAnyKeyword',
-        message: 'Do not assert to any. Give the value a real type, or check it at run time.',
-    },
-    {
-        selector: 'TSAsExpression > TSNeverKeyword',
+        selector: ':matches(TSAsExpression, TSTypeAssertion) > TSNeverKeyword',
         message: 'Do not assert to never to silence the type system.',
     },
     {
-        selector: 'TSTypeAssertion > TSNeverKeyword',
-        message: 'Do not assert to never to silence the type system.',
-    },
-    {
-        selector: 'LogicalExpression[operator="||"][right.type="ObjectExpression"][right.properties.length=0]',
-        message: 'An empty-object fallback hides a missing value. Handle the missing case.',
-    },
-    {
-        selector: 'LogicalExpression[operator="??"][right.type="ObjectExpression"][right.properties.length=0]',
+        selector: String.raw`LogicalExpression[operator=/^(\|\||\?\?)$/][right.type="ObjectExpression"][right.properties.length=0]`,
         message: 'An empty-object fallback hides a missing value. Handle the missing case.',
     },
     {
         selector:
-            'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > Literal.arguments:first-child[value=/^[a-z]/]',
-        message: 'Start an error message with a capital letter.',
-    },
-    {
-        selector:
-            'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]',
+            'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > :matches(Literal.arguments:first-child[value=/^[a-z]/], TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/])',
         message: 'Start an error message with a capital letter.',
     },
     {

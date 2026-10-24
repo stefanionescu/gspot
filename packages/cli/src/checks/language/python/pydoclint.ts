@@ -40,24 +40,23 @@ async function groupByDocstringStyle(
     files: TrackedFile[],
     configured: PythonDocstringStyle | undefined,
 ) {
-    const groups = new Map<PythonDocstringStyle | undefined, TrackedFile[]>();
+    const styled: { file: TrackedFile; style: PythonDocstringStyle | undefined }[] = [];
     for (const file of files) {
         const style = configured ?? (await detectDocstringStyle(session, file.path));
-        const group = groups.get(style) ?? [];
-        group.push(file);
-        groups.set(style, group);
+        styled.push({ file, style });
     }
-    return groups;
+    return new Map(
+        Map.groupBy(styled, ({ style }) => style)
+            .entries()
+            .map(([style, group]) => [style, group.map(({ file }) => file)]),
+    );
 }
 function parsePydoclintOptions(path: string, text: string, convention: unknown): PydoclintOptions {
     const { tool } = parseTomlFile(path, text, docstringStyleSchema);
     const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
     const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);
     const written = new Set(Object.keys(tool.pydoclint).map((name) => name.replaceAll('_', '-')));
-    const defaults = PYDOCLINT_TYPE_OPTIONS.filter((name) => !written.has(name)).flatMap((name) => [
-        `--${name}`,
-        'false',
-    ]);
+    const defaults = PYDOCLINT_TYPE_OPTIONS.flatMap((name) => (written.has(name) ? [] : [`--${name}`, 'false']));
     return { command: [...PYDOCLINT_COMMAND, ...defaults], style };
 }
 

@@ -11,15 +11,15 @@ import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
+import type { WritePlan, ReplacementRequest } from '#cli/types/apply.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import type { BlockStyle } from '#cli/types/parsers/formats/managed-blocks.ts';
-import type { Writer, WritePlan, ReplacementRequest } from '#cli/types/apply.ts';
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 
 function removeBlock(path: string, onDisk: FileContents): FileContents | undefined {
     const text = decodeUtf8Text(path, onDisk.bytes);
-    const span = findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' });
+    const span = findBlockSpan(text, { path, style: getBlockStyle(path) });
     if (span === undefined) return onDisk;
     const before = text.slice(0, span.start).replace(/(\r?\n)\r?\n$/u, '$1');
     const after = text.slice(span.end);
@@ -73,10 +73,7 @@ export function listStrayPaths(session: Pick<Session, 'root' | 'repository'>, ex
         if (isOwned(path, disk)) return true;
         if (!blockPaths.has(path)) return false;
         const text = disk.read(path)?.bytes.toString('utf8');
-        return (
-            text !== undefined &&
-            findBlockSpan(text, { path, style: path.endsWith('.md') ? 'markdown' : 'hash' }) !== undefined
-        );
+        return text !== undefined && findBlockSpan(text, { path, style: getBlockStyle(path) }) !== undefined;
     });
 }
 
@@ -87,10 +84,10 @@ Plan a replacement: refuse authored bytes that nobody reviewed.
 @param request the new bytes and any reviewed file contents.
 @returns the write plan, with an unchanged, changed, or preserved status.
 */
-export function planReplacement(writer: Writer, request: ReplacementRequest): WritePlan {
+export function planReplacement(writer: Files, request: ReplacementRequest): WritePlan {
     const { path, next, expected } = request;
-    const onDisk = next.isLink === true ? writer.files.readKeepingLinks(path) : writer.files.read(path);
-    if (onDisk !== undefined && !isSameContents(onDisk, next) && !isOwned(path, writer.files) && expected === undefined)
+    const onDisk = next.isLink === true ? writer.readKeepingLinks(path) : writer.read(path);
+    if (onDisk !== undefined && !isSameContents(onDisk, next) && !isOwned(path, writer) && expected === undefined)
         return { path, before: onDisk, status: 'preserved' };
     return {
         path,
@@ -109,8 +106,8 @@ Plan the marked block, and keep the text outside it.
 @param style markdown or hash markers.
 @returns the block write plan.
 */
-export function planBlock(writer: Writer, path: string, body: string, style: BlockStyle): WritePlan {
-    const onDisk = writer.files.read(path);
+export function planBlock(writer: Files, path: string, body: string, style: BlockStyle): WritePlan {
+    const onDisk = writer.read(path);
     const text = onDisk === undefined ? '' : decodeUtf8Text(path, onDisk.bytes);
     const nextText = replaceBlock(text, body, { path, style });
     const next = {
@@ -127,10 +124,10 @@ Plan the removal of an owned file, or of its managed block.
 @param path the stale generated file.
 @returns the old bytes, and any authored text left after the managed block goes.
 */
-export function planRemoval(writer: Writer, path: string): WritePlan {
-    const onDisk = writer.files.readKeepingLinks(path);
+export function planRemoval(writer: Files, path: string): WritePlan {
+    const onDisk = writer.readKeepingLinks(path);
     if (onDisk === undefined) return { path, before: onDisk, status: 'unchanged' };
-    if (isOwned(path, writer.files)) return { path, before: onDisk, status: 'changed' };
+    if (isOwned(path, writer)) return { path, before: onDisk, status: 'changed' };
     const next = removeBlock(path, onDisk);
     return {
         path,
@@ -138,4 +135,9 @@ export function planRemoval(writer: Writer, path: string): WritePlan {
         ...(next === undefined ? {} : { after: next }),
         status: isSameContents(onDisk, next) ? 'unchanged' : 'changed',
     };
+}
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function getBlockStyle(path: string): BlockStyle {
+    return path.endsWith('.md') ? 'markdown' : 'hash';
 }

@@ -7,6 +7,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
 import type { CheckResult } from '#cli/types/runs/check.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/checks/tsc/compiler.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { runTsc, listCompilerFiles, restoreCommandPaths, writeReferenceProjects } from '#cli/checks/tsc/compiler.ts';
@@ -23,7 +24,7 @@ export async function checkTsc(session: Session, planned: PlannedCheck): Promise
         session.root,
         planned.scope.folder.path,
         listCheckedFiles(session.scopes, planned)
-            .filter((file) => file.tags.includes('typescript'))
+            .filter((file) => file.tags.includes(TYPESCRIPT_TAG))
             .map((file) => file.path),
         session.reads,
     );

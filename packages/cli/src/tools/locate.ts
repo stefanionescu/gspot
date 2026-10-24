@@ -49,14 +49,14 @@ function listMiseExecutablePaths(workingFolder: string, name: string, timeoutSec
     const paths = which.sync(name, { nothrow: true, all: true }) ?? [];
     const mise = which.sync(MISE_TOOL, { nothrow: true });
     return paths.flatMap((path) => {
-        if (basename(dirname(path)) !== MISE_LAUNCHER_FOLDER || mise === null) return [path];
+        if (mise === null || basename(dirname(path)) !== MISE_LAUNCHER_FOLDER) return [path];
         const result = spawnProcessBlocking([mise, MISE_WHICH, name], {
             cwd: workingFolder,
             env: TOOL_ENV,
             timeoutSeconds,
         });
         const selected = result.stdout.trim();
-        return result.code === 0 && selected !== '' ? [selected] : [];
+        return selected !== '' && result.code === 0 ? [selected] : [];
     });
 }
 
@@ -139,9 +139,11 @@ Read and cache the installed mise folders when a tool search needs them.
 @returns the folders that mise installed.
 */
 export function getMiseBinPaths(session: Session): string[] {
-    session.miseBinPaths ??= readMiseBinPaths(
+    if (session.miseBinPaths !== undefined) return session.miseBinPaths;
+    const pins = listMisePins(listSelectedConfigurations(session.scopes));
+    session.miseBinPaths = readMiseBinPaths(
         session.installedRoot,
-        [...new Set(listMisePins(listSelectedConfigurations(session.scopes)).map((pin) => pin.name))],
+        [...new Set(pins.map((pin) => pin.name))],
         session.timeoutSeconds,
     );
     return session.miseBinPaths;

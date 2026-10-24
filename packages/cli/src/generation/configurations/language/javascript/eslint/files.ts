@@ -1,6 +1,5 @@
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
+import { escapeGlob, extractExtension } from '#cli/system/paths.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { buildPathMatcher, includeFolderContents } from '#cli/repository/files/matchers.ts';
 
@@ -38,9 +37,9 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
             .map((extension) => ({ pattern: `**/*${extension}`, configuration: name })),
     );
     const components = selected.map(({ pattern }) => pattern);
-    const covered = buildPathMatcher([source, ...components]);
+    const isCovered = buildPathMatcher([source, ...components]);
     const node = buildNodePatterns(
-        nodeFiles.filter((path) => !covered(path)),
+        nodeFiles.filter((path) => !isCovered(path)),
         '',
     );
     const code = [source, ...components, ...node];
@@ -57,22 +56,42 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
         ],
         javascript: [javascript, ...node],
         tests: scopes.flatMap(({ scope, tests }) =>
-            buildTestFiles(tests, code).map(([test, pattern]) => [
+            buildTestFiles(listCodeTestFiles(tests), code).map(([test, pattern]) => [
                 test,
-                joinScope(scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
+                buildScopeGlob(scope),
                 pattern,
             ]),
         ),
         scripts: scopes.flatMap(({ scope, scripts }) =>
-            scripts.flatMap((script) =>
-                code.map((pattern) => [
-                    script,
-                    joinScope(scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
-                    pattern,
-                ]),
-            ),
+            scripts.flatMap((script) => code.map((pattern) => [script, buildScopeGlob(scope), pattern])),
         ),
     };
+}
+
+/**
+Keep test patterns that can select source files supported by ESLint.
+
+@param testFiles the cross-language test patterns.
+@returns the patterns with no extension or with a supported source extension.
+*/
+export function listCodeTestFiles(testFiles: string[]): string[] {
+    const extensions = listTaggedExtensions(...CODE_LANGUAGES, ...COMPONENT_CONFIGURATIONS, 'astro');
+    return testFiles.filter((pattern) => {
+        const extension = extractExtension(pattern);
+        return extension === '' || !/^\.[a-z0-9]+$/u.test(extension) || extensions.includes(extension);
+    });
+}
+
+/**
+Select one literal scope with a source pattern.
+
+@param scope the repository-relative project folder.
+@param pattern the pattern within that folder.
+@returns the escaped scope joined with the pattern.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function buildScopeGlob(scope: string, pattern = '**/*'): string {
+    return joinScope(escapeGlob(scope), pattern);
 }
 
 /**
@@ -98,9 +117,7 @@ Escape detected Node paths for glob selectors within one project scope.
 @returns literal file patterns that cannot select neighboring filenames.
 */
 export function buildNodePatterns(paths: string[], scope: string): string[] {
-    return paths
-        .filter((path) => isInScope(path, scope))
-        .map((path) => path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH));
+    return paths.filter((path) => isInScope(path, scope)).map((path) => escapeGlob(path));
 }
 
 /**
@@ -134,7 +151,7 @@ export function buildScopeFiles(
     return files.flatMap((file) =>
         paths.map((path) => [
             ...(Array.isArray(file) ? file : [file]),
-            joinScope(scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**/*'),
+            buildScopeGlob(scope),
             ...(Array.isArray(path) ? path : [path]),
         ]),
     );
@@ -149,9 +166,7 @@ Exclude nested scopes with the same literal escaping used for includes.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 7 calls in 4 files share it.
 export function listNestedScopeGlobs(paths: string[], scope: string): string[] {
-    return listNestedScopes(paths, scope).map((path) =>
-        joinScope(path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), '**'),
-    );
+    return listNestedScopes(paths, scope).map((path) => buildScopeGlob(path, '**'));
 }
 
 /**

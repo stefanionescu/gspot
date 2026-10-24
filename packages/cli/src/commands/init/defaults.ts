@@ -30,11 +30,12 @@ function isInheritedValueChanged(
         const previous = settings.scopes[writtenTable.scope] as Settings['scopes'][string];
         changed.scopes = { ...settings.scopes, [writtenTable.scope]: { ...previous, written: omitted } };
     }
-    return !consumers.every((consumer) =>
-        isDeepStrictEqual(
-            getSettingValue(consumer.available, settings, key, consumer.scope)?.value,
-            getSettingValue(consumer.available, changed, key, consumer.scope)?.value,
-        ),
+    return consumers.some(
+        (consumer) =>
+            !isDeepStrictEqual(
+                getSettingValue(consumer.available, settings, key, consumer.scope)?.value,
+                getSettingValue(consumer.available, changed, key, consumer.scope)?.value,
+            ),
     );
 }
 

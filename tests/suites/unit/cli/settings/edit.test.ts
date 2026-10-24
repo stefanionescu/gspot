@@ -21,18 +21,17 @@ test('an edit writes the new ignore as a table and keeps the authored comment', 
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, `${SCHEMA_DIRECTIVE}\n# Authored selection.\nconfigurations = ["security",]\n`);
-    const ignore = SEMGREP_IGNORE;
     const edit = readSettingsEdit(sandbox.path);
-    setKey(edit.table, 'ignore', [ignore]);
+    setKey(edit.table, 'ignore', [SEMGREP_IGNORE]);
     const proposed = buildEditedSettings(sandbox.path, edit);
     expect(proposed.text).toBe(
         `${SCHEMA_DIRECTIVE}\n` +
             '# Authored selection.\nconfigurations = ["security"]\n\n[[ignore]]\ncheck = "security/semgrep"\nrule = "js/file-system-race"\npaths = ["fixture.js"]\nreason = "The sandbox owns its temporary files."\n',
     );
-    expect(proposed.settings.ignore).toStrictEqual([ignore]);
+    expect(proposed.settings.ignore).toStrictEqual([SEMGREP_IGNORE]);
     await writeFile(path, proposed.text);
     const unchanged = readSettingsEdit(sandbox.path);
-    setKey(unchanged.table, 'ignore', [ignore]);
+    setKey(unchanged.table, 'ignore', [SEMGREP_IGNORE]);
     expect(buildEditedSettings(sandbox.path, unchanged).changed).toBe(false);
 });
 

@@ -1,5 +1,7 @@
 import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
+import { escapeGlob } from '#cli/system/paths.ts';
+import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -7,14 +9,12 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { buildFinding, getNodePlace } from '#cli/runs/finding.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 import { getImportedModule } from '#cli/repository/files/swift-tags.ts';
 import { NODE_SHEBANG_TAG } from '#cli/config/repository/files/classify.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { SWIFT_EXTENSION, MISE_SCRIPT_PATH } from '#cli/config/files/names.ts';
 import { SWIFT_IMPORT_NODE } from '#cli/config/repository/files/swift-tags.ts';
 import { listSwiftModules } from '#cli/checks/general/structure/swift-modules.ts';
@@ -50,8 +50,9 @@ function buildExemption(planned: PlannedCheck): (file: TrackedFile) => boolean {
     const matches = buildPathMatcher([
         ...settings.test_files,
         ...CONFIG_FILE_PATTERNS,
+        ...(settings.values['tools.eslint']?.plugins ?? []).map((plugin) => plugin.path),
         ...(settings.values.javascript?.script_files ?? []),
-        joinScope(folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), MISE_SCRIPT_PATH),
+        joinScope(escapeGlob(folder.path), MISE_SCRIPT_PATH),
     ]);
     return (file) => matches(file.path) || file.tags.includes(NODE_SHEBANG_TAG);
 }
@@ -102,13 +103,13 @@ async function checkFileImports(
 
 function buildPythonSearch(session: Session, planned: PlannedCheck): PythonSearch {
     const { settings, folder } = planned.scope;
-    const python = settings.values.python;
+    const python = getTable(settings, 'python');
     return {
         files: new Set(session.repository.files.map((file) => file.path)),
-        roots: [...PYTHON_SOURCE_ROOTS, ...(python?.extra_paths ?? [])]
+        roots: [...PYTHON_SOURCE_ROOTS, ...python.import_folders]
             .map((root) => posix.join(folder.path, root))
             .map((root) => (root === '.' ? '' : root)),
-        externals: new Set(python?.externals),
+        externals: new Set(python.externals),
     };
 }
 
@@ -135,8 +136,9 @@ function listSwiftImports(root: Node, path: string, modules: SwiftModule[], look
     return root.descendantsOfType(SWIFT_IMPORT_NODE).flatMap((node) => {
         const name = getImportedModule(node);
         const module = modules.find((each) => each.name === name);
-        if (module === undefined || own.has(module.name)) return [];
-        return [{ node, module: module.name, owners: module.files.map((file) => lookup.ownerOf(file)) }];
+        return module === undefined || own.has(module.name)
+            ? []
+            : { node, module: module.name, owners: module.files.map((file) => lookup.ownerOf(file)) };
     });
 }
 

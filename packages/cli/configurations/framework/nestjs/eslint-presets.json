@@ -1,12 +1,11 @@
 {
     "recommended": {
         "package": "@darraghor/eslint-plugin-nestjs-typed",
-        "version": "7.5.5",
+        "version": "7.5.8",
         "source": "configs.flatRecommended",
         "blocks": [
             { "parser": true },
             {
-                "parser": false,
                 "rules": {
                     "@darraghor/nestjs-typed/provided-injected-should-match-factory-parameters": "error",
                     "@darraghor/nestjs-typed/injectable-should-be-provided": [
@@ -36,17 +35,17 @@
                     "@darraghor/nestjs-typed/forward-ref-injection-should-use-wrapper-type": "error",
                     "@darraghor/nestjs-typed/swagger-file-upload-should-be-documented": "error",
                     "@darraghor/nestjs-typed/uploaded-file-should-be-validated": "error"
-                }
+                },
+                "parser": false
             }
         ]
     },
     "noSwagger": {
         "package": "@darraghor/eslint-plugin-nestjs-typed",
-        "version": "7.5.5",
+        "version": "7.5.8",
         "source": "configs.flatNoSwagger",
         "blocks": [
             {
-                "parser": false,
                 "rules": {
                     "@darraghor/nestjs-typed/api-property-matches-property-optionality": "off",
                     "@darraghor/nestjs-typed/api-method-should-specify-api-response": "off",
@@ -55,7 +54,8 @@
                     "@darraghor/nestjs-typed/api-enum-property-best-practices": "off",
                     "@darraghor/nestjs-typed/api-property-returning-array-should-set-array": "off",
                     "@darraghor/nestjs-typed/swagger-file-upload-should-be-documented": "off"
-                }
+                },
+                "parser": false
             }
         ]
     }

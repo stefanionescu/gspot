@@ -10,8 +10,7 @@ import { PATHS_BASE_OPTION, LOCAL_PATH_PREFIX } from '#cli/config/repository/npm
 
 function findImportTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;
-    if (!isTable(target)) return undefined;
-    return Object.values(target).find((value) => typeof value === 'string');
+    return isTable(target) ? Object.values(target).find((value) => typeof value === 'string') : undefined;
 }
 
 /**
@@ -28,8 +27,7 @@ export function readPackageAliases(root: string, prefix: string): Record<string,
     const imports = packageJson?.imports === undefined ? [] : Object.entries(packageJson.imports);
     for (const [pattern, target] of imports) {
         const found = findImportTarget(target);
-        if (found === undefined) continue;
-        if (!found.startsWith(LOCAL_PATH_PREFIX)) continue;
+        if (found?.startsWith(LOCAL_PATH_PREFIX) !== true) continue;
         const alias = found.slice(LOCAL_PATH_PREFIX.length);
         aliases[pattern] = `${prefix}${alias}`;
     }

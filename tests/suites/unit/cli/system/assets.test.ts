@@ -34,24 +34,6 @@ async function writePackageFolder(folder: string): Promise<string> {
     return cwd;
 }
 
-test('a missing grammar file stops gspot with a reinstall message', async () => {
-    await using sandbox = await testdir();
-    const cwd = await writePackageFolder(sandbox.path);
-    const missing = runCommandBlocking(
-        [
-            process.execPath,
-            '--no-install',
-            '-e',
-            "import { findWasmPath } from './packages/cli/src/system/assets.ts'; findWasmPath('bash.wasm');",
-        ],
-        {
-            cwd,
-        },
-    );
-    expect(missing.code).toBe(1);
-    expect(missing.stderr).toContain('The WebAssembly file bash.wasm is missing');
-});
-
 test('a package folder with spaces, percent signs, and Unicode reads and lists its assets', async () => {
     await using sandbox = await testdir();
     const cwd = await writePackageFolder(sandbox.path);

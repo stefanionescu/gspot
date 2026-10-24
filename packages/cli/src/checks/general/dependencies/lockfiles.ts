@@ -5,7 +5,7 @@ import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import { LOCKFILES, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
+import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { LOCKFILE_DOWNLOADS, DOWNLOAD_PROTOCOLS } from '#cli/config/checks/general/dependencies/lockfiles.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
@@ -29,8 +29,9 @@ function checkFileHosts(
                 const parsed = URL.parse(url);
                 const message =
                     parsed !== null && DOWNLOAD_PROTOCOLS.has(parsed.protocol) ? validateUrl(parsed, hosts) : undefined;
-                if (message === undefined) return [];
-                return [buildFinding(planned, { file: path, line: index + 1 }, 'host', message)];
+                return message === undefined
+                    ? []
+                    : [buildFinding(planned, { file: path, line: index + 1 }, 'host', message)];
             })
             .toArray(),
     );
@@ -50,8 +51,7 @@ function checkForeignLockfiles(planned: PlannedCheck): Finding[] {
     const listed = pathsByPackageManager.values().toArray().join(', ');
     return pathsByPackageManager
         .values()
-        .toArray()
-        .slice(1)
+        .drop(1)
         .map((path) =>
             buildFinding(
                 planned,
@@ -59,7 +59,8 @@ function checkForeignLockfiles(planned: PlannedCheck): Finding[] {
                 'foreign-lockfile',
                 `This scope holds lockfiles of ${String(pathsByPackageManager.size)} package managers: ${listed}. Keep one.`,
             ),
-        );
+        )
+        .toArray();
 }
 
 /**
@@ -72,11 +73,9 @@ scope.
 */
 export function checkDependenciesLockfiles(session: Session, planned: PlannedCheck): Finding[] {
     const hosts = new Set(getTable(planned.scope.settings, 'dependencies')['allowed_registries']);
-    const lockfiles = new Set<string>(JAVASCRIPT_LOCKFILES);
-    const paths = planned.files.map((file) => file.path).filter((path) => lockfiles.has(posix.basename(path)));
     return [
         ...checkForeignLockfiles(planned),
-        ...paths.flatMap((path) => {
+        ...planned.files.flatMap(({ path }) => {
             const pattern = LOCKFILE_DOWNLOADS.get(posix.basename(path));
             return pattern === undefined ? [] : checkFileHosts(session, planned, path, hosts, pattern);
         }),

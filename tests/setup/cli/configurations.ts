@@ -10,9 +10,11 @@ List the shipped configurations that gspot selects in every repository.
 @returns their names.
 */
 export function listAlwaysSelected(): string[] {
-    return [...readConfigurations().values()]
+    return readConfigurations()
+        .values()
         .filter((configuration) => configuration.always_selected)
-        .map((configuration) => configuration.name);
+        .map((configuration) => configuration.name)
+        .toArray();
 }
 
 /**
@@ -48,7 +50,9 @@ export function buildConfiguration(
     };
 }
 
-/** Read one shipped check by ID, rejecting unknown names. */
+/**
+Read one shipped check by ID, rejecting unknown names.
+*/
 export function getShippedCheck(name: string): Check {
     const declaration = listChecksById(readConfigurations().values()).get(name);
     if (declaration === undefined) throw new Error(`The shipped check ${name} does not exist.`);

@@ -4,9 +4,15 @@ import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { ENTITLEMENT_DOCUMENTS, ENTITLEMENT_SCOPE_RESULTS } from '#tests/config/checks/infrastructure/xcode.ts';
+import { ENTITLEMENT_SCOPE_RESULTS } from '#tests/config/checks/infrastructure/xcode.ts';
 
 test('xcode/entitlements checks the deepest scope only', async () => {
+    const ENTITLEMENT_DOCUMENTS = {
+        path: 'App.entitlements',
+        unlisted: '<plist><dict><key>unlisted-capability</key><true/></dict></plist>',
+        allowed: '<plist><dict><key>nested-capability</key><true/></dict></plist>',
+    } as const;
+
     const { path, unlisted: broken, allowed: corrected } = ENTITLEMENT_DOCUMENTS;
     const check = 'xcode/entitlements';
     await using sandbox = await testdir();

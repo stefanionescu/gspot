@@ -31,7 +31,6 @@ test.each([...LEVELS])(
     async (level) => {
         const root = installedSandbox().root;
         await using _change = await applySandboxChanges(installedSandbox(), {
-            check: '',
             files: {
                 'gspot.toml': buildSandboxSettings(['css'], {
                     level,
@@ -68,7 +67,6 @@ test.each([...LEVELS])(
 test("Stylelint run by an editor finds the scope's config file and checks your build folder", async () => {
     const root = installedSandbox().root;
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: '',
         files: {
             'gspot.toml': buildSandboxSettings(['css'], { level: 'all', tables: ALL_LEVEL_STYLELINT_TABLES }),
             'package.json': '{"private":true}\n',
@@ -97,7 +95,6 @@ test("Stylelint run by an editor finds the scope's config file and checks your b
 test('Stylelint accepts Tailwind syntax only in the scope that declares Tailwind', async () => {
     const root = installedSandbox().root;
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: '',
         files: {
             'gspot.toml': buildSandboxSettings(['css', 'nextjs'], { level: 'all', tables: TAILWIND_TABLES }),
             ...TAILWIND_FILES,

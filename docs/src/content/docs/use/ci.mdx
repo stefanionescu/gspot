@@ -114,12 +114,12 @@ limit for anonymous requests. In other pipelines, set `MISE_GITHUB_TOKEN` yourse
 ## Your own pipeline
 
 Install mise and the runtime of your project. Then install your dependencies and run gspot the way your repository
-starts it; see [Installation](/start/install/#choose-how-to-install). With npm:
+starts it; see [Installation](/start/install/#choose-how-to-install). With Bun:
 
 ```shell
-npm ci
-npm exec --no -- gspot install
-npm exec --no -- gspot check
+bun install --frozen-lockfile
+bun run --no-install gspot install
+bun run --no-install gspot check
 ```
 
 With mise:
@@ -132,7 +132,7 @@ mise exec -- gspot check
 Run manual checks by name, for example:
 
 ```shell
-npm exec --no -- gspot check --only security/semgrep-registry
+bun run --no-install gspot check --only security/semgrep-registry
 ```
 
 Let the pipeline fail on the gspot exit code: `1` means findings, and `2` means the run did not finish. A missing

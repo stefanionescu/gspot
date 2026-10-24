@@ -34,24 +34,10 @@ export const CONFIGURATION_DETECTION_LINES = [
         ],
     },
     {
-        configuration: 'prose',
-        lines: [
-            'Detected by: .md, .mdx, .ts, .tsx, .mts, .cts, .js, .mjs, .cjs, .jsx, .swift, .css, .sh, .bash, .zsh, .py, .sql, .pgsql, .psql, tag shebang:shell',
-            'Files: .md, .mdx, .ts, .tsx, .mts, .cts, .js, .mjs, .cjs, .jsx, .swift, .css, .sh, .bash, .zsh, .py, .sql, .pgsql, .psql, shebang:shell',
-        ],
-    },
-    {
         configuration: 'postgres',
         lines: [
             String.raw`Detected by: pg in dependencies, postgres in dependencies, psycopg* in dependencies, asyncpg in dependencies, @neondatabase/serverless in dependencies, prisma/schema.prisma matching (?:^|\n)[\t ]*provider[\t ]*=[\t ]*"postgresql"`,
             'Files: db/migrations/*.sql, migrations/*.sql, prisma/migrations/*/migration.sql, drizzle/*.sql, **/supabase/migrations/*.sql',
-        ],
-    },
-    {
-        configuration: 'xcode',
-        lines: [
-            'Detected by: project file *.xcodeproj',
-            'Files: .plist, .entitlements, .xcconfig, .xcstrings, .storyboard, .xib, **/project.pbxproj, **/*.xcscheme, **/*.xctestplan, **/*.xcassets/**/Contents.json',
         ],
     },
 ] as const;
@@ -80,14 +66,14 @@ export const SYNTAX_CHECK_EXPLANATION = {
     paths: ['**/*.sh'],
 } as const;
 
-export const SYNTAX_CHECK_TABLES = `[[command_check]]
-id = "project/syntax"
-command = ["bash", "-n", "{files}"]
-paths = ["**/*.sh"]
-stage = "manual"
-`;
+export const SYNTAX_CHECK_TABLES =
+    '[[command_check]]\nid = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\npaths = ["**/*.sh"]\nstage = "manual"\n';
 
 export const UNKNOWN_SUBJECT_CASES = [
+    [
+        'unknown/no-such-rule',
+        'gspot cannot explain unknown/no-such-rule. Give a check (python/ruff), a lint rule (eslint/no-console), a configuration (python), a setting (limits.file_lines), or a file (./src/app.ts).',
+    ],
     ['./missing.sh', 'missing.sh is not a file in this repository.'],
     [
         'unknown-configuration',

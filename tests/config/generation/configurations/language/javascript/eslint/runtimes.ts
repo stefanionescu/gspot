@@ -54,3 +54,23 @@ export const RUNTIME_OVERRIDE_SETTINGS = {
         { path: 'native/server', configurations: ['javascript'] },
     ],
 } as const;
+
+export const RUNTIME_GLOBAL_FINDINGS = [
+    { file: 'server.js', messages: [] },
+    { file: 'native/src/source.js', messages: [{ ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." }] },
+    {
+        file: 'native/src/browser.js',
+        messages: [
+            { ruleId: 'no-undef', line: 2, message: "'__DEV__' is not defined." },
+            { ruleId: 'no-undef', line: 3, message: "'process' is not defined." },
+        ],
+    },
+    { file: 'web/source.js', messages: [{ ruleId: 'no-undef', line: 2, message: "'process' is not defined." }] },
+    { file: 'native/scripts/build.js', messages: [] },
+    { file: 'native/server/source.js', messages: [] },
+    { file: 'web/scripts/build.js', messages: [] },
+    {
+        file: 'native/scripts/worker.js',
+        messages: [{ ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." }],
+    },
+];

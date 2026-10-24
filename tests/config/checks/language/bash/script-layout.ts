@@ -15,8 +15,6 @@ main "$@"
     },
 ] as const;
 
-export const ENVIRONMENT_READER_SCOPE_FILES = { 'tools/env.sh': '#!/usr/bin/env bash\nload_environment\n' } as const;
-
 export const ENVIRONMENT_READER_SCOPE_TABLES = `[[scope]]
 path = "tools"
 configurations = ["bash"]

@@ -19,11 +19,10 @@ export type Setting = {
     default?: unknown;
     default_all?: unknown;
     language_defaults?: Record<string, unknown>;
-    reason_needed?: ReasonRequirement;
+    reason_when?: ReasonRequirement;
     reason_values?: boolean;
     description: string;
     languages?: string[];
-    categories?: string[];
 };
 
 export type Scope = {

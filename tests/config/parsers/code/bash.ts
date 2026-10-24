@@ -141,13 +141,25 @@ export const QUOTED_TRAP_CALLS = [
     { source: 'trap "cleanup $(name)" EXIT', counts: [] },
 ] as const;
 
-export const BASH_FUNCTIONS: ScriptFunction = {
-    name: '_one',
-    start: 2,
-    end: 4,
-    body: ['', '    echo 1', ''],
-    highestRead: 0,
-    branches: 0,
-    nesting: 0,
-    assignments: 0,
-};
+export const BASH_FUNCTIONS: ScriptFunction[] = [
+    {
+        name: '_one',
+        start: 2,
+        end: 4,
+        body: ['', '    echo 1', ''],
+        highestRead: 0,
+        branches: 0,
+        nesting: 0,
+        assignments: 0,
+    },
+    {
+        name: 'main',
+        start: 6,
+        end: 8,
+        body: ['', '    _one "$@"', ''],
+        highestRead: Infinity,
+        branches: 0,
+        nesting: 0,
+        assignments: 0,
+    },
+];

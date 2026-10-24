@@ -4,12 +4,12 @@ import type { Session } from '#cli/types/session.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { runCheckTool } from '#cli/runs/command/tool.ts';
+import { isInInstalledFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { assertToolFindings } from '#cli/runs/command/output.ts';
 import { expandCommand } from '#cli/runs/command/placeholders.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { buildCommandSubstitutions } from '#cli/runs/command/check.ts';
-import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/tracked.ts';
 import { isInScope, joinScope, listNestedScopes, findProjectFolder } from '#cli/repository/scopes.ts';
 import { LINT_LINE, ANSIBLE_CONFIG_FILE, ANSIBLE_CONFIG_EXTENSION } from '#cli/config/checks/infrastructure/ansible.ts';
 
@@ -24,10 +24,7 @@ async function lintProject(
         ({ path }) =>
             isInScope(path, folder) &&
             children.every((child) => !isInScope(path, child)) &&
-            !(
-                path.startsWith(`${DOT_GSPOT}/`) ||
-                path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
-            ) &&
+            !(path.startsWith(`${DOT_GSPOT}/`) || isInInstalledFolder(path)) &&
             !path.endsWith(ANSIBLE_CONFIG_EXTENSION),
     );
     if (files.length === 0) return [];

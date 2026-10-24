@@ -3,7 +3,6 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import { stringMap, stringList } from '#cli/schemas/parsers/projects/dependencies/strings.ts';
 
 import type {
-    PackageJson,
     PackageJsonFields,
     PackageDevEngines,
     PackageWorkspaces,
@@ -20,7 +19,7 @@ const devEngineSchema = z.object({
 } satisfies SchemaShape<PackageManagerEngine>);
 
 const devEngines = z.object({
-    packageManager: z.union([devEngineSchema, z.array(devEngineSchema)]).optional(),
+    packageManager: z.union([devEngineSchema, devEngineSchema.array()]).optional(),
 } satisfies SchemaShape<PackageDevEngines>);
 
 export const packageJsonSchema = z.looseObject({
@@ -28,10 +27,8 @@ export const packageJsonSchema = z.looseObject({
     version: z.string().optional(),
     imports: z.record(z.string(), z.unknown()).optional(),
     files: stringList.optional(),
-    private: z.boolean().optional(),
     packageManager: z.string().optional(),
     devEngines: devEngines.optional(),
-    type: z.string().optional(),
     workspaces: z.union([stringList, workspacePackages]).optional(),
     dependencies: stringMap.optional(),
     devDependencies: stringMap.optional(),
@@ -39,4 +36,4 @@ export const packageJsonSchema = z.looseObject({
     optionalDependencies: stringMap.optional(),
     scripts: stringMap.optional(),
     engines: stringMap.optional(),
-} satisfies SchemaShape<PackageJsonFields>) satisfies z.ZodType<PackageJson>;
+} satisfies SchemaShape<PackageJsonFields>);

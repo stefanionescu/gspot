@@ -29,6 +29,7 @@ export const outputSchema = z
                 z
                     .literal('markdownlint')
                     .meta({ description: 'Read markdownlint result objects and their rule and source locations.' }),
+                z.literal('taplo').meta({ description: 'Read Taplo syntax errors and formatting differences.' }),
                 z.literal('json').meta({
                     description: 'Read JSON findings using list, children, and fields to select report entries.',
                 }),

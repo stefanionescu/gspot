@@ -1,12 +1,13 @@
 import { JSON_INDENT } from '#cli/config/text.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { join, dirname, basename, relative } from 'node:path/posix';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { assertRuleOptionsRun } from '#cli/generation/config-files/rule-options.ts';
+import type { BlockWriter, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import { getPreset } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
+import { convertToGlobs, listIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
 import { buildRuntimes } from '#cli/generation/configurations/language/javascript/eslint/runtimes.ts';
-import type { BlockWriter, EslintPresets, PlannedEslintBlock } from '#cli/types/generation/eslint.ts';
 import type { GeneratedFile, ConfigFileOutput, PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { buildPlannedEslintFile } from '#cli/generation/configurations/language/javascript/eslint/plan.ts';
 import { buildSelectedBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
@@ -14,11 +15,6 @@ import { buildBoundaryBlocks } from '#cli/generation/configurations/language/jav
 import { serializeBlock, serializeImports } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 import { listConfigurationBlocks } from '#cli/generation/configurations/language/javascript/eslint/configuration-blocks.ts';
 
-import {
-    convertToGlobs,
-    buildIgnoreSections,
-    listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-files.ts';
 import {
     writeEslintBlock,
     listUnappliedRules,
@@ -39,7 +35,6 @@ import {
     GLOBALS_IMPORT,
     PATH_JOIN_IMPORT,
     ESLINT_BASE_LABEL,
-    RULE_PLUGIN_PREFIX,
     RUNTIME_DECLARATIONS,
     ESLINT_FUNCTIONS_FILE,
     CONFIGURATION_BLOCKS_SUFFIX,
@@ -90,14 +85,8 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
     const { blockWriter } = eslintFile;
     const runtimes = buildRuntimes(session.scopes);
     const boundaryBlocks = buildBoundaryBlocks(eslintFile);
-    const ignoredGlobs = convertToGlobs([
-        ...buildIgnoreSections(session),
-        ...listCheckIgnoreSections(planned.scope.settings, ESLINT_CHECK),
-    ]);
-    const { configurationBlocks, configurationImports, configurationSelectors } = listConfigurationBlocks(
-        session,
-        eslintFile,
-    );
+    const ignoredGlobs = convertToGlobs(listIgnoreSections(planned, ESLINT_CHECK));
+    const { configurationBlocks, configurationImports, configurationSelectors } = listConfigurationBlocks(eslintFile);
     const shipped = selectPlugins(eslintFile, boundaryBlocks);
     const plugins = { ...shipped, ...listLocalPlugins(session.scopes, planned.targetPath, shipped) };
     const presets = eslintFile.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
@@ -131,7 +120,7 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
     const declarations = body.includes(RUNTIME_DECLARATIONS)
         ? `const ${RUNTIME_DECLARATIONS} = ${JSON.stringify(runtimes, null, JSON_INDENT)};\n`
         : '';
-    assertRulesRun(blockWriter, [...Object.keys(plugins), ...listPresetRules(eslintFile.eslintPresets)]);
+    assertRulesRun(blockWriter);
     return {
         content:
             serializeImports(
@@ -145,27 +134,13 @@ export function buildEslintFile(planned: PlannedConfigFile): ConfigFileOutput {
     };
 }
 
-function listPresetRules(presets: Map<string, EslintPresets>): string[] {
-    const blocks = [...presets.values()].flatMap((presetGroup) =>
-        Object.values(presetGroup).flatMap((preset) => preset.blocks),
-    );
-    return blocks.flatMap((block) => (block.rules === undefined ? [] : Object.keys(block.rules)));
-}
-
-function assertRulesRun(writer: BlockWriter, ruleNames: string[]): void {
-    const unapplied = listUnappliedRules(writer);
-    if (unapplied.length === 0) return;
-    const pluginPrefixes = new Set(['', ...ruleNames.map((rule) => RULE_PLUGIN_PREFIX.exec(rule)?.[1] ?? rule)]);
-    throw new GspotError(
-        'settings',
-        unapplied
-            .map((rule) => {
-                if (writer.level !== 'all' && writer.allLevelRules.has(rule))
-                    return `${rule} runs only at level all. gspot sets options only for the rules that run at level recommended.`;
-                return pluginPrefixes.has(RULE_PLUGIN_PREFIX.exec(rule)?.[1] ?? '')
-                    ? `gspot runs ${rule} at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.`
-                    : `${rule} belongs to no plugin that gspot loads. For a rule of your own, add a [[tools.eslint.plugins]] record.`;
-            })
-            .join('\n'),
-    );
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function assertRulesRun(writer: BlockWriter): void {
+    assertRuleOptionsRun({
+        chosen: listUnappliedRules(writer),
+        running: writer.applied,
+        higher: writer.allLevelRules,
+        level: writer.level,
+        suffix: ' For a rule of your own, add a [[tools.eslint.plugins]] record.',
+    });
 }

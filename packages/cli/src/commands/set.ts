@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { GspotError } from '#cli/system/errors.ts';
 import { parseTomlText } from '#cli/settings/file.ts';
 import { trimTrailingSlashes } from '#cli/system/paths.ts';
@@ -7,13 +6,14 @@ import type { TomlTable } from '#cli/types/settings/file.ts';
 import type { SettingsEditContext } from '#cli/types/apply.ts';
 import { buildRepositoryPath } from '#cli/repository/scopes.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
-import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
+import { listSettingReaders } from '#cli/commands/explain/setting.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
 import { setKey, getScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
+import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
+import { RECORD_FIELDS, findSettingSchema } from '#cli/schemas/settings/file.ts';
 import { NUMBER, STRUCTURED, DASH_VALUE_HELP } from '#cli/config/commands/set.ts';
-import { listRecordFields, findSettingSchema } from '#cli/schemas/settings/file.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type Setting, type EffectiveSetting } from '#cli/types/settings/inheritance.ts';
 import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
@@ -45,15 +45,6 @@ function buildSettingValue(words: unknown[], setting: Setting): ParsedSettingVal
     return { type: 'scalar', value: scalar };
 }
 
-function formatValueAdvice(schema: z.ZodType | undefined, setting: Setting, error: z.ZodError): string {
-    const issue = error.issues.find((issue) => issue.code === 'invalid_value');
-    if (issue !== undefined) return issue.values.map(String).join(' or ');
-    let inner = schema === undefined ? undefined : unwrapSettingSchema(schema);
-    if (inner instanceof z.ZodUnion) inner = inner.options[0] as z.ZodType;
-    if (inner instanceof z.ZodNumber) return `a whole number of ${String(inner.minValue ?? 0)} or more`;
-    return `a valid ${setting.type} value: ${setting.description.replace(/\.$/u, '')}`;
-}
-
 function parseSettingValue(values: string[], setting: Setting): ParsedSettingValue {
     const converted = buildSettingValue(
         values.map((text) => parseValueArgument(text)),
@@ -65,10 +56,9 @@ function parseSettingValue(values: string[], setting: Setting): ParsedSettingVal
         parsedValues.find((parsedValue) => schema?.safeParse(parsedValue.value).success !== false) ?? converted;
     const validation = schema?.safeParse(chosen.value);
     if (validation?.success === false) {
-        const advice = formatValueAdvice(schema, setting, validation.error);
         throw new GspotError(
             'arguments',
-            `The value ${values.join(' ')} is not valid for ${setting.name}. Use ${advice}.`,
+            formatSettingValueError(values.join(' '), setting, { schema, error: validation.error }),
         );
     }
     return chosen;
@@ -90,13 +80,12 @@ function editSetting(table: TomlTable, change: ParsedSettingValue, setting: Sett
     else if (setting.type === 'table' && isTable(change.value)) {
         const written = getValueAt(scopeTable, options.key.split('.'));
         const writtenValue = getWrittenValue(written);
-        setKey(scopeTable, options.key, { ...(isTable(writtenValue) ? writtenValue : {}), ...change.value });
+        setKey(scopeTable, options.key, { ...(isTable(writtenValue) && writtenValue), ...change.value });
     } else setKey(scopeTable, options.key, change.value);
-    if (options.reason !== undefined && setting.reason_values !== true) {
-        const written = getValueAt(scopeTable, options.key.split('.'));
-        const value = getWrittenValue(written);
-        setKey(scopeTable, options.key, { value, reason: options.reason });
-    }
+    if (options.reason === undefined || setting.reason_values === true) return;
+    const written = getValueAt(scopeTable, options.key.split('.'));
+    const value = getWrittenValue(written);
+    setKey(scopeTable, options.key, { value, reason: options.reason });
 }
 
 function assertReasonPresent({
@@ -105,8 +94,12 @@ function assertReasonPresent({
     change,
     shippedDefault,
 }: Omit<SettingReasonContext, 'previous'>): void {
-    if (options.reason === undefined || setting.reason_values === true) return;
-    if (isLoosening(setting, change.value, shippedDefault)) return;
+    if (
+        options.reason === undefined ||
+        setting.reason_values === true ||
+        isLoosening(setting, change.value, shippedDefault)
+    )
+        return;
     throw new GspotError(
         'arguments',
         `${options.key} takes no reason here: the value does not loosen the shipped default. Run the command without --reason.`,
@@ -146,7 +139,7 @@ async function readSettingChange(
     options: SetOptions,
 ): Promise<{ setting: Setting; change: ParsedSettingValue; summary: string }> {
     const { settings } = edit;
-    const { available: availableSettings, match } = await readSetting(edit, options.key, options.scope);
+    const { available: availableSettings, match, scope } = await readSetting(edit, options.key, options.scope);
     const setting = match.setting;
     const change =
         setting.reason_values === true ? parseReasonTable(options) : parseSettingValue(options.values, setting);
@@ -154,16 +147,17 @@ async function readSettingChange(
     const shippedDefault = findSettingDefault(availableSettings, settings, match, options.scope)?.value;
     assertReasonCoversList({ options, setting, change, previous, shippedDefault });
     assertReasonPresent({ options, setting, change, shippedDefault });
-    const summary = formatSettingChange(change, {
-        setting,
-        options,
-        previous,
-    });
+    const readers = listSettingReaders(settings, scope, options.key);
+    const note =
+        options.key.startsWith('limits.') && readers.every((reader) => !reader.enabled)
+            ? `\nnote     No selected check reads ${options.key} at level ${settings.level}.`
+            : '';
+    const summary = formatSettingChange(change, { setting, options, previous }) + note;
     return { setting, change, summary };
 }
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
-    if (Object.hasOwn(listRecordFields(), options.key))
+    if (Object.hasOwn(RECORD_FIELDS, options.key))
         throw new GspotError(
             'arguments',
             options.key === 'ignore'

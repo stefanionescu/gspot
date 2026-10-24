@@ -100,7 +100,7 @@ createRuleTester().run('no-comments-in-imports', plugin.rules['no-comments-in-im
     ).map(([code, output, line]) => ({
         code,
         output,
-        errors: [{ messageId: 'comment' as const, ...(line === undefined ? {} : { line }) }],
+        errors: [{ messageId: 'comment' as const, ...(line !== undefined && { line }) }],
     })),
 });
 

@@ -39,3 +39,13 @@ test('an unmatched ignore path with an unescaped route group gets help to escape
         String.raw`app/(missing)/** under [[ignore]] matches no tracked file or folder. If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`,
     ]);
 });
+
+test('an unmatched ignore points at its written record', async () => {
+    const text = buildSandboxSettings([], {
+        tables: '\n[[ignore]]\npaths = ["missing/**"]\nreason = "This fixture names an absent folder."\n',
+    });
+    await using sandbox = await testdir({ 'gspot.toml': text });
+    commitAll(sandbox.path);
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths');
+    expect(findings).toMatchObject([{ file: 'gspot.toml', line: text.split('\n').indexOf('[[ignore]]') + 1 }]);
+});

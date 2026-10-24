@@ -3,7 +3,12 @@ import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { SELECTOR_FILES } from '#tests/config/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
+
+import {
+    SELECTOR_FILES,
+    SELECTOR_LIBRARY_FILES,
+    SELECTOR_VALIDATION_SOURCE,
+} from '#tests/config/generation/configurations/language/javascript/eslint/blocks/selectors.ts';
 
 test('a template message to a logger method, including log, is reported, and console.log is not', async () => {
     await using sandbox = await testdir({
@@ -66,11 +71,26 @@ test('store, form and procedure selectors distinguish validated calls and unrela
         'gspot.toml': buildSandboxSettings(['javascript', 'zustand', 'react-hook-form', 'trpc'], {
             tables: '[trpc]\nrouter_files = ["source.js"]\n',
         }),
-        'source.js':
-            'useStore(cartStore);\nuseForm(options);\nuseForm({ ...options });\nuseForm({ defaultValues: { nested: { resolver: 1 } } });\npublicProcedure.query(resolve);\nprotectedProcedure.use(logger).query(resolve);\nt.procedure.query(resolve);\npool.query(sql);\nbyId.query(resolve);\ngetClient().query(sql);\npublicProcedure.input(schema).use(logger).mutation(resolve);\n',
+        'source.js': SELECTOR_VALIDATION_SOURCE,
     });
     const eslint = await createEslint(sandbox.path);
     expect(await listLintFindings(eslint, sandbox.path, ['source.js'], ['no-restricted-syntax'])).toStrictEqual(
         [1, 4, 5, 6, 7].map((line) => ({ file: 'source.js', rule: 'no-restricted-syntax', line })),
     );
+});
+
+test('recommended library selectors report both whole-store reads and accept schema options and unrelated queries', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'zustand', 'react-hook-form', 'trpc'], {
+            tables: '[trpc]\nrouter_files = ["router.js"]\n',
+        }),
+        ...SELECTOR_LIBRARY_FILES,
+    });
+    const eslint = await createEslint(sandbox.path);
+    expect(
+        await listLintFindings(eslint, sandbox.path, Object.keys(SELECTOR_LIBRARY_FILES), ['no-restricted-syntax']),
+    ).toStrictEqual([
+        { file: 'cart.js', line: 4, rule: 'no-restricted-syntax' },
+        { file: 'cart.js', line: 5, rule: 'no-restricted-syntax' },
+    ]);
 });

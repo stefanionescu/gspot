@@ -3,6 +3,7 @@ locale = "en"
 extend-ignore-re = ["\\b[0-9a-f]{7,40}\\b", "\\b[A-Za-z0-9+/]{40,}={0,2}\\b"]
 
 [default.extend-words]
+vertica = "vertica"
 axe = "axe"
 optin = "optin"
 IIF = "IIF"
@@ -20,18 +21,13 @@ extend-exclude = [
   # Build output
   "**/build/**",
   # Files that Git ignores
-  "**/.DS_Store",
-  "**/Thumbs.db",
-  "**/*.swp",
-  "**/*~",
-  "**/.idea/**",
-  "**/.vscode/**",
   "**/node_modules/**",
   "**/.env",
   "**/.env.*",
   "**/*.log",
-  ".wrangler/**",
   "packages/*/dist/**",
+  "packages/*/LICENSE.md",
+  "packages/cli/README.md",
   "packages/cli/grammars/**",
   "docs/dist/**",
   "docs/.astro/**",

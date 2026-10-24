@@ -13,8 +13,8 @@ export function buildPeripheryFile(planned: PlannedConfigFile): string {
     const project = getTable(planned.scope.settings, 'swift').xcode_project;
     const scheme = getTable(planned.scope.settings, 'swift').xcode_scheme;
     return stringifyYaml({
-        ...(project === undefined ? {} : { project }),
-        ...(scheme === undefined ? {} : { schemes: [scheme] }),
+        ...(project !== undefined && { project }),
+        ...(scheme !== undefined && { schemes: [scheme] }),
         ...PERIPHERY_RETAIN,
     });
 }

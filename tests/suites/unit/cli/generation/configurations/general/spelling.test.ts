@@ -11,27 +11,27 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
     const words = ['café', "apostrophe'word", 'long-term'];
     const paths = ['docs/"draft"/**', 'generated/draft/**', 'café/**'];
     const reason = 'An upstream name.\n[files]\nextend-exclude = ["**"]';
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['spelling'], {
-            rules: true,
-            tables: stringify({
-                spelling: { allowed_words: Object.fromEntries(words.map((word) => [word, reason])) },
-                ignore: [{ check: 'spelling/typos', paths, reason }],
-            }),
+    const observed = {
+        rules: true,
+        tables: stringify({
+            spelling: { allowed_words: Object.fromEntries(words.map((word) => [word, reason])) },
+            ignore: [{ check: 'spelling/typos', paths, reason }],
         }),
-    });
+    };
+    const settingsText = {
+        'gspot.toml': buildSandboxSettings(['spelling'], observed),
+    };
+    await using sandbox = await testdir(settingsText);
 
     const session = await openSession(sandbox.path);
     const output = generate(session);
     const target = output.files.find((file) => file.path === findManifestTarget('spelling', 'typos.toml'))!;
     const parsed = parse(target.content) as Record<string, unknown>;
-    expect(Object.keys(parsed).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        'default',
-        'files',
-    ]);
-    expect(parsed).not.toHaveProperty('type');
-    expect(parsed['default']).not.toHaveProperty('extend-identifiers');
-    expect(parsed['default']).toMatchObject({ 'extend-words': Object.fromEntries(words.map((word) => [word, word])) });
+    expect(parsed['default']).toStrictEqual({
+        locale: 'en',
+        'extend-ignore-re': [String.raw`\b[0-9a-f]{7,40}\b`, String.raw`\b[A-Za-z0-9+/]{40,}={0,2}\b`],
+        'extend-words': { café: 'café', "apostrophe'word": "apostrophe'word", 'long-term': 'long-term' },
+    });
     const { 'extend-exclude': excluded, ...otherFiles } = parsed['files'] as { 'extend-exclude': string[] };
     expect(otherFiles).toStrictEqual({});
     expect(excluded.slice(-paths.length)).toStrictEqual(paths);

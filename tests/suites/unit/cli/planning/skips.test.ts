@@ -43,7 +43,7 @@ test('a commits check outside Git is skipped because there is no history to read
 });
 
 test.each([...NEXT_INTL_PROJECTS])(
-    'translations/messages $outcome in the $name, as its next-intl dependency decides',
+    'translations/messages runs only where the project depends on next-intl: $name (selected: $selected)',
     async ({ scope, files, selected }) => {
         await using sandbox = await testdir({
             ...files,

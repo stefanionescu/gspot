@@ -8,7 +8,7 @@ const beforeLines = example.agent.files
     .flatMap(({ content }) => buildExampleLines(content))
     .map((line) => ({
         ...line,
-        problem: example.problems.findIndex(({ lines }) => lines.includes(line.number)) + 1,
+        issue: example.issues.findIndex(({ lines }) => lines.includes(line.number)) + 1,
         inserted: false,
     }));
 const afterLines = example.fix.files
@@ -16,7 +16,7 @@ const afterLines = example.fix.files
     .map((line) => ({
         ...line,
         inserted: example.fix.inserted_lines.includes(line.number),
-        problem: 0,
+        issue: 0,
     }));
 const summaries = [
     { status: 'failed', summary: example.rejected_summary },
@@ -36,33 +36,31 @@ const summaries = [
                 </figcaption>
                 <div class="panel-body">
                     <code class="code">
-                        {(status === 'failed' ? beforeLines : afterLines).map(
-                            ({ number, problem, inserted, tokens }) => (
-                                <span class:list={['line', { 'is-marked': problem > 0, 'is-inserted': inserted }]}>
-                                    <span class:list={{ badge: problem > 0 }}>
-                                        {problem > 0 && (
-                                            <>
-                                                <span class="sr-only">Problem </span>
-                                                {problem}
-                                            </>
-                                        )}
-                                    </span>
-                                    <span class="number" aria-hidden="true">
-                                        {number}
-                                    </span>
-                                    <span>
-                                        {tokens.map(({ text, kind }) => (
-                                            <span class:list={[kind]}>{text}</span>
-                                        ))}
-                                    </span>
+                        {(status === 'failed' ? beforeLines : afterLines).map(({ number, issue, inserted, tokens }) => (
+                            <span class:list={['line', { 'is-marked': issue > 0, 'is-inserted': inserted }]}>
+                                <span class:list={{ badge: issue > 0 }}>
+                                    {issue > 0 && (
+                                        <>
+                                            <span class="sr-only">Problem </span>
+                                            {issue}
+                                        </>
+                                    )}
                                 </span>
-                            ),
-                        )}
+                                <span class="number" aria-hidden="true">
+                                    {number}
+                                </span>
+                                <span>
+                                    {tokens.map(({ text, kind }) => (
+                                        <span class:list={[kind]}>{text}</span>
+                                    ))}
+                                </span>
+                            </span>
+                        ))}
                     </code>
                 </div>
                 {status === 'failed' ? (
-                    <ol class="problems">
-                        {example.problems.map(({ title, text }, index) => (
+                    <ol class="issues">
+                        {example.issues.map(({ title, text }, index) => (
                             <li>
                                 <span class="badge" aria-hidden="true">
                                     {index + 1}

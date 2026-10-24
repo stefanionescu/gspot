@@ -1,5 +1,6 @@
 import { DIGITS_ONLY } from '#cli/config/text.ts';
 import { getColors } from '#cli/system/terminal.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { readLintJobs } from '#cli/repository/setup/tools.ts';
@@ -8,6 +9,7 @@ import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { GROUP_LABELS } from '#cli/config/configurations/names.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
+import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { GITIGNORE_FILE } from '#cli/config/repository/files/tracked.ts';
@@ -25,10 +27,12 @@ import {
     HOOKS_ROW,
     COLUMN_GAP,
     ORIGIN_WIDTH,
+    ANY_FILE_GLOB,
     CI_FILE_NOTES,
     ATTRIBUTES_ROW,
     DETECTION_GAP_WIDTH,
     CONFIGURATION_WIDTH,
+    UNCHECKED_FILES_SHOWN,
     DETECTION_LABEL_WIDTH,
 } from '#cli/config/commands/init/plan.ts';
 
@@ -55,41 +59,34 @@ function buildToolDependencyRows(
     requirements: Configuration[],
 ): InitFileRow[] {
     const toolPackages = new Set(Object.keys(listToolProjectPins(requirements).npm));
-    return repositorySetup.toolOnlyPackages.flatMap((path) => {
-        const packageJson = readPackageJson(repository.root, path) as PackageJson;
-        const names = [
-            ...new Set(
-                Object.keys({
-                    ...packageJson.dependencies,
-                    ...packageJson.devDependencies,
-                    ...packageJson.peerDependencies,
-                    ...packageJson.optionalDependencies,
-                }),
-            ),
-        ]
-            .filter((name) => toolPackages.has(name))
-            .toSorted((left, right) => compareText(left, right));
-        if (names.length === 0) return [];
-        const subject = names.join(', ');
-        const verb = names.length === 1 ? 'is' : 'are';
-        const pronoun = names.length === 1 ? 'it' : 'them';
-        return [
-            {
+    return repositorySetup.toolOnlyPackages
+        .values()
+        .map((path) => {
+            const packageJson = readPackageJson(repository.root, path) as PackageJson;
+            const names = Object.keys({
+                ...packageJson.dependencies,
+                ...packageJson.devDependencies,
+                ...packageJson.peerDependencies,
+                ...packageJson.optionalDependencies,
+            })
+                .filter((name) => toolPackages.has(name))
+                .toSorted(compareText);
+            if (names.length === 0) return undefined;
+            const subject = names.join(', ');
+            const verb = names.length === 1 ? 'is' : 'are';
+            const pronoun = names.length === 1 ? 'it' : 'them';
+            return {
                 path,
                 note: `${subject} ${verb} now pinned in ${GSPOT_PATHS.npmProject}; remove ${pronoun} from package.json if nothing else uses ${pronoun}`,
-            },
-        ];
-    });
+            };
+        })
+        .filter((row) => row !== undefined)
+        .toArray();
 }
 
 function buildKeptCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: string[]): InitPlan['retained'] {
     const untouched =
-        ci === 'none' && lintJobs.length === 0
-            ? ciFiles.map((path) => ({
-                  path,
-                  note: 'existing CI file',
-              }))
-            : [];
+        ci === 'none' && lintJobs.length === 0 ? ciFiles.map((path) => ({ path, note: 'existing CI file' })) : [];
     const jobs = lintJobs.map((path) => ({ path, note: 'existing lint job kept. gspot adds no second CI job.' }));
     return [...untouched, ...jobs];
 }
@@ -155,7 +152,7 @@ export function planInitFiles(
         { path: SETTINGS_FILE, note: `your settings, ${String(settingsText.split('\n').length)} lines` },
         { path: `${DOT_GSPOT}/`, note: 'generated files and version pin' },
         ...[...generated.files, ...generated.blocks]
-            .filter(({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && !change.some((row) => row.path === path))
+            .filter(({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && change.every((row) => row.path !== path))
             .map(({ path }) => {
                 const replaced = conflicts.deleted.find((row) => row.path === path);
                 if (replaced !== undefined)
@@ -178,7 +175,7 @@ export function planInitFiles(
         level: settings.level,
         configurations: buildConfigurationRows(scan, settings),
         write,
-        delete: conflicts.deleted.filter(({ path }) => !write.some((row) => row.path === path)),
+        delete: conflicts.deleted.filter(({ path }) => write.every((row) => row.path !== path)),
         retained: [
             ...conflicts.retained,
             ...listSubmodulePaths(repository.index).map((path) => ({ path, note: 'submodule; init does not read it' })),
@@ -239,14 +236,47 @@ function formatDetectedTools(summary: DetectionSummary): (string | undefined)[] 
     );
     const lint = repositorySetup.lintFolders.map((folder) => `${folder}/`);
     return [
-        formatDetectionRow('hooks', hooks.length === 0 ? ['none'] : hooks),
-        formatDetectionRow('ci', repositorySetup.ci.length === 0 ? ['none'] : repositorySetup.ci),
+        formatDetectionRow('existing hooks', hooks.length === 0 ? ['none'] : hooks),
+        formatDetectionRow('existing ci', repositorySetup.ci.length === 0 ? ['none'] : repositorySetup.ci),
+        ...(summary.ciProvider === 'none'
+            ? [
+                  formatDetectionRow('ci workflow', [
+                      'none: no GitHub or GitLab remote or CI file. Run gspot set ci.enabled true later.',
+                  ]),
+              ]
+            : []),
         formatDetectionRow('agent files', [
             ...repositorySetup.agentFiles,
             ...repositorySetup.ruleFolders.map((folder) => `${folder}/`),
         ]),
         formatDetectionRow('lint folders', lint.length === 0 ? [] : [...lint, 'old lint setup; gspot replaces it']),
     ];
+}
+
+function formatUncheckedFiles(summary: DetectionSummary): string[] {
+    const matchers = summary.configurations
+        .values()
+        .flatMap((configuration) => [
+            configuration.files,
+            ...configuration.checks.flatMap((check) => check.files ?? []),
+        ])
+        .map((files) => buildFileMatcher({ ...files, paths: files.paths.filter((path) => !ANY_FILE_GLOB.test(path)) }))
+        .toArray();
+    const files = summary.files.filter((file) => file.kind === 'source' && matchers.every((matches) => !matches(file)));
+    const extensions = [...new Set(files.map((file) => extractExtension(file.path)))].filter(
+        (extension) => extension !== '',
+    );
+    return extensions.flatMap((extension) =>
+        files
+            .filter((file) => extractExtension(file.path) === extension)
+            .slice(0, UNCHECKED_FILES_SHOWN)
+            .map(
+                (file) =>
+                    formatDetectionRow('not checked', [
+                        `${file.path} (no configuration reads ${extension} files)`,
+                    ]) as string,
+            ),
+    );
 }
 
 function formatConflictingConfigFiles(summary: DetectionSummary): string[] {
@@ -278,6 +308,7 @@ export function formatDetection(summary: DetectionSummary): string {
         });
     const rows = [
         formatDetectionRow(GROUP_LABELS.language.toLowerCase(), languages),
+        ...formatUncheckedFiles(summary),
         ...Object.entries(GROUP_LABELS)
             .filter(([group]) => group !== 'language' && group !== 'general')
             .map(([group, label]) =>
@@ -296,7 +327,7 @@ export function formatDetection(summary: DetectionSummary): string {
         ...formatDetectedTools(summary),
     ].filter((line) => line !== undefined);
     return [
-        `reading ${summary.files.length.toLocaleString('en-US')} files: tracked, and untracked but not ignored`,
+        `reading ${summary.files.length.toLocaleString('en-US')} ${summary.files.length === 1 ? 'file' : 'files'}: tracked, and untracked but not ignored`,
         ...(summary.hasGit
             ? []
             : ['no git repository: the hooks and the configurations that read git stay out until git init runs']),

@@ -27,10 +27,7 @@ test('duplication/jscpd reports a copied Bash function on the second file and ig
     });
 
     commitAll(sandbox.path);
-    await initSandbox(
-        { root: sandbox.path, environment: {}, run: spawnGspot },
-        { configurations: ['bash'], level: 'all' },
-    );
+    await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['bash'], level: 'all' });
     await runJscpdCheck(sandbox.path, 0);
     await writeFile(join(sandbox.path, 'scripts/second.sh'), buildCountScript('count_second'));
     const report = await runJscpdCheck(sandbox.path, 1);
@@ -60,10 +57,7 @@ test('duplication/jscpd skips an import list that two files share', async () => 
         'second.ts': `${SHARED_IMPORTS}\n\nexport const second = value2 * value3;\n`,
     });
     commitAll(sandbox.path);
-    await initSandbox(
-        { root: sandbox.path, environment: {}, run: spawnGspot },
-        { configurations: ['typescript'], level: 'all' },
-    );
+    await initSandbox({ root: sandbox.path, run: spawnGspot }, { configurations: ['typescript'], level: 'all' });
     const report = await runJscpdCheck(sandbox.path, 0);
     expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
 });

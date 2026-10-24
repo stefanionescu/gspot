@@ -48,16 +48,17 @@ async function runValeOnPaths(
     session: Session,
     planned: PlannedCheck,
     routes: ProseRoute[],
+    command: string[],
     folder: string,
 ): Promise<ValeAlert[]> {
-    const base = [VALE_TOOL, '--config', join(session.root, GSPOT_PATHS.valeConfigFile), ...VALE_ARGUMENTS];
     const alerts: ValeAlert[] = [];
-    for (const batch of splitFileArguments(
+    const batches = splitFileArguments(
         routes.map((route) => join(session.root, route.path)),
-        base,
+        command,
         process.platform,
-    )) {
-        const result = await runCheckTool(session, planned, [...base, ...batch], {
+    );
+    for (const batch of batches) {
+        const result = await runCheckTool(session, planned, [...command, ...batch], {
             cwd: folder,
         });
         assertValeRan(result);
@@ -75,20 +76,14 @@ async function runValeOnStdin(
     session: Session,
     planned: PlannedCheck,
     route: ProseRoute,
+    command: string[],
     folder: string,
 ): Promise<ValeAlert[]> {
     const text = readCachedText(session.reads, route.path);
     const result = await runCheckTool(
         session,
         planned,
-        [
-            VALE_TOOL,
-            '--config',
-            join(session.root, GSPOT_PATHS.valeConfigFile),
-            ...VALE_ARGUMENTS,
-            `--ext=${route.extension}`,
-            `--path=${join(session.root, route.path)}${route.extension}`,
-        ],
+        [...command, `--ext=${route.extension}`, `--path=${join(session.root, route.path)}${route.extension}`],
         {
             cwd: folder,
             stdin: text,
@@ -103,18 +98,18 @@ async function runValeOnStdin(
 
 function selectRoute(file: TrackedFile): ProseRoute | undefined {
     const extension = extractExtension(file.path);
-    const grammars: Readonly<Record<string, Omit<ProseRoute, 'path'>>> = PROSE_GRAMMARS;
     const grammar =
-        grammars[extension] ?? (extension === '' && file.tags.includes(SCRIPT_TAG) ? SCRIPT_GRAMMAR : undefined);
+        PROSE_GRAMMARS[extension] ?? (extension === '' && file.tags.includes(SCRIPT_TAG) ? SCRIPT_GRAMMAR : undefined);
     return grammar === undefined ? undefined : { path: file.path, mode: grammar.mode, extension: grammar.extension };
 }
 
 function groupRoutes(files: TrackedFile[]): ProseRouteGroup[] {
     const routes = files.map((file) => selectRoute(file)).filter((route) => route !== undefined);
     const pathRoutes = routes.filter((each) => each.mode === 'path');
-    const byExtension = [...Map.groupBy(pathRoutes, (route) => route.extension).values()].map(
-        (group) => group as ProseRouteGroup,
-    );
+    const byExtension = Map.groupBy(pathRoutes, (route) => route.extension)
+        .values()
+        .map((group) => group as ProseRouteGroup)
+        .toArray();
     return [...byExtension, ...routes.filter((each) => each.mode === 'stdin').map((route): ProseRouteGroup => [route])];
 }
 
@@ -128,6 +123,7 @@ Runs Vale on the scope files, by path where Vale has a grammar and through stdin
 export async function checkProseVale(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     if (!hasValePackages(session.installedRoot, session.settingsFile.settings.level))
         throw new GspotError('tool', 'The Vale packages are not installed. Run gspot install.');
+    const command = [VALE_TOOL, '--config', join(session.root, GSPOT_PATHS.valeConfigFile), ...VALE_ARGUMENTS];
     const folder = dirname(join(session.root, GSPOT_PATHS.valeConfigFile));
     const groups = groupRoutes(planned.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];
@@ -135,8 +131,8 @@ export async function checkProseVale(session: Session, planned: PlannedCheck): P
         const [first] = group;
         const alerts =
             first.mode === 'path'
-                ? await runValeOnPaths(session, planned, group, folder)
-                : await runValeOnStdin(session, planned, first, folder);
+                ? await runValeOnPaths(session, planned, group, command, folder)
+                : await runValeOnStdin(session, planned, first, command, folder);
         findings.push(
             ...alerts.map((alert) =>
                 buildFinding(

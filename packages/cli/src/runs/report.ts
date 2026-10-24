@@ -1,5 +1,6 @@
 import { quoteArgument } from '#cli/system/text.ts';
 import type { Session } from '#cli/types/session.ts';
+import { stripUndefined } from '#cli/system/tables.ts';
 import type { RunReport } from '#cli/types/runs/run.ts';
 import { listCheckedFiles } from '#cli/planning/files.ts';
 import type { FixReport } from '#cli/types/runs/fixes.ts';
@@ -18,9 +19,11 @@ function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined):
 }
 
 function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport | undefined): boolean {
-    if (session.cancelSignal?.aborted === true) return true;
-    if (results.some((result) => INCOMPLETE_STATUSES.has(result.status))) return true;
-    return fixes?.results.some((result) => result.status === 'failed') === true;
+    return (
+        session.cancelSignal?.aborted === true ||
+        results.some((result) => INCOMPLETE_STATUSES.has(result.status)) ||
+        fixes?.results.some((result) => result.status === 'failed') === true
+    );
 }
 
 /**
@@ -50,14 +53,14 @@ Merge repeated runs of one check. Keep their findings and the base file count.
 @returns the combined result, with a missing-tool or process failure when the next run stops.
 */
 export function mergeCheckResults(merged: CheckResult, next: CheckResult): CheckResult {
-    const stopped = next.status === 'missing' || next.status === 'error';
+    const isStopped = next.status === 'missing' || next.status === 'error';
     const status = merged.status === 'failed' || next.status === 'failed' ? 'failed' : merged.status;
     return {
         ...merged,
         findings: [...merged.findings, ...next.findings],
         duration: merged.duration + next.duration,
-        status: stopped ? next.status : status,
-        ...(stopped ? { note: next.note, command: next.command } : {}),
+        status: isStopped ? next.status : status,
+        ...(isStopped && { note: next.note, command: next.command }),
     };
 }
 
@@ -68,7 +71,7 @@ Builds the report of a finished run, which check --json prints.
 @returns the checks and exit code.
 */
 export function buildRunReport(run: FinishedRun): RunReport {
-    const { session, options, started, planned, ran, ignores, fixes } = run;
+    const { session, options, started, planned, ran, fixes } = run;
     const results = new Map(run.active.map((check, index) => [check, ran[index] as CheckResult]));
     const checks = planned.map<CheckResult>(
         (check) =>
@@ -82,20 +85,18 @@ export function buildRunReport(run: FinishedRun): RunReport {
     const failed = listFailedChecks(checks, fixes);
     let code = failed.length > 0 ? EXIT_FINDINGS : 0;
     if (isIncomplete(session, ran, fixes)) code = EXIT_ERROR;
+    if (session.cancelSignal?.aborted === true && typeof session.cancelSignal.reason === 'number')
+        code = session.cancelSignal.reason;
     return {
-        ...(options.comparison === undefined ? {} : { comparison: options.comparison }),
+        ...(options.comparison !== undefined && { comparison: options.comparison }),
         version: cliPackage.version,
         stage: options.stage,
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),
         checks,
-        ignores: ignores.map((record) => ({
-            ...(record.check === undefined ? {} : { check: record.check }),
-            ...(record.rule === undefined ? {} : { rule: record.rule }),
-            ...(record.paths === undefined ? {} : { paths: record.paths }),
-            ...(record.names === undefined ? {} : { names: record.names }),
-            reason: record.reason,
-        })),
+        ignores: session.settingsFile.settings.ignore.map(({ until, ...record }) =>
+            stripUndefined({ ...record, until: until?.toISOString() }),
+        ),
         unstagedChanges: options.unstagedChanges ?? 0,
         partial: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
         failed,

@@ -1,12 +1,21 @@
 import { createRule } from '../create-rule.ts';
 import type { ImplementedFunction } from '../types/syntax.ts';
 import type { TrivialFunctionsOptions } from '../types/rules.ts';
-import { countStatements, findOutermostValue } from '../syntax.ts';
 import { OPTIONS_SCHEMA } from '../config/rules/no-trivial-functions.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { FUNCTION_SELECTOR, INLINE_VALUE_PARENTS, TRIVIAL_FUNCTION_STATEMENTS } from '../config/syntax.ts';
+import { unwrap, countStatements, findOutermostValue } from '../syntax.ts';
+
+import {
+    TYPE_ONLY,
+    FUNCTION_SELECTOR,
+    PASSED_VALUE_TYPES,
+    INLINE_VALUE_PARENTS,
+    FUNCTION_MEMBER_PARENTS,
+    TRIVIAL_FUNCTION_STATEMENTS,
+} from '../config/syntax.ts';
 
 function isInlineValue(node: ImplementedFunction): boolean {
+    if (FUNCTION_MEMBER_PARENTS.has(node.parent.type)) return true;
     if (node.type === AST_NODE_TYPES.FunctionDeclaration || node.id !== null) return false;
     const value = findOutermostValue(node);
     return INLINE_VALUE_PARENTS.has(value.parent.type) || isValueSlot(value);
@@ -16,7 +25,11 @@ function isValueSlot(value: TSESTree.Expression): boolean {
     const parent = value.parent;
     switch (parent.type) {
         case AST_NODE_TYPES.Property: {
-            return parent.kind === 'init' && !parent.method;
+            return true;
+        }
+        case AST_NODE_TYPES.MethodDefinition:
+        case AST_NODE_TYPES.PropertyDefinition: {
+            return true;
         }
         case AST_NODE_TYPES.AssignmentExpression: {
             return parent.left.type === AST_NODE_TYPES.MemberExpression;
@@ -31,6 +44,48 @@ function isValueSlot(value: TSESTree.Expression): boolean {
     }
 }
 
+function unwrapPassThrough(node: TSESTree.Node | null): TSESTree.Node | null {
+    let value = unwrap(node);
+    while (value?.type === AST_NODE_TYPES.AwaitExpression) value = unwrap(value.argument);
+    return value;
+}
+
+function isPassedValue(node: TSESTree.Node | null): boolean {
+    const value = unwrapPassThrough(node);
+    if (value === null || PASSED_VALUE_TYPES.has(value.type)) return true;
+    return (
+        value.type === AST_NODE_TYPES.MemberExpression &&
+        isPassedValue(value.object) &&
+        (!value.computed || isPassedValue(value.property))
+    );
+}
+
+function isPassThrough(node: TSESTree.Node | null): boolean {
+    const value = unwrapPassThrough(node);
+    switch (value?.type) {
+        case AST_NODE_TYPES.CallExpression:
+        case AST_NODE_TYPES.NewExpression: {
+            return isPassedValue(value.callee) && value.arguments.every((argument) => isPassedValue(argument));
+        }
+        case AST_NODE_TYPES.AssignmentExpression: {
+            return value.operator === '=' && isPassedValue(value.left) && isPassedValue(value.right);
+        }
+        default: {
+            return isPassedValue(value);
+        }
+    }
+}
+
+function isPassThroughBody(body: ImplementedFunction['body']): boolean {
+    if (body.type !== AST_NODE_TYPES.BlockStatement) return isPassThrough(body);
+    return body.body.every((statement) => {
+        if (TYPE_ONLY.has(statement.type) || ('declare' in statement && statement.declare)) return true;
+        return statement.type === AST_NODE_TYPES.ReturnStatement
+            ? isPassThrough(statement.argument)
+            : statement.type === AST_NODE_TYPES.ExpressionStatement && isPassThrough(statement.expression);
+    });
+}
+
 export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>({
     name: 'no-trivial-functions',
     meta: {
@@ -38,10 +93,10 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
         type: 'suggestion',
         docs: {
             example:
-                'The function `function one() { return 1; }` reports `trivial`. Replace its calls with the value `1` and delete the function. An anonymous function written inline as an argument has no name, so the rule leaves it out. A function that must stay, such as a method that an interface requires, gets a suppression comment with its reason.',
+                'The function `function one() { return 1; }` reports `trivial`. Replace its calls with `1` and delete the function. A function that computes a value, a type predicate, and object or class members do not report. A pass-through call still reports when formatting spreads it over several lines.',
             level: 'all',
             description:
-                'Reports each named function at or under the `trivialFunctionStatements` limit: function declarations, functions assigned to a name, methods, accessors, and constructors, exported or not.\n\n- The count includes nested callbacks.\n- An anonymous function written inline as a value, such as a callback argument, has no name and is not reported.',
+                'Reports a function at or under the `trivialFunctionStatements` limit that only passes values on to another call.',
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline the function at its call sites and delete it.',
         },
@@ -55,7 +110,13 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
         return {
             [`${FUNCTION_SELECTOR}:exit`](node: ImplementedFunction) {
                 const count = countStatements(node, context.sourceCode.visitorKeys);
-                if (count > limit || isInlineValue(node)) return;
+                if (
+                    count > limit ||
+                    isInlineValue(node) ||
+                    node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate ||
+                    !isPassThroughBody(node.body)
+                )
+                    return;
                 context.report({
                     node,
                     messageId: 'trivial',

@@ -7,8 +7,8 @@ export const START_COMMANDS = [
 ] as const;
 
 export const HOOK_LEVEL_CASES = [
-    { level: 'recommended', hooks: ['pre-commit', 'pre-push'] },
-    { level: 'all', hooks: ['commit-msg', 'pre-commit', 'pre-push'] },
+    { level: 'recommended', hooks: ['post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'] },
+    { level: 'all', hooks: ['commit-msg', 'post-checkout', 'post-commit', 'post-merge', 'pre-commit', 'pre-push'] },
 ] as const;
 
 export const HOOK_CASES = [
@@ -22,13 +22,4 @@ export const HOOK_SCRIPT = `console.log(JSON.stringify({
     cwd: process.cwd(),
     hook: process.env.GSPOT_HOOK ?? null,
 }));
-`;
-
-export const LOGGING_SCRIPT = String.raw`const fs = require('node:fs');
-const name = require('node:path').basename(process.argv[1], '.js');
-const input = fs.readFileSync(0, 'utf8');
-fs.appendFileSync(process.env.CALLS_LOG, JSON.stringify({ name, argv: process.argv.slice(2), input }) + '\n');
-`;
-
-export const CAT_SCRIPT = `process.stdout.write(require('node:fs').readFileSync(0));
 `;

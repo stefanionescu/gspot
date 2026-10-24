@@ -8,7 +8,6 @@ import { runCommandGroups } from '#cli/runs/command/check.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/placeholders.ts';
 import { type TrackedFile } from '#cli/types/repository/files.ts';
 import { listCheckFiles } from '#cli/repository/files/selection.ts';
-import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files/classify.ts';
 import { composeSchema } from '#cli/schemas/checks/infrastructure/docker/compose.ts';
 import { DOCKERIGNORE } from '#cli/config/checks/infrastructure/docker/dockerignore.ts';
@@ -45,7 +44,7 @@ function groupComposeFiles(files: TrackedFile[]): ComposeFiles[] {
         }
         groups.set(project.path, group);
     }
-    return [...groups.values()];
+    return groups.values().toArray();
 }
 
 function listBuildContexts(declarations: ComposeDeclaration[], folder: string): [string, string[]][] {
@@ -77,7 +76,8 @@ Reads Compose services and resolves their local build contexts.
 */
 export function readComposeDocuments(session: Session, planned: PlannedCheck): ComposeDocuments {
     const documents: ComposeDocuments = { declarations: [], contexts: new Map() };
-    for (const group of groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK))) {
+    const groups = groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
+    for (const group of groups) {
         const declarations = [...group.before, group.last].flatMap(({ path }) => {
             const document = parseYamlFile(path, readCachedText(session.reads, path), composeSchema);
             const servicePairs = document.services === undefined ? [] : Object.entries(document.services);
@@ -100,8 +100,7 @@ Validates each Compose project with its overrides.
 @returns the check result.
 */
 export async function checkDockerCompose(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const isCompose = buildPathMatcher(planned.check.files?.paths ?? []);
-    const groups = groupComposeFiles(planned.files.filter(({ path }) => isCompose(path)));
+    const groups = groupComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     return runCommandGroups(
         session,
         planned,

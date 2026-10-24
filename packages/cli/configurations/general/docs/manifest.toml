@@ -15,7 +15,6 @@ version = "0.24.2"
 [[config_file]]
 per_scope = true
 target = "lychee.toml"
-tool = "lychee"
 
 [[check]]
 command = ["lychee", "--config", "{config_file:lychee}", "--root-dir", "{root}/.gspot/root-links", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]

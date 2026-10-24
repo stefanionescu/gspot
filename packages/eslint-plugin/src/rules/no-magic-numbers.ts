@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { createRule } from '../create-rule.ts';
 import { FUNCTION_TYPES } from '../config/syntax.ts';
 import type { MagicNumbersOptions } from '../types/rules.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ESLintUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { UPSTREAM_RULE, OPTIONS_SCHEMA, UPSTREAM_PACKAGE } from '../config/rules/no-magic-numbers.ts';
 
 const requireModule = createRequire(import.meta.url);
@@ -46,17 +46,22 @@ export const noMagicNumbers = createRule<MagicNumbersOptions, 'noMagic' | 'useCo
     },
     create(context) {
         const upstream = requireModule(UPSTREAM_PACKAGE) as {
-            rules: Record<typeof UPSTREAM_RULE, TSESLint.RuleModule<string, unknown[]>>;
+            rules: Record<
+                typeof UPSTREAM_RULE,
+                TSESLint.RuleModule<string, MagicNumbersOptions> & { meta: { defaultOptions: MagicNumbersOptions } }
+            >;
         };
-        return upstream.rules[UPSTREAM_RULE].create(
+        const rule = upstream.rules[UPSTREAM_RULE];
+        return rule.create(
             Object.create(context, {
+                options: { value: ESLintUtils.applyDefault(rule.meta.defaultOptions, context.options) },
                 report: {
                     value: (descriptor: TSESLint.ReportDescriptor<string>) => {
                         if ('node' in descriptor && isConstantValue(descriptor.node as TSESTree.Node)) return;
                         context.report(descriptor as TSESLint.ReportDescriptor<'noMagic' | 'useConst'>);
                     },
                 },
-            }) as TSESLint.RuleContext<string, unknown[]>,
+            }) as TSESLint.RuleContext<string, MagicNumbersOptions>,
         );
     },
 });

@@ -66,7 +66,7 @@ export async function applySettingsEdit(
         report.notes.push(MANAGED_KEYS_NOTE);
     const shown = result.changed ? summary : 'No change: gspot.toml stays the same.';
     return {
-        text: `${shown === '' ? '' : shown + '\n'}${formatApplyReport(report)}`,
+        text: `${shown}\n${formatApplyReport(report)}`,
         json: { ...report, changed: result.changed },
         exitCode: 0,
     };
@@ -95,7 +95,6 @@ Validate the configuration names and the scope for add and remove before either 
 export function prepareConfigurationEdit(options: ConfigurationsOptions): {
     root: string;
     input: SettingsEdit;
-    settings: Settings;
     scopeSettings: Pick<Settings, 'configurations' | 'removed_configurations'>;
     selected: string[];
     configurations: Map<string, Configuration>;
@@ -113,8 +112,8 @@ export function prepareConfigurationEdit(options: ConfigurationsOptions): {
     const selected = selectForScope(edit.settings, options.scope ?? '', configurations).map(
         (configuration) => configuration.name,
     );
-    const { root, input, settings } = edit;
-    return { root, input, settings, scopeSettings, selected, configurations };
+    const { root, input } = edit;
+    return { root, input, scopeSettings, selected, configurations };
 }
 
 /**
@@ -134,14 +133,14 @@ export async function readSetting(
     context: SettingsEditContext,
     key: string,
     scope: string | undefined,
-): Promise<{ available: AvailableSettings; match: SettingMatch }> {
+): Promise<{ available: AvailableSettings; match: SettingMatch; scope: Scope }> {
     if (['configurations', 'removed_configurations'].includes(key))
         throw new GspotError('arguments', 'Use gspot add or gspot remove to change configurations.');
     getScopeTable(context.input.table, scope);
     const { settings, reads } = context;
     const session = await openSession(context.root, { settingsFile: { settings, text: context.input.text }, reads });
-    const availableSettings = (session.scopes.find((each) => each.folder.path === (scope ?? '')) as Scope)
-        .availableSettings;
+    const selected = session.scopes.find((each) => each.folder.path === (scope ?? '')) as Scope;
+    const availableSettings = selected.availableSettings;
     const match = findSetting(availableSettings, key);
     if (match === undefined) {
         const selectedScope = session.scopes.find(
@@ -156,5 +155,5 @@ export async function readSetting(
             );
         throw new GspotError('arguments', formatUnknownSetting(availableSettings, key));
     }
-    return { available: availableSettings, match };
+    return { available: availableSettings, match, scope: selected };
 }

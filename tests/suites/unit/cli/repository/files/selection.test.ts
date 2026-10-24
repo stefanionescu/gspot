@@ -81,7 +81,7 @@ test.each(MIGRATION_CASES)(
     },
 );
 
-test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope"', ({ scope, tests, expected }) => {
+test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope" with $tests', ({ scope, tests, expected }) => {
     const configurations = readConfigurations();
 
     const selected = selectConfigurations(['jest'], configurations);

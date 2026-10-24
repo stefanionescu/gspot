@@ -7,8 +7,7 @@ import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareProseSandbox } from '#tests/setup/sandboxes/create.ts';
-import { PROSE_SANDBOX } from '#tests/config/checks/general/prose.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { VALE_INI, EXAMPLE_STYLE_FOLDER } from '#tests/config/integration/checks/general/prose/samples.ts';
 
 import {
@@ -99,6 +98,5 @@ test.each([...PROSE_COMMENT_CASES])(
 const installedSandbox = shareProseSandbox();
 
 test.each([...PROSE_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
-    const result = await runCheckSample(installedSandbox(), sample, PROSE_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
+    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
 });

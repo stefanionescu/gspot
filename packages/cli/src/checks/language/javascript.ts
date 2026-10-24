@@ -87,9 +87,10 @@ export async function checkJavascriptTsc(session: Session, planned: PlannedCheck
                 ...generated.raw.compilerOptions,
                 typeRoots: project.options.typeRoots?.map((path) => join(scratch, relative(session.root, path))),
             },
-            files: project.fileNames.map((path) =>
-                convertToPosixPath(relative(dirname(generatedPath), join(scratch, relative(session.root, path)))),
-            ),
+            files: project.fileNames.map((path) => {
+                const copied = join(scratch, relative(session.root, path));
+                return convertToPosixPath(relative(dirname(generatedPath), copied));
+            }),
             include: [],
             exclude: [],
         }),

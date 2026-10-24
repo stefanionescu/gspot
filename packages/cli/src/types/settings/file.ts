@@ -2,11 +2,11 @@ import type { Check } from '#cli/types/configurations.ts';
 import type { STAGES } from '#cli/config/configurations/names.ts';
 import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { REEXPORT_MODES } from '#cli/config/settings/tables.ts';
+import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 import type { ConfigurationTables } from '#cli/types/settings/tables.ts';
 import type { Defined, Optional, SchemaShape } from '#cli/types/shapes.ts';
 import type { CheckOutput, WrittenOutput } from '#cli/types/runs/output.ts';
 import type { ParsedTools, WrittenTools } from '#cli/types/settings/tools.ts';
-import type { ImportRule, WrittenImportRule } from '#cli/types/settings/import-rules.ts';
 
 import type {
     NamingCase,
@@ -75,7 +75,7 @@ export type Settings = Omit<
     naming: NonNullable<ParsedSettings['naming']>;
     import_rule: ImportRule[];
     structure: StructureSettings;
-    format: WrittenFormat;
+    format: ParsedFormat;
     tools: Record<string, TomlTable>;
     test_files: string[];
     ignore: IgnoreRecord[];
@@ -168,6 +168,7 @@ type RootOnlyFields =
     | 'import_rule';
 
 type ParsedScopeTables = {
+    limits: ParsedLimits;
     dependencies: Omit<ConfigurationTables['dependencies'], 'min_release_age_days'>;
     coverage: Omit<ConfigurationTables['coverage'], 'swift_target'>;
     docs: Omit<ConfigurationTables['docs'], 'banned_headings'>;
@@ -229,7 +230,7 @@ export type WrittenSettings = Optional<
         scope?: WrittenScope[] | undefined;
         limits?: WrittenLimits | undefined;
         naming?: WrittenNaming | undefined;
-        import_rule?: WrittenImportRule[] | undefined;
+        import_rule?: ImportRule[] | undefined;
         tools?: WrittenTools | undefined;
         format?: WrittenFormat | undefined;
         command_check?: (CommandCheckFields & { output?: WrittenOutput | undefined })[] | undefined;
@@ -243,11 +244,11 @@ export type ParsedSettings = ParsedRoot & {
     [Name in keyof ConfigurationTables]?: ConfigurationTables[Name] | undefined;
 } & {
     scope?: ParsedScope[] | undefined;
-    limits?: ParsedLimits | undefined;
-    naming?: ParsedNaming | undefined;
+    limits: ParsedLimits;
+    naming: ParsedNaming;
     import_rule: ImportRule[];
     tools?: ParsedTools | undefined;
-    format?: ParsedFormat | undefined;
+    format: ParsedFormat;
     ignore?:
         | {
               check?: string | undefined;
@@ -259,7 +260,7 @@ export type ParsedSettings = ParsedRoot & {
           }[]
         | undefined;
     command_check?: (CommandCheckFields & { output: CheckOutput })[] | undefined;
-    structure?: ParsedStructure | undefined;
+    structure: ParsedStructure;
     hooks?: ParsedHooks | undefined;
     ci?: ParsedCi | undefined;
     rules: ParsedRules;

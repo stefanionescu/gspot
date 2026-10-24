@@ -26,32 +26,31 @@ function splitContentLines(text: string): NumberedLine[] {
         .filter((line) => line.text.trim() !== '' && !line.text.trimStart().startsWith('#'));
 }
 
+function appendHeader(block: HeaderBlock | undefined, line: NumberedLine): NumberedLine[] {
+    if (block === undefined) return [{ number: line.number, text: 'Add a path line before this header.' }];
+    const header = line.text.trim();
+    if (header.startsWith(DETACH_PREFIX)) return [];
+    if (!HTTP_HEADER_LINE.test(header)) return [{ number: line.number, text: 'Write this header as Name: value.' }];
+    const colon = header.indexOf(':');
+    block.headers.push({ name: header.slice(0, colon).toLowerCase(), value: header.slice(colon + 1).trim() });
+    return [];
+}
+
 function parseHeadersFile(text: string): ParsedHeadersFile {
     const blocks: HeaderBlock[] = [];
-    const errors = splitContentLines(text).flatMap((line): NumberedLine[] => {
+    const errors: NumberedLine[] = [];
+    for (const line of splitContentLines(text)) {
         if (!/^\s/u.test(line.text)) {
             blocks.push({ path: line.text.trim(), headers: [] });
-            return PATH_PREFIXES.some((prefix) => line.text.startsWith(prefix))
-                ? []
-                : [
-                      {
-                          number: line.number,
-                          text: 'Start this block with a path beginning with / or an https:// address.',
-                      },
-                  ];
+            if (PATH_PREFIXES.every((prefix) => !line.text.startsWith(prefix)))
+                errors.push({
+                    number: line.number,
+                    text: 'Start this block with a path beginning with / or an https:// address.',
+                });
+            continue;
         }
-        const block = blocks.at(-1);
-        if (block === undefined) return [{ number: line.number, text: 'Add a path line before this header.' }];
-        const header = line.text.trim();
-        if (header.startsWith(DETACH_PREFIX)) return [];
-        if (!HTTP_HEADER_LINE.test(header)) return [{ number: line.number, text: 'Write this header as Name: value.' }];
-        const colon = header.indexOf(':');
-        block.headers.push({
-            name: header.slice(0, colon).toLowerCase(),
-            value: header.slice(colon + 1).trim(),
-        });
-        return [];
-    });
+        errors.push(...appendHeader(blocks.at(-1), line));
+    }
     return { blocks, errors };
 }
 
@@ -76,9 +75,12 @@ function validateRedirects(text: string): NumberedLine[] {
         const [source = '', , status] = segments;
         if (segments.length < REDIRECT_FIELDS.minimum || segments.length > REDIRECT_FIELDS.maximum)
             return [
-                { number: line.number, text: 'Write a redirect as a source, a destination, and an optional status.' },
+                {
+                    number: line.number,
+                    text: 'Write a redirect as a source, a destination, and an optional status.',
+                },
             ];
-        if (!PATH_PREFIXES.some((prefix) => source.startsWith(prefix)))
+        if (PATH_PREFIXES.every((prefix) => !source.startsWith(prefix)))
             return [{ number: line.number, text: 'Start the redirect source with / or https://.' }];
         if (status === undefined) return [];
         const isRedirectStatus = REDIRECT_STATUS_CODES.has(status);

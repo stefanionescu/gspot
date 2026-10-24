@@ -18,8 +18,7 @@ function findDoubledQuoteEnd(text: string, from: number, quote: string): number 
 function findEscapedStringEnd(text: string, from: number): number {
     for (let at = from; at < text.length; at += 1) {
         const char = text[at];
-        if (char === '\\') at += 1;
-        else if (char === "'" && text[at + 1] === "'") at += 1;
+        if (char === '\\' || (char === "'" && text[at + 1] === "'")) at += 1;
         else if (char === "'") return at + 1;
     }
     return text.length;
@@ -35,7 +34,7 @@ function findIdentifierEnd(text: string, from: number): number {
 function findVariableEnd(text: string, at: number): number {
     const quote = text[at + 1];
     const isQuoted = quote === "'" || quote === '"';
-    const start = isQuoted ? at + ":'".length : at + 1;
+    const start = at + (isQuoted ? ":'".length : 1);
     const end = findIdentifierEnd(text, start);
     if (end === start) return -1;
     if (!isQuoted) return end;
@@ -44,9 +43,11 @@ function findVariableEnd(text: string, at: number): number {
 
 type MatchedToken = Omit<SqlToken, 'start'>;
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function matchEscapedString(text: string, at: number): MatchedToken | undefined {
-    if (text[at + 1] !== "'" || WORD_CHARACTER.test(text[at - 1] ?? '')) return undefined;
-    return { end: findEscapedStringEnd(text, at + "E'".length), kind: 'other' };
+    return text[at + 1] !== "'" || WORD_CHARACTER.test(text[at - 1] ?? '')
+        ? undefined
+        : { end: findEscapedStringEnd(text, at + "E'".length), kind: 'other' };
 }
 
 function matchDollarTag(text: string, at: number): MatchedToken | undefined {
@@ -111,8 +112,7 @@ function findTokenEnd(text: string, at: number, token: MatchedToken): number {
 function buildReplacement(kind: SqlToken['kind'], text: string): string {
     if (kind === 'command') return ' '.repeat(text.length);
     if (text[1] === "'") return `''${' '.repeat(text.length - "''".length)}`;
-    if (text[1] === '"') return ` ${text.slice(1)}`;
-    return `_${text.slice(1)}`;
+    return text[1] === '"' ? ` ${text.slice(1)}` : `_${text.slice(1)}`;
 }
 
 /**
@@ -146,11 +146,13 @@ export function replacePsqlSyntax(text: string): BlankedSql {
     const pieces: string[] = [];
     let offset = 0;
     for (const { start, end, kind } of listSqlTokens(text)) {
-        if (kind === 'command' || kind === 'variable') {
-            pieces.push(text.slice(offset, start), buildReplacement(kind, text.slice(start, end)));
-            if (kind === 'variable') variables.push({ start, end });
-            offset = end;
+        if (!(kind === 'command' || kind === 'variable')) {
+            continue;
         }
+
+        pieces.push(text.slice(offset, start), buildReplacement(kind, text.slice(start, end)));
+        if (kind === 'variable') variables.push({ start, end });
+        offset = end;
     }
     pieces.push(text.slice(offset));
     return { text: pieces.join(''), variables };

@@ -20,7 +20,7 @@ export function buildTanstackQueryBlocks(scope: Pick<EslintScope, 'presets' | 'e
         imports: CONFIGURATION_PLUGINS['tanstack-query'],
         blocks: buildArrayPresetBlocks(recommended, 'tanstackQuery', ({ rules }) => ({
             files: eslintFiles.code,
-            ...(rules === undefined ? {} : { rules: convertWarningsToErrors(rules) }),
+            ...(rules !== undefined && { rules: convertWarningsToErrors(rules) }),
         })),
     };
 }

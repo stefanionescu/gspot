@@ -1,16 +1,16 @@
 import ignore from 'ignore';
-import { isInside } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import { join, posix, relative } from 'node:path';
-import { GspotError } from '#cli/system/errors.ts';
 import { runGitForBytes } from '#cli/system/git.ts';
 import { parseIndexFiles } from '#cli/parsers/git.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import type { GitIndexFile } from '#cli/types/parsers/git.ts';
 import { isIgnored } from '#cli/repository/files/gitignore.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { readText, decodeUtf8 } from '#cli/system/files/reads.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
+import { isInside, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import { GITLINK_MODE, GIT_FILE_MODES, EXECUTABLE_FILE } from '#cli/config/files/modes.ts';
 import type { ListedFile, PathIgnore, PendingFolder, FolderListing } from '#cli/types/repository/files.ts';
 
@@ -29,8 +29,7 @@ function readSymlinkFile(root: string, path: string): ListedFile | undefined {
     try {
         target = realpathSync(join(root, path));
     } catch (error) {
-        if (error instanceof Error && 'code' in error && (error.code === 'ENOENT' || error.code === 'ELOOP'))
-            return link;
+        if (hasErrorCode(error, 'ENOENT') || hasErrorCode(error, 'ELOOP')) return link;
         throw error;
     }
     if (!isInside(relative(realpathSync(root), target))) return undefined;
@@ -47,14 +46,9 @@ function readListedFile(
     if (stat === undefined) return undefined;
     if (stat.isSymbolicLink()) {
         if (INSTALLED_DEPENDENCY_FOLDERS.has(posix.basename(path))) return undefined;
-        if (
-            path
-                .split('/')
-                .slice(0, -1)
-                .some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
-        )
-            return { path, size: stat.size, executable: false, symlink: true };
-        return readSymlinkFile(root, path);
+        return isInInstalledFolder(extractParentFolder(path))
+            ? { path, size: stat.size, executable: false, symlink: true }
+            : readSymlinkFile(root, path);
     }
     if (stat.isDirectory()) return undefined;
     const isExecutable = executables === undefined ? (stat.mode & EXECUTABLE_BITS) !== 0 : executables.has(path);
@@ -173,7 +167,7 @@ export async function listTrackedFiles(
         .filter(
             (path) =>
                 !STATE_FOLDER_PATTERN.test(path.normalize('NFC')) &&
-                !submodules.some((module) => isInScope(path, module)),
+                submodules.every((module) => !isInScope(path, module)),
         )
         .toSorted((a, b) => compareText(a, b))
         .map((path) => readListedFile(repositoryRoot, path, executables))

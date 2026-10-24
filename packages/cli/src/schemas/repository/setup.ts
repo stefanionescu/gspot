@@ -8,11 +8,15 @@ export const ciJobSchema = z.object({
     script: (
         z.union([
             z.string(),
-            z.array(z.unknown()).transform((commands) => commands.filter((command) => typeof command === 'string')),
+            z
+                .unknown()
+                .array()
+                .transform((commands) => commands.filter((command) => typeof command === 'string')),
         ]) satisfies z.ZodType<string | string[]>
     ).optional(),
     steps: z
-        .array(z.unknown())
+        .unknown()
+        .array()
         .transform((steps) =>
             steps.flatMap((step) => {
                 const parsed = ciStepSchema.safeParse(step);

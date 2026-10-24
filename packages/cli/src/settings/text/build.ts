@@ -2,11 +2,11 @@ import { isDeepStrictEqual } from 'node:util';
 import { isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { TomlTable } from '#cli/types/settings/file.ts';
-import { tableValuesSchema } from '#cli/schemas/settings/tables.ts';
+import { RECORD_FIELDS } from '#cli/schemas/settings/file.ts';
+import type { ParsedFormat } from '#cli/types/settings/values.ts';
 import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { parseTomlText, isReasonedValue } from '#cli/settings/file.ts';
 import { encodeSettings, listKeptComments } from '#cli/settings/text/layout.ts';
-import { settingsSchema, listRecordFields } from '#cli/schemas/settings/file.ts';
 import { ROOT_KEYS, LAST_TABLES, FIRST_TABLES } from '#cli/config/settings/text/build.ts';
 import { SETTINGS_FILE, SCHEMA_DIRECTIVE, SCHEMA_DIRECTIVE_LINE } from '#cli/config/settings/file.ts';
 
@@ -27,7 +27,7 @@ function sortTable(table: TomlTable): TomlTable {
 function sortValue(value: unknown, path: string[]): unknown {
     if (Array.isArray(value)) return value.map((element: unknown) => sortValue(element, path));
     if (!isTable(value)) return value;
-    const fields: Readonly<Record<string, readonly string[]>> = listRecordFields();
+    const fields: Readonly<Record<string, readonly string[]>> = RECORD_FIELDS;
     const recordOrder: readonly string[] | undefined = isReasonedValue(value)
         ? ['value', 'reason']
         : fields[path.join('.')];
@@ -39,8 +39,8 @@ function sortValue(value: unknown, path: string[]): unknown {
             ...names.filter((key) => !recordOrder.includes(key)),
         ];
     else if (path[0] === 'tools') {
-        const sortsNames = path.at(-1) === 'rules';
-        if (sortsNames) order = names.toSorted((left, right) => compareText(left, right));
+        const isSortsNames = path.at(-1) === 'rules';
+        if (isSortsNames) order = names.toSorted((left, right) => compareText(left, right));
     }
     return Object.fromEntries(order.map((key) => [key, sortValue(value[key], [...path, key])]));
 }
@@ -62,7 +62,13 @@ function compareIgnores(left: TomlTable, right: TomlTable): number {
     return 0;
 }
 
-function mergeIgnores(ignores: TomlTable[]): TomlTable[] {
+/**
+Merge matching ignore records and sort them.
+
+@param ignores the authored ignore records.
+@returns the merged records in settings order.
+*/
+export function mergeIgnores(ignores: TomlTable[]): TomlTable[] {
     const merged: TomlTable[] = [];
     for (const ignore of ignores) mergeIgnore(merged, ignore);
     return merged.toSorted(compareIgnores);
@@ -99,14 +105,17 @@ directive, which replaces any directive on the first line before.
 
 @param previousText the gspot.toml contents before, or empty for init.
 @param settings the written values, before defaults.
+@param format the parsed indentation settings.
 @returns the TOML 1.0 text.
 */
-export function buildSettingsText(previousText: string, settings: TomlTable): string {
+export function buildSettingsText(
+    previousText: string,
+    settings: TomlTable,
+    format: Pick<ParsedFormat, 'indent_style' | 'indent_width'>,
+): string {
     const authored = previousText.replace(SCHEMA_DIRECTIVE_LINE, '');
     let target = sortTable(settings);
-    if (target['ignore'] !== undefined)
-        target['ignore'] = mergeIgnores(settingsSchema.shape.ignore.unwrap().parse(target['ignore']));
-    const format = tableValuesSchema.in.shape.format.parse(target['format']);
+    if (target['ignore'] !== undefined) target['ignore'] = mergeIgnores(target['ignore'] as TomlTable[]);
     const indent = format.indent_style === 'tab' ? '\t' : ' '.repeat(format.indent_width);
     const syntax = parseTomlSyntax(authored, parseTomlText(authored, SETTINGS_FILE));
     const comments = listKeptComments(syntax, target);

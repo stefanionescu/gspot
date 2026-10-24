@@ -27,6 +27,7 @@ test.each([...HOOK_REPOSITORIES])(
     async (provider) => {
         const { startProgram } = provider;
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const { files, setting, gitHook } = provider;
         await createFileTree(sandbox.path, {
             'gspot.toml': buildSandboxSettings([], {
@@ -120,6 +121,9 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
             path.startsWith(`${GSPOT_PATHS.hooks}/`),
         ),
     ).toStrictEqual([
+        { path: `${GSPOT_PATHS.hooks}/post-checkout`, kind: 'stray' },
+        { path: `${GSPOT_PATHS.hooks}/post-commit`, kind: 'stray' },
+        { path: `${GSPOT_PATHS.hooks}/post-merge`, kind: 'stray' },
         { path: `${GSPOT_PATHS.hooks}/pre-commit`, kind: 'stray' },
         { path: `${GSPOT_PATHS.hooks}/pre-push`, kind: 'stray' },
     ]);
@@ -128,8 +132,7 @@ test('turning hooks off removes .gspot/hooks and leaves unsetting core.hooksPath
     expect(removed).toMatchObject({
         code: 0,
         stdout: [
-            `removed  ${GSPOT_PATHS.hooks}/pre-commit`,
-            `removed  ${GSPOT_PATHS.hooks}/pre-push`,
+            'removed  5 generated files',
             'note     Git hooks changed. Run gspot install.',
             'note     The tool lockfile is missing or stale. Run gspot install; until then gspot/generated-files fails on it.',
             '',

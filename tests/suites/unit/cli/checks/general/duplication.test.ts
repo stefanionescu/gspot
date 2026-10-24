@@ -11,7 +11,7 @@ import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { buildJscpdReport, JSCPD_SCOPE_FINDINGS } from '#tests/config/checks/general/duplication.ts';
+import { JSCPD_SCOPE_FINDINGS } from '#tests/config/checks/general/duplication.ts';
 
 async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promise<string> {
     const folder = resources.use(await testdir());
@@ -51,7 +51,22 @@ test.each(['relative', 'absolute', 'namespaced'])(
         await using resources = new AsyncDisposableStack();
         const root = await prepareDuplicationSandbox(resources);
         const absolute = mode === 'namespaced' ? toNamespacedPath(root) : root;
-        const report = buildJscpdReport(mode === 'relative' ? '' : absolute);
+        const prefix = mode === 'relative' ? '' : absolute;
+        const original = { name: join(prefix, 'scripts', 'original.sh'), start: 7, end: 36 };
+        const report = {
+            duplicates: [
+                {
+                    lines: 30,
+                    firstFile: original,
+                    secondFile: { name: join(prefix, 'scripts', 'café.sh'), start: 3, end: 32 },
+                },
+                {
+                    lines: 30,
+                    firstFile: original,
+                    secondFile: { name: join(prefix, 'vendor', 'copy.sh'), start: 1, end: 30 },
+                },
+            ],
+        };
         await createFileTree(root, { 'scripts/café.sh': 'echo clone\n', 'vendor/copy.sh': 'echo vendor\n' });
         const session = await openSession(root);
         using _spawn = spyOn(processes, 'spawnProcess').mockImplementation(async (command) => {

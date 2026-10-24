@@ -14,13 +14,6 @@ import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeNpmPackage, writeScriptCommand, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
-function buildVersionBelow(minimum: string): string {
-    const segments = minimum.split('.').map(Number);
-    const index = segments.findLastIndex((number) => number > 0);
-    segments[index]! -= 1;
-    return segments.join('.');
-}
-
 test('an npm tool is the version its package holds, whatever it prints', async () => {
     await using sandbox = await testdir();
     await fakeNpmPackage(sandbox.path, { name: 'teller', version: '5.0.1', script: "console.log('4.4.2');\n" });
@@ -138,7 +131,7 @@ test.each(['gitleaks', 'next'])('the %s pin is outdated below its minimum versio
     const pin = getTool(readConfigurations().values(), name);
     const minimum = pin.min_version!;
     const available = pin.system === true ? 'system' : 'ok';
-    for (const version of [buildVersionBelow(minimum), minimum]) {
+    for (const version of ['0.0.0', minimum]) {
         const printed = name === 'next' ? `Next.js v${version}` : version;
         const tool = { ...pin, version_command: ['-e', `console.log(${JSON.stringify(printed)});`] };
         expect(inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({

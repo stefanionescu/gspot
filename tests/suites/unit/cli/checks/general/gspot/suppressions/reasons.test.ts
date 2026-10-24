@@ -6,20 +6,21 @@ import { testdir, createFileTree } from 'testdirs';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { COMPILER_SOURCE } from '#tests/config/checks/language/typescript.ts';
 
 import {
-    COMPILER_REASON,
     SWIFT_REASON_CASES,
     SUPPRESSION_REASONS,
-    TYPESCRIPT_SUPPRESSIONS,
     SUPPRESSION_REASON_CASES,
 } from '#tests/config/checks/general/gspot/suppressions/reasons.ts';
 
 test.each(['javascript', 'typescript'])(
     '@ts-ignore, @ts-expect-error and @ts-nocheck in %s need a reason; the same text in a string is not a comment',
     async (language) => {
+        const COMPILER_REASON = 'A separate sandbox checks the external declaration.';
+
+        const TYPESCRIPT_SUPPRESSIONS = ['ignore', 'expect-error', 'nocheck'] as const;
+
         await using sandbox = await testdir();
         const ending = language === 'javascript' ? 'js' : 'ts';
         const paths = TYPESCRIPT_SUPPRESSIONS.map((directive) => `${directive}.${ending}`);
@@ -61,28 +62,22 @@ test.each(['javascript', 'typescript'])(
     },
 );
 
-test.each(SUPPRESSION_REASON_CASES)(
-    'a suppression in %s needs its reason on the line directly above',
-    async (path, source, lines) => {
-        await using sandbox = await testdir({
-            'gspot.toml': buildSandboxSettings(['typescript', 'bash'], { level: 'all', rules: true }),
-            [path]: source,
-        });
-
-        const session = await openSession(sandbox.path);
-        const result = await runChecks(session, buildRunOptions({ stage: 'commit', only: ['gspot/suppressions'] }));
-        expect(result.report.checks.map(({ status }) => status)).toStrictEqual([
-            lines.length === 0 ? 'passed' : 'failed',
-        ]);
-        expect(result.report.checks.flatMap(({ findings }) => findings.map(({ line }) => line))).toStrictEqual([
-            ...lines,
-        ]);
-        for (const finding of result.report.checks.flatMap(({ findings }) => findings)) {
-            const name = finding.rule!.replace('-no-reason', '');
-            expect(finding.message).toBe(`This ${name} suppression has no reason of two or more words.`);
-        }
-    },
-);
+test.each([...SUPPRESSION_REASON_CASES])('$name', async ({ path, source, findings }) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['typescript', 'bash'], { level: 'all', rules: true }),
+        [path]: source,
+    });
+    const session = await openSession(sandbox.path);
+    const result = await runChecks(session, buildRunOptions({ stage: 'commit', only: ['gspot/suppressions'] }));
+    expect(result.report.checks.map(({ status }) => status)).toStrictEqual([
+        findings.length === 0 ? 'passed' : 'failed',
+    ]);
+    expect(
+        result.report.checks.flatMap(({ findings }) =>
+            findings.map(({ line, rule, message }) => ({ line, rule, message })),
+        ),
+    ).toStrictEqual([...findings]);
+});
 
 test.each(['-->', '--!>'])('an HTML suppression that ends with %s still needs a reason', async (ending) => {
     await using sandbox = await testdir({
@@ -156,7 +151,7 @@ test.each([...SWIFT_REASON_CASES])(
         ]);
         const correction = source.replace(
             `// ${directive}`,
-            `// ${directive} - The external declaration retains its layout.`,
+            () => `// ${directive} - The external declaration retains its layout.`,
         );
         await writeFile(join(sandbox.path, 'Value.swift'), correction);
         const passed = await runChecks(
@@ -168,17 +163,21 @@ test.each([...SWIFT_REASON_CASES])(
     },
 );
 
-test.each(SUPPRESSION_REASONS)(
-    'the %s suppression pattern of %s finds the comment and its reason',
-    (configuration, tool, bare, explained, expected) => {
-        const definition = readConfigurations()
-            .get(configuration)!
-            .tools.find(({ name }) => name === tool)!.suppression!;
-        const marker = new RegExp(definition.marker, 'u');
-        const reason = new RegExp(definition.reason, 'u');
-        expect(marker.test(bare)).toBe(true);
-        expect(marker.test(explained)).toBe(true);
-        expect(reason.exec(bare)?.groups?.['reason']).toBeUndefined();
-        expect(reason.exec(explained)?.groups?.['reason']).toBe(expected);
+test.each([...SUPPRESSION_REASONS])(
+    'a $tool suppression needs a reason and passes with one',
+    async ({ configuration, file, bare, explained, rule }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings([configuration], { level: 'all' }),
+            [file]: `${bare}\n${explained}\n`,
+        });
+        const result = await runChecks(
+            await openSession(sandbox.path),
+            buildRunOptions({ only: ['gspot/suppressions'] }),
+        );
+        expect(
+            result.report.checks.flatMap(({ findings }) =>
+                findings.map(({ file, line, rule }) => ({ file, line, rule })),
+            ),
+        ).toStrictEqual([{ file, line: 1, rule }]);
     },
 );

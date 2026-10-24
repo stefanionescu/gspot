@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { spawnGspot, listFindingRows, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     SQUAWK_SCOPE_SETTINGS,
@@ -13,14 +13,14 @@ import {
 } from '#tests/config/integration/checks/postgres.ts';
 
 test("Squawk uses each scope's assume_in_transaction setting", async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase'], { tables: SQUAWK_SCOPE_SETTINGS }),
         [SQUAWK_ROOT_MIGRATION_PATH]: UNWRAPPED_MIGRATION_SQL,
         'transactional/supabase/migrations/0001_initial.sql': 'SELECT 1;\n',
         [SQUAWK_CHILD_MIGRATION_PATH]: UNWRAPPED_MIGRATION_SQL,
     });
 
-    await installGeneratedTools(sandbox.path);
+    await applyThenInstall(sandbox.path);
     const transactional = await spawnGspot(sandbox.path, [
         'check',
         SQUAWK_CHILD_MIGRATION_PATH,

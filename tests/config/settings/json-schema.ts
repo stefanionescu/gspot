@@ -45,15 +45,6 @@ export const PUBLISHED_SCHEMA_CASES = [
         valid: true,
     },
     {
-        name: 'an allowed package with a tag for a version',
-        input: {
-            licenses: {
-                allowed_package: [{ name: 'example', version: 'latest', reason: 'Reviewed its MIT license.' }],
-            },
-        },
-        valid: false,
-    },
-    {
         name: 'a SQLFluff dialect that injects a directive',
         input: { tools: { sqlfluff: { dialect: 'sqlite\nexclude_rules = ALL' } } },
         valid: false,

@@ -64,22 +64,17 @@ export const PROJECT_CHOICES = {
 } as const;
 
 export const PROJECT_SCOPE_CASES = [
-    ['', 'nextjs', true],
-    ['app', 'nextjs', false],
-    ['app/child', 'nextjs', false],
-    ['app/worker', 'nextjs', true],
-    ['sibling', 'nextjs', true],
-    ['required', 'javascript', true],
+    { scope: '', name: 'nextjs', selected: true },
+    { scope: 'app', name: 'nextjs', selected: false },
+    { scope: 'app/child', name: 'nextjs', selected: false },
+    { scope: 'app/worker', name: 'nextjs', selected: true },
+    { scope: 'sibling', name: 'nextjs', selected: true },
+    { scope: 'required', name: 'javascript', selected: true },
 ] as const;
 
 export const SITE_PACKAGE_MANAGER_CASES = [
     ['npm fallback', {}, 'npm'],
     ['declared Bun', { 'package.json': '{"packageManager":"bun@1.4.2"}' }, 'bun'],
-] as const;
-
-export const SITE_BUILD_COMMANDS = [
-    ['custom-builder', '', 'two words'],
-    ['npm', 'run', 'build'],
 ] as const;
 
 export const IGNORE_EXPIRY_CASES = [

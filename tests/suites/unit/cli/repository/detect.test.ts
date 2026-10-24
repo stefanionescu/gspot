@@ -24,12 +24,19 @@ async function detectSandbox(root: string): Promise<string[]> {
 }
 
 test('detection proposes a language from an extension and the always-selected configurations', () => {
+    const always = { ...buildConfiguration('always'), always_selected: true };
+    const bashConfiguration = buildConfiguration('shell', { tables: '[detect]\nextensions = [".sh"]\n' });
     const plans = detectConfigurations(
         { root: process.cwd(), files: [buildTrackedFile('a.sh')], dependencyFiles: [] },
-        readConfigurations(),
+        new Map([
+            [always.name, always],
+            [bashConfiguration.name, bashConfiguration],
+        ]),
     );
-    expect(plans.find((plan) => plan.configuration === 'bash')?.evidence).toBe('1 .sh file');
-    expect(plans.map(({ configuration }) => configuration)).toContain('spelling');
+    expect(plans).toStrictEqual([
+        { configuration: 'always', group: 'language', evidence: 'every repository' },
+        { configuration: 'shell', group: 'language', evidence: '1 .sh file', count: 1 },
+    ]);
 });
 
 test.each(['.d.ts', '.d.mts', '.d.cts'])(
@@ -168,15 +175,15 @@ test('Testing Library is detected only in the scope that declares it', async () 
 
     const session = await openSession(sandbox.path);
     const projects = await readDependencyFiles(createReadCache(sandbox.path), session.repository.files);
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-    const detectTestingLibrary = (scope: string) =>
-        detectConfigurations(
-            { root: sandbox.path, files: session.repository.files, dependencyFiles: projects },
-            session.configurations,
-            scope,
-        ).find((row) => row.configuration === 'testing-library');
-    expect(detectTestingLibrary('child')).toMatchObject({ evidence: `${dependency} in child/package.json` });
-    expect(detectTestingLibrary('neighbor')).toBeUndefined();
+    expect(
+        ['child', 'neighbor'].map((scope) =>
+            detectConfigurations(
+                { root: sandbox.path, files: session.repository.files, dependencyFiles: projects },
+                session.configurations,
+                scope,
+            ).find((row) => row.configuration === 'testing-library'),
+        ),
+    ).toMatchObject([{ evidence: `${dependency} in child/package.json` }, undefined]);
 });
 
 test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its project', async (row) => {
@@ -203,7 +210,8 @@ test.each(RUNTIME_DETECTION_CASES)('$name decides runtime detection within its p
 
 test('site is detected from a sitemap.xml in any folder', () => {
     const configurations = readConfigurations();
-    for (const path of SITE_DETECTION_PATHS.filter((path) => path.endsWith('sitemap.xml'))) {
+    for (const path of SITE_DETECTION_PATHS) {
+        if (!path.endsWith('sitemap.xml')) continue;
         const detected = detectConfigurations(
             { root: process.cwd(), files: [buildTrackedFile(path)], dependencyFiles: [] },
             configurations,
@@ -219,7 +227,6 @@ test('site detection excludes a server framework even when a sitemap is present'
     });
     expect(await detectSandbox(sandbox.path)).not.toContain('site');
 });
-
 test('a favicon manifest alone does not select the static site checks', () => {
     expect(
         detectConfigurations(

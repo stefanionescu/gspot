@@ -1,3 +1,3 @@
-export const CHILD_TIMEOUT_SECONDS = 5;
+export const CHILD_TIMEOUT_SECONDS = 1;
 
 export const DESCENDANT_TIMEOUT_MILLISECONDS = 20_000;

@@ -73,16 +73,3 @@ export const GIT_HOOK_REPORT = {
     indexRetained: true,
     workingBytes: 'working\n',
 } as const;
-
-export const GIT_HOOK_CASES = [
-    { part: 'environment', name: 'a Git hook keeps the inherited environment in both revision copies' },
-    { part: 'index', name: 'a hook in a linked worktree keeps its own index' },
-    { part: 'HEAD', name: 'a hook in a linked worktree keeps its own HEAD' },
-    { part: 'cancellation', name: 'a Git hook reports cancellation in both revision copies' },
-] as const;
-
-export const GIT_HOOK_FIELDS = {
-    environment: ['kind', 'ownMetadata', 'toolMetadata', 'configuration', 'explicit'],
-    index: ['kind', 'source', 'tree', 'paths'],
-    cancellation: ['kind', 'cancelled'],
-} as const;

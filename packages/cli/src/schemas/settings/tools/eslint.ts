@@ -12,12 +12,12 @@ const firstEslintOption = z.union([
     z.number(),
     z.boolean(),
     z.null(),
-    z.array(z.json()),
+    z.json().array(),
     z.record(z.string(), z.json()),
 ]) satisfies z.ZodType<JsonValue>;
 
 const eslintOptions = z.union([
-    z.array(z.never()).max(0),
+    z.never().array().max(0),
     z.tuple([firstEslintOption]).rest(z.json()),
 ]) satisfies z.ZodType<TableSettings<'tools.eslint'>['rules'][string]>;
 
@@ -27,17 +27,16 @@ export const eslintRules = buildRuleTableSchema(
 ) satisfies z.ZodType<TableSettings<'tools.eslint'>['rules']>;
 
 export const eslintPluginsSchema = z
-    .array(
-        z.strictObject({
-            name: z
-                .string()
-                .regex(ESLINT_PLUGIN_NAME, 'Use a lowercase rule prefix, such as local.')
-                .meta(SETTING_DEFINITIONS['tools.eslint.plugins.name']),
-            path: relativePath
-                .regex(ESLINT_PLUGIN_MODULE, 'Name a .js or .mjs module.')
-                .meta(SETTING_DEFINITIONS['tools.eslint.plugins.path']),
-            rules: eslintRules.meta(SETTING_DEFINITIONS['tools.eslint.plugins.rules']),
-        } satisfies SchemaShape<NonNullable<ParsedTools['eslint']>['plugins'][number]>),
-    )
+    .strictObject({
+        name: z
+            .string()
+            .regex(ESLINT_PLUGIN_NAME, 'Use a lowercase rule prefix, such as local.')
+            .meta(SETTING_DEFINITIONS['tools.eslint.plugins.name']),
+        path: relativePath
+            .regex(ESLINT_PLUGIN_MODULE, 'Name a .js or .mjs module.')
+            .meta(SETTING_DEFINITIONS['tools.eslint.plugins.path']),
+        rules: eslintRules.meta(SETTING_DEFINITIONS['tools.eslint.plugins.rules']),
+    } satisfies SchemaShape<NonNullable<ParsedTools['eslint']>['plugins'][number]>)
+    .array()
     .default(SETTING_DEFINITIONS['tools.eslint.plugins'].default)
     .meta(SETTING_DEFINITIONS['tools.eslint.plugins']);

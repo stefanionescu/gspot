@@ -83,20 +83,16 @@ the modules that python.externals names, load no repository file.
 export function listPythonImports(root: Node, file: string, search: PythonSearch): LocatedImport[] {
     return root.descendantsOfType([PYTHON_IMPORT_STATEMENT, PYTHON_FROM_STATEMENT]).flatMap((node) => {
         if (node.type === PYTHON_IMPORT_STATEMENT)
-            return node.childrenForFieldName('name').flatMap((nameNode) => {
-                const module =
-                    nameNode.type === 'aliased_import'
-                        ? (nameNode.childForFieldName('name')?.text ?? '')
-                        : nameNode.text;
-                const path = search.externals.has(module.split('.', 1)[0] ?? '')
-                    ? undefined
-                    : findAbsoluteModule(module, search);
+            return listImportedNames(node).flatMap((module) => {
+                if (module === undefined || search.externals.has(module.split('.', 1)[0] ?? '')) return [];
+                const path = findAbsoluteModule(module, search);
                 return path === undefined ? [] : [{ node, module, path }];
             });
         const source = node.childForFieldName('module_name');
         if (source === null) return [];
         if (source.type === RELATIVE_IMPORT) return listRelativeImports(node, source, file, search);
-        if (search.externals.has(source.text.split('.', 1)[0] ?? '')) return [];
-        return listAbsoluteImports(node, source.text, search);
+        return search.externals.has(source.text.split('.', 1)[0] ?? '')
+            ? []
+            : listAbsoluteImports(node, source.text, search);
     });
 }

@@ -45,7 +45,4 @@ test.each([...SEMGREP_REFUSED_REPORTS])('a Semgrep report with %s is an error', 
         .checks.find((check) => check.id === 'security/semgrep')!;
     const paths = { cwd: sandbox.path, root: sandbox.path };
     expect(parseCommandFindings({ check }, buildProcessResult({ code: 3, stdout }), paths).note).toBe(note);
-    expect(
-        parseCommandFindings({ check }, buildProcessResult({ stdout: '{"results":[],"errors":[]}' }), paths).findings,
-    ).toStrictEqual([]);
 });

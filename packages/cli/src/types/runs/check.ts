@@ -14,6 +14,7 @@ type CheckRun = (
 ) => CheckResult | Promise<CheckResult>;
 
 export type CheckRunOptions = {
+    verbose?: boolean | undefined;
     command?: string[];
     copyRoot?: string;
     listFileArguments?: ((session: Session, planned: PlannedCheck) => string[]) | undefined;

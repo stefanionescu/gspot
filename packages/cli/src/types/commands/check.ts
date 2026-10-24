@@ -4,7 +4,7 @@ import type { CHECK_HOOKS } from '#cli/config/generation/hooks.ts';
 import type { RunReport, CheckProgress } from '#cli/types/runs/run.ts';
 import type { PushInput, StagedPaths, ChangedPaths, PushedRevisions } from '#cli/types/repository/revisions.ts';
 
-type CheckedRevision = { hash: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport };
+type CheckedRevision = { hash: string; refs: string[]; commits: string[]; shallow: boolean; report: RunReport };
 
 export type PushReport = {
     canceled?: { pendingRefs: string[] };
@@ -21,6 +21,7 @@ export type RunFilters = {
 };
 
 export type CheckOptions = {
+    allFiles?: 'empty-base' | 'new-branch';
     hook?: (typeof CHECK_HOOKS)[number];
     onProgress?: (progress: CheckProgress) => void;
     cwd: string;
@@ -36,7 +37,7 @@ export type CheckOptions = {
     verbose: boolean;
 };
 
-export type RevisionSource =
+export type RevisionSource = (
     | {
           content: 'index';
           cwd: string;
@@ -52,9 +53,10 @@ export type RevisionSource =
           reference: string;
           base?: string;
           commits: string[];
-          historyComplete: boolean;
+          shallow: boolean;
           changed?: string[];
-      };
+      }
+) & { dependencyNote?: string };
 
 export type CheckFlags = {
     json?: boolean;

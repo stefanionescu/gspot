@@ -29,6 +29,7 @@ test('Prettier loads the selected plugin through the root pointer', async () => 
         join(sandbox.path, GSPOT_PATHS.nodeModules, 'prettier-plugin-svelte/plugin.js'),
     ]);
 });
+
 test('the Prettier plugin overrides come before your overrides, and without a plugin the Prettier file has no plugins key', async () => {
     const settings = {
         configurations: ['svelte'],

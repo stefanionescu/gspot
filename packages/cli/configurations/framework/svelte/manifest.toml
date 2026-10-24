@@ -22,7 +22,7 @@ kind = "library"
 name = "eslint-plugin-svelte"
 npm = "eslint-plugin-svelte"
 rule_prefix = "svelte"
-version = "3.23.0"
+version = "3.23.1"
 
 [tool.eslint]
 extensions = [".svelte"]
@@ -31,12 +31,12 @@ extensions = [".svelte"]
 kind = "library"
 name = "svelte-eslint-parser"
 npm = "svelte-eslint-parser"
-version = "1.8.1"
+version = "1.9.0"
 
 [[tool]]
 name = "svelte-check"
 npm = "svelte-check"
-version = "4.7.6"
+version = "4.7.7"
 
 [[tool]]
 kind = "library"

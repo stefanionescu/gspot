@@ -17,7 +17,7 @@ export function parseMarkdownlintFindings(output: ToolOutput): Finding[] {
         check,
         file: resolve(cwd, report.fileName),
         line: report.lineNumber,
-        ...(report.errorRange === null ? {} : { column: report.errorRange[0] }),
+        ...(report.errorRange !== null && { column: report.errorRange[0] }),
         rule: report.ruleNames[0],
         message: [report.ruleDescription, report.errorDetail, report.errorContext]
             .filter((text) => text !== null)

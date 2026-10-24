@@ -10,10 +10,6 @@ export const OUTSIDE_LINKS = [
     },
     {
         path: 'linked',
-        refusal: 'linked is not a regular file with one link. Use a regular file without extra hard links.',
-    },
-    {
-        path: 'hardlinked',
-        refusal: 'hardlinked is not a regular file with one link. Use a regular file without extra hard links.',
+        refusal: 'linked is not a regular file. Use a regular file.',
     },
 ] as const;

@@ -3,6 +3,7 @@ import { compareText } from '#cli/system/text.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { joinDefaultPaths } from '#cli/settings/paths.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
+import { findParentCategory } from '#cli/settings/naming.ts';
 import { findSettingSchema } from '#cli/schemas/settings/file.ts';
 import { commandSchema } from '#cli/schemas/configurations/fields.ts';
 import { unwrapSettingSchema } from '#cli/schemas/settings/fields.ts';
@@ -10,8 +11,7 @@ import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import type { Settings, SettingsTable } from '#cli/types/settings/file.ts';
 import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/naming.ts';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
-import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming/settings.ts';
-import { CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
+import { SETTING_TABLE_FIELDS, CATEGORY_KEY_SEGMENTS, LANGUAGE_GROUP_TABLES } from '#cli/config/settings/inherit.ts';
 
 import {
     type Setting,
@@ -32,8 +32,7 @@ function findLanguageSetting(
 ): SettingMatch | undefined {
     const base = availableSettings.settings.get(`${table}.${name}`);
     const languages = base?.languages ?? [];
-    if (base && languages.includes(language)) return { setting: base, language };
-    return undefined;
+    return base && languages.includes(language) ? { setting: base, language } : undefined;
 }
 
 function findVariantSetting(
@@ -45,8 +44,9 @@ function findVariantSetting(
     const [first, second] = rest;
     if (first === undefined) return undefined;
     if (second === undefined) return findLanguageSetting(availableSettings, table, language, first);
-    if (table !== 'naming' || rest.length !== CATEGORY_KEY_SEGMENTS) return undefined;
-    return findCategorySetting(availableSettings, language, first, second);
+    return table === 'naming' && rest.length === CATEGORY_KEY_SEGMENTS
+        ? findCategorySetting(availableSettings, language, first, second)
+        : undefined;
 }
 
 function findCategorySetting(
@@ -110,15 +110,15 @@ export function mergeValue(setting: Setting, inherited: unknown, found: unknown)
             | z.ZodType
             | undefined;
     if (
-        schema instanceof z.ZodArray &&
         schema !== commandSchema &&
+        schema instanceof z.ZodArray &&
         !(schema.element instanceof z.ZodObject) &&
         [inherited, found].every((value) => Array.isArray(value))
     )
         return [...new Set([inherited, found].flat())];
-    if (setting.type === 'table')
-        return Object.fromEntries([inherited, found].filter(isTable).flatMap((table) => Object.entries(table)));
-    return found;
+    return setting.type === 'table'
+        ? Object.fromEntries([inherited, found].filter(isTable).flatMap((table) => Object.entries(table)))
+        : found;
 }
 
 /**
@@ -144,9 +144,9 @@ List the root settings and the scope tables that apply, from outermost to innerm
 @param scope the folder, '' or undefined for the root alone.
 @returns the tables with their scope paths and reported names.
 */
-export function listApplicableTables(settings: Settings, scope: string | undefined): WrittenScopeTable[] {
+export function listApplicableTables(settings: Settings, scope = ''): WrittenScopeTable[] {
     return listSettingsTables(settings)
-        .filter((settingsTable) => settingsTable.scope === undefined || isInScope(scope ?? '', settingsTable.scope))
+        .filter((settingsTable) => settingsTable.scope === undefined || isInScope(scope, settingsTable.scope))
         .toSorted((left, right) => compareScopeDepth(left.scope ?? '', right.scope ?? ''));
 }
 
@@ -161,8 +161,9 @@ export function findSetting(availableSettings: AvailableSettings, key: string): 
     const direct = availableSettings.settings.get(key);
     if (direct) return { setting: direct };
     const [table, language, ...rest] = key.split('.');
-    if (table === undefined || language === undefined || !LANGUAGE_GROUP_TABLES.has(table)) return undefined;
-    return findVariantSetting(availableSettings, table, language, rest);
+    return table === undefined || language === undefined || !LANGUAGE_GROUP_TABLES.has(table)
+        ? undefined
+        : findVariantSetting(availableSettings, table, language, rest);
 }
 
 /**
@@ -183,9 +184,9 @@ export function getWrittenSetting(settings: Pick<Settings, 'written'>, key: stri
         : { value };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function listPossibleKeys(match: SettingMatch, key: string): string[] {
-    const parents: Readonly<Record<string, string>> = CATEGORY_PARENTS;
-    const parent = match.category === undefined ? undefined : parents[match.category];
+    const parent = match.category === undefined ? undefined : findParentCategory(match.category);
     return match.language === undefined
         ? [key]
         : [
@@ -296,29 +297,25 @@ List every setting key that a settings table writes, in dotted form.
 */
 export function listWrittenKeys(settings: SettingsTable, availableSettings: AvailableSettings): string[] {
     const keys: string[] = [];
-    const pending = (settings.tools === undefined ? [] : Object.entries(settings.tools)).flatMap(([tool, table]) =>
-        table === undefined
-            ? []
-            : Object.entries(table).map(([field, value]) => ({ key: `tools.${tool}.${field}`, value })),
-    );
-    pending.push(
-        ...Object.entries(settings.written).flatMap(([name, table]) => {
-            if (availableSettings.settings.has(name)) return [{ key: name, value: table }];
-            if (isTable(table) && name !== 'tools' && name !== 'removed_configurations')
-                return Object.entries(table).map(([field, value]) => ({ key: `${name}.${field}`, value }));
-            return [];
-        }),
-    );
-    for (const { key, value } of pending) {
+    const pending = Object.entries(settings.written).flatMap(([name, table]) => {
+        const fields = name !== 'removed_configurations' && isTable(table) ? Object.entries(table) : [];
+        return availableSettings.settings.has(name)
+            ? { key: name, value: table }
+            : fields.map(([field, value]) => ({ key: `${name}.${field}`, value }));
+    });
+    let offset = 0;
+    while (offset < pending.length) {
+        const { key, value } = pending[offset] as (typeof pending)[number];
+        offset++;
         if (isKeyGroup(availableSettings, key, value))
             pending.push(...Object.entries(value).map(([field, child]) => ({ key: `${key}.${field}`, value: child })));
         else keys.push(key);
     }
-    const format = (settings.format === undefined ? [] : Object.keys(settings.format)).map((key) => `format.${key}`);
-    const settingKeys = [...availableSettings.settings.keys()].filter(
-        (key) => getWrittenSetting(settings, key) !== undefined,
-    );
-    return [...new Set([...settingKeys, ...keys, ...format])];
+    const settingKeys = availableSettings.settings
+        .keys()
+        .filter((key) => getWrittenSetting(settings, key) !== undefined)
+        .toArray();
+    return [...new Set([...settingKeys, ...keys])];
 }
 
 /**
@@ -356,8 +353,8 @@ Get the table name of a setting: tools.<tool> for a tool setting, else the first
 @param key the full setting name.
 @returns its table name.
 */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 export function getSettingTable(key: string): string {
-    const [table, tool] = key.split('.');
-    if (table === 'tools' && tool !== undefined) return `${table}.${tool}`;
-    return table as string;
+    const [table, tool] = key.split('.', SETTING_TABLE_FIELDS);
+    return table === 'tools' && tool !== undefined ? `${table}.${tool}` : (table as string);
 }

@@ -1,11 +1,10 @@
 {
     "recommended": {
         "package": "@next/eslint-plugin-next",
-        "version": "16.3.8",
+        "version": "16.4.2",
         "source": "configs.core-web-vitals",
         "blocks": [
             {
-                "parser": false,
                 "rules": {
                     "@next/next/google-font-display": "warn",
                     "@next/next/google-font-preconnect": "warn",
@@ -29,7 +28,8 @@
                     "@next/next/no-duplicate-head": "error",
                     "@next/next/no-head-import-in-document": "error",
                     "@next/next/no-script-component-in-head": "error"
-                }
+                },
+                "parser": false
             }
         ]
     },

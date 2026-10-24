@@ -53,7 +53,7 @@ export const RECORD_FIELD_DEFINITIONS = {
         default: [] as [],
     },
     'scope.removed_configurations': {
-        reason_needed: 'adding',
+        reason_when: 'adding',
         description: 'Configurations removed in this folder; only `gspot add` and `gspot remove` write this list.',
         default: [] as [],
     },

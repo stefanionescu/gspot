@@ -32,14 +32,9 @@ function findVersionAbove(files: Files | undefined, root: string, start: string,
 
 function readPackageVersion(repositoryRoot: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    using files = convertToPosixPath(relative(repositoryRoot, path)).startsWith(`${DOT_GSPOT}/`)
-        ? openFiles(repositoryRoot)
-        : undefined;
-    const folder = dirname(
-        files === undefined
-            ? realpathSync(path)
-            : files.readCanonicalPath(convertToPosixPath(relative(repositoryRoot, path))),
-    );
+    const local = convertToPosixPath(relative(repositoryRoot, path));
+    using files = local.startsWith(`${DOT_GSPOT}/`) ? openFiles(repositoryRoot) : undefined;
+    const folder = dirname(files === undefined ? realpathSync(path) : files.readCanonicalPath(local));
     const start = basename(folder) === basename(NPM_BIN_FOLDER) ? join(dirname(folder), name) : folder;
     return findVersionAbove(files, repositoryRoot, start, name);
 }
@@ -58,9 +53,9 @@ function findVersionFailure(
 ): ParsedToolVersion | undefined {
     const failure = findRunFailure(result, tool, text);
     if (failure !== undefined) return failure;
-    if (version === undefined && tool.kind === 'library')
-        return { state: 'missing', note: `The version command of the host tool does not list ${tool.name}.` };
-    return undefined;
+    return version === undefined && tool.kind === 'library'
+        ? { state: 'missing', note: `The version command of the host tool does not list ${tool.name}.` }
+        : undefined;
 }
 
 function findRunFailure(result: SpawnResult, tool: Tool, text: string): ParsedToolVersion | undefined {
@@ -125,7 +120,7 @@ function parseVersionOutput(tool: Tool, result: SpawnResult, installedVersion: s
     const version = (npm?.version === tool.version ? installedVersion : undefined) ?? extractVersion(text, tool);
     const failure = findVersionFailure(result, tool, text, version);
     if (failure !== undefined) return failure;
-    if (version === undefined || semver.coerce(version) === null)
-        return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
-    return { version };
+    return version === undefined || semver.coerce(version) === null
+        ? { state: 'error', note: `${tool.name} did not report a valid version: ${text}` }
+        : { version };
 }

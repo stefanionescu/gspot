@@ -35,16 +35,17 @@ export const ENGINE_PATHS = [
     'browser/source.js',
 ] as const;
 
-export const ENGINE_SOURCE = 'export const grouped = Object.groupBy([1], String);\nprocess.loadEnvFile();\n';
-
-export const ENGINE_FINDINGS = [
-    { ruleId: 'n/no-unsupported-features/es-builtins', line: 1 },
-    { ruleId: 'n/no-unsupported-features/node-builtins', line: 2 },
-] as const;
-
 export const ENGINE_PHASES = [
-    { reported: ['old/source.js', 'old/source.cjs', 'forced/source.js'], corrections: [] },
-    { reported: [], corrections: ['old/source.js', 'old/source.cjs', 'forced/source.js'] },
+    {
+        name: 'before the engines fix',
+        reported: ['old/source.js', 'old/source.cjs', 'forced/source.js'],
+        corrections: [],
+    },
+    {
+        name: 'after the engines fix',
+        reported: [],
+        corrections: ['old/source.js', 'old/source.cjs', 'forced/source.js'],
+    },
 ] as const;
 
 const NODE_SCRIPT_SOURCE = `#!/usr/bin/env node
@@ -196,21 +197,21 @@ export const EXTENSIONLESS_SCRIPT_CASES = [
     {
         file: 'scripts/structural',
         source: `#!/usr/bin/env node
-function value() { const result = process.cwd(); return result; }
+function value() { console.log("ready"); return process.cwd(); }
 console.log(value());
 `,
-        corrected: '#!/usr/bin/env node\nconsole.log(process.cwd());\n',
+        corrected: '#!/usr/bin/env node\nconsole.log("ready");\nconsole.log(process.cwd());\n',
         recommended: [],
         all: [{ ruleId: 'gspot/no-trivial-functions', line: 2 }],
     },
     {
         file: 'child/scripts/structural',
         source: `#!/usr/bin/env node
-function value() { const result = process.cwd(); return result; }
+function value() { console.log("ready"); return process.cwd(); }
 console.log(value());
 `,
         corrected: `#!/usr/bin/env node
-function value() { const result = process.cwd(); return result; }
+function value() { console.log("ready"); return process.cwd(); }
 console.log(value());
 `,
         recommended: [],

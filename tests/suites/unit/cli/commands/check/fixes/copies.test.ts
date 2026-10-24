@@ -36,7 +36,7 @@ test("a fixer's {root} environment paths point into the copy during a dry run", 
 });
 
 test.each([false, true])(
-    'a fix in a copy writes only the selected file back and removes the copy (dry run %s)',
+    'a fix in a copy writes only the selected file back and removes the copy (dry run %p)',
     async (preview) => {
         await using sandbox = await testdir({
             'gspot.toml': buildFixerSettings(),
@@ -85,20 +85,18 @@ test('a fix in a copy refuses to overwrite a file changed while it ran, and remo
         `,
     );
     planned.check.run_in_copy = true;
-    expect(
-        await captureRejection(runFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!)),
-    ).toBe('z-last.txt changed while gspot wrote it. Run the command again.');
+    const rejection = await captureRejection(runFixers(session, [planned], { isDryRun: false }));
+    expect(rejection.message).toBe('z-last.txt changed while gspot wrote it. Run the command again.');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('isolated correction');
     expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
     expect(await isOnDisk(await readFile(trace, 'utf8'))).toBe(false);
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
     corrected.check.run_in_copy = true;
-    expect(await runFixers(session, [corrected], { isDryRun: false }).then(({ results }) => results[0]!)).toMatchObject(
-        {
-            status: 'changed',
-            changed: ['source.txt'],
-        },
-    );
+    const correctedRun = await runFixers(session, [corrected], { isDryRun: false });
+    expect(correctedRun.results[0]).toMatchObject({
+        status: 'changed',
+        changed: ['source.txt'],
+    });
 });
 
 test('a failed dry-run fix removes its copy and keeps the source bytes', async () => {
@@ -135,7 +133,8 @@ test.each([...COPY_FAILURES])('a failed $operation removes the copy', async ({ o
     const temporary = join(sandbox.path, 'scratch');
     await mkdir(temporary);
     using _temporaryFolder = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    expect(await captureRejection(runFixers(session, [planned], { isDryRun: true }))).toContain(message);
+    const runFixersError = await captureRejection(runFixers(session, [planned], { isDryRun: true }));
+    expect(runFixersError.message).toContain(message);
     expect(await readdir(temporary)).toStrictEqual([]);
     if (operation === 'copy') {
         const attributes = await stat(join(sandbox.path, 'source.txt'));
@@ -160,12 +159,13 @@ test.each([false, true])(
         );
         planned.check.run_in_copy = isolated;
         session.cancelSignal = controller.signal;
-        const execution = runFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
+        const execution = runFixers(session, [planned], { isDryRun: false });
         try {
             expect(await waitForFile(ready)).toBe(true);
             const pid = Number(await readFile(ready, 'utf8'));
             controller.abort();
-            const result = await execution;
+            const report = await execution;
+            const result = report.results[0]!;
             await waitForExit(pid);
             expect(result).toMatchObject({
                 status: 'failed',
@@ -178,9 +178,14 @@ test.each([false, true])(
             await execution;
         }
         delete session.cancelSignal;
-        const corrected = await runFixers(session, [planFixer(session, "await Bun.write('source.txt', 'corrected')")], {
-            isDryRun: false,
-        }).then(({ results }) => results[0]!);
+        const correctedRun = await runFixers(
+            session,
+            [planFixer(session, "await Bun.write('source.txt', 'corrected')")],
+            {
+                isDryRun: false,
+            },
+        );
+        const corrected = correctedRun.results[0]!;
         expect(corrected.status).toBe('changed');
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
     },

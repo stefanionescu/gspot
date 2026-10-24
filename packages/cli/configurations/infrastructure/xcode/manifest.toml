@@ -1,7 +1,7 @@
 allowed_words = ["Xcode"]
 
 [configuration]
-description = "An Xcode project: property lists that parse, build settings files, and complete string catalogs. Asset catalogs hold their images, sources belong to a target, and entitlements stay on a list."
+description = "An Xcode project: property lists that parse, complete string catalogs, asset catalogs that hold their images, Swift files that belong to a target, no arbitrary loads, and entitlements on a list."
 suggests = ["swift"]
 title = "Xcode"
 

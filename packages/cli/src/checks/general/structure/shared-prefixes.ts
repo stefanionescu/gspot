@@ -5,9 +5,8 @@ import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/tracked.ts';
 import { listCodeFiles, buildFolderTree } from '#cli/checks/general/structure/folder-tree.ts';
-import { extractBaseName, extractExtension, extractParentFolder } from '#cli/system/paths.ts';
+import { extractBaseName, extractExtension, isInInstalledFolder, extractParentFolder } from '#cli/system/paths.ts';
 
 import {
     SPEC_SUFFIX,
@@ -48,8 +47,8 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
     const files = listCodeFiles(planned).filter((file) => {
         const folder = extractParentFolder(file.path);
         return (
-            !HOOK_FOLDERS.some((hook) => isInScope(folder, joinScope(planned.scope.folder.path, hook))) &&
-            !folder.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
+            HOOK_FOLDERS.every((hook) => !isInScope(folder, joinScope(planned.scope.folder.path, hook))) &&
+            !isInInstalledFolder(folder)
         );
     });
     return files.flatMap((file) => {
@@ -62,7 +61,7 @@ export function checkStructureSharedPrefixes(_session: Session, planned: Planned
             if (child.kind === 'folder')
                 return (
                     !child.name.startsWith('.') &&
-                    !INSTALLED_DEPENDENCY_FOLDERS.has(child.name) &&
+                    !isInInstalledFolder(child.name) &&
                     extractPrefix(child.name) === prefix
                 );
             if (hasKindSuffix(child.name, kinds)) return false;

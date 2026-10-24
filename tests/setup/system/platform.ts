@@ -32,7 +32,7 @@ export function simulateOperatingSystem(name: NodeJS.Platform): Disposable {
     const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
     Object.defineProperty(process, 'platform', { value: name });
     return {
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: `using` calls it when the scope ends.
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
         [Symbol.dispose]() {
             Object.defineProperty(process, 'platform', descriptor);
         },

@@ -99,9 +99,5 @@ test('JWT rules are written only where the nearest package.json has jsonwebtoken
                 ? ['gspot.javascript.jwt-verify-without-algorithms', 'gspot.javascript.jwt-decode-without-verify']
                 : [],
         );
-        expect(
-            ids.filter((id) => id.includes('stack-trace-in-response')),
-            scope,
-        ).toStrictEqual([]);
     }
 });

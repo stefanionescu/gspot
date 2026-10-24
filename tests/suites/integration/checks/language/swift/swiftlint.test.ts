@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
@@ -55,7 +56,8 @@ async function prepareSwiftScope(scope: string) {
         [`${prefix}AppTests/Value.swift`]: PARSER_SOURCE,
         [`${prefix}AppTests/Deep/Value.swift`]: PARSER_SOURCE,
     });
-    expect(await spawnGspot(root, ['apply'])).toMatchObject({ code: 0 });
+    const applied = await spawnGspot(root, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await isOnDisk(join(root, `${prefix}AppTests/.swiftlint.yml`))).toBe(true);
     const lifetime = resources.move();
     return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
@@ -99,7 +101,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
 test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
     'a Swift test scope %s gets one complete SwiftLint config file',
     async (scope) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings([], {
                 level: 'all',
                 scopes: [{ path: scope, configurations: ['swift'] }],
@@ -107,7 +109,8 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
             [`${scope}/Value.swift`]: PARSER_SOURCE,
         });
 
-        expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
+        const reapplied = await spawnGspot(sandbox.path, ['apply']);
+        expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
         expect(await isOnDisk(join(sandbox.path, `${scope}/.swiftlint.yml`))).toBe(true);
         const toolResult = await runCommand(
             ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
@@ -123,9 +126,8 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
 test.skipIf(!hasToolBuild('swiftlint'))(
     'SwiftLint and SwiftFormat read the configuration of their scope, and the findings keep the scope path',
     async () => {
-        const { root, environment } = installedSandbox();
+        const { root } = installedSandbox();
         await using _change = await applySandboxChanges(installedSandbox(), {
-            check: 'swift/swiftlint',
             removed: Object.keys(SWIFT_SANDBOX.files),
             files: {
                 'ios/Sources/App/Greeting.swift': CLEAN_SWIFT,
@@ -139,15 +141,14 @@ test.skipIf(!hasToolBuild('swiftlint'))(
         });
 
         for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
-            const clean = await spawnGspot(root, ['check', '--only', id], environment);
+            const clean = await spawnGspot(root, ['check', '--only', id]);
             expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
         }
         const result = parseCheckReport(
-            await runCheckOnChanges(
-                root,
-                { check: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST_SWIFT } },
-                environment,
-            ),
+            await runCheckOnChanges(installedSandbox(), {
+                check: 'swift/swiftlint',
+                files: { 'ios/Sources/App/Cast.swift': CAST_SWIFT },
+            }),
         );
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(result.report.checks).toMatchObject([{ check: 'swift/swiftlint', scope: 'ios', status: 'failed' }]);
@@ -155,9 +156,7 @@ test.skipIf(!hasToolBuild('swiftlint'))(
             { file: 'ios/Sources/App/Cast.swift', line: 5, rule: 'force_cast' },
         ]);
         await writeFile(join(root, 'ios/Sources/App/Cast.swift'), CLEAN_SWIFT.replace('greeting', 'correctedGreeting'));
-        const corrected = parseCheckReport(
-            await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json'], environment),
-        );
+        const corrected = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toMatchObject([
             { check: 'swift/swiftlint', scope: 'ios', status: 'passed', findings: [] },

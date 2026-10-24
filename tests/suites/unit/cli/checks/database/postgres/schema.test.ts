@@ -8,19 +8,15 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 
 import {
-    KEYED_TABLES_SQL,
     RENAMED_TABLE_SQL,
     RECREATED_TABLE_SQL,
-    DROP_SECOND_INDEX_SQL,
     EQUIVALENT_INDEXES_SQL,
-    INDEXED_TABLE_DROP_SQL,
-    UNNAMED_FOREIGN_KEY_SQL,
     DROPPED_CONSTRAINTS_SQL,
 } from '#tests/config/checks/database/postgres/schema.ts';
 
 test('table and column renames retain their foreign keys, indexes, and row security', async () => {
     const schema = buildSchema([await parseMigration('1_rename.sql', RENAMED_TABLE_SQL)]);
-    expect([...schema.tables.keys()]).toStrictEqual(['public.groups']);
+    expect(schema.tables.keys().toArray()).toStrictEqual(['public.groups']);
     expect([...schema.secured]).toStrictEqual(['public.groups']);
     expect(schema.foreignKeys).toMatchObject([{ table: 'public.groups', columns: ['organization_id', 'user_id'] }]);
     expect([...schema.indexed]).toStrictEqual([['public.groups', [['organization_id', 'user_id']]]]);
@@ -39,6 +35,11 @@ async function parseMigration(name: string, text: string): Promise<Migration> {
 }
 
 test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {
+    const INDEXED_TABLE_DROP_SQL = 'CREATE INDEX posts_author_idx ON posts (author_id, id);\nDROP TABLE drafts;';
+
+    const KEYED_TABLES_SQL =
+        'CREATE TABLE posts (id UUID PRIMARY KEY, author_id UUID REFERENCES users (id), team_id UUID, CONSTRAINT team_fk FOREIGN KEY (team_id) REFERENCES teams (id));\nCREATE TABLE drafts (id UUID PRIMARY KEY, post_id UUID REFERENCES posts (id));';
+
     const fields = buildSchema([
         await parseMigration('1_create.sql', KEYED_TABLES_SQL),
         await parseMigration('2_index.sql', INDEXED_TABLE_DROP_SQL),
@@ -53,13 +54,15 @@ test('keys count as indexes, a table constraint names its columns, and a dropped
 
 test('table recreation discards security, keys, and indexes from the old table', async () => {
     const fields = buildSchema([await parseMigration('1_reset.sql', RECREATED_TABLE_SQL)]);
-    expect([...fields.tables.keys()]).toStrictEqual(['public.posts']);
+    expect(fields.tables.keys().toArray()).toStrictEqual(['public.posts']);
     expect([...fields.secured]).toStrictEqual([]);
     expect([...fields.indexed]).toStrictEqual([]);
     expect(fields.foreignKeys.map((key) => key.columns)).toStrictEqual([['author_id']]);
 });
 
 test('removing one equivalent index preserves the other until it is removed, and disabling row security removes it', async () => {
+    const DROP_SECOND_INDEX_SQL = 'DROP INDEX second;\nALTER TABLE posts DISABLE ROW LEVEL SECURITY;\n';
+
     const initial = await parseMigration('1_create.sql', EQUIVALENT_INDEXES_SQL);
     const retained = buildSchema([initial]);
     expect(retained.indexed.get('public.posts')).toStrictEqual([['author_id']]);
@@ -78,6 +81,9 @@ test('dropped foreign and unique constraints remove only the fields they own', a
 });
 
 test('an unnamed foreign key gets the PostgreSQL default name and does not count as an index', async () => {
+    const UNNAMED_FOREIGN_KEY_SQL =
+        'CREATE TABLE posts (id int PRIMARY KEY, author_id int REFERENCES users(id), title text UNIQUE, CHECK (id > 0));';
+
     const initial = await parseMigration('1_keys.sql', UNNAMED_FOREIGN_KEY_SQL);
     const fields = buildSchema([initial]);
     expect(fields.foreignKeys.map(({ columns }) => columns)).toStrictEqual([['author_id']]);

@@ -77,14 +77,6 @@ export const store = create(() => ({ readFile }));
 `,
 } as const;
 
-export const ZUSTAND_TABLES = `[tools.eslint]
-restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
-[zustand]
-store_files = ["**/store.js"]
-`;
-
-export const TRANSLATION_SOURCE = 'export const element = <p>Hello there</p>;\n';
-
 export const UNCHECKED_ROUTER_FILES: string[] = [
     'routers/default.ts',
     'inherited/routers/action.ts',

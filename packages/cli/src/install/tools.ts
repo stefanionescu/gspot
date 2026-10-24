@@ -1,17 +1,18 @@
 import which from 'which';
-import type { Writer } from '#cli/types/apply.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { installHooks } from '#cli/install/hooks.ts';
 import type { Session } from '#cli/types/session.ts';
 import { MISE_TOOL } from '#cli/config/tools/locate.ts';
 import { installMiseTools } from '#cli/install/mise.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import { installValePackages } from '#cli/install/vale.ts';
 import { VALE_TOOL } from '#cli/config/checks/general/prose.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
-import { installSandboxTools } from '#cli/install/tool-projects.ts';
+import { installToolProjects } from '#cli/install/tool-projects.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import { assertPackageManagerVersion } from '#cli/install/npm/project.ts';
 import type { ToolInstall, InstallResult } from '#cli/types/install/tools.ts';
+import { readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 
 /**
 Install the tools in their tool projects and set the hooks of this clone.
@@ -23,7 +24,7 @@ Install the tools in their tool projects and set the hooks of this clone.
 */
 export async function installTools(
     session: Session,
-    writer: Writer,
+    writer: Files,
     generated: GenerationResult,
 ): Promise<InstallResult> {
     const configurations = session.toolConfigurations;
@@ -31,18 +32,27 @@ export async function installTools(
     const notes: string[] = [];
     const tools = listDistinctTools(configurations);
     const misePath = which.sync(MISE_TOOL, { nothrow: true });
-    const context: ToolInstall = {
-        session,
-        writer,
-        generated,
-        tools,
-        misePath,
-        steps,
-    };
     try {
+        const context: ToolInstall = {
+            session,
+            packageManager:
+                session.packageManager === undefined
+                    ? undefined
+                    : readToolPackageManager(
+                          session.installedRoot,
+                          session.packageManager,
+                          session.timeoutSeconds,
+                          session.reads,
+                      ),
+            writer,
+            generated,
+            tools,
+            misePath,
+            steps,
+        };
         await assertPackageManagerVersion(context);
         const toolNote = await installMiseTools(context);
-        notes.push(...(await installSandboxTools(context)));
+        notes.push(...(await installToolProjects(context)));
         if (configurations.some((configuration) => configuration.tools.some((tool) => tool.name === VALE_TOOL))) {
             notes.push(await installValePackages(context));
         }
@@ -51,7 +61,7 @@ export async function installTools(
     } catch (error) {
         session.cancelSignal?.throwIfAborted();
         if (!(error instanceof GspotError) || !['tool', 'install'].includes(error.code)) throw error;
-        throw new GspotError('install', `${error.message}\nTool installation is incomplete. Run gspot install.`, {
+        throw new GspotError('install', error.message, {
             cause: error,
         });
     }

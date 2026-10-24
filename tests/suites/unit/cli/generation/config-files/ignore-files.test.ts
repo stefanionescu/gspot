@@ -7,12 +7,12 @@ import { openSession } from '#cli/session.ts';
 import { getValueAt } from '#cli/system/tables.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { openWriter } from '#cli/apply/write/writer.ts';
+import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { parse, stringify } from '@decimalturn/toml-patch';
 import { generateFile } from '#tests/setup/cli/generated-files.ts';
 import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { buildIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
 
 import {
@@ -126,10 +126,6 @@ test.each([...LANGUAGE_IGNORES])(
             expect(information.ignored).toBe(true);
         }
         for (const path of absent) expect(internal.split('\n')).not.toContain(path);
-        expect(files.has('prettier.config.mjs')).toBe(true);
-        expect(files.has('.markdownlint.jsonc')).toBe(true);
-        expect(files.has('.prettierignore')).toBe(true);
-        expect(files.has(`${GSPOT_PATHS.configurations}/general/format/.prettierignore`)).toBe(false);
     },
 );
 

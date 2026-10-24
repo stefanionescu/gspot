@@ -4,9 +4,9 @@ import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { limitCommand } from '#tests/setup/system/processes.ts';
 import type { ProcessBackend } from '#tests/types/processes.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
-import { limitToTestDeadline } from '#tests/setup/system/processes.ts';
 import type { AsyncSpawnOptions } from '#cli/types/system/processes.ts';
 import { spawnProcess, spawnProcessBlocking } from '#cli/system/processes.ts';
 
@@ -59,7 +59,7 @@ test.each(buildProcessBackends())(
         const result = await backend.execute([join(sandbox.path, 'missing-executable')], { cwd: sandbox.path });
         expect(result.code).toBe(127);
         expect(result.missing).toBe(true);
-        expect(result.stderr).not.toBe('');
+        expect(result.stderr).toBe(`Executable not found: ${join(sandbox.path, 'missing-executable')}`);
     },
 );
 
@@ -74,7 +74,7 @@ test.skipIf(isWindows).each(buildProcessBackends())(
         expect(result.code).not.toBe(0);
         expect(result.code).not.toBe(127);
         expect(result.missing).toBe(false);
-        expect(result.stderr).not.toBe('');
+        expect(result.stderr.split('\n', 1)[0]).toBe(`Command failed with EACCES: ${executable}`);
     },
 );
 
@@ -172,12 +172,12 @@ function buildProcessBackends(): ProcessBackend[] {
         {
             name: 'asynchronous',
             execute: async (command: string[], options: AsyncSpawnOptions) =>
-                await spawnProcess(command, limitToTestDeadline(command, options).options),
+                await spawnProcess(command, limitCommand(command, options).options),
         },
         {
             name: 'synchronous',
             execute: (command: string[], options: AsyncSpawnOptions) =>
-                spawnProcessBlocking(command, limitToTestDeadline(command, options).options),
+                spawnProcessBlocking(command, limitCommand(command, options).options),
         },
     ];
 }

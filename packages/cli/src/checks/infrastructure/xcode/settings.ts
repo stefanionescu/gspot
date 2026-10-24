@@ -48,7 +48,7 @@ Reports each plist that turns App Transport Security off for every host.
 @param planned the scope files to read.
 @returns the findings.
 */
-export function checkAppTransportSecurity(session: Session, planned: PlannedCheck): Finding[] {
+export function checkXcodeAppTransportSecurity(session: Session, planned: PlannedCheck): Finding[] {
     return listSourcePaths(planned.files, [PLIST_SUFFIX]).flatMap((path): Finding[] => {
         const text = readCachedText(session.reads, path);
         const found = INSECURE_TRANSPORT_SETTING.exec(text);

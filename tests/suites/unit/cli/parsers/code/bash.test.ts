@@ -35,19 +35,7 @@ test('Bash functions report their lines, bodies and the highest positional param
     const parsed = await parseBashScript(
         '#!/usr/bin/env bash\n_one() {\n    echo 1\n}\n\nmain() {\n    _one "$@"\n}\n',
     );
-    expect(parsed.functions).toStrictEqual([
-        BASH_FUNCTIONS,
-        {
-            name: 'main',
-            start: 6,
-            end: 8,
-            body: ['', '    _one "$@"', ''],
-            highestRead: Number.POSITIVE_INFINITY,
-            branches: 0,
-            nesting: 0,
-            assignments: 0,
-        },
-    ]);
+    expect(parsed.functions).toStrictEqual(BASH_FUNCTIONS);
     expect(parsed.calls).toStrictEqual([
         { name: 'echo', count: 1, line: 3, forwards: false },
         { name: '_one', count: 1, line: 7, forwards: true },

@@ -4,8 +4,3 @@
 id = "GHSA-ch52-4w7c-c8xp"
 ignoreUntil = 2026-11-19
 reason = "As checked on 2026-10-20, no release fixes the max-stale flaw: bun.lock holds 4.2.0, and 4.3.0 changes only Vary handling. Astro and make-fetch-happen use it in the docs and tests workspaces, which share no cached responses between users."
-
-[[IgnoredVulns]]
-id = "GHSA-vfj7-8cjw-p6xm"
-ignoreUntil = 2026-11-19
-reason = "As checked on 2026-10-20, braces 3.0.3 has no patched release and is used only by development tools to expand patterns written in this repository."

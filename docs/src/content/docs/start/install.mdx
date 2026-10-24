@@ -13,8 +13,8 @@ import {
 
 ## What you need
 
-Git and {`Node.js ${RUNTIME_MINIMUMS.node} or newer`}. When Bun runs gspot, it needs {`Bun ${RUNTIME_MINIMUMS.bun} or newer`}.
-An older runtime stops gspot with exit code 2 and names the version it found:
+Git and {`Node.js ${RUNTIME_MINIMUMS.node} or newer`}. When Bun runs gspot, it needs {`Bun ${RUNTIME_MINIMUMS.bun} or
+newer`}. An older runtime stops gspot with exit code 2 and names the version it found:
 
 <Code code={`gspot needs Node.js ${RUNTIME_MINIMUMS.node} or newer (found 22.11.0).`} lang="text" />
 
@@ -27,12 +27,12 @@ The tools that your checks run need these:
 | Other programs                                           | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools.                                                                                                                                                       |
 | Your project's own commands, such as its tests and build | Your project's runtime, dependencies, and build tools.                                                                                                                                                                               |
 
-`gspot init --dry-run` shows the configurations that gspot picks. After init, `gspot doctor` lists the missing
-tools.
+`gspot init --dry-run` shows the configurations that gspot picks. After init, `gspot doctor` lists the missing tools.
 
 ### Systems
 
-gspot runs on macOS, Linux, and Windows. Some checks need macOS or Linux, the Swift toolchain, a running Docker daemon, or network access; each [check page](/reference/checks/) says what it needs.
+gspot runs on macOS, Linux, and Windows. Some checks need macOS or Linux, the Swift toolchain, a running Docker daemon,
+or network access; each [check page](/reference/checks/) says what it needs.
 
 ## Choose how to install
 
@@ -86,8 +86,8 @@ and prints the install command. `gspot init` refuses to run where `gspot.toml` e
     ))}
 </Tabs>
 
-`gspot install` installs the tools and turns on hooks in this clone.
-If it changes a lockfile under `.gspot/`, commit that file.
+`gspot install` installs the tools and turns on hooks in this clone. If it changes a lockfile under `.gspot/`, commit
+that file.
 
 ## A hold on new releases
 
@@ -132,15 +132,15 @@ To stop checking one language or framework instead, see [gspot.toml](/configure/
 
 Commit first, so you can go back.
 
-1. Copy the list under "Generated files" in the managed block of `AGENTS.md`, the part between the gspot markers. It names every file gspot writes outside
-   `.gspot/` and each key it sets in your files.
+1. Copy the list under "Generated files" in the managed block of `AGENTS.md`, the part between the gspot markers. It
+   names every file gspot writes outside `.gspot/` and each key it sets in your files.
 2. Run `gspot set rules.enabled false`, `gspot set ci.enabled false`, and `gspot set hooks.enabled false`, then
    `gspot install`. gspot deletes the rules, its `AGENTS.md` managed block, the CI workflow, and the hook scripts, and
    `gspot install` removes `core.hooksPath`. If Husky, Lefthook, or your own hooks run gspot, delete those lines.
 3. Restore your earlier config files from Git, such as `git show <commit>:.eslintrc.json`, or set up the tools you want.
 4. Delete the files and keys from step 1, the managed blocks in `.gitignore` and `.gitattributes`, `gspot.toml`, and
    `.gspot/`.
-5. Remove the package: `npm uninstall @gspothq/cli`, the remove command of your package manager, or
+5. Remove the package: `bun remove @gspothq/cli`, the remove command of your package manager, or
    `mise unuse npm:@gspothq/cli`.
 
 Review the diff. To undo, go back to the first commit and run `gspot install`.

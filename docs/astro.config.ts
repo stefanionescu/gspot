@@ -26,23 +26,17 @@ import {
 
 export default defineConfig({
     site: SITE_URL,
-    // Fetch a page when the pointer rests on its link, so the click opens it from the cache.
     prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
     vite: {
         resolve: {
             tsconfigPaths: true,
-            // starlight-llms-txt exports no Markdown converter, so the Markdown copy of each page imports its file.
             alias: {
                 'starlight-llms-txt/markdown': fileURLToPath(
                     new URL('node_modules/starlight-llms-txt/entryToSimpleMarkdown.ts', import.meta.url),
                 ),
             },
         },
-        // The CLI code that the reference pages import uses `using` declarations, which Vite must lower before Bun runs
-        // them.
         oxc: { target: 'es2022' },
-        // Astro uses a compiled Node.js add-on for Markdown. Bun must find it in docs/node_modules,
-        // so the package lists it as a dependency and keeps Vite from bundling it.
         environments: { prerender: { resolve: { external: ['satteri'] } } },
     },
     integrations: [
@@ -76,10 +70,8 @@ export default defineConfig({
         },
         starlight({
             title: 'gspot',
-            // Links each page to its Markdown copy.
             routeMiddleware: './src/route-data.ts',
             favicon: FAVICON,
-            // Writes /llms.txt with the steps for coding agents, and /llms-full.txt and /llms-small.txt with the docs.
             plugins: [
                 starlightLlmsTxt({
                     projectName: 'gspot',
@@ -100,7 +92,6 @@ export default defineConfig({
                 { tag: 'meta', attrs: { property: 'og:image:height', content: String(SOCIAL_IMAGE_SIZE.height) } },
                 { tag: 'meta', attrs: { property: 'og:image:alt', content: SOCIAL_IMAGE_ALT } },
                 { tag: 'link', attrs: { rel: 'apple-touch-icon', href: APPLE_TOUCH_ICON } },
-                // Wait for the browser to parse the article before painting a new page.
                 { tag: 'link', attrs: { rel: 'expect', href: FIRST_PAINT_ELEMENT, blocking: 'render' } },
             ],
             components: {

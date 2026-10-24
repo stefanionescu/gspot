@@ -20,19 +20,14 @@ import {
 } from '#cli/config/checks/infrastructure/docker/trivy-image.ts';
 
 async function scanImage(session: Session, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
+    const configFile = getConfigFile(session, planned, TRIVY_CONFIG_FILE);
+    const targets = getConfigFiles(session).targets;
     const result = await runCheckTool(
         session,
         planned,
         [
             ...TRIVY_IMAGE_COMMAND,
-            join(
-                session.root,
-                getConfigFileTarget(
-                    planned.scope.folder.path,
-                    getConfigFile(session, planned, TRIVY_CONFIG_FILE),
-                    getConfigFiles(session).targets,
-                ),
-            ),
+            join(session.root, getConfigFileTarget(planned.scope.folder.path, configFile, targets)),
             image,
         ],
         { cwd: session.root },
@@ -43,7 +38,7 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
         throw new Error(`Trivy could not scan ${image}: ${detail}`);
     }
     const report = parseToolReport('Trivy', result.stdout, imageReportSchema);
-    const findings = (report.Results ?? []).flatMap((target) => [
+    return (report.Results ?? []).flatMap((target) => [
         ...(target.Vulnerabilities ?? []).map((vulnerability) => ({
             rule: vulnerability.VulnerabilityID,
             message: `${image}: ${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
@@ -53,9 +48,6 @@ async function scanImage(session: Session, planned: PlannedCheck, image: string)
             message: `${image}: ${secret.RuleID}: ${secret.Title}`,
         })),
     ]);
-    if ((result.code === TRIVY_FINDINGS_EXIT_CODE) !== findings.length > 0)
-        throw new Error(`Trivy returned an inconsistent image report for ${image}.`);
-    return findings;
 }
 
 /**

@@ -1,5 +1,5 @@
 [configuration]
-description = "Translated interfaces: no literal text in components, and message files that parse and stay complete in every locale."
+description = "Translated interfaces: next-intl message files that parse and hold every key of the base locale. Level all adds no literal text in components."
 requires = ["javascript"]
 title = "Translations"
 

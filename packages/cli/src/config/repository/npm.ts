@@ -1,9 +1,4 @@
-export const MISSING_PACKAGE_MANAGER_MESSAGE =
-    'No package manager is selected for the npm tool project. Run gspot apply first.';
-
 export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
-
-export const NYPM_DETECTION_OPTIONS = { ignoreArgv: true, ignorePackageJSON: true, includeParentDirs: false } as const;
 
 export const YARN_BERRY_MAJOR = 2;
 

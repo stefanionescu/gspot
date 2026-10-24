@@ -128,14 +128,14 @@ Last line"""}] # Native inline
 path="apps/前言"
 configurations=[]
 `,
-        // eslint-disable-next-line unicorn/prefer-string-raw -- Bun escapes Unicode in raw templates and changes this TOML value.
+        // eslint-disable-next-line unicorn/prefer-string-raw -- reason: Bun escapes Unicode in raw templates and changes this TOML value.
         target: `[tools.eslint.rules]
 options = [{a=1,b=["x","y"],note="First line\\n# String data\\nLast line"}]
 [[scope]]
 path="apps/前言"
 configurations=[]
 `,
-        // eslint-disable-next-line unicorn/prefer-string-raw -- Bun escapes Unicode in raw templates and changes this expected TOML value.
+        // eslint-disable-next-line unicorn/prefer-string-raw -- reason: Bun escapes Unicode in raw templates and changes this expected TOML value.
         expected: `# Native options
 [tools.eslint.rules]
 options = [

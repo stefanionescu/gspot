@@ -1,4 +1,4 @@
-import type { KNIP_ISSUE_TYPES } from '#cli/config/runs/output/knip.ts';
+import type { KNIP_ISSUE_MESSAGES } from '#cli/config/runs/output/knip.ts';
 
 export type SarifMessage = { text?: string | undefined };
 
@@ -34,7 +34,7 @@ export type MarkdownlintResult = {
 
 export type KnipReport = {
     issues: ({ file: string; owners?: { name: string }[] | undefined } & Partial<
-        Record<Exclude<(typeof KNIP_ISSUE_TYPES)[number], 'cycles' | 'duplicates'>, KnipSymbol[] | undefined>
+        Record<Exclude<keyof typeof KNIP_ISSUE_MESSAGES, 'cycles' | 'duplicates'>, KnipSymbol[] | undefined>
     > & { cycles?: KnipSymbol[][] | undefined; duplicates?: KnipSymbol[][] | undefined })[];
 };
 

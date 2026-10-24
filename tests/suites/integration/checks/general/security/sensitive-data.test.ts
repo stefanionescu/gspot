@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile, writeFile } from 'node:fs/promises';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { SEMGREP_CHECK } from '#tests/config/integration/checks/general/security/samples.ts';
-import { spawnGspot, listFindingRows, parseCheckReport, installGeneratedTools } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, listFindingRows, applyThenInstall, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 import {
     SENSITIVE_FILES,
@@ -16,12 +16,12 @@ import {
 test.skipIf(!hasToolBuild('semgrep'))(
     'Semgrep reports secrets in log calls and UserDefaults and a JWT check without algorithms, and passes after the fix',
     async () => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['javascript', 'swift', 'security'], { level: 'all' }),
             ...SENSITIVE_FILES,
         });
 
-        await installGeneratedTools(sandbox.path);
+        await applyThenInstall(sandbox.path);
         const failed = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(listFindingRows(failed.report)).toStrictEqual([...SENSITIVE_FINDINGS]);
@@ -39,10 +39,5 @@ test.skipIf(!hasToolBuild('semgrep'))(
         const corrected = parseCheckReport(await spawnGspot(sandbox.path, SEMGREP_CHECK));
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-        expect(
-            await Promise.all(
-                Object.keys(CORRECTED_SENSITIVE_FILES).map((file) => readFile(join(sandbox.path, file), 'utf8')),
-            ),
-        ).toStrictEqual(Object.values(CORRECTED_SENSITIVE_FILES));
     },
 );

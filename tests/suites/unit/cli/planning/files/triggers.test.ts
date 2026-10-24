@@ -10,11 +10,11 @@ import { runFixers } from '#cli/commands/check/fixes.ts';
 import { type Check } from '#cli/types/configurations.ts';
 import { BASE_CHECK } from '#tests/config/runs/command.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
-import { mkdir, unlink, readFile } from 'node:fs/promises';
 import { isActive, planChecks } from '#cli/planning/checks.ts';
 import { writeScriptCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { mkdir, unlink, readFile, appendFile } from 'node:fs/promises';
 import { TWO_SCOPES_SETTINGS } from '#tests/config/planning/samples.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { readStagedPaths, readChangedPaths } from '#cli/repository/revisions/changes.ts';
@@ -27,6 +27,8 @@ import {
 } from '#tests/config/planning/files.ts';
 
 async function replaceChildScopeChecks(session: Session): Promise<void> {
+    if (await isOnDisk(join(session.root, '.git/info/exclude')))
+        await appendFile(join(session.root, '.git/info/exclude'), '\n.gspot/mock-tsc*\n');
     await writeScriptCommand(
         session.root,
         `${DOT_GSPOT}/mock-tsc`,
@@ -61,15 +63,16 @@ test.each([...PROJECT_TRIGGERS])(
         });
 
         commitAll(sandbox.path);
-        if (operation === 'delete') runGitStep(sandbox.path, ['rm', 'api/source.ts']);
-        else runGitStep(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
+        runGitStep(
+            sandbox.path,
+            operation === 'delete' ? ['rm', 'api/source.ts'] : ['mv', 'api/source.ts', 'web/source.ts'],
+        );
         await mkdir(join(sandbox.path, 'api'), { recursive: true });
         const session = await openSession(sandbox.path);
         await replaceChildScopeChecks(session);
-        const revision =
-            selection === 'staged'
-                ? await readStagedPaths(sandbox.path).then(({ staged }) => ({ staged }))
-                : await readChangedPaths(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
+        const selected =
+            selection === 'staged' ? await readStagedPaths(sandbox.path) : await readChangedPaths(sandbox.path, 'HEAD');
+        const revision = 'staged' in selected ? { staged: selected.staged } : { changed: selected.paths };
         const planned = planChecks(session, { ...TSC_PUSH_OPTIONS, ...revision });
         const api = planned.find((check) => check.scope.folder.path === 'api')!;
         expect(api.files).toStrictEqual([]);

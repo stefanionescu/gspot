@@ -8,8 +8,6 @@ import {
     HTML_BRACKET_ENTITIES,
 } from '../config/reference.ts';
 
-const LIST_FORMAT = new Intl.ListFormat('en', { type: 'conjunction' });
-
 /**
 Build a reference page with escaped markup and no edit link.
 
@@ -48,17 +46,6 @@ export function formatTable(header: string[], rows: string[][]): string {
     if (rows.length === 0) return '';
     const cells = rows.map((row) => row.map((cell) => cell.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ')));
     return [header, header.map(() => '---'), ...cells].map((line) => `| ${line.join(' | ')} |`).join('\n');
-}
-
-/**
-Join names the way a sentence lists them.
-
-@param names the names, already formatted
-@returns the names as one phrase, such as a, b, and c
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 6 calls in 3 files share it.
-export function formatList(names: string[]): string {
-    return LIST_FORMAT.format(names);
 }
 
 /**

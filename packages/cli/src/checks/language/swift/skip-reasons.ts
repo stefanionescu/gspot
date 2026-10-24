@@ -36,13 +36,12 @@ function listUnexplainedSkips(root: Node, lines: string[]): Node[] {
     const calls = root.descendantsOfType('call_expression').filter((call) => {
         const name = call.firstNamedChild?.text.replace(XCTEST_PREFIX, '') ?? '';
         const position = SKIP_REASON_ARGUMENT.get(name);
-        if (position === undefined) return false;
-        return !hasReason(findSkipReason(call, position));
+        return position !== undefined && !hasReason(findSkipReason(call, position));
     });
     const attributes = root.descendantsOfType('attribute').filter((attribute) => {
         if (
             attribute.firstNamedChild?.text !== 'available' ||
-            !attribute.namedChildren.some((node) => node.type === 'simple_identifier' && node.text === 'unavailable')
+            attribute.namedChildren.every((node) => !(node.type === 'simple_identifier' && node.text === 'unavailable'))
         )
             return false;
         const reasonArgument =
@@ -63,7 +62,8 @@ export async function checkSwiftSkipReasons(session: Session, planned: PlannedCh
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'swift' as const }));
     const findings: Finding[] = [];
     await visitParsedSources({ reads: session.reads, resources: session.resources, files }, (source) => {
-        for (const node of listUnexplainedSkips(source.rootNode, source.text.split('\n')))
+        const skipped = listUnexplainedSkips(source.rootNode, source.text.split('\n'));
+        for (const node of skipped)
             findings.push(
                 buildFinding(
                     planned,

@@ -11,6 +11,7 @@ createRuleTester().run<
 >('import-boundaries', plugin.rules['import-boundaries'], {
     valid: [
         {
+            name: 'external script allowed by externals',
             code: "import { app } from '../../scripts/app.js';",
             filename: '/repo/web/src/a.ts',
             options: [{ externals: ['../../scripts/app.js'] }],
@@ -19,14 +20,20 @@ createRuleTester().run<
             code: "import { b } from '../../user/b';",
             filename: '/repo/packages/shop/source/cart/inner/a.ts',
         },
-        { code: "import { b } from '../cart/b';", filename: '/repo/features/cart/a.ts' },
+        {
+            name: 'sibling within the root feature folder',
+            code: "import { b } from '../cart/b';",
+            filename: '/repo/features/cart/a.ts',
+        },
         { code: "import { b } from '../b';", filename: '/repo/features/cart/inner/a.ts' },
         { code: "import { b } from './cart/b';", filename: '/repo/features/main.ts' },
         {
+            name: 'sibling within the package feature folder',
             code: "import { b } from '../cart/b';",
             filename: '/repo/packages/shop/source/cart/a.ts',
         },
         {
+            name: 'relative import within an aliased feature',
             code: "import { a } from './a.js';",
             filename: '/repo/src/turn/b.ts',
             options: [{ aliases: IMPORT_ALIASES }],
@@ -42,6 +49,7 @@ createRuleTester().run<
             options: [{ folders: ['api'] }],
         },
         {
+            name: 'parent import with no configured boundaries',
             code: "import { a } from '../../supabase/a.js';",
             filename: '/repo/api/src/b.ts',
             options: [{ folders: [] }],
@@ -61,6 +69,7 @@ createRuleTester().run<
             options: [{ folders: ['.'] }],
         },
         {
+            name: 'relative import within a declared project',
             code: "import { a } from './a.js';",
             filename: '/repo/api/src/b.ts',
             options: [{ folders: PROJECT_FOLDERS }],
@@ -71,11 +80,13 @@ createRuleTester().run<
             options: [{ folders: PROJECT_FOLDERS }],
         },
         {
+            name: 'parent import across declared project boundaries',
             code: "import { a } from '../../supabase/a.js';",
             filename: '/repo/root/src/b.ts',
             options: [{ folders: PROJECT_FOLDERS }],
         },
         {
+            name: 'relative import within a nested declared project',
             code: "import { a } from './a.js';",
             filename: '/repo/apps/api/src/b.ts',
             options: [{ folders: ['apps', 'apps/api', 'services/db'] }],
@@ -83,6 +94,7 @@ createRuleTester().run<
     ],
     invalid: [
         {
+            name: 'exact alias cannot represent a child module',
             code: "import { a } from '../lib/a.js';",
             filename: '/repo/src/app/main.ts',
             options: [{ aliases: { '@lib': 'src/lib' } }],
@@ -90,6 +102,7 @@ createRuleTester().run<
             errors: [{ messageId: 'escape' }],
         },
         {
+            name: 'suffix wildcard alias represents a child module',
             code: "import { a } from '../lib/a.js';",
             filename: '/repo/src/app/main.ts',
             options: [{ aliases: { '#lib/*.js': 'src/lib/*.js' } }],
@@ -104,6 +117,7 @@ createRuleTester().run<
             errors: [{ messageId: 'alias' }],
         },
         {
+            name: 'external script without externals',
             code: "import { app } from '../../scripts/app.js';",
             filename: '/repo/web/src/a.ts',
             errors: [{ messageId: 'escape' }],
@@ -125,6 +139,7 @@ createRuleTester().run<
             ],
         },
         {
+            name: 'sibling feature import on POSIX',
             code: "import { b } from '../user/b';",
             filename: '/repo/features/cart/a.ts',
             errors: [
@@ -225,9 +240,16 @@ createRuleTester({ root: String.raw`c:\repo` }).run<
     keyof (typeof plugin.rules)['import-boundaries']['meta']['messages'],
     [Partial<ImportBoundariesOptions[0]>]
 >('import-boundaries on Windows paths', plugin.rules['import-boundaries'], {
-    valid: [{ code: "import { b } from '../cart/b';", filename: String.raw`C:\repo\features\cart\a.ts` }],
+    valid: [
+        {
+            name: 'sibling within a Windows feature folder',
+            code: "import { b } from '../cart/b';",
+            filename: String.raw`C:\repo\features\cart\a.ts`,
+        },
+    ],
     invalid: [
         {
+            name: 'sibling feature import on Windows',
             code: "import { b } from '../user/b';",
             filename: String.raw`C:\repo\features\cart\a.ts`,
             errors: [

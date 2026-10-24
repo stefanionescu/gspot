@@ -1,5 +1,6 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { findSettingLine } from '#cli/settings/file.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
 import { mapSettingPaths } from '#cli/settings/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -27,7 +28,7 @@ export function checkGspotUnmatchedPaths(session: Session, planned: PlannedCheck
         const schema = scope === '' ? settingsSchema : scopeSchema;
         const visit: PathVisitor = (pattern, keys, role) => {
             const matches = buildPathMatcher([pattern.replace(NEGATED_PATTERN, '')]);
-            if (role === 'source' && !repositoryPaths.some((repositoryPath) => matches(repositoryPath))) {
+            if (role === 'source' && repositoryPaths.every((repositoryPath) => !matches(repositoryPath))) {
                 const names = keys
                     .filter((field): field is string => typeof field === 'string')
                     .filter((field, index, fields) => field !== 'paths' || index !== fields.length - 1);
@@ -38,7 +39,10 @@ export function checkGspotUnmatchedPaths(session: Session, planned: PlannedCheck
                 findings.push(
                     buildFinding(
                         planned,
-                        { file: SETTINGS_FILE, line: 1 },
+                        {
+                            file: SETTINGS_FILE,
+                            line: findSettingLine(session.settingsFile, [...path, ...keys]),
+                        },
                         'unmatched-path',
                         `${pattern} under ${where} matches no tracked file or folder.${UNESCAPED_GROUP.test(pattern) ? GROUP_HELP : ''}`,
                     ),

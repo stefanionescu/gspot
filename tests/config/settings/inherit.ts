@@ -86,3 +86,39 @@ max_words = 3
 max_characters = 20
 cases = { value = ["kebab"], reason = "CSS and HTML file names use kebab case." }
 `;
+
+export const PURGECSS_SCOPE_CONFIGURATIONS = [
+    'html',
+    'site',
+    'data-files',
+    'dependencies',
+    'docs',
+    'duplication',
+    'engineering',
+    'format',
+    'gspot',
+    'naming',
+    'prose',
+    'repository',
+    'secrets',
+    'security',
+    'spelling',
+    'structure',
+];
+
+export const PURGECSS_SIBLING_CONFIGURATIONS = [
+    'data-files',
+    'dependencies',
+    'docs',
+    'duplication',
+    'engineering',
+    'format',
+    'gspot',
+    'naming',
+    'prose',
+    'repository',
+    'secrets',
+    'security',
+    'spelling',
+    'structure',
+];

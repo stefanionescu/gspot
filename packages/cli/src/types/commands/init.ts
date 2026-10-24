@@ -1,17 +1,15 @@
 import type { Session } from '#cli/types/session.ts';
+import { type FileContents } from '#cli/types/system/files.ts';
 import type { RepositorySetup } from '#cli/types/repository/setup.ts';
 import type { GenerationResult } from '#cli/types/generation/files.ts';
 import type { Settings, TomlTable } from '#cli/types/settings/file.ts';
 import type { Level, Configuration } from '#cli/types/configurations.ts';
 import type { AvailableSettings } from '#cli/types/settings/inheritance.ts';
 import type { ConfigurationEvidence } from '#cli/types/repository/detect.ts';
-import { type ReadCache, type FileContents } from '#cli/types/system/files.ts';
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
 
 export type InitScan = {
-    reads: ReadCache;
     repository: Repository;
-    options: InitOptions;
     repositorySetup: RepositorySetup;
     configurations: InitConfigurations;
     everySelected: Configuration[];
@@ -70,6 +68,7 @@ export type DetectionSummary = {
     unowned: string[];
     configurations: Map<string, Configuration>;
     hasGit: boolean;
+    ciProvider: InitAnswers['ci'];
 };
 
 export type InitFileRow = { path: string; note: string };
@@ -88,7 +87,6 @@ export type InitConfigurations = {
     scopes: ScopeFolder[];
     rootNames: string[];
     scopeConfigurations: Map<string, string[]>;
-    selectedNames: Set<string>;
     detected: ConfigurationEvidence[];
     origins: Map<string, ConfigurationOrigin>;
 };
@@ -105,6 +103,9 @@ export type PrettierOptions = {
     tabWidth?: number | undefined;
     printWidth?: number | undefined;
     singleQuote?: boolean | undefined;
+    useTabs?: boolean | undefined;
+    semi?: boolean | undefined;
+    trailingComma?: 'all' | 'es5' | 'none' | undefined;
     overrides?: { files: string | string[]; options: Omit<PrettierOptions, 'overrides'> }[] | undefined;
 };
 
@@ -116,3 +117,5 @@ export type RuffFormatSettings = {
 };
 
 export type WrittenTable = { scope: string; table: TomlTable; available: AvailableSettings };
+
+export type EditorconfigSection = { files: string; fields: Record<string, string> };

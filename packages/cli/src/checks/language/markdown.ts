@@ -46,8 +46,9 @@ function findTomlSyntaxError(body: string): FenceSyntaxError | undefined {
 
 function findYamlSyntaxError(body: string): FenceSyntaxError | undefined {
     const error = parseAllDocuments(body).flatMap((document) => document.errors)[0];
-    if (error === undefined) return undefined;
-    return { line: getPosition(body, error.pos[0]).line, message: error.message.split('\n', 1).join('') };
+    return error === undefined
+        ? undefined
+        : { line: getPosition(body, error.pos[0]).line, message: error.message.split('\n', 1).join('') };
 }
 
 async function findTreeSyntaxError(
@@ -89,8 +90,8 @@ async function validateCodeFences(text: string, cache: ParseCache): Promise<Fenc
             .split('\n')
             .map((line) => (ELLIPSIS_LINE.test(line) ? omitted : line))
             .join('\n')
-            .replaceAll(ELLIPSIS_ARGUMENTS, EMPTY_ARGUMENTS)
-            .replaceAll(ANGLE_PLACEHOLDER, PLACEHOLDER_VALUE);
+            .replaceAll(ELLIPSIS_ARGUMENTS, () => EMPTY_ARGUMENTS)
+            .replaceAll(ANGLE_PLACEHOLDER, () => PLACEHOLDER_VALUE);
         const error = await readers[parser](body);
         if (error !== undefined) errors.push({ ...error, line: fence.startLine + error.line });
     }

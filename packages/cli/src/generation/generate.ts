@@ -19,18 +19,13 @@ import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/files/names.ts';
 import { YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
 import { buildPointerFieldEdits } from '#cli/generation/config-files/pointers.ts';
-import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files/classify.ts';
 import { hasTopHeading, selectRuleFiles, buildAgentsBlock } from '#cli/generation/rules.ts';
 import { DOT_GSPOT, GSPOT_PATHS, INSTALLED_TOOL_FOLDERS } from '#cli/config/gspot-folder.ts';
 import { buildBunScannerEdits } from '#cli/generation/configurations/general/dependencies.ts';
 import { isConfigurationSelected, listSelectedConfigurations } from '#cli/configurations/select.ts';
 import { buildNpmProject, buildMiseProject, buildPythonProject } from '#cli/generation/tool-projects.ts';
+import { selectToolPackageManager, readPackageManagerVersion } from '#cli/repository/npm/package-manager.ts';
 
-import {
-    assertPackageManager,
-    selectToolPackageManager,
-    readPackageManagerVersion,
-} from '#cli/repository/npm/package-manager.ts';
 import {
     buildGithubWorkflow,
     buildGitlabWorkflow,
@@ -61,7 +56,7 @@ function buildWorkflow(session: Session, generated: GenerationResult): void {
                     ? undefined
                     : readPackageManagerVersion(
                           session.installedRoot,
-                          assertPackageManager(session.packageManager),
+                          session.packageManager,
                           session.timeoutSeconds,
                           session.reads,
                       ),
@@ -86,16 +81,16 @@ function buildAttributePattern(path: string): string {
 }
 
 function buildAttributesBlock(outsidePaths: string[], authored: string): string {
-    const inheritsLineEndings = parseAttributePatterns(authored, '.').some(
+    const isInheritsLineEndings = parseAttributePatterns(authored, '.').some(
         ({ pattern, attributes }) =>
             pattern === '**/*' && AUTO_LF_ATTRIBUTES.every((attribute) => attributes.includes(attribute)),
     );
-    const block = inheritsLineEndings
+    const block = isInheritsLineEndings
         ? GIT_ATTRIBUTES_BLOCK.split('\n')
               .filter((line) => !line.endsWith(` ${LF_ATTRIBUTES}`))
               .join('\n')
         : GIT_ATTRIBUTES_BLOCK;
-    const suffix = inheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
+    const suffix = isInheritsLineEndings ? '' : ` ${LF_ATTRIBUTES}`;
     const lines = outsidePaths
         .toSorted((left, right) => compareText(left, right))
         .map((path) => `${buildAttributePattern(path)} linguist-generated${suffix}`);
@@ -169,7 +164,7 @@ export function generate(session: Session): GenerationResult {
         scopes,
     } = session;
     const { installedRoot, timeoutSeconds, reads } = session;
-    const packageManager = session.packageManager?.name;
+    const packageManager = session.packageManager;
     const configurations = session.toolConfigurations;
     const generated: GenerationResult = {
         files: [
@@ -185,26 +180,18 @@ export function generate(session: Session): GenerationResult {
         ...buildBunScannerEdits(session),
         ...buildPointerFieldEdits(session, generated.files, configFiles.targets),
     );
+    const minimumAge = getTable(findRootScope(scopes).settings, 'dependencies').min_release_age_days;
     generated.files.push(
-        ...buildHookFiles(settings, session.startRunner, {
-            names: listHookNames(session.configuredChecks),
-            usesLfs: session.repository.attributes.values().some((values) => values[FILTER_ATTRIBUTE] === LFS_FILTER),
-        }),
+        ...(settings.hooks?.enabled === true
+            ? buildHookFiles(session.startRunner, listHookNames(session.configuredChecks), true)
+            : []),
         ...(packageManager === undefined
             ? []
             : buildNpmProject({
                   configurations,
-                  packageManager: selectToolPackageManager(
-                      installedRoot,
-                      assertPackageManager(session.packageManager),
-                      timeoutSeconds,
-                      reads,
-                  ),
+                  packageManager: selectToolPackageManager(installedRoot, packageManager, timeoutSeconds, reads),
               })),
-        ...buildPythonProject(
-            configurations,
-            getTable(findRootScope(scopes).settings, 'dependencies').min_release_age_days,
-        ),
+        ...buildPythonProject(configurations, minimumAge),
         buildMiseProject(configurations),
     );
     buildWorkflow(session, generated);

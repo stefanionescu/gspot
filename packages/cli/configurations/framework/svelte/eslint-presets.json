@@ -1,27 +1,26 @@
 {
     "recommended": {
         "package": "eslint-plugin-svelte",
-        "version": "3.23.0",
+        "version": "3.23.1",
         "source": "configs.recommended",
         "blocks": [
             { "parser": false },
             {
                 "files": ["*.svelte", "**/*.svelte"],
-                "parser": true,
                 "rules": {
                     "no-inner-declarations": "off",
                     "no-self-assign": "off",
                     "svelte/comment-directive": "error",
                     "svelte/system": "error"
-                }
+                },
+                "parser": true
             },
             {
                 "files": ["*.svelte.js", "*.svelte.ts", "**/*.svelte.js", "**/*.svelte.ts"],
-                "parser": true,
-                "rules": {}
+                "rules": {},
+                "parser": true
             },
             {
-                "parser": false,
                 "rules": {
                     "svelte/comment-directive": "error",
                     "svelte/infinite-reactive-loop": "error",
@@ -60,7 +59,8 @@
                     "svelte/system": "error",
                     "svelte/valid-each-key": "error",
                     "svelte/valid-prop-names-in-kit-pages": "error"
-                }
+                },
+                "parser": false
             }
         ]
     }

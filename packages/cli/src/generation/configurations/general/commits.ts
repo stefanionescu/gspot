@@ -18,8 +18,9 @@ Build commitlint.json: the Commitlint rules with the allowed types and scopes of
 export function buildCommitlintFile(planned: PlannedConfigFile): string {
     const { scopes } = planned.session;
 
-    const types = getTable(planned.scope.settings, 'tools.commitlint').types;
-    const named = getTable(planned.scope.settings, 'tools.commitlint').scopes;
+    const commitlint = getTable(planned.scope.settings, 'tools.commitlint');
+    const types = commitlint.types;
+    const named = commitlint.scopes;
     const allowed =
         named.length > 0
             ? named
@@ -32,7 +33,7 @@ export function buildCommitlintFile(planned: PlannedConfigFile): string {
         rules['scope-enum'] = [COMMITLINT_ERROR_SEVERITY, 'always', allowed];
         rules['scope-case'] = [0];
     }
-    const chosen = getTable(planned.scope.settings, 'tools.commitlint').rules;
+    const chosen = commitlint.rules;
     const running = new Set(
         Object.entries(rules)
             .filter(([, value]) => value[0] !== 0)

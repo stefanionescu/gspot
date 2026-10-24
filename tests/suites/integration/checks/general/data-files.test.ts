@@ -10,7 +10,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applySandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     FILES_CASES,
@@ -39,41 +39,36 @@ async function assertYamlFiles(root: string, rule?: string): Promise<void> {
 const installedSandbox = shareInstalledSandbox(FILES_SANDBOX);
 
 test.each([...FILES_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-    const result = await runCheckSample(installedSandbox(), sample, FILES_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
+    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
 });
 
 test('v8r validates a staged JSON file with a non-ASCII path against its schema', async () => {
-    const { root, environment } = installedSandbox();
+    const { root } = installedSandbox();
     await using state = new AsyncDisposableStack();
-    const server = Bun.serve({
+    using server = Bun.serve({
         hostname: '127.0.0.1',
         port: 0,
+
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: `Bun.serve` calls it for each request.
         async fetch() {
             return new Response(await readFile(join(root, 'schema.json')));
         },
     });
-    state.defer(async () => {
-        await server.stop(true);
-    });
-    state.use(
-        await applySandboxChanges(installedSandbox(), {
-            check: 'data-files/v8r',
-            files: { 'settings/café.json': '', '.v8rrc.yml': '' },
-            settings: stringify({
-                tools: {
-                    v8r: { schema: [{ paths: ['settings/café.json'], url: `${server.url.toString()}schema.json` }] },
-                },
-            }),
+    const observed = await applySandboxChanges(installedSandbox(), {
+        files: { 'settings/café.json': '', '.v8rrc.yml': '' },
+        settings: stringify({
+            tools: {
+                v8r: { schema: [{ paths: ['settings/café.json'], url: `${server.url.href}schema.json` }] },
+            },
         }),
-    );
+    });
+    state.use(observed);
     await writeFile(join(root, '.v8rrc.yml'), 'invalid: [\n');
     const path = join(root, 'settings/café.json');
     await writeFile(path, JSON.stringify({ count: 'invalid' }));
     runGitStep(root, ['add', '-A']);
     const command = ['check', '--only', 'data-files/v8r', '--staged', '--json'];
-    const invalid = parseCheckReport(await spawnGspot(root, command, environment));
+    const invalid = parseCheckReport(await spawnGspot(root, command));
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
     expect(invalid.report.checks).toMatchObject([
         {
@@ -84,42 +79,39 @@ test('v8r validates a staged JSON file with a non-ASCII path against its schema'
     ]);
     await writeFile(path, JSON.stringify({ count: 1 }));
     runGitStep(root, ['add', 'settings/café.json']);
-    const valid = parseCheckReport(await spawnGspot(root, command, environment));
+    const valid = parseCheckReport(await spawnGspot(root, command));
     expect(valid.code, valid.stdout + valid.stderr).toBe(0);
     expect(valid.report.checks).toMatchObject([{ check: 'data-files/v8r', status: 'passed', findings: [] }]);
 });
 
 test('Taplo never downloads a schema named in a #:schema comment', async () => {
-    const { root, environment } = installedSandbox();
+    const { root } = installedSandbox();
     await using resources = new AsyncDisposableStack();
     let requests = 0;
-    const server = Bun.serve({
+    using server = Bun.serve({
         hostname: '127.0.0.1',
         port: 0,
+
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: `Bun.serve` calls it for each request.
         fetch() {
             requests++;
             return Response.json({ type: 'object', required: ['missing'] });
         },
     });
-    resources.defer(async () => {
-        await server.stop(true);
-    });
-    const directive = `#:schema ${server.url.toString()}schema.json\n`;
+    const directive = `#:schema ${server.url.href}schema.json\n`;
     resources.use(
         await applySandboxChanges(installedSandbox(), {
-            check: 'data-files/taplo-format',
             files: { 'settings/schema.toml': directive + 'value =\n' },
         }),
     );
     const command = ['check', 'settings/schema.toml', '--only', 'data-files/taplo-format', '--json'];
-    const failed = parseCheckReport(await spawnGspot(root, command, environment));
+    const failed = parseCheckReport(await spawnGspot(root, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(failed.report.checks).toMatchObject([
         { check: 'data-files/taplo-format', status: 'failed', findings: [{ file: 'settings/schema.toml', line: 2 }] },
     ]);
     await writeFile(join(root, 'settings/schema.toml'), directive + 'value = 1\n');
-    const corrected = parseCheckReport(await spawnGspot(root, command, environment));
+    const corrected = parseCheckReport(await spawnGspot(root, command));
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(corrected.report.checks).toMatchObject([
         { check: 'data-files/taplo-format', status: 'passed', findings: [] },
@@ -130,7 +122,6 @@ test('Taplo never downloads a schema named in a #:schema comment', async () => {
 test("yamllint applies each scope's lint rule options, and Prettier keeps two-space YAML", async () => {
     const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'data-files/yamllint',
         removed: Object.keys(FILES_SANDBOX.files),
         files: {
             'gspot.toml': buildSandboxSettings([], { tables: YAML_SCOPE_TABLES }),
@@ -150,13 +141,12 @@ test("yamllint applies each scope's lint rule options, and Prettier keeps two-sp
 });
 
 test('v8r checks gspot.toml against the schema in .gspot, which accepts an unquoted until date', async () => {
-    const { root, environment } = installedSandbox();
+    const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), UNQUOTED_UNTIL_CHANGE);
+
     // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
     const checkSettings = async () =>
-        parseCheckReport(
-            await spawnGspot(root, ['check', SETTINGS_FILE, '--only', 'data-files/v8r', '--json'], environment),
-        );
+        parseCheckReport(await spawnGspot(root, ['check', SETTINGS_FILE, '--only', 'data-files/v8r', '--json']));
     const accepted = await checkSettings();
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(accepted.report.checks).toMatchObject([

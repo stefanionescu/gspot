@@ -21,8 +21,8 @@ export function buildHadolintFile(planned: PlannedConfigFile): string {
     const registries = getTable(planned.scope.settings, 'tools.hadolint').trusted_registries;
     const document = {
         'failure-threshold': HADOLINT_FAILURE_THRESHOLD,
-        ...(off.length > 0 ? { ignored: off } : {}),
-        ...(registries.length > 0 ? { trustedRegistries: registries } : {}),
+        ...(off.length > 0 && { ignored: off }),
+        ...(registries.length > 0 && { trustedRegistries: registries }),
     };
     return stringify(document);
 }

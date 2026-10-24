@@ -9,17 +9,12 @@ export const DEFAULT_MIGRATION_FOLDER_FILES = {
     'custom_extra/6_ignored.sql': 'invalid SQL;',
 } as const;
 
-export const MALFORMED_MIGRATION_PATH = 'migrations/20240201_teams.sql';
-
-export const SECURED_TEAMS_SQL =
-    'CREATE TABLE teams (id integer PRIMARY KEY);\nALTER TABLE teams ENABLE ROW LEVEL SECURITY;\n';
-
 export const MALFORMED_MIGRATION_FILES = {
     'gspot.toml': buildSandboxSettings(['postgres'], {
         level: 'all',
         tables: '[postgres]\nfrozen_through = "all"\nclient_schemas = ["public"]\n',
     }),
-    [MALFORMED_MIGRATION_PATH]: 'CREATE TABLE ;',
+    ['migrations/20240201_teams.sql']: 'CREATE TABLE ;',
 };
 
 export const POSTGRES_CHECKS = [

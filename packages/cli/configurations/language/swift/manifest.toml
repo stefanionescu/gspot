@@ -2,7 +2,7 @@ allowed_words = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
 ignored_paths = [".build", "DerivedData", "**/.build/**", "**/DerivedData/**", "**/Pods/**"]
 
 [configuration]
-description = "Swift sources and their XCTest and Swift Testing tests: lint and analyzer rules for each level, one format, a clean build, no unused code, a reason on each disabled test, and a minimum coverage."
+description = "Swift sources and their XCTest and Swift Testing tests: lint and analyzer rules for each level, one format, a clean build, no unused code, a reason on each disabled test, and passing tests, with a coverage minimum at level all."
 title = "Swift"
 
 [detect]
@@ -26,7 +26,7 @@ name = "swiftlint"
 replace = [".swiftlint.yml", ".swiftlint.yaml"]
 rule_url = "https://realm.github.io/SwiftLint/{rule}.html"
 suppression = { marker = "\\bswiftlint:disable\\b(?::(?:next|this|previous))?(?<rules>.*)", reason = " - (?<reason>\\S.*)", example = "// swiftlint:disable:next force_unwrapping - reason: the URL is a literal", separator = "\\s-\\s", all_rules = "^all(?=$|\\s)", limit_rules = "(?:^|[\\s,])(?:cyclomatic_complexity|function_body_length|file_length|type_body_length|function_parameter_count)(?=$|[\\s,])" }
-version = "0.63.2"
+version = "0.65.1"
 version_command = ["version"]
 
 [[tool]]
@@ -35,9 +35,8 @@ min_version = "0.54.0"
 name = "swiftformat"
 replace = [".swiftformat"]
 suppression = { marker = "\\bswiftformat:disable\\b", reason = " - (?<reason>\\S.*)", example = "// swiftformat:disable:next redundantSelf - reason: the closure needs self" }
-version = "0.61.1"
-# The GitHub release ships an app bundle beside the executable, which mise skips.
-mise = { name = "swiftformat", version = "0.61.1", options = { no_app = true, rename_exe = "swiftformat" } }
+version = "0.64.0"
+mise = { name = "swiftformat", options = { no_app = true, rename_exe = "swiftformat" } }
 
 [[tool]]
 builds = ["macos"]
@@ -46,7 +45,7 @@ mise = "periphery"
 name = "periphery"
 replace = [".periphery.yml", ".periphery.yaml"]
 suppression = { marker = "\\bperiphery:ignore\\b", reason = " - (?<reason>\\S.*)", example = "// periphery:ignore - reason: the runtime calls it by name" }
-version = "3.6.0"
+version = "3.8.0"
 version_command = ["version"]
 
 [[tool]]
@@ -97,7 +96,6 @@ name = "swiftlint"
 output = { format = "json", fields = { file = "file", line = "line", column = "character", rule = "rule_id", message = "reason" } }
 stage = "commit"
 summary = "Lints Swift files with the SwiftLint files of each scope and nested folder, and treats warnings as errors."
-tool = "swiftlint"
 why = "Forced casts and tries can crash, and a strong delegate can keep its owner alive."
 
 [[check]]

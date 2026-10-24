@@ -13,12 +13,12 @@ import { listEffectiveSettings } from '#cli/settings/inherit.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
 import { Argument, type Command } from '@commander-js/extra-typings';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
-import { KEY_GAP, LIST_KINDS, VALUE_WIDTH } from '#cli/config/commands/list.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
+import { KEY_GAP, LIST_KINDS, VALUE_WIDTH, REASON_HEADER } from '#cli/config/commands/list.ts';
 import { type ListKind, type SettingsListJson, type ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 function buildSettingsResult(session: Session): CommandResult {
-    const { settings } = buildSettingRows(session.settingsFile.settings, session.scopes);
+    const settings = buildSettingRows(session.settingsFile.settings, session.scopes);
     const displayed = settings.filter(
         (row) => row.scope === '' || (row.origin === 'scope' && row.originScope === row.scope),
     );
@@ -27,9 +27,9 @@ function buildSettingsResult(session: Session): CommandResult {
         const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
         const shortened = value.length > VALUE_WIDTH ? `${value.slice(0, VALUE_WIDTH - 1)}…` : value;
         const scope = row.scope === '' ? '' : `  [scope ${row.scope}]`;
-        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reason_needed ?? '').padEnd('reason needed when'.length)}  ${row.source}${scope}`;
+        return `${row.key.padEnd(width)}${shortened.padEnd(VALUE_WIDTH)} ${(row.reason_when ?? '').padEnd(REASON_HEADER.length)}  ${row.source}${scope}`;
     });
-    lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} reason needed when  source`);
+    lines.unshift(`${'setting'.padEnd(width)}${'value'.padEnd(VALUE_WIDTH)} ${REASON_HEADER}  source`);
     return { text: `${lines.join('\n')}\n`, json: { settings } satisfies SettingsListJson, exitCode: 0 };
 }
 
@@ -41,16 +41,20 @@ function listCheckStates(
     const listed = new Set<string>();
     return session.scopes.flatMap((scope) =>
         scope.configurations.includes(configuration)
-            ? configuration.checks.flatMap((check) => {
-                  const path =
-                      check.runs === 'once' || check.runs === 'history' || isRootOnlyCheck(configuration, check)
-                          ? ''
-                          : scope.folder.path;
-                  const key = `${path}\0${check.id}`;
-                  if (listed.has(key)) return [];
-                  listed.add(key);
-                  return [{ name: check.id, scope: path, state: formatCheckState(planned.get(key)) }];
-              })
+            ? configuration.checks
+                  .values()
+                  .map((check) => {
+                      const path =
+                          check.runs === 'once' || check.runs === 'history' || isRootOnlyCheck(configuration, check)
+                              ? ''
+                              : scope.folder.path;
+                      const key = `${path}\0${check.id}`;
+                      if (listed.has(key)) return undefined;
+                      listed.add(key);
+                      return { name: check.id, scope: path, state: formatCheckState(planned.get(key)) };
+                  })
+                  .filter((check) => check !== undefined)
+                  .toArray()
             : [],
     );
 }
@@ -73,7 +77,8 @@ function buildConfigurationsResult(session: Session): CommandResult {
     const lines = ['selected'];
     for (const configuration of selected) {
         lines.push(`  ${configuration.name}`);
-        for (const [name, checks] of Map.groupBy(configuration.checks, (check) => check.name)) {
+        const groups = Map.groupBy(configuration.checks, (check) => check.name);
+        for (const [name, checks] of groups) {
             const states = checks.map(
                 (check) => `${check.scope === '' ? ROOT_SCOPE_LABEL : check.scope}: ${check.state}`,
             );
@@ -89,8 +94,8 @@ function buildConfigurationsResult(session: Session): CommandResult {
     };
 }
 
-function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson {
-    const rows = scopes.flatMap((scope) => {
+function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson['settings'] {
+    return scopes.flatMap((scope) => {
         const scopePath = scope.folder.path;
         return listEffectiveSettings(scope.availableSettings, settings, scopePath)
             .filter((effectiveSetting) => scopePath === '' || effectiveSetting.origin !== 'configuration')
@@ -100,11 +105,10 @@ function buildSettingRows(settings: Settings, scopes: Scope[]): SettingsListJson
                 source: row.source,
                 origin: row.origin,
                 ...stripUndefined({ originScope: row.originScope }),
-                reason_needed: row.setting.reason_needed,
+                reason_when: row.setting.reason_when,
                 scope: scopePath,
             }));
     });
-    return { settings: rows };
 }
 
 function formatCheckState(check: PlannedCheck | undefined): string {

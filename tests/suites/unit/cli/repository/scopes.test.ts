@@ -55,13 +55,12 @@ test('broad workspace patterns skip .gspot/.venv and its outside interpreter lin
     await symlink('../../../../outside/python', join(root, `${GSPOT_PATHS.pythonEnvironment}/bin/python`));
     const repository = await readTestRepository(root);
     expect(listWorkspaceFolders(root)).toStrictEqual(['packages/app']);
-    expect(
-        findScopeFolders(
-            repository.files,
-            await readDependencyFiles(createReadCache(root), repository.files),
-            readConfigurations().values(),
-        ).map((scope) => scope.path),
-    ).toStrictEqual(['packages/app']);
+    const observed = findScopeFolders(
+        repository.files,
+        await readDependencyFiles(createReadCache(root), repository.files),
+        readConfigurations().values(),
+    ).map((scope) => scope.path);
+    expect(observed).toStrictEqual(['packages/app']);
 });
 test('every folder that holds a project file is a scope, the root and lint-only packages aside', async () => {
     await using sandbox = await testdir(PROJECT_SCOPE_FILES);
@@ -74,34 +73,31 @@ test('every folder that holds a project file is a scope, the root and lint-only 
 
 test('scope detection leaves out packages that hold only gspot npm tools or a hook manager, and keeps unpinned packages', async () => {
     await using sandbox = await testdir();
-    const dependencyFiles = TOOL_ONLY_PACKAGES;
     await createFileTree(sandbox.path, {
         'package.json': '{"workspaces":["packages/*"]}',
-        ...dependencyFiles,
+        ...TOOL_ONLY_PACKAGES,
     });
     const repository = await readTestRepository(sandbox.path);
     expect(listWorkspaceFolders(sandbox.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         ...TOOL_ONLY_FOLDERS,
     ]);
-    expect(
-        findScopeFolders(
-            repository.files,
-            await readDependencyFiles(createReadCache(sandbox.path), repository.files),
-            readConfigurations().values(),
-        ).map((scope) => scope.path),
-    ).toStrictEqual(['packages/custom', 'packages/process']);
+    const observed = findScopeFolders(
+        repository.files,
+        await readDependencyFiles(createReadCache(sandbox.path), repository.files),
+        readConfigurations().values(),
+    ).map((scope) => scope.path);
+    expect(observed).toStrictEqual(['packages/custom', 'packages/process']);
     await writeFile(
         join(sandbox.path, 'packages/next/package.json'),
         '{"dependencies":{"next":"16.0.0"},"devDependencies":{"@next/eslint-plugin-next":"16.0.0"}}',
     );
     const corrected = await readTestRepository(sandbox.path);
-    expect(
-        findScopeFolders(
-            corrected.files,
-            await readDependencyFiles(createReadCache(sandbox.path), corrected.files),
-            readConfigurations().values(),
-        ).map((scope) => scope.path),
-    ).toStrictEqual(['packages/custom', 'packages/next', 'packages/process']);
+    const correctedFolders = findScopeFolders(
+        corrected.files,
+        await readDependencyFiles(createReadCache(sandbox.path), corrected.files),
+        readConfigurations().values(),
+    ).map((scope) => scope.path);
+    expect(correctedFolders).toStrictEqual(['packages/custom', 'packages/next', 'packages/process']);
 });
 
 test('Python scopes use the dependency files read with the repository', async () => {

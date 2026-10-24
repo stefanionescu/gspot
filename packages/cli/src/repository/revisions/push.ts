@@ -31,9 +31,9 @@ import {
     MISSING_PUSH_REVISION_MESSAGE,
 } from '#cli/config/repository/revisions/push.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isHashPair(localHash: string, remoteHash: string): boolean {
-    if (!HASH_PATTERN.test(localHash) || !HASH_PATTERN.test(remoteHash)) return false;
-    return localHash.length === remoteHash.length;
+    return HASH_PATTERN.test(localHash) && HASH_PATTERN.test(remoteHash) && localHash.length === remoteHash.length;
 }
 
 function parseLine(line: string): PushLine {
@@ -80,7 +80,10 @@ async function readComparison(search: PushSearch, hash: string, remoteHash: stri
     const { root, cancelSignal } = search;
     if (!ABSENT_HASH.test(remoteHash)) {
         if (!search.commits.has(remoteHash))
-            throw new GspotError('git', MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', remoteHash));
+            throw new GspotError(
+                'git',
+                MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', () => remoteHash),
+            );
         const previous = search.commits.get(remoteHash);
         if (previous === undefined)
             return { base: await readPushBase(root, cancelSignal), changed: undefined, range: [hash] };
@@ -104,8 +107,8 @@ async function buildRevision(search: PushSearch, line: PushLine, hash: string): 
         tree: tree.trim(),
         refs: [line.localRef],
         commits: history,
-        historyComplete: !history.some((commit) => boundaries.has(commit)),
-        ...(selected === undefined ? {} : { paths: selected }),
+        shallow: history.some((commit) => boundaries.has(commit)),
+        ...(selected !== undefined && { paths: selected }),
     };
 }
 
@@ -119,7 +122,7 @@ function addRevision(pushed: PushedRevisions, revision: PushRevision): void {
         return;
     }
     duplicate.refs.push(...revision.refs);
-    duplicate.historyComplete &&= revision.historyComplete;
+    duplicate.shallow ||= revision.shallow;
     duplicate.commits = [...new Set([...duplicate.commits, ...revision.commits])];
 }
 
@@ -129,7 +132,10 @@ async function selectLine(search: PushSearch, pushed: PushedRevisions, line: Pus
         return;
     }
     if (!search.commits.has(line.localHash))
-        throw new GspotError('git', MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', line.localHash));
+        throw new GspotError(
+            'git',
+            MISSING_PUSH_REVISION_MESSAGE.replace('{hash}', () => line.localHash),
+        );
     const commit = search.commits.get(line.localHash);
     if (commit === undefined) {
         pushed.skipped.push({ ref: line.localRef, hash: line.localHash, reason: 'non-commit object' });
@@ -165,7 +171,7 @@ export async function selectPush(
         .filter((row) => row.trim() !== '')
         .map((line) => parseLine(line));
     const shallowAnswer = await readGitText(repositoryRoot, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
-    const shallow = shallowAnswer.trim() === 'true';
+    const isShallow = shallowAnswer.trim() === 'true';
     const remotes =
         remote === undefined ? [] : await readGitLines(repositoryRoot, GIT_REMOTE_ARGUMENTS, { cancelSignal });
     const context: PushSearch = {
@@ -173,7 +179,7 @@ export async function selectPush(
         cancelSignal,
         commits: await readPeeledCommits(repositoryRoot, lines, cancelSignal),
         remote: remotes.find((name) => name === remote),
-        boundaries: shallow ? await readShallowBoundaries(repositoryRoot, cancelSignal) : new Set<string>(),
+        boundaries: isShallow ? await readShallowBoundaries(repositoryRoot, cancelSignal) : new Set<string>(),
     };
     const result: PushedRevisions = { revisions: [], skipped: [] };
     for (const line of lines) await selectLine(context, result, line);
@@ -199,6 +205,7 @@ export async function readPushedCommits(
     const listed = await runGit(repositoryRoot, [...GIT_REV_LIST_ARGUMENTS, `${base}..HEAD`, '--'], {
         cancelSignal,
     });
-    if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };
-    return listed.stdout.split('\n').filter(Boolean);
+    return listed.code === 0
+        ? listed.stdout.split('\n').filter(Boolean)
+        : { error: `Cannot select commit messages: ${listed.stderr.trim()}` };
 }

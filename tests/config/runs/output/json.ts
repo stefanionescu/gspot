@@ -1,7 +1,10 @@
 export const EMPTY_JSON_CASES = [
-    ['', 'JSON returned no structured findings.'],
-    ['noise only', 'JSON returned no structured findings.'],
-    ['{ broken', 'JSON printed output that gspot cannot read.'],
+    ['', 'The command printed nothing; it should print a JSON report.'],
+    [' \n\t', 'The command printed nothing; it should print a JSON report.'],
+    ['noise only', 'The output is not JSON. It starts with: noise only'],
+    ['\n \nfirst line\nsecond line', 'The output is not JSON. It starts with: first line'],
+    ['a'.repeat(100), `The output is not JSON. It starts with: ${'a'.repeat(80)}`],
+    ['{ broken', 'The output is not JSON. It starts with: { broken'],
     ['{"items":null}', 'Required JSON report array items is missing or invalid.'],
 ] as const;
 

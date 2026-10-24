@@ -7,8 +7,6 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
-    MEMBER_INDEX_SQL,
-    MEMBER_TABLES_SQL,
     COMPOSITE_INDEX_CASES,
     COMPOSITE_FOREIGN_KEY_SQL,
 } from '#tests/config/checks/database/postgres/foreign-key-indexes.ts';
@@ -33,6 +31,11 @@ test.each([...COMPOSITE_INDEX_CASES])(
 );
 
 test('foreign-key-indexes reports a foreign key column that no index leads with and passes after an index on it', async () => {
+    const MEMBER_INDEX_SQL = 'CREATE INDEX members_team_id ON members (team_id);\n';
+
+    const MEMBER_TABLES_SQL =
+        'CREATE TABLE teams (id bigint PRIMARY KEY);\nCREATE TABLE members (id bigint PRIMARY KEY, team_id bigint REFERENCES teams (id));\n';
+
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
         'migrations/1_members.sql': MEMBER_TABLES_SQL,

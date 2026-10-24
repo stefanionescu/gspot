@@ -17,14 +17,18 @@ test.each([...DOCKERIGNORE_ALLOWLISTS])(
             '.dockerignore': text,
         });
         const findings = await runSandboxCheck(sandbox.path, 'docker/dockerignore');
-        expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual(
+        expect(findings).toStrictEqual(
             missing.length === 0
                 ? []
                 : [
                       {
+                          check: 'docker/dockerignore',
                           file: '.dockerignore',
+                          line: 1,
                           rule: 'missing-entry',
                           message: `Add these entries to .dockerignore: ${missing.join(', ')}.`,
+                          fixable: false,
+                          help: 'Add a .dockerignore beside the Dockerfile with the paths the message names.',
                       },
                   ],
         );

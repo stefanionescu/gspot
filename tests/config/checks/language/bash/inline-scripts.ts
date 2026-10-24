@@ -2,7 +2,6 @@ import { BASH_HEADER } from '#tests/config/checks/samples.ts';
 
 export const INLINE_SCRIPT_CASES = [
     {
-        check: 'bash/inline-scripts',
         files: {
             'scripts/node.sh': `${BASH_HEADER}# main: runs the script.
 main() {
@@ -15,7 +14,6 @@ main "$@"
         expected: { file: 'scripts/node.sh', rule: 'runtime-embed', line: 10 },
     },
     {
-        check: 'bash/inline-scripts',
         files: {
             'scripts/python.sh': `${BASH_HEADER}# main: runs the script.
 main() {
@@ -30,7 +28,6 @@ main "$@"
         expected: { file: 'scripts/python.sh', rule: 'runtime-embed', line: 10 },
     },
     {
-        check: 'bash/inline-scripts',
         files: {
             'scripts/print.sh': `${BASH_HEADER}# main: runs the script.
 main() {
@@ -43,7 +40,6 @@ main "$@"
         expected: { file: 'scripts/print.sh', rule: 'runtime-embed', line: 10 },
     },
     {
-        check: 'bash/inline-scripts',
         files: {
             'scripts/node-heredoc.sh': `${BASH_HEADER}# main: runs the script.
 main() {
@@ -58,7 +54,6 @@ main "$@"
         expected: { file: 'scripts/node-heredoc.sh', rule: 'runtime-embed', line: 10 },
     },
     {
-        check: 'bash/inline-scripts',
         files: {
             'scripts/bun.sh': `${BASH_HEADER}# main: runs the script.
 main() {
@@ -71,7 +66,6 @@ main "$@"
         expected: { file: 'scripts/bun.sh', rule: 'runtime-embed', line: 10 },
     },
     {
-        check: 'bash/inline-scripts',
         files: {
             'scripts/deno.sh': `${BASH_HEADER}# main: runs the script.
 main() {
@@ -84,7 +78,6 @@ main "$@"
         expected: { file: 'scripts/deno.sh', rule: 'runtime-embed', line: 10 },
     },
     {
-        check: 'bash/inline-scripts',
         files: {
             'scripts/perl.sh': `${BASH_HEADER}# main: runs the script.
 main() {
@@ -97,7 +90,6 @@ main "$@"
         expected: { file: 'scripts/perl.sh', rule: 'runtime-embed', line: 10 },
     },
     {
-        check: 'bash/inline-scripts',
         files: {
             'scripts/ruby.sh': `${BASH_HEADER}# main: runs the script.
 main() {

@@ -8,6 +8,7 @@ import {
     HEAD_SUFFIX,
     GIT_SHALLOW_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
+    REMOTE_HEAD_FIELD_COUNT,
     GIT_HEAD_NAME_ARGUMENTS,
     GIT_DIFF_NAMES_ARGUMENTS,
     GIT_MERGE_BASE_ARGUMENTS,
@@ -21,7 +22,7 @@ async function listRemoteHeads(root: string, cancelSignal?: AbortSignal): Promis
         cancelSignal,
     });
     return lines.flatMap((line) => {
-        const [name, target] = line.split('\t');
+        const [name, target] = line.split('\t', REMOTE_HEAD_FIELD_COUNT);
         const isHead = name !== undefined && name.endsWith(HEAD_SUFFIX) && target !== undefined && target !== '';
         return isHead ? [[name, target] as [string, string]] : [];
     });
@@ -97,17 +98,23 @@ export async function readChangedPaths(
 ): Promise<ChangedPaths> {
     const compared = reference === '' ? await readDefaultRef(repositoryRoot, cancelSignal) : reference;
     if (compared === '') {
-        throw new GspotError('git', 'No upstream or default branch is available; use --changed <ref>.');
+        throw new GspotError(
+            'git',
+            'No upstream or default branch is available. Run git remote set-head origin --auto once, or pass --changed <ref>.',
+        );
     }
     const merged = await readMergeBase(repositoryRoot, compared, cancelSignal);
     const committed = await readGitPaths(repositoryRoot, [...GIT_DIFF_NAMES_ARGUMENTS, merged, '--'], { cancelSignal });
     const working = await readGitPaths(repositoryRoot, GIT_DIFF_NAMES_ARGUMENTS, { cancelSignal });
+    const untracked = await readGitPaths(repositoryRoot, ['ls-files', '--others', '--exclude-standard', '-z'], {
+        cancelSignal,
+    });
     const commits = await readGitLines(repositoryRoot, [...GIT_CHANGED_COMMITS_ARGUMENTS, `${merged}..HEAD`, '--'], {
         cancelSignal,
     });
     return {
         reference: compared,
-        paths: [...new Set([...committed, ...working])].toSorted((a, b) => compareText(a, b)),
+        paths: [...new Set([...committed, ...working, ...untracked])].toSorted((a, b) => compareText(a, b)),
         commits,
     };
 }

@@ -63,7 +63,7 @@ test('--changed without an upstream names the fix, and uses the remote default b
     const absent = await runGspot(sandbox.path, ['check', '--only', 'sandbox/paths', '--changed', '--json']);
     expect(absent.code).toBe(2);
     expect((JSON.parse(absent.stdout) as CommandFailureJson).message).toBe(
-        'No upstream or default branch is available; use --changed <ref>.',
+        'No upstream or default branch is available. Run git remote set-head origin --auto once, or pass --changed <ref>.',
     );
     runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
     runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
@@ -96,6 +96,7 @@ test.each(['', '0'.repeat(40)])('--changed %p, as CI gives for a new branch, che
 
 test('a shallow clone explains how to fetch the missing history', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const source = join(sandbox.path, 'source');
     await prepareChangedRepository(source, { 'api/source.txt': 'before' });
     runGitStep(source, ['init', '-b', 'main']);

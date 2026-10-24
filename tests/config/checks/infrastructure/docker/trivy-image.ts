@@ -1,6 +1,3 @@
-export const TRIVY_MIXED_REPORT =
-    '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"},{"VulnerabilityID":"CVE-neighbor","PkgName":"neighbor"}],"Secrets":[{"RuleID":"private-key","Title":"Private key","Secret":"sensitive-native-value"}]}]}';
-
 export const COMPOSE_SOURCES = [
     {
         name: 'an inherited service mapping',
@@ -19,24 +16,30 @@ services: {app: {image: nginx:1.27.2}, copy: {image: nginx:1.27.2}, env: {image:
     },
 ] as const;
 
-export const TRIVY_REPORT =
-    '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}';
-
 export const TRIVY_REGISTRY_FAILURE = {
     code: 1,
-    stdout: TRIVY_REPORT,
+    stdout: '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}',
     stderr: 'FATAL registry authentication failed',
     message: 'Trivy could not scan nginx:1.27.2: FATAL registry authentication failed',
 } as const;
 
 export const INVALID_COMPOSE_SOURCES = [
-    { name: 'malformed YAML', source: 'services: [', message: 'compose.yaml is not valid YAML:' },
+    {
+        name: 'malformed YAML',
+        source: 'services: [',
+        message:
+            'compose.yaml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 12. Fix the file.',
+    },
     {
         name: 'a non-string image',
         source: 'services: {app: {image: 12}}',
-        message: 'compose.yaml: services.app.image:',
+        message: 'compose.yaml: services.app.image: Invalid input: expected string, received number. Fix the field.',
     },
-    { name: 'an empty service value', source: 'services: {app: null}', message: 'compose.yaml: services.app:' },
+    {
+        name: 'an empty service value',
+        source: 'services: {app: null}',
+        message: 'compose.yaml: services.app: Invalid input: expected object, received null. Fix the field.',
+    },
 ] as const;
 
 export const TRIVY_IMAGE_FINDINGS = [

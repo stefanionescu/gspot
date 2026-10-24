@@ -1,4 +1,3 @@
-import { findQuotedEnd } from '#cli/system/text.ts';
 import type { DirectiveScan } from '#cli/types/parsers/formats/nginx.ts';
 
 import {
@@ -10,6 +9,22 @@ import {
     ESCAPED_CHARACTER,
     NGINX_PUNCTUATION,
 } from '#cli/config/parsers/formats/nginx.ts';
+
+/**
+Skip a quoted span before looking for comment openers outside it.
+
+@param line the source to scan.
+@param start the first source offset.
+@returns the offset after the quoted value.
+*/
+function findQuotedEnd(line: string, start: number): number {
+    const quote = line.charAt(start);
+    for (let at = start + 1; at < line.length; at += 1) {
+        if (line.charAt(at) === '\\') at += 1;
+        else if (line.charAt(at) === quote) return at + 1;
+    }
+    return line.length;
+}
 
 function findProtectedUnitEnd(text: string, at: number): number {
     const char = text[at];
@@ -75,14 +90,14 @@ export function parseNginxDirectives(text: string): [string, ...string[]][] {
         switch (token) {
             case '}': {
                 directive = [];
-                break;
+                continue;
             }
             case ';':
             case '{': {
                 const [name, ...commandArguments] = directive;
                 if (name !== undefined) found.push([name, ...commandArguments]);
                 directive = [];
-                break;
+                continue;
             }
             default: {
                 directive.push(

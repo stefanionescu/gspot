@@ -14,3 +14,5 @@ export const INDEX_SETTINGS = new Set([
 ]);
 
 export const UV_SETTINGS_FILE = 'uv.toml';
+
+export const MILLISECONDS_PER_DAY = 86_400_000;

@@ -28,31 +28,32 @@ namingLanguageSchema.register(z.globalRegistry, { id: 'namingLanguage' });
 
 const namingLists = {
     banned_words: z
-        .array(z.string())
+        .string()
+        .array()
         .default(SETTING_DEFINITIONS['naming.banned_words'].default)
         .meta(SETTING_DEFINITIONS['naming.banned_words']),
-    override: z
-        .array(
-            namingOverrideSchema.extend({
-                paths: nonemptyPaths
-                    .default(SETTING_DEFINITIONS['naming.override.paths'].default)
-                    .describe(namingOverrideSchema.shape.paths.description as string),
-                languages: z
-                    .array(z.enum(SETTING_LANGUAGES))
-                    .optional()
-                    .describe(namingOverrideSchema.shape.languages.description as string),
-                allow_digits: namingOverrideSchema.shape.allow_digits.default(
-                    SETTING_DEFINITIONS['naming.override.allow_digits'].default,
-                ),
-                allow_repeated_words: namingOverrideSchema.shape.allow_repeated_words.default(
-                    SETTING_DEFINITIONS['naming.override.allow_repeated_words'].default,
-                ),
-                reason: z.string().describe(namingOverrideSchema.shape.reason.description as string),
-            } satisfies SchemaShape<
-                Pick<ParsedNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>,
-                Pick<WrittenNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>
-            >),
-        )
+    override: namingOverrideSchema
+        .extend({
+            paths: nonemptyPaths
+                .default(SETTING_DEFINITIONS['naming.override.paths'].default)
+                .describe(namingOverrideSchema.shape.paths.description as string),
+            languages: z
+                .enum(SETTING_LANGUAGES)
+                .array()
+                .optional()
+                .describe(namingOverrideSchema.shape.languages.description as string),
+            allow_digits: namingOverrideSchema.shape.allow_digits.default(
+                SETTING_DEFINITIONS['naming.override.allow_digits'].default,
+            ),
+            allow_repeated_words: namingOverrideSchema.shape.allow_repeated_words.default(
+                SETTING_DEFINITIONS['naming.override.allow_repeated_words'].default,
+            ),
+            reason: z.string().describe(namingOverrideSchema.shape.reason.description as string),
+        } satisfies SchemaShape<
+            Pick<ParsedNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>,
+            Pick<WrittenNamingOverride, 'paths' | 'languages' | 'allow_digits' | 'allow_repeated_words' | 'reason'>
+        >)
+        .array()
         .default(SETTING_DEFINITIONS['naming.override'].default)
         .meta(SETTING_DEFINITIONS['naming.override']),
 };

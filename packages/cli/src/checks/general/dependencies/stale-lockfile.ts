@@ -3,24 +3,11 @@ import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { findCachedText } from '#cli/system/files/reads.ts';
-import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { parseLockedSpecifiers } from '#cli/parsers/projects/lockfiles.ts';
 import { readDependencySpecifiers } from '#cli/repository/dependencies.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { IMPORTER_LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
+import { findNearestLockfile, parseLockedSpecifiers } from '#cli/parsers/projects/lockfiles.ts';
 import { LOCKFILE_UPDATE_COMMANDS } from '#cli/config/checks/general/dependencies/stale-lockfile.ts';
-
-function findImporterLockfile(session: Session, folder: string) {
-    for (const base of listEnclosingFolders(folder)) {
-        for (const lockfile of IMPORTER_LOCKFILES) {
-            const path = posix.join(base, lockfile);
-            const text = findCachedText(session.reads, path);
-            if (text !== undefined) return { lockfile, path, base, text };
-        }
-    }
-    return undefined;
-}
 
 function compareSpecifiers(
     specifiers: Map<string, string>,
@@ -36,9 +23,11 @@ function compareSpecifiers(
                 : `package.json asks for ${name} ${specifier}, but ${lockfilePath} records ${recorded}.`,
         ];
     });
-    const removed = [...locked.keys()]
+    const removed = locked
+        .keys()
         .filter((name) => !specifiers.has(name))
-        .map((name) => `${lockfilePath} records ${name}, which package.json no longer declares.`);
+        .map((name) => `${lockfilePath} records ${name}, which package.json no longer declares.`)
+        .toArray();
     return [...changed, ...removed];
 }
 
@@ -53,7 +42,7 @@ export function checkDependenciesStaleLockfile(session: Session, planned: Planne
     const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const specifiers = readDependencySpecifiers(session.reads, packageJsonPath);
-    const found = findImporterLockfile(session, folder);
+    const found = findNearestLockfile(session.reads, folder, IMPORTER_LOCKFILES);
     if (specifiers === undefined || found === undefined) return [];
     const locked = parseLockedSpecifiers(found.lockfile, found.text, posix.join(found.base, found.lockfile)).get(
         posix.relative(found.base, folder),

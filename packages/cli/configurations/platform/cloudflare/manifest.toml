@@ -2,7 +2,7 @@ allowed_words = ["Cloudflare"]
 generated = ["worker-configuration.d.ts", "cloudflare-env.d.ts"]
 
 [configuration]
-description = "Cloudflare Pages and Workers: valid headers and redirects files, current binding types, and security rules for worker code."
+description = "Cloudflare Pages and Workers: valid headers and redirects files and current binding types. Level all adds security rules for worker code."
 requires = ["javascript"]
 title = "Cloudflare"
 
@@ -58,5 +58,4 @@ name = "stale-types"
 runs = "scope"
 stage = "push"
 summary = "Checks that Git tracks the environment types file, and that it matches what wrangler writes."
-tool = "wrangler"
 why = "Stale binding types let code compile against a binding the configuration dropped."

@@ -49,7 +49,7 @@ Reports a packageManager field that names another version than the mise pin of t
 @param planned the scope and the run cache.
 @returns a finding when the two versions differ.
 */
-export function checkPackageManagerPin(session: Session, planned: PlannedCheck): Finding[] {
+export function checkDependenciesPackageManagerPin(session: Session, planned: PlannedCheck): Finding[] {
     const folder = planned.scope.folder.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
     const writtenPin = splitPackageManager(readCachedPackageJson(session.reads, packageJsonPath)?.packageManager);

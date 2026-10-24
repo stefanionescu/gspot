@@ -5,6 +5,7 @@ import { openSession } from '#cli/session.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { type Finding } from '#cli/types/runs/check.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { README, LICENSE } from '#tests/config/checks/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -123,7 +124,8 @@ test.each([...MALFORMED_TASK_FILES])(
         await writeFile(join(sandbox.path, path), text);
         session.reads = createReadCache(sandbox.path);
         const input = planSandboxCheck(session, 'docs/missing-paths', { paths: [document] });
-        expect(() => findBuiltInCheck('docs/missing-paths')(session, input)).toThrow(message);
+        const failure = await captureRejection(findBuiltInCheck('docs/missing-paths')(session, input));
+        expect(failure.message).toBe(message);
     },
 );
 

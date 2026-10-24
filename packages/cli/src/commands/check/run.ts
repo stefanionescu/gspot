@@ -27,11 +27,10 @@ import type { Finding, CheckCode, CheckResult, CheckRunOptions } from '#cli/type
 function isIgnoreMatch(record: IgnoreRecord, finding: Finding): boolean {
     if ((['check', 'rule'] as const).some((key) => record[key] !== undefined && record[key] !== finding[key]))
         return false;
-    if (record.names !== undefined) {
-        if (finding.name === undefined) return false;
-        if (!record.names.includes(finding.name)) return false;
-    }
-    return record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file);
+    return (
+        (record.names === undefined || (finding.name !== undefined && record.names.includes(finding.name))) &&
+        (record.paths === undefined || record.paths.length === 0 || buildPathMatcher(record.paths)(finding.file))
+    );
 }
 
 async function refreshAfterFixes(session: Session): Promise<void> {
@@ -70,14 +69,18 @@ async function runPlannedCheck(run: Run, runnable: PlannedCheck): Promise<CheckR
     if (early) return early;
     const started = performance.now();
     try {
-        return await runCheckCode(session, runnable, findCheckCode(runnable.check));
+        return await runCheckCode(session, runnable, findCheckCode(runnable.check), { verbose: run.options.verbose });
     } catch (error) {
-        return { ...base, duration: performance.now() - started, ...classifyCheckError(runnable.check.id, error) };
+        return {
+            ...base,
+            duration: Math.round(performance.now() - started),
+            ...classifyCheckError(runnable.check.id, error),
+        };
     }
 }
 
 function removeIgnoredFindings(result: CheckResult, ignores: IgnoreRecord[]): void {
-    result.findings = result.findings.filter((finding) => !ignores.some((record) => isIgnoreMatch(record, finding)));
+    result.findings = result.findings.filter((finding) => ignores.every((record) => !isIgnoreMatch(record, finding)));
     result.status = result.findings.length > 0 ? 'failed' : 'passed';
 }
 
@@ -107,13 +110,12 @@ function finishResult(run: Run, result: CheckResult): void {
         removeOutsideFindings(result, run);
         removeIgnoredFindings(result, run.session.settingsFile.settings.ignore);
     }
-    if (FAILED_STATUSES.has(result.status)) {
-        const scopeArgument =
-            result.scope === ''
-                ? undefined
-                : relative(run.options.cwd, join(run.session.installedRoot, result.scope)) || '.';
-        result.reproduce = formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options));
-    }
+    if (!FAILED_STATUSES.has(result.status)) return;
+    const scopeArgument =
+        result.scope === ''
+            ? undefined
+            : relative(run.options.cwd, join(run.session.installedRoot, result.scope)) || '.';
+    result.reproduce = formatReproduceCommand(result.check, scopeArgument, buildReproduceOptions(run.options));
 }
 
 async function runActiveChecks(run: Run, checks: PlannedCheck[]): Promise<CheckResult[]> {
@@ -153,12 +155,11 @@ async function planAfterFixes(session: Session, options: RunOptions): Promise<Pl
 /**
 Plan and run the checks, after the fixers when --fix asks, then drop ignored findings and build the run report.
 
-@param opened the repository and its tools.
+@param session the repository and its tools.
 @param options the stage, the file selection, and the fix flags.
 @returns the report, the plan, and the fix report when --fix ran.
 */
-export async function runChecks(opened: Session, options: RunOptions): Promise<RunResult> {
-    const session = opened;
+export async function runChecks(session: Session, options: RunOptions): Promise<RunResult> {
     const started = new Date();
     const { planned, fixes } = await planAfterFixes(session, options);
     const runState: Run = {
@@ -174,7 +175,6 @@ export async function runChecks(opened: Session, options: RunOptions): Promise<R
         planned,
         active,
         ran,
-        ignores: session.settingsFile.settings.ignore,
         fixes,
     });
     return fixes ? { report, planned, fixes } : { report, planned };

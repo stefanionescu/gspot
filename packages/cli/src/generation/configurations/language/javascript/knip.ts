@@ -3,7 +3,6 @@ import { compareText } from '#cli/system/text.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
-import type { Settings } from '#cli/types/settings/file.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
 import { listDistinctTools } from '#cli/configurations/tools.ts';
@@ -12,17 +11,13 @@ import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
 import { listWorkspaceFolders } from '#cli/repository/npm/workspaces.ts';
 import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import type { Settings, TableSettings } from '#cli/types/settings/file.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
+import { convertToGlobs, listIgnoreSections } from '#cli/generation/config-files/ignore-files.ts';
 
 import {
-    convertToGlobs,
-    buildIgnoreSections,
-    listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-files.ts';
-import {
-    KNIP_SCHEMA_URL,
     PACKAGE_RUNNERS,
-    KNIP_ENTRY_SETTING,
+    KNIP_ESLINT_CONFIG,
     MISE_FILE_TASK_GLOBS,
     COMMAND_WORD_SEPARATORS,
     KNIP_IGNORED_DEPENDENCIES,
@@ -30,12 +25,9 @@ import {
 } from '#cli/config/generation/configurations/language/javascript/knip.ts';
 
 function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): string[] {
-    const authored = listApplicableTables(settings, scope).flatMap(({ table }) => {
-        const patterns = table.tools?.['knip']?.[KNIP_ENTRY_SETTING];
-        return Array.isArray(patterns)
-            ? patterns.filter((pattern): pattern is string => typeof pattern === 'string')
-            : [];
-    });
+    const authored = listApplicableTables(settings, scope).flatMap(
+        ({ table }) => (table.tools?.knip as Partial<TableSettings<'tools.knip'>> | undefined)?.entry ?? [],
+    );
     const nearest = scopes
         .filter((each) => isInScope(scope, each.folder.path))
         .toSorted((left, right) => compareScopeDepth(right.folder.path, left.folder.path))
@@ -46,13 +38,18 @@ function selectEntryFiles(settings: Settings, scopes: Scope[], scope: string): s
                 : []
             ).map((pattern) => joinScopeSelector(pattern, scope)),
             ...scopeSettings.test_files,
+            ...(scopeSettings.values.javascript?.script_files ?? []),
+            ...(scope === '' ? [KNIP_ESLINT_CONFIG] : []),
         ]);
-    return [...new Set([...authored, ...nearest])].flatMap((pattern) => {
+    const entries: string[] = [];
+    const patterns = new Set([...authored, ...nearest]);
+    for (const pattern of patterns) {
         const sign = pattern.startsWith('!') ? '!' : '';
         const source = sign === '' ? pattern : pattern.slice(1);
-        if (scope === '' || source.startsWith('**/')) return [pattern];
-        return source.startsWith(`${scope}/`) ? [`${sign}${source.slice(scope.length + 1)}`] : [];
-    });
+        if (scope === '' || source.startsWith('**/')) entries.push(pattern);
+        else if (source.startsWith(`${scope}/`)) entries.push(`${sign}${source.slice(scope.length + 1)}`);
+    }
+    return entries;
 }
 
 function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Scope[]) {
@@ -69,7 +66,7 @@ function buildWorkspaces(repositoryRoot: string, settings: Settings, scopes: Sco
                 path === '' ? '.' : path,
                 {
                     entry: selectEntryFiles(settings, scopes, path),
-                    ...(path !== '' && ignored !== undefined ? { ignoreDependencies: ignored } : {}),
+                    ...(path !== '' && ignored !== undefined && { ignoreDependencies: ignored }),
                 },
             ];
         }),
@@ -80,15 +77,16 @@ function findRunPackage(words: string[], index: number): string | undefined {
     const subcommands = PACKAGE_RUNNERS[words[index] ?? ''];
     if (subcommands === undefined) return undefined;
     const hasSubcommand = subcommands.length > 0;
-    if (hasSubcommand && !subcommands.includes(words[index + 1] ?? '')) return undefined;
-    return words.slice(index + 1 + Number(hasSubcommand)).find((word) => !word.startsWith('-'));
+    return hasSubcommand && !subcommands.includes(words[index + 1] ?? '')
+        ? undefined
+        : words.slice(index + 1 + Number(hasSubcommand)).find((word) => !word.startsWith('-'));
 }
 
 function listRunPackages(text: string): string[] {
     const words = text.split(COMMAND_WORD_SEPARATORS);
     return words.flatMap((_word, index) => {
         const target = findRunPackage(words, index);
-        return target === undefined ? [] : [splitIdentity(target)?.[0] ?? target];
+        return target === undefined ? [] : (splitIdentity(target)?.[0] ?? target);
     });
 }
 
@@ -116,24 +114,20 @@ export function buildKnipFile(planned: PlannedConfigFile): string {
     const { settingsFile, root, startRunner } = planned.session;
     const options = getTable(scope.settings, 'tools.knip');
     const scanner = getTable(scope.settings, 'dependencies').bun_scanner;
-    const ignoredGlobs = convertToGlobs([
-        ...buildIgnoreSections(planned.session),
-        ...listCheckIgnoreSections(scope.settings, 'javascript/knip'),
-    ]);
+    const ignoredGlobs = convertToGlobs(listIgnoreSections(planned, 'javascript/knip'));
     const tools = listDistinctTools(configurations);
     const toolBinaries = [
         ...tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),
         startRunner.name,
     ];
     const toolPackages = tools.flatMap((tool) =>
-        tool.installers['npm']?.name === undefined ? [] : [tool.installers['npm'].name],
+        tool.installers['npm']?.name === undefined ? [] : tool.installers['npm'].name,
     );
     const workspaces = buildWorkspaces(root, settingsFile.settings, scopes);
     const externals = [...new Set(scopes.flatMap(({ settings }) => settings.values.javascript?.externals ?? []))];
     return JSON.stringify(
         {
-            $schema: KNIP_SCHEMA_URL,
-            ignore: ignoredGlobs,
+            ignore: ignoredGlobs.filter((pattern) => pattern !== KNIP_ESLINT_CONFIG),
             ignoreDependencies: [
                 ...new Set([
                     ...KNIP_IGNORED_DEPENDENCIES,
@@ -145,7 +139,7 @@ export function buildKnipFile(planned: PlannedConfigFile): string {
             ],
             ignoreBinaries: [...new Set(toolBinaries)],
             ignoreExportsUsedInFile: planned.level !== 'all',
-            ...(externals.length === 0 ? {} : { ignoreUnresolved: externals }),
+            ...(externals.length > 0 && { ignoreUnresolved: externals }),
             workspaces,
         },
         null,

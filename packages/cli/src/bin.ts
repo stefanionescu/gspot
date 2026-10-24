@@ -8,6 +8,10 @@ if (runtimeError === undefined) {
     const { runProgram } = await import('#cli/main.ts');
     process.exitCode = await runProgram(process.argv.slice(PROCESS_ARGUMENTS_START));
 } else {
-    process.stderr.write(`${runtimeError}\n`);
+    const argumentsEnd = process.argv.indexOf('--');
+    const commandArguments = argumentsEnd === -1 ? process.argv : process.argv.slice(0, argumentsEnd);
+    if (commandArguments.includes('--json'))
+        process.stdout.write(`${JSON.stringify({ error: 'runtime', message: runtimeError })}\n`);
+    else process.stderr.write(`${runtimeError}\n`);
     process.exitCode = EXIT_ERROR;
 }

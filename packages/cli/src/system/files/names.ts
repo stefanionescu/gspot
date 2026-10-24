@@ -2,10 +2,11 @@ import { GspotError } from '#cli/system/errors.ts';
 import { STATE_FOLDER_PATTERN } from '#cli/config/gspot-folder.ts';
 import { DEVICE_NAME, UNSAFE_PATH_END, UNSAFE_CHARACTERS, RESERVED_SEGMENTS } from '#cli/config/system/files/names.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function isUnsafeSegment(segment: string): boolean {
-    if (RESERVED_SEGMENTS.has(segment)) return true;
-    if (UNSAFE_CHARACTERS.test(segment) || UNSAFE_PATH_END.test(segment)) return true;
-    return DEVICE_NAME.test(segment);
+    return RESERVED_SEGMENTS.has(segment) || UNSAFE_CHARACTERS.test(segment) || UNSAFE_PATH_END.test(segment)
+        ? true
+        : DEVICE_NAME.test(segment);
 }
 
 function splitPortablePath(path: string): string[] {

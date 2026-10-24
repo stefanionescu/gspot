@@ -56,7 +56,7 @@ name = "eslint"
 npm = "eslint"
 replace = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint.config.ts", "eslint.config.mts", "eslint.config.cts", ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json", ".eslintrc.yml", ".eslintrc.yaml", ".eslintignore"]
 rule_url = "https://eslint.org/docs/latest/rules/{rule}"
-version = "9.39.5"
+version = "10.13.0"
 
 
 [tool.suppression]
@@ -75,7 +75,7 @@ key = "eslintConfig"
 kind = "library"
 name = "@eslint/js"
 npm = "@eslint/js"
-version = "9.39.5"
+version = "10.0.1"
 
 [[tool]]
 kind = "library"
@@ -90,7 +90,7 @@ kind = "library"
 name = "eslint-plugin-sonarjs"
 npm = "eslint-plugin-sonarjs"
 rule_prefix = "sonarjs"
-version = "4.2.0"
+version = "4.2.2"
 
 [[tool]]
 kind = "library"
@@ -98,14 +98,14 @@ name = "eslint-plugin-unicorn"
 npm = "eslint-plugin-unicorn"
 rule_prefix = "unicorn"
 rule_url = "https://github.com/sindresorhus/eslint-plugin-unicorn/blob/main/docs/rules/{rule}.md"
-version = "65.0.1"
+version = "78.0.0"
 
 [[tool]]
 kind = "library"
 name = "eslint-plugin-security"
 npm = "eslint-plugin-security"
 rule_prefix = "security"
-version = "4.0.1"
+version = "4.2.0"
 
 [[tool]]
 kind = "library"
@@ -126,21 +126,21 @@ kind = "library"
 name = "eslint-plugin-n"
 npm = "eslint-plugin-n"
 rule_prefix = "n"
-version = "18.3.0"
+version = "18.4.1"
 
 [[tool]]
 kind = "library"
 name = "eslint-plugin-jsdoc"
 npm = "eslint-plugin-jsdoc"
 rule_prefix = "jsdoc"
-version = "64.3.9"
+version = "65.3.11"
 
 [[tool]]
 kind = "library"
 name = "eslint-plugin-regexp"
 npm = "eslint-plugin-regexp"
 rule_prefix = "regexp"
-version = "3.3.0"
+version = "3.3.1"
 
 [[tool]]
 kind = "library"
@@ -179,7 +179,7 @@ kind = "library"
 name = "eslint-plugin-package-json"
 npm = "eslint-plugin-package-json"
 rule_prefix = "package-json"
-version = "1.8.0"
+version = "1.10.1"
 
 [[tool]]
 kind = "library"
@@ -191,13 +191,13 @@ version = "10.1.8"
 kind = "library"
 name = "globals"
 npm = "globals"
-version = "17.12.0"
+version = "17.13.0"
 
 [[tool]]
 name = "knip"
 npm = "knip"
 replace = ["knip.json", "knip.jsonc", ".knip.json", ".knip.jsonc", "knip.ts", "knip.js", "knip.config.js", "knip.config.ts"]
-version = "6.35.1"
+version = "6.41.0"
 
 [[tool]]
 name = "tsc"
@@ -220,7 +220,7 @@ target = "eslint/eslint.mjs"
 tool = "eslint"
 
 [config_file.pointer]
-body = "export { default } from {target_module};"
+body = "export { default } from {target_module};\n"
 note = "Run gspot install before you use ESLint in your editor."
 path = "eslint.config.mjs"
 

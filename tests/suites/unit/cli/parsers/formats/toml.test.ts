@@ -43,7 +43,8 @@ test('a TOML syntax error is a GspotError that names the file and keeps the pars
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'filesystem',
-            message: 'apps/api/bunfig.toml:1:9 is not valid TOML: Error parsing TOML (1, 9). Fix the file.',
+            message:
+                'apps/api/bunfig.toml:1:9 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
             cause: expect.any(Error),
         }),
     );

@@ -88,9 +88,9 @@ function findGeneratedKind(path: string, prefix: Buffer): FileClassification | u
     if (path.startsWith(`${DOT_GSPOT}/`)) return { kind: 'generated', origin: KIND_ORIGINS.gspot };
     if (BUILD_LAUNCHERS.has(posix.basename(path))) return { kind: 'generated', origin: KIND_ORIGINS.buildWrapper };
     const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
-    if (hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some((banner) => banner.test(start)))
-        return { kind: 'generated', origin: KIND_ORIGINS.banner };
-    return undefined;
+    return hasGeneratedHeader(start) || GENERATOR_OUTPUT_BANNERS.some((banner) => banner.test(start))
+        ? { kind: 'generated', origin: KIND_ORIGINS.banner }
+        : undefined;
 }
 
 function classifyManagedDocument(root: string, file: ListedFile, prefix: Buffer): FileClassification {
@@ -98,8 +98,9 @@ function classifyManagedDocument(root: string, file: ListedFile, prefix: Buffer)
         return SOURCE_KIND;
     const text = readText(root, file.path);
     const authored = stripBlock(text, { path: file.path, style: 'markdown' });
-    if (authored === text || authored.trim() !== '') return SOURCE_KIND;
-    return { kind: 'generated', origin: KIND_ORIGINS.gspot };
+    return authored === text || authored.trim() !== ''
+        ? SOURCE_KIND
+        : { kind: 'generated', origin: KIND_ORIGINS.gspot };
 }
 
 function classifyKind(
@@ -252,13 +253,11 @@ export function listConfigurationGeneratedPaths(selected: Map<string, Configurat
                 const paths = [...generated.map((file) => posix.join(path, file)), ...listPointers(path, configFiles)];
                 return paths.length === 0
                     ? []
-                    : [
-                          {
-                              kind: 'generated' as const,
-                              configuration: name,
-                              paths,
-                          },
-                      ];
+                    : {
+                          kind: 'generated' as const,
+                          configuration: name,
+                          paths,
+                      };
             }),
         )
         .toArray();

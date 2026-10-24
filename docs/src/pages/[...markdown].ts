@@ -12,7 +12,7 @@ export const getStaticPaths = (async () => {
     const pages = await getCollection('docs');
     return pages.flatMap((page) => {
         const copy = buildMarkdownCopyPath(page.id);
-        return copy === undefined ? [] : [{ params: { markdown: copy.slice(1) }, props: { docsPage: page } }];
+        return copy === undefined ? [] : { params: { markdown: copy.slice(1) }, props: { docsPage: page } };
     });
 }) satisfies GetStaticPaths;
 

@@ -1,21 +1,22 @@
 import type { Session } from '#cli/types/session.ts';
-import { UV_TOOL } from '#cli/config/tools/python.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { findSystemSkip } from '#cli/planning/skips.ts';
 import { listCheckTools } from '#cli/planning/tools.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { PACKAGE_MANAGERS } from '#cli/config/repository/npm.ts';
 import { compareText, quoteArgument } from '#cli/system/text.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
-import type { Pipeline, ActionPin } from '#cli/types/generation/ci.ts';
 import { CHECK_LIST_SEPARATOR } from '#cli/config/commands/check/check.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { getTool, findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
+import type { Pipeline, Lockfile, ActionPin } from '#cli/types/generation/ci.ts';
+import { getUvPin, findMisePin, findMissingBuild } from '#cli/configurations/tools.ts';
 import { TOOL_BUILDS, NEXTJS_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
+import type { PackageManager, PackageManagerPin } from '#cli/types/repository/npm/package-manager.ts';
 
 import {
     isYarnBerry,
@@ -75,7 +76,7 @@ function selectManualChecks(pipeline: Pipeline, platform: Pipeline['operatingSys
     const tools = pipeline.manualTools.flatMap((tool) => {
         const pin = findMisePin(tool);
         return pin !== undefined && required.has(tool.name) && findMissingBuild(tool, { platform, arch }) === undefined
-            ? [pin.name]
+            ? pin.name
             : [];
     });
     return {
@@ -149,7 +150,7 @@ function buildJob(pipeline: Pipeline, platform: Pipeline['operatingSystems'][num
                       {
                           name: CI_STEP_NAMES.slow,
                           if: GITHUB_SLOW_CONDITION,
-                          ...(slow.tools.length === 0 ? {} : { env: { ...MISE_TOKEN_ENVIRONMENT } }),
+                          ...(slow.tools.length > 0 && { env: { ...MISE_TOKEN_ENVIRONMENT } }),
                           run: listManualLines(command, slow).join('\n') + '\n',
                       },
                   ]),
@@ -221,18 +222,20 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             ? pipeline.projectInstall
             : [pipeline.setupCommand.map((argument) => quoteArgument(argument)).join(' ')];
     const check = [GITLAB_BASE_LINE, `${command} check --changed "\${${CI_BASE_VARIABLE}}"`].join('\n');
-    const branches = OPERATING_SYSTEMS.flatMap((system) =>
+    const builds = OPERATING_SYSTEMS.flatMap((system) =>
         TOOL_BUILDS.filter((build) => build.startsWith(`${system.name}-`)).flatMap((build) => {
             const arch = build.slice(system.name.length + 1);
             const manual = selectManualChecks(pipeline, system.name, arch);
-            if (manual.checks.length === 0) return [];
-            return [
-                `    ${system.nodeName}/${arch})`,
-                ...listManualLines(command, manual).map((line) => `        ${line}`),
-                '        ;;',
-            ];
+            return manual.checks.length === 0
+                ? []
+                : { pattern: `${system.nodeName}/${arch}`, lines: listManualLines(command, manual) };
         }),
     );
+    const branches = [...Map.groupBy(builds, ({ lines }) => lines.join('\n'))].flatMap(([lines, group]) => [
+        `    ${group.map(({ pattern }) => pattern).join('|')})`,
+        ...lines.split('\n').map((line) => `        ${line}`),
+        '        ;;',
+    ]);
     const manual =
         branches.length === 0
             ? []
@@ -257,11 +260,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}`, kind: 'workflow' };
 }
 
-function readProjectPackageManager(
-    session: Session,
-    scope: string,
-    name: NonNullable<Session['packageManager']>['name'],
-): ReturnType<typeof readPackageManagerVersion> {
+function readProjectPackageManager(session: Session, scope: string, name: PackageManagerPin['name']): PackageManager {
     const packageJson = readPackageJson(session.root, joinScope(scope, PACKAGE_JSON));
     const written = packageJson === undefined ? undefined : readPackageManagerPin(packageJson);
     const selected = written?.name === name ? written : session.packageManager;
@@ -273,16 +272,12 @@ function readProjectPackageManager(
     );
 }
 
-function buildFrozenInstall(session: Session, scope: string, lockfile: string): readonly string[] | undefined {
+function buildFrozenInstall(session: Session, scope: string, lockfile: Lockfile): readonly string[] {
     const command = FROZEN_INSTALLS[lockfile];
-    if (command === undefined) return undefined;
-    const [name] = command;
-    const runner =
-        name === UV_TOOL
-            ? { name, version: getTool(session.configurations.values(), UV_TOOL).version }
-            : readProjectPackageManager(session, scope, name as NonNullable<Session['packageManager']>['name']);
+    const name = PACKAGE_MANAGERS.find((tool) => tool === command[0]);
+    const runner = name === undefined ? getUvPin() : readProjectPackageManager(session, scope, name);
     const args =
-        lockfile === 'yarn.lock' && isYarnBerry(runner as NonNullable<Session['packageManager']> & { version: string })
+        runner.name === 'yarn' && isYarnBerry({ name: 'yarn', version: runner.version })
             ? YARN_BERRY_INSTALL.slice(1)
             : command.slice(1);
     return buildPackageManagerCommand(runner, args);
@@ -297,7 +292,7 @@ List the tracked lockfiles of the root and of each scope, which CI installs from
 export function listProjectLockfiles(session: Session): string[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     return session.scopes.flatMap(({ folder }) =>
-        Object.keys(FROZEN_INSTALLS)
+        (Object.keys(FROZEN_INSTALLS) as Lockfile[])
             .map((lockfile) => joinScope(folder.path, lockfile))
             .filter((path) => tracked.has(path)),
     );
@@ -313,11 +308,11 @@ Next.js project, which typed lint rules read.
 export function listProjectInstallLines(session: Session): string[] {
     const lockfiles = new Set(listProjectLockfiles(session));
     return session.scopes.flatMap(({ folder, configurations }) => {
-        const installs = Object.keys(FROZEN_INSTALLS)
+        const installs = (Object.keys(FROZEN_INSTALLS) as Lockfile[])
             .filter((lockfile) => lockfiles.has(joinScope(folder.path, lockfile)))
-            .flatMap((lockfile) => {
+            .map((lockfile) => {
                 const command = buildFrozenInstall(session, folder.path, lockfile);
-                return command === undefined ? [] : [command.map((argument) => quoteArgument(argument)).join(' ')];
+                return command.map((argument) => quoteArgument(argument)).join(' ');
             });
         const isNext = configurations.some((configuration) => configuration.name === NEXTJS_CONFIGURATION);
         const lines = [...installs, ...(isNext && installs.length > 0 ? [NEXT_TYPEGEN_LINE] : [])];

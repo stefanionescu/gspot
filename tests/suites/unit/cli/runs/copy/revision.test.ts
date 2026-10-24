@@ -6,15 +6,15 @@ import { testdir, createFileTree } from 'testdirs';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { type ProcessOutput } from '#tests/types/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runGit, commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { type GitHookReport, type ProcessOutput } from '#tests/types/processes.ts';
 import { readIndexFiles, listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { listHeadFiles, listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
+import { GIT_HOOK_REPORT, GIT_HOOK_SCRIPT } from '#tests/config/runs/copy/revision.ts';
 import { chmod, mkdir, readdir, symlink, copyFile, readFile, writeFile } from 'node:fs/promises';
-import { GIT_HOOK_CASES, GIT_HOOK_FIELDS, GIT_HOOK_REPORT, GIT_HOOK_SCRIPT } from '#tests/config/runs/copy/revision.ts';
 
 function runGitHook(worktree: string, index: string, folder: string, report: string): ProcessOutput {
     const revision = pathToFileURL(Bun.resolveSync('#cli/runs/copy/revision.ts', import.meta.dir)).href;
@@ -38,7 +38,8 @@ function runGitHook(worktree: string, index: string, folder: string, report: str
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();
     const { project, commitId } = await prepareNestedRepository(sandbox.path);
-    const headFiles = await listHeadFiles(project);
+    const head = await readHead(project);
+    const headFiles = await listRevisionFiles(project, { kind: 'commit', hash: head! });
     expect(headFiles.map((file) => file.path)).toStrictEqual(['source.txt']);
     const files = await listRevisionFiles(project, { kind: 'index' });
     expect(files.map((file) => file.path)).toStrictEqual(['source.txt']);
@@ -85,56 +86,35 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
     expect(await readFile(join(outside.path, 'source.txt'), 'utf8')).toBe('outside source');
 });
 
-test.each([...GIT_HOOK_CASES])(
-    'a Git hook in a linked worktree copies the index and the commit, and keeps its own index, HEAD, Git settings, and cancellation',
-    async ({ part }) => {
-        await using sandbox = await testdir({ 'repository/nested/source.txt': 'committed\n' });
+test('a Git hook in a linked worktree copies the index and the commit, and keeps its own index, HEAD, Git settings, and cancellation', async () => {
+    await using sandbox = await testdir({ 'repository/nested/source.txt': 'committed\n' });
 
-        const root = join(sandbox.path, 'repository');
-        commitAll(root);
-        const worktree = join(sandbox.path, 'linked');
-        runGitStep(root, ['worktree', 'add', '-qb', 'hook-probe', worktree]);
-        const folder = runGitStep(worktree, ['rev-parse', '--absolute-git-dir']);
-        const index = join(folder, 'custom-index');
-        const standard = await readFile(join(folder, 'index'));
-        await copyFile(join(folder, 'index'), index);
-        await writeFile(join(worktree, 'nested/source.txt'), 'selected\n');
-        const staged = runGit(worktree, ['add', 'nested/source.txt'], { GIT_INDEX_FILE: index });
-        expect(staged.code, staged.stderr).toBe(0);
-        await writeFile(join(worktree, 'nested/source.txt'), 'working\n');
-        await createFileTree(sandbox.path, {
-            'hook/probe.mjs': GIT_HOOK_SCRIPT,
-            'hook/pre-commit':
-                '#!/bin/sh\n"$GSPOT_HOOK_RUNTIME" "$GSPOT_HOOK_PROBE" "$GSPOT_HOOK_REVISION" "$GSPOT_HOOK_GIT" "$GSPOT_HOOK_TOOL" "$GSPOT_HOOK_TIMEOUT" "$GSPOT_HOOK_REPORT"\n',
-        });
-        await chmod(join(sandbox.path, 'hook/pre-commit'), 0o755);
-        const report = join(sandbox.path, 'report.json');
-        const result = runGitHook(worktree, index, sandbox.path, report);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        const actual = JSON.parse(await readFile(report, 'utf8')) as GitHookReport;
-        if (part === 'HEAD') {
-            expect(actual.headRetained).toBe(GIT_HOOK_REPORT.headRetained);
-            expect(actual.workingBytes).toBe(GIT_HOOK_REPORT.workingBytes);
-            expect(runGitStep(worktree, ['symbolic-ref', 'HEAD'])).toBe('refs/heads/hook-probe');
-            expect(await readFile(join(worktree, 'nested/source.txt'), 'utf8')).toBe('working\n');
-        } else {
-            const fields = GIT_HOOK_FIELDS[part];
-            expect(
-                actual.reports.map((report: Record<string, unknown>) =>
-                    Object.fromEntries(fields.map((field) => [field, report[field]])),
-                ),
-            ).toStrictEqual(
-                GIT_HOOK_REPORT.reports.map((report) =>
-                    Object.fromEntries(fields.map((field) => [field, report[field]])),
-                ),
-            );
-            if (part === 'index') {
-                expect(actual.indexRetained).toBe(GIT_HOOK_REPORT.indexRetained);
-                expect(await readFile(join(folder, 'index'))).toStrictEqual(standard);
-            }
-        }
-    },
-);
+    const root = join(sandbox.path, 'repository');
+    commitAll(root);
+    const worktree = join(sandbox.path, 'linked');
+    runGitStep(root, ['worktree', 'add', '-qb', 'hook-probe', worktree]);
+    const folder = runGitStep(worktree, ['rev-parse', '--absolute-git-dir']);
+    const index = join(folder, 'custom-index');
+    const standard = await readFile(join(folder, 'index'));
+    await copyFile(join(folder, 'index'), index);
+    await writeFile(join(worktree, 'nested/source.txt'), 'selected\n');
+    const staged = runGit(worktree, ['add', 'nested/source.txt'], { GIT_INDEX_FILE: index });
+    expect(staged.code, staged.stderr).toBe(0);
+    await writeFile(join(worktree, 'nested/source.txt'), 'working\n');
+    await createFileTree(sandbox.path, {
+        'hook/probe.mjs': GIT_HOOK_SCRIPT,
+        'hook/pre-commit':
+            '#!/bin/sh\n"$GSPOT_HOOK_RUNTIME" "$GSPOT_HOOK_PROBE" "$GSPOT_HOOK_REVISION" "$GSPOT_HOOK_GIT" "$GSPOT_HOOK_TOOL" "$GSPOT_HOOK_TIMEOUT" "$GSPOT_HOOK_REPORT"\n',
+    });
+    await chmod(join(sandbox.path, 'hook/pre-commit'), 0o755);
+    const report = join(sandbox.path, 'report.json');
+    const result = runGitHook(worktree, index, sandbox.path, report);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(JSON.parse(await readFile(report, 'utf8'))).toStrictEqual(GIT_HOOK_REPORT);
+    expect(runGitStep(worktree, ['symbolic-ref', 'HEAD'])).toBe('refs/heads/hook-probe');
+    expect(await readFile(join(worktree, 'nested/source.txt'), 'utf8')).toBe('working\n');
+    expect(await readFile(join(folder, 'index'))).toStrictEqual(standard);
+});
 
 test.skipIf(isWindows)('an index copy keeps unusual filename bytes and contents', async () => {
     await using sandbox = await testdir();
@@ -148,12 +128,26 @@ test.skipIf(isWindows)('an index copy keeps unusual filename bytes and contents'
 test('a revision copy keeps its source available until disposal and removes the temporary folder afterward', async () => {
     await using sandbox = await testdir({ 'source.txt': 'selected source' });
     commitAll(sandbox.path);
-    let copiedPath = '';
     const copy = await copyRevision(sandbox.path, { kind: 'index' });
-    copiedPath = join(copy.root, 'source.txt');
+    const copiedPath = join(copy.root, 'source.txt');
     expect(await readFile(copiedPath, 'utf8')).toBe('selected source');
     expect(runGitStep(copy.root, ['write-tree'])).toBe(copy.tree);
     copy[Symbol.dispose]();
     expect(await isOnDisk(copiedPath)).toBe(false);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('selected source');
+});
+
+test('a shallow index copy reads newly staged blobs and preserves its shallow history', async () => {
+    await using sandbox = await testdir({ 'origin/source.txt': 'committed\n' });
+    const origin = join(sandbox.path, 'origin');
+    const checkout = join(sandbox.path, 'shallow');
+    commitAll(origin);
+    runGitStep(origin, ['commit', '--allow-empty', '-qm', 'Second']);
+    runGitStep(sandbox.path, ['clone', '--quiet', '--depth', '1', pathToFileURL(origin).href, checkout]);
+    await writeFile(join(checkout, 'new.txt'), 'new staged blob\n');
+    runGitStep(checkout, ['add', 'new.txt']);
+    using copy = await copyRevision(checkout, { kind: 'index' });
+    expect(await readFile(join(copy.root, 'new.txt'), 'utf8')).toBe('new staged blob\n');
+    expect(runGitStep(copy.root, ['rev-list', '--count', 'HEAD'])).toBe('1');
+    expect(runGitStep(copy.root, ['write-tree'])).toBe(copy.tree);
 });

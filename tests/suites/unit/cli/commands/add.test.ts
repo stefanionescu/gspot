@@ -2,19 +2,19 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { readSettings } from '#cli/settings/read.ts';
 import type { ApplyReport } from '#cli/types/apply.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listToolInstallFiles } from '#tests/setup/cli/tools.ts';
 import { recordNpmCommands } from '#tests/setup/system/fakes.ts';
 import { isOnDisk, readTree } from '#tests/setup/system/files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
+import { readSandboxSettings, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
     API_BASH_FILES,
+    API_SCOPE_FILES,
     TOOLS_CHANGED_NOTE,
     ALWAYS_SELECTED_RESULTS,
     UNKNOWN_CONFIGURATION_REFUSALS,
@@ -22,10 +22,9 @@ import {
 } from '#tests/config/commands/samples.ts';
 
 test('add --scope writes the scope list and applies it without an npm install', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { scopes: [{ path: 'api', configurations: [] }] }),
-        'README.md': '# Example\n',
-        'api/entry.sh': 'echo api\n',
+        ...API_SCOPE_FILES,
     });
     commitAll(sandbox.path);
     const initial = await runGspot(sandbox.path, ['apply']);
@@ -41,7 +40,7 @@ test('add --scope writes the scope list and applies it without an npm install', 
         notes: [TOOLS_CHANGED_NOTE],
     });
     expect(npm.installations).toStrictEqual([]);
-    const saved = readSettings(sandbox.path).settings;
+    const saved = readSandboxSettings(sandbox.path);
     expect(saved.scopes['api']!.configurations).toStrictEqual(['bash']);
     expect(saved.configurations).toStrictEqual(['markdown']);
     const applied = await runGspot(sandbox.path, ['apply']);
@@ -64,16 +63,17 @@ test('add security exits 2, names gspot set level, and writes nothing', async ()
 test.each([false, true])(
     'add reports an inherited configuration as already selected and writes nothing (json: %j)',
     async (json) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': INHERITED_CONFIGURATION_SETTINGS,
             'api/entry.sh': 'echo api\n',
         });
         const before = await readTree(sandbox.path);
         const result = await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api', ...(json ? ['--json'] : [])]);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(result.stderr).toBe('');
-        if (json) expect(JSON.parse(result.stdout)).toStrictEqual({ changed: false });
-        else expect(result.stdout).toBe('No change: bash is already selected.\n');
+        expect(result).toStrictEqual({
+            code: 0,
+            stdout: json ? '{\n  "changed": false\n}\n' : 'No change: bash is already selected.\n',
+            stderr: '',
+        });
         expect(await readTree(sandbox.path)).toStrictEqual(before);
     },
 );
@@ -81,6 +81,7 @@ test.each([false, true])(
 test('add names every unknown configuration before changing the settings', async () => {
     const text = 'configurations = []\n';
     await using sandbox = await testdir({ 'gspot.toml': text });
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const result = await runGspot(sandbox.path, ['add', 'not-a-real-config-a', 'not-a-real-config-b']);
     expect(result.code).toBe(2);
     expect(result.stdout).toBe('');
@@ -88,24 +89,12 @@ test('add names every unknown configuration before changing the settings', async
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(text);
 });
 
-test('add bash --scope api reports no change when the root already selects bash', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['bash'], { scopes: [{ path: 'api' }] }),
-        'api/entry.sh': 'echo api\n',
-    });
-    const before = await readTree(sandbox.path);
-    expect(await runGspot(sandbox.path, ['add', 'bash', '--scope', 'api'])).toStrictEqual({
-        code: 0,
-        stdout: 'No change: bash is already selected.\n',
-        stderr: '',
-    });
-    expect(await readTree(sandbox.path)).toStrictEqual(before);
-});
-
 test('add names only added configurations in a mixed request', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['bash']) });
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const result = await runGspot(sandbox.path, ['add', 'bash', 'markdown']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout.split('\n', 1)[0]).toBe('Added markdown. bash is already selected.');
-    expect(readSettings(sandbox.path).settings.configurations).toStrictEqual(['bash', 'markdown']);
+    const settings = readSandboxSettings(sandbox.path).configurations;
+    expect(settings).toStrictEqual(['bash', 'markdown']);
 });

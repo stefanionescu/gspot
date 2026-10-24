@@ -1,17 +1,17 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { LEVELS } from '#cli/config/configurations/names.ts';
-import type { EslintConfiguration } from '#tests/types/tools.ts';
+import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-
-import {
-    VITEST_FILES,
-    JEST_IN_APP_TABLES,
-    TESTING_LIBRARY_CASES,
-} from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/testing.ts';
+import { TESTING_LIBRARY_CASES } from '#tests/config/generation/configurations/language/javascript/eslint/configuration-blocks/testing.ts';
 
 test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', async (extension) => {
+    const JEST_IN_APP_TABLES = `[[scope]]
+path = "app"
+configurations = [ "jest" ]
+`;
+
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: JEST_IN_APP_TABLES }),
         'package.json': '{"private":true,"type":"module"}\n',
@@ -30,6 +30,7 @@ test.each(['js', 'jsx'])('Jest rules apply only to their scope for .%s files', a
         { file: nested, rule: 'jest/no-focused-tests', line: 2 },
     ]);
 });
+
 test.each([...TESTING_LIBRARY_CASES])(
     'Testing Library with %s reports debugging only in dependency-owned test files',
     async (framework, library) => {
@@ -62,9 +63,15 @@ test.each([...TESTING_LIBRARY_CASES])(
         ).toStrictEqual([]);
     },
 );
+
 test.each([...LEVELS])(
     'Vitest reports a focused test without a fix, and strict equality only at level all (%s)',
     async (level) => {
+        const VITEST_FILES = {
+            'package.json': '{"private":true,"type":"module"}\n',
+            'tests/unit/example.test.js': '',
+        } as const;
+
         await using sandbox = await testdir({
             ...VITEST_FILES,
             'gspot.toml': buildSandboxSettings(['vitest'], { level }),
@@ -86,6 +93,7 @@ test.only('checks the value', () => { expect({value: 1}).toEqual({value: 1}); })
         expect(result!.messages.find(({ ruleId }) => ruleId === 'vitest/no-focused-tests')?.fix).toBeUndefined();
     },
 );
+
 test('Testing Library rules take the framework package of each scope', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript', 'testing-library'], {

@@ -5,3 +5,5 @@ export type IgnoreRemoval = {
     removedPaths: number;
     everywhere: number;
 };
+
+export type IgnoreTarget = { noMatch: string; removed: string };

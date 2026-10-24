@@ -6,7 +6,7 @@ Await a promise that must reject with an error.
 @param promise what must reject.
 @returns the error it rejected with.
 */
-export async function captureRejectedError(promise: Promise<unknown>): Promise<Error> {
+export async function captureRejection(promise: Promise<unknown>): Promise<Error> {
     try {
         await promise;
     } catch (error) {
@@ -17,40 +17,12 @@ export async function captureRejectedError(promise: Promise<unknown>): Promise<E
 }
 
 /**
-Await a promise that must reject with an error.
-
-@param promise what must reject.
-@returns the message of the error it rejected with.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 47 calls in 23 files share it.
-export async function captureRejection(promise: Promise<unknown>): Promise<string> {
-    const error = await captureRejectedError(promise);
-    return error.message;
-}
-
-/**
-Run a function that must throw an error.
-
-@param run what must throw.
-@returns the message of the error it threw.
-*/
-export function captureThrow(run: () => unknown): string {
-    try {
-        run();
-    } catch (error) {
-        if (error instanceof Error) return error.message;
-        throw new Error(`The function threw a value that is not an error: ${String(error)}`);
-    }
-    throw new Error('The function returned, and an error was expected.');
-}
-
-/**
 An object that must hold these properties, typed as the compared value.
 
 @param shape the properties the compared object must hold.
 @returns the matcher.
 */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 91 calls in 42 files share it.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cast lets an asymmetric matcher stand where a test expects T.
 export function matchFields<T>(shape: NoInfer<Partial<T>>): T {
     return expect.objectContaining(shape) as T;
 }

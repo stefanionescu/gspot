@@ -66,6 +66,7 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '// eslint-disable-next-line complexity -- reason: The external interface fixes this statement.',
         code: 'console.log(1);',
         rule: 'eslint-limit',
+        message: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
     },
     {
         configuration: 'javascript',
@@ -74,6 +75,7 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '// eslint-disable-next-line  -- reason: The external interface fixes this statement.',
         code: 'console.log(1);',
         rule: 'eslint-all',
+        message: 'This comment turns off every rule, including the size limits. Name the rules and give a reason.',
     },
     {
         configuration: 'python',
@@ -82,6 +84,7 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '# ruff: noqa: C901 # reason: The external interface fixes this statement.',
         code: 'print(1)',
         rule: 'ruff-limit',
+        message: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
     },
     {
         configuration: 'python',
@@ -90,6 +93,7 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '# ruff: noqa # reason: The external interface fixes this statement.',
         code: 'print(1)',
         rule: 'ruff-all',
+        message: 'This comment turns off every rule, including the size limits. Name the rules and give a reason.',
     },
     {
         configuration: 'swift',
@@ -98,6 +102,7 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '// swiftlint:disable cyclomatic_complexity // reason: The external interface fixes this statement.',
         code: 'let value = 1',
         rule: 'swiftlint-limit',
+        message: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
     },
     {
         configuration: 'swift',
@@ -106,6 +111,7 @@ export const LIMIT_SUPPRESSION_CASES = [
         directive: '// swiftlint:disable all // reason: The external interface fixes this statement.',
         code: 'let value = 1',
         rule: 'swiftlint-all',
+        message: 'This comment turns off every rule, including the size limits. Name the rules and give a reason.',
     },
 ] as const;
 
@@ -132,6 +138,6 @@ export const SUPPRESSION_SYNTAX_CASES = [
         extension: 'html',
         form: 'html-validate',
         rows: HTML_VALIDATE_SUPPRESSIONS,
-        body: '\u003Cimg src="sample.png">',
+        body: '<img src="sample.png">',
     },
 ] as const;

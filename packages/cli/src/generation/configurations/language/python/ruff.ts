@@ -67,7 +67,7 @@ export function buildRuffFile(planned: PlannedConfigFile): string {
             ignore: [...off, ...RUFF_ALWAYS_OFF],
             isort: RUFF_ISORT,
             mccabe: { 'max-complexity': getLimit(planned.scope.settings, 'cyclomatic_complexity', 'python') },
-            ...(convention === undefined ? {} : { pydocstyle: { convention } }),
+            ...(convention !== undefined && { pydocstyle: { convention } }),
             pylint: {
                 'max-statements': getLimit(planned.scope.settings, 'function_statements', 'python'),
                 'max-args': getLimit(planned.scope.settings, 'function_parameters', 'python'),
@@ -75,7 +75,7 @@ export function buildRuffFile(planned: PlannedConfigFile): string {
                 'max-branches': getLimit(planned.scope.settings, 'function_branches', 'python'),
                 'max-returns': getLimit(planned.scope.settings, 'function_returns', 'python'),
             },
-            ...(byPath.size === 0 ? {} : { 'per-file-ignores': Object.fromEntries(byPath) }),
+            ...(byPath.size > 0 && { 'per-file-ignores': Object.fromEntries(byPath) }),
         },
     };
 

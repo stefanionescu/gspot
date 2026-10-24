@@ -18,9 +18,9 @@ import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts
 import {
     runGspot,
     spawnGspot,
+    applyThenInstall,
     parseCheckReport,
     buildInitArguments,
-    installGeneratedTools,
 } from '#tests/setup/cli/commands.ts';
 import {
     COMMITS_FILES,
@@ -58,6 +58,7 @@ function prepareHookRepository(): void {
 
 test('commitlint accepts exact folder-name scopes or no scope, reports bad messages, and runs only at level all', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settingsPath = join(sandbox.path, 'gspot.toml');
     const settings = buildSandboxSettings([], {
         level: 'all',
@@ -69,7 +70,7 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
     });
     commitAll(sandbox.path);
 
-    await installGeneratedTools(sandbox.path);
+    await applyThenInstall(sandbox.path);
     const draft = join(sandbox.path, 'draft.txt');
     const command = ['check', '--only', 'commits/commitlint', '--json', '--hook', 'commit-msg', '--', draft];
     for (const { message, rule } of COMMIT_MESSAGES) {
@@ -98,9 +99,8 @@ test('commitlint accepts exact folder-name scopes or no scope, reports bad messa
     for (const level of ['recommended', 'all', 'recommended']) {
         const switched = await spawnGspot(sandbox.path, ['set', 'level', level]);
         expect(switched.code, switched.stdout + switched.stderr).toBe(0);
-        expect(await isOnDisk(join(sandbox.path, findManifestTarget('commits', 'commitlint.json')))).toBe(
-            level === 'all',
-        );
+        const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('commits', 'commitlint.json')));
+        expect(isObserved).toBe(level === 'all');
         const checked = parseCheckReport(await spawnGspot(sandbox.path, command));
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(checked.report.checks).toMatchObject(
@@ -121,15 +121,15 @@ describe('a repository with the commit hooks installed', () => {
     });
 
     test('commits/commitlint-pushed reports a commit made past the hook', async () => {
-        const { root, environment } = installedSandbox();
+        const { root } = installedSandbox();
         const command = ['check', '--only', 'commits/commitlint-pushed', '--json'];
-        const accepted = await spawnGspot(root, command, environment);
+        const accepted = await spawnGspot(root, command);
         expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
         await writeFile(join(root, 'more.md'), '# More\n');
         runGitStep(root, ['add', '-A']);
         runGitStep(root, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']);
         const pushed = runGitStep(root, ['rev-parse', 'HEAD']);
-        const range = parseCheckReport(await spawnGspot(root, command, environment));
+        const range = parseCheckReport(await spawnGspot(root, command));
         expect(range.code, range.stdout + range.stderr).toBe(1);
         expect(range.report.checks[0]!.findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual(
             buildUntypedMessageFindings(pushed),
@@ -137,13 +137,13 @@ describe('a repository with the commit hooks installed', () => {
     });
 
     test('the pre-push check reads every pushed commit message, even when the trees are equal', async () => {
-        const { root, environment } = installedSandbox();
+        const { root } = installedSandbox();
         const base = runGitStep(root, ['rev-parse', 'HEAD']);
         const tree = runGitStep(root, ['rev-parse', 'HEAD^{tree}']);
         const good = runGitStep(root, ['commit-tree', tree, '-p', base, '-m', 'docs: reviewed']);
         const bad = runGitStep(root, ['commit-tree', tree, '-p', base, '-m', 'Bad message.']);
         const command = ['check', '--hook', 'pre-push', '--only', 'commits/commitlint-pushed', '--json'];
-        const rejected = await spawnGspot(root, command, environment, {
+        const rejected = await spawnGspot(root, command, {
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/bad ${bad} refs/heads/bad ${base}\n`,
         });
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
@@ -155,7 +155,7 @@ describe('a repository with the commit hooks installed', () => {
         expect(
             report.revisions[1]!.report.checks[0]!.findings.map(({ rule, message }) => ({ rule, message })),
         ).toStrictEqual(buildUntypedMessageFindings(bad));
-        const corrected = await spawnGspot(root, command, environment, {
+        const corrected = await spawnGspot(root, command, {
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -167,6 +167,7 @@ test.each(['', 'app'])(
     'commitlint reads the generated config through the package.json field gspot writes, in %s',
     async (scope) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const packageFile = posix.join(scope, 'package.json');
         const messageFile = posix.join(scope, 'message.txt');
         const cwd = join(sandbox.path, scope);
@@ -180,8 +181,7 @@ test.each(['', 'app'])(
         await replaceCommitlint(sandbox.path, command, execution);
         const target = `${scope === '' ? './' : '../'}${findManifestTarget('commits', 'commitlint.json')}`;
         expect(await readFile(join(sandbox.path, packageFile), 'utf8')).toBe(
-            COMMITLINT_PACKAGE.replace(
-                '{"rules":{"type-enum":[2,"always",["special"]]}}',
+            COMMITLINT_PACKAGE.replace('{"rules":{"type-enum":[2,"always",["special"]]}}', () =>
                 JSON.stringify({ extends: target }),
             ),
         );
@@ -192,20 +192,18 @@ test.each(['', 'app'])(
             const changed = await runGspot(sandbox.path, ['set', 'level', level]);
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
             const packageText = await readFile(join(sandbox.path, packageFile), 'utf8');
-            expect(JSON.parse(packageText)).toStrictEqual(
-                Object.fromEntries(
-                    Object.entries(parseJsonFile('package.json', COMMITLINT_PACKAGE)).filter(
-                        ([key]) => key !== 'commitlint',
-                    ),
+            const expected = Object.fromEntries(
+                Object.entries(parseJsonFile('package.json', COMMITLINT_PACKAGE)).filter(
+                    ([key]) => key !== 'commitlint',
                 ),
             );
+            expect(JSON.parse(packageText)).toStrictEqual(expected);
             const generatedConfig = join(sandbox.path, findManifestTarget('commits', 'commitlint.json'));
             expect(await isOnDisk(generatedConfig)).toBe(level === 'all');
-            if (level === 'all') {
-                const native = await runCommand([...command, '--config', generatedConfig], execution);
-                expect(native.code, native.stdout + native.stderr).toBe(1);
-                expect(native.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
-            }
+            if (level !== 'all') continue;
+            const native = await runCommand([...command, '--config', generatedConfig], execution);
+            expect(native.code, native.stdout + native.stderr).toBe(1);
+            expect(native.stdout.match(/\[type-enum\]/gu)).toStrictEqual(['[type-enum]']);
         }
         await writeFile(join(sandbox.path, messageFile), 'fix: generated contract\n');
         const corrected = await runCommand(

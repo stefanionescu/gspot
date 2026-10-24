@@ -2,6 +2,7 @@ import { getLimit } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
+import { countCodeLines } from '#cli/checks/code-lines.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { parseGrammarComments } from '#cli/parsers/code/comments.ts';
@@ -28,13 +29,11 @@ export async function checkStructureLongFiles(session: Session, planned: Planned
             const text = readCachedText(session.reads, file.path);
             const parsed = language === 'bash' ? await parseGrammarComments('bash', text) : undefined;
             const comments = new Set(parsed?.filter((comment) => comment.standalone).map((comment) => comment.line));
-            const count = text
-                .split('\n')
-                .filter(
-                    (line, index) =>
-                        line.trim() !== '' &&
-                        (parsed === undefined ? !line.trimStart().startsWith(marker) : !comments.has(index + 1)),
-                ).length;
+            const lines = text.split('\n');
+            const count =
+                parsed === undefined
+                    ? countCodeLines(lines, marker)
+                    : lines.filter((line, index) => line.trim() !== '' && !comments.has(index + 1)).length;
             return count <= limit
                 ? []
                 : [

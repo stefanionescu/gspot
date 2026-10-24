@@ -2,11 +2,13 @@ import * as files from 'node:fs';
 import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { captureThrow } from '#tests/setup/matchers.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
+import { listConflictingConfigFiles } from '#cli/repository/setup/config-files.ts';
 import { readHooks, readLintJobs, readRepositorySetup } from '#cli/repository/setup/tools.ts';
 
 import {
@@ -45,8 +47,13 @@ test('CI discovery reports malformed YAML', async () => {
     await using sandbox = await testdir();
     const path = '.gitlab-ci.yml';
     await createFileTree(sandbox.path, { [path]: 'quality: [unterminated' });
-    expect(captureThrow(() => readLintJobs(sandbox.path, [path]))).toBe(
-        '.gitlab-ci.yml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 23. Fix the file.',
+    expect(() => readLintJobs(sandbox.path, [path])).toThrow(
+        expect.objectContaining({
+            name: 'GspotError',
+            code: 'filesystem',
+            message:
+                '.gitlab-ci.yml is not valid YAML: Flow sequence in block collection must be sufficiently indented and end with a ] at line 1, column 23. Fix the file.',
+        }),
     );
 });
 
@@ -112,8 +119,12 @@ test('pre-commit is found from its configuration file', async () => {
 test('hook discovery refuses a malformed package.json and names it', async () => {
     await using sandbox = await testdir({ 'package.json': '{' });
 
-    expect(captureThrow(() => readHooks(sandbox.path))).toBe(
-        'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',
+    expect(() => readHooks(sandbox.path)).toThrow(
+        expect.objectContaining({
+            name: 'GspotError',
+            code: 'filesystem',
+            message: 'package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.',
+        }),
     );
 });
 test('hook discovery reports other hook folders and leaves gspot and task scripts out', async () => {
@@ -176,17 +187,16 @@ test.each([...LEFTHOOK_FILES])(
 test('a read error in a hooks folder reaches the caller', async () => {
     await using sandbox = await testdir({ '.husky/pre-commit': '#!/bin/sh\nexit 0\n' });
     const failure = Object.assign(new Error('Cannot read the authored hooks directory.'), { code: 'EIO' });
-    using read = spyOn(files, 'readdirSync').mockImplementation(() => {
+    using _read = spyOn(files, 'readdirSync').mockImplementation(() => {
         throw failure;
     });
-    let caught: unknown;
-    try {
-        readHooks(sandbox.path);
-    } catch (error) {
-        caught = error;
-    }
-    expect(caught).toBe(failure);
-    expect(read).toHaveBeenCalledTimes(1);
+    expect(() => readHooks(sandbox.path)).toThrow(
+        matchFields<Error & { code: string }>({
+            name: 'Error',
+            code: 'EIO',
+            message: 'Cannot read the authored hooks directory.',
+        }),
+    );
 });
 test.each([...SIMPLE_GIT_HOOKS_PACKAGES])(
     'hook discovery reads simple-git-hooks from the package.json key: $text',
@@ -201,4 +211,26 @@ test('hook discovery lists a hooks folder once when core.hooksPath names it by i
     runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', join(sandbox.path, '.githooks')]);
     expect(readHooks(sandbox.path)).toStrictEqual([{ kind: 'hooksPath', path: '.githooks', files: ['pre-commit'] }]);
+});
+
+test('INI tool headings include their exact sections and subsections', async () => {
+    await using sandbox = await testdir({
+        'tox.ini': '[unrelated]\r\nvalue = 1\r\n[sqlfluff:rules]; selected\r\nvalue = 2\r\n',
+    });
+    const sql = readConfigurations().get('sql')!;
+    expect(listConflictingConfigFiles(sandbox.path, [], [sql])).toStrictEqual([
+        { tool: 'sqlfluff', path: 'tox.ini', shared: true, table: 'sqlfluff' },
+    ]);
+});
+
+test('an INI heading with a longer name does not select the tool', async () => {
+    await using sandbox = await testdir({ 'tox.ini': '[sqlfluffbox]\nvalue = 3\n' });
+    const sql = readConfigurations().get('sql')!;
+    expect(listConflictingConfigFiles(sandbox.path, [], [sql])).toStrictEqual([]);
+});
+
+test('an incomplete INI heading does not select the tool', async () => {
+    await using sandbox = await testdir({ 'tox.ini': '[sqlfluff\nvalue = 3\n' });
+    const sql = readConfigurations().get('sql')!;
+    expect(listConflictingConfigFiles(sandbox.path, [], [sql])).toStrictEqual([]);
 });

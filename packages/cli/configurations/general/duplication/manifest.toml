@@ -10,11 +10,10 @@ languages = true
 name = "jscpd"
 npm = "jscpd"
 replace = [".jscpd.json"]
-version = "5.2.0"
+version = "5.4.1"
 
 [[config_file]]
 target = "jscpd.json"
-tool = "jscpd"
 
 [[check]]
 example = "Two files with the same long block of code report that block. Move it into one function, and call it from both places."

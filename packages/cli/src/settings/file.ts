@@ -1,18 +1,19 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse } from '@decimalturn/toml-patch';
 import { isTable } from '#cli/system/tables.ts';
-import type { Writer } from '#cli/types/apply.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { writePlans } from '#cli/apply/write/writer.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { planReplacement } from '#cli/apply/write/plans.ts';
-import type { TomlTable } from '#cli/types/settings/file.ts';
-import type { FileContents } from '#cli/types/system/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/files/modes.ts';
+import type { KeyPath } from '#cli/types/parsers/editable-file.ts';
 import type { ReasonedValue } from '#cli/types/settings/values.ts';
+import type { Files, FileContents } from '#cli/types/system/files.ts';
 import type { SettingsFileContents } from '#cli/types/settings/edits.ts';
+import { type TomlTable, type SettingsFile } from '#cli/types/settings/file.ts';
 import { SETTINGS_FILE, PARSE_CONTEXT_LINES } from '#cli/config/settings/file.ts';
+import { getTomlRange, parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 
 /**
 Identify a written setting that carries both its value and its reason.
@@ -67,7 +68,7 @@ Write gspot.toml only while the file on disk still matches the one that the edit
 @param text the new gspot.toml contents.
 @param original the captured file bytes and mode.
 */
-export function writeSettings(writer: Writer, text: string, original: FileContents | undefined): void {
+export function writeSettings(writer: Files, text: string, original: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: original?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, original)) return;
     writePlans(writer, [
@@ -80,4 +81,29 @@ export function writeSettings(writer: Writer, text: string, original: FileConten
             before: original,
         },
     ]);
+}
+
+/**
+Find the source line of a written setting or record.
+
+@param file the parsed settings and their source text.
+@param path the setting key or record path.
+@returns the written source line.
+*/
+export function findSettingLine(file: SettingsFile, path: KeyPath): number {
+    const syntax = parseTomlSyntax(file.text, file.settings.written);
+    const record = syntax.pathNodes
+        .filter(
+            (node) =>
+                node.kind === 'header' &&
+                typeof node.path.at(-1) === 'number' &&
+                node.path.every((key, index) => key === path[index]),
+        )
+        .toSorted((left, right) => right.path.length - left.path.length)[0];
+    const found =
+        record ??
+        syntax.pathNodes.find(
+            (node) => node.path.length === path.length && node.path.every((key, index) => key === path[index]),
+        );
+    return found === undefined ? 1 : file.text.slice(0, getTomlRange(found.node)[0]).split('\n').length;
 }

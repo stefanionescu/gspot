@@ -1,23 +1,27 @@
-import { createTwoFilesPatch } from 'diff';
 import { compareText } from '#cli/system/text.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import type { Session } from '#cli/types/session.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { findCheckCode } from '#cli/checks/registry.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
+import { buildDiff } from '#cli/apply/files/outdated.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { isReportedCrash } from '#cli/runs/command/output.ts';
 import type { CheckRunOptions } from '#cli/types/runs/check.ts';
 import type { CommandLaunch } from '#cli/types/runs/command.ts';
+import { FIX_ROUNDS } from '#cli/config/commands/check/fixes.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
 import { findTool, runToolProcess } from '#cli/runs/command/tool.ts';
 import { createCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
 import type { GrammarName } from '#cli/types/parsers/code/grammars.ts';
 import type { FixReport, FixResult, FixOptions } from '#cli/types/runs/fixes.ts';
-import { FIX_ROUNDS, FIX_DIFF_CONTEXT } from '#cli/config/commands/check/fixes.ts';
 import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { copyCheckFiles, prepareCommand, prepareCommandIn, prepareToolEnvironment } from '#cli/runs/command/check.ts';
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function listFixPaths(planned: PlannedCheck): string[] {
+    return [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
+}
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     const { check } = planned;
@@ -33,7 +37,7 @@ async function runFixCommands(
     cancelSignal: AbortSignal | undefined,
 ): Promise<FixResult> {
     const check = planned.check.id;
-    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
+    const paths = listFixPaths(planned);
     const before = readContents(setup.root, paths);
     let note: string | undefined;
     for (const command of setup.commandLines) {
@@ -65,7 +69,7 @@ async function runFixInCopy(
     using scratch = await copyCheckFiles(planned, { session: { ...session, root }, command, options });
     const setup = prepareCommandIn(scratch.path, planned, { session, command, toolPath, options });
     using files = openFiles(root);
-    const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
+    const paths = listFixPaths(planned);
     const originals = new Map(paths.map((path) => [path, files.read(path)]));
     const result = await runFixCommands(planned, setup, session.cancelSignal);
     using corrected = openFiles(scratch.path);
@@ -155,11 +159,12 @@ async function runFixerRounds(
         const changed = new Set(listChangedPaths(before, after));
         pending = checks.flatMap((check, index) => {
             const files = check.files.filter((file) => changed.has(file.path) && after.get(file.path) !== undefined);
-            if (files.length === 0 || results.get(index)?.status === 'failed') return [];
-            return [{ check: { ...check, files, triggerPaths: [] }, index }];
+            return files.length === 0 || results.get(index)?.status === 'failed'
+                ? []
+                : { check: { ...check, files, triggerPaths: [] }, index };
         });
     }
-    return { results: [...results.values()], before: firstBefore ?? after, after };
+    return { results: results.values().toArray(), before: firstBefore ?? after, after };
 }
 
 async function hasSyntaxError(grammar: GrammarName, bytes: Buffer): Promise<boolean> {
@@ -201,11 +206,7 @@ Runs fixes in passes and collects their results. A dry run always removes its co
 export async function runFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {
     const { isDryRun } = options;
     const checks = planned.filter((check) => check.check.fix !== undefined);
-    const paths = [
-        ...new Set(
-            checks.flatMap((check) => [...new Set([...check.files.map((file) => file.path), ...check.triggerPaths])]),
-        ),
-    ].toSorted((a, b) => compareText(a, b));
+    const paths = [...new Set(checks.flatMap((check) => listFixPaths(check)))].toSorted((a, b) => compareText(a, b));
     using scratch = isDryRun
         ? await createCopy(
               selectCopyPaths(
@@ -221,15 +222,10 @@ export async function runFixers(session: Session, planned: PlannedCheck[], optio
     const broken = await listBrokenSyntax(changed, before, after);
     const diffs = isDryRun
         ? changed.map((path) =>
-              createTwoFilesPatch(
-                  `a/${convertToPosixPath(path)}`,
-                  `b/${convertToPosixPath(path)}`,
-                  before.get(path)?.toString('utf8') ?? '',
-                  after.get(path)?.toString('utf8') ?? '',
+              buildDiff(path, before.get(path)?.toString('utf8') ?? '', after.get(path)?.toString('utf8') ?? '', [
                   '',
                   '',
-                  { context: FIX_DIFF_CONTEXT },
-              ),
+              ]),
           )
         : [];
     return { results, changed, broken, diffs };

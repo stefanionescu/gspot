@@ -26,8 +26,6 @@ export const PREFIX_TREE = {
     'pnpm/pnpm-workspace.yaml': '',
 } as const;
 
-export const PREFIX_CHECK_OPTIONS = { only: ['structure/shared-prefixes'] };
-
 export const NEST_SUFFIX_FILES = {
     'app/jsx.view.tsx': '',
     'app/jsx.service.tsx': '',

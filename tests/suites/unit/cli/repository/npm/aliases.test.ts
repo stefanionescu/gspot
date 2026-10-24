@@ -8,7 +8,7 @@ import { ALIAS_FILES, SCOPE_ALIASES, ALIAS_PROJECT } from '#tests/config/reposit
 
 test.each([...ALIAS_FILES])('alias reads report a malformed $path', async ({ path, message }) => {
     await using sandbox = await testdir({ [path]: '{ "compilerOptions": { "paths": {} },' });
-    expect(() => readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toThrow(message);
+    expect(() => readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toThrow(new Error(message));
 });
 
 test('root and child aliases read their own files, and tsconfig paths win', async () => {
@@ -53,5 +53,9 @@ test('inherited aliases are read relative to the file that declares them', async
 
 test('alias reads name a missing extended file', async () => {
     await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"./missing-base.json"}' });
-    expect(() => readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toThrow('missing-base.json');
+    expect(() => readScopeAliases(sandbox.path, '', createReadCache(sandbox.path))).toThrow(
+        new Error(
+            `Cannot read the compiler settings in tsconfig.json: Cannot read file '${join(sandbox.path, 'missing-base.json')}'.`,
+        ),
+    );
 });

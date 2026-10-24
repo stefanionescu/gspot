@@ -60,8 +60,8 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
             title: IGNORE_SECTION_TITLES.build,
             patterns: [
                 ...BUILD_OUTPUT_PATTERNS.filter((pattern) => {
-                    const matches = buildPathMatcher([convertToGlob(pattern)]);
-                    return repository.files.some((file) => matches(file.path));
+                    const isMatch = buildPathMatcher([convertToGlob(pattern)]);
+                    return repository.files.some((file) => isMatch(file.path));
                 }),
                 ...folders.filter((folder) => BUILD_OUTPUT_FOLDERS.has(folder)).map((folder) => `${folder}/`),
             ],
@@ -93,17 +93,22 @@ export function buildIgnoreSections(session: Session): IgnoreSection[] {
     ];
 }
 
-/**
-Keep the reason with each check-wide path ignore.
-
-@param scopeSettings the settings of this scope.
-@param check the ID whose ignores to keep.
-@returns the check-wide path ignores with their reasons.
-*/
-export function listCheckIgnoreSections(scopeSettings: ScopeSettings, check: string): IgnoreSection[] {
+function listCheckIgnoreSections(scopeSettings: ScopeSettings, check: string): IgnoreSection[] {
     return listIgnores(scopeSettings, check)
         .filter((ignore) => ignore.rule === undefined && ignore.names === undefined)
         .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths }));
+}
+
+/**
+Join shared exclusions with the path ignores of one check.
+
+@param planned the config file and its scope.
+@param check the ID whose path ignores apply.
+@returns the exclusion groups in order.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function listIgnoreSections(planned: PlannedConfigFile, check: string): IgnoreSection[] {
+    return [...buildIgnoreSections(planned.session), ...listCheckIgnoreSections(planned.scope.settings, check)];
 }
 
 /**
@@ -156,12 +161,12 @@ function formatIgnoreFile(sections: IgnoreSection[]): string {
 function convertToGlob(pattern: string): string {
     const negative = pattern.startsWith('!') ? '!' : '';
     let path = negative === '' ? pattern : pattern.slice(1);
-    const anchored = path.startsWith('/');
-    if (anchored) path = path.slice(1);
-    const folder = path.endsWith('/');
-    const bare = folder ? path.slice(0, -1) : path;
-    const prefix = anchored || bare.includes('/') ? '' : '**/';
-    return `${negative}${prefix}${bare}${folder ? '/**' : ''}`;
+    const isAnchored = path.startsWith('/');
+    if (isAnchored) path = path.slice(1);
+    const isFolder = path.endsWith('/');
+    const bare = isFolder ? path.slice(0, -1) : path;
+    const prefix = isAnchored || bare.includes('/') ? '' : '**/';
+    return `${negative}${prefix}${bare}${isFolder ? '/**' : ''}`;
 }
 
 /**
@@ -205,8 +210,5 @@ Build .prettierignore: the ignored paths in the shared section order, with the w
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The config-file builder calls it by its target path.
 export function buildPrettierignoreFile(planned: PlannedConfigFile): string {
-    return formatIgnoreFile([
-        ...buildIgnoreSections(planned.session),
-        ...listCheckIgnoreSections(planned.scope.settings, 'format/prettier'),
-    ]);
+    return formatIgnoreFile(listIgnoreSections(planned, 'format/prettier'));
 }

@@ -1,13 +1,12 @@
 {
     "strict": {
         "package": "typescript-eslint",
-        "version": "8.70.0",
+        "version": "8.71.2",
         "source": "configs.strictTypeChecked",
         "blocks": [
             { "parser": true },
             {
                 "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
-                "parser": false,
                 "rules": {
                     "constructor-super": "off",
                     "getter-return": "off",
@@ -32,10 +31,10 @@
                     "prefer-const": "error",
                     "prefer-rest-params": "error",
                     "prefer-spread": "error"
-                }
+                },
+                "parser": false
             },
             {
-                "parser": false,
                 "rules": {
                     "@typescript-eslint/await-thenable": "error",
                     "@typescript-eslint/ban-ts-comment": ["error", { "minimumDescriptionLength": 10 }],
@@ -82,6 +81,7 @@
                     "@typescript-eslint/no-unsafe-assignment": "error",
                     "@typescript-eslint/no-unsafe-call": "error",
                     "@typescript-eslint/no-unsafe-declaration-merging": "error",
+                    "@typescript-eslint/no-unsafe-enum-assignment": "error",
                     "@typescript-eslint/no-unsafe-enum-comparison": "error",
                     "@typescript-eslint/no-unsafe-function-type": "error",
                     "@typescript-eslint/no-unsafe-member-access": "error",
@@ -134,17 +134,17 @@
                     "@typescript-eslint/unbound-method": "error",
                     "@typescript-eslint/unified-signatures": "error",
                     "@typescript-eslint/use-unknown-in-catch-callback-variable": "error"
-                }
+                },
+                "parser": false
             }
         ]
     },
     "untyped": {
         "package": "typescript-eslint",
-        "version": "8.70.0",
+        "version": "8.71.2",
         "source": "configs.disableTypeChecked",
         "blocks": [
             {
-                "parser": false,
                 "rules": {
                     "@typescript-eslint/await-thenable": "off",
                     "@typescript-eslint/consistent-return": "off",
@@ -176,6 +176,7 @@
                     "@typescript-eslint/no-unsafe-argument": "off",
                     "@typescript-eslint/no-unsafe-assignment": "off",
                     "@typescript-eslint/no-unsafe-call": "off",
+                    "@typescript-eslint/no-unsafe-enum-assignment": "off",
                     "@typescript-eslint/no-unsafe-enum-comparison": "off",
                     "@typescript-eslint/no-unsafe-member-access": "off",
                     "@typescript-eslint/no-unsafe-return": "off",
@@ -208,7 +209,8 @@
                     "@typescript-eslint/switch-exhaustiveness-check": "off",
                     "@typescript-eslint/unbound-method": "off",
                     "@typescript-eslint/use-unknown-in-catch-callback-variable": "off"
-                }
+                },
+                "parser": false
             }
         ]
     }

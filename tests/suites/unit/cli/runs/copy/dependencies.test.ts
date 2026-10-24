@@ -39,7 +39,8 @@ test('an index copy copies every workspace dependency tree before it checks the 
     );
     await unlink(join(sandbox.path, 'node_modules/owned'));
     await symlink(sandbox.path, join(sandbox.path, 'node_modules/owned'), 'dir');
-    expect(await captureRejection(copyRevision(sandbox.path, { kind: 'index' }))).toBe(
+    const copyRevisionError = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
+    expect(copyRevisionError.message).toBe(
         `Installed dependency link ${join('node_modules', 'owned')} points to this repository or a parent folder. Check this commit in its own clone after installing its project dependencies there.`,
     );
 });
@@ -52,7 +53,7 @@ test('a workspace bin into untracked build output is left out of the copy', asyn
     await symlink('../cli/dist/cli.js', join(sandbox.path, 'node_modules/.bin/cli'));
     stageRevision(sandbox.path);
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
-    const bin = await lstat(join(copy.root, 'node_modules/.bin/cli')).catch((error: unknown) => error);
+    const bin = await captureRejection(lstat(join(copy.root, 'node_modules/.bin/cli')));
     const copied = { package: await isOnDisk(join(copy.root, 'node_modules/cli/package.json')), bin };
     expect(copied).toMatchObject({ package: true, bin: { code: 'ENOENT' } });
 });
@@ -114,7 +115,8 @@ test.each(['', 'nested/'])('revision copies reuse the installed Vale packages un
     expect(source).toBe('extends: existence\n');
     expect(await readFile(join(sandbox.path, packagePath), 'utf8')).toBe('extends: existence\n');
     await writeFile(join(sandbox.path, config), 'Packages = Different\n');
-    expect(await captureRejection(copyRevision(sandbox.path, { kind: 'index' }))).toBe(
+    const valeError = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }));
+    expect(valeError.message).toBe(
         'The installed Vale packages do not match the Vale settings of this revision. Check this commit in its own clone after running gspot apply and gspot install there.',
     );
 });
@@ -139,8 +141,9 @@ test('a copy leaves the virtual environment in the working tree and still checks
     expect(copied).toStrictEqual({ environment: false, source: 'selected = True\n' });
     expect(await readFile(join(root, '.venv/bin/python'), 'utf8')).toBe('interpreter');
     await writeFile(join(root, 'uv.lock'), 'version = 2\n');
-    expect(await captureRejection(copyRevision(root, { kind: 'index' }))).toBe(
-        'Installed dependencies do not match the dependency files and lockfiles of the revision or its compiler configurations. Check this commit in its own clone after installing its project dependencies and running gspot install there.',
+    using changed = await copyRevision(root, { kind: 'index' });
+    expect(changed.dependencyNote).toBe(
+        'The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.',
     );
 });
 
@@ -163,9 +166,8 @@ test('cancellation waits for the dependency copies to finish before removing the
         }
     });
 
-    expect(await captureRejection(copyRevision(sandbox.path, { kind: 'index' }, controller.signal))).toBe(
-        'Canceled dependency copy',
-    );
+    const cancelError = await captureRejection(copyRevision(sandbox.path, { kind: 'index' }, controller.signal));
+    expect(cancelError.message).toBe('Canceled dependency copy');
     expect(pending).toBe(0);
     expect(await isOnDisk(destination!)).toBe(false);
     expect(await readFile(join(sandbox.path, 'node_modules/item-0/value.js'), 'utf8')).toBe(
@@ -184,7 +186,9 @@ test('a package.json checked out with CRLF matches its LF blob in the index copy
     const source = await readFile(join(copy.root, 'node_modules/example/index.js'), 'utf8');
     expect(source).toBe('export const value = 1;');
     await writeFile(join(sandbox.path, 'package.json'), '{\r\n    "name": "changed"\r\n}\r\n');
-    expect(await captureRejection(copyRevision(sandbox.path, { kind: 'index' }))).toBe(
-        'Installed dependencies do not match the dependency files and lockfiles of the revision or its compiler configurations. Check this commit in its own clone after installing its project dependencies and running gspot install there.',
+    using changed = await copyRevision(sandbox.path, { kind: 'index' });
+    expect(changed.dependencyNote).toBe(
+        'The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.',
     );
+    expect(await readFile(join(changed.root, 'node_modules/example/index.js'), 'utf8')).toBe('export const value = 1;');
 });

@@ -127,10 +127,7 @@ export const TEXT_TAG = 'text';
 
 export const HEADER_LINES_CHECKED = 3;
 
-export const GENERATED_HEADER_LINE = new RegExp(
-    String.raw`^(?:#|//|--|<!--|\s{2})\s*${RegExp.escape(GENERATED_HEADER_TEXT)}`,
-    'u',
-);
+export const GENERATED_HEADER_LINE = new RegExp(String.raw`^(?:#|//)\s*${RegExp.escape(GENERATED_HEADER_TEXT)}`, 'u');
 
 export const SHEBANG_PREFIX = '#!';
 

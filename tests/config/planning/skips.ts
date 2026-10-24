@@ -6,35 +6,30 @@ export const NEXT_INTL_PROJECTS = [
         scope: '',
         files: { 'package.json': NEXT_INTL_PACKAGE },
         selected: true,
-        outcome: 'runs',
     },
     {
         name: 'own child project',
         scope: 'app',
         files: { 'app/package.json': NEXT_INTL_PACKAGE },
         selected: true,
-        outcome: 'runs',
     },
     {
         name: 'inherited root project',
         scope: 'app/deep',
         files: { 'package.json': NEXT_INTL_PACKAGE },
         selected: true,
-        outcome: 'runs',
     },
     {
         name: 'unrelated child project',
         scope: '',
         files: { 'app/package.json': NEXT_INTL_PACKAGE },
         selected: false,
-        outcome: 'is skipped',
     },
     {
         name: 'unrelated sibling project',
         scope: 'app',
         files: { 'sibling/package.json': NEXT_INTL_PACKAGE },
         selected: false,
-        outcome: 'is skipped',
     },
     { name: 'absent project', scope: 'app', files: {}, selected: false },
     {
@@ -45,7 +40,6 @@ export const NEXT_INTL_PROJECTS = [
             'app/package.json': '{"dependencies":{"react-i18next":"16.5.3"}}',
         },
         selected: false,
-        outcome: 'is skipped',
     },
 ] as const;
 

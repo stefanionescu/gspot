@@ -1,18 +1,18 @@
-import { joinScope } from '#cli/repository/scopes.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
+import { escapeGlob } from '#cli/system/paths.ts';
 import { getLimit, getTable } from '#cli/settings/scopes.ts';
 import { MISE_SCRIPT_PATH } from '#cli/config/files/names.ts';
 import { readScopeAliases } from '#cli/repository/npm/aliases.ts';
 import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/configurations/names.ts';
 import { getPreset } from '#cli/generation/configurations/language/javascript/eslint/presets.ts';
 import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 import { buildRestrictedImportBlocks } from '#cli/generation/configurations/language/javascript/eslint/blocks/settings.ts';
 
 import {
+    buildScopeGlob,
     buildScopeFiles,
+    listCodeTestFiles,
     listNestedScopeGlobs,
 } from '#cli/generation/configurations/language/javascript/eslint/files.ts';
 import {
@@ -31,6 +31,7 @@ import {
 } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 import {
     type EslintBlock,
+    type EslintFiles,
     type EslintPlugins,
     type EslintPresets,
     type EslintRuntime,
@@ -144,6 +145,31 @@ export function buildOpeningBlocks(
     ];
 }
 
+function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRuntime[]): ConfigurationBlocks['blocks'] {
+    const runtimes: ConfigurationBlocks['blocks'] = runtimeBlocks.map(({ runtime }, index) => {
+        const names = RUNTIME_GLOBALS[runtime] ?? runtime;
+        return {
+            fields: {
+                files: eslintFiles.code.map((pattern) => [pattern, { runtime: index }]),
+                rules: {
+                    ...(runtime === 'commonjs' && { 'unicorn/prefer-module': 'off' }),
+                },
+            },
+            properties: `languageOptions: { sourceType: ${JSON.stringify(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${JSON.stringify(names)}] }`,
+        };
+    });
+    const nodeIndexes = runtimeBlocks.flatMap(({ runtime }, index) => (NODE_RUNTIMES.includes(runtime) ? index : []));
+    return [
+        ...runtimes,
+        {
+            fields: {
+                files: eslintFiles.code.flatMap((pattern) => nodeIndexes.map((index) => [pattern, { runtime: index }])),
+                rules: NODE_RULES,
+            },
+        },
+    ];
+}
+
 /**
 Build the blocks after the configuration blocks: runtime, selector, test, script, and final pinned rules.
 
@@ -161,35 +187,19 @@ export function buildClosingBlocks(
     const isAll = planned.level === 'all';
     const rules = planned.levelRules;
     const presets = planned.eslintPresets.get(JAVASCRIPT_CONFIGURATION);
-    const runtimes: ConfigurationBlocks['blocks'] = runtimeBlocks.map(({ runtime }, index) => {
-        const isNode = NODE_RUNTIMES.includes(runtime);
-        const names = RUNTIME_GLOBALS[runtime] ?? runtime;
-        return {
-            fields: {
-                files: eslintFiles.code.map((pattern) => [pattern, { runtime: index }]),
-                rules: {
-                    ...(isNode ? rules.node : {}),
-                    ...(runtime === 'commonjs' ? { 'unicorn/prefer-module': 'off' } : {}),
-                },
-            },
-            properties: `languageOptions: { sourceType: ${JSON.stringify(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${JSON.stringify(names)}] }`,
-        };
-    });
     return [
-        ...runtimes,
+        ...buildRuntimeBlocks(eslintFiles, runtimeBlocks),
         ...selectorGroups.map((group): ConfigurationBlocks['blocks'][number] => ({
             fields: {
                 files: buildScopeFiles(eslintFiles.code, group.scope ?? '', group.files ?? ['**/*']),
                 ignores: [
-                    ...(group.ignoredScopes ?? []).map(
-                        (scope) => `${scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH)}/**`,
-                    ),
+                    ...(group.ignoredScopes ?? []).map((scope) => `${escapeGlob(scope)}/**`),
                     ...(group.ignores ?? []),
                 ],
                 rules: { 'no-restricted-syntax': ['error', ...(isAll ? BASE_SELECTORS : []), ...group.selectors] },
             },
         })),
-        ...buildConsoleBlocks(planned, rules.console).map((block): ConfigurationBlocks['blocks'][number] => ({
+        ...buildConsoleBlocks(planned).map((block): ConfigurationBlocks['blocks'][number] => ({
             fields: block,
         })),
         { fields: { files: eslintFiles.scripts, rules: SCRIPT_RULES } },
@@ -211,10 +221,7 @@ export function buildClosingBlocks(
     ];
 }
 
-function buildConsoleBlocks(
-    planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
-    rules: EslintLevelRules['console'],
-): EslintBlockFields[] {
+function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>): EslintBlockFields[] {
     const scopes = planned.session.scopes.filter(({ settings }) =>
         settings.configurations.includes(JAVASCRIPT_CONFIGURATION),
     );
@@ -225,12 +232,12 @@ function buildConsoleBlocks(
                 scopes.map(({ folder }) => folder.path),
                 scope.folder.path,
             ),
-            ...scope.settings.test_files,
+            ...listCodeTestFiles(scope.settings.test_files),
 
             ...(scope.settings.values.javascript?.script_files ?? []),
-            joinScope(scope.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH), MISE_SCRIPT_PATH),
+            buildScopeGlob(scope.folder.path, MISE_SCRIPT_PATH),
         ],
-        rules,
+        rules: CONSOLE_RULES,
     }));
 }
 
@@ -246,11 +253,12 @@ export function selectPlugins(planned: PlannedEslintFile, boundaryBlocks: Eslint
     const repositorySettings = planned.session.settingsFile.settings;
     return {
         ...ESLINT_PLUGIN_IMPORTS,
-        ...(isAll ? { perfectionist: LEVEL_ALL_PLUGIN_IMPORTS.perfectionist } : {}),
-        ...(isAll && repositorySettings.structure.reexports === 'index-only'
-            ? { 'barrel-files': LEVEL_ALL_PLUGIN_IMPORTS['barrel-files'] }
-            : {}),
-        ...(boundaryBlocks.length > 0 ? BOUNDARIES_PLUGIN_IMPORT : {}),
+        ...(isAll && { perfectionist: LEVEL_ALL_PLUGIN_IMPORTS.perfectionist }),
+        ...(isAll &&
+            repositorySettings.structure.reexports === 'index-only' && {
+                'barrel-files': LEVEL_ALL_PLUGIN_IMPORTS['barrel-files'],
+            }),
+        ...(boundaryBlocks.length > 0 && BOUNDARIES_PLUGIN_IMPORT),
     };
 }
 
@@ -320,7 +328,5 @@ export function buildLevelRules(
             'sonarjs/no-identical-functions': ['error', getTable(scopeSettings, 'duplication').min_lines],
         },
         javascript: buildLimitRules(scopeSettings, 'javascript'),
-        node: NODE_RULES,
-        console: CONSOLE_RULES,
     };
 }

@@ -22,7 +22,6 @@ import { writeScriptCommand, fakeToolExecutables, fakeExecutableLookup } from '#
 
 import {
     GENERATOR_CASES,
-    DATABASE_SCHEMAS,
     GENERATOR_SCRIPT,
     DOCKER_VERSION_OUTPUT,
     SUPABASE_TYPES_OUTPUT,
@@ -129,9 +128,8 @@ test.each([...GENERATOR_CASES])(
     async (row) => {
         await using sandbox = await testdir();
         const { session, planned } = await prepareGeneratorCheck(sandbox.path, row);
-        expect(await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)))).toBe(
-            'The generator command failed: Generation failed\nfailure',
-        );
+        const runCheckCodeError = await captureRejection(runCheckCode(session, planned, findCheckCode(planned.check)));
+        expect(runCheckCodeError.message).toBe('The generator command failed: Generation failed\nfailure');
         await writeFile(join(sandbox.path, 'schema.txt'), 'changed');
         const stale = await runCheckCode(session, planned, findCheckCode(planned.check));
         expect(stale.findings.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
@@ -145,6 +143,7 @@ test.each([...GENERATOR_CASES])(
         expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('Keep untracked notes\n');
     },
 );
+
 test('a missing OpenAPI document is reported before generation', async () => {
     using resources = new DisposableStack();
 
@@ -162,6 +161,7 @@ test('a missing OpenAPI document is reported before generation', async () => {
     expect(missingResult.findings).toMatchObject([...MISSING_OPENAPI_FINDINGS]);
     expect(run).not.toHaveBeenCalled();
 });
+
 test('custom Worker type settings reach wrangler types as --env-interface', async () => {
     await using sandbox = await testdir();
     const source = 'interface CloudflareEnv {}\n';
@@ -187,6 +187,7 @@ test('custom Worker type settings reach wrangler types as --env-interface', asyn
     expect(await isOnDisk(cwd)).toBe(false);
     expect(await readFile(join(sandbox.path, 'workers/api/cloudflare-env.d.ts'), 'utf8')).toBe(source);
 });
+
 test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and reports the file until Git tracks it', async () => {
     await using sandbox = await testdir();
     const source = 'interface CloudflareEnv {}\n';
@@ -218,9 +219,12 @@ test('an OpenNext project checks cloudflare-env.d.ts against CloudflareEnv, and 
         ['types', 'cloudflare-env.d.ts', '--env-interface', 'CloudflareEnv'],
     ]);
 });
+
 test.each(['', 'apps/api'])(
     'Supabase passes every configured schema as its own --schema, in the root and in a scope (%s)',
     async (scope) => {
+        const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
+
         await using sandbox = await testdir();
         using fixture = await prepareSupabaseCheck(
             sandbox.path,
@@ -247,6 +251,7 @@ test.each(['', 'apps/api'])(
         ]);
     },
 );
+
 test('Supabase types need Docker before the local stack starts', async () => {
     using resources = new DisposableStack();
 
@@ -261,6 +266,7 @@ test('Supabase types need Docker before the local stack starts', async () => {
     });
     expect(fixture.requests).toStrictEqual([]);
 });
+
 test('a [[command_check]] with outputs reports an output that differs from what its command writes', async () => {
     await using sandbox = await testdir();
     const generator = JSON.stringify([

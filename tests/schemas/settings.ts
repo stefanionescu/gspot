@@ -1,12 +1,12 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import { ISO_DATE } from '#tests/config/settings/schema.ts';
 import { buildJsonSchema } from '#cli/settings/json-schema.ts';
 
-export const publishedSettingsValidator = new Ajv2020({
+const schemaText = JSON.stringify(buildJsonSchema());
+
+export const isPublishedSettings = new Ajv2020({
     strict: true,
     strictTuples: false,
     formats: {
         uri: (value: string) => URL.canParse(value),
-        date: (value: string) => ISO_DATE.test(value) && !Number.isNaN(Date.parse(value)),
     },
-}).compile(buildJsonSchema());
+}).compile(JSON.parse(schemaText) as object);

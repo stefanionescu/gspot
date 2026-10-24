@@ -14,19 +14,17 @@ paths = ["db/migrations/*.sql", "migrations/*.sql", "prisma/migrations/*/migrati
 
 [defaults]
 "tools.sqlfluff.dialect" = "postgres"
-"tools.squawk.assume_in_transaction" = true
 
 [[tool]]
 min_version = "2.0.0"
 name = "squawk"
 npm = "squawk-cli"
 replace = [".squawk.toml", "squawk.toml"]
-version = "2.64.0"
+version = "2.70.0"
 
 [[config_file]]
 per_scope = true
 target = "squawk.toml"
-tool = "squawk"
 
 [[check]]
 command = ["squawk", "--config", "{config_file:squawk}", "--reporter", "json", "{files}"]

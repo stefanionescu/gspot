@@ -109,13 +109,13 @@ export function parseTomlFile(path: string, text: string, schema?: z.ZodType): u
     let value: Record<string, unknown>;
     try {
         value = parseToml(text) as Record<string, unknown>;
-    } catch (error) {
-        if (!(error instanceof Error)) throw error;
+    } catch (error_) {
+        const error = error_ as Error;
         const position =
             'line' in error && typeof error.line === 'number' && 'column' in error && typeof error.column === 'number'
                 ? `${path}:${String(error.line)}:${String(error.column + 1)}`
                 : path;
-        const detail = error.message.split('\n', 1).join('').replace(/[.:]$/u, '');
+        const detail = error.message.trimEnd().split('\n').slice(-1).join('').replace(/[.:]$/u, '');
         throw new GspotError('filesystem', `${position} is not valid TOML: ${detail}. Fix the file.`, { cause: error });
     }
     return schema === undefined ? value : parseFileFields(path, value, schema);
@@ -152,6 +152,7 @@ export function openTomlFile(path: string, text: string): EditableFile {
                     configurable: true,
                 });
         },
+
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: The TOML document type declares it.
         getText() {
             return buildPatchedToml(original, document);

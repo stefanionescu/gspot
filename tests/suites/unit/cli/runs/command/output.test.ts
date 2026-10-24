@@ -250,3 +250,32 @@ test('a finding in a folder outside the scope keeps its repository path when the
 
     expect(checked.findings.map(({ file }) => file)).toStrictEqual(['lib/x.ts', 'app/src/a.swift']);
 });
+
+test('a network crash names the network requirement and keeps only the last stderr line', async () => {
+    await using sandbox = await testdir();
+    const check = { ...BASE_CHECK, needs: ['network' as const], exit_codes: [0] };
+    const result = buildProcessResult({ code: 2, stdout: '{"Results":[]}', stderr: 'scan log\nrequest refused\n' });
+    expect(parseCommandFindings({ check }, result, { cwd: sandbox.path, root: sandbox.path }).note).toBe(
+        `${check.id} failed with exit 2. It needs network access: check the network or proxy, then run again.\nrequest refused`,
+    );
+});
+
+test('a crash tail keeps the cause and hides stack frames', () => {
+    const result = {
+        stdout: '',
+        stderr: 'Error: Cannot find package example\n    at load (loader.js:1:2)\n    at start (main.js:2:3)',
+    };
+    expect(formatOutputTail(result)).toBe('Error: Cannot find package example');
+    expect(formatOutputTail(result, '', { verbose: true })).toBe(result.stderr);
+});
+
+test('a crash tail hides stack frames at the beginning of either stream', () => {
+    const result = {
+        stdout: '    at output (stdout.js:1:2)\nError: stdout cause',
+        stderr: '    at error (stderr.js:2:3)\nError: stderr cause',
+    };
+    expect(formatOutputTail(result)).toBe('Error: stderr cause\nError: stdout cause');
+    expect(formatOutputTail(result, '', { verbose: true })).toBe(
+        'at error (stderr.js:2:3)\nError: stderr cause\nat output (stdout.js:1:2)\nError: stdout cause',
+    );
+});

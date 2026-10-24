@@ -15,18 +15,10 @@ kind = "library"
 name = "@react-native/eslint-plugin"
 npm = "@react-native/eslint-plugin"
 rule_prefix = "@react-native"
-version = "0.87.1"
-
-[[tool]]
-kind = "library"
-name = "eslint-plugin-react-native"
-npm = "eslint-plugin-react-native"
-rule_prefix = "react-native"
-version = "5.0.0"
+version = "0.88.0"
 
 [eslint]
-required_tools = ["@react-native/eslint-plugin", "eslint-plugin-react-native"]
-all_level_rules = ["react-native/no-color-literals", "react-native/no-inline-styles", "react-native/split-platform-components"]
+required_tools = ["@react-native/eslint-plugin"]
 
 [[eslint.selectors]]
 level = "all"

@@ -90,7 +90,8 @@ Remove the empty parent folders that a removed file leaves, stopping at the root
 @param path the removed file.
 */
 export function removeEmptyFolders(files: Files, path: string): void {
-    for (const folder of listEnclosingFolders(extractParentFolder(path)).slice(0, -1)) {
+    const parents = listEnclosingFolders(extractParentFolder(path)).slice(0, -1);
+    for (const folder of parents) {
         if (files.list(folder).length > 0) return;
         files.deleteFolder(folder);
     }

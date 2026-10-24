@@ -6,15 +6,14 @@ import { unlink, writeFile } from 'node:fs/promises';
 import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runSandboxCheck, findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     HOST_LOCKFILE,
-    BINARY_BUN_LOCKFILE,
     LOCKFILE_HOST_CASES,
     DEPENDENCIES_SANDBOX,
     REGISTRY_SCOPE_RESULTS,
@@ -84,11 +83,16 @@ test('dependencies/lockfiles reports Git download hosts until they are allowed, 
 
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
-test.each([...LOCKFILE_HOST_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
-    await using sandbox = await createSandbox(DEPENDENCIES_SANDBOX);
-    const result = await runCheckSample(sandbox, sample, DEPENDENCIES_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
-});
+
+test.each([...LOCKFILE_HOST_CASES])(
+    'dependencies/lockfiles reports $expected.rule in $expected.file and passes after the fix',
+    async (row) => {
+        const sample = { check: 'dependencies/lockfiles', ...row };
+        await using sandbox = await createSandbox(DEPENDENCIES_SANDBOX);
+        expect(await runCheckSample(sandbox, sample)).toStrictEqual(expectedSummary(sample));
+    },
+);
+
 test('an allowed registry host in a scope applies only to that scope', async () => {
     const lockfile = JSON.stringify(HOST_LOCKFILE, null, 2);
     await using sandbox = await testdir({
@@ -111,14 +115,18 @@ test('an allowed registry host in a scope applies only to that scope', async () 
         })),
     ).toStrictEqual([...REGISTRY_SCOPE_RESULTS]);
 });
+
 test('dependencies/lockfiles reads no hosts from the binary bun.lockb', async () => {
+    const BINARY_BUN_LOCKFILE = Buffer.concat([
+        Buffer.from([0xff, 0]),
+        Buffer.from('https://untrusted.invalid/package.tgz'),
+    ]);
+
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'bun.lockb': BINARY_BUN_LOCKFILE,
     });
-    const session = await openSession(sandbox.path);
-    const planned = planSandboxCheck(session, 'dependencies/lockfiles');
-    expect(await findBuiltInCheck('dependencies/lockfiles')(session, planned)).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'dependencies/lockfiles')).toStrictEqual([]);
 });
 
 test('dependencies/lockfiles reports the lockfile of a second package manager in the scope as foreign-lockfile', async () => {
@@ -144,7 +152,7 @@ test.each([...LOCKFILE_DOWNLOAD_CASES])(
     '$path checks download fields without treating metadata URLs as registries',
     async ({ path, text, lines }) => {
         await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]), [path]: text });
-        const checked = await runSandboxCheck(sandbox.path, 'dependencies/lockfiles');
-        expect(checked.map(({ line }) => line)).toStrictEqual([...lines]);
+        const findings = await runSandboxCheck(sandbox.path, 'dependencies/lockfiles');
+        expect(findings.map(({ line }) => line)).toStrictEqual([...lines]);
     },
 );

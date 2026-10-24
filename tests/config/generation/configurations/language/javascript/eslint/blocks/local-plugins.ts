@@ -1,10 +1,8 @@
-export const LOCAL_PLUGIN_TABLES = `[[tools.eslint.plugins]]
+export const SCOPE_PLUGIN_TABLES = `[[tools.eslint.plugins]]
 name = "local"
 path = "tools/lint/plugin.mjs"
 rules = { "no-forbidden" = [] }
-`;
 
-export const SCOPE_PLUGIN_TABLES = `${LOCAL_PLUGIN_TABLES}
 [[scope]]
 path = "app"
 configurations = ["javascript"]

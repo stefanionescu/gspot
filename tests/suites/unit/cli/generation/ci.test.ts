@@ -5,7 +5,6 @@ import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/session.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
-import { quoteArgument } from '#cli/system/text.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { type Pipeline } from '#cli/types/generation/ci.ts';
@@ -15,14 +14,6 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { type GithubWorkflow, type GitlabPipeline } from '#tests/types/ci.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/ci.ts';
 
-import {
-    CI_PINS,
-    CI_NODE,
-    CI_CACHE_FILES,
-    CI_CACHE_PREFIX,
-    GITHUB_PUSH_CONDITION,
-    GITHUB_SLOW_CONDITION,
-} from '#cli/config/generation/ci.ts';
 import {
     LINT_STEPS,
     SETUP_CASES,
@@ -34,25 +25,19 @@ import {
 } from '#tests/config/generation/ci.ts';
 
 async function buildPipeline(resources: AsyncDisposableStack): Promise<Pipeline> {
-    const sandbox = resources.use(
-        await testdir({
-            'gspot.toml': buildSandboxSettings(['docs'], {
-                tables: stringify({
-                    command_check: [
-                        { id: 'project/audit', paths: ['**/*'], stage: 'manual', command: ['echo', 'sample'] },
-                    ],
-                }),
+    const settingsText = await testdir({
+        'gspot.toml': buildSandboxSettings(['docs'], {
+            tables: stringify({
+                command_check: [{ id: 'project/audit', paths: ['**/*'], stage: 'manual', command: ['echo', 'sample'] }],
             }),
-            'README.md': '# Example\n',
-            'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
         }),
-    );
+        'README.md': '# Example\n',
+        'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
+    });
+    const sandbox = resources.use(settingsText);
     const session = await openSession(sandbox.path);
     const pipeline: Pipeline = {
         ...LINUX_PIPELINE,
-        operatingSystems: [...LINUX_PIPELINE.operatingSystems],
-        projectInstall: [...LINUX_PIPELINE.projectInstall],
-        lockfiles: [...LINUX_PIPELINE.lockfiles],
         manualChecks: session.configuredChecks.filter(({ check }) =>
             ['docs/lychee-external', 'project/audit'].includes(check.id),
         ),
@@ -75,10 +60,8 @@ test('the GitHub workflow has one lint job, which ends with the slow checks only
 test('the Slow checks step names every slow check in one comma list', async () => {
     await using resources = new AsyncDisposableStack();
     const pipeline = await buildPipeline(resources);
-    expect(pipeline.manualChecks.map(({ check }) => check.id)).toStrictEqual(['docs/lychee-external', 'project/audit']);
-    const cli = `npm:@gspothq/cli[allow_low_downloads=true]@${pipeline.version}`;
-    const command = `mise exec ${quoteArgument(CI_NODE)} ${quoteArgument(cli)} -- gspot`;
-    const expected = `${command} check --only ${quoteArgument('docs/lychee-external,project/audit')}`;
+    const command = "mise exec node@24 'npm:@gspothq/cli[allow_low_downloads=true]@1.2.3' -- gspot";
+    const expected = `${command} check --only 'docs/lychee-external,project/audit'`;
     const steps = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps;
     expect(steps.find((step) => step.name === 'Install gspot tools')?.run).toBe(`${command} install`);
     expect(steps.find((step) => step.name === 'Slow checks')?.run).toBe(
@@ -96,10 +79,10 @@ test('pushes run the job on the default branch only, and the slow checks only on
     const pipeline = await buildPipeline(resources);
 
     const job = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!;
-    expect(job.if).toBe(GITHUB_PUSH_CONDITION);
-    expect(job.steps.filter((step) => step.if === GITHUB_SLOW_CONDITION).map((step) => step.name)).toStrictEqual([
-        'Slow checks',
-    ]);
+    expect(job.if).toBe("github.event_name != 'push' || github.ref_name == github.event.repository.default_branch");
+    expect(
+        job.steps.filter((step) => step.if === "github.event_name == 'push'").map((step) => step.name),
+    ).toStrictEqual(['Slow checks']);
 });
 
 test('the cache key covers the gspot version, the tool files, and the project lockfiles, and the cache is saved before the checks', async () => {
@@ -108,9 +91,10 @@ test('the cache key covers the gspot version, the tool files, and the project lo
 
     const steps = (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps;
     const restore = steps.find((step) => step.name === 'Restore caches')!;
-    const hashed = [...CI_CACHE_FILES, ...pipeline.lockfiles].map((path) => `'${path}'`).join(', ');
-    expect(restore.with?.['key']).toBe(`${CI_CACHE_PREFIX}${pipeline.version}-\${{ hashFiles(${hashed}) }}`);
-    expect(restore.with?.['restore-keys']).toBe(CI_CACHE_PREFIX);
+    expect(restore.with?.['key']).toBe(
+        "gspot-${{ runner.os }}-${{ runner.arch }}-1.2.3-${{ hashFiles('.gspot/package.json', '.gspot/*lock*', '.gspot/pyproject.toml', '.gspot/mise.toml', '.gspot/mise.lock', 'package-lock.json', 'web/pnpm-lock.yaml') }}",
+    );
+    expect(restore.with?.['restore-keys']).toBe('gspot-${{ runner.os }}-${{ runner.arch }}-');
     const save = steps.find((step) => step.name === 'Save caches')!;
     expect(save).toMatchObject({
         if: `steps.${restore.id ?? ''}.outputs.cache-hit != 'true'`,
@@ -147,12 +131,12 @@ test('a Swift scope adds a macOS job, each job names its system, and the Linux j
         Object.entries(workflow.jobs).map(([id, job]) => ({ id, name: job.name, runner: job['runs-on'] })),
     ).toStrictEqual([
         { id: 'lint-linux', name: 'lint (linux)', runner: 'linux-large' },
-        { id: 'lint-macos', name: 'lint (macos)', runner: CI_PINS.githubRunners.macos.label },
+        { id: 'lint-macos', name: 'lint (macos)', runner: 'macos-26' },
     ]);
 });
 
 test.each([...SETUP_CASES])(
-    'the %s job keeps setup exit %s and literal arguments before gspot',
+    'the %s job keeps setup exit %i and literal arguments before gspot',
     async (provider, setupExit) => {
         await using resources = new AsyncDisposableStack();
         const selectedPipeline = await buildPipeline(resources);
@@ -175,7 +159,7 @@ test.each([...SETUP_CASES])(
         const script =
             provider === 'github'
                 ? (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps.flatMap(
-                      (step) => (step.run === undefined ? [] : [step.run]),
+                      (step) => (step.run === undefined ? [] : step.run),
                   )
                 : (parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script;
         const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {

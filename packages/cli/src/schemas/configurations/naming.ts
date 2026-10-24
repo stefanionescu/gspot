@@ -13,24 +13,17 @@ const pathContainerSchema = z.strictObject({
 
 const identifierCategory = z.enum(NAMED_CATEGORIES) satisfies z.ZodType<NamedCategory>;
 
-const reservedCategories = z
-    .array(identifierCategory)
-    .min(1)
-    .meta({ description: 'Identifier categories where the term is permitted, such as properties or folders.' });
+const sourcePathSchema = z.string().min(1).meta({ pathRole: 'source' }) satisfies z.ZodType<string>;
 
-const namingGroupSchema = z.strictObject({ terms: z.array(z.string()) } satisfies SchemaShape<
+const namingGroupSchema = z.strictObject({ terms: z.string().array() } satisfies SchemaShape<
     NamingDefaults['groups'][string]
 >);
 
 export const namingOverrideSchema = z.strictObject({
-    paths: z
-        .array(z.string().min(1).meta({ pathRole: 'source' }))
-        .min(1)
-        .optional()
-        .meta({ description: 'Where the override applies.' }),
-    languages: z.array(z.string()).optional().meta({ description: 'The languages it applies to.' }),
-    categories: z
-        .array(identifierCategory)
+    paths: sourcePathSchema.array().min(1).optional().meta({ description: 'Where the override applies.' }),
+    languages: z.string().array().optional().meta({ description: 'The languages it applies to.' }),
+    categories: identifierCategory
+        .array()
         .optional()
         .meta({ description: 'The kinds of name it applies to. Unknown kinds are refused.' }),
     ignored_prefix: z.string().optional().meta({ description: 'A prefix not counted as a word, such as ^test_.' }),
@@ -39,35 +32,28 @@ export const namingOverrideSchema = z.strictObject({
     }),
     allow_digits: z.boolean().optional().meta({ description: 'Accept digits in names.' }),
     allow_repeated_words: z.boolean().optional().meta({ description: 'Accept a word twice in one name.' }),
-    allowed_names: z.array(z.string()).optional().meta({ description: 'Names accepted despite the naming rules.' }),
-    cases: z.array(z.enum(CASE_NAMES)).optional().meta({ description: 'The cases accepted here.' }),
+    allowed_names: z.string().array().optional().meta({ description: 'Names accepted despite the naming rules.' }),
+    cases: z.enum(CASE_NAMES).array().optional().meta({ description: 'The cases accepted here.' }),
     reason: z.string().optional().meta({ description: 'Why these names may break the rules.' }),
 } satisfies SchemaShape<NamingOverride>);
 
 export const writtenNamingOverrideSchema = namingOverrideSchema.extend({
     reason: z.string().min(1),
 }) satisfies z.ZodType<NamingOverride>;
+const categoriesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() } satisfies SchemaShape<
+    NamingDefaults['languages'][string]['categories'][string]
+>);
+const languagesSchema = z.strictObject({
+    categories: z.record(z.string(), categoriesSchema),
+} satisfies SchemaShape<NamingDefaults['languages'][string]>);
 
 export const namingDefaultsSchema = z.strictObject({
-    path_containers: z.array(pathContainerSchema),
-    allow_digits: z.boolean(),
-    allow_repeated_words: z.boolean(),
+    path_containers: pathContainerSchema.array(),
     groups: z
         .object({ folders: namingGroupSchema } satisfies SchemaShape<{ folders: NamingDefaults['groups'][string] }>)
         .catchall(namingGroupSchema),
-    reserved: z.record(z.string(), reservedCategories),
-    allowed_names: z.array(z.string()),
-    allowed_phrases: z.array(z.string()),
-    languages: z.record(
-        z.string(),
-        z.strictObject({
-            categories: z.record(
-                z.string(),
-                z.strictObject({ cases: z.array(z.enum(CASE_NAMES)) } satisfies SchemaShape<
-                    NamingDefaults['languages'][string]['categories'][string]
-                >),
-            ),
-        } satisfies SchemaShape<NamingDefaults['languages'][string]>),
-    ),
-    override: z.array(writtenNamingOverrideSchema),
+    allowed_names: z.string().array(),
+    allowed_phrases: z.string().array(),
+    languages: z.record(z.string(), languagesSchema),
+    override: writtenNamingOverrideSchema.array(),
 } satisfies SchemaShape<NamingDefaults>);

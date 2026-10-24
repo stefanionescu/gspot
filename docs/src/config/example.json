@@ -16,7 +16,7 @@
         ],
         "inserted_lines": [5]
     },
-    "rejected_summary": "Failed: 2 checks with 5 findings. Passed: 11 checks. Skipped: 9 checks.",
+    "rejected_summary": "Failed: 2 checks with 5 findings. Passed: 12 checks. Skipped: 7 checks.",
     "findings": [
         {
             "check": "javascript/eslint",
@@ -53,12 +53,12 @@
             "check": "gspot/suppressions",
             "file": "src/checkout.ts",
             "line": 6,
-            "rule": "eslint-limit",
-            "message": "Split the code by its steps, or ask the user to raise the limit in gspot.toml."
+            "rule": "eslint-all",
+            "message": "This comment turns off every rule, including the size limits. Name the rules and give a reason."
         }
     ],
-    "passed": "Passed: 13 checks. Skipped: 9 checks.",
-    "problems": [
+    "passed": "Passed: 14 checks. Skipped: 7 checks.",
+    "issues": [
         {
             "title": "No await.",
             "text": "The function returns before the charge ends.",
@@ -69,7 +69,7 @@
             "title": "Linter off.",
             "text": "The comment turns off every rule for line 7 and gives no reason.",
             "lines": [6],
-            "rules": ["unicorn/no-abusive-eslint-disable", "eslint-limit"]
+            "rules": ["unicorn/no-abusive-eslint-disable", "eslint-all"]
         },
         {
             "title": "Errors dropped.",

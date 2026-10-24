@@ -10,7 +10,6 @@ extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".xml"]
 
 [[tool]]
 min_version = "0.9.0"
-# The npm build of Taplo checks no file on Windows, so mise installs the native release on every platform.
 mise = "taplo"
 name = "taplo"
 replace = ["taplo.toml", ".taplo.toml"]
@@ -28,7 +27,6 @@ npm = "v8r"
 requires = ["ajv"]
 version = "6.1.0"
 
-# v8r imports this optional peer when it loads ajv-draft-04. Tool projects must install it.
 [[tool]]
 kind = "library"
 name = "ajv"
@@ -60,7 +58,7 @@ fix = ["taplo", "fmt", "--config", "{config_file:taplo}", "--colors", "never", "
 help = "Run `gspot check --fix`."
 level = "recommended"
 name = "taplo-format"
-output = { format = "regex", pattern = "^(?:\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)|--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file does not parse as TOML, or it is not in the format of the configured TOML settings.", fixable = "^(?:--- a/|ERROR taplo:format_files)" }
+output = { format = "taplo" }
 stage = "commit"
 summary = "Checks that every TOML file parses and matches the taplo output under the shared settings."
 why = "One formatter keeps a diff about the values, not the spacing."

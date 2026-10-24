@@ -1,7 +1,5 @@
 export const SETTING_REFERENCE = /\$[({]/u;
 
-export const PBXPROJ = '.xcodeproj/project.pbxproj';
-
 export const PROJECT_TOKENS = [
     /\s+/y,
     /\/\*[\s\S]*?\*\//y,
@@ -16,7 +14,7 @@ export const PROJECT_PUNCTUATION: ReadonlySet<string> = new Set(['{', '}', '(', 
 export const PROJECT_ESCAPE = /\\(U[\dA-Fa-f]{4}|[0-7]{1,3}|[\s\S])/gu;
 
 export const PROJECT_ESCAPES: Readonly<Record<string, string>> = {
-    a: '\u0007',
+    a: '\u{7}',
     b: '\b',
     f: '\f',
     n: '\n',

@@ -1,10 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { readSettings } from '#cli/settings/read.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { openWriter } from '#cli/apply/write/writer.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { readSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { COMMENTED_SETTINGS } from '#tests/config/settings/file.ts';
-import { link, stat, symlink, readFile, writeFile } from 'node:fs/promises';
+import { stat, link, symlink, readFile, writeFile } from 'node:fs/promises';
 import { setKey, readSettingsEdit, buildEditedSettings } from '#cli/settings/edit.ts';
 import { parseTomlText, writeSettings, readSettingsFile } from '#cli/settings/file.ts';
 
@@ -36,20 +38,22 @@ test('an edit planned from old bytes is refused, and a new plan is written', asy
     using writer = openWriter(sandbox.path);
     expect(() => {
         writeSettings(writer, result.text, input.original);
-    }).toThrow();
+    }).toThrow(new GspotError('filesystem', 'gspot.toml changed while gspot wrote it. Run the command again.'));
     expect(await readFile(path, 'utf8')).toBe(`${COMMENTED_SETTINGS}# Concurrent edit.\n`);
     const fresh = readSettingsEdit(sandbox.path);
     setKey(fresh.table, 'level', 'all');
     const next = buildEditedSettings(sandbox.path, fresh);
     writeSettings(writer, next.text, fresh.original);
-    expect(readSettings(sandbox.path).settings.level).toBe('all');
+    const settings = readSandboxSettings(sandbox.path).level;
+    expect(settings).toBe('all');
 });
 
 test('reading or editing a missing gspot.toml is refused and creates nothing', async () => {
     await using sandbox = await testdir();
-    expect(() => readSettings(sandbox.path)).toThrow('Run `gspot init`');
+    expect(() => readSettingsFile(sandbox.path)).toThrow('Run `gspot init`');
     expect(() => readSettingsEdit(sandbox.path)).toThrow('Run `gspot init`');
-    expect(await stat(join(sandbox.path, 'gspot.toml')).catch(() => undefined)).toBeUndefined();
+    const missing = await captureRejection(stat(join(sandbox.path, 'gspot.toml')));
+    expect(missing).toMatchObject({ code: 'ENOENT' });
 });
 
 test('writing an unchanged file does not touch it', async () => {
@@ -63,7 +67,7 @@ test('writing an unchanged file does not touch it', async () => {
     expect(await stat(path)).toMatchObject({ ino: before.ino, mtimeMs: before.mtimeMs, mode: before.mode });
 });
 
-test.each(['symlink inside', 'symlink outside', 'hardlink'])(
+test.each(['symlink inside', 'symlink outside'])(
     'an edit of a gspot.toml that is a link is refused and the link target is unchanged: %s',
     async (kind) => {
         await using sandbox = await testdir({
@@ -73,10 +77,25 @@ test.each(['symlink inside', 'symlink outside', 'hardlink'])(
 
         const root = join(sandbox.path, 'project');
         const target = join(sandbox.path, kind === 'symlink outside' ? 'outside.toml' : 'project/source.toml');
-        await (kind === 'hardlink'
-            ? link(target, join(root, 'gspot.toml'))
-            : symlink(target, join(root, 'gspot.toml')));
-        expect(() => readSettingsEdit(root)).toThrow('regular file with one link');
+        await symlink(target, join(root, 'gspot.toml'));
+        expect(() => readSettingsEdit(root)).toThrow(
+            new GspotError('filesystem', 'gspot.toml is not a regular file. Use a regular file.'),
+        );
         expect(await readFile(target, 'utf8')).toBe(COMMENTED_SETTINGS);
     },
 );
+
+test('editing settings through a hard link replaces only the selected path', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': COMMENTED_SETTINGS });
+    const peer = join(sandbox.path, 'peer.toml');
+    await link(join(sandbox.path, 'gspot.toml'), peer);
+    const input = readSettingsEdit(sandbox.path);
+    setKey(input.table, 'level', 'all');
+    const result = buildEditedSettings(sandbox.path, input);
+    using writer = openWriter(sandbox.path);
+    writeSettings(writer, result.text, input.original);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(result.text);
+    expect(await readFile(peer, 'utf8')).toBe(COMMENTED_SETTINGS);
+    const [written, retained] = await Promise.all([stat(join(sandbox.path, 'gspot.toml')), stat(peer)]);
+    expect(written.ino).not.toBe(retained.ino);
+});

@@ -32,10 +32,10 @@ function convertArtifactUri(artifact: SarifArtifactLocation, run: SarifRun, sour
     const uri = new URL(artifact.uri, artifact.uriBaseId === undefined ? root : buildBaseUrl(artifact.uriBaseId));
     if (uri.protocol !== 'file:')
         throw new GspotError('output', 'SARIF reported a source location that is not a file.');
-    const file = relative(source, fileURLToPath(uri));
-    if (!isInside(file))
+    const file = fileURLToPath(uri);
+    if (!isInside(relative(source, file)))
         throw new GspotError('output', 'SARIF reported a source location outside the copy of the source.');
-    return fileURLToPath(uri);
+    return file;
 }
 
 function buildFindingPlace(location: SarifPhysicalLocation, run: SarifRun, source: string): FindingPlace {
@@ -44,8 +44,8 @@ function buildFindingPlace(location: SarifPhysicalLocation, run: SarifRun, sourc
     const artifact = getArtifactLocation(reference, run);
     return {
         file: convertArtifactUri(artifact, run, source),
-        ...(region?.startLine === undefined ? {} : { line: region.startLine }),
-        ...(region?.startColumn === undefined ? {} : { column: region.startColumn }),
+        ...(region?.startLine !== undefined && { line: region.startLine }),
+        ...(region?.startColumn !== undefined && { column: region.startColumn }),
     };
 }
 
@@ -56,20 +56,19 @@ function assertSuccessfulRun(run: SarifRun): void {
                 analysis.executionSuccessful === false ||
                 analysis.toolExecutionNotifications?.some((notification) => notification.level === 'error') === true,
         ) ?? [];
-    if (unsuccessful.length > 0) {
-        const notifications = unsuccessful.flatMap((analysis) =>
-            (analysis.toolExecutionNotifications ?? []).filter((notification) => notification.level === 'error'),
-        );
-        const detail = notifications
-            .map((notification) => notification.message?.text)
-            .filter((text) => text !== undefined)
-            .join('\n');
-        const message =
-            detail === ''
-                ? 'SARIF reported an unsuccessful analysis.'
-                : `SARIF reported an unsuccessful analysis: ${detail}`;
-        throw new GspotError('output', message);
-    }
+    if (unsuccessful.length === 0) return;
+    const notifications = unsuccessful.flatMap((analysis) =>
+        (analysis.toolExecutionNotifications ?? []).filter((notification) => notification.level === 'error'),
+    );
+    const detail = notifications
+        .map((notification) => notification.message?.text)
+        .filter((text) => text !== undefined)
+        .join('\n');
+    const message =
+        detail === ''
+            ? 'SARIF reported an unsuccessful analysis.'
+            : `SARIF reported an unsuccessful analysis: ${detail}`;
+    throw new GspotError('output', message);
 }
 
 /**
@@ -86,7 +85,7 @@ export function parseSarifFindings(output: ToolOutput): Finding[] {
         return run.results.map((result) => ({
             check,
             ...buildFindingPlace(result.locations?.[0]?.physicalLocation, run, source),
-            ...(result.ruleId === undefined ? {} : { rule: result.ruleId }),
+            ...(result.ruleId !== undefined && { rule: result.ruleId }),
             help,
             message: result.message?.text ?? 'SARIF reports a result here.',
             fixable: false,

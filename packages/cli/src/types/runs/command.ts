@@ -44,7 +44,7 @@ export type CommandLaunch = {
     env: Record<string, string>;
 };
 
-export type CopyRun = {
+export type FolderRun = {
     session: Session;
     planned: PlannedCheck;
     tool: Tool;

@@ -24,9 +24,10 @@ export const LANGUAGE_DEFINITIONS = {
             'Modules that the host application provides at run time, such as folder_paths. A name covers its submodules.',
         default: [] as [],
     },
-    'python.extra_paths': {
+    'python.import_folders': {
         configurations: ['python'],
-        description: 'Folders, relative to the scope, where basedpyright also looks for imports.',
+        description:
+            'Folders, relative to the scope, that Python imports resolve from, for basedpyright and the import rules check.',
         default: [] as [],
     },
 } as const satisfies Record<string, SettingDefinition>;

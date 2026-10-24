@@ -7,6 +7,7 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { parseJsonFindings } from '#cli/runs/output/json.ts';
 import { parseKnipFindings } from '#cli/runs/output/knip.ts';
 import { parseSarifFindings } from '#cli/runs/output/sarif.ts';
+import { parseTaploFindings } from '#cli/runs/output/taplo.ts';
 import { parseTyposFindings } from '#cli/runs/output/typos.ts';
 import { DRIVE_LETTER } from '#cli/config/files/path-patterns.ts';
 import { parseSemgrepFindings } from '#cli/runs/output/semgrep.ts';
@@ -36,7 +37,7 @@ function stripRoot(root: string, file: string): string {
 
 function listRootPrefixes(root: string): string[] {
     const roots = [root, readCanonicalPath(root) ?? root];
-    const prefixes = new Set(roots.flatMap((form) => [`${form}/`, `${form.replaceAll('/', sep)}${sep}`]));
+    const prefixes = new Set(roots.flatMap((form) => [`${form}/`, `${form.replaceAll('/', () => sep)}${sep}`]));
     return [...prefixes].toSorted((first, second) => second.length - first.length);
 }
 
@@ -48,6 +49,7 @@ export const outputFormats = {
     },
     sarif: { parse: parseSarifFindings, namesFiles: () => true },
     typos: { parse: parseTyposFindings, namesFiles: () => true },
+    taplo: { parse: parseTaploFindings, namesFiles: () => true },
     markdownlint: { parse: parseMarkdownlintFindings, namesFiles: () => true },
     knip: { parse: parseKnipFindings, namesFiles: () => true },
     semgrep: { parse: parseSemgrepFindings, namesFiles: () => true },

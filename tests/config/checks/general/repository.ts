@@ -53,8 +53,3 @@ path = "app"
 [repository]
 max_file_kilobytes = 1
 `;
-
-export const LARGE_FILE_ATTRIBUTES = `lfs.bin filter=lfs
-data/** linguist-generated
-vendor/** linguist-vendored
-`;

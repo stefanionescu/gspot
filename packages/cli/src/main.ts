@@ -4,6 +4,7 @@ import { findRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
 import { EXIT_ERROR } from '#cli/config/terminal.ts';
+import { isGitRepository } from '#cli/system/git.ts';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerUnset } from '#cli/commands/unset.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
@@ -23,6 +24,7 @@ import { printError, printResult, isColorAllowed, setOutputOptions } from '#cli/
 
 import {
     CODE_MARK,
+    GIT_COMMANDS,
     GLOBAL_OPTIONS,
     HELP_TERM_WIDTH,
     EXIT_CODE_SPACING,
@@ -47,14 +49,7 @@ function formatArgumentError(error: CommanderError, programHelp: string): string
     return `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 }
 
-/**
-Print a command failure, and choose the exit status.
-
-@param error what the command threw.
-@param programHelp the help that gspot prints when the arguments name no command.
-@returns zero for Commander help, or the command error status.
-*/
-export function printFailure(error: unknown, programHelp: string): number {
+function printFailure(error: unknown, programHelp: string): number {
     if (error instanceof CommanderError) {
         if (error.exitCode === 0) return 0;
         printError({ error: 'arguments', message: formatArgumentError(error, programHelp) });
@@ -118,8 +113,6 @@ export function buildProgram(onResult: CommandCompletion): Command {
         .version(cliPackage.version, '--version', GLOBAL_OPTIONS['--version'])
         .helpOption('-h, --help', GLOBAL_OPTIONS['-h, --help'])
         .helpCommand(false)
-        .showSuggestionAfterError(true)
-        .showHelpAfterError('(add --help to see the options)')
         .exitOverride();
     program.configureOutput({ writeErr: () => {} });
     registerInit(program, onResult);
@@ -164,14 +157,18 @@ export async function runProgram(commandArguments: string[]): Promise<number> {
     const end = commandArguments.indexOf('--');
     const commandJson = (end === -1 ? commandArguments : commandArguments.slice(0, end)).includes('--json');
     setOutputOptions({ json: commandJson, color: isColorAllowed() });
-    program.hook('preAction', async (_program, command) => {
-        if (
-            VERSION_PIN_COMMANDS.has(command.name()) ||
-            (command.name() === 'check' && command.getOptionValue('fix') === true)
-        )
-            await assertVersionPin(findRoot(process.cwd()));
+    program.hook('preAction', (_program, command) => {
+        if (GIT_COMMANDS.has(command.name()) && !isGitRepository(process.cwd()))
+            throw new GspotError('git', 'gspot needs a Git repository. Run git init, then gspot init.');
+        if (VERSION_PIN_COMMANDS.has(command.name())) assertVersionPin(findRoot(process.cwd()));
     });
     try {
+        if (commandArguments[0] === '--version' && commandArguments.length > 1)
+            throw new CommanderError(
+                EXIT_ERROR,
+                'commander.unknownOption',
+                `error: unknown option '${commandArguments[1] as string}'`,
+            );
         await program.parseAsync(commandArguments, { from: 'user' });
         printResult(result);
         return result.exitCode;

@@ -20,9 +20,9 @@ import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import type { SitemapUrls } from '#cli/types/checks/framework/site.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
+import { purgecssReportSchema } from '#cli/schemas/checks/framework/site.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
 import { PURGECSS } from '#cli/config/checks/framework/site/purgecss-process.ts';
-import { purgecssReportSchema } from '#cli/schemas/checks/framework/site/pages.ts';
 import { listBuiltFiles, getSuccessfulBuild, buildRepositoryPath } from '#cli/checks/framework/site/build.ts';
 
 import {
@@ -94,11 +94,11 @@ function readSitemapUrls(folder: string, files: ReadonlySet<string>, planned: Pl
         }
     };
     for (const file of files) if (SITEMAP_FILE.test(file)) read(file);
-    return { urls: [...urls.values()], findings };
+    return { urls: urls.values().toArray(), findings };
 }
 
 function listPossiblePages(pathname: string): [string, ...string[]] {
-    const path = decodeURIComponent(pathname.replace(/[?#][\s\S]*/u, '')).replace(/^\//u, '');
+    const path = decodeURIComponent(pathname).replace(/^\//u, '');
     if (path === '' || path.endsWith('/')) return [`${path}${INDEX_PAGE}`];
     return path.endsWith(HTML_EXTENSION) ? [path] : [path, `${path}${HTML_EXTENSION}`, `${path}/${INDEX_PAGE}`];
 }

@@ -8,7 +8,6 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
-import { DIGEST_ALGORITHM } from '#cli/config/files/hashes.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import type { TrackedFile } from '#cli/types/repository/files.ts';
@@ -60,7 +59,7 @@ function readBuildSources(root: string, paths: string[]): Map<string, FileConten
 
 function pruneSources(folder: string, files: Files, wantedFiles: Map<string, FileContents>): void {
     const wantedFolders = new Set(
-        [...wantedFiles.keys()].flatMap((path) => {
+        wantedFiles.keys().flatMap((path) => {
             const segments = path.split('/');
             return segments.slice(0, -1).map((_segment, index) => segments.slice(0, index + 1).join('/'));
         }),
@@ -77,8 +76,8 @@ function pruneSources(folder: string, files: Files, wantedFiles: Map<string, Fil
         if (onDisk !== undefined) files.deleteFile(path, onDisk);
         return false;
     });
-    for (const emptyFolder of empty.toSorted((left, right) => right.length - left.length))
-        files.deleteFolder(emptyFolder);
+    const deepestFirst = empty.toSorted((left, right) => right.length - left.length);
+    for (const emptyFolder of deepestFirst) files.deleteFolder(emptyFolder);
 }
 
 function openBuildCache(folder: string): Files {
@@ -94,6 +93,18 @@ function openBuildCache(folder: string): Files {
 }
 
 /**
+Return the cache folder owned by one checkout, shared by all of its build tools.
+
+@param root the repository checkout.
+@returns its cache folder.
+*/
+export function readCheckoutCacheFolder(root: string): string {
+    const canonicalRoot = realpathSync(root);
+    const digest = createHash('sha256').update(canonicalRoot).digest('hex');
+    return join(readCacheFolder(), digest);
+}
+
+/**
 Computes the build folder for a scope and tool.
 
 @param root the installed checkout.
@@ -104,8 +115,7 @@ Computes the build folder for a scope and tool.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 3 files share it.
 export function getScopeBuildFolder(root: string, scope: string, purpose: SwiftBuildPurpose): string {
     return join(
-        readCacheFolder(),
-        createHash(DIGEST_ALGORITHM).update(realpathSync(root)).digest('hex'),
+        readCheckoutCacheFolder(root),
         SWIFT_BUILD_FOLDER,
         scope === '' ? ROOT_BUILD_FOLDER : `${SCOPE_FOLDER_PREFIX}${Buffer.from(scope).toString('hex')}`,
         purpose,
@@ -117,14 +127,13 @@ Plans the build of a scope: the command, its folder, and its log path.
 
 @param session the repository and its tools.
 @param planned the scope and its Swift settings.
-@param purpose the tool whose build needs its own cache.
-@param purpose.purpose the tool whose build needs its own cache.
+@param purpose the tool whose build needs its own cache, compile by default.
 @returns the command, build folder, and log path.
 */
 export function buildPlan(
     session: Session,
     planned: PlannedCheck,
-    { purpose = 'compile' }: { purpose?: Exclude<SwiftBuildPurpose, 'periphery'> } = {},
+    purpose: Exclude<SwiftBuildPurpose, 'periphery'> = 'compile',
 ): SwiftBuildPlan {
     const folder = getScopeBuildFolder(session.installedRoot, planned.scope.folder.path, purpose);
     const log = join(folder, BUILD_LOG);
@@ -134,13 +143,14 @@ export function buildPlan(
         xcode_destination: destination,
     } = getTable(planned.scope.settings, 'swift');
     if (project === undefined) {
-        if (!session.repository.files.some(({ path }) => path === joinScope(planned.scope.folder.path, PACKAGE_SWIFT)))
+        if (session.repository.files.every(({ path }) => path !== joinScope(planned.scope.folder.path, PACKAGE_SWIFT)))
             throw new GspotError('skip', 'Set swift.xcode_project or add Package.swift in this scope.');
         const scratch = join(folder, PACKAGE_SCRATCH_FOLDER);
         return {
             folder,
             log,
             kind: 'package',
+            purpose,
             scratch,
             commandArguments: [SWIFT_PROGRAM, ...SWIFT_BUILD_COMMANDS[purpose].package, SCRATCH_PATH_FLAG, scratch],
         };
@@ -161,7 +171,7 @@ export function buildPlan(
         join(folder, DERIVED_DATA_FOLDER),
         CODE_SIGNING_OFF,
     ];
-    return { kind: 'xcode', folder, log, commandArguments };
+    return { kind: 'xcode', purpose, folder, log, commandArguments };
 }
 
 /**

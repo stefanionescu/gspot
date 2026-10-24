@@ -41,6 +41,6 @@ export const EXPANSION_NODES: readonly string[] = ['simple_expansion', 'expansio
 
 export const TRAP_EXPANSION_NODES = [...EXPANSION_NODES, 'command_substitution', 'arithmetic_expansion'];
 
-export const TRAP_STRING_ESCAPES = /\\(["\\$\u0060\n])/gu;
+export const TRAP_STRING_ESCAPES = /\\(["\\$\u{60}\n])/gu;
 
 export const NOT_LINE_BREAK = /[^\r\n]/gu;

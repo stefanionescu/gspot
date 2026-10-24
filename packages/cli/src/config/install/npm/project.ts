@@ -9,11 +9,20 @@ export const PACKAGE_MANAGER_ARGUMENTS = {
             'install',
             '--package-lock-only',
             '--legacy-peer-deps',
+            '--ignore-scripts',
             '--no-audit',
             '--no-fund',
             '--omit-lockfile-registry-resolved',
         ],
-        install: ['npm', 'ci', '--legacy-peer-deps', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
+        install: [
+            'npm',
+            'ci',
+            '--legacy-peer-deps',
+            '--ignore-scripts',
+            '--no-audit',
+            '--no-fund',
+            '--omit-lockfile-registry-resolved',
+        ],
     },
     bun: {
         lockfile: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted', '--network-concurrency=1'],
@@ -41,3 +50,5 @@ export const NPM_SETTING_PREFIX = 'npm_config_';
 export const NPMRC_FILE = '.npmrc';
 
 export const NODE_TOOL = 'node';
+
+export const YARN_ENABLE_SCRIPTS = 'YARN_ENABLE_SCRIPTS';

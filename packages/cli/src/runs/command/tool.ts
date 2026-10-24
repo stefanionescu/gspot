@@ -9,8 +9,8 @@ import { listOtherTools } from '#cli/planning/tools.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import type { SpawnResult } from '#cli/types/system/processes.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { inspectTool, buildToolAvailability } from '#cli/tools/inspect.ts';
+import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { ProcessFailure, ToolRunOptions, ToolAvailability } from '#cli/types/tools/run.ts';
 import type { CheckTool, CheckToolOptions, CheckToolProgram, ToolProcessResult } from '#cli/types/runs/command.ts';
 
@@ -99,11 +99,7 @@ export function buildOtherToolEnvironment(
         ...env,
         PATH: [
             ...folders,
-            env[
-                Object.keys(env).find(
-                    (name) => (process.platform === 'win32' ? name.toUpperCase() : name) === 'PATH',
-                ) ?? 'PATH'
-            ] ??
+            env[Object.keys(env).find((name) => foldVariableName(name) === 'PATH') ?? 'PATH'] ??
                 readEnvironmentVariable('PATH') ??
                 '',
         ].join(delimiter),

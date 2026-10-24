@@ -1,11 +1,11 @@
 import ts from 'typescript';
 import { CST, Lexer } from 'yaml';
 import { visit } from 'unist-util-visit';
+import { getPosition } from '#cli/system/text.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { SourcePosition } from '#cli/types/text.ts';
 import { listSqlTokens } from '#cli/parsers/code/sql/tokens.ts';
-import { getPosition, findQuotedEnd } from '#cli/system/text.ts';
 import { NOT_LINE_BREAK } from '#cli/config/parsers/code/bash.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 import { SCRIPT_TAG } from '#cli/config/repository/files/classify.ts';
@@ -18,11 +18,9 @@ import type { CommentParser, SourceComment } from '#cli/types/parsers/code/comme
 import {
     COMMENT_NODES,
     HTML_COMMENT_END,
-    QUOTE_CHARACTERS,
     BLOCK_COMMENT_END,
     ASTRO_FRONT_MATTER,
     YAML_SCALAR_TOKENS,
-    SCSS_COMMENT_OPENERS,
     HTML_ALTERNATE_COMMENT_END,
 } from '#cli/config/parsers/code/comments.ts';
 
@@ -57,28 +55,13 @@ function parseJavascriptComments(text: string, path: string): SourceComment[] {
             if (range.end <= end) comments.set(range.pos, range);
     };
     visitNode(source);
-    return [...comments.values()]
+    return comments
+        .values()
+        .toArray()
         .toSorted((left, right) => left.pos - right.pos)
         .map((range) =>
             buildComment(text, range.pos, range.end, source.getLineAndCharacterOfPosition(range.pos).line + 1),
         );
-}
-
-function findCommentStart(line: string, openers: readonly string[]): number | undefined {
-    for (let at = 0; at < line.length; ) {
-        if (openers.some((opener) => line.startsWith(opener, at))) return at;
-        if (QUOTE_CHARACTERS.has(line.charAt(at))) at = findQuotedEnd(line, at);
-        else at += 1;
-    }
-    return undefined;
-}
-
-function parseScssComments(text: string): SourceComment[] {
-    return text.split('\n').flatMap((line, index) => {
-        const start = findCommentStart(line, SCSS_COMMENT_OPENERS);
-        if (start === undefined) return [];
-        return [buildComment(line, start, line.length, index + 1)];
-    });
 }
 
 function parseYamlComments(text: string): SourceComment[] {
@@ -86,7 +69,8 @@ function parseYamlComments(text: string): SourceComment[] {
     let offset = 0;
     let line = 1;
     let isScalar = false;
-    for (const token of new Lexer().lex(text)) {
+    const tokens = new Lexer().lex(text);
+    for (const token of tokens) {
         const kind = CST.tokenType(token);
         if (!isScalar && YAML_SCALAR_TOKENS.has(kind ?? '')) {
             isScalar = kind === 'scalar';
@@ -131,12 +115,6 @@ function parseTomlComments(text: string, path: string): SourceComment[] {
     });
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The comment parsers table calls it for .md and .mdx files.
-async function parseMarkdownComments(text: string): Promise<SourceComment[]> {
-    const source = extractMarkdownHtml(text).replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->');
-    return parseSyntaxComments('html', source, text);
-}
-
 async function parseComponentComments(text: string, path: string): Promise<SourceComment[]> {
     const masked = text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
     const front = path.endsWith('.astro') ? ASTRO_FRONT_MATTER.exec(text) : null;
@@ -178,11 +156,13 @@ const COMMENT_PARSERS = new Map<string, CommentParser>([
     ['.sql', parseSqlComments],
     ['.pgsql', parseSqlComments],
     ['.psql', parseSqlComments],
-    ['.scss', parseScssComments],
     ['.html', parseGrammarComments.bind(undefined, 'html')],
     ['.htm', parseGrammarComments.bind(undefined, 'html')],
-    ['.md', parseMarkdownComments],
-    ['.mdx', parseMarkdownComments],
+    ...['.md', '.mdx'].map((extension): [string, CommentParser] => [
+        extension,
+        (text) =>
+            parseSyntaxComments('html', extractMarkdownHtml(text).replaceAll(HTML_ALTERNATE_COMMENT_END, ' -->'), text),
+    ]),
     ['.css', parseGrammarComments.bind(undefined, 'css')],
 ]);
 
@@ -218,8 +198,7 @@ Remove only the closing delimiter that matches the comment syntax.
 */
 export function stripCommentEnd(text: string): string {
     if (text.startsWith('/*')) return text.replace(BLOCK_COMMENT_END, '').trimEnd();
-    if (text.startsWith('<!--')) return text.replace(HTML_COMMENT_END, '').trimEnd();
-    return text.trimEnd();
+    return text.startsWith('<!--') ? text.replace(HTML_COMMENT_END, '').trimEnd() : text.trimEnd();
 }
 
 /**
@@ -239,8 +218,9 @@ export async function parseComments(path: string, text: string, tags: readonly s
     else if (tags.includes('python')) scriptGrammar = 'python';
     const grammar = findGrammarByExtension(lowerPath) ?? scriptGrammar;
     if (grammar !== undefined) {
-        if (['javascript', 'typescript', 'tsx'].includes(grammar)) return parseJavascriptComments(text, path);
-        return parseGrammarComments(grammar, text);
+        return ['javascript', 'typescript', 'tsx'].includes(grammar)
+            ? parseJavascriptComments(text, path)
+            : parseGrammarComments(grammar, text);
     }
     const parser = COMMENT_PARSERS.get(extractExtension(path));
     return parser === undefined ? [] : parser(text, path);

@@ -47,7 +47,7 @@ function validateRemovedConfigurations(value: unknown, path: KeyPath): SettingsE
 }
 
 /**
-Find missing or invalid reasons on ignores, reasoned values, naming overrides, and extra tool options.
+Find missing or invalid reasons on ignores, reasoned values, and naming overrides.
 
 @param settings the normalized gspot.toml.
 @returns the errors in plain English.
@@ -60,17 +60,15 @@ export function validateSettingReasons(settings: Settings): SettingsError[] {
         if (!isTable(value)) return [];
         const reason = value['reason'];
         const own: SettingsError[] = [];
-        if (reason !== undefined)
-            own.push(
-                ...buildErrorsAt(
-                    [...path, 'reason'],
-                    validateReason(path.map(String).join('.'), typeof reason === 'string' ? reason : undefined),
-                ),
-            );
+        if (reason !== undefined) {
+            const reasonKey = path.map(String).join('.');
+            const errors = validateReason(reasonKey, typeof reason === 'string' ? reason : undefined);
+            own.push(...buildErrorsAt([...path, 'reason'], errors));
+        }
         return [
             ...own,
             ...Object.entries(value)
-                .filter(([key]) => key !== 'reason' && !(path.length === 0 && key === 'ignore'))
+                .filter(([key]) => key !== 'reason' && !(key === 'ignore' && path.length === 0))
                 .flatMap(([key, child]) => visit(child, [...path, key])),
         ];
     }
@@ -121,12 +119,12 @@ Check whether `value` for `setting` loosens `shipped`, so the value needs a reas
 @returns whether the value needs a reason.
 */
 export function isLoosening(setting: Setting, value: unknown, shipped: unknown): boolean {
-    if (setting.reason_needed === 'adding') {
+    if (setting.reason_when === 'adding') {
         if (Array.isArray(value))
             return value.some(
                 (element) =>
                     !Array.isArray(shipped) ||
-                    !shipped.some((shippedElement) => isDeepStrictEqual(element, shippedElement)),
+                    shipped.every((shippedElement) => !isDeepStrictEqual(element, shippedElement)),
             );
         if (isTable(value))
             return Object.entries(value).some(
@@ -134,7 +132,8 @@ export function isLoosening(setting: Setting, value: unknown, shipped: unknown):
             );
         return !isDeepStrictEqual(value, shipped);
     }
-    if (setting.reason_needed === 'raising' || setting.reason_needed === 'lowering')
-        return isLimitLoosening(setting.reason_needed, value, shipped);
-    return false;
+    return (
+        (setting.reason_when === 'raising' || setting.reason_when === 'lowering') &&
+        isLimitLoosening(setting.reason_when, value, shipped)
+    );
 }

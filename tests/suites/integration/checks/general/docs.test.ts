@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import type { LinkFailure } from '#tests/types/reports.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
@@ -40,8 +40,9 @@ async function assertTextLinks(root: string, check: string, target: string): Pro
 
 test('docs/lychee checks local links, and docs/lychee-external checks web links, fragments, and allowed URLs per scope', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const requests: string[] = [];
-    const server = Bun.serve({
+    using server = Bun.serve({
         hostname: '127.0.0.1',
         port: 0,
         fetch(request) {
@@ -52,35 +53,31 @@ test('docs/lychee checks local links, and docs/lychee-external checks web links,
                 : new Response('Missing endpoint', { status: 404 });
         },
     });
-    try {
-        const url = server.url.toString();
-        const child = `# Links\n\nRead [the page](${url}page#setup).\n\n[Child endpoint](${url}child-only)\n`;
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildSandboxSettings([], { tables: LINK_SCOPE_TABLES }),
-            'root.md': `# Links\n\nRead [the page](${url}missing).\n\n[Root endpoint](${url}root-only)\n`,
-            'app/guide.md': child,
-            'page.html': LINK_PAGE,
-        });
-        commitAll(sandbox.path);
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await assertLinkFailures(sandbox.path, 'docs/lychee', []);
-        expect(requests).toStrictEqual([]);
-        await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
-        expect(requests.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(['/missing', '/page']);
-        await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}child-only).\n`);
-        await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
-        await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}page#setup).\n`);
-        await assertLinkFailures(sandbox.path, 'docs/lychee-external', []);
-        const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        await assertTextLinks(sandbox.path, 'docs/lychee-external', `${url}page`);
-        requests.length = 0;
-        await assertTextLinks(sandbox.path, 'docs/lychee', 'page.html');
-        expect(requests).toStrictEqual([]);
-    } finally {
-        await server.stop(true);
-    }
+    const url = server.url.href;
+    const child = `# Links\n\nRead [the page](${url}page#setup).\n\n[Child endpoint](${url}child-only)\n`;
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings([], { tables: LINK_SCOPE_TABLES }),
+        'root.md': `# Links\n\nRead [the page](${url}missing).\n\n[Root endpoint](${url}root-only)\n`,
+        'app/guide.md': child,
+        'page.html': LINK_PAGE,
+    });
+    commitAll(sandbox.path);
+    const applied = await spawnGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await assertLinkFailures(sandbox.path, 'docs/lychee', []);
+    expect(requests).toStrictEqual([]);
+    await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
+    expect(requests.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(['/missing', '/page']);
+    await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}child-only).\n`);
+    await assertLinkFailures(sandbox.path, 'docs/lychee-external', [{ scope: '', file: 'root.md', rule: '404' }]);
+    await writeFile(join(sandbox.path, 'root.md'), `# Links\n\nRead [the page](${url}page#setup).\n`);
+    await assertLinkFailures(sandbox.path, 'docs/lychee-external', []);
+    const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
+    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+    await assertTextLinks(sandbox.path, 'docs/lychee-external', `${url}page`);
+    requests.length = 0;
+    await assertTextLinks(sandbox.path, 'docs/lychee', 'page.html');
+    expect(requests).toStrictEqual([]);
 });
 
 test('docs/lychee reads a root-relative link from the repository root, and leaves a site route to the site', async () => {

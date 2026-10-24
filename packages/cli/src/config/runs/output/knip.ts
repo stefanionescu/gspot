@@ -17,23 +17,3 @@ export const KNIP_ISSUE_MESSAGES = {
     unlisted: 'Unlisted dependency',
     unresolved: 'Unresolved import',
 } as const;
-
-export const KNIP_ISSUE_TYPES = [
-    'binaries',
-    'catalog',
-    'catalogReferences',
-    'cycles',
-    'dependencies',
-    'devDependencies',
-    'duplicates',
-    'enumMembers',
-    'exports',
-    'files',
-    'namespaceMembers',
-    'nsExports',
-    'nsTypes',
-    'optionalPeerDependencies',
-    'types',
-    'unlisted',
-    'unresolved',
-] as const;

@@ -14,12 +14,12 @@ import type { Migration, MigrationStatement } from '#cli/types/checks/postgres.t
 import { getNodeFields, listNodeFields, visitStatement } from '#cli/parsers/code/sql/postgres.ts';
 
 function buildFunctionKey(names: Node[] | undefined, parameters: (TypeName | undefined)[]): string {
-    const path = listNodeFields(names, 'String').map(({ sval }) => sval ?? '');
+    const path = listNodeFields(names, 'String').map(({ sval = '' }) => sval);
     const qualified = path.length === 1 ? [PUBLIC_SCHEMA, ...path] : path;
     return JSON.stringify([
         qualified,
         parameters.map((parameter) => [
-            listNodeFields(parameter?.names, 'String').map(({ sval }) => sval ?? ''),
+            listNodeFields(parameter?.names, 'String').map(({ sval = '' }) => sval),
             (parameter?.arrayBounds?.length ?? 0) > 0,
         ]),
     ]);
@@ -79,7 +79,7 @@ Reports each table in a client schema with row security off.
 @param planned the scope whose migrations to read.
 @returns the findings.
 */
-export async function checkRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkPostgresRowLevelSecurity(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const migrations = await readParsedMigrations(session, planned);
     const schema = buildSchema(migrations);
     const schemas = new Set(getTable(planned.scope.settings, 'postgres')['client_schemas']);
@@ -134,7 +134,7 @@ Reports each SECURITY DEFINER function that sets no search_path.
 @param planned the scope whose migrations to read.
 @returns the findings.
 */
-export async function checkDefinerSearchPath(session: Session, planned: PlannedCheck): Promise<Finding[]> {
+export async function checkPostgresDefinerSearchPath(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const message =
         'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.';
     const migrations = await readParsedMigrations(session, planned);

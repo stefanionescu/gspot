@@ -17,8 +17,9 @@ import {
 
 function formatCheckedContent(comparison: CheckProgress['comparison']): string {
     if (comparison?.content === 'index') return 'the staged files';
-    if (comparison?.content === 'commit') return `commit ${comparison.reference.slice(0, COMMIT_PREFIX_LENGTH)}`;
-    return 'the working tree';
+    return comparison?.content === 'commit'
+        ? `commit ${comparison.reference.slice(0, COMMIT_PREFIX_LENGTH)}`
+        : 'the working tree';
 }
 
 function formatUnstagedChanges(report: RunReport): string[] {
@@ -37,7 +38,12 @@ function formatLocation(finding: Finding): string {
 function formatFinding(finding: Finding, next?: Finding): string[] {
     const rule =
         finding.rule === undefined || finding.rule === finding.check ? '' : `${getColors().cyan(finding.rule)}  `;
-    const lines = [`  ${formatLocation(finding)}${rule}${finding.message}`];
+    const lines = [
+        `  ${formatLocation(finding)}${rule}${finding.message
+            .split(/\r?\n/u)
+            .map((line) => line.trim())
+            .join(' ')}`,
+    ];
     if (finding.help !== undefined && finding.help !== '' && next?.help !== finding.help)
         lines.push(`  ${getColors().dim('help:')} ${finding.help}`);
     return lines;
@@ -45,8 +51,9 @@ function formatFinding(finding: Finding, next?: Finding): string[] {
 
 function formatCheckTail(check: CheckResult): string {
     if (NOTE_STATUSES.has(check.status)) return check.note ?? '';
-    if (check.status === 'failed') return formatCount(check.findings.length, 'finding');
-    return `${formatCount(check.fileCount, 'file')}  ${(check.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
+    return check.status === 'failed'
+        ? formatCount(check.findings.length, 'finding')
+        : `${formatCount(check.fileCount, 'file')}  ${(check.duration / MILLISECONDS_PER_SECOND).toFixed(1)}s`;
 }
 
 function formatCheckFindings(findings: readonly Finding[], { verbose }: { verbose: boolean }): string[] {
@@ -67,8 +74,7 @@ function formatCheck(check: CheckResult, { verbose }: { verbose: boolean }): str
     const lines = [`${scope}${check.check}  ${status}  ${tail}`.trimEnd()];
     if (verbose && check.command) lines.push(`  ${getColors().dim('$ ' + check.command.join(' '))}`);
     if (check.status === 'failed') lines.push(...formatCheckFindings(check.findings, { verbose }));
-    if ((check.status === 'failed' || check.status === 'error') && check.reproduce !== undefined)
-        lines.push(`  ${getColors().dim('run again:')} ${check.reproduce}`);
+    if (check.reproduce !== undefined) lines.push(`  ${getColors().dim('run again:')} ${check.reproduce}`);
     return lines;
 }
 
@@ -104,8 +110,9 @@ function formatSummary(report: RunReport): string {
 
 function formatComparison(comparison: RunReport['comparison']): string {
     if (comparison === undefined) return '';
-    if (comparison.content === 'working-tree') return `Checked the files changed since ${comparison.reference}.\n`;
-    return `Checked ${formatCheckedContent(comparison)}.\n`;
+    return comparison.content === 'working-tree'
+        ? `Checked the files changed since ${comparison.reference}.\n`
+        : `Checked ${formatCheckedContent(comparison)}.\n`;
 }
 
 /**
@@ -152,6 +159,7 @@ export function formatRunReport(report: RunReport, options: { verbose: boolean }
     );
     const lines = checks.flatMap((check) => [...formatCheck(check, { verbose }), '']);
     lines.push(
+        ...(report.notes ?? []).map((note) => `note     ${note}`),
         ...formatIgnores(report, { verbose }),
         ...formatUnstagedChanges(report),
         formatSummary(report),

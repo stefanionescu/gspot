@@ -58,7 +58,7 @@ function validateDocComment(
             message: `The summary of ${scriptFunction.name} says nothing beyond its name.`,
         };
     const positions = BASH_DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
-    if (!positions.every((position, index) => index === 0 || position > (positions[index - 1] ?? -1)))
+    if (positions.some((position, index) => !(index === 0 || position > (positions[index - 1] ?? -1))))
         return {
             rule: 'section-order',
             message: `Order the doc sections of ${scriptFunction.name} as Globals, Arguments, Outputs, Returns.`,

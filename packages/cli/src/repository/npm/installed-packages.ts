@@ -66,7 +66,7 @@ export function findInstalledDependency(
     try {
         path = require.resolve(`${name}/package.json`);
     } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND') return undefined;
+        if (hasErrorCode(error, 'MODULE_NOT_FOUND')) return undefined;
         throw error;
     }
     return { path, version: readHostPackage(path)?.version };

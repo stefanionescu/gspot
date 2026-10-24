@@ -5,34 +5,30 @@ import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';
-import type { EslintConfiguration } from '#tests/types/tools.ts';
+import { type EslintConfiguration } from '#tests/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { assertPackageManager } from '#cli/repository/npm/package-manager.ts';
 
 import {
-    CAN_IMPORT_TABLES,
     ENVIRONMENT_CASES,
     IMPORT_RULE_CASES,
     IMPORT_RULE_FILES,
     TEST_IMPORT_CASES,
-    TEST_IMPORT_PATHS,
     ENVIRONMENT_TABLES,
     IMPORT_RULE_TABLES,
-    TEST_IMPORT_TABLES,
-    ENVIRONMENT_COMPOSED,
-    TEST_IMPORT_TSCONFIG,
+    BOUNDARY_IMPORT_TABLES,
     TEST_IMPORT_RULE_CASES,
     REFUSED_IMPORT_MESSAGES,
     TEST_IMPORT_RULE_TABLES,
     ENVIRONMENT_READER_PATHS,
-    IMPORT_RULE_CORRECTED_SOURCE,
 } from '#tests/config/generation/configurations/language/javascript/eslint/blocks/boundaries.ts';
 
 test.each([...IMPORT_RULE_CASES])(
     '$level loads eslint-plugin-boundaries for $declarations import rules',
     async ({ level, declarations }) => {
+        const IMPORT_RULE_CORRECTED_SOURCE = "import { value } from './value.js';\nexport const result = value;\n";
+
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['typescript'], { level, tables: IMPORT_RULE_TABLES[declarations] });
         await createFileTree(sandbox.path, { ...IMPORT_RULE_FILES, 'gspot.toml': settings });
@@ -40,12 +36,12 @@ test.each([...IMPORT_RULE_CASES])(
         const session = await openSession(sandbox.path);
         const packages = parseToolPackageJson(
             await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8'),
-            assertPackageManager(session.packageManager).name,
+            session.packageManager!.name,
         );
-        const enabled = level === 'all' || declarations !== 'none';
-        expect(Object.hasOwn(packages.dependencies, 'eslint-plugin-boundaries')).toBe(enabled);
+        const isEnabled = level === 'all' || declarations !== 'none';
+        expect(Object.hasOwn(packages.dependencies, 'eslint-plugin-boundaries')).toBe(isEnabled);
         expect(Object.hasOwn(packages.dependencies, 'eslint-import-resolver-typescript')).toBe(true);
-        if (!enabled) await unlink(join(sandbox.path, 'node_modules/eslint-plugin-boundaries'));
+        if (!isEnabled) await unlink(join(sandbox.path, 'node_modules/eslint-plugin-boundaries'));
         async function lintFiles() {
             const files = ['app/source.ts', 'apps/api/app/source.ts'];
             const configured = [];
@@ -63,8 +59,8 @@ test.each([...IMPORT_RULE_CASES])(
             };
         }
         const configured = [
-            { plugin: enabled, classic: enabled, modern: true },
-            { plugin: enabled, classic: enabled, modern: true },
+            { plugin: isEnabled, classic: isEnabled, modern: true },
+            { plugin: isEnabled, classic: isEnabled, modern: true },
         ];
         expect(await lintFiles()).toStrictEqual({
             configured,
@@ -120,6 +116,20 @@ test('import rules skip your test files in each scope and check other files', as
 test.each([...LEVELS])(
     'a file outside test_files may not import a test file, in root and child scopes, at %s',
     async (level) => {
+        const TEST_IMPORT_PATHS = {
+            'src/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+            'tests/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+            'other/value.test.ts': 'export const value = 1;\n',
+        } as const;
+
+        const TEST_IMPORT_TSCONFIG =
+            '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","baseUrl":".","paths":{"@/*":["./*"]},"types":[]},"include":["**/*.ts"]}';
+
+        const TEST_IMPORT_TABLES = `[[scope]]
+path = "app"
+configurations = ["typescript"]
+`;
+
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['typescript'], { level, tables: TEST_IMPORT_TABLES });
         await createFileTree(sandbox.path, {
@@ -152,6 +162,8 @@ test.each([...LEVELS])(
 test.each([...LEVELS])(
     'environment reads are allowed only in environment_readers files of each scope at %s',
     async (level) => {
+        const ENVIRONMENT_COMPOSED = "export * from './other.js';\nconst port = import.meta.env.PORT;\n";
+
         await using sandbox = await testdir();
         const settings = buildSandboxSettings(['typescript'], { level, tables: ENVIRONMENT_TABLES });
         const paths = [...ENVIRONMENT_READER_PATHS];
@@ -168,12 +180,12 @@ test.each([...LEVELS])(
         });
         const eslint = await createEslint(sandbox.path);
         for (const path of paths) {
-            const rejected =
+            const isRejected =
                 level === 'all' && !['config/env.js', 'app/src/env/source.js', 'literal/config/env.js'].includes(path);
             for (const { source, rule } of ENVIRONMENT_CASES) {
                 await createFileTree(sandbox.path, { [path]: source });
                 expect(await listLintFindings(eslint, sandbox.path, [path], [rule])).toStrictEqual(
-                    rejected ? [{ file: path, rule, line: 1 }] : [],
+                    isRejected ? [{ file: path, rule, line: 1 }] : [],
                 );
             }
             await createFileTree(sandbox.path, { [path]: 'const port = "3000";\n' });
@@ -218,7 +230,7 @@ test('without environment_readers, environment reads are allowed at level all', 
 test('can_import names exactly the rules a rule may import, and a refused import says what it may import', async () => {
     await using sandbox = await testdir({
         ...IMPORT_RULE_FILES,
-        'gspot.toml': buildSandboxSettings(['typescript'], { tables: CAN_IMPORT_TABLES }),
+        'gspot.toml': buildSandboxSettings(['typescript'], { tables: BOUNDARY_IMPORT_TABLES }),
         'core/value.ts': 'export const value = 3;\n',
         'app/source.ts':
             "import { value } from '../storage/value.js';\nimport { value as core } from '../core/value.js';\nexport const result = value + core;\n",

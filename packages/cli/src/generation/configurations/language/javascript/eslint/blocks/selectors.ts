@@ -1,11 +1,10 @@
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { escapeGlob } from '#cli/system/paths.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
 import type { Scope } from '#cli/types/settings/inheritance.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
-import { type Level, type Configuration } from '#cli/types/configurations.ts';
+import type { Level, Configuration } from '#cli/types/configurations.ts';
 import { type SelectorGroup, type SelectorPaths } from '#cli/types/generation/eslint.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/generation/configurations/language/javascript/eslint/config-file.ts';
 
@@ -45,14 +44,14 @@ function groupSelectors(selectors: SelectorPaths[]): SelectorGroup[] {
             { ...group, ignores: [...group.ignores, ...paths] },
         ]);
     return groups.map((group) => ({
-        ...(group.files.length === 0 ? {} : { files: group.files }),
-        ...(group.ignores.length === 0 ? {} : { ignores: group.ignores }),
+        ...(group.files.length > 0 && { files: group.files }),
+        ...(group.ignores.length > 0 && { ignores: group.ignores }),
         selectors: selectors
             .filter(
                 (each) =>
                     (each.files === undefined || group.matched.some((paths) => isDeepStrictEqual(paths, each.files))) &&
                     (each.except === undefined ||
-                        !group.matched.some((paths) => isDeepStrictEqual(paths, each.except))),
+                        group.matched.every((paths) => !isDeepStrictEqual(paths, each.except))),
             )
             .map((each) => ({ selector: each.selector, message: each.message })),
     }));
@@ -90,13 +89,14 @@ export function buildSelectorGroups(
 ): SelectorGroup[] {
     const scopePaths = scopes.map((each) => each.folder.path);
     return scopes.flatMap((scope) => {
-        const prefix = scope.folder.path.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
+        const prefix = escapeGlob(scope.folder.path);
         const declarations = scope.configurations.flatMap((configuration) =>
             configuration.eslint.selectors.filter((selector) => level === 'all' || selector.level === 'recommended'),
         );
-        const applied: SelectorPaths[] = [
-            ...new Map(declarations.map((declaration) => [declaration.selector, declaration])).values(),
-        ].map((declaration) => buildSelectorPaths(scope, declaration));
+        const applied: SelectorPaths[] = new Map(declarations.map((declaration) => [declaration.selector, declaration]))
+            .values()
+            .map((declaration) => buildSelectorPaths(scope, declaration))
+            .toArray();
         if (level === 'all') {
             const except = reexports === 'index-only' ? [posix.join(prefix, '**/index.*')] : [];
             applied.push(...REEXPORT_SELECTORS.map((selector) => ({ ...selector, except })));

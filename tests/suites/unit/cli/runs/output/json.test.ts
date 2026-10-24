@@ -40,8 +40,7 @@ test('a nested list reads the file from the item and the rest from the child', (
     const stdout = `noise\n${JSON.stringify({
         files: [{ filepath: 'a.sql', violations: [{ start_line_no: 3, code: 'LT01', description: 'Spacing.' }] }],
     })}`;
-    const output = NESTED_LIST_FORMAT;
-    const [finding] = parseJsonReport('sql/sqlfluff', output, stdout);
+    const [finding] = parseJsonReport('sql/sqlfluff', NESTED_LIST_FORMAT, stdout);
     expect([finding?.file, finding?.line, finding?.rule]).toStrictEqual(['a.sql', 3, 'LT01']);
 });
 
@@ -85,8 +84,7 @@ test('a tool that counts lines from zero names its line base', () => {
 
 test('lists nested two levels down read the file from the top and join several message paths', () => {
     const stdout = JSON.stringify(NESTED_LIST_OUTPUT);
-    const output = TWO_LEVEL_FORMAT;
-    const [finding] = parseJsonReport('dependencies/osv-scanner', output, stdout);
+    const [finding] = parseJsonReport('dependencies/osv-scanner', TWO_LEVEL_FORMAT, stdout);
     expect([finding?.file, finding?.rule, finding?.message]).toStrictEqual([
         'bun.lock',
         'GHSA-1',

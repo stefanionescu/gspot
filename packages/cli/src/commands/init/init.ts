@@ -1,23 +1,21 @@
 import { isCI } from 'std-env';
 import { confirm } from '@clack/prompts';
 import { openSession } from '#cli/session.ts';
+import { print } from '#cli/system/terminal.ts';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readGitSetting } from '#cli/system/git.ts';
+import type { WritePlan } from '#cli/types/apply.ts';
 import { writeSettings } from '#cli/settings/file.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { stripUndefined } from '#cli/system/tables.ts';
-import { print, getColors } from '#cli/system/terminal.ts';
-import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { SETTINGS_FILE } from '#cli/config/settings/file.ts';
 import { createReadCache } from '#cli/system/files/cache.ts';
-import type { Writer, WritePlan } from '#cli/types/apply.ts';
-import type { FileContents } from '#cli/types/system/files.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { CI_FILE_LABELS } from '#cli/config/commands/doctor.ts';
 import { Option, type Command } from '@commander-js/extra-typings';
@@ -26,6 +24,7 @@ import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { openWriter, writePlans } from '#cli/apply/write/writer.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import type { RepositorySetup } from '#cli/types/repository/setup.ts';
+import type { Files, FileContents } from '#cli/types/system/files.ts';
 import { listSelectedConfigurations } from '#cli/configurations/select.ts';
 import type { CommandResult, CommandCompletion } from '#cli/types/terminal.ts';
 import { readLintJobs, readRepositorySetup } from '#cli/repository/setup/tools.ts';
@@ -122,13 +121,28 @@ export function registerInit(program: Command, onResult: CommandCompletion): voi
         });
 }
 
+function assertConflictingFilesCommitted(root: string, paths: string[]): void {
+    const committed = listCommittedPaths(root, paths);
+    const uncommitted = paths.filter((path) => !committed.has(path));
+    if (uncommitted.length > 0)
+        throw new GspotError(
+            'arguments',
+            `init replaces ${uncommitted.join(', ')}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.`,
+        );
+}
+
 async function planInit(root: string, options: InitOptions): Promise<InitPlanning> {
     const reads = createReadCache(root);
     const configurations = readConfigurations();
     const repository = await readRepository(reads, { generatedPaths: [], scopes: [], configurations });
     const initConfigurations = selectForInit({ repository, configurations, options });
     const repositorySetup = readRepositorySetup(reads, repository);
-    const answers: InitAnswers = { hooks: true, rules: true, ci: detectCiProvider(root, repositorySetup) };
+    const ciProvider = detectCiProvider(root, repositorySetup);
+    const answers: InitAnswers = {
+        hooks: true,
+        rules: true,
+        ci: readLintJobs(root, repositorySetup.ci).length > 0 ? 'none' : ciProvider,
+    };
     const draft = buildSettingsDraft(initConfigurations, answers, options);
     const settingsText = buildInitSettings(draft, repository, configurations);
     const settings = parseSettings(settingsText, root);
@@ -148,21 +162,16 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
         unowned: detectedTools.filter((tool) => !tools.has(tool)),
         configurations,
         hasGit: repository.hasGit,
+        ciProvider,
     };
     const generated = generate(session);
     const conflicts = readConflictingConfigFiles(root, repositorySetup, tools, generated.managedKeys);
-    const paths = conflicts.deleted.map(({ path }) => path);
-    const committed = listCommittedPaths(root, paths);
-    const uncommitted = paths.filter((path) => !committed.has(path));
-    if (uncommitted.length > 0)
-        throw new GspotError(
-            'arguments',
-            `init replaces ${uncommitted.join(', ')}, and Git does not hold them unchanged at HEAD. Commit them or move them away, then run gspot init again.`,
-        );
+    assertConflictingFilesCommitted(
+        root,
+        conflicts.deleted.map(({ path }) => path),
+    );
     const planning: InitScan = {
-        reads,
         repository: session.repository,
-        options,
         repositorySetup,
         configurations: initConfigurations,
         everySelected,
@@ -184,7 +193,7 @@ async function planInit(root: string, options: InitOptions): Promise<InitPlannin
 
 async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
     if (yes) return true;
-    if (!(process.stdin.isTTY && process.stdout.isTTY && !isCI))
+    if (isCI || !(process.stdin.isTTY && process.stdout.isTTY))
         throw new GspotError('prompt', 'There is no terminal to ask in. Pass --yes to accept the plan.');
     const answer = await confirm({ message: 'Continue?', initialValue: true });
     if (typeof answer !== 'boolean') throw new GspotError('prompt', 'Canceled. Nothing was written.');
@@ -192,7 +201,7 @@ async function askConfirmation({ yes }: { yes: boolean }): Promise<boolean> {
 }
 
 function deleteConflictingConfigFiles(
-    writer: Writer,
+    writer: Files,
     deleted: InitPlanning['deleted'],
     read: ReadonlyMap<string, FileContents | undefined>,
 ): string[] {
@@ -214,17 +223,10 @@ async function writeInitFiles(root: string, initPlan: InitPlanning): Promise<str
     const applied = await writeGeneratedFiles(session, generated, writer, { reviewedOriginals: initPlan.read });
     const kept = deleteConflictingConfigFiles(writer, initPlan.deleted, initPlan.read);
     applied.notes.push(...kept.map((path) => `kept ${path}: it changed after init read it`));
-    const version = getColors().dim(`gspot ${cliPackage.version}`);
-    return [
-        'written: gspot.toml, .gspot/',
-        ...applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note)),
-        version,
-        '',
-    ];
+    return ['Wrote the plan above.', ...applied.notes.filter((note) => !INIT_INSTALL_NOTES.has(note)), ''];
 }
 
 function detectCiProvider(root: string, repositorySetup: RepositorySetup): InitAnswers['ci'] {
-    if (readLintJobs(root, repositorySetup.ci).length > 0) return 'none';
     let previous: InitAnswers['ci'] | undefined;
     if (repositorySetup.ci.includes(GITLAB_CI_FILE)) previous = 'gitlab';
     else if (repositorySetup.ci.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) previous = 'github';

@@ -65,12 +65,13 @@ export const SONAR_RULES = {
 
 export const UNICORN_RULES = {
     'unicorn/no-lonely-if': 'off',
-    'unicorn/prevent-abbreviations': 'off',
+    'unicorn/name-replacements': 'off',
     'unicorn/filename-case': 'off',
     'unicorn/no-null': 'off',
     'unicorn/no-useless-undefined': 'off',
     'unicorn/import-style': 'off',
     'unicorn/prefer-export-from': 'off',
+    'unicorn/no-unnecessary-array-flat-map': 'off',
 
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
     'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],

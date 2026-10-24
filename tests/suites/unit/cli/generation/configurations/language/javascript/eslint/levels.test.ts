@@ -10,20 +10,18 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import type { EslintConfiguration } from '#tests/types/tools.ts';
 import { writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
     COALESCING_SOURCE,
-    LEVEL_RULE_OPTIONS,
     COALESCING_CORRECTED,
-    UNAPPLIED_RULE_OPTIONS,
-    UNAPPLIED_RULE_REFUSALS,
     DOCUMENTED_PRICE_SOURCE,
     CONFIGURATION_RULE_OPTIONS,
 } from '#tests/config/generation/configurations/language/javascript/eslint/levels.ts';
 
 test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside their scope', async (level) => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level,
             scopes: [{ path: 'app', configurations: ['react', 'drizzle'] }],
@@ -36,10 +34,8 @@ test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside the
     const eslint = await createEslint(sandbox.path);
     const outside = (await eslint.calculateConfigForFile(join(sandbox.path, 'root.jsx'))) as EslintConfiguration;
     const inside = (await eslint.calculateConfigForFile(join(sandbox.path, 'app/client.jsx'))) as EslintConfiguration;
-    expect(outside.rules['react/jsx-key']).toBeUndefined();
-    expect(inside.rules['react/jsx-key']![0]).toBe(2);
-    expect(outside.rules['import-x/exports-last']).toBeUndefined();
-    expect(inside.rules['import-x/exports-last']).toBeUndefined();
+    expect(outside.rules['@eslint-react/no-missing-key']).toBeUndefined();
+    expect(inside.rules['@eslint-react/no-missing-key']![0]).toBe(2);
     const source = 'export const query = sql`select 1`;';
     await createFileTree(sandbox.path, { 'app/client.jsx': source, 'root.jsx': source });
     expect(await listLintFindings(eslint, sandbox.path, ['app/client.jsx'], ['no-restricted-syntax'])).toStrictEqual(
@@ -47,10 +43,11 @@ test.each([...LEVELS])('%s keeps framework rules and syntax selectors inside the
     );
     expect(await listLintFindings(eslint, sandbox.path, ['root.jsx'], ['no-restricted-syntax'])).toStrictEqual([]);
 });
+
 test('level all keeps every rule that recommended turns on for a React file', async () => {
     const rules: Record<string, EslintConfiguration['rules']> = {};
     for (const level of LEVELS) {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['react'], { level }),
             'package.json': '{"private":true,"type":"module"}',
             'client.jsx': '',
@@ -60,11 +57,15 @@ test('level all keeps every rule that recommended turns on for a React file', as
         rules[level] = config.rules;
     }
     const active = Object.entries(rules['recommended']!).filter(([, value]) => Array.isArray(value) && value[0] !== 0);
-    expect(active.map(([name]) => name)).toContain('react/jsx-key');
+    expect(active.map(([name]) => name)).toContain('@eslint-react/no-missing-key');
     for (const [name] of active) expect((rules['all']![name] as unknown[])[0], name).not.toBe(0);
 });
+
 test('all applies your rule options except in script and test files', async () => {
-    await using sandbox = await testdir({
+    const LEVEL_RULE_OPTIONS =
+        '[limits.javascript]\ntrivial_function_statements = 4\n[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n';
+
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all', tables: LEVEL_RULE_OPTIONS }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
@@ -83,7 +84,16 @@ test('all applies your rule options except in script and test files', async () =
 });
 
 test('recommended refuses options for a rule of level all, a rule that runs at no level, and a rule of no loaded plugin', async () => {
-    await using sandbox = await testdir({
+    const UNAPPLIED_RULE_REFUSALS = [
+        'n/no-process-exit runs only at level all. gspot sets options only for the rules that run at level recommended.',
+        'gspot runs id-length at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
+        'gspot runs acme/foo at no level, so it takes no options. For a rule of your own, add a [[tools.eslint.plugins]] record.',
+    ] as const;
+
+    const UNAPPLIED_RULE_OPTIONS =
+        '[tools.eslint.rules]\n"n/no-process-exit" = []\n"id-length" = []\n"acme/foo" = []\n';
+
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { level: 'recommended', tables: UNAPPLIED_RULE_OPTIONS }),
         'package.json': '{"private":true,"type":"module"}',
         'source.js': '',
@@ -97,6 +107,7 @@ test.each([...LEVELS])(
     'layout rules stay off and empty-object fallbacks are reported only at level all (%s)',
     async (level) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const settings = buildSandboxSettings(['javascript'], { level });
         await createFileTree(sandbox.path, {
             'gspot.toml': settings,
@@ -130,8 +141,10 @@ test.each([...LEVELS])(
         expect(corrected).toStrictEqual({ layout: [], findings: [] });
     },
 );
+
 test('switching the level and back writes the same files', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     await writeFile(join(sandbox.path, 'source.js'), 'export const value = 1;\n');
     const outputs: { path: string; content: string }[][] = [];
     for (const level of ['recommended', 'all', 'recommended'] as const) {
@@ -150,7 +163,7 @@ test('switching the level and back writes the same files', async () => {
 test.each([...LEVELS])(
     '%s asks for a blank line between a description and its tags only at level all',
     async (level) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['javascript'], { level }),
             'package.json': '{"private":true,"type":"module"}',
             'total.js': DOCUMENTED_PRICE_SOURCE,
@@ -159,13 +172,13 @@ test.each([...LEVELS])(
         const eslint = await createEslint(sandbox.path, { fix: true });
         const [result] = await eslint.lintFiles(['total.js']);
         expect(result?.output?.split('\n').slice(0, 3)).toStrictEqual(
-            level === 'all' ? ['/**', ' * Add the two prices.', ' *'] : undefined,
+            level === 'all' ? ['/**', 'Add the two prices.', ''] : undefined,
         );
     },
 );
 
 test('your options for a rule that a configuration adds, such as @typescript-eslint/no-floating-promises, reach the ESLint file at level all', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'typescript'], {
             level: 'all',
             tables: CONFIGURATION_RULE_OPTIONS.tables,

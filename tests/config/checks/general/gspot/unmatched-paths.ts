@@ -87,6 +87,5 @@ export const UNMATCHED_PATH_CASES = [
 export const UNMATCHED_PATH_FINDING = {
     check: 'gspot/unmatched-paths',
     file: 'gspot.toml',
-    line: 1,
     rule: 'unmatched-path',
 } as const;

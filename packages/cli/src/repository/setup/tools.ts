@@ -63,8 +63,7 @@ function listFolder(root: string, folder: string): string[] {
     if (statSync(path, { throwIfNoEntry: false }) === undefined) return [];
     const canonicalRoot = realpathSync(root);
     const target = realpathSync(path);
-    if (!isInside(relative(canonicalRoot, target))) return [];
-    if (!statSync(target).isDirectory()) return [];
+    if (!isInside(relative(canonicalRoot, target)) || !statSync(target).isDirectory()) return [];
     return readdirSync(target)
         .toSorted((left, right) => compareText(left, right))
         .filter((name) => !name.startsWith('.') || name === KEPT_DOT_FILE);
@@ -109,11 +108,15 @@ function listLintCommands(path: string, document: unknown): string[] {
     if (!parsed.success) return [];
     const source = path.startsWith(GITHUB_WORKFLOWS_FOLDER) ? ciDocumentSchema.safeParse(parsed.data['jobs']) : parsed;
     if (!source.success) return [];
-    return Object.entries(source.data).flatMap(([name, value]) => {
-        if (name.startsWith('.')) return [];
-        const job = ciJobSchema.safeParse(value);
-        return job.success && isLintJob(name, job.data) ? [`${path}: ${name}`] : [];
-    });
+    return Object.entries(source.data)
+        .values()
+        .map(([name, value]) => {
+            if (name.startsWith('.')) return undefined;
+            const job = ciJobSchema.safeParse(value);
+            return job.success && isLintJob(name, job.data) ? `${path}: ${name}` : undefined;
+        })
+        .filter((command) => command !== undefined)
+        .toArray();
 }
 
 function readHooksPathSetup(root: string, hooksPath: string): RepositorySetup['hooks'] {
@@ -130,7 +133,7 @@ Read the hooks that a clone already runs: another hooks folder, a tool hooks fol
 */
 export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
     const packageJson = readPackageJson(repositoryRoot, PACKAGE_JSON);
-    const packageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
+    const isPackageHooks = packageJson !== undefined && Object.hasOwn(packageJson, SIMPLE_GIT_HOOKS_KEY);
     const written = readGitSetting(repositoryRoot, HOOKS_PATH_SETTING) ?? '';
     const hooksPath = convertToPosixPath(relative(repositoryRoot, resolve(repositoryRoot, written))).replace(
         TRAILING_SLASH,
@@ -159,7 +162,7 @@ export function readHooks(repositoryRoot: string): RepositorySetup['hooks'] {
         ...(present.includes(PRE_COMMIT_FILE)
             ? [{ kind: 'pre-commit' as const, path: PRE_COMMIT_FILE, files: [] }]
             : []),
-        ...(packageHooks ? [{ kind: 'simple-git-hooks' as const, path: PACKAGE_JSON, files: [] }] : []),
+        ...(isPackageHooks ? [{ kind: 'simple-git-hooks' as const, path: PACKAGE_JSON, files: [] }] : []),
     ];
 }
 
@@ -202,19 +205,19 @@ export function readRepositorySetup(
 
     const conflictingConfigFiles = listConflictingConfigFiles(repositoryRoot, files, configurations.values());
     return {
-        conflictingConfigFiles: [
-            ...new Map(
-                conflictingConfigFiles.map((conflictingConfigFile) => [
-                    JSON.stringify([
-                        conflictingConfigFile.tool,
-                        conflictingConfigFile.path,
-                        conflictingConfigFile.table,
-                        conflictingConfigFile.key,
-                    ]),
-                    conflictingConfigFile,
+        conflictingConfigFiles: new Map(
+            conflictingConfigFiles.map((conflictingConfigFile) => [
+                JSON.stringify([
+                    conflictingConfigFile.tool,
+                    conflictingConfigFile.path,
+                    conflictingConfigFile.table,
+                    conflictingConfigFile.key,
                 ]),
-            ).values(),
-        ],
+                conflictingConfigFile,
+            ]),
+        )
+            .values()
+            .toArray(),
         hooks: readHooks(repositoryRoot),
         ci: [...paths]
             .filter(

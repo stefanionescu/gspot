@@ -1,4 +1,6 @@
 import { sep, join, posix, isAbsolute } from 'node:path';
+import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
+import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/tracked.ts';
 import { EXECUTABLE_LAYOUTS, DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 
 const systemExecutables = EXECUTABLE_LAYOUTS[process.platform === 'win32' ? 'windows' : 'posix'];
@@ -15,17 +17,6 @@ export function convertToPosixPath(path: string): string {
 }
 
 /**
-Convert a POSIX path to the form of this system, for tool arguments.
-
-@param path the path, with forward slashes.
-@returns the path in the form of this system.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 1 file share it.
-export function convertToSystemPath(path: string): string {
-    return sep === '/' ? path : path.split('/').join(sep);
-}
-
-/**
 Check whether a path relative to a folder stays inside it: not absolute, not the parent, and not under the parent.
 
 @param local the path relative to the folder, with either separator.
@@ -33,7 +24,7 @@ Check whether a path relative to a folder stays inside it: not absolute, not the
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 files call it.
 export function isInside(local: string): boolean {
-    return !(isAbsolute(local) || local === '..' || local.startsWith('../') || local.startsWith(`..${sep}`));
+    return !(local === '..' || isAbsolute(local) || local.startsWith('../') || local.startsWith(`..${sep}`));
 }
 
 /**
@@ -149,4 +140,26 @@ export function listEnclosingFolders(folder: string): string[] {
         folders.push(walked);
     }
     return folders;
+}
+
+/**
+Test whether a path passes through an installed dependency folder.
+
+@param path the repository-relative path.
+@returns whether a folder segment names installed dependencies.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function isInInstalledFolder(path: string): boolean {
+    return path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment));
+}
+
+/**
+Escape a literal repository path for use within a glob.
+
+@param path the literal path.
+@returns the path with glob syntax escaped.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function escapeGlob(path: string): string {
+    return path.replaceAll(GLOB_SPECIAL_CHARACTERS, (match) => `\\${match}`);
 }

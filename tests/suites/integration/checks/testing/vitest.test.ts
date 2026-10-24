@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import vitestPackage from 'vitest/package.json' with { type: 'json' };
@@ -22,6 +23,7 @@ const vitestProjectFiles = {
 
 test('vitest/coverage reports coverage under its limit and passes after the fix, in the root and a scope', async () => {
     await using sandbox = await testdir(vitestProjectFiles);
+    runGitStep(sandbox.path, ['init', '--quiet']);
 
     await createFileTree(join(sandbox.path, 'app'), vitestProjectFiles);
     await linkInstalledModules(join(sandbox.path, 'node_modules'));
@@ -69,6 +71,7 @@ test('vitest/coverage reports coverage under its limit and passes after the fix,
 
 test('vitest/coverage at a limit above 0 reports @vitest/coverage-v8 as missing when the project lacks it', async () => {
     await using sandbox = await testdir(vitestProjectFiles);
+    runGitStep(sandbox.path, ['init', '--quiet']);
 
     await createFileTree(join(sandbox.path, 'app'), vitestProjectFiles);
     await linkInstalledModules(join(sandbox.path, 'node_modules'));

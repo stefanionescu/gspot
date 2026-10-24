@@ -96,9 +96,10 @@ export async function readRepository(
         hasGit,
         files: tracked,
         dependencyFiles,
-        scopeFolders: [...new Map([...discovered, ...written].map((scope) => [scope.path, scope])).values()].toSorted(
-            (left, right) => compareText(left.path, right.path),
-        ),
+        scopeFolders: new Map([...discovered, ...written].map((scope) => [scope.path, scope]))
+            .values()
+            .toArray()
+            .toSorted((left, right) => compareText(left.path, right.path)),
     };
 }
 
@@ -119,7 +120,7 @@ export function readLinguistPatterns(reads: ReadCache, paths: string[]): string[
                     const authored = stripBlock(text, { path, style: 'hash' });
                     return parseAttributePatterns(authored, posix.dirname(path))
                         .filter((rule) =>
-                            Object.entries(mergeAttributes(rule.attributes, {})).some(
+                            Object.entries(mergeAttributes(rule.attributes)).some(
                                 ([name, value]) =>
                                     (name === GENERATED_ATTRIBUTE || name === VENDORED_ATTRIBUTE) &&
                                     SET_VALUES.has(value),

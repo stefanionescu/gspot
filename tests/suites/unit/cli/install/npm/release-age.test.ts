@@ -30,7 +30,8 @@ test('a Bun tool lockfile reads the release age from a bunfig.toml in its folder
         7,
     );
     expect(hold).toStrictEqual([...PACKAGE_MANAGER_ARGUMENTS.bun.lockfile]);
-    expect(Bun.TOML.parse(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8'))).toStrictEqual({
+    const contents = Bun.TOML.parse(await readFile(join(sandbox.path, 'bunfig.toml'), 'utf8'));
+    expect(contents).toStrictEqual({
         install: { peer: false, minimumReleaseAge: 604_800, minimumReleaseAgeExcludes: [...OWN_PACKAGES] },
     });
 });
@@ -44,7 +45,8 @@ test('a pnpm tool lockfile reads the hold from pnpm-workspace.yaml', async () =>
         7,
     );
     expect(hold).toStrictEqual([...PACKAGE_MANAGER_ARGUMENTS.pnpm.lockfile]);
-    expect(Bun.YAML.parse(await readFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'utf8'))).toStrictEqual({
+    const contents = Bun.YAML.parse(await readFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'utf8'));
+    expect(contents).toStrictEqual({
         minimumReleaseAge: 10_080,
         minimumReleaseAgeExclude: [...OWN_PACKAGES],
     });

@@ -2,6 +2,8 @@ export const GSPOT_ENVIRONMENT = { NO_COLOR: '1', CI: '1' } as const;
 
 export const TEST_TIMEOUT_MILLISECONDS = 900_000;
 
+export const UNIT_TEST_TIMEOUT_MILLISECONDS = 60_000;
+
 export const PACKED_PACKAGES_FILE = 'packages.json';
 
 export const OFFLINE_ENVIRONMENT = {
@@ -13,4 +15,5 @@ export const OFFLINE_ENVIRONMENT = {
     https_proxy: undefined,
     all_proxy: undefined,
     no_proxy: undefined,
+    MISE_OFFLINE: '1',
 } as const;

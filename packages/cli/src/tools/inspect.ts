@@ -19,9 +19,9 @@ import { readToolProjectPackage, findInstalledDependency } from '#cli/repository
 function buildInstallHelp(tool: Tool): string {
     const toolProjectPackage = findToolProjectPackage(tool);
     if (toolProjectPackage !== undefined || tool.system !== true) {
-        if (toolProjectPackage !== undefined || which.sync(MISE_TOOL, { nothrow: true }) !== null)
-            return 'Run gspot install.';
-        return `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`;
+        return toolProjectPackage === undefined && which.sync(MISE_TOOL, { nothrow: true }) === null
+            ? `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`
+            : 'Run gspot install.';
     }
     return tool.install_help ?? `Install ${tool.name}.`;
 }
@@ -164,6 +164,7 @@ export function inspectTool(search: ToolSearch, tool: Tool): ToolInspection {
         miseBinPaths: search.miseBinPaths,
     };
     const inspection = tool.kind === 'library' ? inspectLibrary(inspected) : inspectExecutable(inspected);
+    if (inspection.state === 'ok') delete inspection.help;
     inspections.set(key, inspection);
     return inspection;
 }
@@ -177,7 +178,7 @@ Resolve a usable executable, or a failure with the next step.
 */
 export function buildToolAvailability(tool: Tool, inspection: ToolInspection): ToolAvailability {
     if (AVAILABLE_TOOL_STATES.has(inspection.state) && inspection.path !== undefined) return { path: inspection.path };
-    if (inspection.state === 'error')
-        return { status: 'error', note: inspection.note ?? `gspot could not read the version of ${tool.name}.` };
-    return { status: 'missing', note: formatUnavailableNote(tool, inspection) };
+    return inspection.state === 'error'
+        ? { status: 'error', note: inspection.note ?? `gspot could not read the version of ${tool.name}.` }
+        : { status: 'missing', note: formatUnavailableNote(tool, inspection) };
 }

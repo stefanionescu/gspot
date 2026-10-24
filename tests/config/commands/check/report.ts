@@ -38,7 +38,6 @@ export const FAILED_CHECK_REPORT = {
             duration: 0,
             findings: [],
             note: 'prettier is not installed. Run: mise install',
-            reproduce: 'gspot check api --only format/prettier',
         },
     ],
     ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why' }],
@@ -121,24 +120,24 @@ export const DURATION = /\b\d+\.\ds\b/gu;
 /**
 Build the report of the verbosity run, with every duration written as `0.0s`.
 
-@param verbose whether the run printed every finding and every command.
+@param isVerbose whether the run printed every finding and every command.
 @returns the report text.
 */
-export function buildVerbosityReport(verbose: boolean): string {
+export function buildVerbosityReport(isVerbose: boolean): string {
     const total = String(FINDINGS_SHOWN + 1);
     return [
         'Checked the files changed since HEAD.',
         `example/findings  failed  ${total} findings`,
-        ...(verbose ? [`  $ ${process.execPath} findings.ts`] : []),
+        ...(isVerbose ? [`  $ ${process.execPath} findings.ts`] : []),
         ...Array.from(
-            { length: verbose ? FINDINGS_SHOWN + 1 : FINDINGS_SHOWN },
+            { length: isVerbose ? FINDINGS_SHOWN + 1 : FINDINGS_SHOWN },
             (_, index) => `  finding ${String(index + 1)}.`,
         ),
         '  help: Read the command output; this repository declares the check.',
-        ...(verbose ? [] : ['  and 1 more (--verbose prints every finding)']),
+        ...(isVerbose ? [] : ['  and 1 more (--verbose prints every finding)']),
         '  run again: gspot check --only example/findings --changed HEAD',
         '',
-        ...(verbose
+        ...(isVerbose
             ? ['example/passing  passed  1 file  0.0s', `  $ ${process.execPath} -e process.exitCode=0;`, '']
             : []),
         `Failed: 1 check with ${total} findings. Passed: 1 check. Skipped: 0 checks.`,

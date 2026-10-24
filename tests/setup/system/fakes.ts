@@ -4,11 +4,11 @@ import { quoteArgument } from '#cli/system/text.ts';
 import { join, dirname, basename } from 'node:path';
 import * as processes from '#cli/system/processes.ts';
 import { getTool } from '#cli/configurations/tools.ts';
-import type { Tool } from '#cli/types/configurations.ts';
+import { type Tool } from '#cli/types/configurations.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { listExecutableNames } from '#cli/system/paths.ts';
 import { chmod, mkdir, writeFile } from 'node:fs/promises';
-import type { spawnProcess } from '#cli/system/processes.ts';
+import { type spawnProcess } from '#cli/system/processes.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { EXECUTABLE_MODE } from '#tests/config/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
@@ -90,7 +90,9 @@ export async function writeScriptCommand(sandboxRoot: string, name: string, scri
     return folder;
 }
 
-/** Write the package.json and a version program for the pinned npm tool. */
+/**
+Write the package.json and a version program for the pinned npm tool.
+*/
 export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
     const declaration = getTool(readConfigurations().values(), tool);
     const installer = declaration.installers['npm'];
@@ -105,7 +107,9 @@ export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
     return declaration;
 }
 
-/** Write an installed npm package and the program that the tool package exposes. */
+/**
+Write an installed npm package and the program that the tool package exposes.
+*/
 export async function fakeNpmPackage(
     root: string,
     npmPackage: { name: string; version: string; script: string; bin?: string },
@@ -130,7 +134,7 @@ export function fakeExecutableLookup(
     return spyOn(executables, 'sync').mockImplementation(((
         name: string,
         options?: executables.Options,
-        // eslint-disable-next-line sonarjs/function-return-type -- which.sync returns one path, all paths, or null.
+        // eslint-disable-next-line sonarjs/function-return-type -- reason: which.sync returns one path, all paths, or null.
     ): string | string[] | null => {
         const found = typeof path === 'function' ? path(name) : path;
         if (found === undefined) return locate(name, options);

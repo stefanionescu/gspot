@@ -1,6 +1,8 @@
 import { SQL_CHECK_SCRIPT } from '#tests/config/runs/command.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { ALWAYS_SELECTED_REFUSAL } from '#tests/config/commands/configurations.ts';
+
+const ALWAYS_SELECTED_REFUSAL =
+    'gspot selects security by itself when the repository needs it, so you cannot add or remove it. To run more or fewer of its checks, run gspot set level. To turn one check off, run gspot ignore.';
 
 export const INHERITED_CONFIGURATION_SETTINGS = `configurations = ["markdown", "bash"]
 [rules]
@@ -38,3 +40,5 @@ command = ${JSON.stringify([process.execPath, '-e', SQL_CHECK_SCRIPT, '{files}']
 `;
 
 export const TEST_VERSION = '0.0.0-test';
+
+export const API_SCOPE_FILES = { 'README.md': '# Example\n', 'api/entry.sh': 'echo api\n' } as const;

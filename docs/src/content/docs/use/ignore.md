@@ -19,8 +19,8 @@ names, such as the hooks that a framework calls by name:
 gspot ignore structure/trivial-functions --names define_schema execute --reason "ComfyUI calls these node hooks."
 ```
 
-Add `--until YYYY-MM-DD` for an ignore that ends at 00:00 UTC on that date. From then on, `gspot/suppressions` reports
-the ignore until you fix the findings and run `gspot unignore`, or write a later date.
+Add `--until YYYY-MM-DD` to set the date the ignore expires, at 00:00 UTC. The ignore stays in effect. From that
+date, `gspot/suppressions` fails on it until you fix the findings and run `gspot unignore`, or write a later date.
 
 To ignore a dependency advisory, give its ID as the rule:
 

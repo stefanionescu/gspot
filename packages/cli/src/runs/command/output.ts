@@ -10,14 +10,7 @@ import type { SpawnResult } from '#cli/types/system/processes.ts';
 import type { Finding, CheckResult } from '#cli/types/runs/check.ts';
 import { parseOutput, outputFormats } from '#cli/runs/output/formats.ts';
 import { TAIL_LINES, OUT_OF_MEMORY } from '#cli/config/runs/command/output.ts';
-
-import type {
-    CommandRun,
-    OutputCheck,
-    CommandLine,
-    ParsedFindings,
-    CommandLineOutput,
-} from '#cli/types/runs/command.ts';
+import type { CommandRun, OutputCheck, ParsedFindings, CommandLineOutput } from '#cli/types/runs/command.ts';
 
 function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, file: string | undefined): Finding {
     const emptyOutputText = `${tool.name} exited ${String(result.code)}`;
@@ -39,9 +32,8 @@ function buildUnexplainedFailure(check: Check, tool: Tool, result: SpawnResult, 
     };
 }
 
-function setFindingFiles(parsed: Finding[], commandLine: CommandLine, paths: OutputPaths): void {
-    if (commandLine.file === undefined) return;
-    const file = convertToPosixPath(relative(paths.root, join(paths.cwd, commandLine.file)));
+function setFindingFiles(parsed: Finding[], file: string | undefined): void {
+    if (file === undefined) return;
     for (const finding of parsed) if (finding.file === '') finding.file = file;
 }
 
@@ -52,9 +44,17 @@ function isOnDisk(file: string, roots: string[]): boolean {
     );
 }
 
-function throwCrash(planned: OutputCheck, result: SpawnResult): never {
+function throwCrash(planned: OutputCheck, result: SpawnResult, options: { verbose?: boolean | undefined }): never {
     const failure = `${planned.tool?.name ?? planned.check.id} failed with exit ${String(result.code)}`;
-    const detail = formatOutputTail(result, '');
+    if (planned.check.needs?.includes('network') === true) {
+        const last = result.stderr.trim().split('\n').at(-1);
+        const detail = last === undefined || last === '' ? '' : `\n${last}`;
+        throw new GspotError(
+            'output',
+            `${failure}. It needs network access: check the network or proxy, then run again.${detail}`,
+        );
+    }
+    const detail = formatOutputTail(result, '', options);
     throw new GspotError('output', detail === '' ? `${failure} and printed nothing.` : `${failure}:\n${detail}`);
 }
 
@@ -62,15 +62,21 @@ function isSilentCrash(check: Check, result: SpawnResult, parsed: Finding[], pat
     if (check.runs === 'history' || result.code === 0 || (check.command?.includes(FILE_PLACEHOLDER) ?? false))
         return false;
     const output = check.output;
-    if (!outputFormats[output.format].namesFiles(output)) return false;
-    return parsed.every((finding) => !isOnDisk(finding.file, [paths.cwd, paths.root]));
+    return outputFormats[output.format].namesFiles(output)
+        ? parsed.every((finding) => !isOnDisk(finding.file, [paths.cwd, paths.root]))
+        : false;
 }
 
-function parseVerifiedFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): Finding[] {
+function parseVerifiedFindings(
+    planned: OutputCheck,
+    result: SpawnResult,
+    paths: OutputPaths,
+    options: { verbose?: boolean | undefined },
+): Finding[] {
     const { check } = planned;
-    if (isReportedCrash(check, planned.tool, result)) throwCrash(planned, result);
+    if (isReportedCrash(check, planned.tool, result)) throwCrash(planned, result, options);
     const parsed = parseOutput(check, result.stdout, result.stderr, paths);
-    if (isSilentCrash(check, result, parsed, paths)) throwCrash(planned, result);
+    if (isSilentCrash(check, result, parsed, paths)) throwCrash(planned, result, options);
     return parsed;
 }
 
@@ -97,7 +103,7 @@ export function buildCheckResult(
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
     const status = state.failed || findings.length > 0 ? 'failed' : 'passed';
-    return { ...base, status, duration: performance.now() - started, findings, command: commandArguments };
+    return { ...base, status, duration: Math.round(performance.now() - started), findings, command: commandArguments };
 }
 
 /**
@@ -106,11 +112,18 @@ Parses the command output, or returns why gspot refused it.
 @param planned the check that ran.
 @param result what the process returned.
 @param paths the repository root and working folder.
+@param options controls crash details.
+@param options.verbose includes stack frames.
 @returns findings or a refusal note.
 */
-export function parseCommandFindings(planned: OutputCheck, result: SpawnResult, paths: OutputPaths): ParsedFindings {
+export function parseCommandFindings(
+    planned: OutputCheck,
+    result: SpawnResult,
+    paths: OutputPaths,
+    options: { verbose?: boolean | undefined } = {},
+): ParsedFindings {
     try {
-        return { findings: parseVerifiedFindings(planned, result, paths) };
+        return { findings: parseVerifiedFindings(planned, result, paths, options) };
     } catch (error) {
         if (error instanceof GspotError && error.code === 'output') return { note: error.message };
         throw error;
@@ -137,7 +150,7 @@ export function addCommandLine(
         commandLine.file === undefined
             ? undefined
             : convertToPosixPath(relative(commandRun.root, join(commandRun.cwd, commandLine.file)));
-    setFindingFiles(findings, commandLine, commandRun);
+    setFindingFiles(findings, file);
     if (result.code !== 0) {
         commandRun.failed = true;
         if (findings.length === 0) findings.push(buildUnexplainedFailure(check, tool, result, file));
@@ -164,16 +177,28 @@ Formats the last lines of tool output.
 
 @param result what the tool printed.
 @param emptyOutputText the text when both streams stay empty.
+@param options controls crash details.
+@param options.verbose includes stack frames.
 @returns the last lines of output.
 */
 export function formatOutputTail(
     result: Pick<SpawnResult, 'stdout' | 'stderr'>,
     emptyOutputText = 'The tool printed no error output.',
+    options: { verbose?: boolean | undefined } = {},
 ): string {
     if (OUT_OF_MEMORY.test(result.stderr) || OUT_OF_MEMORY.test(result.stdout))
         return 'The tool ran out of memory. It most likely read build output or a bundle: keep that folder in .gitignore, or add an [[ignore]] with its paths.';
     const output = [result.stderr, result.stdout]
-        .map((stream) => stream.trim().split('\n').slice(-TAIL_LINES).join('\n'))
+        .map((stream) =>
+            stream
+                .split('\n')
+                .filter((line) => options.verbose === true || !/^\s+at /u.test(line))
+                .join('\n')
+                .trim()
+                .split('\n')
+                .slice(-TAIL_LINES)
+                .join('\n'),
+        )
         .filter((stream) => stream !== '');
     return output.length === 0 ? emptyOutputText : output.join('\n');
 }

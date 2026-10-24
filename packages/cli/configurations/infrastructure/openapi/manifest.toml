@@ -8,9 +8,8 @@ filenames = ["openapi.yaml", "openapi.yml", "openapi.json", "swagger.json", "swa
 [[tool]]
 name = "spectral"
 npm = "@stoplight/spectral-cli"
-version = "6.15.0"
+version = "6.17.0"
 
-# Spectral's Ajv plugins must use the same ajv package as Spectral, so the tool project installs one shared ajv.
 [[tool]]
 name = "ajv"
 
@@ -30,7 +29,6 @@ output = { format = "regex", pattern = '^(?<file>.+):(?<line>\d+):(?<column>\d+)
 runs = "scope"
 stage = "commit"
 summary = "Lints the file in `openapi.document` with the Spectral OpenAPI rules."
-tool = "spectral"
 when = { setting = "openapi.document" }
 why = "Teams generate clients from this document, so an operation with no ID or an undefined response breaks them."
 

@@ -1,22 +1,20 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { join, delimiter } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     runGspot,
     spawnGspot,
+    applyThenInstall,
     parseCheckReport,
     buildInitArguments,
-    installGeneratedTools,
 } from '#tests/setup/cli/commands.ts';
 import {
     MIT_ONLY,
@@ -29,6 +27,7 @@ import {
 
 test('licenses/allowed accepts an allowed license choice and reports a disallowed dependency', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const root = sandbox.path;
     await createFileTree(root, {
         'package.json': LICENSES_ROOT_PACKAGE,
@@ -40,7 +39,7 @@ test('licenses/allowed accepts an allowed license choice and reports a disallowe
         const applied = await spawnGspot(root, command);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     }
-    await installGeneratedTools(root);
+    await applyThenInstall(root);
     const baseline = parseCheckReport(await spawnGspot(root, ['check', '--only', 'licenses/allowed', '--json']));
     expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
     expect(baseline.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
@@ -62,6 +61,7 @@ test('licenses/allowed accepts an allowed license choice and reports a disallowe
 
 test("licenses/allowed reads installed Python packages, ignores the project's pip-licenses settings, and matches an allowed package by its normalized name", async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const root = sandbox.path;
     await createFileTree(root, {
         'gspot.toml': buildSandboxSettings(['licenses'], { tables: stringify({ licenses: MIT_ONLY }), level: 'all' }),
@@ -69,7 +69,7 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
     });
     const venv = await runCommand(['uv', 'venv', '.venv'], { cwd: root });
     expect(venv.code, venv.stdout + venv.stderr).toBe(0);
-    await installGeneratedTools(root);
+    await applyThenInstall(root);
     const location = await runCommand(
         [
             buildVenvExecutablePath(join(root, '.venv'), 'python'),
@@ -118,7 +118,7 @@ test("licenses/allowed reads installed Python packages, ignores the project's pi
 });
 
 test('an allowed package at the root also covers that package in a child scope without its own package.json', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['licenses'], {
             tables: stringify({
                 licenses: {
@@ -136,14 +136,8 @@ test('an allowed package at the root also covers that package in a child scope w
         }),
         ...FONT_PACKAGE_FILES,
     });
-    await installGeneratedTools(sandbox.path);
-    const checked = parseCheckReport(
-        await spawnGspot(sandbox.path, ['check', '--only', 'licenses/allowed', '--json'], {
-            PATH: [join(sandbox.path, `${GSPOT_PATHS.nodeModules}/.bin`), readEnvironmentVariable('PATH') ?? ''].join(
-                delimiter,
-            ),
-        }),
-    );
+    await applyThenInstall(sandbox.path);
+    const checked = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', 'licenses/allowed', '--json']));
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(checked.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });

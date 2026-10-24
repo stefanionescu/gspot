@@ -1,19 +1,27 @@
 export const ROOT_DEPENDENCIES = [
-    [
-        'npm',
-        '{"packages":{"":{"devDependencies":{"eslint":"9.39.5"},"dependencies":{"runtime":"1.0.0"}},"node_modules/eslint":{"version":"9.39.5","integrity":"sha512-YQ=="},"apps/api":{"devDependencies":{"typescript":"5.9.3"}}}}',
-        { eslint: '9.39.5' },
-    ],
-    ['npm', '{"packages":{"":{"dependencies":{"runtime":"1.0.0"}}}}', {}],
-    [
-        'bun',
-        '{"workspaces":{"":{"devDependencies":{"eslint":"9.39.5"},"dependencies":{"runtime":"1.0.0"}},"apps/api":{"devDependencies":{"typescript":"5.9.3"}}},"packages":{"eslint":["eslint@9.39.5","",{},"sha512-YQ=="]}}',
-        { eslint: '9.39.5' },
-    ],
-    ['bun', '{"workspaces":{}}', {}],
-    [
-        'pnpm',
-        `importers:
+    {
+        name: 'npm with root development dependencies',
+        manager: 'npm',
+        source: '{"packages":{"":{"devDependencies":{"eslint":"9.39.5"},"dependencies":{"runtime":"1.0.0"}},"node_modules/eslint":{"version":"9.39.5","integrity":"sha512-YQ=="},"apps/api":{"devDependencies":{"typescript":"5.9.3"}}}}',
+        expected: { eslint: '9.39.5' },
+    },
+    {
+        name: 'npm without development dependencies',
+        manager: 'npm',
+        source: '{"packages":{"":{"dependencies":{"runtime":"1.0.0"}}}}',
+        expected: {},
+    },
+    {
+        name: 'bun with root development dependencies',
+        manager: 'bun',
+        source: '{"workspaces":{"":{"devDependencies":{"eslint":"9.39.5"},"dependencies":{"runtime":"1.0.0"}},"apps/api":{"devDependencies":{"typescript":"5.9.3"}}},"packages":{"eslint":["eslint@9.39.5","",{},"sha512-YQ=="]}}',
+        expected: { eslint: '9.39.5' },
+    },
+    { name: 'bun without development dependencies', manager: 'bun', source: '{"workspaces":{}}', expected: {} },
+    {
+        name: 'pnpm with root development dependencies',
+        manager: 'pnpm',
+        source: `importers:
   .:
     devDependencies:
       eslint:
@@ -31,8 +39,8 @@ packages:
     resolution:
       integrity: sha512-YQ==
 `,
-        { eslint: '9.39.5' },
-    ],
+        expected: { eslint: '9.39.5' },
+    },
 ] as const;
 
 export const LOCKFILE_REGISTRY = { npm_config_registry: 'https://registry.npmjs.org/' };

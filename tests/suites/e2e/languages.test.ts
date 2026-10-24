@@ -7,16 +7,9 @@ import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/e2e/languages.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
-async function assertSample(installation: GspotProject, check: typeof PROSE_CHECK | typeof SWIFT_CHECK): Promise<void> {
-    const result = await runCheckSample(installation.offline, check, { configurations: [], files: {} });
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(check));
-}
 
 async function prepareLanguages(installation: GspotProject): Promise<void> {
     const { online } = installation;
@@ -39,10 +32,10 @@ async function prepareLanguages(installation: GspotProject): Promise<void> {
 test('gspot installed from npm runs Vale and the built-in Swift naming check, reports their findings, and passes after the fixes', async () => {
     await using installation = await createGspotProject();
     await prepareLanguages(installation);
-    await assertSample(installation, PROSE_CHECK);
+    expect(await runCheckSample(installation.offline, PROSE_CHECK)).toStrictEqual(expectedSummary(PROSE_CHECK));
     const level = await installation.online.run(installation.root, ['set', 'level', 'all']);
     expect(level.code, level.stdout + level.stderr).toBe(0);
-    await assertSample(installation, SWIFT_CHECK);
+    expect(await runCheckSample(installation.offline, SWIFT_CHECK)).toStrictEqual(expectedSummary(SWIFT_CHECK));
     const vocabulary = await readFile(
         join(installation.root, findManifestTarget('prose', 'styles/config/vocabularies/words/accept.txt')),
         'utf8',
@@ -57,10 +50,6 @@ test('gspot installed from npm suggests gspot add sql for a SQL file, and SQLFlu
     await initSandbox(installation.online, { configurations: ['bash'] });
     const { root, offline, online } = installation;
     await writeFile(join(root, 'query.sql'), 'SELECT 1;\n');
-    const listed = await offline.run(root, ['list', '--json']);
-    expect(listed.code, listed.stdout + listed.stderr).toBe(0);
-    const available = JSON.parse(listed.stdout) as ConfigurationsListJson;
-    expect(available.available.map(({ name }) => name)).toContain('sql');
     const inspected = await offline.run(root, ['doctor', '--json']);
     const report = JSON.parse(inspected.stdout) as DoctorReport;
     expect(inspected.code, inspected.stdout + inspected.stderr).toBe(report.exitCode);

@@ -13,13 +13,6 @@ export type CapturedProcess = Pick<
 
 export type CapturedChild = AsyncDisposable & { output: Promise<string>; errors: Promise<string> };
 
-export type GitHookReport = {
-    headRetained: boolean;
-    workingBytes: string;
-    indexRetained: boolean;
-    reports: Record<string, unknown>[];
-};
-
 export type ProcessBackend = {
     name: string;
     execute: (command: string[], options: AsyncSpawnOptions) => SpawnResult | Promise<SpawnResult>;

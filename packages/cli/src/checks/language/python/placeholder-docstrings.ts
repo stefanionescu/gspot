@@ -14,11 +14,10 @@ Reports Python docstrings that only repeat a name or placeholder.
 @returns the findings.
 */
 export async function checkPythonPlaceholderDocstrings(session: Session, planned: PlannedCheck): Promise<Finding[]> {
-    const parsed = await parseCached(
+    const { functions } = await parseCached(
         { root: session.root, reads: session.reads, resources: session.resources, files: planned.files },
         PYTHON_SOURCES,
     );
-    const { functions } = parsed;
     return functions.flatMap((definition) => {
         const text = findDocstring(definition.node);
         if (text === undefined) return [];

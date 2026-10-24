@@ -33,9 +33,7 @@ export function buildAstroBlocks(
         buildArrayPresetBlocks(getPreset(presets, name), 'astroPlugin', ({ parser: _parser, ...fields }) => ({
             ...fields,
             files: fields.files ?? ASTRO_FILES,
-            ...(fields.rules === undefined
-                ? {}
-                : { rules: allowFocusableRegions(convertWarningsToErrors(fields.rules)) }),
+            ...(fields.rules !== undefined && { rules: allowFocusableRegions(convertWarningsToErrors(fields.rules)) }),
         })),
     );
     blocks.push({

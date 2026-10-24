@@ -25,7 +25,7 @@ export function buildOsvScannerFile(planned: PlannedConfigFile): string {
     );
     const vulnerabilities = ignores.map((ignore) => ({
         id: ignore.rule,
-        ...(ignore.until ? { ignoreUntil: ignore.until } : {}),
+        ...(ignore.until && { ignoreUntil: ignore.until }),
         reason: ignore.reason,
     }));
     return [
@@ -46,7 +46,8 @@ export function buildBunScannerEdits(session: Session): ManagedKeys[] {
         const usesBun = LOCKFILES.filter((lockfile) => lockfile.packageManager === 'bun').some(({ file }) =>
             session.repository.files.some(({ path }) => path === joinScope(scope.folder.path, file)),
         );
-        if (scanner === undefined || !usesBun) return [];
-        return [{ path: joinScope(scope.folder.path, BUNFIG_FILE), keys: [{ key: SCANNER_KEY, value: scanner }] }];
+        return scanner === undefined || !usesBun
+            ? []
+            : { path: joinScope(scope.folder.path, BUNFIG_FILE), keys: [{ key: SCANNER_KEY, value: scanner }] };
     });
 }

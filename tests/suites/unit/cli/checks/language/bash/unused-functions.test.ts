@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { BASH_SANDBOX } from '#tests/config/checks/language/bash/sandbox.ts';
-import { runCheckSample, expectedSummary, shareBashSandbox, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, expectedSummary, shareBashSandbox } from '#tests/setup/cli/samples.ts';
 
 import {
     TRAP_SCRIPT_FORMS,
@@ -15,12 +15,16 @@ const bashSandbox = shareBashSandbox();
 test.each(TRAP_SCRIPT_FORMS)('a function called by trap %s is not reported', async (script) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash']),
-        'source.sh': TRAP_FUNCTION_SOURCE.replace('trap _cleanup EXIT', `trap ${script} EXIT`),
+        'source.sh': TRAP_FUNCTION_SOURCE.replace('trap _cleanup EXIT', () => `trap ${script} EXIT`),
     });
     expect(await runSandboxCheck(sandbox.path, 'bash/unused-functions')).toStrictEqual([]);
 });
 
-test.each([...UNUSED_FUNCTION_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
-    const result = await runCheckSample(bashSandbox(), sample, BASH_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
-});
+test.each([...UNUSED_FUNCTION_CASES])(
+    '$check reports $expected.rule in $expected.file and passes after the fix',
+    async (sample) => {
+        expect(await runCheckSample(bashSandbox(), sample, BASH_SANDBOX.cleanSource)).toStrictEqual(
+            expectedSummary(sample),
+        );
+    },
+);

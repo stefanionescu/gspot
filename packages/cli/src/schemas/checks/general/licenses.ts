@@ -8,17 +8,17 @@ import {
 } from '#cli/types/checks/general/licenses.ts';
 
 const licenseSchema = z.object({
-    licenses: z.union([z.string(), z.array(z.string())]).optional(),
+    licenses: z.union([z.string(), z.string().array()]).optional(),
 } satisfies SchemaShape<JavascriptPackageLicense>);
 
 export const javascriptReportSchema = z.record(z.string(), licenseSchema) satisfies z.ZodType<JavascriptLicenseReport>;
 
-export const pythonReportSchema = z.array(
-    z.object({
+export const pythonReportSchema = z
+    .object({
         Name: z.string().min(1),
         Version: z.string().min(1),
         'License-Expression': z.string().optional(),
         'License-Metadata': z.string().optional(),
         'License-Classifier': z.string().optional(),
-    } satisfies SchemaShape<PythonLicenseReport>),
-) satisfies z.ZodType<PythonLicenseReport[]>;
+    } satisfies SchemaShape<PythonLicenseReport>)
+    .array() satisfies z.ZodType<PythonLicenseReport[]>;

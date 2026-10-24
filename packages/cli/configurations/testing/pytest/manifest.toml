@@ -1,5 +1,5 @@
 [configuration]
-description = "pytest suites: test style rules, test-name prefixes, and a minimum coverage before every push."
+description = "pytest suites: test lint rules, and passing tests before every push. Level all adds a coverage minimum."
 requires = ["python"]
 title = "pytest"
 

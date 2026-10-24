@@ -15,7 +15,7 @@ export const ROOT_SETTING_DEFINITIONS = {
     },
     removed_configurations: {
         default: [] as [],
-        reason_needed: 'adding',
+        reason_when: 'adding',
         description:
             'Configurations you removed, which detection does not add back; only `gspot add` and `gspot remove` write this list.',
     },

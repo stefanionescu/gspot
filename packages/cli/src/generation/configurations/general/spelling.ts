@@ -1,41 +1,32 @@
-import { posix } from 'node:path';
 import { getTable } from '#cli/settings/scopes.ts';
 import { stringify } from '@decimalturn/toml-patch';
-import { LOCKFILES } from '#cli/config/parsers/projects/lockfiles.ts';
 import { CONFIG_FILE_TOML_FORMAT } from '#cli/config/generation/config-files/build.ts';
 import type { IgnoreSection, PlannedConfigFile } from '#cli/types/generation/files.ts';
 
 import {
-    TYPOS_IGNORED_GLOBS,
-    TYPOS_EXCLUDED_ARRAY,
-    TYPOS_IGNORE_PATTERNS,
-} from '#cli/config/generation/configurations/general/spelling.ts';
-import {
     convertToGlobs,
     formatReasonLines,
     keepFirstPatterns,
-    buildIgnoreSections,
-    listCheckIgnoreSections,
+    listIgnoreSections,
 } from '#cli/generation/config-files/ignore-files.ts';
+import {
+    TYPOS_FORMAT_GLOBS,
+    TYPOS_LOCKFILE_GLOBS,
+    TYPOS_EXCLUDED_ARRAY,
+    TYPOS_IGNORE_PATTERNS,
+} from '#cli/config/generation/configurations/general/spelling.ts';
 
 function buildTyposSections(planned: PlannedConfigFile): IgnoreSection[] {
-    const excludedLockfiles = TYPOS_IGNORED_GLOBS.filter(
-        (path) => path === '*.lock' || LOCKFILES.some((lockfile) => lockfile.file === posix.basename(path)),
-    );
-    const excludedFormats = TYPOS_IGNORED_GLOBS.filter((path) => !excludedLockfiles.includes(path));
-    const sections = [
-        ...buildIgnoreSections(planned.session),
-        ...listCheckIgnoreSections(planned.scope.settings, 'spelling/typos'),
-    ].map((section) => {
+    const sections = listIgnoreSections(planned, 'spelling/typos').map((section) => {
         if (section.key === 'lockfiles')
             return {
                 ...section,
-                patterns: [...section.patterns, ...excludedLockfiles].filter(
+                patterns: [...section.patterns, ...TYPOS_LOCKFILE_GLOBS].filter(
                     (path) => path === '*.lock' || !path.endsWith('.lock'),
                 ),
             };
         return section.key === 'generators'
-            ? { ...section, patterns: [...section.patterns, ...excludedFormats] }
+            ? { ...section, patterns: [...section.patterns, ...TYPOS_FORMAT_GLOBS] }
             : section;
     });
     return keepFirstPatterns(

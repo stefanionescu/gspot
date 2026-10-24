@@ -7,7 +7,6 @@ import type { SettingMatch, WrittenSetting, AvailableSettings } from '#cli/types
 import {
     findSetting,
     getSettingTable,
-    getSettingValue,
     listWrittenKeys,
     getWrittenSetting,
     listSettingsTables,
@@ -77,8 +76,9 @@ function validateWrittenKey(
                 message: `\`${key}\` does not loosen the default. Write it as a plain value, without a reason.`,
             },
         ];
-    if (match.setting.type === 'list') return validateWrittenList(key, written, match, shipped);
-    return validateWrittenScalar(key, written, match, scope, shipped);
+    return match.setting.type === 'list'
+        ? validateWrittenList(key, written, match, shipped)
+        : validateWrittenScalar(key, written, match, scope, shipped);
 }
 
 function listUnsettledConflicts(
@@ -98,7 +98,7 @@ function listUnsettledConflicts(
     for (const { selected, scope, path } of availableByScope) {
         const tables = listApplicableTables(settings, scope);
         for (const { key, message: text } of selected.errors)
-            if (!tables.some(({ table }) => getWrittenSetting(table, key) !== undefined))
+            if (tables.every(({ table }) => getWrittenSetting(table, key) === undefined))
                 errors.push({ path, message: text });
     }
     return errors;
@@ -154,18 +154,6 @@ export function validateKeys(
         defaults: new Map(later.flatMap((scopeSettings) => scopeSettings.defaults.entries().toArray())),
         errors: availableSettings.errors,
     };
-    const coverageLines = getSettingValue(everywhere, settings, 'coverage.lines')?.value;
-    const targetErrors = (settings.coverage?.swift_target ?? [])
-        .map((target, index) => ({ target, index }))
-        .filter(
-            ({ target }) =>
-                typeof coverageLines === 'number' && target.lines < coverageLines && target.reason === undefined,
-        )
-        .map(({ index }) => ({
-            path: ['coverage', 'swift_target', index, 'reason'],
-            message: 'A Swift target with a lower line minimum than coverage.lines needs a reason.',
-        }));
-    errors.push(...targetErrors);
     for (const { table, scope, path } of listSettingsTables(settings)) {
         const active = scope === undefined ? everywhere : (scopeAvailable.get(scope) as AvailableSettings);
         const selectedAvailable: AvailableSettings = {
@@ -173,11 +161,9 @@ export function validateKeys(
             defaults: new Map([...general.defaults, ...active.defaults]),
             errors: active.errors,
         };
-        const found = [
-            ...listWrittenKeys(table, selectedAvailable).flatMap((key) =>
-                validateWrittenKey(selectedAvailable, settings, table, scope, key),
-            ),
-        ];
+        const found = listWrittenKeys(table, selectedAvailable).flatMap((key) =>
+            validateWrittenKey(selectedAvailable, settings, table, scope, key),
+        );
         errors.push(...found.map((error) => ({ ...error, path: [...path, ...error.path] })));
     }
     return errors;

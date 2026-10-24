@@ -5,7 +5,7 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { GROUPED_PBXPROJ, SINGLE_FILE_PBXPROJ } from '#tests/config/checks/infrastructure/xcode.ts';
+import { GROUPED_PBXPROJ } from '#tests/config/checks/infrastructure/xcode.ts';
 
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
     await using sandbox = await testdir({
@@ -30,6 +30,11 @@ test('Xcode sources follow group paths and target membership instead of duplicat
 });
 
 test('membership combines projects in a scope and checks nested scopes independently', async () => {
+    const SINGLE_FILE_PBXPROJ = GROUPED_PBXPROJ.replace('files = (B1, B2,);', 'files = (B2,);').replace(
+        'fileSystemSynchronizedGroups = (SYNC,);',
+        '',
+    );
+
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['xcode'], { scopes: [{ path: 'nested' }] }),
         'One.xcodeproj/project.pbxproj': SINGLE_FILE_PBXPROJ.replace('path = Root.swift;', 'path = One.swift;'),

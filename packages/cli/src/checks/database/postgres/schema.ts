@@ -1,4 +1,4 @@
-import type { RangeVar, Constraint } from '@pgsql/types';
+import type { Constraint } from '@pgsql/types';
 import type { SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
 import { getNodeFields, listNodeFields, visitStatement } from '#cli/parsers/code/sql/postgres.ts';
 import { PUBLIC_SCHEMA, SCHEMA_NAME_INDEX, CONSTRAINT_SUFFIXES } from '#cli/config/checks/database/postgres/schema.ts';
@@ -12,10 +12,9 @@ import type {
     SchemaAlterations,
 } from '#cli/types/checks/postgres.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 3 calls in this file share it.
-function buildRelationName(relation: RangeVar | undefined): string {
-    const schema = relation?.schemaname ?? '';
-    return `${schema === '' ? PUBLIC_SCHEMA : schema}.${relation?.relname ?? ''}`;
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function qualifyName(schema: string | undefined, name: string | undefined = ''): string {
+    return `${schema === undefined || schema === '' ? PUBLIC_SCHEMA : schema}.${name}`;
 }
 
 function removeTable(schema: DatabaseSchema, table: string): void {
@@ -66,7 +65,7 @@ function addForeignKey(schema: DatabaseSchema, at: Location, name: string, colum
 
 function addConstraint(schema: DatabaseSchema, at: Location, node: Constraint, column?: string): void {
     const kind = node.contype ?? '';
-    if (!(kind in CONSTRAINT_SUFFIXES)) return;
+    if (!Reflect.has(CONSTRAINT_SUFFIXES, kind)) return;
     const { keys, columns } =
         column === undefined
             ? {
@@ -76,12 +75,19 @@ function addConstraint(schema: DatabaseSchema, at: Location, node: Constraint, c
             : { keys: [column], columns: [column] };
     const isForeign = kind === 'CONSTR_FOREIGN';
     const name = buildConstraintName(node, at.table, kind, isForeign ? columns : keys);
-    if (!isForeign && keys.length > 0) schema.indexes.push({ table: at.table, name, columns: keys, constraint: name });
+    if (!isForeign && keys.length > 0)
+        schema.indexes.push({
+            table: at.table,
+            schema: at.table.slice(0, at.table.indexOf('.')),
+            name,
+            columns: keys,
+            constraint: name,
+        });
     if (isForeign) addForeignKey(schema, at, name, columns);
 }
 
 const readCreateTable: StatementReader<'CreateStmt'> = (statement, schema, migration) => {
-    const table = buildRelationName(statement.fields.relation);
+    const table = qualifyName(statement.fields.relation?.schemaname, statement.fields.relation?.relname);
     if (schema.tables.has(table) && statement.fields.if_not_exists === true) return;
     removeTable(schema, table);
     const at = { migration, statement, table };
@@ -110,7 +116,11 @@ const ALTERATIONS: SchemaAlterations = {
 };
 
 const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, schema, migration) => {
-    const at: Location = { migration, statement, table: buildRelationName(statement.fields.relation) };
+    const at: Location = {
+        migration,
+        statement,
+        table: qualifyName(statement.fields.relation?.schemaname, statement.fields.relation?.relname),
+    };
     for (const command of listNodeFields(statement.fields.cmds, 'AlterTableCmd'))
         if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(schema, at, command);
 };
@@ -120,48 +130,58 @@ const readDrop: StatementReader<'DropStmt'> = (statement, schema) => {
         const names = listNodeFields(nodeField.items, 'String').map((stringNode) => stringNode.sval ?? '');
         switch (statement.fields.removeType) {
             case 'OBJECT_TABLE': {
-                removeTable(schema, `${names.at(SCHEMA_NAME_INDEX) ?? PUBLIC_SCHEMA}.${names.at(-1) ?? ''}`);
-                break;
+                removeTable(schema, qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1)));
+                continue;
             }
             case 'OBJECT_INDEX': {
-                const name = `${names.at(SCHEMA_NAME_INDEX) ?? PUBLIC_SCHEMA}.${names.at(-1) ?? ''}`;
-                schema.indexes = schema.indexes.filter(
-                    (index) => `${index.table.slice(0, index.table.indexOf('.'))}.${index.name}` !== name,
-                );
-                break;
+                const name = qualifyName(names.at(SCHEMA_NAME_INDEX), names.at(-1));
+                schema.indexes = schema.indexes.filter((index) => qualifyName(index.schema, index.name) !== name);
+                continue;
             }
             default: {
-                break;
+                continue;
             }
         }
     }
 };
 
-const TOKEN_MATCHERS: SqlStatementVisitors<void, [DatabaseSchema, Migration]> = {
+function renameColumn(schema: DatabaseSchema, table: string, previous: string | undefined, name: string): void {
+    const keys = schema.constraints.get(table)?.values() ?? [];
+    for (const key of keys) key.columns = key.columns.map((column) => (column === previous ? name : column));
+    for (const index of schema.indexes) {
+        if (index.table === table) index.columns = index.columns.map((column) => (column === previous ? name : column));
+    }
+}
+
+const STATEMENT_READERS: SqlStatementVisitors<void, [DatabaseSchema, Migration]> = {
     DropStmt: readDrop,
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
     RenameStmt: ({ fields }, schema) => {
-        const table = buildRelationName(fields.relation);
+        const table = qualifyName(fields.relation?.schemaname, fields.relation?.relname);
         if (fields.renameType === 'OBJECT_TABLE') renameTable(schema, table, fields.newname ?? '');
         if (fields.renameType !== 'OBJECT_COLUMN') return;
-        for (const key of schema.constraints.get(table)?.values() ?? [])
-            key.columns = key.columns.map((column) => (column === fields.subname ? (fields.newname ?? '') : column));
-        for (const index of schema.indexes.filter((indexed) => indexed.table === table))
-            index.columns = index.columns.map((column) =>
-                column === fields.subname ? (fields.newname ?? '') : column,
-            );
+        renameColumn(schema, table, fields.subname, fields.newname ?? '');
     },
     IndexStmt: (statement, state) => {
         const columns = listNodeFields(statement.fields.indexParams, 'IndexElem').map((column) => column.name ?? '');
         if (columns.length === 0) return;
-        const table = buildRelationName(statement.fields.relation);
-        state.indexes.push({ table, name: statement.fields.idxname ?? '', columns, constraint: '' });
+        const table = qualifyName(statement.fields.relation?.schemaname, statement.fields.relation?.relname);
+        state.indexes.push({
+            table,
+            schema: statement.fields.relation?.schemaname,
+            name: statement.fields.idxname ?? '',
+            columns,
+            constraint: '',
+        });
     },
 };
 
 function buildDatabaseSchema(schema: DatabaseSchema): Schema {
-    const foreignKeys = [...schema.constraints.values()].flatMap((constraints) => [...constraints.values()]);
+    const foreignKeys = schema.constraints
+        .values()
+        .flatMap((constraints) => constraints.values().toArray())
+        .toArray();
     const indexed = new Map<string, string[][]>();
     for (const index of schema.indexes) {
         const columns = indexed.get(index.table) ?? [];
@@ -186,6 +206,6 @@ export function buildSchema(migrations: Migration[]): Schema {
         secured: new Set(),
     };
     for (const migration of migrations)
-        for (const statement of migration.statements) visitStatement(statement, TOKEN_MATCHERS, state, migration);
+        for (const statement of migration.statements) visitStatement(statement, STATEMENT_READERS, state, migration);
     return buildDatabaseSchema(state);
 }

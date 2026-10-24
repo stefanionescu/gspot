@@ -3,10 +3,12 @@ import { testdir } from 'testdirs';
 import * as git from '#cli/system/git.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { findRoot } from '#cli/repository/read.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { captureRejectedError } from '#tests/setup/matchers.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { runGit, commitAll } from '#tests/setup/system/git.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/read.ts';
 
 test('finding settings outside Git needs one Git lookup', async () => {
     await using sandbox = await testdir({ 'gspot.toml': 'configurations = []\n', 'deep/source.txt': 'source\n' });
@@ -21,13 +23,28 @@ test('a Git refusal while finding the root stays a Git error', async () => {
     using boundary = spyOn(git, 'runGitBlocking').mockReturnValue(
         buildProcessResult({ code: 128, stderr: 'fatal: detected dubious ownership\n' }),
     );
-    const error = await captureRejectedError(Promise.resolve().then(() => findRoot(sandbox.path)));
+    const error = await captureRejection(Promise.try(() => findRoot(sandbox.path)));
     expect(error).toMatchObject({
         name: 'GspotError',
         code: 'git',
         message: `Git could not open ${sandbox.path}: fatal: detected dubious ownership`,
     });
     expect(boundary).toHaveBeenCalledTimes(1);
+});
+
+test('a real Git ownership refusal while finding the root stays a Git error', async () => {
+    await using sandbox = await testdir({ 'source.txt': 'source\n' });
+    commitAll(sandbox.path);
+    using _environment = overrideEnvironment(DUBIOUS_GIT_ENVIRONMENT);
+    const refused = runGit(sandbox.path, ['rev-parse', '--show-toplevel'], DUBIOUS_GIT_ENVIRONMENT);
+    expect(refused.code).toBe(128);
+    expect(refused.stderr).toStartWith('fatal: detected dubious ownership');
+    const error = await captureRejection(Promise.try(() => findRoot(sandbox.path)));
+    expect(error).toMatchObject({
+        name: 'GspotError',
+        code: 'git',
+        message: `Git could not open ${sandbox.path}: ${refused.stderr.trim()}`,
+    });
 });
 
 test('a Git refusal while reading attributes stays a Git error', async () => {
@@ -39,7 +56,7 @@ test('a Git refusal while reading attributes stays a Git error', async () => {
             ? buildProcessResult({ code: 128, stderr: 'fatal: cannot read attributes\n' })
             : run(root, commandArguments, options),
     );
-    const error = await captureRejectedError(readTestRepository(sandbox.path));
+    const error = await captureRejection(readTestRepository(sandbox.path));
     expect(error).toMatchObject({
         name: 'GspotError',
         code: 'git',

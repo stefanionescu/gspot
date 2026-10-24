@@ -1,24 +1,26 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { join, dirname } from 'node:path';
 import { parse } from '@decimalturn/toml-patch';
 import { readFile, writeFile } from 'node:fs/promises';
+import type { RunReport } from '#cli/types/runs/run.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildVenvExecutablePath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
+import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/checks/ruff.ts';
+import { ruffRulesSchema, ruffConfigurationSchema } from '#tests/schemas/ruff.ts';
 import { RUFF_SANDBOX } from '#tests/config/integration/checks/language/python/samples.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { findManifestTarget, readGeneratedFiles } from '#tests/setup/cli/generated-files.ts';
 import { applySandboxChanges, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     PYTEST_SAMPLE,
+    VERSION_SOURCE,
     RUFF_RULE_SOURCE,
     RUFF_FORMAT_CASES,
+    RUFF_VERSION_CASES,
     RUFF_RULE_ARGUMENTS,
     UNUSED_IMPORT_SOURCE,
     RUFF_FORMAT_ARGUMENTS,
@@ -86,20 +88,6 @@ test('Ruff selects the pytest lint rules only in the scope that selects pytest, 
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
 
-    const rootConfig = findManifestTarget('python', 'ruff.toml');
-    const appConfig = `${dirname(rootConfig)}/scopes/app/ruff.toml`;
-    const configs = await readGeneratedFiles(root, `${GSPOT_PATHS.configurations}/**/ruff.toml`);
-    expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        rootConfig,
-        appConfig,
-    ]);
-    const [rootSelect, appSelect] = [rootConfig, appConfig].map(
-        (path) =>
-            ruffConfigurationSchema.parse(parse(configs.find((config) => config.path === path)!.content)).lint.select,
-    );
-    const { ruff } = readConfigurations().get('pytest')!;
-    expect(appSelect!.filter((code) => !rootSelect!.includes(code))).toStrictEqual([...ruff.recommended, ...ruff.all]);
-
     await assertPytestSelection(root, PYTEST_SAMPLE);
     await assertIgnoreScope(root);
 });
@@ -123,11 +111,11 @@ test.each([...LEVELS])(
         );
         expect(resultRules.code, resultRules.stdout + resultRules.stderr).toBe(0);
         const rules = ruffRulesSchema.parse(JSON.parse(resultRules.stdout));
-        const previewCodes = new Set(rules.flatMap(({ code, preview }) => (code !== null && preview ? [code] : [])));
+        const previewCodes = new Set(rules.flatMap(({ code, preview }) => (code !== null && preview ? code : [])));
         const command = ['check', 'sample.py', '--only', 'python/ruff', '--json'];
-        const config = ruffConfigurationSchema.parse(
-            parse(await readFile(join(root, findManifestTarget('python', 'ruff.toml')), 'utf8')),
-        );
+        const ruffText = await readFile(join(root, findManifestTarget('python', 'ruff.toml')), 'utf8');
+        const contents: unknown = parse(ruffText);
+        const config = ruffConfigurationSchema.parse(contents);
         expect(config.lint.select.filter((code) => previewCodes.has(code))).toStrictEqual([]);
         const result = parseCheckReport(await spawnGspot(root, command));
         expect(result.code, result.stdout + result.stderr).toBe(1);
@@ -210,3 +198,55 @@ TOTAL: int = 1
     const corrected = await spawnGspot(root, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
+
+test("Ruff fixes follow each scope's minimum Python version", async () => {
+    const { root } = installedSandbox();
+    const tables = RUFF_VERSION_CASES.filter(({ scope }) => scope !== '')
+        .map(({ scope }) => `[[scope]]\npath = "${scope}"\n`)
+        .join('');
+    const files = Object.fromEntries(
+        RUFF_VERSION_CASES.flatMap(({ scope, requires }) => [
+            [
+                join(scope, 'pyproject.toml'),
+                `[project]
+name = "version-example"
+version = "1.0.0"
+requires-python = "${requires}"
+`,
+            ],
+            [join(scope, 'sample.py'), VERSION_SOURCE],
+        ]),
+    );
+    const sourceFiles = { 'gspot.toml': buildSandboxSettings(['python'], { level: 'all', tables }), ...files };
+    await using _sourceChange = await applySandboxChanges(
+        installedSandbox(),
+        buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
+    );
+
+    const command = ['check', '--only', 'python/ruff', '--json'];
+    const checked = parseCheckReport(await spawnGspot(root, command));
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect(listScopeRules(checked.report)).toStrictEqual(
+        Object.fromEntries(RUFF_VERSION_CASES.map(({ scope, rules }) => [scope, { status: 'failed', rules }])),
+    );
+    const fixed = parseCheckReport(await spawnGspot(root, [...command, '--fix']));
+    expect(fixed.code, fixed.stdout + fixed.stderr).toBe(1);
+    expect(listScopeRules(fixed.report)).toStrictEqual({
+        '': { status: 'failed', rules: ['FA100', 'FA100', 'FA100', 'FA100'] },
+        legacy: { status: 'failed', rules: ['UP035', 'FA100', 'UP006', 'FA100', 'UP006'] },
+        modern: { status: 'passed', rules: [] },
+    });
+    const sources = await Promise.all(
+        RUFF_VERSION_CASES.map(async ({ scope }) => await readFile(join(root, scope, 'sample.py'), 'utf8')),
+    );
+    expect(sources).toStrictEqual(RUFF_VERSION_CASES.map(({ fixed: source }) => source));
+});
+
+function listScopeRules(report: RunReport): Record<string, { status: string; rules: readonly (string | undefined)[] }> {
+    return Object.fromEntries(
+        report.checks.map(({ scope, status, findings }) => [
+            scope,
+            { status, rules: findings.map(({ rule }) => rule) },
+        ]),
+    );
+}

@@ -39,10 +39,10 @@ version = "7.1.1"
 
 [[tool]]
 kind = "library"
-name = "eslint-plugin-react"
-npm = "eslint-plugin-react"
-rule_prefix = "react"
-version = "7.37.5"
+name = "@eslint-react/eslint-plugin"
+npm = "@eslint-react/eslint-plugin"
+rule_prefix = "@eslint-react"
+version = "5.28.0"
 
 [[tool]]
 kind = "library"
@@ -52,8 +52,8 @@ rule_prefix = "react-refresh"
 version = "0.5.7"
 
 [eslint]
-required_tools = ["eslint-plugin-react-hooks", "eslint-plugin-react", "eslint-plugin-react-refresh"]
-all_level_rules = ["react/self-closing-comp", "react/display-name", "react/no-array-index-key"]
+required_tools = ["eslint-plugin-react-hooks", "@eslint-react/eslint-plugin", "eslint-plugin-react-refresh"]
+all_level_rules = ["@eslint-react/no-missing-component-display-name", "@eslint-react/no-array-index-key"]
 
 [[eslint.rules_off]]
 files = ["**/*.tsx", "**/*.jsx"]

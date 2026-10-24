@@ -117,8 +117,8 @@ Reports inline scripts, handler attributes, and script links in each HTML file.
 export async function checkHtmlInlineScripts(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const files = planned.files.map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: Finding[] = [];
-    await visitParsedSources({ reads: session.reads, resources: session.resources, files }, (source) =>
-        findings.push(...checkInlineScripts(planned, source), ...checkScriptAttributes(planned, source)),
-    );
+    await visitParsedSources({ reads: session.reads, resources: session.resources, files }, (source) => {
+        findings.push(...checkInlineScripts(planned, source), ...checkScriptAttributes(planned, source));
+    });
     return findings;
 }

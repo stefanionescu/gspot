@@ -23,14 +23,14 @@ Test a path against ignore files in order, keeping later negations.
 @returns whether the final matching pattern ignores the path.
 */
 export function isIgnored(path: string, ignores: PathIgnore[]): boolean {
-    let ignored = false;
+    let isPathIgnored = false;
     for (const { base, matcher } of ignores) {
-        if (!path.startsWith(base) || path === base) continue;
+        if (path === base || !path.startsWith(base)) continue;
         const result = matcher.test(path.slice(base.length));
-        if (result.ignored) ignored = true;
-        else if (result.unignored) ignored = false;
+        if (result.ignored) isPathIgnored = true;
+        else if (result.unignored) isPathIgnored = false;
     }
-    return ignored;
+    return isPathIgnored;
 }
 
 /**

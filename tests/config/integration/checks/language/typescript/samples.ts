@@ -53,15 +53,17 @@ export const doubled = twice(wrong);
 export const TYPESCRIPT_SANDBOX = {
     configurations: ['typescript'],
 
-    tsconfig: {
-        compilerOptions: { ...STRICT_COMPILER_OPTIONS, allowJs: true },
-        include: ['src', 'types'],
-    },
-    files: {
-        'jsconfig.json': `${JSON.stringify({
+    json: {
+        'tsconfig.json': {
+            compilerOptions: { ...STRICT_COMPILER_OPTIONS, allowJs: true },
+            include: ['src', 'types'],
+        },
+        'jsconfig.json': {
             compilerOptions: { ...STRICT_COMPILER_OPTIONS, checkJs: true, noEmit: true },
             include: ['src/**/*.js'],
-        })}\n`,
+        },
+    },
+    files: {
         'package.json': TYPESCRIPT_PACKAGE,
         '.gitignore': 'node_modules/\n',
         'types/orders.ts': `// Type aliases of the orders module.

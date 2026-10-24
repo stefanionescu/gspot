@@ -53,16 +53,16 @@ function replaceReference(text: string, reference: Scalar): string {
     return text.slice(0, start) + replaced + text.slice(start + source.length);
 }
 
-function prepareActionlintText(text: string): string {
+function replaceSelfReferences(text: string): string {
     const document = parseDocument(text, { keepSourceTokens: true });
     if (document.errors.length > 0 || !isMap(document.contents)) return text;
-    let actionlintText = text;
+    let replaced = text;
     for (const value of listWorkflowReferences(document)) {
         const reference = isAlias(value) ? value.resolve(document) : value;
         if (!isScalar(reference) || typeof reference.value !== 'string' || !reference.value.startsWith('$/')) continue;
-        actionlintText = replaceReference(actionlintText, reference);
+        replaced = replaceReference(replaced, reference);
     }
-    return actionlintText;
+    return replaced;
 }
 
 /**
@@ -82,8 +82,8 @@ export async function checkGithubActionsActionlint(session: Session, planned: Pl
     );
     for (const file of actionFiles.values()) {
         const source = readCachedText(session.reads, file.path);
-        const actionlintText = prepareActionlintText(source);
-        if (actionlintText !== source) replacements.set(file.path, actionlintText);
+        const replaced = replaceSelfReferences(source);
+        if (replaced !== source) replacements.set(file.path, replaced);
     }
     if (replacements.size === 0) return runCheckCommand(session, planned);
     using scratch = await createCopy({

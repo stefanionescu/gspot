@@ -24,7 +24,7 @@ export type ConfigurationTables = {
         frozen_through: string;
         migrations_folder?: string | undefined;
     };
-    python: { externals: string[]; extra_paths: string[] };
+    python: { externals: string[]; import_folders: string[] };
     prose: { max_sentence_words: number; max_list_item_words: number; max_paragraph_sentences: number };
     repository: { max_file_kilobytes: number };
     secrets: { env_examples: string[]; environment_functions: string[] };

@@ -2,14 +2,14 @@ import { z } from 'zod';
 import type { SchemaShape } from '#cli/types/shapes.ts';
 import { nonemptyPaths } from '#cli/schemas/settings/fields.ts';
 import type { SettingsError } from '#cli/types/settings/file.ts';
+import type { ImportRule } from '#cli/types/settings/import-rules.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
-import type { ImportRule, WrittenImportRule } from '#cli/types/settings/import-rules.ts';
 
 const importRuleSchema = z.strictObject({
     name: z.string().min(1).describe(SETTING_DEFINITIONS['import_rule.name'].description),
     paths: nonemptyPaths.describe(SETTING_DEFINITIONS['import_rule.paths'].description),
-    can_import: z.array(z.string()).optional().describe(SETTING_DEFINITIONS['import_rule.can_import'].description),
-} satisfies SchemaShape<ImportRule, WrittenImportRule>);
+    can_import: z.string().array().optional().describe(SETTING_DEFINITIONS['import_rule.can_import'].description),
+} satisfies SchemaShape<ImportRule>);
 
 function validateImportRules(rules: ImportRule[]): SettingsError[] {
     const names = new Set(rules.map((rule) => rule.name));
@@ -17,13 +17,13 @@ function validateImportRules(rules: ImportRule[]): SettingsError[] {
         (rule.can_import ?? []).flatMap((name, edge) =>
             names.has(name)
                 ? []
-                : [{ path: [index, 'can_import', edge], message: `There is no import rule named ${name}.` }],
+                : { path: [index, 'can_import', edge], message: `There is no import rule named ${name}.` },
         ),
     );
 }
 
-export const importRulesSchema = z
-    .array(importRuleSchema)
+export const importRulesSchema = importRuleSchema
+    .array()
     .superRefine((rules, context) => {
         for (const { path, message } of validateImportRules(rules))
             context.addIssue({ code: 'custom', path: [...path], message });

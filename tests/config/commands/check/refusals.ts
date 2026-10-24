@@ -36,11 +36,6 @@ export const ARGUMENT_REFUSALS = [
     ],
     ['a path that matches nothing', ['check', 'missing'], 'Path missing matches no repository files.'],
     [
-        'a message file that does not exist',
-        ['check', '--hook', 'commit-msg', '--', 'missing-message.txt'],
-        'gspot cannot read the commit message file <root>/missing-message.txt.',
-    ],
-    [
         'an empty --only list',
         ['check', '--only', ','],
         "Option '--only <checks>' argument ',' is invalid. Name a check, such as --only python/ruff.",
@@ -50,7 +45,7 @@ export const ARGUMENT_REFUSALS = [
 export const OUTSIDE_GIT_SETTINGS = `configurations = []
 [[command_check]]
 id = "sandbox/paths"
-command = ["node", "-e", "process.exitCode=0"]
+command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=0'])}
 paths = ["api/**"]
 stage = "commit"
 `;

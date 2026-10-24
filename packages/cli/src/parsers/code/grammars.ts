@@ -1,9 +1,10 @@
 import { posix } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { findWasmPath } from '#cli/system/assets.ts';
+import { buildAssetPath } from '#cli/system/assets.ts';
 import { getCachedValue } from '#cli/system/files/cache.ts';
 import { readCachedText } from '#cli/system/files/reads.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
+import { GRAMMARS_FOLDER } from '#cli/config/system/assets.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system/paths.ts';
 
 import {
@@ -29,7 +30,8 @@ const grammars: ParserGrammars = {
 async function buildParser(name: GrammarName): Promise<Parser> {
     grammars.runtime ??= Parser.init();
     await grammars.runtime;
-    const language = await Language.load(readFileSync(findWasmPath(`${name}${GRAMMAR_FILE_EXTENSION}`)));
+    const grammar = posix.join(GRAMMARS_FOLDER, `${name}${GRAMMAR_FILE_EXTENSION}`);
+    const language = await Language.load(readFileSync(buildAssetPath(grammar)));
     const parser = new Parser();
     parser.setLanguage(language);
     return parser;

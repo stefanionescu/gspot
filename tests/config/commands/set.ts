@@ -76,7 +76,7 @@ export const SET_REFUSALS = [
     [
         'a rule turned off',
         ['set', 'tools.markdownlint.rules', '{ MD013 = false }'],
-        'The value { MD013 = false } is not valid for tools.markdownlint.rules. Use a valid table value: Option tables by Markdown rule ID, such as MD024; the level decides which rules run. Accept a finding with gspot ignore markdown/markdownlint --rule `<rule>` --reason `<why>`.',
+        'The value { MD013 = false } is not valid for tools.markdownlint.rules. This table holds options only, without a severity; the level decides which rules run. To turn MD013 off, run gspot ignore markdown/markdownlint --rule MD013 --reason "<why>".',
     ],
     ['a key without a value', ['set', 'limits.file_lines'], "Missing required argument 'values'"],
     [
@@ -102,7 +102,7 @@ export const KEPT_SETTING_CHANGES = [
         'set',
         ['set', 'limits.bash.file_lines', '200', '--reason', 'Generated scripts need this limit.'],
         '[limits.bash]\nfile_lines = { value = 200, reason = "Generated scripts need this limit." }',
-        'Set limits.bash.file_lines to 200.  # Generated scripts need this limit.  (was 140 from configuration structure)',
+        'Set limits.bash.file_lines to 200.  # Generated scripts need this limit.  (was 140 from configuration structure)\nnote     No selected check reads limits.bash.file_lines at level recommended.',
     ],
     [
         'ignore',
@@ -127,13 +127,14 @@ export const NO_CHANGE_COMMANDS = [
 
 export const UNKNOWN_SETTING_KEYS = [
     {
-        key: 'tools.eslint.extra',
-        message: 'No selected configuration has the setting tools.eslint.extra. No setting exists under that table.',
+        key: 'tools.eslint.unknown_key',
+        message:
+            'No selected configuration has the setting tools.eslint.unknown_key. No setting exists under that table.',
     },
     {
-        key: 'tools.v8r.extra',
+        key: 'tools.v8r.unknown_key',
         message:
-            'No selected configuration has the setting tools.v8r.extra. The settings that exist under that table are `schema`.',
+            'No selected configuration has the setting tools.v8r.unknown_key. The settings that exist under that table are `schema`.',
     },
 ] as const;
 
@@ -146,3 +147,33 @@ export const STRING_SETTING_VALUES = [
     { key: 'ci.setup_command', words: ['make', '2'], value: ['make', '2'] },
     { key: 'ci.setup_command', words: ['false'], value: ['false'] },
 ] as const;
+
+export const SET_VALUE_REFUSALS = [
+    {
+        name: 'set with malformed TOML',
+        arguments: ['set', 'ci.setup_command', '['],
+        message:
+            'The value [ is not a TOML inline value. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.',
+    },
+    {
+        name: 'set without an existing list reason',
+        arguments: ['set', 'site.allowed_unlisted_pages', 'admin/index.html'],
+        message:
+            'site.allowed_unlisted_pages already has the reason "The private page belongs outside the public site map.". Pass --reason with a reason that covers every item.',
+    },
+    {
+        name: 'set with an unnecessary reason',
+        arguments: ['set', 'spelling.locale', 'en-gb', '--reason', 'The project publishes content for local readers.'],
+        message:
+            'spelling.locale takes no reason here: the value does not loosen the shipped default. Run the command without --reason.',
+    },
+] as const;
+
+const COMMAND_VALUE_SETTINGS = `configurations = ["site"]
+[rules]
+enabled = false
+[site]
+allowed_unlisted_pages = { value = ["private/index.html"], reason = "The private page belongs outside the public site map." }
+`;
+
+export const REFUSAL_FILES = { 'gspot.toml': COMMAND_VALUE_SETTINGS, 'control.txt': 'preserve\n' } as const;

@@ -37,37 +37,26 @@ export function buildSwiftformatFile(planned: PlannedConfigFile): string {
     const { format } = scope.settings.values;
     const isAll = level === 'all';
     const version = readSwiftVersion(reads, scope.folder.path, getTable(scope.settings, 'swift').xcode_project ?? '');
-    const document = {
-        options: {
-            ...SWIFTFORMAT_OPTIONS,
-            indent: format.indent_style === 'tab' ? 'tab' : format.indent_width,
-            maxwidth: format.print_width,
-            commas: SWIFTFORMAT_COMMAS[format.trailing_commas],
-            linebreaks: format.line_ending,
-            ...(version === undefined ? {} : { swiftversion: version }),
-        },
-        enable: isAll
-            ? SWIFTFORMAT_ALL_LEVEL_ON.filter(
-                  (rule) => !listIgnoredRules(planned.scope, 'swift/swiftformat').includes(rule),
-              )
-            : [],
-        disable: [
-            ...new Set([
-                ...Object.keys(SWIFTFORMAT_ALWAYS_OFF),
-                ...listIgnoredRules(planned.scope, 'swift/swiftformat'),
-                ...(isAll ? [] : SWIFTFORMAT_RECOMMENDED_OFF),
-            ]),
-        ],
-        comments: SWIFTFORMAT_ALWAYS_OFF,
+    const ignored = listIgnoredRules(scope, 'swift/swiftformat');
+    const options = {
+        ...SWIFTFORMAT_OPTIONS,
+        indent: format.indent_style === 'tab' ? 'tab' : format.indent_width,
+        maxwidth: format.print_width,
+        commas: SWIFTFORMAT_COMMAS[format.trailing_commas],
+        linebreaks: format.line_ending,
+        ...(version !== undefined && { swiftversion: version }),
     };
-
+    const enabled = isAll ? SWIFTFORMAT_ALL_LEVEL_ON.filter((rule) => !ignored.includes(rule)) : [];
+    const disabled = [
+        ...new Set([...Object.keys(SWIFTFORMAT_ALWAYS_OFF), ...ignored, ...(isAll ? [] : SWIFTFORMAT_RECOMMENDED_OFF)]),
+    ];
     return [
-        ...Object.entries(document.options).map(([option, value]) => `--${option} ${String(value)}`),
+        ...Object.entries(options).map(([option, value]) => `--${option} ${String(value)}`),
         '',
-        ...document.enable.map((rule) => `--enable ${rule}`),
+        ...enabled.map((rule) => `--enable ${rule}`),
         '',
-        ...document.disable.flatMap((rule) => {
-            const reason = document.comments[rule];
+        ...disabled.flatMap((rule) => {
+            const reason = SWIFTFORMAT_ALWAYS_OFF[rule];
             return [...(reason === undefined ? [] : [reason]), `--disable ${rule}`];
         }),
     ].join('\n');

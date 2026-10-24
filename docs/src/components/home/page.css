@@ -56,7 +56,7 @@ main:has(.landing) {
 }
 
 .inline-code,
-.problems code,
+.issues code,
 .card > p code {
     padding: 1px 5px;
     border: 1px solid var(--sl-color-gray-5);
@@ -66,7 +66,6 @@ main:has(.landing) {
     white-space: nowrap;
 }
 
-/* Tools: four columns on phones, eight from 50rem. */
 .tools {
     padding-block: 32px 56px;
     border-top: 1px solid var(--sl-color-gray-5);
@@ -115,7 +114,6 @@ main:has(.landing) {
     }
 }
 
-/* What gspot does: one column, two from 50rem, three from 72rem. */
 .cards {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -180,7 +178,6 @@ main:has(.landing) {
     white-space: nowrap;
 }
 
-/* Footer: the same width as the header and the page. */
 .home-footer {
     border-top: 1px solid var(--sl-color-gray-5);
 }

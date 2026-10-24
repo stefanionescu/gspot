@@ -13,13 +13,16 @@ import { findBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 import {
     POSTGRES_CHECKS,
-    SECURED_TEAMS_SQL,
-    MALFORMED_MIGRATION_PATH,
     MALFORMED_MIGRATION_FILES,
     DEFAULT_MIGRATION_FOLDER_FILES,
 } from '#tests/config/checks/database/postgres/migrations.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, the other postgres checks skip, and the fixed migration passes', async () => {
+    const SECURED_TEAMS_SQL =
+        'CREATE TABLE teams (id integer PRIMARY KEY);\nALTER TABLE teams ENABLE ROW LEVEL SECURITY;\n';
+
+    const MALFORMED_MIGRATION_PATH = 'migrations/20240201_teams.sql';
+
     await using sandbox = await testdir(MALFORMED_MIGRATION_FILES);
     const checks = [...POSTGRES_CHECKS];
 
@@ -113,8 +116,8 @@ test.each(['prisma/migrations/20260101000000_init/migration.sql', 'drizzle/0001_
         });
         const session = await openSession(sandbox.path);
         const input = planSandboxCheck(session, 'postgres/migration-order');
-        const read = await readMigrations(session, input);
-        expect(read.migrations.map(({ version }) => version)).toStrictEqual([
+        const { migrations } = await readMigrations(session, input);
+        expect(migrations.map(({ version }) => version)).toStrictEqual([
             path.startsWith('prisma/') ? '20260101000000' : '0001',
         ]);
         expect(await findBuiltInCheck('postgres/migration-order')(session, input)).toStrictEqual([]);

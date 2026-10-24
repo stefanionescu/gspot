@@ -1,6 +1,7 @@
 import { ESLint } from 'eslint';
 import { join, relative } from 'node:path';
 import { openSession } from '#cli/session.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { runGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
@@ -8,7 +9,9 @@ import { findConfigFilePath } from '#tests/setup/cli/generated-files.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import type { LintFinding, EslintConfiguration } from '#tests/types/tools.ts';
 
-/** Lint the files and keep the findings of these rules and fatal errors, sorted. */
+/**
+Lint the files and keep the findings of these rules and fatal errors, sorted.
+*/
 export async function listLintFindings(
     eslint: ESLint,
     root: string,
@@ -37,8 +40,9 @@ Link the test packages, run apply, and load the generated ESLint config file.
 @returns ESLint set up with the generated config file.
 */
 export async function createEslint(sandboxRoot: string, options?: ESLint.Options): Promise<ESLint> {
+    runGitStep(sandboxRoot, ['init', '--quiet']);
     await linkInstalledModules(join(sandboxRoot, 'node_modules'));
-    await runGspotStep({ root: sandboxRoot, environment: {}, run: runGspot }, ['apply']);
+    await runGspotStep({ root: sandboxRoot, run: runGspot }, ['apply']);
     const session = await openSession(sandboxRoot);
     const scope = session.scopes.find((each) =>
         each.configurations.some((configuration) =>
@@ -54,7 +58,10 @@ export async function createEslint(sandboxRoot: string, options?: ESLint.Options
     });
 }
 
-/** Order two findings by file, line, and rule. */
+/**
+Order two findings by file, line, and rule.
+*/
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three files sort findings with it.
 export function compareFindings(left: LintFinding, right: LintFinding): number {
     return (
@@ -64,7 +71,9 @@ export function compareFindings(left: LintFinding, right: LintFinding): number {
     );
 }
 
-/** Read the rule table ESLint calculates for each file in a scoped repository. */
+/**
+Read the rule table ESLint calculates for each file in a scoped repository.
+*/
 export async function readEslintRules(
     eslint: ESLint,
     files: readonly string[],
@@ -79,9 +88,11 @@ export async function readEslintRules(
     );
 }
 
-/** List each rule name once, sorted. */
+/**
+List each rule name once, sorted.
+*/
 export function listFindingRules(findings: readonly LintFinding[]): (string | null)[] {
     return [...new Set(findings.map(({ rule }) => rule))].toSorted((left, right) =>
-        (left ?? '').localeCompare(right ?? ''),
+        String(left).localeCompare(String(right)),
     );
 }

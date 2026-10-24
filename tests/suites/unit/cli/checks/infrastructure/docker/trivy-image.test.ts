@@ -6,18 +6,18 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 import { NGINX_COMPOSE } from '#tests/config/checks/infrastructure/docker/samples.ts';
-import { TRIVY_FINDINGS_EXIT_CODE } from '#cli/config/checks/infrastructure/docker/trivy-image.ts';
 
 import {
-    TRIVY_REPORT,
     COMPOSE_SOURCES,
-    TRIVY_MIXED_REPORT,
     TRIVY_IMAGE_FINDINGS,
     TRIVY_REGISTRY_FAILURE,
     INVALID_COMPOSE_SOURCES,
 } from '#tests/config/checks/infrastructure/docker/trivy-image.ts';
 
 test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', async ({ source }) => {
+    const TRIVY_REPORT =
+        '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}';
+
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': source,
@@ -25,17 +25,15 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
 
     using resources = new DisposableStack();
     const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
-    const nativeRun = processes.spawnProcess;
-    resources.use(
-        spyOn(processes, 'spawnProcess').mockImplementation((command, options) => {
-            if (command[0] === 'git') return nativeRun(command, options);
-            expect(command.at(-1)).toBe('nginx:1.27.2');
-            expect(options.cwd).toBe(sandbox.path);
-            return Promise.resolve(buildProcessResult({ code: TRIVY_FINDINGS_EXIT_CODE, stdout: TRIVY_REPORT }));
-        }),
+    const scan = resources.use(
+        spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code: 10, stdout: TRIVY_REPORT })),
     );
     expect(await runSandboxCheck(session.root, 'docker/trivy-image')).toStrictEqual([...TRIVY_IMAGE_FINDINGS]);
+    expect(scan.mock.calls.map(([command, options]) => ({ image: command.at(-1), cwd: options.cwd }))).toStrictEqual([
+        { image: 'nginx:1.27.2', cwd: sandbox.path },
+    ]);
 });
+
 test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, async () => {
     const { code, stdout, stderr, message } = TRIVY_REGISTRY_FAILURE;
     await using sandbox = await testdir({
@@ -45,8 +43,10 @@ test(`docker/trivy-image fails with Trivy's error text when Trivy exits 1`, asyn
     using resources = new DisposableStack();
     const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
     resources.use(spyOn(processes, 'spawnProcess').mockResolvedValue(buildProcessResult({ code, stdout, stderr })));
-    expect(await captureRejection(runSandboxCheck(session.root, 'docker/trivy-image'))).toBe(message);
+    const runSandboxCheckError = await captureRejection(runSandboxCheck(session.root, 'docker/trivy-image'));
+    expect(runSandboxCheckError.message).toBe(message);
 });
+
 test.each([...INVALID_COMPOSE_SOURCES])(
     'docker/trivy-image fails on $name in compose.yaml before it runs Trivy',
     async ({ source, message }) => {
@@ -56,11 +56,16 @@ test.each([...INVALID_COMPOSE_SOURCES])(
         });
 
         using scan = spyOn(processes, 'spawnProcess');
-        expect(await captureRejection(runSandboxCheck(sandbox.path, 'docker/trivy-image'))).toStartWith(message);
+        const scanError = await captureRejection(runSandboxCheck(sandbox.path, 'docker/trivy-image'));
+        expect(scanError.message).toBe(message);
         expect(scan).not.toHaveBeenCalled();
     },
 );
+
 test('Trivy scans a repeated image once and reports each advisory and secret in every Compose file that names it', async () => {
+    const TRIVY_MIXED_REPORT =
+        '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"},{"VulnerabilityID":"CVE-neighbor","PkgName":"neighbor"}],"Secrets":[{"RuleID":"private-key","Title":"Private key","Secret":"sensitive-native-value"}]}]}';
+
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['docker']),
         'compose.yaml': NGINX_COMPOSE,
@@ -70,7 +75,7 @@ test('Trivy scans a repeated image once and reports each advisory and secret in 
     const session = await openFakeToolSession(sandbox.path, ['trivy'], resources);
     const scan = resources.use(
         spyOn(processes, 'spawnProcess').mockResolvedValue(
-            buildProcessResult({ code: TRIVY_FINDINGS_EXIT_CODE, stdout: TRIVY_MIXED_REPORT }),
+            buildProcessResult({ code: 10, stdout: TRIVY_MIXED_REPORT }),
         ),
     );
     const findings = await runSandboxCheck(session.root, 'docker/trivy-image');

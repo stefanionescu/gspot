@@ -6,7 +6,7 @@ export type PushRevision = {
     tree: string;
     refs: string[];
     commits: string[];
-    historyComplete: boolean;
+    shallow: boolean;
     paths?: string[];
 };
 

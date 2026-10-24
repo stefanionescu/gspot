@@ -1,8 +1,3 @@
-export const KEYED_TABLES_SQL =
-    'CREATE TABLE posts (id UUID PRIMARY KEY, author_id UUID REFERENCES users (id), team_id UUID, CONSTRAINT team_fk FOREIGN KEY (team_id) REFERENCES teams (id));\nCREATE TABLE drafts (id UUID PRIMARY KEY, post_id UUID REFERENCES posts (id));';
-
-export const INDEXED_TABLE_DROP_SQL = 'CREATE INDEX posts_author_idx ON posts (author_id, id);\nDROP TABLE drafts;';
-
 export const RECREATED_TABLE_SQL = `
         CREATE TABLE posts (id int PRIMARY KEY, author_id int REFERENCES users(id));
         ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
@@ -27,11 +22,6 @@ export const DROPPED_CONSTRAINTS_SQL = `
         CREATE INDEX author_index ON posts(author_id);
         ALTER TABLE posts DROP CONSTRAINT author_fk, DROP CONSTRAINT author_unique;
     `;
-
-export const UNNAMED_FOREIGN_KEY_SQL =
-    'CREATE TABLE posts (id int PRIMARY KEY, author_id int REFERENCES users(id), title text UNIQUE, CHECK (id > 0));';
-
-export const DROP_SECOND_INDEX_SQL = 'DROP INDEX second;\nALTER TABLE posts DISABLE ROW LEVEL SECURITY;\n';
 
 export const RENAMED_TABLE_SQL = `CREATE TABLE teams (tenant_id int, user_id int, FOREIGN KEY (tenant_id, user_id) REFERENCES users (tenant_id, user_id));
 CREATE INDEX teams_lookup ON teams (tenant_id, user_id);

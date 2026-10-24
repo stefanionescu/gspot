@@ -11,7 +11,8 @@ test('Markdown refuses options for a rule disabled at the selected level', async
         findManifestTarget('markdown', 'markdownlint.jsonc'),
         { 'source.md': '# Sample\n' },
     );
-    expect(await captureRejection(generated)).toBe('gspot runs MD013 at no level, so it takes no options.');
+    const generatedError = await captureRejection(generated);
+    expect(generatedError.message).toBe('gspot runs MD013 at no level, so it takes no options.');
 });
 
 test.each([...LEVELS])('%s turns on MD041 and MD025 only at level all and keeps your MD044 names', async (level) => {

@@ -12,7 +12,7 @@ Reports each file whose name without its extension matches the name of a sibling
 @param planned the scope files.
 @returns the findings.
 */
-export function checkFileFolderClashes(_session: Session, planned: PlannedCheck): Finding[] {
+export function checkStructureFileFolderClashes(_session: Session, planned: PlannedCheck): Finding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
     return files.flatMap((file) => {

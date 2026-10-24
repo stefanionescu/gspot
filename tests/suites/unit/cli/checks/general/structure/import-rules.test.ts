@@ -6,7 +6,6 @@ import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GROUPED_PBXPROJ } from '#tests/config/checks/infrastructure/xcode.ts';
-import { UNCOVERED_FILE_MESSAGE } from '#cli/config/checks/general/structure/import-rules.ts';
 
 import {
     REFUSAL_HELP,
@@ -27,7 +26,8 @@ test('structure/import-rules reports a Python file outside every rule and each r
             file: 'src/app/__init__.py',
             line: 1,
             rule: 'uncovered-file',
-            message: UNCOVERED_FILE_MESSAGE,
+            message:
+                'No [[import_rule]] covers this file. Add a path that matches it to an import rule, or record an [[ignore]] for structure/import-rules with its paths and a reason.',
         },
         {
             file: 'src/app/core/uses_web.py',
@@ -57,7 +57,13 @@ test('Swift imports follow the import rules through the SwiftPM targets, and a f
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/import-rules');
     expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
-        { file: 'Sources/Loose/Helper.swift', line: 1, rule: 'uncovered-file', message: UNCOVERED_FILE_MESSAGE },
+        {
+            file: 'Sources/Loose/Helper.swift',
+            line: 1,
+            rule: 'uncovered-file',
+            message:
+                'No [[import_rule]] covers this file. Add a path that matches it to an import rule, or record an [[ignore]] for structure/import-rules with its paths and a reason.',
+        },
         {
             file: 'Sources/Core/Model.swift',
             line: 2,
@@ -98,4 +104,15 @@ test('without import rules the check is skipped', async () => {
     expect(report.checks).toMatchObject([
         { check: 'structure/import-rules', status: 'skipped', note: 'Add [[import_rule]] records to check imports.' },
     ]);
+});
+
+test('import rules exempt a local ESLint plugin named by settings', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            tables: '[[import_rule]]\nname = "source"\npaths = ["src/**"]\n[[tools.eslint.plugins]]\nname = "local"\npath = "tools/lint/plugin.mjs"\nrules = {}\n',
+        }),
+        'src/index.js': 'export {};\n',
+        'tools/lint/plugin.mjs': 'export default {};\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'structure/import-rules')).toStrictEqual([]);
 });

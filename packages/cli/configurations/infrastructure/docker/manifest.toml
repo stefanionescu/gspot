@@ -17,13 +17,13 @@ prefixes = ["docker"]
 mise = "hadolint"
 name = "hadolint"
 replace = [".hadolint.yaml", ".hadolint.yml"]
-version = "2.14.0"
+version = "2.15.1"
 
 [[tool]]
 mise = "trivy"
 name = "trivy"
 replace = ["trivy.yaml", ".trivyignore"]
-version = "0.69.3"
+version = "0.76.0"
 
 [[tool]]
 install_help = "Install Docker Desktop or Docker Engine."
@@ -69,7 +69,6 @@ output = { format = "lines" }
 runs = "scope"
 stage = "push"
 summary = "Parses every Compose file with `docker compose config`, which needs no running daemon."
-tool = "docker"
 why = "Valid YAML can still hold a key that Compose rejects, and otherwise the first sign comes during a deploy."
 
 [[check]]
@@ -83,18 +82,17 @@ summary = "Checks that an ignore file sits beside every Dockerfile and keeps the
 why = "Without it, the daemon receives the whole folder, and a `COPY` of it puts the history and secrets into the image."
 
 [[check]]
-command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{config_file:trivy}", "--ignorefile", "{config_file:trivyignore}", "--exit-code", "10", "--format", "sarif", "{root}"]
+command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{config_file:trivy}", "--ignorefile", "{config_file:trivyignore}", "--exit-code", "10", "--format", "json", "{root}"]
 example = "A Dockerfile whose final stage runs as root reports a finding. Create an unprivileged user, and switch to it with `USER` before the application starts."
 exit_codes = [10]
 help = "Change the file the way the message says. Accept one advisory with `gspot ignore docker/trivy-config --rule <rule> --reason \"<why>\"`."
 level = "recommended"
 name = "trivy-config"
-output = { format = "sarif" }
+output = { format = "json", list = "Results", children = "Misconfigurations", fields = { file = "Target", line = "CauseMetadata.StartLine", rule = "ID", message = "Message" } }
 run_in_copy = true
 runs = "scope"
 stage = "push"
 summary = "Scans Dockerfiles for HIGH and CRITICAL misconfigurations, including a root user and exposed secrets."
-tool = "trivy"
 why = "A root user turns any bug in the service into full control of the container."
 
 [[check]]

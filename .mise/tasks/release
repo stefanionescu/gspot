@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Publish both npm packages from a tested main commit, deploy the docs site, tag each published package, and create the GitHub release."
 #MISE depends=["build", "docs:build"]
-# npm asks for its publish approval only on a terminal, so the task keeps the terminal of the caller.
 #MISE raw=true
 set -euo pipefail
 

@@ -10,6 +10,4 @@ export const INDEX_BASENAMES = new Set([
     'index.cts',
 ]);
 
-export const STDIN_NAMES = new Set(['<input>', '<text>']);
-
 export const TRAILING_SLASH = /\/$/u;

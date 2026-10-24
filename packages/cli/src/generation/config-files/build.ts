@@ -36,17 +36,16 @@ import { buildBasedpyrightFile } from '#cli/generation/configurations/language/p
 import { buildEslintFile } from '#cli/generation/configurations/language/javascript/eslint/config-file.ts';
 
 import {
+    convertToGlobs,
+    listIgnoreSections,
+    buildPrettierignoreFile,
+} from '#cli/generation/config-files/ignore-files.ts';
+import {
     type BuiltConfigFile,
     type PlannedConfigFile,
     type ConfigFileBuilder,
     type ConfigFileGeneration,
 } from '#cli/types/generation/files.ts';
-import {
-    convertToGlobs,
-    buildIgnoreSections,
-    buildPrettierignoreFile,
-    listCheckIgnoreSections,
-} from '#cli/generation/config-files/ignore-files.ts';
 import {
     JSCPD_IGNORED,
     TRANSPILE_OPTIONS,
@@ -58,16 +57,12 @@ import {
 } from '#cli/config/generation/config-files/build.ts';
 import {
     buildValeIniFile,
+    buildLengthStyle,
     buildAltTextStyle,
     buildAcronymsStyle,
-    buildTitleCaseStyle,
-    buildHeadingCaseStyle,
-    buildPossessivesStyle,
-    buildBulletLengthStyle,
     buildAcceptedWordsFile,
+    buildCapitalizationStyle,
     buildBannedHeadingsStyle,
-    buildSentenceLengthStyle,
-    buildParagraphLengthStyle,
 } from '#cli/generation/configurations/general/prose.ts';
 
 const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefined>> = {
@@ -98,13 +93,7 @@ const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefine
                 absolute: true,
                 gitignore: true,
                 ignorePattern: JSCPD_IMPORT_PATTERNS,
-                ignore: [
-                    ...JSCPD_IGNORED,
-                    ...convertToGlobs([
-                        ...buildIgnoreSections(planned.session),
-                        ...listCheckIgnoreSections(planned.scope.settings, 'duplication/jscpd'),
-                    ]),
-                ],
+                ignore: [...JSCPD_IGNORED, ...convertToGlobs(listIgnoreSections(planned, 'duplication/jscpd'))],
             },
             null,
             JSON_INDENT,
@@ -122,14 +111,13 @@ const CONFIG_FILE_BUILDERS: Readonly<Record<string, ConfigFileBuilder | undefine
     'format/.editorconfig': buildEditorconfigFile,
     'prose/styles/config/vocabularies/words/accept.txt': buildAcceptedWordsFile,
     'prose/vale.ini': buildValeIniFile,
-    'prose/styles/gspot/heading-case.yml': buildHeadingCaseStyle,
-    'prose/styles/gspot/paragraph-length.yml': buildParagraphLengthStyle,
+    'prose/styles/gspot/heading-case.yml': (planned) => buildCapitalizationStyle(planned, 'heading'),
+    'prose/styles/gspot/paragraph-length.yml': (planned) => buildLengthStyle(planned, 'paragraph'),
     'prose/styles/gspot/alt-text.yml': buildAltTextStyle,
     'prose/styles/gspot/banned-headings.yml': buildBannedHeadingsStyle,
-    'prose/styles/gspot/sentence-length.yml': buildSentenceLengthStyle,
-    'prose/styles/gspot/title-case.yml': buildTitleCaseStyle,
-    'prose/styles/gspot/item-length.yml': buildBulletLengthStyle,
-    'prose/styles/gspot/possessives.yml': buildPossessivesStyle,
+    'prose/styles/gspot/sentence-length.yml': (planned) => buildLengthStyle(planned, 'sentence'),
+    'prose/styles/gspot/title-case.yml': (planned) => buildCapitalizationStyle(planned, 'title'),
+    'prose/styles/gspot/item-length.yml': (planned) => buildLengthStyle(planned, 'item'),
     'spelling/typos.toml': buildTyposFile,
     'python/basedpyright.json': buildBasedpyrightFile,
     'python/ruff.toml': buildRuffFile,
@@ -163,7 +151,7 @@ export function buildConfigFile(
             : CONFIG_FILE_BUILDERS[`${planned.configuration.name}/${configFile.file}`];
     let built: ReturnType<ConfigFileBuilder>;
     if (builder === undefined) {
-        const source = configFile.source ?? configFile.file;
+        const source = configFile.source;
         const shipped = readFileSync(buildAssetPath(`${planned.configuration.folder}/${source}`), 'utf8');
         built = source.endsWith('.ts')
             ? ts.transpileModule(shipped, { compilerOptions: TRANSPILE_OPTIONS }).outputText
@@ -173,7 +161,7 @@ export function buildConfigFile(
     const source = content.replaceAll(CONFIG_FILE_REFERENCE, (match: string, path: string) => {
         const referenced = join(dirname(configFile.target), path);
         const chosen = targets.get(planned.scope.folder.path)?.get(referenced);
-        return chosen === undefined ? match : match.replace(path, relative(dirname(targetPath), chosen));
+        return chosen === undefined ? match : match.replace(path, () => relative(dirname(targetPath), chosen));
     });
     return {
         file: { path: targetPath, content: `${formatHeader(targetPath)}${source.trimEnd()}\n` },

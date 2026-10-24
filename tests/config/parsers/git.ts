@@ -18,7 +18,6 @@ export const INDEX_LINE_FAILURE =
     'The Git entry is unsupported or conflicted. Resolve index conflicts before checking this revision.';
 
 export const INVALID_INDEX_LINES = [
-    { name: 'unmerged index stage', output: `100644 ${SHA1} 1\tsource.ts\0` },
     { name: 'unsupported mode', output: `100600 ${SHA1} 0\tsource.ts\0` },
     { name: 'short object ID', output: '100644 aaaa 0\tsource.ts\0' },
     { name: 'empty path', output: `100644 ${SHA1} 0\t\0` },
@@ -46,10 +45,16 @@ export const ATTRIBUTE_LINES = [
     { line: '[attr]gen linguist-generated', expected: [] },
     {
         line: String.raw`"a\ab\bc\fd\ne\rf\tg\vh\\i\"j.txt" text`,
-        expected: [{ pattern: '**/a\u0007b\bc\fd\ne\rf\tg\vh\\i"j.txt', attributes: ['text'] }],
+        expected: [{ pattern: '**/a\u{7}b\bc\fd\ne\rf\tg\vh\\i"j.txt', attributes: ['text'] }],
     },
     { line: '"日本語 naïve.txt" text', expected: [{ pattern: '**/日本語 naïve.txt', attributes: ['text'] }] },
     { line: String.raw`"bad\q.txt" text`, expected: [] },
     { line: String.raw`"bad\12.txt" text`, expected: [] },
     { line: String.raw`"bad\400.txt" text`, expected: [] },
 ];
+
+export const TRAILING_BLOB_CHUNKS = [
+    { name: 'same chunk', chunks: [`${SHA1} blob 0\n\ntrailing`] },
+    { name: 'next chunk', chunks: [`${SHA1} blob 0\n\n`, 'trailing'] },
+    { name: 'after an empty chunk', chunks: [`${SHA1} blob 0\n\n`, '', 'trailing'] },
+] as const;

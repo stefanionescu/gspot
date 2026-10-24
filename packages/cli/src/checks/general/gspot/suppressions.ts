@@ -1,5 +1,6 @@
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
+import { findSettingLine } from '#cli/settings/file.ts';
 import { getToolName } from '#cli/configurations/tools.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { findScopeFolder } from '#cli/repository/scopes.ts';
@@ -13,7 +14,6 @@ import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import type { SourceComment } from '#cli/types/parsers/code/comments.ts';
 import type { SuppressionSyntax } from '#cli/types/checks/general/gspot.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
-import { getTomlRange, parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 
 import {
     REASON_ABOVE,
@@ -74,8 +74,7 @@ function listSuppressionSyntaxes(scope: Scope): SuppressionSyntax[] {
 function parseSuppressionRules(form: SuppressionSyntax, text: string): string | undefined {
     if (form.separator === undefined) return undefined;
     const suppression = form.marker.exec(text);
-    if (suppression === null) return undefined;
-    return (suppression.groups?.['rules'] ?? '').split(form.separator)[0];
+    return suppression === null ? undefined : (suppression.groups?.['rules'] ?? '').split(form.separator)[0];
 }
 
 function classifySuppression(
@@ -120,7 +119,7 @@ function checkSuppressionComment(
 }
 
 function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] {
-    const { settings, text } = session.settingsFile;
+    const { settings } = session.settingsFile;
     const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
     const expired = new Map(
         settings.ignore.flatMap((ignore, index) => {
@@ -129,25 +128,20 @@ function listExpiredIgnores(session: Session, planned: PlannedCheck): Finding[] 
         }),
     );
     if (expired.size === 0) return [];
-    return parseTomlSyntax(text, settings.written).pathNodes.flatMap(({ path: [table, index, ...keys], node }) => {
-        if (table !== 'ignore' || typeof index !== 'number' || keys.length > 0) return [];
-        const ignore = expired.get(index);
-        if (ignore === undefined) return [];
-        const line = text.slice(0, getTomlRange(node)[0]).split('\n').length;
-        return [
-            buildFinding(
-                planned,
-                { file: SETTINGS_FILE, line },
-                'expired-ignore',
-                `This ignore of ${ignore.record.check ?? 'every check'} ended on ${ignore.date}.`,
-                { help: EXPIRED_IGNORE_HELP },
-            ),
-        ];
-    });
+    return [...expired].map(([index, ignore]) =>
+        buildFinding(
+            planned,
+            { file: SETTINGS_FILE, line: findSettingLine(session.settingsFile, ['ignore', index]) },
+            'expired-ignore',
+            `This ignore of ${ignore.record.check ?? 'every check'} ended on ${ignore.date}.`,
+            { help: EXPIRED_IGNORE_HELP },
+        ),
+    );
 }
 
 /**
-Reports forbidden suppressions and suppressions without a valid reason.
+Reports forbidden suppressions, suppressions that turn off every rule or a size limit, suppressions without a
+reason, and ignores past their until date.
 
 @param session the repository and its tools.
 @param planned the files to scan, by scope.
@@ -159,12 +153,13 @@ export async function checkGspotSuppressions(session: Session, planned: PlannedC
     const found: Finding[] = listExpiredIgnores(session, planned);
     for (const [scopePath, scope] of scopesByPath) {
         const syntaxes = listSuppressionSyntaxes(scope);
-        for (const file of planned.files.filter(
-            (file) =>
-                file.kind === 'source' &&
-                file.tags.includes('text') &&
-                findScopeFolder(file.path, scopes).path === scopePath,
-        )) {
+        for (const file of planned.files) {
+            if (
+                file.kind !== 'source' ||
+                !file.tags.includes('text') ||
+                findScopeFolder(file.path, scopes).path !== scopePath
+            )
+                continue;
             const forms = syntaxes.filter((form) => form.covers(file));
             const source = readCachedText(session.reads, file.path);
             const comments = await parseComments(file.path, source, file.tags);

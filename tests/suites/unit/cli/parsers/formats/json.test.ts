@@ -17,21 +17,19 @@ test.each(NON_TABLE_JSON)(
     },
 );
 
-test('a JSON syntax error names the file and keeps the parser error as its cause', () => {
-    expect(() => parseJsonFile('package.json', '{')).toThrow(
-        matchFields<GspotError>({
-            name: 'GspotError',
-            code: 'filesystem',
-            message: 'package.json is not valid JSON: Invalid JSON at offset 1: CloseBraceExpected. Fix the file.',
-            cause: expect.any(SyntaxError),
-        }),
-    );
-});
-
-test('JSON with comments names the error offset', () => {
-    expect(() => parseJsonFile('bun.lock', '{"value": }')).toThrow(
-        'bun.lock is not valid JSON: Invalid JSON at offset 10: ValueExpected. Fix the file.',
-    );
+test.each([
+    {
+        path: 'package.json',
+        source: '{',
+        message: 'package.json:1:2 is not valid JSON: CloseBraceExpected. Fix the file.',
+    },
+    {
+        path: 'bun.lock',
+        source: '{"value": }',
+        message: 'bun.lock:1:11 is not valid JSON: ValueExpected. Fix the file.',
+    },
+])('a JSON syntax error names its line and column in $path', ({ path, source, message }) => {
+    expect(() => parseJsonFile(path, source)).toThrow(new Error(message));
 });
 
 test('JSON files accept comments and trailing commas without a JSONC extension', () => {

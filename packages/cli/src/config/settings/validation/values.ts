@@ -8,5 +8,4 @@ export const SETTING_RULES: Readonly<Record<string, Readonly<Record<string, stri
         'gspot/no-trivial-files': 'structure.reexports',
         'n/file-extension-in-import': 'tools.eslint.import_extension',
     },
-    markdownlint: { MD007: 'format.indent_width' },
 };

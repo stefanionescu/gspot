@@ -5,17 +5,20 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { SETTING_REASON } from '#tests/config/commands/set.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     REASON_VALUES,
+    REASON_EXPLANATIONS,
     NAMING_SCOPE_LIMITS,
+    NEUTRAL_SETTING_TEXT,
     SCOPE_SETTING_EXPLANATION,
 } from '#tests/config/commands/explain/settings.ts';
 
 test.each([...NAMING_SCOPE_LIMITS])(
-    "explain shows each scope's default and current naming limit: $key",
+    "explain shows each scope's default and value naming limit: $key",
     async ({ key, shipped, child }) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['naming'], {
                 level: 'all',
                 scopes: [{ path: 'app' }],
@@ -30,14 +33,14 @@ test.each([...NAMING_SCOPE_LIMITS])(
         expect(JSON.parse(explained.stdout)).toMatchObject({
             kind: 'setting',
             scopes: [
-                { scope: '', default: shipped, current: shipped },
-                { scope: 'app', default: shipped, current: child },
+                { scope: '', default: shipped, value: shipped },
+                { scope: 'app', default: shipped, value: child },
             ],
         });
     },
 );
 test('a setting explanation lists settings set only in scopes and each inherited value', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             rules: true,
             tables: '[[scope]]\npath = "api"\nconfigurations = ["jest"]\n[scope.coverage]\nlines = 90\n[[scope]]\npath = "api/worker"\nconfigurations = []\n[scope.coverage]\nlines = 95\n',
@@ -53,6 +56,7 @@ test('a setting explanation lists settings set only in scopes and each inherited
 
 test('explain reads an inherited limits.function_lines value and its reason, and writes nothing', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings(['structure'], {
         scopes: [{ path: 'app' }],
         tables: `[limits]\nfunction_lines = { value = 100, reason = ${JSON.stringify(SETTING_REASON)} }\n`,
@@ -64,7 +68,7 @@ test('explain reads an inherited limits.function_lines value and its reason, and
         kind: 'setting',
         key: 'limits.function_lines',
         type: 'number',
-        scopes: ['', 'app'].map((scope) => ({ scope, current: 100, source: 'gspot.toml', reason: SETTING_REASON })),
+        scopes: ['', 'app'].map((scope) => ({ scope, value: 100, source: 'gspot.toml', reason: SETTING_REASON })),
     });
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
 });
@@ -72,6 +76,7 @@ test.each([...REASON_VALUES])(
     'explain $key shows the value of each scope and asks for a reason only where the value loosens the default',
     async (row) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const explanation = 'The sandbox preserves the project convention for this native setting.';
         const separator = row.key.lastIndexOf('.');
         const table = row.key.slice(0, separator);
@@ -87,32 +92,17 @@ test.each([...REASON_VALUES])(
         });
         const result = await runGspot(sandbox.path, ['explain', row.key]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const sections = result.stdout.split('Scope: ').slice(1);
-        expect(sections).toHaveLength(2);
-        for (const [scope, section, needsReason, target] of [
-            ['root', sections[0]!, row.needsReason[0], ''],
-            ['app', sections[1]!, row.needsReason[1], ' --scope app'],
-        ] as const) {
-            expect(section).toStartWith(`${scope}\n`);
-            expect(section.includes('If you set this value, give a reason:')).toBe(needsReason);
-            expect(section.includes(`Reason on record: ${explanation}`)).toBe(needsReason);
-            expect(section).toContain(`Change it: gspot set ${row.key} <value>${target} [--reason "<why>"]`);
-        }
+        const expected = REASON_EXPLANATIONS[row.key];
+        expect(result.stdout).toBe(expected.text);
         const reported = await runGspot(sandbox.path, ['explain', row.key, '--json']);
         expect(reported.code, reported.stdout + reported.stderr).toBe(0);
-        expect(JSON.parse(reported.stdout)).toMatchObject({
-            key: row.key,
-            scopes: [
-                { scope: '', current: row.current[0] },
-                { scope: 'app', current: row.current[1], ...(row.needsReason[1] ? { reason: explanation } : {}) },
-            ],
-        });
+        expect(JSON.parse(reported.stdout)).toStrictEqual(expected.json);
         expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
     },
 );
 test('a neutral format setting stays settable without a reason', async () => {
     const key = 'format.indent_style';
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['data-files'], { level: 'all', rules: true, scopes: [{ path: 'app' }] }),
         'app/project.toml': 'name = "Project"\n',
     });
@@ -121,42 +111,84 @@ test('a neutral format setting stays settable without a reason', async () => {
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     const human = await runGspot(sandbox.path, ['explain', key]);
     expect(human.code, human.stdout + human.stderr).toBe(0);
-    expect(human.stdout).not.toContain('Reason:');
+    expect(human.stdout).toBe(NEUTRAL_SETTING_TEXT);
     const structured = await runGspot(sandbox.path, ['explain', key, '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
-    expect(JSON.parse(structured.stdout)).not.toHaveProperty('reason_needed');
+    expect(JSON.parse(structured.stdout)).not.toHaveProperty('reason_when');
     expect(JSON.parse(structured.stdout)).toMatchObject({
         scopes: [
-            { scope: '', current: 'space' },
-            { scope: 'app', current: 'tab' },
+            { scope: '', value: 'space' },
+            { scope: 'app', value: 'tab' },
         ],
     });
 });
 
 test('explain shows the default of a path setting joined with the scope, as gspot uses it', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { rules: true, scopes: [{ path: 'web', configurations: ['site'] }] }),
         'web/index.html': '<!doctype html><title>Example</title>\n',
     });
     const explained = await runGspot(sandbox.path, ['explain', 'site.build_folder', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
     const { scopes } = JSON.parse(explained.stdout) as {
-        scopes: { scope: string; default: unknown; current: unknown; source: string }[];
+        scopes: { scope: string; default: unknown; value: unknown; source: string }[];
     };
     expect(scopes.filter((each) => each.scope === 'web')).toStrictEqual([
-        { scope: 'web', default: 'web/dist', current: 'web/dist', source: 'configuration site' },
+        { scope: 'web', default: 'web/dist', value: 'web/dist', source: 'configuration site' },
     ]);
 });
 
 test('explain tells you to write a record list by hand, not with gspot set', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], { rules: true, scopes: [{ path: 'app' }] }),
         'index.js': 'export const example = 1;\n',
         'app/index.js': 'export const example = 1;\n',
     });
     const explained = await runGspot(sandbox.path, ['explain', 'import_rule']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(explained.stdout).toContain('write [[import_rule]] records by hand in gspot.toml');
-    expect(explained.stdout).not.toContain('gspot set');
-    expect(explained.stdout).not.toContain('--scope');
+    expect(explained.stdout.split('\n').slice(4)).toStrictEqual([
+        'Scope: root',
+        'Shipped default: []',
+        'Current value: [] (from configuration structure)',
+        'Change it: write [[import_rule]] records by hand in gspot.toml, then run gspot apply.',
+        '',
+    ]);
+});
+
+test.each(['recommended', 'all'] as const)('set and explain report whether a limit runs at level %s', async (level) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], { level }),
+        'script.sh': 'printf ready\n',
+    });
+    const changed = await runGspot(sandbox.path, [
+        'set',
+        'limits.bash.function_lines',
+        '50',
+        '--reason',
+        'The script keeps one operation together.',
+    ]);
+    expect(changed.code, changed.stdout + changed.stderr).toBe(0);
+    const note = 'note     No selected check reads limits.bash.function_lines at level recommended.';
+    if (level === 'recommended') expect(changed.stdout.split('\n')).toContain(note);
+    else expect(changed.stdout).not.toContain('No selected check reads');
+    const explained = await runGspot(sandbox.path, ['explain', 'limits.bash.function_lines']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(explained.stdout).toContain(
+        level === 'recommended'
+            ? 'Read by: bash/function-size (off at level recommended)'
+            : 'Read by: bash/function-size',
+    );
+    if (level === 'all') expect(explained.stdout).not.toContain('off at level');
+    const machine = await runGspot(sandbox.path, ['explain', 'limits.bash.function_lines', '--json']);
+    expect(machine.code, machine.stdout + machine.stderr).toBe(0);
+    expect(JSON.parse(machine.stdout)).toMatchObject({
+        scopes: [
+            {
+                scope: '',
+                readBy: [
+                    level === 'recommended' ? 'bash/function-size (off at level recommended)' : 'bash/function-size',
+                ],
+            },
+        ],
+    });
 });

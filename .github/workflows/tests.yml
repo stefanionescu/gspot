@@ -1,12 +1,9 @@
-# Run the unit, integration, and end-to-end tests on Linux, macOS, and Windows.
 name: tests
 on:
     push:
         branches: [main]
 permissions:
     contents: read
-concurrency:
-    group: ${{ github.workflow }}-${{ github.run_id }}
 jobs:
     test:
         name: ${{ matrix.suite }} (${{ matrix.os }})
@@ -25,9 +22,6 @@ jobs:
               with:
                   version: '2026.10.7'
                   install_args: bun node
-            # The C: drive of a Windows runner writes files many times slower than D:, which holds the runner's temporary
-            # folder. Keep the test sandboxes and the npm cache on D:. This step follows mise-action, which renames
-            # files from its temporary folder into C: and fails across drives.
             - if: runner.os == 'Windows'
               shell: pwsh
               run: |

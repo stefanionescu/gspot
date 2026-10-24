@@ -1,15 +1,22 @@
 {
     "recommended": {
         "package": "eslint-plugin-astro",
-        "version": "1.7.0",
+        "version": "3.2.1",
         "source": "configs.flat/recommended",
         "blocks": [
             { "parser": false },
-            { "files": ["*.astro", "**/*.astro"], "parser": true, "rules": {} },
-            { "files": ["**/*.astro/*.js", "*.astro/*.js"], "parser": false, "rules": { "prettier/prettier": "off" } },
-            { "files": ["**/*.astro/*.ts", "*.astro/*.ts"], "parser": true, "rules": { "prettier/prettier": "off" } },
+            { "files": ["*.astro", "**/*.astro"], "rules": {}, "parser": true },
             {
-                "parser": false,
+                "files": ["**/*.astro/*.js", "*.astro/*.js"],
+                "rules": { "prettier/prettier": "off" },
+                "parser": false
+            },
+            {
+                "files": ["**/*.astro/*.ts", "*.astro/*.ts"],
+                "rules": { "prettier/prettier": "off" },
+                "parser": true
+            },
+            {
                 "rules": {
                     "astro/missing-client-only-directive-value": "error",
                     "astro/no-conflict-set-directives": "error",
@@ -17,23 +24,32 @@
                     "astro/no-deprecated-astro-fetchcontent": "error",
                     "astro/no-deprecated-astro-resolve": "error",
                     "astro/no-deprecated-getentrybyslug": "error",
-                    "astro/no-unused-define-vars-in-style": "error",
-                    "astro/valid-compile": "error"
-                }
+                    "astro/no-exports-from-components": "error",
+                    "astro/no-prerender-export-outside-pages": "error",
+                    "astro/no-unused-define-vars-in-style": "error"
+                },
+                "parser": false
             }
         ]
     },
     "accessibility": {
         "package": "eslint-plugin-astro",
-        "version": "1.7.0",
+        "version": "3.2.1",
         "source": "configs.flat/jsx-a11y-recommended",
         "blocks": [
             { "parser": false },
-            { "files": ["*.astro", "**/*.astro"], "parser": true, "rules": {} },
-            { "files": ["**/*.astro/*.js", "*.astro/*.js"], "parser": false, "rules": { "prettier/prettier": "off" } },
-            { "files": ["**/*.astro/*.ts", "*.astro/*.ts"], "parser": true, "rules": { "prettier/prettier": "off" } },
+            { "files": ["*.astro", "**/*.astro"], "rules": {}, "parser": true },
             {
-                "parser": false,
+                "files": ["**/*.astro/*.js", "*.astro/*.js"],
+                "rules": { "prettier/prettier": "off" },
+                "parser": false
+            },
+            {
+                "files": ["**/*.astro/*.ts", "*.astro/*.ts"],
+                "rules": { "prettier/prettier": "off" },
+                "parser": true
+            },
+            {
                 "rules": {
                     "astro/jsx-a11y/alt-text": "error",
                     "astro/jsx-a11y/anchor-ambiguous-text": "off",
@@ -49,7 +65,15 @@
                     "astro/jsx-a11y/control-has-associated-label": [
                         "off",
                         {
-                            "ignoreElements": ["audio", "canvas", "embed", "input", "textarea", "tr", "video"],
+                            "ignoreElements": [
+                                "audio",
+                                "canvas",
+                                "embed",
+                                "input",
+                                "textarea",
+                                "tr",
+                                "video"
+                            ],
                             "ignoreRoles": [
                                 "grid",
                                 "listbox",
@@ -71,7 +95,17 @@
                     "astro/jsx-a11y/img-redundant-alt": "error",
                     "astro/jsx-a11y/interactive-supports-focus": [
                         "error",
-                        { "tabbable": ["button", "checkbox", "link", "searchbox", "spinbutton", "switch", "textbox"] }
+                        {
+                            "tabbable": [
+                                "button",
+                                "checkbox",
+                                "link",
+                                "searchbox",
+                                "spinbutton",
+                                "switch",
+                                "textbox"
+                            ]
+                        }
                     ],
                     "astro/jsx-a11y/label-has-associated-control": "error",
                     "astro/jsx-a11y/label-has-for": "off",
@@ -109,7 +143,15 @@
                         {
                             "ul": ["listbox", "menu", "menubar", "radiogroup", "tablist", "tree", "treegrid"],
                             "ol": ["listbox", "menu", "menubar", "radiogroup", "tablist", "tree", "treegrid"],
-                            "li": ["menuitem", "menuitemradio", "menuitemcheckbox", "option", "row", "tab", "treeitem"],
+                            "li": [
+                                "menuitem",
+                                "menuitemradio",
+                                "menuitemcheckbox",
+                                "option",
+                                "row",
+                                "tab",
+                                "treeitem"
+                            ],
                             "table": ["grid"],
                             "td": ["gridcell"],
                             "fieldset": ["radiogroup", "presentation"]
@@ -124,14 +166,22 @@
                         "error",
                         {
                             "allowExpressionValues": true,
-                            "handlers": ["onClick", "onMouseDown", "onMouseUp", "onKeyPress", "onKeyDown", "onKeyUp"]
+                            "handlers": [
+                                "onClick",
+                                "onMouseDown",
+                                "onMouseUp",
+                                "onKeyPress",
+                                "onKeyDown",
+                                "onKeyUp"
+                            ]
                         }
                     ],
                     "astro/jsx-a11y/role-has-required-aria-props": "error",
                     "astro/jsx-a11y/role-supports-aria-props": "error",
                     "astro/jsx-a11y/scope": "error",
                     "astro/jsx-a11y/tabindex-no-positive": "error"
-                }
+                },
+                "parser": false
             }
         ]
     }

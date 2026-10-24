@@ -51,6 +51,11 @@ function getChangedBase(changed: CheckFlags['changed']): string | undefined {
     return changed === true ? '' : undefined;
 }
 
+function getAllFilesCause(changed: CheckFlags['changed']): CheckOptions['allFiles'] {
+    if (typeof changed !== 'string' || !NO_BASE_REVISION.test(changed)) return undefined;
+    return changed === '' ? 'empty-base' : 'new-branch';
+}
+
 function buildCheckOptions(paths: string[], flags: CheckFlags, cwd: string): CheckOptions {
     const hook = flags.hook;
     let stage: CheckOptions['stage'];
@@ -65,6 +70,7 @@ function buildCheckOptions(paths: string[], flags: CheckFlags, cwd: string): Che
         paths: hook === 'commit-msg' ? [] : paths,
         ...stripUndefined({
             hook,
+            allFiles: getAllFilesCause(flags.changed),
             only: flags.only,
             base: getChangedBase(flags.changed),
             messageFile: hook === 'commit-msg' && paths[0] !== undefined ? resolve(cwd, paths[0]) : undefined,
@@ -98,9 +104,9 @@ function assertPushFlags(flags: CheckFlags): void {
         );
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
 function formatStagedFlag(hook: CheckFlags['hook']): string {
-    if (hook === 'pre-commit') return '--hook pre-commit';
-    return '--staged';
+    return hook === 'pre-commit' ? '--hook pre-commit' : '--staged';
 }
 
 function assertCheckSelection(options: CheckOptions, flags: CheckFlags): void {
@@ -127,7 +133,8 @@ function assertGitSelection(root: string, options: CheckOptions): void {
 }
 
 function assertMessageSelection(options: CheckOptions, paths: string[]): void {
-    const messageCheck = [...readConfigurations().values()]
+    const messageCheck = readConfigurations()
+        .values()
         .flatMap(({ checks }) => checks)
         .find((check) => check.stage === 'message' && options.only?.includes(check.id) === true);
     if (messageCheck !== undefined && options.messageFile === undefined)
@@ -172,6 +179,7 @@ async function checkStaged(
     using copy = await copyRevision(root, { kind: 'index' }, cancelSignal);
     const paths = options.paths.map((path) => buildRepositoryPath(root, options.cwd, path));
     return await checkTree(copy.root, { ...options, cwd: copy.root, paths }, cancelSignal, {
+        ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
         content: 'index',
         cwd: options.cwd,
         paths: options.paths,
@@ -182,14 +190,14 @@ async function checkStaged(
     });
 }
 
-async function runCheckCommand(
+async function runCheckSelection(
     root: string,
     options: CheckOptions,
     cancelSignal: AbortSignal,
 ): Promise<CommandResult<CheckCommandJson>> {
     if (options.hook === 'pre-push') {
         const input = await readPushInput(cancelSignal);
-        const push = { stdin: input, ...(options.paths[0] === undefined ? {} : { remote: options.paths[0] }) };
+        const push = { stdin: input, ...(options.paths[0] !== undefined && { remote: options.paths[0] }) };
         return await checkPush(root, { ...options, paths: [], push }, cancelSignal);
     }
     return await (options.staged ? checkStaged(root, options, cancelSignal) : checkTree(root, options, cancelSignal));
@@ -199,7 +207,7 @@ async function runCheck(paths: string[], flags: CheckFlags, cwd: string): Promis
     try {
         return await runCancelableCommand(async (cancelSignal) => {
             const { root, options } = parseCheckFlags(paths, flags, cwd);
-            return await runCheckCommand(root, options, cancelSignal);
+            return await runCheckSelection(root, options, cancelSignal);
         }, 'Check stopped before every check finished.');
     } finally {
         if (flags.json !== true && process.stderr.isTTY) process.stderr.write(PROGRESS_CLEAR);

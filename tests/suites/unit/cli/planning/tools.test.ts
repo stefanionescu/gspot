@@ -9,7 +9,13 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { listOtherTools, listCheckTools } from '#cli/planning/tools.ts';
-import { NODE_REQUIREMENTS, COVERAGE_PROVIDERS, ARCHITECTURE_REQUIREMENTS } from '#tests/config/planning/tools.ts';
+
+import {
+    NODE_REQUIREMENTS,
+    COVERAGE_PROVIDERS,
+    INDEPENDENT_LIBRARIES,
+    ARCHITECTURE_REQUIREMENTS,
+} from '#tests/config/planning/tools.ts';
 
 test.each([...NODE_REQUIREMENTS])(
     'the needed tools include Node only when an npm tool needs it: $name',
@@ -74,11 +80,14 @@ describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...r
             checks = planChecks(session, { stage: 'push', only: [configuration + '/coverage'] });
         });
         afterAll(() => resources.disposeAsync());
-        test.each(['', 'app'])('scope %s needs the coverage provider and lists it among the other tools', (scope) => {
-            const check = checks.find((planned) => planned.scope.folder.path === scope)!;
-            expect(listCheckTools(check).includes(provider)).toBe(lines !== 0);
-            expect(listOtherTools(check.scope, check.check, check.check.command)).toContain(provider);
-        });
+        test.each(['', 'app'])(
+            'scope %p needs the coverage provider only above a zero limit and always lists it among the other tools',
+            (scope) => {
+                const check = checks.find((planned) => planned.scope.folder.path === scope)!;
+                expect(listCheckTools(check)).toStrictEqual([configuration, ...(lines === 0 ? [] : [provider])]);
+                expect(listOtherTools(check.scope, check.check, check.check.command)).toStrictEqual([provider]);
+            },
+        );
     },
 );
 
@@ -109,6 +118,5 @@ test('omitting coverage keeps unrelated system libraries required by another con
         ),
     };
     const companions = listOtherTools(scope, check, ['vitest', 'run']);
-    expect(companions).toContain('independent-support');
-    expect(companions).not.toContain('@vitest/coverage-v8');
+    expect(companions).toStrictEqual([...INDEPENDENT_LIBRARIES]);
 });

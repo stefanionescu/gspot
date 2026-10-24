@@ -3,6 +3,8 @@ import type { Sandbox } from '#tests/types/sandbox.ts';
 export type GspotProject = AsyncDisposable & {
     root: string;
     workspace: string;
+    environment: Record<string, string>;
+    buildSandbox: (changes: Readonly<Record<string, string | undefined>>) => Sandbox;
     online: Sandbox;
     offline: Sandbox;
 };
@@ -18,7 +20,7 @@ export type RegistryPackage = {
 
 export type PackedPackage = Omit<RegistryPackage, 'source'> & { filename: string; integrity: string };
 
-export type NpmRegistry = AsyncDisposable & { url: string; npmrc: string; readonly requests: number };
+export type NpmRegistry = Disposable & { url: string; npmrc: string; requests: number };
 
 export type NpmProject = {
     root: string;
@@ -40,4 +42,9 @@ export type IndexedPythonProject = AsyncDisposable & {
     rootProject: Buffer<ArrayBuffer>;
     rootConfiguration: Buffer<ArrayBuffer>;
     projectFiles: ToolProjectFiles;
+};
+
+export type PythonProject = AsyncDisposable & {
+    rootProject: Buffer<ArrayBuffer>;
+    rootConfiguration: Buffer<ArrayBuffer>;
 };

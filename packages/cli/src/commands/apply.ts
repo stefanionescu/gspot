@@ -9,23 +9,40 @@ import { type Command } from '@commander-js/extra-typings';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { DRY_RUN_NOTE } from '#cli/config/commands/apply.ts';
+import { TOOL_LOCKFILES } from '#cli/config/gspot-folder.ts';
 import { readVersionPin } from '#cli/repository/version-pin.ts';
 import { listOutdatedFiles } from '#cli/apply/files/outdated.ts';
 import { type DryRunJson, type ApplyOptions } from '#cli/types/commands/apply.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { formatUpToDate, formatApplyReport, writeGeneratedFiles } from '#cli/apply/files/generated.ts';
 
+function formatFileChanges(files: OutdatedFile[], repair: string): string[] {
+    const lines: string[] = [];
+    if (files.length === 0) return lines;
+    for (const file of files) {
+        lines.push(`  ${file.path}  ${file.kind}`);
+        if (file.diff !== undefined && file.diff !== '')
+            lines.push(...file.diff.split('\n').map((line) => `    ${line}`));
+    }
+    return [...lines, '', repair, ''];
+}
+
 function formatOutdatedFiles(outdatedFiles: OutdatedFile[]): string {
     const lines = [
         `${formatCount(outdatedFiles.length, 'generated file')} ${outdatedFiles.length === 1 ? 'needs' : 'need'} updating:`,
         '',
     ];
-    for (const outdatedFile of outdatedFiles) {
-        const differences = (outdatedFile.diff ?? '').split('\n').map((line) => `    ${line}`);
-        lines.push(`  ${outdatedFile.path}  ${outdatedFile.kind}`);
-        if ((outdatedFile.diff ?? '') !== '') lines.push(...differences);
-    }
-    lines.push('', 'Run gspot apply to write these files.');
+    const groups = [
+        {
+            files: outdatedFiles.filter(({ path }) => !TOOL_LOCKFILES.has(path)),
+            repair: 'Run gspot apply to write these files.',
+        },
+        {
+            files: outdatedFiles.filter(({ path }) => TOOL_LOCKFILES.has(path)),
+            repair: 'Run gspot install to write the tool lockfiles.',
+        },
+    ];
+    for (const group of groups) lines.push(...formatFileChanges(group.files, group.repair));
     return `${lines.join('\n')}\n`;
 }
 
@@ -44,8 +61,8 @@ async function runApplyCommand(options: ApplyOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     const session = await openSession(root);
     if (options.isDryRun) return buildDryRunResult(session);
-    using log = openWriter(root);
-    const report = await writeGeneratedFiles(session, generate(session), log);
+    using writer = openWriter(root);
+    const report = await writeGeneratedFiles(session, generate(session), writer);
     return { text: formatApplyReport(report), json: report, exitCode: 0 };
 }
 

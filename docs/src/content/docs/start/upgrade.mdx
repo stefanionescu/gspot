@@ -20,14 +20,13 @@ and put it in place of `<version>` below.
     ))}
 </Tabs>
 
-`gspot apply` writes the new version to `.gspot/version` and updates the generated
-files. If it refuses a key of `gspot.toml`, the message names the close keys. Edit `gspot.toml`, then run `gspot apply`
-again.
+`gspot apply` writes the new version to `.gspot/version` and updates the generated files. If it refuses a key of
+`gspot.toml`, the message names the close keys. Edit `gspot.toml`, then run `gspot apply` again.
 
-When `gspot apply` succeeds, review the diff and fix any findings. Then commit the generated files that changed, in `.gspot/` and outside it,
-and either `package.json` with its lockfile or `mise.toml`, together. Commit `gspot.toml` too if you changed it to fix
-findings. Every other clone then runs `gspot install`. See
-[Set up a clone](/start/install/#set-up-a-clone).
+When `gspot apply` succeeds, review the diff and fix any findings. Then commit the generated files that changed, in
+`.gspot/` and outside it, and either `package.json` with its lockfile or `mise.toml`, together. Commit `gspot.toml` too
+if you changed it to fix findings. Every other clone then runs `gspot install`. See [Set up a
+clone](/start/install/#set-up-a-clone).
 
 If `gspot apply` says that it did not overwrite some files, gspot did not write them. Move each one aside, then run
 `gspot apply` again.

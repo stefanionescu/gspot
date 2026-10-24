@@ -3,8 +3,8 @@ import type { SchemaShape } from '#cli/types/shapes.ts';
 import type { EslintPresets } from '#cli/types/generation/eslint.ts';
 
 const eslintPresetBlockSchema = z.strictObject({
-    files: z.array(z.union([z.string(), z.array(z.string())])).exactOptional(),
-    ignores: z.array(z.string()).exactOptional(),
+    files: z.union([z.string(), z.string().array()]).array().exactOptional(),
+    ignores: z.string().array().exactOptional(),
     basePath: z.string().exactOptional(),
     parser: z.boolean(),
     rules: z.record(z.string(), z.json()).exactOptional(),
@@ -16,3 +16,5 @@ export const eslintPresetSchema = z.strictObject({
     source: z.string(),
     blocks: z.tuple([eslintPresetBlockSchema], eslintPresetBlockSchema),
 } satisfies SchemaShape<EslintPresets[string]>);
+
+export const eslintPresetsSchema = z.record(z.string(), eslintPresetSchema) satisfies z.ZodType<EslintPresets>;

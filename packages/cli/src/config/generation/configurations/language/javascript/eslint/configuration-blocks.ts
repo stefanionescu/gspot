@@ -12,12 +12,6 @@ const EXPRESS_RULES = { 'security/detect-no-csrf-before-method-override': 'error
 const REACT_NATIVE_RULES = {
     '@react-native/platform-colors': 'error',
     '@react-native/no-deep-imports': 'error',
-    'react-native/no-unused-styles': 'error',
-    'react-native/no-single-element-style-arrays': 'error',
-
-    'react-native/split-platform-components': 'error',
-    'react-native/no-inline-styles': 'error',
-    'react-native/no-color-literals': 'error',
 } as const;
 
 const TRANSLATIONS_RULES = { 'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }] } as const;
@@ -44,7 +38,6 @@ export const CONFIGURATION_PLUGINS = {
     expo: { expoPlugin: ['expoPlugin', 'eslint-plugin-expo'] },
     'react-native': {
         reactNativePlatform: ['reactNativePlatform', '@react-native/eslint-plugin'],
-        reactNative: ['reactNative', 'eslint-plugin-react-native'],
     },
     zod: { zodPlugin: ['zodPlugin', 'eslint-plugin-zod'] },
     translations: { i18next: ['i18next', 'eslint-plugin-i18next'] },
@@ -57,7 +50,7 @@ export const CONFIGURATION_PLUGINS = {
         vueParser: ['vueParser', 'vue-eslint-parser'],
         vueAccessibility: ['vueAccessibility', 'eslint-plugin-vuejs-accessibility'],
     },
-    'react-dom': { accessibility: ['accessibility', 'eslint-plugin-jsx-a11y'] },
+    'react-dom': { accessibility: ['accessibility', 'eslint-plugin-jsx-a11y-x'] },
     astro: { astroPlugin: ['astroPlugin', 'eslint-plugin-astro'] },
     zustand: {},
     svelte: {
@@ -77,7 +70,7 @@ export const CONFIGURATION_PLUGINS = {
     'testing-library': { testingLibrary: ['testingLibrary', 'eslint-plugin-testing-library'] },
     react: {
         reactHooks: ['reactHooks', 'eslint-plugin-react-hooks'],
-        react: ['react', 'eslint-plugin-react'],
+        react: ['react', '@eslint-react/eslint-plugin'],
         reactRefresh: ['reactRefresh', 'eslint-plugin-react-refresh'],
     },
     drizzle: { drizzlePlugin: ['drizzlePlugin', 'eslint-plugin-drizzle'] },
@@ -127,7 +120,7 @@ export const PLUGIN_RULE_BLOCKS: Readonly<
     express: { imports: {}, properties: '', files: 'code', rules: EXPRESS_RULES },
     'react-native': {
         imports: CONFIGURATION_PLUGINS['react-native'],
-        properties: "plugins: { '@react-native': reactNativePlatform, 'react-native': reactNative }",
+        properties: "plugins: { '@react-native': reactNativePlatform }",
         files: 'code',
         rules: REACT_NATIVE_RULES,
     },

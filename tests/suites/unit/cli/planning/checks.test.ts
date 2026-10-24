@@ -176,12 +176,10 @@ test.each([...LEVELS])('%s plans history checks once at the root and only for pu
     expect(
         planChecks(session, { stage: 'push', only: names, staged: [], commits: [] }).map((check) => isActive(check)),
     ).toStrictEqual(names.map(() => false));
-    expect(() =>
-        planChecks(session, { stage: 'push', only: ['secrets/gitleaks-pushed'], historyComplete: false }),
-    ).toThrow(
+    expect(() => planChecks(session, { stage: 'push', only: ['secrets/gitleaks-pushed'], shallow: true })).toThrow(
         new Error('Pushed history is incomplete for secrets/gitleaks-pushed. Run git fetch --unshallow and retry.'),
     );
-    expect(planChecks(session, { stage: 'push', only: ['sandbox/once'], historyComplete: false })).toHaveLength(1);
+    expect(planChecks(session, { stage: 'push', only: ['sandbox/once'], shallow: true })).toHaveLength(1);
 });
 test.each([...CONFIGURED_CHECK_CASES])(
     'planning $check keeps its declared config-file selection $selected: $name',

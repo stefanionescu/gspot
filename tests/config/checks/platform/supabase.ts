@@ -57,10 +57,6 @@ export const SECRET_KEY_READS = [
 
 export const HELLO_EDGE_FUNCTION = 'Deno.serve(() => new Response("hello"));\n';
 
-export const INVALID_BUCKETS_CONFIG = '[storage]\nbuckets = "avatars"\n';
-
-export const AVATARS_BUCKET_CONFIG = '[storage.buckets.avatars]\npublic = false\n';
-
 export const SERVICE_ROLE_CLIENT_FILES = [
     'client.astro',
     'client.cjs',

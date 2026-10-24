@@ -6,7 +6,6 @@ import { openSession } from '#cli/session.ts';
 import { generate } from '#cli/generation/generate.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { createReadCache } from '#cli/system/files/cache.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -68,10 +67,11 @@ test.each(['recommended', 'all'] as const)('JavaScript implicit parameters follo
             'export function total(items) { return items.length; }\n/** @type {number} */\nexport const count = "one";\n',
     });
     await applyGeneratedFiles(sandbox.path);
+    const session = await openSession(sandbox.path);
     const project = readTsconfig(
         sandbox.path,
         join(sandbox.path, findManifestTarget('javascript', 'jsconfig.json')),
-        createReadCache(sandbox.path),
+        session.reads,
     )!;
     const program = ts.createProgram(project.fileNames, { ...project.options, noLib: true });
     const errorCodes = new Set(program.getSemanticDiagnostics().map(({ code }) => code));

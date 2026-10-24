@@ -32,10 +32,3 @@ export const FIX_LINTER_CASES = [
         corrected: 'a { color: #fff; }\n',
     },
 ] as const;
-
-export const GENERATED_TYPE_FILES = [
-    'app/next-env.d.ts',
-    'app/worker-configuration.d.ts',
-    'next-env.d.ts',
-    'worker-configuration.d.ts',
-] as const;

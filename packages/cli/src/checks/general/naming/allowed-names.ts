@@ -67,13 +67,15 @@ export async function checkNamingAllowedNames(session: Session, planned: Planned
                 .flatMap((file) => {
                     if (file.declarations === undefined) return [];
                     if (override.categories === undefined) return file.names;
-                    if (override.categories.includes('files')) return [...file.declarations, file.stem];
-                    return file.declarations;
+                    return override.categories.includes('files')
+                        ? [...file.declarations, file.stem]
+                        : file.declarations;
                 }),
         );
         if (override.categories === undefined || override.categories.includes('folders')) {
-            for (const identifier of folders.filter((identifier) => matches(identifier.folder ?? identifier.file)))
-                sourceNames.add(identifier.name);
+            for (const identifier of folders) {
+                if (matches(identifier.folder ?? identifier.file)) sourceNames.add(identifier.name);
+            }
         }
         return (override.allowed_names ?? [])
             .filter((name) => !sourceNames.has(name))

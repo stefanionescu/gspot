@@ -1,4 +1,3 @@
-/* Setup card: two modes in one card. Both panels share one grid cell, so the card keeps its height when the mode changes. */
 .setup {
     display: block;
     width: 100%;

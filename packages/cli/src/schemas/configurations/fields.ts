@@ -7,14 +7,15 @@ import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects/dependencies.t
 import { LEVELS, STAGES, MAX_EXIT_CODE } from '#cli/config/configurations/names.ts';
 import type { Level, Stage, ParsedCheck, ConditionFields } from '#cli/types/configurations.ts';
 
-const findingExitCodesSchema = z.array(z.number().int().min(1).max(MAX_EXIT_CODE));
+const findingExitCodesSchema = z.number().int().min(1).max(MAX_EXIT_CODE).array();
 
 export const nonemptyString = z.string().min(1);
 
 export const checkStageSchema = z.enum(STAGES) satisfies z.ZodType<Stage>;
 
 export const commandSchema = z
-    .array(z.string())
+    .string()
+    .array()
     .min(1)
     .refine((command) => command[0] !== '', { message: 'The executable cannot be empty.', path: [0] })
     .meta({ prefixItems: [{ type: 'string', minLength: 1 }] });
@@ -38,11 +39,11 @@ export const conditionSchema = z.strictObject({
     level: levelSchema,
     setting: z.string().min(1),
     git: z.literal(true),
-    dependencies: z.array(z.string().min(1)).min(1),
-    absent_dependencies: z.array(z.string().min(1)).min(1),
-    filenames: z.array(z.string().min(1)).min(1),
-    tags: z.array(z.string().min(1)).min(1),
-    runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).min(1),
+    dependencies: z.string().min(1).array().min(1),
+    absent_dependencies: z.string().min(1).array().min(1),
+    filenames: z.string().min(1).array().min(1),
+    tags: z.string().min(1).array().min(1),
+    runtimes: z.enum(JAVASCRIPT_RUNTIMES).array().min(1),
 } satisfies SchemaShape<ConditionFields>);
 
 export const commandCheckFields = {

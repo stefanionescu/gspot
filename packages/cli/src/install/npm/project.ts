@@ -16,36 +16,32 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { parseToolPackageJson } from '#cli/install/npm/package-json.ts';
 import { type NpmToolProject } from '#cli/types/install/tool-projects.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
+import { buildPackageManagerCommand } from '#cli/repository/npm/package-manager.ts';
 import { isLockfileFresh, stripBunRegistryUrls } from '#cli/install/npm/lockfiles.ts';
-import { type PackageManagerRun, type PackageManagerCommand } from '#cli/types/install/npm.ts';
 import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/install/credentials.ts';
 import { RELEASE_AGE_FILES, RELEASE_AGE_VERSIONS } from '#cli/config/install/npm/release-age.ts';
 import { YARN_SETTINGS_FILE, YARN_INSTALL_SETTINGS_FILE } from '#cli/config/install/npm/yarn.ts';
-import { assertPackageManager, readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import { writeNpmrc, readRegistryEnvironment, extractRegistryCredentials } from '#cli/install/npm/registry.ts';
+import { type NpmToolInstall, type PackageManagerRun, type PackageManagerCommand } from '#cli/types/install/npm.ts';
 
 import {
     NODE_TOOL,
     NPMRC_FILE,
     NPM_SETTING_PREFIX,
+    YARN_ENABLE_SCRIPTS,
     PACKAGE_MANAGER_ARGUMENTS,
     NPM_CONFIG_FOLDER_VARIABLE,
     YARN_SETTINGS_FILE_VARIABLE,
 } from '#cli/config/install/npm/project.ts';
 
 async function createNpmLockfile(
-    install: ToolInstall,
+    install: NpmToolInstall,
     toolProjectFile: GeneratedFile,
     project: NpmToolProject,
     recorded: string | undefined,
     yarn: string | undefined,
 ): Promise<string> {
-    const packageManager = readToolPackageManager(
-        install.session.installedRoot,
-        assertPackageManager(install.session.packageManager),
-        install.session.timeoutSeconds,
-        install.session.reads,
-    );
+    const packageManager = install.packageManager;
     if (which.sync(NODE_TOOL, { nothrow: true }) === null)
         throw new GspotError('install', 'The npm tool project needs Node.js to create its lockfile. Install Node.js.');
     using scratch = createTemporaryFolder();
@@ -63,6 +59,7 @@ async function createNpmLockfile(
         packageManager,
         commandArguments: prepareReleaseAge(runFolder, lockfileArguments, packageManager, days),
         failure: 'lockfile resolution failed',
+        days,
     });
     const lockfilePath = join(runFolder, project.lockfile);
     let lockfile = readFileSync(lockfilePath, 'utf8');
@@ -82,7 +79,7 @@ async function createNpmLockfile(
 
 async function runPackageManager(install: ToolInstall, request: PackageManagerCommand): Promise<PackageManagerRun> {
     const { root } = install.session;
-    const { runFolder, packageManager, commandArguments, failure } = request;
+    const { runFolder, packageManager, commandArguments, failure, days } = request;
     const env = await readRegistryEnvironment(root);
     const credentials = extractRegistryCredentials(env);
     using settings = createTemporaryFolder();
@@ -91,16 +88,20 @@ async function runPackageManager(install: ToolInstall, request: PackageManagerCo
         env[`${NPM_SETTING_PREFIX}userconfig`] = join(settings.path, NPMRC_FILE);
         env[NPM_CONFIG_FOLDER_VARIABLE] = settings.path;
         if (packageManager.name === 'yarn') {
-            credentials.push(...(await writeYarnSettings(install, runFolder, env)));
+            env[YARN_ENABLE_SCRIPTS] = '0';
+            credentials.push(...(await writeYarnSettings(install, runFolder, env, days)));
             env[YARN_SETTINGS_FILE_VARIABLE] = YARN_INSTALL_SETTINGS_FILE;
         }
+        const projectPackageManager = install.session.packageManager;
+        const commandPackageManager =
+            projectPackageManager?.name === packageManager.name ? projectPackageManager : { name: packageManager.name };
         const args = [...commandArguments];
         if (packageManager.name === 'bun') {
-            const days = getTable(findRootScope(install.session.scopes).settings, 'dependencies').min_release_age_days;
             prepareReleaseAge(settings.path, args, packageManager, days);
             args.push(`--config=${join(settings.path, RELEASE_AGE_FILES.bun)}`);
         }
-        const result = await runInstallStep(install, args, { cwd: runFolder, env });
+        const command = buildPackageManagerCommand(commandPackageManager, args.slice(1));
+        const result = await runInstallStep(install, command, { cwd: runFolder, env });
         if (result.code !== 0) {
             throw new GspotError(
                 'install',
@@ -120,18 +121,13 @@ Verify the package manager executable before install changes any tool project fi
 */
 export async function assertPackageManagerVersion(install: ToolInstall): Promise<void> {
     const { session } = install;
-    const packageManager =
-        session.packageManager === undefined
-            ? undefined
-            : readToolPackageManager(
-                  session.installedRoot,
-                  assertPackageManager(session.packageManager),
-                  session.timeoutSeconds,
-                  session.reads,
-              );
+    const packageManager = install.packageManager;
     if (packageManager === undefined) return;
     const { root } = session;
-    const versionCommand = [packageManager.name, VERSION_FLAG];
+    const projectPackageManager = session.packageManager;
+    const commandPackageManager =
+        projectPackageManager?.name === packageManager.name ? projectPackageManager : { name: packageManager.name };
+    const versionCommand = buildPackageManagerCommand(commandPackageManager, [VERSION_FLAG]);
     const version = await runInstallStep(install, versionCommand, { cwd: root });
     const requirement = `${String(semver.major(packageManager.version))}.x`;
     const found = version.stdout.trim();
@@ -164,18 +160,13 @@ Prepare the npm tool project lockfile, free of credentials.
 @returns the lockfile and its recorded bytes.
 */
 export async function prepareNpmLockfile(
-    install: ToolInstall,
+    install: NpmToolInstall,
     toolProjectFile: GeneratedFile,
     yarn: string | undefined,
 ): Promise<GeneratedFile> {
     const { root } = install.session;
-    const owner = install.writer.files;
-    const packageManager = readToolPackageManager(
-        install.session.installedRoot,
-        assertPackageManager(install.session.packageManager),
-        install.session.timeoutSeconds,
-        install.session.reads,
-    );
+    const owner = install.writer;
+    const packageManager = install.packageManager;
     const project = parseToolPackageJson(toolProjectFile.content, packageManager.name);
     const original = owner.read(project.lockfilePath);
     const recorded = original?.bytes.toString('utf8');
@@ -203,18 +194,13 @@ Install the npm tool project in .gspot.
 @param install what install needs for this step.
 @returns the install summary.
 */
-export async function installNpmTools(install: ToolInstall): Promise<string> {
+export async function installNpmTools(install: NpmToolInstall): Promise<string> {
     const { session } = install;
     const { root } = session;
-    const owner = install.writer.files;
+    const owner = install.writer;
     const toolProjectFile = owner.read(GSPOT_PATHS.npmProject);
     if (toolProjectFile === undefined) return '';
-    const packageManager = readToolPackageManager(
-        session.installedRoot,
-        assertPackageManager(session.packageManager),
-        session.timeoutSeconds,
-        session.reads,
-    );
+    const packageManager = install.packageManager;
     const project = parseToolPackageJson(toolProjectFile.bytes.toString('utf8'), packageManager.name);
     owner.deleteTree(GSPOT_PATHS.nodeModules);
     const runFolder = join(root, DOT_GSPOT);
@@ -223,6 +209,7 @@ export async function installNpmTools(install: ToolInstall): Promise<string> {
         packageManager,
         commandArguments: [...PACKAGE_MANAGER_ARGUMENTS[packageManager.name].install],
         failure: 'installation failed',
+        days: getTable(findRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
     });
     return `installed ${formatCount(Object.keys(project.dependencies).length, 'npm tool')} in ${GSPOT_PATHS.nodeModules} (${packageManager.name} ${packageManager.version})`;
 }

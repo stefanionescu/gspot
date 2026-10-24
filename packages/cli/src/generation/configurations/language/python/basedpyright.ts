@@ -27,13 +27,13 @@ export function buildBasedpyrightFile(planned: PlannedConfigFile): string {
     )
         ? PYTHON_ENVIRONMENT_FOLDER
         : undefined;
-    const extraPaths = planned.scope.settings.values.python?.extra_paths ?? [];
+    const extraPaths = planned.scope.settings.values.python?.import_folders ?? [];
     return JSON.stringify(
         {
             ...BASEDPYRIGHT_OPTIONS,
-            ...(planned.level === 'all' ? BASEDPYRIGHT_ALL_LEVEL_OPTIONS : {}),
+            ...(planned.level === 'all' && BASEDPYRIGHT_ALL_LEVEL_OPTIONS),
             typeCheckingMode: planned.level,
-            ...(pythonVenv === undefined ? {} : { venvPath: pythonScopePath, venv: pythonVenv }),
+            ...(pythonVenv !== undefined && { venvPath: pythonScopePath, venv: pythonVenv }),
             include: [pythonScopePath],
             extraPaths: [pythonScopePath, ...extraPaths.map((path) => posix.join(pythonScopePath, path))],
             exclude: listPythonIgnoredGlobs(planned, 'python/basedpyright'),

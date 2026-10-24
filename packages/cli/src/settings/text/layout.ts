@@ -32,7 +32,8 @@ import {
 
 function encodeAssignment(key: string, value: unknown, path: KeyPath): { text: string; pair: TomlKeyValue } {
     const assignment = stringify({ [key]: value }, TOML_ASSIGNMENT_FORMAT);
-    const text = path[0] === 'scope' && key.includes('.') ? assignment.replace(JSON.stringify(key), key) : assignment;
+    const text =
+        path[0] === 'scope' && key.includes('.') ? assignment.replace(JSON.stringify(key), () => key) : assignment;
     const pair = parseDocument(text).cst.find((node) => isTomlKind(node, 'KeyValue')) as TomlKeyValue;
     return { text, pair };
 }
@@ -71,18 +72,18 @@ function splitSection(
     const isToolRule = (path[0] === 'tools' || path[2] === 'tools') && path.at(-1) === 'rules';
     const childRows = Object.entries(value).map(([key, child]) => {
         const isChildTable = isTable(child);
-        const reasonedValue = isReasonedValue(child);
+        const hasReason = isReasonedValue(child);
         const childPath = [...path, key];
-        const hasComments = [...comments.values()].some(({ path: note }) =>
-            childPath.every((segment, index) => note[index] === segment),
-        );
+        const hasComments = comments
+            .values()
+            .some(({ path: note }) => childPath.every((segment, index) => note[index] === segment));
         const row = { key, child, isTable: isChildTable, childPath };
         return {
             ...row,
             isScopeTable: isScope && isChildTable,
             isRecordList: isRecordArray(child) && !isToolRule,
-            isInline: reasonedValue || key === 'output',
-            isCommentedReasonedValue: reasonedValue && hasComments,
+            isInline: hasReason || key === 'output',
+            isCommentedReasonedValue: hasReason && hasComments,
         };
     });
     const scopeAssignments = new Map(
@@ -152,14 +153,28 @@ export function encodeSettings(table: TomlTable, indent: string, comments: TomlC
     if (comments.size > 0)
         throw new GspotError(
             'settings',
-            [...comments.values()]
+            comments
+                .values()
                 .map(
                     ({ path }) =>
                         `The comment for ${path.map(String).join('.')} cannot be represented in TOML 1.0. Move that field out of its inline table before writing the settings.`,
                 )
+                .toArray()
                 .join('\n'),
         );
     return output;
+}
+
+function isMatchingRecord(source: TomlTable, value: unknown, path: KeyPath): boolean {
+    if (!isTable(value)) return false;
+    if (path[0] === 'ignore')
+        return IGNORE_IDENTITY_FIELDS.every((key) =>
+            isDeepStrictEqual(normalizeTables(source[key]), normalizeTables(value[key])),
+        );
+    const name = source['name'];
+    return name === undefined
+        ? isDeepStrictEqual(normalizeTables(source), normalizeTables(value))
+        : isDeepStrictEqual(normalizeTables(name), normalizeTables(value['name']));
 }
 
 function listMatchingPositions(
@@ -179,34 +194,14 @@ function listMatchingPositions(
         const index = matches[occurrence] ?? matches[0];
         return index === undefined ? [] : [index];
     }
-    const matches = values.flatMap((value, index) => {
-        if (!isTable(value)) return [];
-        if (path[0] === 'ignore')
-            return IGNORE_IDENTITY_FIELDS.every((key) =>
-                isDeepStrictEqual(normalizeTables(source[key]), normalizeTables(value[key])),
-            )
-                ? [index]
-                : [];
-        if (source['name'] !== undefined)
-            return isDeepStrictEqual(normalizeTables(source['name']), normalizeTables(value['name'])) ? [index] : [];
-        return isDeepStrictEqual(normalizeTables(source), normalizeTables(value)) ? [index] : [];
-    });
+    const matches = values.flatMap((value, index) => (isMatchingRecord(source, value, path) ? index : []));
     if (matches.length === 0) return path[0] === 'ignore' || position >= values.length ? [] : [position];
-    return matches.toSorted(
-        (left, right) =>
-            Number(
-                !isDeepStrictEqual(
-                    normalizeTables(source['until']),
-                    normalizeTables(getValueAt(values[left], ['until'])),
-                ),
-            ) -
-            Number(
-                !isDeepStrictEqual(
-                    normalizeTables(source['until']),
-                    normalizeTables(getValueAt(values[right], ['until'])),
-                ),
-            ),
-    );
+    const until = normalizeTables(source['until']);
+    return matches.toSorted((left, right) => {
+        const leftUntil = normalizeTables(getValueAt(values[left], ['until']));
+        const rightUntil = normalizeTables(getValueAt(values[right], ['until']));
+        return Number(!isDeepStrictEqual(until, leftUntil)) - Number(!isDeepStrictEqual(until, rightUntil));
+    });
 }
 
 function listDestinationPaths(syntax: TomlSyntax, destination: TomlTable, path: KeyPath): KeyPath[] {
@@ -247,8 +242,7 @@ function findCommentPlace(syntax: TomlSyntax, destination: TomlTable, owner: Tom
     if (owner.kind !== 'key') return { kind: owner.kind, path };
     const value: unknown = getValueAt(destination, path);
     if (isTable(value)) return { kind: 'header', path };
-    if (isRecordArray(value)) return { kind: 'header', path: [...path, 0] };
-    return { kind: owner.kind, path };
+    return isRecordArray(value) ? { kind: 'header', path: [...path, 0] } : { kind: owner.kind, path };
 }
 
 function findKeptCommentPlacement(

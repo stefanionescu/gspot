@@ -53,12 +53,6 @@ skip-checking-raises = true
     },
 ] as const;
 
-export const TYPE_FLAG_NAMES = [
-    '--arg-type-hints-in-docstring',
-    '--check-return-types',
-    '--check-yield-types',
-] as const;
-
 const DEFAULT_TYPE_FLAGS = [
     '--arg-type-hints-in-docstring',
     'false',
@@ -70,15 +64,23 @@ const DEFAULT_TYPE_FLAGS = [
 
 export const PYDOCLINT_PROJECT_CASES = [
     ...DOCSTRING_STYLES.map((row) => ({ ...row, typeFlags: DEFAULT_TYPE_FLAGS })),
-    ...['', '[tool.ruff]\nline-length = 88\n', '[tool.ruff.lint.pydocstyle]\nconvention = "pep257"\n'].map(
-        (project) => ({
-            name: 'keeps the default style without a supported convention',
-            project,
-            setting: undefined,
-            expected: 'numpy',
-            typeFlags: DEFAULT_TYPE_FLAGS,
-        }),
-    ),
+    ...[
+        { name: 'keeps the default style with no pyproject.toml', project: '' },
+        {
+            name: 'keeps the default style with a Ruff table and no convention',
+            project: '[tool.ruff]\nline-length = 88\n',
+        },
+        {
+            name: 'keeps the default style with the pep257 convention',
+            project: '[tool.ruff.lint.pydocstyle]\nconvention = "pep257"\n',
+        },
+    ].map(({ name, project }) => ({
+        name,
+        project,
+        setting: undefined,
+        expected: 'numpy',
+        typeFlags: DEFAULT_TYPE_FLAGS,
+    })),
     {
         name: 'preserves explicit signature type options',
         project:

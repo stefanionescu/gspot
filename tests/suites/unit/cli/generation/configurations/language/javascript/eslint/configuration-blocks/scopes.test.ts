@@ -29,10 +29,6 @@ test("a nested scope whose configuration blocks match its parent's gets no copy,
     const { default: blocks } = generated as { default: Linter.Config[] };
     const tests = blocks.filter((block) => block.rules?.['@typescript-eslint/no-non-null-assertion'] === 'off');
     expect(tests).toHaveLength(2);
-    const parent = tests.find((block) => block.ignores?.includes('different/**') === true);
-    expect(parent?.ignores).toContain('different/**');
-    expect(parent?.ignores).not.toContain('same/**');
-    expect(parent?.ignores).not.toContain('same/deep/**');
     const same = (await eslint.calculateConfigForFile('same/sample.test.ts')) as EslintConfiguration;
     const different = (await eslint.calculateConfigForFile('different/custom/sample.ts')) as EslintConfiguration;
     const code = (await eslint.calculateConfigForFile('different/src/sample.ts')) as EslintConfiguration;

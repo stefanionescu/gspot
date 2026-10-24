@@ -35,7 +35,6 @@ export const DEPENDENCIES_SANDBOX = {
 
 export const LOCKFILE_HOST_CASES = [
     {
-        check: 'dependencies/lockfiles',
         files: {
             'package-lock.json': `{
     "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz", "funding": { "url": "https://opencollective.com/a" } } }
@@ -53,7 +52,6 @@ export const LOCKFILE_HOST_CASES = [
         },
     },
     {
-        check: 'dependencies/lockfiles',
         files: {
             'npm-shrinkwrap.json': `{
     "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz", "funding": { "url": "https://opencollective.com/a" } } }
@@ -71,7 +69,6 @@ export const LOCKFILE_HOST_CASES = [
         },
     },
     {
-        check: 'dependencies/lockfiles',
         files: {
             'pnpm-lock.yaml': `lockfileVersion: '9.0'
 packages:
@@ -91,7 +88,6 @@ packages:
         },
     },
     {
-        check: 'dependencies/lockfiles',
         files: {
             'yarn.lock': `a@1.0.0:
   version "1.0.0"
@@ -118,11 +114,6 @@ export const HOST_LOCKFILE = {
     },
 } as const;
 
-export const BINARY_BUN_LOCKFILE = Buffer.concat([
-    Buffer.from([0xff, 0]),
-    Buffer.from('https://untrusted.invalid/package.tgz'),
-]);
-
 export const REGISTRY_SCOPE_RESULTS: { scope: string; status: CheckResult['status']; files: string[] }[] = [
     { scope: '', status: 'failed', files: ['package-lock.json', 'package-lock.json', 'package-lock.json'] },
     { scope: 'app', status: 'passed', files: [] },
@@ -145,10 +136,6 @@ export const MISE_PIN_FILES = [
 ] as const;
 
 export const ALLOWED_GITHUB_REGISTRIES = `allowed_registries = { value = ["github.com", "codeload.github.com"], reason = ${JSON.stringify(SETTING_REASON)} }\n`;
-
-export const MATCHED_REACT_FILES = Object.fromEntries(
-    Object.entries(BUN_PROJECT_FILES).map(([path, text]) => [path, text.replaceAll('19.0.0', '19.1.0')]),
-);
 
 export const LOCKFILE_DOWNLOAD_CASES = [
     {

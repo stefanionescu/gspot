@@ -122,16 +122,6 @@ class Book {}
 `,
         expected: ['firstValue', 'loadValue', 'inputValue', 'innerValue', 'Book'],
     },
-    {
-        language: 'bash',
-        file: 'source.sh',
-        source: `first_value=1
-load_value() {
-    inner_value=1
-}
-`,
-        expected: ['first_value', 'load_value', 'inner_value'],
-    },
 ] as const;
 
 export const NAME_POSITION_CASES = [

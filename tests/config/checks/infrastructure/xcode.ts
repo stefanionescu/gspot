@@ -23,11 +23,6 @@ export const GROUPED_PBXPROJ = `// !$*UTF8*$!
 export const BUILD_SETTINGS_PBXPROJ =
     '{rootObject=P;objects={P={isa=PBXProject;};D={isa=XCBuildConfiguration;buildSettings={SDKROOT=macosx;SWIFT_VERSION=6.0;};};};}';
 
-export const SINGLE_FILE_PBXPROJ = GROUPED_PBXPROJ.replace('files = (B1, B2,);', 'files = (B2,);').replace(
-    'fileSystemSynchronizedGroups = (SYNC,);',
-    '',
-);
-
 export const ASSET_SETTING_CASES = [
     {
         title: 'A root Xcode project setting',
@@ -79,12 +74,6 @@ export const PARTLY_TRANSLATED_STRINGS = {
         Goodbye: {},
     },
 };
-
-export const ENTITLEMENT_DOCUMENTS = {
-    path: 'App.entitlements',
-    unlisted: '<plist><dict><key>unlisted-capability</key><true/></dict></plist>',
-    allowed: '<plist><dict><key>nested-capability</key><true/></dict></plist>',
-} as const;
 
 export const ENTITLEMENT_SCOPE_RESULTS = [
     { scope: '', status: 'passed' },

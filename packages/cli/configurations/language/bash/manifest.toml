@@ -33,7 +33,7 @@ version = "0.11.0"
 [[tool]]
 mise = "shfmt"
 name = "shfmt"
-version = "3.12.0"
+version = "3.14.1"
 
 [[tool]]
 name = "zsh"

@@ -6,12 +6,13 @@ import { isOnDisk } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { copyRevision } from '#cli/runs/copy/revision.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
-import { mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { listWorkspaceDependencySources } from '#cli/repository/npm/workspaces.ts';
 import { createCopy, createCheckCopy, selectCopyPaths } from '#cli/runs/copy/files.ts';
+import { mkdir, lstat, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/runs/copy/files.ts';
 
 test('a copy holds workspace dependencies and working bin links, and edits in it reach neither source', async () => {
@@ -77,26 +78,28 @@ test('a link into another linked tree points at the copy of that tree, whatever 
     using copy = await createCopy(selectCopyPaths(sandbox.path, ['package.json'], ['']));
     const scratch = copy.path;
     const copied = await realpath(join(scratch, 'node_modules/a-next'));
-    expect(copied.startsWith(await realpath(join(scratch, 'node_modules/z-store')))).toBe(true);
+    const isObserved = copied.startsWith(await realpath(join(scratch, 'node_modules/z-store')));
+    expect(isObserved).toBe(true);
     expect(await isOnDisk(join(copied, '../helpers/package.json'))).toBe(true);
 });
 
-test('a dependency link that points at nothing refuses the copy', async () => {
+test('a dependency link that points at nothing is left out of the copy', async () => {
     await using sandbox = await testdir({
         'package.json': '{"private":true}',
         'node_modules/.bin/tool': '#!/bin/sh\n',
     });
 
     await symlink('../missing/bin/gspot', join(sandbox.path, 'node_modules/.bin/gspot'));
-    expect(
-        await createCopy(selectCopyPaths(sandbox.path, ['package.json'], [''])).catch((error: unknown) => error),
-    ).toMatchObject({
+    using copy = await createCopy(selectCopyPaths(sandbox.path, ['package.json'], ['']));
+    const error = await captureRejection(lstat(join(copy.path, 'node_modules/.bin/gspot')));
+    expect(error).toMatchObject({
         code: 'ENOENT',
     });
+    expect(await readFile(join(copy.path, 'node_modules/.bin/tool'), 'utf8')).toBe('#!/bin/sh\n');
 });
 
 test.each([false, true])(
-    "a check's copy holds its files and dependencies, plus an extra file when asked: %s",
+    "a check's copy holds its files and dependencies, plus an extra file when asked: %p",
     async (includedPaths) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript']),
@@ -122,7 +125,7 @@ test.each([false, true])(
 );
 
 test.each([false, true])(
-    'workspace dependency copies keep exactly the sources the check imports (revision copy %s)',
+    'workspace dependency copies keep exactly the sources the check imports (revision copy %p)',
     async (revision) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['javascript'], {

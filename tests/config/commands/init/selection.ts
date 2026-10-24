@@ -3,9 +3,72 @@ export const PYTHON_SOURCE = { 'source.py': 'VALUE = 1\n' };
 export const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
 
 export const CONFIGURATION_CHOICES = [
-    { configurations: undefined },
-    { configurations: undefined, noConfigurations: true },
-    { configurations: ['python'] },
+    {
+        configurations: undefined,
+        expected: [
+            'javascript',
+            'licenses',
+            'commits',
+            'data-files',
+            'dependencies',
+            'docs',
+            'duplication',
+            'engineering',
+            'format',
+            'gspot',
+            'naming',
+            'prose',
+            'repository',
+            'secrets',
+            'security',
+            'spelling',
+            'structure',
+        ],
+    },
+    {
+        configurations: undefined,
+        noConfigurations: true,
+        expected: [
+            'commits',
+            'data-files',
+            'dependencies',
+            'docs',
+            'duplication',
+            'engineering',
+            'format',
+            'gspot',
+            'licenses',
+            'naming',
+            'prose',
+            'repository',
+            'secrets',
+            'security',
+            'spelling',
+            'structure',
+        ],
+    },
+    {
+        configurations: ['python'],
+        expected: [
+            'python',
+            'commits',
+            'data-files',
+            'dependencies',
+            'docs',
+            'duplication',
+            'engineering',
+            'format',
+            'gspot',
+            'licenses',
+            'naming',
+            'prose',
+            'repository',
+            'secrets',
+            'security',
+            'spelling',
+            'structure',
+        ],
+    },
 ] as const;
 
 export const VUE_COMPONENT = `<script setup>
@@ -31,16 +94,6 @@ export const STYLE_SOURCE_FILES = {
     color: #abc;
 }
 `,
-} as const;
-
-export const MIXED_LANGUAGE_FILES = {
-    'package.json': '{"name":"example","private":true,"type":"module"}\n',
-    'source.js': 'export const port = 8080;\n',
-    'api/pyproject.toml': `[project]
-name = "api"
-version = "1.0.0"
-`,
-    'api/source.py': 'PORT = 8080\n',
 } as const;
 
 export const NEXTJS_LOCALE_CASES = [

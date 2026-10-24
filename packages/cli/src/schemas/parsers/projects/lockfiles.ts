@@ -14,46 +14,52 @@ export const dependencySectionsSchema = z.looseObject({
     dependencies: z.record(z.string(), z.unknown()).optional(),
     devDependencies: z.record(z.string(), z.unknown()).optional(),
     optionalDependencies: z.record(z.string(), z.unknown()).optional(),
-} satisfies SchemaShape<DependencySections>) satisfies z.ZodType<DependencySections>;
+} satisfies SchemaShape<DependencySections>);
+const npmPackageSchema = z.looseObject({
+    version: z.string().optional(),
+} satisfies SchemaShape<NpmLockfile['packages'][string]>);
 
 export const npmLockSchema = z.looseObject({
-    packages: z.record(z.string(), z.looseObject({ version: z.string().optional() })).default({}),
-} satisfies SchemaShape<NpmLockfile>) satisfies z.ZodType<NpmLockfile>;
+    packages: z.record(z.string(), npmPackageSchema).default({}),
+} satisfies SchemaShape<NpmLockfile>);
 
 export const bunLockSchema = z.looseObject({
     workspaces: z.record(z.string(), z.unknown()).default({}),
-    packages: z.record(z.string(), z.array(z.unknown())).default({}),
-} satisfies SchemaShape<BunLockfile>) satisfies z.ZodType<BunLockfile>;
+    packages: z.record(z.string(), z.unknown().array()).default({}),
+} satisfies SchemaShape<BunLockfile>);
 
 export const pnpmLockSchema = z.looseObject({
     importers: z.record(z.string(), z.unknown()).default({}),
     packages: z.record(z.string(), z.unknown()).default({}),
-} satisfies SchemaShape<PnpmLockfile>) satisfies z.ZodType<PnpmLockfile>;
+} satisfies SchemaShape<PnpmLockfile>);
 
-export const yarnLockSchema = z.record(z.string(), z.unknown());
+export const yarnLockSchema = z.record(z.string(), z.unknown()) satisfies z.ZodType<Record<string, unknown>>;
 
 export const yarnPackageSchema = z.looseObject({
     version: z.string().optional(),
     resolved: z.string().optional(),
-} satisfies SchemaShape<YarnPackage>) satisfies z.ZodType<YarnPackage>;
+} satisfies SchemaShape<YarnPackage>);
+const uvSourceSchema = z.looseObject({
+    virtual: z.string().optional(),
+} satisfies SchemaShape<NonNullable<UvLockfile['package'][number]['source']>>);
+const uvRequirementSchema = z.object({
+    name: z.string(),
+    specifier: z.string().optional(),
+} satisfies SchemaShape<NonNullable<NonNullable<UvLockfile['package'][number]['metadata']>['requires-dist']>[number]>);
+const uvMetadataSchema = z.looseObject({
+    'requires-dist': uvRequirementSchema.array().optional(),
+} satisfies SchemaShape<NonNullable<UvLockfile['package'][number]['metadata']>>);
 
 export const uvLockSchema = z.looseObject({
     version: z.number().optional(),
     'requires-python': z.string().optional(),
     package: z
-        .array(
-            z.looseObject({
-                name: z.string(),
-                version: z.string().optional(),
-                source: z.looseObject({ virtual: z.string().optional() }).optional(),
-                metadata: z
-                    .looseObject({
-                        'requires-dist': z
-                            .array(z.object({ name: z.string(), specifier: z.string().optional() }))
-                            .optional(),
-                    })
-                    .optional(),
-            }),
-        )
+        .looseObject({
+            name: z.string(),
+            version: z.string().optional(),
+            source: uvSourceSchema.optional(),
+            metadata: uvMetadataSchema.optional(),
+        } satisfies SchemaShape<UvLockfile['package'][number]>)
+        .array()
         .default([]),
-} satisfies SchemaShape<UvLockfile>) satisfies z.ZodType<UvLockfile>;
+} satisfies SchemaShape<UvLockfile>);

@@ -1,11 +1,11 @@
-import { join, dirname, delimiter } from 'node:path';
+import { join, dirname } from 'node:path';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { FOLDER_LINK_TYPE } from '#tests/setup/system/platform.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import type { PackageJson } from '#cli/types/parsers/projects/dependencies.ts';
 import { mkdir, readdir, symlink, readFile, realpath } from 'node:fs/promises';
 
-export const workspaceModules = join(import.meta.dir, '../../../node_modules');
+export const workspaceModules = join(REPOSITORY_ROOT, 'node_modules');
 
 export const testModules = join(import.meta.dir, '../../node_modules');
 
@@ -26,7 +26,6 @@ async function listPackageNames(store: string): Promise<string[]> {
 /**
 Link test packages before workspace packages, with their .bin and the workspace .bun store.
 Links to the real package folders keep relative dependencies that Windows store junctions break.
-Copied sandboxes keep the installed dependency layout.
 
 @param modulesFolder the node_modules folder to create.
 */
@@ -83,10 +82,11 @@ export async function linkPackages(modulesFolder: string, names: readonly string
     }
 }
 
-/** Link the installed TypeScript package and its executable launchers. */
-export async function linkTypescript(root: string, folder = join(root, 'node_modules')): Promise<string> {
-    await mkdir(folder, { recursive: true });
-    await linkPackages(folder, ['typescript']);
-    await symlink(await realpath(join(testModules, '.bin')), join(folder, '.bin'), FOLDER_LINK_TYPE);
-    return [join(folder, '.bin'), readEnvironmentVariable('PATH') ?? ''].join(delimiter);
+/**
+Link the installed TypeScript package and its executable launchers.
+*/
+export async function linkTypescript(modulesFolder: string): Promise<void> {
+    await mkdir(modulesFolder, { recursive: true });
+    await linkPackages(modulesFolder, ['typescript']);
+    await symlink(await realpath(join(testModules, '.bin')), join(modulesFolder, '.bin'), FOLDER_LINK_TYPE);
 }

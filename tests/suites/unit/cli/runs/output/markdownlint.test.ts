@@ -12,9 +12,11 @@ test('a markdownlint JSON item becomes a finding', async () => {
         parseOutput(check, JSON.stringify([MARKDOWN_REPORT]), '', { root: sandbox.path, cwd: sandbox.path }),
     ).toMatchObject([{ file: 'sample.md', rule: 'MD033', fixable: false }]);
 });
-test.each([...MARKDOWNLINT_REPORT_ERRORS])('markdownlint refuses $name: $message', async ({ output, message }) => {
+test.each([...MARKDOWNLINT_REPORT_ERRORS])('markdownlint refuses $name', async ({ output }) => {
     const stdout = typeof output === 'string' ? output : JSON.stringify(output);
     await using sandbox = await testdir({ 'sample.md': '<span>Content</span>\n' });
     const check = getShippedCheck('markdown/markdownlint');
-    expect(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })).toThrow(message);
+    expect(() => parseOutput(check, stdout, '', { root: sandbox.path, cwd: sandbox.path })).toThrow(
+        new Error('Markdownlint printed output that gspot cannot read.'),
+    );
 });

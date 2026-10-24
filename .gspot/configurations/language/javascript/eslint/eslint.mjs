@@ -115,18 +115,13 @@ export default [
     {
         "ignores": [
             "**/build/**",
-            "**/.DS_Store",
-            "**/Thumbs.db",
-            "**/*.swp",
-            "**/*~",
-            "**/.idea/**",
-            "**/.vscode/**",
             "**/node_modules/**",
             "**/.env",
             "**/.env.*",
             "**/*.log",
-            ".wrangler/**",
             "packages/*/dist/**",
+            "packages/*/LICENSE.md",
+            "packages/cli/README.md",
             "packages/cli/grammars/**",
             "docs/dist/**",
             "docs/.astro/**",
@@ -213,10 +208,7 @@ export default [
             },
             'import-x/ignore': [
                 "[\\\\/]build[\\\\/]",
-                "[\\\\/]\\.idea[\\\\/]",
-                "[\\\\/]\\.vscode[\\\\/]",
                 "[\\\\/]node_modules[\\\\/]",
-                "[\\\\/]\\.wrangler[\\\\/]",
                 "[\\\\/]packages[\\\\/]cli[\\\\/]grammars[\\\\/]",
                 "[\\\\/]docs[\\\\/]dist[\\\\/]",
                 "[\\\\/]docs[\\\\/]\\.astro[\\\\/]",
@@ -1053,8 +1045,7 @@ export default [
                     {
                         "category": "import-rule:generation",
                         "pattern": [
-                            "packages/cli/src/generation/**",
-                            "packages/cli/src/schemas/generation.ts"
+                            "packages/cli/src/generation/**"
                         ]
                     },
                     {
@@ -2102,7 +2093,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs-config\" may import its own files and \"cli-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"docs-config\" may import its own files and \"cli-config\", \"docs-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2116,7 +2107,8 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:docs-config",
-                                                "import-rule:cli-config"
+                                                "import-rule:cli-config",
+                                                "import-rule:docs-types"
                                             ]
                                         }
                                     }
@@ -2136,7 +2128,7 @@ export default [
                                     }
                                 }
                             },
-                            "message": "Import rule \"docs-types\" may import its own files and \"cli-types\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
+                            "message": "Import rule \"docs-types\" may import its own files and \"cli-types\", \"settings\", \"docs-config\", not {{dependency.source}} from {{to.file.categories.[0]}}. Move the code, move that rule above this one, or list the rules it may import in can_import."
                         },
                         {
                             "from": {
@@ -2150,7 +2142,9 @@ export default [
                                         "categories": {
                                             "anyOf": [
                                                 "import-rule:docs-types",
-                                                "import-rule:cli-types"
+                                                "import-rule:cli-types",
+                                                "import-rule:settings",
+                                                "import-rule:docs-config"
                                             ]
                                         }
                                     }

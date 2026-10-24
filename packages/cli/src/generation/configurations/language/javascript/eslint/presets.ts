@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { buildAssetPath } from '#cli/system/assets.ts';
-import { eslintPresetsSchema } from '#cli/schemas/generation.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
+import { eslintPresetsSchema } from '#cli/schemas/configurations/eslint-presets.ts';
 import { serializePresetAccess } from '#cli/generation/configurations/language/javascript/eslint/print.ts';
 
 import {
@@ -42,9 +42,8 @@ Read the pinned presets shipped beside their configuration.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 2 files share it.
 export function readPresets(configuration: Configuration): EslintPresets {
-    return eslintPresetsSchema.parse(
-        JSON.parse(readFileSync(buildAssetPath(`${configuration.folder}/${ESLINT_PRESETS_FILE}`), 'utf8')),
-    );
+    const path = buildAssetPath(`${configuration.folder}/${ESLINT_PRESETS_FILE}`);
+    return eslintPresetsSchema.parse(JSON.parse(readFileSync(path, 'utf8')));
 }
 
 /**
@@ -145,6 +144,6 @@ export function convertPresetWarnings(block: EslintPreset['blocks'][number]): Es
     const { parser: _parser, ...fields } = block;
     return {
         ...fields,
-        ...(block.rules === undefined ? {} : { rules: convertWarningsToErrors(block.rules) }),
+        ...(block.rules !== undefined && { rules: convertWarningsToErrors(block.rules) }),
     };
 }

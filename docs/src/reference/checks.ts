@@ -1,22 +1,18 @@
-import type { Tool } from '#cli/types/configurations.ts';
-import { CLI_REFERENCE, type readCliReference } from './cli.ts';
+import { CLI_REFERENCE } from './cli.ts';
 import { getTool, getToolName } from '#cli/configurations/tools.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system/environment.ts';
+import type { Check, Configuration } from '#cli/types/configurations.ts';
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/runs/command/placeholders.ts';
-import type { GuideCheck, CliReference, ReferencePage } from '../types/reference.ts';
-import { CHECK_RUN_LABELS, CHECK_NEEDS_LABELS, SUPPRESSIONS_CHECK } from '../config/reference.ts';
-import { formatList, formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
-
-type Suppression = NonNullable<Tool['suppression']>;
-
-const configurations = CLI_REFERENCE.configurations;
+import type { GuideCheck, Suppression, CliReference, ReferencePage } from '../types/reference.ts';
+import { formatTable, formatSection, buildReferencePage, formatReferencePath } from './markdown.ts';
+import { LIST_FORMAT, CHECK_RUN_LABELS, CHECK_NEEDS_LABELS, SUPPRESSIONS_CHECK } from '../config/reference.ts';
 
 function formatToolNames(check: Check): string | undefined {
     const program = getToolName(check);
     if (program === undefined) return undefined;
     const setting = SETTING_ONLY_PLACEHOLDER.exec(program)?.groups?.['name'];
     const tool = setting === undefined ? program : `the command in \`${setting}\``;
-    return check.other_tools === undefined ? tool : `${tool}, with ${formatList(check.other_tools)}`;
+    return check.other_tools === undefined ? tool : `${tool}, with ${LIST_FORMAT.format(check.other_tools)}`;
 }
 
 function listCheckRequirements(check: Check): string[] {
@@ -25,8 +21,8 @@ function listCheckRequirements(check: Check): string[] {
     const needs = check.needs?.map((need) => CHECK_NEEDS_LABELS[need]);
     return [
         tools === undefined ? 'gspot runs this check itself.' : `It runs ${tools}.`,
-        needs === undefined ? '' : `It needs ${formatList(needs)}.`,
-        systems === undefined ? '' : `It runs on ${formatList(systems)}.`,
+        needs === undefined ? '' : `It needs ${LIST_FORMAT.format(needs)}.`,
+        systems === undefined ? '' : `It runs on ${LIST_FORMAT.format(systems)}.`,
     ];
 }
 
@@ -48,8 +44,9 @@ function formatCheckFacts(check: Check, configuration: Configuration): string {
 
 function formatSuppressionComment(form: Suppression | undefined): string {
     if (form === undefined) return '';
-    if (form.forbidden === true) return '\n\nA suppression comment is refused; use `gspot ignore`.';
-    return `\n\nTo silence one place, write a comment such as:\n\n\`\`\`text\n${form.example ?? ''}\n\`\`\``;
+    return form.forbidden === true
+        ? '\n\nA suppression comment is refused; use `gspot ignore`.'
+        : `\n\nTo silence one place, write a comment such as:\n\n\`\`\`text\n${form.example ?? ''}\n\`\`\``;
 }
 
 function formatTurnOff(check: Check, suppressions: Map<string, Suppression>): string {
@@ -174,14 +171,10 @@ export function formatCheckTable(checks: Check[]): string {
     );
 }
 
-type Configuration = ReturnType<typeof readCliReference>['configurations'][number];
-
-type Check = Configuration['checks'][number];
-
 function listToolSystems(check: Check): string[] | undefined {
     const program = getToolName(check);
-    const builds = program === undefined ? undefined : getTool(configurations, program).builds;
-    if (check.operating_systems === undefined && builds === undefined) return undefined;
+    const builds = program === undefined ? undefined : getTool(CLI_REFERENCE.configurations, program).builds;
+    if (builds === undefined && check.operating_systems === undefined) return undefined;
     return OPERATING_SYSTEMS.filter(
         ({ name }) =>
             (check.operating_systems?.includes(name) ?? true) &&

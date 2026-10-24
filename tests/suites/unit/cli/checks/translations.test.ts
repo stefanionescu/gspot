@@ -6,7 +6,7 @@ import { type Finding } from '#cli/types/runs/check.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     MESSAGE_LAYOUTS,
@@ -44,11 +44,13 @@ test('a missing base locale is reported and restoring it enables key comparisons
     expect(compared).toMatchObject([{ file: 'messages/de.json', rule: 'missing-key' }]);
 });
 
-test.each([...TRANSLATION_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
-    await using repository = await createSandbox(TRANSLATION_SANDBOX);
-    const result = await runCheckSample(repository, sample, TRANSLATION_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
-});
+test.each([...TRANSLATION_CASES])(
+    '$check reports $expected.rule in $expected.file and passes after the fix',
+    async (sample) => {
+        await using repository = await createSandbox(TRANSLATION_SANDBOX);
+        expect(await runCheckSample(repository, sample)).toStrictEqual(expectedSummary(sample));
+    },
+);
 
 test.each([...MESSAGE_LAYOUTS])(
     'each message file compares with its own base locale file: $layout',
@@ -76,7 +78,7 @@ test('translations/messages reports a message file that is not JSON as syntax an
             file: 'messages/fr.json',
             line: 1,
             rule: 'syntax',
-            message: 'messages/fr.json is not valid JSON: Invalid JSON at offset 2: InvalidSymbol. Fix the file.',
+            message: 'messages/fr.json:1:3 is not valid JSON: InvalidSymbol. Fix the file.',
         },
     ]);
     const empty = await runMessagesCheck({ ...files, 'messages/fr.json': '{"greeting":"Bonjour","farewell":""}' });

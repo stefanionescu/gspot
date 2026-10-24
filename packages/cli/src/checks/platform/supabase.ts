@@ -77,8 +77,9 @@ function readSupabaseProjectFile(
 ): Parsed<SupabaseProjectFile, Finding> | undefined {
     const local = joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE);
     const text = findCachedText(session.reads, local);
-    if (text === undefined) return undefined;
-    return readParsedFile(planned, local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
+    return text === undefined
+        ? undefined
+        : readParsedFile(planned, local, () => parseTomlFile(local, text, supabaseProjectFileSchema));
 }
 
 function listFunctionEntrypoints(planned: PlannedCheck): string[] {
@@ -95,7 +96,7 @@ function listFunctionEntrypoints(planned: PlannedCheck): string[] {
             continue;
         if (!entrypoints.has(folder)) entrypoints.set(folder, path);
     }
-    return [...entrypoints.values()];
+    return entrypoints.values().toArray();
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in this file share it.
@@ -103,11 +104,11 @@ async function runDenoCommand(
     session: Session,
     planned: PlannedCheck,
     command: readonly string[],
-    path: string,
+    folder: string,
 ): Promise<SpawnResult> {
     const commandArguments = [
         ...command.slice(0, -1),
-        ...buildDenoJsonArguments(session.root, path),
+        ...buildDenoJsonArguments(session.root, folder),
         ...command.slice(-1),
     ];
     return await runCheckTool(session, planned, commandArguments, {
@@ -124,9 +125,9 @@ Reports each storage bucket that no migration policy on storage.objects names.
 */
 export async function checkSupabaseStoragePolicies(session: Session, planned: PlannedCheck): Promise<Finding[]> {
     const parsed = readSupabaseProjectFile(session, planned);
-    const at = { file: joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE), line: 1 };
     if (parsed === undefined) return [];
     if ('error' in parsed) return [parsed.error];
+    const at = { file: joinScope(planned.scope.folder.path, SUPABASE_PROJECT_FILE), line: 1 };
     const projectFile = parsed.value;
     const migrations = await readParsedMigrations(session, planned);
     const policed = new Set<string>();
@@ -229,7 +230,7 @@ Reports privileged Supabase keys outside edge functions and test files.
 @param planned the scope files and allowed paths.
 @returns the findings.
 */
-export function checkServiceRoleKey(session: Session, planned: PlannedCheck): Finding[] {
+export function checkSupabaseServiceRoleKey(session: Session, planned: PlannedCheck): Finding[] {
     const folder = getTable(planned.scope.settings, 'supabase').functions_folder;
     const tests = planned.scope.settings.test_files;
     const isAllowed = buildPathMatcher([`${folder}/**`, ...tests]);

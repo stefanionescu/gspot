@@ -10,16 +10,16 @@ import { type PushReport } from '#cli/types/commands/check.ts';
 import { MISE_INSTALL_URL } from '#cli/config/tools/inspect.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/runs/command.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { PARTIAL_FIX_CASES, TAB_FORMAT_SETTINGS } from '#tests/config/integration/commands.ts';
-import { spawnGspot, parseCheckReport, buildInitArguments, installGeneratedTools } from '#tests/setup/cli/commands.ts';
+import { spawnGspot, applyThenInstall, parseCheckReport, buildInitArguments } from '#tests/setup/cli/commands.ts';
 
 test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned version, while bash/function-size passes and bash/shellcheck passes on the full PATH', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'scripts/a.sh': CLEAN_BASH_SCRIPT,
         '.gitignore': 'home/\nbin/\n',
         home: {},
@@ -47,7 +47,7 @@ test('bash/shellcheck without ShellCheck on PATH exits 2 and names the pinned ve
         await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json'], environment),
     );
     expect(check.code, check.stdout + check.stderr).toBe(2);
-    const version = String(getTool([...readConfigurations().values()], 'shellcheck').version);
+    const version = String(getTool(readConfigurations().values().toArray(), 'shellcheck').version);
     expect(check.report.checks).toMatchObject([
         {
             check: 'bash/shellcheck',
@@ -78,7 +78,7 @@ test('a pre-push check in a shallow clone passes project/bash-syntax and refuses
         'source.sh': 'echo base\n',
     });
     runGitStep(source, ['init', '-q']);
-    await installGeneratedTools(source);
+    await applyThenInstall(source);
     runGitStep(source, ['add', '-A']);
     runGitStep(source, ['commit', '-qm', 'chore: initialize']);
     const base = runGitStep(source, ['rev-parse', 'HEAD']);
@@ -91,11 +91,11 @@ test('a pre-push check in a shallow clone passes project/bash-syntax and refuses
     const remote = ['--', 'unseen', 'unused'];
     const input = { stdin: `refs/heads/main ${selected} refs/heads/main ${'0'.repeat(selected.length)}\n` };
     runGitStep(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]);
-    await installGeneratedTools(checkout);
+    await applyThenInstall(checkout);
     const content = await spawnGspot(checkout, [...command, 'project/bash-syntax', ...remote], {}, input);
     expect(content.code, content.stdout + content.stderr).toBe(0);
     expect((JSON.parse(content.stdout) as PushReport).revisions[0]).toMatchObject({
-        historyComplete: false,
+        shallow: true,
         report: { checks: [{ status: 'passed' }] },
     });
     const refused = await spawnGspot(checkout, [...command, 'commits/commitlint-pushed', ...remote], {}, input);
@@ -108,11 +108,11 @@ test('a pre-push check in a shallow clone passes project/bash-syntax and refuses
     expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
     const report = JSON.parse(pushed.stdout) as PushReport;
     expect({
-        historyComplete: report.revisions[0]?.historyComplete,
+        shallow: report.revisions[0]?.shallow,
         checks: report.revisions[0]?.report.checks.map(({ status }) => ({ status })),
         commits: new Set(report.revisions[0]?.commits),
     }).toStrictEqual({
-        historyComplete: true,
+        shallow: false,
         checks: [{ status: 'passed' }],
         commits: new Set([base, selected]),
     });
@@ -132,8 +132,9 @@ test.skipIf(isWindows || process.getuid?.() === 0)(
             }),
             'source/sample.sql': 'select  * from foo;\n',
         });
+        runGitStep(sandbox.path, ['init', '--quiet']);
 
-        await installGeneratedTools(sandbox.path);
+        await applyThenInstall(sandbox.path);
         const command = ['check', '--only', 'sql/sqlfluff', '--fix', '--json'];
         await chmod(join(sandbox.path, 'source'), 0o500);
         try {
@@ -162,12 +163,16 @@ test.each([...PARTIAL_FIX_CASES])(
             '.gitignore': `${DOT_GSPOT}/\n`,
             [path]: sample,
         });
+        runGitStep(sandbox.path, ['init', '--quiet']);
 
-        await installGeneratedTools(sandbox.path);
+        await applyThenInstall(sandbox.path);
         const command = ['check', '--only', check, '--fix', '--json'];
         const failed = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
         expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
         expect(failed.fixes?.results).toMatchObject([{ check, status: 'changed', changed: [path] }]);
+        expect(
+            failed.checks.flatMap(({ findings }) => findings).map(({ file, fixable }) => ({ file, fixable })),
+        ).toStrictEqual([{ file: path, fixable: false }]);
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(partial);
         const repeated = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
         expect(repeated.exitCode, JSON.stringify(repeated)).toBe(1);
@@ -179,22 +184,6 @@ test.each([...PARTIAL_FIX_CASES])(
     },
 );
 
-test('typos marks a finding that its fixer cannot fix as not fixable', async () => {
-    const { configuration, check, path, tables, sample } = PARTIAL_FIX_CASES.find(
-        (each) => each.check === 'spelling/typos',
-    )!;
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings([configuration], { level: 'all', tables }),
-        '.gitignore': `${DOT_GSPOT}/\n`,
-        [path]: sample,
-    });
-    await installGeneratedTools(sandbox.path);
-    const fixed = parseCheckReport(await spawnGspot(sandbox.path, ['check', '--only', check, '--fix', '--json']));
-    expect(
-        fixed.report.checks.flatMap(({ findings }) => findings).map(({ file, fixable }) => ({ file, fixable })),
-    ).toStrictEqual([{ file: path, fixable: false }]);
-});
-
 test('shfmt reports and fixes script formatting with tabs', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['bash', 'format'], TAB_FORMAT_SETTINGS),
@@ -204,7 +193,7 @@ fi
 `,
     });
 
-    await installGeneratedTools(sandbox.path);
+    await applyThenInstall(sandbox.path);
     const command = ['check', '--only', 'bash/shfmt', '--json'];
     const broken = parseCheckReport(await spawnGspot(sandbox.path, command)).report;
     expect(broken.exitCode, JSON.stringify(broken)).toBe(1);

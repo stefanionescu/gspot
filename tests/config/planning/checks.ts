@@ -16,14 +16,14 @@ export const CONFIGURED_CHECK_CASES = [
         selected: true,
     },
     {
-        name: 'Go and Rust sources do not select Prettier',
+        name: 'Prettier stays configured without matching sources',
         files: {
             'gspot.toml': buildSandboxSettings([], { level: 'all', rules: true }),
             'main.go': 'package main\nfunc main() {}\n',
             'main.rs': 'fn main() {}\n',
         },
         check: 'format/prettier',
-        selected: false,
+        selected: true,
     },
 ] as const;
 

@@ -17,22 +17,25 @@ export function listForeignDisableComments(session: Session): { path: string; no
         ),
     );
     return session.repository.files
+        .values()
         .filter((file) => file.kind === 'source' && file.tags.some((tag) => CODE_FILE_TAGS.has(tag)))
-        .flatMap((file) => {
+        .map((file) => {
             const text = readCachedText(session.reads, file.path);
-            const rules = [...text.matchAll(ESLINT_DIRECTIVE)]
+            const rules = text
+                .matchAll(ESLINT_DIRECTIVE)
                 .flatMap((match) => (match.groups?.['rules'] ?? '').split(DIRECTIVE_TAIL, 1)[0]?.split(',') ?? [])
                 .map((rule) => rule.trim())
                 .filter((rule) => {
                     const prefix = extractRulePrefix(rule);
                     return prefix !== undefined && !prefixes.has(prefix);
-                });
-            if (rules.length === 0) return [];
-            return [
-                {
-                    path: file.path,
-                    note: `${[...new Set(rules)].join(', ')}: gspot does not load these rules; delete the comments`,
-                },
-            ];
-        });
+                })
+                .toArray();
+            if (rules.length === 0) return undefined;
+            return {
+                path: file.path,
+                note: `${[...new Set(rules)].join(', ')}: gspot does not load these rules; delete the comments`,
+            };
+        })
+        .filter((file) => file !== undefined)
+        .toArray();
 }

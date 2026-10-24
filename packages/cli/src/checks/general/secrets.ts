@@ -46,9 +46,10 @@ function findMissingEnvironmentKeys(
 ): Finding[] {
     const findings: Finding[] = [];
     const seen = new Set<string>();
-    for (const { key, line } of reads.toSorted(
+    const ordered = reads.toSorted(
         (left, right) => left.line - right.line || compareText(left.key ?? '', right.key ?? ''),
-    )) {
+    );
+    for (const { key, line } of ordered) {
         if (key === undefined || exampleKeys.has(key) || seen.has(key)) continue;
         seen.add(key);
         findings.push(

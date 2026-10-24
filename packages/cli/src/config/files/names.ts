@@ -28,3 +28,7 @@ export const MISE_FILES = [
 ] as const;
 
 export const SQL_EXTENSION = '.sql';
+
+export const PBXPROJ = `.xcodeproj/${PBXPROJ_NAME}`;
+
+export const NPM_PACKAGE_FOLDER = `${NODE_MODULES}/`;

@@ -19,6 +19,6 @@ export type DoctorReport = {
     hooks: string;
     ci: string;
     ruleFiles: number;
-    version: { running: string; pinned?: string };
+    version: { running: string; pin?: string; installCommand?: string };
     exitCode: number;
 };

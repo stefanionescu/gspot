@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import * as clack from '@clack/prompts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import { GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
@@ -14,7 +13,9 @@ import { rm, stat, readFile, writeFile } from 'node:fs/promises';
 import { EDITED_STYLELINT_PACKAGE } from '#tests/config/apply/files.ts';
 import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/checks/language/css.ts';
+import { CSS_MANAGED_PLAN_CHANGES } from '#tests/config/commands/init/write.ts';
 import { simulateInteractiveTerminal } from '#tests/setup/system/environment.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { INVALID_CSS, buildRetainedNote } from '#tests/config/commands/init/samples.ts';
 
 test.each([
@@ -25,15 +26,17 @@ test.each([
         },
     ],
     ['vanishes', rm],
-])('init refuses to delete a conflicting config file that %s after the plan', async (kind, change) => {
+])('init refuses to delete a conflicting config file that %p after the plan', async (kind, change) => {
     using mockResources = new DisposableStack();
-    await using sandbox = await testdir({ '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
+    await using sandbox = await createGitSandbox({ '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
 
     commitAll(sandbox.path);
 
     const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'bash', '--json']);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.delete.map((file) => file.path)).toContain('.shellcheckrc');
+    expect(plan.delete).toStrictEqual([
+        { path: '.shellcheckrc', note: 'replaced by the generated shellcheck config file' },
+    ]);
     await using _terminal = await simulateInteractiveTerminal();
     mockResources.use(
         spyOn(clack, 'confirm').mockImplementation(async () => {
@@ -88,16 +91,18 @@ test('init keeps the old config file when the generated one cannot be written', 
         'gspot stopped because of an internal error: Generated write denied. Report it at https://github.com/stefanionescu/gspot/issues with the command you ran.\n',
     );
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    expect(await isOnDisk(join(sandbox.path, findManifestTarget('spelling', 'typos.toml')))).toBe(false);
+    const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('spelling', 'typos.toml')));
+    expect(isObserved).toBe(false);
 });
 
 test('init refuses to write package.json when one of its managed fields changed after the plan, and keeps its bytes and mode', async () => {
     using mockResources = new DisposableStack();
     await using sandbox = await testdir({ 'package.json': STYLELINT_PACKAGE_JSON, 'source.css': INVALID_CSS });
+    runGitStep(sandbox.path, ['init', '--quiet']);
 
     const preview = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', '--configurations', 'css', '--json']);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan;
-    expect(plan.change).toContainEqual({ path: 'package.json', note: 'managed stylelint fields; other content stays' });
+    expect(plan.change).toStrictEqual([...CSS_MANAGED_PLAN_CHANGES]);
     expect(plan.delete.map(({ path }) => path)).not.toContain('package.json');
     let mode = 0;
     await using _terminal = await simulateInteractiveTerminal();
@@ -123,7 +128,7 @@ test('init refuses to write package.json when one of its managed fields changed 
 
 test('init keeps a shared file that was edited after the plan', async () => {
     using mockResources = new DisposableStack();
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'setup.cfg': '[sqlfluff]\nexclude_rules = LT01\n',
         'query.sql': 'SELECT 1;\n',
     });
@@ -146,9 +151,10 @@ ignore = E501
     const written = await runGspot(sandbox.path, ['init', '--configurations', 'sql']);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    expect(await isOnDisk(join(sandbox.path, findManifestTarget('sql', 'sqlfluff.cfg')))).toBe(true);
+    const isObserved = await isOnDisk(join(sandbox.path, findManifestTarget('sql', 'sqlfluff.cfg')));
+    expect(isObserved).toBe(true);
 });
-test.each([true, false])('init writes gspot.toml only when you confirm the plan (answer %s)', async (answer) => {
+test.each([true, false])('init writes gspot.toml only when you confirm the plan (answer %p)', async (answer) => {
     await using sandbox = await testdir({ 'README.md': '# Example\n' });
     commitAll(sandbox.path);
     await using _terminal = await simulateInteractiveTerminal();

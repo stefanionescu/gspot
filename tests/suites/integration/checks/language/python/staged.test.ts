@@ -9,8 +9,10 @@ import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 
 test('Ruff from the installed environment reports a staged Python finding while the working tree differs', async () => {
     await using sandbox = await testdir();
-    await using project = await createPythonProject(sandbox.path, { indexFile: 'pyproject.toml' });
-    expect(await spawnGspot(project.root, ['install'])).toMatchObject({ code: 0 });
+    runGitStep(sandbox.path, ['init', '--quiet']);
+    await using _project = await createPythonProject(sandbox.path, { indexFile: 'pyproject.toml' });
+    const installed = await spawnGspot(sandbox.path, ['install']);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'source.py'), 'import os\nimport sys\n');
     runGitStep(sandbox.path, ['add', 'source.py']);

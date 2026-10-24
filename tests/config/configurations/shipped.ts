@@ -1,0 +1,15 @@
+export const SUPPRESSION_EXAMPLE_REASONS = new Map([
+    ['shellcheck', 'the word splitting is wanted here'],
+    ['stylelint', 'reason: the vendor widget sets its own color'],
+    ['html-validate', 'reason: the email client strips classes'],
+    ['eslint', 'reason: the command prints its result'],
+    ['tsc', 'reason: the library types omit this overload'],
+    ['markdownlint-cli2', 'reason: the table row cannot wrap'],
+    ['pytest', 'reason: imports for type checkers only'],
+    ['ruff', 'reason: the module registers its plugins on import'],
+    ['basedpyright', 'reason: the payload is checked above'],
+    ['sqlfluff', 'reason: the view mirrors every column'],
+    ['swiftlint', 'reason: the URL is a literal'],
+    ['swiftformat', 'reason: the closure needs self'],
+    ['periphery', 'reason: the runtime calls it by name'],
+]);

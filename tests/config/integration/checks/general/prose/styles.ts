@@ -36,7 +36,7 @@ Read pages 3 to 5.
             {
                 line: 3,
                 rule: 'gspot.en-dashes',
-                message: "En dash '\u2013'. Write 'to' for a range, or use a hyphen in a compound.",
+                message: "En dash '\u{2013}'. Write 'to' for a range, or use a hyphen in a compound.",
             },
         ],
     },

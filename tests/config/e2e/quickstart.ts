@@ -1,5 +1,4 @@
 export const PYTHON_TUTORIAL = {
-    configuration: 'python',
     folder: 'orders-python',
     firstCheckCode: 0,
     projectCommands: [
@@ -11,11 +10,10 @@ export const PYTHON_TUTORIAL = {
     invalidSource: 'def total(items):\n    return sum(items\n',
     check: 'python/ruff',
     rule: 'invalid-syntax',
-    message: 'unexpected EOF while parsing',
+    line: 3,
 } as const;
 
 export const SWIFT_TUTORIAL = {
-    configuration: 'swift',
     folder: 'orders-swift',
     firstCheckCode: 1,
     projectCommands: [['swift', 'package', 'init', '--type', 'library']],
@@ -39,5 +37,5 @@ value as! Int
 `,
     check: 'swift/swiftlint',
     rule: 'force_cast',
-    message: 'Force casts should be avoided',
+    line: 2,
 } as const;

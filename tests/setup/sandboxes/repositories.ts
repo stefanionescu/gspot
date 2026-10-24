@@ -32,7 +32,9 @@ export async function preparePushRepository(
     return { base, reviewed, broken, zero: '0'.repeat(base.length) };
 }
 
-/** Create a repository with a nested scope whose source differs in the commit, the index, and the working tree. */
+/**
+Create a repository with a nested scope whose source differs in the commit, the index, and the working tree.
+*/
 export async function prepareNestedRepository(
     root: string,
 ): Promise<{ project: string; base: string; commitId: string }> {

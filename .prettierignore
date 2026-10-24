@@ -6,23 +6,18 @@
 build/
 
 # Files that Git ignores
-.DS_Store
 .env
 .env.*
-.idea/
-.vscode/
 *.log
-*.swp
-*~
-/.wrangler/
 /docs/.astro/
 /docs/.wrangler/
 /docs/dist/
 /findings/
 /packages/*/dist/
+/packages/*/LICENSE.md
 /packages/cli/grammars/
+/packages/cli/README.md
 node_modules/
-Thumbs.db
 
 # Files that gspot generates
 .gspot/**

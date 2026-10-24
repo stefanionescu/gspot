@@ -37,8 +37,8 @@ export const configurationTableSchemas = {
     structure: z
         .strictObject({
             reexports: allowReasonedValue(z.enum(REEXPORT_MODES), SETTING_DEFINITIONS['structure.reexports']),
-            environment_readers: z
-                .array(relativePath)
+            environment_readers: relativePath
+                .array()
                 .default(SETTING_DEFINITIONS['structure.environment_readers'].default)
                 .meta(SETTING_DEFINITIONS['structure.environment_readers']),
         } satisfies SchemaShape<TableSettings<'structure'>, NonNullable<WrittenSettings['structure']>>)
@@ -60,16 +60,15 @@ export const configurationTableSchemas = {
             functions: allowReasonedValue(percentage, SETTING_DEFINITIONS['coverage.functions']),
             statements: allowReasonedValue(percentage, SETTING_DEFINITIONS['coverage.statements']),
             swift_target: z
-                .array(
-                    z.strictObject({
-                        name: nonemptyString.describe(SETTING_DEFINITIONS['coverage.swift_target.name'].description),
-                        lines: percentage.describe(SETTING_DEFINITIONS['coverage.swift_target.lines'].description),
-                        reason: z
-                            .string()
-                            .optional()
-                            .describe(SETTING_DEFINITIONS['coverage.swift_target.reason'].description),
-                    } satisfies SchemaShape<TableSettings<'coverage'>['swift_target'][number]>),
-                )
+                .strictObject({
+                    name: nonemptyString.describe(SETTING_DEFINITIONS['coverage.swift_target.name'].description),
+                    lines: percentage.describe(SETTING_DEFINITIONS['coverage.swift_target.lines'].description),
+                    reason: z
+                        .string()
+                        .optional()
+                        .describe(SETTING_DEFINITIONS['coverage.swift_target.reason'].description),
+                } satisfies SchemaShape<TableSettings<'coverage'>['swift_target'][number]>)
+                .array()
                 .default(SETTING_DEFINITIONS['coverage.swift_target'].default)
                 .meta(SETTING_DEFINITIONS['coverage.swift_target']),
         } satisfies SchemaShape<TableSettings<'coverage'>, NonNullable<WrittenSettings['coverage']>>)
@@ -90,10 +89,11 @@ export const configurationTableSchemas = {
     docs: z
         .strictObject({
             banned_headings: z
-                .array(z.string())
+                .string()
+                .array()
                 .default(SETTING_DEFINITIONS['docs.banned_headings'].default)
                 .meta(SETTING_DEFINITIONS['docs.banned_headings']),
-            allowed_urls: allowReasonedValue(z.array(z.string()), SETTING_DEFINITIONS['docs.allowed_urls']),
+            allowed_urls: allowReasonedValue(z.string().array(), SETTING_DEFINITIONS['docs.allowed_urls']),
         } satisfies SchemaShape<TableSettings<'docs'>, NonNullable<WrittenSettings['docs']>>)
         .optional(),
     drizzle: z
@@ -107,20 +107,20 @@ export const configurationTableSchemas = {
     python: pythonSchema,
     trpc: z
         .strictObject({
-            router_files: z
-                .array(relativePath)
+            router_files: relativePath
+                .array()
                 .default(SETTING_DEFINITIONS['trpc.router_files'].default)
                 .meta(SETTING_DEFINITIONS['trpc.router_files']),
-            server_files: z
-                .array(relativePath)
+            server_files: relativePath
+                .array()
                 .default(SETTING_DEFINITIONS['trpc.server_files'].default)
                 .meta(SETTING_DEFINITIONS['trpc.server_files']),
         } satisfies SchemaShape<TableSettings<'trpc'>, NonNullable<WrittenSettings['trpc']>>)
         .optional(),
     zustand: z
         .strictObject({
-            store_files: z
-                .array(relativePath)
+            store_files: relativePath
+                .array()
                 .default(SETTING_DEFINITIONS['zustand.store_files'].default)
                 .meta(SETTING_DEFINITIONS['zustand.store_files']),
         } satisfies SchemaShape<TableSettings<'zustand'>, NonNullable<WrittenSettings['zustand']>>)
@@ -163,21 +163,20 @@ export const configurationTableSchemas = {
                 .default(SETTING_DEFINITIONS['site.build_folder'].default)
                 .meta(SETTING_DEFINITIONS['site.build_folder']),
             allowed_unlisted_pages: allowReasonedValue(
-                z.array(relativePath.meta({ path_role: 'build' })),
+                relativePath.meta({ path_role: 'build' }).array(),
                 SETTING_DEFINITIONS['site.allowed_unlisted_pages'],
             ),
             size_limit: z
-                .array(
-                    z.strictObject({
-                        paths: z
-                            .array(destinationPath)
-                            .min(1)
-                            .describe(SETTING_DEFINITIONS['site.size_limit.paths'].description),
-                        kilobytes: nonnegativeInteger.describe(
-                            SETTING_DEFINITIONS['site.size_limit.kilobytes'].description,
-                        ),
-                    } satisfies SchemaShape<TableSettings<'site'>['size_limit'][number]>),
-                )
+                .strictObject({
+                    paths: destinationPath
+                        .array()
+                        .min(1)
+                        .describe(SETTING_DEFINITIONS['site.size_limit.paths'].description),
+                    kilobytes: nonnegativeInteger.describe(
+                        SETTING_DEFINITIONS['site.size_limit.kilobytes'].description,
+                    ),
+                } satisfies SchemaShape<TableSettings<'site'>['size_limit'][number]>)
+                .array()
                 .default(SETTING_DEFINITIONS['site.size_limit'].default)
                 .meta(SETTING_DEFINITIONS['site.size_limit']),
         } satisfies SchemaShape<TableSettings<'site'>, NonNullable<WrittenSettings['site']>>)
@@ -255,7 +254,8 @@ export const configurationTableSchemas = {
     xcode: z
         .strictObject({
             allowed_entitlements: z
-                .array(z.string())
+                .string()
+                .array()
                 .default(SETTING_DEFINITIONS['xcode.allowed_entitlements'].default)
                 .meta(SETTING_DEFINITIONS['xcode.allowed_entitlements']),
         } satisfies SchemaShape<TableSettings<'xcode'>, NonNullable<WrittenSettings['xcode']>>)

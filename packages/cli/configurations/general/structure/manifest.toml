@@ -96,6 +96,7 @@ files = { extensions = [".py", ".swift"], tags = ["shell"], kinds = ["source"] }
 help = "Move the environment read into a file listed in structure.environment_readers, then pass the value to callers."
 level = "all"
 name = "environment-readers"
+when = { setting = "structure.environment_readers" }
 runs = "scope"
 stage = "commit"
 summary = "Finds environment reads outside the files listed in structure.environment_readers."

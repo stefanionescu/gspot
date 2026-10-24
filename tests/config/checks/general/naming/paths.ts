@@ -7,16 +7,6 @@ reason = "The project orders its tasks by this prefix."
 
 const NEXT_PAGE_SOURCE = 'export default function Page() { return null; }\n';
 
-export const MIGRATION_FILES = {
-    'migrations/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
-    'other/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
-} as const;
-
-export const NUMBERED_FILES = {
-    '.mise/tasks/01-build.sh': 'echo example\n',
-    'scripts/steps/01-build.sh': 'echo example\n',
-} as const;
-
 export const FILE_NAME_CASES = [
     {
         name: '__init__.ts is reported; Python __init__.py and __main__.py are allowed',

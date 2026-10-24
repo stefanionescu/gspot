@@ -22,7 +22,7 @@ import {
     FORMAT_OVERRIDE_MIN_FIELDS,
 } from '#cli/config/settings/fields.ts';
 
-export const nonemptyStrings = z.array(nonemptyString);
+export const nonemptyStrings = nonemptyString.array();
 
 export const nonnegativeInteger = z.number().int().nonnegative();
 export const percentage = z.number().min(0).max(MAX_PERCENTAGE);
@@ -82,13 +82,13 @@ export const relativePath = z
     .meta({ path_role: 'source' });
 
 export const destinationPath = relativePath.meta({ path_role: 'destination' });
-export const relativePaths = z.array(relativePath);
+export const relativePaths = relativePath.array();
 export const nonemptyPaths = relativePaths.min(1);
 
 export const namingCategorySchema = z.strictObject({
     max_characters: allowReasonedValue(z.number().int().positive(), SETTING_DEFINITIONS['naming.max_characters']),
     max_words: allowReasonedValue(z.number().int().positive(), SETTING_DEFINITIONS['naming.max_words']),
-    cases: allowReasonedValue(z.array(z.enum(CASE_NAMES)), SETTING_DEFINITIONS['naming.cases']),
+    cases: allowReasonedValue(z.enum(CASE_NAMES).array(), SETTING_DEFINITIONS['naming.cases']),
 } satisfies SchemaShape<ParsedNamingFields, NamingFields<SettingValue<number>, SettingValue<NamingCase[]>>>);
 
 namingCategorySchema.register(z.globalRegistry, { id: 'namingCategory' });
@@ -100,43 +100,43 @@ export const localDateSchema = z.custom<LocalDate>(
     { error: 'Use an unquoted TOML local date in YYYY-MM-DD form, without a time or offset.' },
 );
 
+const formatOverrideSchema = z
+    .strictObject({
+        paths: nonemptyPaths.describe(SETTING_DEFINITIONS['format.override.paths'].description),
+        indent_style: formatFields.shape.indent_style
+            .unwrap()
+            .describe(formatFields.shape.indent_style.description as string),
+        indent_width: formatFields.shape.indent_width
+            .unwrap()
+            .describe(formatFields.shape.indent_width.description as string),
+        print_width: formatFields.shape.print_width
+            .unwrap()
+            .describe(formatFields.shape.print_width.description as string),
+        line_ending: formatFields.shape.line_ending
+            .unwrap()
+            .describe(formatFields.shape.line_ending.description as string),
+        final_newline: formatFields.shape.final_newline
+            .unwrap()
+            .describe(formatFields.shape.final_newline.description as string),
+        quotes: formatFields.shape.quotes.describe(formatFields.shape.quotes.description as string),
+        trailing_commas: formatFields.shape.trailing_commas
+            .unwrap()
+            .describe(formatFields.shape.trailing_commas.description as string),
+        semicolons: formatFields.shape.semicolons
+            .unwrap()
+            .describe(formatFields.shape.semicolons.description as string),
+    } satisfies SchemaShape<
+        TableSettings<'format'>['override'][number],
+        NonNullable<WrittenFormat['override']>[number]
+    >)
+    .refine((override) => Object.keys(override).length > 1, {
+        message: 'A format override needs at least one formatting option.',
+    })
+    .meta({ minProperties: FORMAT_OVERRIDE_MIN_FIELDS });
+
 export const formatSchema = formatFields.extend({
-    override: z
-        .array(
-            z
-                .strictObject({
-                    paths: nonemptyPaths.describe(SETTING_DEFINITIONS['format.override.paths'].description),
-                    indent_style: formatFields.shape.indent_style
-                        .unwrap()
-                        .describe(formatFields.shape.indent_style.description as string),
-                    indent_width: formatFields.shape.indent_width
-                        .unwrap()
-                        .describe(formatFields.shape.indent_width.description as string),
-                    print_width: formatFields.shape.print_width
-                        .unwrap()
-                        .describe(formatFields.shape.print_width.description as string),
-                    line_ending: formatFields.shape.line_ending
-                        .unwrap()
-                        .describe(formatFields.shape.line_ending.description as string),
-                    final_newline: formatFields.shape.final_newline
-                        .unwrap()
-                        .describe(formatFields.shape.final_newline.description as string),
-                    quotes: formatFields.shape.quotes.describe(formatFields.shape.quotes.description as string),
-                    trailing_commas: formatFields.shape.trailing_commas
-                        .unwrap()
-                        .describe(formatFields.shape.trailing_commas.description as string),
-                    semicolons: formatFields.shape.semicolons
-                        .unwrap()
-                        .describe(formatFields.shape.semicolons.description as string),
-                } satisfies SchemaShape<
-                    TableSettings<'format'>['override'][number],
-                    NonNullable<WrittenFormat['override']>[number]
-                >)
-                .refine((override) => Object.keys(override).length > 1, {
-                    message: 'A format override needs at least one formatting option.',
-                })
-                .meta({ minProperties: FORMAT_OVERRIDE_MIN_FIELDS }),
-        )
+    override: formatOverrideSchema
+        .array()
         .default(SETTING_DEFINITIONS['format.override'].default)
         .meta(SETTING_DEFINITIONS['format.override']),
 } satisfies SchemaShape<Pick<TableSettings<'format'>, 'override'>, Pick<WrittenFormat, 'override'>>);
@@ -159,7 +159,7 @@ export function allowReasonedValue<Output, Input>(
             z
                 .strictObject({
                     value: schema.describe(definition.description),
-                    reason: z.string().describe(REASON_DESCRIPTIONS[definition.reason_needed]),
+                    reason: z.string().describe(REASON_DESCRIPTIONS[definition.reason_when]),
                 })
                 .transform((reasoned) => reasoned.value) satisfies z.ZodType<Output, ReasonedValue<Input>>,
         ])

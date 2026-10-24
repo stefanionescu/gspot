@@ -36,7 +36,7 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
                 <span class="sr-only">Package manager</span>
                 <select>
                     {SETUP_COMMANDS.map(({ label }, index) => (
-                        <option value={index}>{label}</option>
+                        <option value={index}>{label.toLowerCase()}</option>
                     ))}
                 </select>
                 <Icon name="down-caret" size="1rem" class="icon-16" />
@@ -72,10 +72,10 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
                 {promptStart}
                 <span class="em">
                     <span class="nowrap">curl -fsSL</span>{' '}
-                    {LLMS_URL.split(URL_BREAK).map((part, index) => (
+                    {LLMS_URL.split(URL_BREAK).map((segment, index) => (
                         <>
                             {index > 0 && <wbr />}
-                            {part}
+                            {segment}
                         </>
                     ))}
                 </span>
@@ -91,14 +91,11 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
 
     class HomeSetup extends HTMLElement {
         connectedCallback(): void {
-            const manager = this.querySelector('select');
+            const manager = this.querySelector('select') as HTMLSelectElement;
             const commands = [...this.querySelectorAll<HTMLPreElement>('pre.commands')];
-            const copy = this.querySelector('[data-copy]');
-            const status = this.querySelector('[data-copy-status]');
+            const copy = this.querySelector('[data-copy]') as HTMLButtonElement;
+            const status = this.querySelector('[data-copy-status]') as HTMLElement;
             const tabs = [...this.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
-            if (manager === null || commands.length === 0 || copy === null || status === null) {
-                throw new Error('The setup card has a missing control.');
-            }
             manager.addEventListener('change', () => {
                 for (const [index, pre] of commands.entries()) pre.hidden = index !== manager.selectedIndex;
             });
@@ -106,12 +103,11 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
                 tab.addEventListener('click', () => {
                     this.dataset['mode'] = tab.dataset['mode'];
                     for (const other of tabs) {
-                        const selected = other === tab;
-                        other.setAttribute('aria-selected', String(selected));
-                        other.tabIndex = selected ? 0 : -1;
-                        const panel = this.querySelector<HTMLElement>(`#${other.getAttribute('aria-controls')}`);
-                        if (panel === null) throw new Error('The setup tab has no panel.');
-                        panel.hidden = !selected;
+                        const isSelected = other === tab;
+                        other.setAttribute('aria-selected', String(isSelected));
+                        other.tabIndex = isSelected ? 0 : -1;
+                        const panel = this.querySelector(`#${other.getAttribute('aria-controls') ?? ''}`) as HTMLElement;
+                        panel.hidden = !isSelected;
                     }
                 });
                 tab.addEventListener('keydown', (event) => {
@@ -119,10 +115,9 @@ const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
                     event.preventDefault();
                     let next = tabs.find((other) => other !== tab);
                     if (event.key === 'Home') next = tabs[0];
-                    if (event.key === 'End') next = tabs.at(-1);
-                    if (next === undefined) throw new Error('The setup card has no next tab.');
-                    next.click();
-                    next.focus();
+                    else if (event.key === 'End') next = tabs.at(-1);
+                    next?.click();
+                    next?.focus();
                 });
             }
             copy.addEventListener('click', async () => {

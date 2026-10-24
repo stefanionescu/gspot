@@ -23,7 +23,7 @@ npm = "typescript-eslint"
 requires = ["tsc"]
 rule_prefix = "@typescript-eslint"
 rule_url = "https://typescript-eslint.io/rules/{rule}"
-version = "8.70.0"
+version = "8.71.2"
 
 [tool.eslint]
 extensions = [".ts", ".tsx", ".mts", ".cts"]

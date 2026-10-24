@@ -13,7 +13,7 @@ kind = "library"
 name = "@tanstack/eslint-plugin-query"
 npm = "@tanstack/eslint-plugin-query"
 rule_prefix = "@tanstack/query"
-version = "5.91.2"
+version = "5.104.3"
 
 [eslint]
 required_tools = ["@tanstack/eslint-plugin-query"]

@@ -1,7 +1,7 @@
 export const ESLINT_PRESETS_FILE = 'eslint-presets.json';
 
 export const TABINDEX_RULES = [
-    'jsx-a11y/no-noninteractive-tabindex',
+    'jsx-a11y-x/no-noninteractive-tabindex',
     'astro/jsx-a11y/no-noninteractive-tabindex',
 ] as const;
 

@@ -31,6 +31,7 @@ The commitlint findings of a commit message with no type, one sentence such as `
 @param hash the commit.
 @returns each rule with its message.
 */
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 2 calls in 1 file share it.
 export function buildUntypedMessageFindings(hash: string): { rule: string; message: string }[] {
     return [

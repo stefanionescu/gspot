@@ -1,4 +1,4 @@
-export type CloneLocation = { name: string; start: number; end: number };
+export type CloneLocation = { name: string; start: number };
 
 export type CloneReport = {
     duplicates: {

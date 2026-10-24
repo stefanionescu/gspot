@@ -11,10 +11,8 @@ export type PackageJsonFields = {
     version?: string | undefined;
     imports?: Record<string, unknown> | undefined;
     files?: string[] | undefined;
-    private?: boolean | undefined;
     packageManager?: string | undefined;
     devEngines?: PackageDevEngines | undefined;
-    type?: string | undefined;
     workspaces?: string[] | PackageWorkspaces | undefined;
     dependencies?: Record<string, string> | undefined;
     devDependencies?: Record<string, string> | undefined;
@@ -47,8 +45,6 @@ export type PythonDependencyGroup = (string | PythonGroupInclude)[];
 export type PythonProject = {
     dependencies?: string[] | undefined;
     'optional-dependencies'?: Record<string, string[]> | undefined;
-    scripts?: Record<string, string> | undefined;
-    'requires-python'?: string | undefined;
 };
 
 export type PoetryGroup = { dependencies?: Record<string, PythonDependency> | undefined };

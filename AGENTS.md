@@ -56,13 +56,13 @@ A more specific rule wins over a general one.
 - `.gspot/configurations/framework/astro/rules/ASTRO.md` in `docs/`: when you change Astro components, pages, or content collections.
 - `.gspot/configurations/framework/site/rules/SITE.md` in `docs/`: when you change a site that a build turns into static HTML.
 
-## Libraries
-
-- `.gspot/configurations/library/zod/rules/ZOD.md` in `docs/`, `packages/cli/`, `tests/`: when you write or change a Zod schema.
-
 ## Platforms
 
 - `.gspot/configurations/platform/cloudflare/rules/CLOUDFLARE.md` in `docs/`: when code runs on Cloudflare Workers.
+
+## Libraries
+
+- `.gspot/configurations/library/zod/rules/ZOD.md` in `packages/cli/`, `tests/`: when you write or change a Zod schema.
 
 ## Commands
 
@@ -167,12 +167,12 @@ repository.
   test files of one folder may share `tests/config/<folder>.ts`.
 - `suites/` and `unit/cli/` drop out of a `tests/config/` path. Values that only the integration suites read live under
   `tests/config/integration/`.
-- A value goes to `tests/config/` when two test files read it, when it forms a `test.each` table with expected results,
-  or when it has more than five lines. RuleTester cases and the arguments of a command stay beside their call.
+- A value goes to `tests/config/` when a test file reads it more than once, or when two test files read it. It also goes
+  there when it forms a `test.each` table with expected results, or when it has more than five lines.
+- A value read once stays at its call. RuleTester cases and the arguments of a command stay beside their call.
 - `tests/suites/` holds the `unit/`, `integration/`, and `e2e/` suites. `tests/setup/` holds the code that tests share,
   in one subfolder per job.
-- `tests/types/` holds the types that two or more test files share, and `tests/schemas/` the schemas that read tool
-  output in tests.
+- `tests/types/` holds the types of the tests, and `tests/schemas/` the schemas that read tool output in tests.
 
 ## Dependency overrides
 
@@ -183,5 +183,4 @@ The root `package.json` overrides keep transitive packages on security fixes.
 | `handlebars`              | `4.7.10` | [GHSA-xw65-4hp5-5hc7](https://github.com/advisories/GHSA-xw65-4hp5-5hc7) — Prevents JavaScript injection from precompiled templates; eslint-plugin-boundaries and @boundaries/elements pin 4.7.9.                                                                                                                                                                                                                                      |
 | `js-yaml@3`               | `4.3.2`  | [GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c) — Removes the unpatched sprintf-js dependency chain that @istanbuljs/load-nyc-config receives through major 3.                                                                                                                                                                                                                                                |
 | `postcss-selector-parser` | `7.1.6`  | [GHSA-rj75-hqrm-r3gf](https://github.com/advisories/GHSA-rj75-hqrm-r3gf) — Bounds flat-selector processing; PurgeCSS and postcss-nested request major 6.                                                                                                                                                                                                                                                                               |
-| `sharp`                   | `0.35.5` | [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w) — Fixes the bundled librsvg vulnerability; Miniflare pins 0.35.4.                                                                                                                                                                                                                                                                                             |
 | `undici@7`                | `7.30.1` | [GHSA-w293-vg96-wgc3](https://github.com/advisories/GHSA-w293-vg96-wgc3), [GHSA-4qv8-2p9j-2685](https://github.com/advisories/GHSA-4qv8-2p9j-2685), [GHSA-f72v-6w45-q472](https://github.com/advisories/GHSA-f72v-6w45-q472), [GHSA-xjj6-f33q-929c](https://github.com/advisories/GHSA-xjj6-f33q-929c) — Preserves TLS validation options in BalancedPool and bounds EventSource and content-encoding handling; Miniflare pins 7.29.0. |

@@ -8,14 +8,15 @@ import { isTable, getValueAt } from '#cli/system/tables.ts';
 import type { BunPackage } from '#cli/types/install/npm.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { NPM_PACKAGE_FOLDER } from '#cli/config/files/names.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
 import { NPM_SETTING_PREFIX } from '#cli/config/install/npm/project.ts';
 import type { YarnPackage } from '#cli/types/parsers/projects/lockfiles.ts';
 import type { DependencyMap } from '#cli/types/parsers/projects/dependencies.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
+import { PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects/lockfiles.ts';
 import { bunLockSchema, yarnLockSchema, yarnPackageSchema } from '#cli/schemas/parsers/projects/lockfiles.ts';
-import { PNPM_PEER_START, PNPM_ROOT_IMPORTER, NPM_PACKAGE_FOLDER } from '#cli/config/parsers/projects/lockfiles.ts';
 import { INTEGRITY, LOCKFILE_WORKSPACE_KEYS, YARN_DESCRIPTOR_SEPARATOR } from '#cli/config/install/npm/lockfiles.ts';
 
 import {

@@ -5,7 +5,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import type { Sandbox } from '#tests/types/sandbox.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import type { Level } from '#cli/types/configurations.ts';
-import type { SampleChanges } from '#tests/types/samples.ts';
+import type { SandboxChanges } from '#tests/types/samples.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -178,7 +178,7 @@ async function checkNextjsOptions(
     ).toStrictEqual(expected.map(({ file, line, rule }) => ({ file, line, rule })));
 }
 
-async function applyStagedSandboxChanges(sandbox: Sandbox, changes: SampleChanges): Promise<AsyncDisposable> {
+async function applyStagedSandboxChanges(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     await using resources = new AsyncDisposableStack();
     resources.use(await changeAppliedSandbox(sandbox, changes));
     runGitStep(sandbox.root, ['add', '--all']);

@@ -22,7 +22,8 @@ Run these commands in the root of your repository.
 
 1. The first command adds gspot to the project, pinned to one version.
 2. `gspot init` shows a plan. When you accept it, gspot writes `gspot.toml`, the config files, `AGENTS.md` and the
-   rules, the Git hooks, and the CI workflow, and deletes the config files it replaces.
+   rules, and the Git hooks, and deletes the config files it replaces. When the `origin` remote points to GitHub or
+   GitLab, it also writes the CI workflow.
    [Read the plan](/start/migrate/#read-the-plan) first.
 3. `gspot install` installs the pinned tools and turns on the hooks. From then on, every commit runs the checks.
 
@@ -42,10 +43,6 @@ The agent then:
    the plan. It writes the plan only after you agree.
 3. Runs `gspot install` and `gspot check`, and shows you the result.
 4. Reads `AGENTS.md` and the agent rules before it writes more code.
-
-:::note
-Agents read the steps in [/llms.txt](/llms.txt). Read the whole documentation in [/llms-full.txt](/llms-full.txt).
-:::
 
 ## After you install
 

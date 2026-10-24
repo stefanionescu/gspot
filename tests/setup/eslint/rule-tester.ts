@@ -10,6 +10,7 @@ A rule tester using the TypeScript parser and a fixed repository root.
 @param options.languageOptions the parser and runtime settings for the cases.
 @returns a tester that runs the ESLint plugin rules.
 */
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 11 files share it.
 export function createRuleTester({
     root = RULE_TESTER_ROOT,

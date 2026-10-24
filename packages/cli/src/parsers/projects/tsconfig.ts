@@ -21,7 +21,7 @@ function readReferencedProjects(
 ): Map<string, TypeScriptConfiguration> {
     const projects = new Map<string, TypeScriptConfiguration>();
     const pending = [resolve(path)];
-    for (const projectPath of pending) {
+    for (let projectPath = pending.shift(); projectPath !== undefined; projectPath = pending.shift()) {
         if (projects.has(projectPath)) continue;
         const parsed = readTsconfig(repositoryRoot, projectPath, reads);
         if (parsed === undefined) throw new Error(`Missing TypeScript project: ${projectPath}`);
@@ -75,7 +75,8 @@ function buildCompilerHost(
     options: ts.CompilerOptions,
 ): ts.CompilerHost {
     const host = ts.createCompilerHost(options);
-    const libraries = new Set([dirname(dirname(ts.getDefaultLibFilePath(options)))]);
+    const libraryFile = ts.getDefaultLibFilePath(options);
+    const libraries = new Set([dirname(dirname(libraryFile))]);
     const readCanonicalPath = host.realpath?.bind(host);
     const getSourceFile = host.getSourceFile.bind(host);
     host.getSourceFile = (path, languageVersion, _onError, createSource) =>
@@ -181,11 +182,11 @@ export function readTsconfigProject(
         if (config === undefined) continue;
         const projects = readReferencedProjects(repositoryRoot, path, reads);
         const members = new Set(
-            [...projects.values()].flatMap((project) => project.fileNames.map((file) => convertToPosixPath(file))),
+            projects.values().flatMap((project) => project.fileNames.map((file) => convertToPosixPath(file))),
         );
-        if (folder !== scope && files.some((file) => !members.has(convertToPosixPath(join(repositoryRoot, file)))))
-            return undefined;
-        return { path, config, projects };
+        return folder !== scope && files.some((file) => !members.has(convertToPosixPath(join(repositoryRoot, file))))
+            ? undefined
+            : { path, config, projects };
     }
     return undefined;
 }
@@ -208,7 +209,7 @@ export function listSourceFiles(
     const program = ts.createProgram({
         rootNames: config.fileNames,
         options: config.options,
-        ...(config.projectReferences === undefined ? {} : { projectReferences: config.projectReferences }),
+        ...(config.projectReferences !== undefined && { projectReferences: config.projectReferences }),
         host: buildCompilerHost(repositoryRoot, scope, reads, config.options),
     });
     return program

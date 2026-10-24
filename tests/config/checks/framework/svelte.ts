@@ -3,6 +3,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 export const SVELTE_PROJECTS = [
     {
         name: 'root JavaScript',
+        typeRoots: ['node_modules/@types'],
         scope: '',
         settings: buildSandboxSettings(['svelte'], { scopes: [{ path: 'app' }] }),
         files: {},
@@ -11,6 +12,7 @@ export const SVELTE_PROJECTS = [
     },
     {
         name: 'scoped TypeScript',
+        typeRoots: ['app/node_modules/@types', 'node_modules/@types'],
         scope: 'app',
         settings: buildSandboxSettings(['svelte', 'typescript'], { scopes: [{ path: 'app' }] }),
         files: {

@@ -5,10 +5,10 @@ export type SandboxPlan = {
     configurations: readonly string[];
     dependencies?: Readonly<Record<string, string>>;
     files: Readonly<Record<string, string>>;
-    tsconfig?: Record<string, unknown>;
+    json?: Readonly<Record<string, unknown>>;
     level?: Level;
     before?: (root: string) => void | Promise<void>;
-    prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>;
+    prepare?: (root: string) => void | Promise<void>;
     cleanSource?: string;
 };
 
@@ -19,6 +19,5 @@ export type InstalledSandboxPlan = SandboxPlan & {
 
 export type Sandbox = {
     root: string;
-    environment: Record<string, string>;
     run: GspotCall;
 };

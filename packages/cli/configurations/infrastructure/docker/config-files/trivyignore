@@ -1,2 +1,0 @@
-# This file stops Trivy from reading the repository .trivyignore.
-# Accept a finding with gspot ignore docker/trivy-config and a reason.

@@ -5,9 +5,13 @@ import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { BUN_PROJECT_FILES, MATCHED_REACT_FILES } from '#tests/config/checks/general/dependencies.ts';
+import { BUN_PROJECT_FILES } from '#tests/config/checks/general/dependencies.ts';
 
 test('react-versions reports react and react-dom that lock different versions, and nothing when they match', async () => {
+    const MATCHED_REACT_FILES = Object.fromEntries(
+        Object.entries(BUN_PROJECT_FILES).map(([path, text]) => [path, text.replaceAll('19.0.0', '19.1.0')]),
+    );
+
     await using sandbox = await testdir({
         ...BUN_PROJECT_FILES,
         'gspot.toml': buildSandboxSettings(['react-dom']),

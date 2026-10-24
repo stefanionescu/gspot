@@ -2,17 +2,15 @@ import { resolve, relative } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { Configuration } from '#cli/types/configurations.ts';
-import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
 import { LINT_FOLDERS } from '#cli/config/repository/setup/tools.ts';
 import { buildPathMatcher } from '#cli/repository/files/matchers.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import type { ScopeFolder, TrackedFile } from '#cli/types/repository/files.ts';
 import { ROOT_SCOPE, EVERY_FILE_GLOBS } from '#cli/config/repository/scopes.ts';
 import type { DependencyFile } from '#cli/types/parsers/projects/dependencies.ts';
-import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/repository/files/tracked.ts';
-import { GLOB_EXCLUDE, FOLDER_CONTENTS, GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
+import { GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/files/path-patterns.ts';
+import { isInside, escapeGlob, convertToPosixPath, isInInstalledFolder } from '#cli/system/paths.ts';
 
 /**
 Build a command path from its calling folder within the repository.
@@ -78,10 +76,7 @@ export function isScopeCovered(paths: string[], scope: string): boolean {
     if (scope === '') return false;
     const segments = scope.split('/');
     return segments.some((_, index) => {
-        const literal = segments
-            .slice(0, index + 1)
-            .join('/')
-            .replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH);
+        const literal = escapeGlob(segments.slice(0, index + 1).join('/'));
         return paths.includes(literal) || paths.includes(`${literal}${FOLDER_CONTENTS}`);
     });
 }
@@ -119,11 +114,8 @@ export function findScopeFolders(
         (file) =>
             file.kind === 'source' &&
             !toolOnlyPackages.has(file.path) &&
-            !(
-                file.path.startsWith(`${DOT_GSPOT}/`) ||
-                file.path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment))
-            ) &&
-            !LINT_FOLDERS.some((folder) => file.path.startsWith(`${folder}/`)),
+            !(file.path.startsWith(`${DOT_GSPOT}/`) || isInInstalledFolder(file.path)) &&
+            LINT_FOLDERS.every((folder) => !file.path.startsWith(`${folder}/`)),
     );
     for (const file of sources) {
         for (const pattern of patterns) {

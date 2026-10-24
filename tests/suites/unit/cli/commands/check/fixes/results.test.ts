@@ -13,16 +13,15 @@ import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { planFixer, buildRunOptions, buildFixerSettings } from '#tests/setup/cli/runs.ts';
 import { FIXER_RESULTS, FAILING_VERSION_TOOL } from '#tests/config/commands/check/fixes/results.ts';
 
-test.each([0, 3])('a declared crash pattern fails a fix that exits %s', async (code) => {
+test.each([0, 3])('a declared crash pattern fails a fix that exits %p', async (code) => {
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`);
     planned.check.exit_codes = [3];
     planned.tool!.crash_pattern = '^Fatal:';
-    const {
-        results: [failed],
-    } = await runFixers(session, [planned], { isDryRun: false });
+    const failedRun = await runFixers(session, [planned], { isDryRun: false });
+    const failed = failedRun.results[0];
     expect(failed).toMatchObject({
         status: 'failed',
         changed: [],
@@ -30,9 +29,8 @@ test.each([0, 3])('a declared crash pattern fails a fix that exits %s', async (c
     });
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
     corrected.tool!.crash_pattern = planned.tool!.crash_pattern;
-    const {
-        results: [correctedResult],
-    } = await runFixers(session, [corrected], { isDryRun: false });
+    const correctedResultRun = await runFixers(session, [corrected], { isDryRun: false });
+    const correctedResult = correctedResultRun.results[0];
     expect(correctedResult).toMatchObject({
         status: 'changed',
         changed: ['source.txt'],
@@ -47,9 +45,8 @@ test.each([...FIXER_RESULTS])(
         const session = await openSession(sandbox.path);
         const planned = planFixer(session, script);
         if (exitCodes !== undefined) planned.check.exit_codes = [...exitCodes];
-        const {
-            results: [result],
-        } = await runFixers(session, [planned], { isDryRun: false });
+        const resultRun = await runFixers(session, [planned], { isDryRun: false });
+        const result = resultRun.results[0];
         expect({ status: result!.status, note: 'note' in result! ? result.note : undefined }).toStrictEqual({
             status,
             note,
@@ -63,11 +60,10 @@ test('a fixer that swaps one invalid UTF-8 byte for another reports the file as 
     await using sandbox = await testdir({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
 
     const session = await openSession(sandbox.path);
-    await writeFile(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
     const planned = planFixer(session, "await Bun.write('source.txt', new Uint8Array([0xfe]))");
-    const {
-        results: [result],
-    } = await runFixers(session, [planned], { isDryRun: false });
+    await writeFile(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
+    const resultRun = await runFixers(session, [planned], { isDryRun: false });
+    const result = resultRun.results[0];
     expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
     expect(await readFile(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
 });
@@ -77,9 +73,8 @@ test('a fixer that deletes an empty file reports it as changed', async () => {
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "require('node:fs').unlinkSync('source.txt')");
-    const {
-        results: [result],
-    } = await runFixers(session, [planned], { isDryRun: false });
+    const resultRun = await runFixers(session, [planned], { isDryRun: false });
+    const result = resultRun.results[0];
     expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
     expect(await isOnDisk(join(sandbox.path, 'source.txt'))).toBe(false);
 });
@@ -89,14 +84,16 @@ test('a skipped fixer reports skipped, and a fixer whose program is missing fail
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "await Bun.write('source.txt', 'wrong')");
-    const skipped = await runFixers(session, [{ ...planned, skip: { cause: 'level', note: 'Not selected.' } }], {
+    const skippedRun = await runFixers(session, [{ ...planned, skip: { cause: 'level', note: 'Not selected.' } }], {
         isDryRun: false,
-    }).then(({ results }) => results[0]!);
-    const failed = await runFixers(
+    });
+    const skipped = skippedRun.results[0]!;
+    const failedRun = await runFixers(
         session,
         [{ ...planned, check: { ...planned.check, fix: [join(sandbox.path, 'absent-tool')] } }],
         { isDryRun: false },
-    ).then(({ results }) => results[0]!);
+    );
+    const failed = failedRun.results[0]!;
     expect(skipped.status).toBe('skipped');
     expect(failed).toMatchObject({
         status: 'failed',
@@ -110,11 +107,12 @@ test('a fixer runs its own program when the check program is missing', async () 
 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "await Bun.write('source.txt', 'corrected')");
-    const result = await runFixers(
+    const resultRun = await runFixers(
         session,
         [{ ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {}, kind: 'program' } }],
         { isDryRun: false },
-    ).then(({ results }) => results[0]!);
+    );
+    const result = resultRun.results[0]!;
     expect(result.status).toBe('changed');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
 });
@@ -142,7 +140,8 @@ test('a failed version check blocks a check and its fix without changing source 
     const checked = await runCheckCommand(session, planned);
     expect(checked.status).toBe('error');
     expect(checked.note).toBe('The version command of version-teller exited 7: 3.8.1');
-    const fixed = await runFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
+    const fixedRun = await runFixers(session, [planned], { isDryRun: false });
+    const fixed = fixedRun.results[0]!;
     expect(fixed.status).toBe('failed');
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
 });

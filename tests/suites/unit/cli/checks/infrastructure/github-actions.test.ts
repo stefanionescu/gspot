@@ -46,8 +46,9 @@ test('actionlint copies root actions and unchanged actions outside .github with 
         );
         return buildProcessResult();
     });
-    const result = await runChecks(session, buildRunOptions({ only: ['github-actions/actionlint'] }));
-    expect(result.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    const planned = planChecks(session, buildRunOptions({ only: ['github-actions/actionlint'] }))[0]!;
+    const result = await runCheckCode(session, planned, findCheckCode(planned.check));
+    expect(result.findings).toStrictEqual([]);
     expect(boundary).toHaveBeenCalledTimes(1);
     for (const [path, source] of Object.entries(OUTSIDE_GITHUB_ACTIONS))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
@@ -86,7 +87,7 @@ test.each([...GENERATED_WORKFLOW_CHECKS])(
 );
 
 test.each([...WORKFLOW_TEXT_CASES])(
-    'actionlint prepares $path references without changing their offsets',
+    'actionlint prepares references without changing their offsets: $name',
     async ({ path, before, expected }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildSandboxSettings(['github-actions']),
@@ -124,11 +125,8 @@ test.each([...ACTIONLINT_EXITS])(
             'gspot.toml': buildSandboxSettings(['github-actions']),
             '.github/workflows/caller.yml': workflow,
         });
-        await writeScriptCommand(
-            sandbox.path,
-            'actionlint',
-            `if (process.argv.includes('--version')) console.log(${JSON.stringify(getTool(readConfigurations().values(), 'actionlint').version)}); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`,
-        );
+        const observed = `if (process.argv.includes('--version')) console.log(${JSON.stringify(getTool(readConfigurations().values(), 'actionlint').version)}); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`;
+        await writeScriptCommand(sandbox.path, 'actionlint', observed);
         await chmod(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
         const session = await openSession(sandbox.path);
         using _pins = fakeToolExecutables([getTool(session.configurations.values(), 'shellcheck')]);

@@ -2,18 +2,6 @@ export const SEPARATORS = /[^A-Za-z0-9]+/u;
 
 export const DIGIT_BOUNDARY = /(?<=\D)(?=\d)|(?<=\d)(?=\D)/u;
 
-export const CATEGORY_PARENTS = {
-    classes: 'types',
-    type_aliases: 'types',
-    exceptions: 'types',
-    methods: 'functions',
-    constants: 'variables',
-    attributes: 'properties',
-    enum_cases: 'properties',
-    modules: 'files',
-    packages: 'folders',
-} as const;
-
 export const NUMERIC_WORDS = new Set([
     'base64',
     'utf8',

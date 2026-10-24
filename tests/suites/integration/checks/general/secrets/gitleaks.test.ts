@@ -59,13 +59,15 @@ test('secrets/gitleaks-staged skips a folder without Git and checks staged chang
         'src/config.js': `const token = "${API_TOKEN}";\n`,
     });
 
-    expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
+    const applied = await spawnGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const withoutGit = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
     ).report.checks;
     expect(withoutGit).toMatchObject([{ check: 'secrets/gitleaks-staged', status: 'skipped' }]);
     commitAll(sandbox.path);
-    expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
+    const reapplied = await spawnGspot(sandbox.path, ['apply']);
+    expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
     const committed = parseCheckReport(
         await spawnGspot(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json']),
     ).report.checks;
@@ -100,6 +102,7 @@ test('gitleaks reports both staged secrets, hides the tokens, and passes after t
 
 test('secrets/gitleaks-pushed reports the secrets of the pushed commits only', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const { base, leaked, removed } = await prepareHistory(sandbox.path);
     const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-pushed', '--json'];
     const history = await spawnGspot(
@@ -129,6 +132,7 @@ test('secrets/gitleaks-pushed reports the secrets of the pushed commits only', a
 
 test('secrets/gitleaks-pushed drops a finding only when an ignore names its exact fingerprint, and never prints a token', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const { base, leaked } = await prepareHistory(sandbox.path);
     const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-pushed', '--json'];
     const settings = buildSandboxSettings(['secrets']);

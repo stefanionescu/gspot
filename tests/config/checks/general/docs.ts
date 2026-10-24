@@ -80,7 +80,7 @@ export const MISE_TASK_SOURCES = [
 export const MALFORMED_TASK_FILES = [
     {
         path: 'package.json',
-        message: 'package.json is not valid JSON: Invalid JSON at offset 1: InvalidSymbol. Fix the file.',
+        message: 'package.json:1:2 is not valid JSON: InvalidSymbol. Fix the file.',
         text: '{broken',
         document: 'a.md',
         scopes: [],
@@ -88,7 +88,7 @@ export const MALFORMED_TASK_FILES = [
     },
     {
         path: 'mise.toml',
-        message: 'mise.toml:1:7 is not valid TOML:',
+        message: 'mise.toml:1:7 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
         text: '[tasks',
         document: 'a.md',
         scopes: [],
@@ -96,7 +96,7 @@ export const MALFORMED_TASK_FILES = [
     },
     {
         path: 'app/package.json',
-        message: 'app/package.json is not valid JSON: Invalid JSON at offset 1: InvalidSymbol. Fix the file.',
+        message: 'app/package.json:1:2 is not valid JSON: InvalidSymbol. Fix the file.',
         text: '{broken',
         document: 'app/nested/guide.md',
         scopes: DOC_TASK_SCOPES,
@@ -104,7 +104,7 @@ export const MALFORMED_TASK_FILES = [
     },
     {
         path: 'app/mise.toml',
-        message: 'app/mise.toml:1:7 is not valid TOML:',
+        message: 'app/mise.toml:1:7 is not valid TOML: Expected table closing "]", found end of file. Fix the file.',
         text: '[tasks',
         document: 'app/nested/guide.md',
         scopes: DOC_TASK_SCOPES,

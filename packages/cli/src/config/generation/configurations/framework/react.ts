@@ -1,9 +1,8 @@
 export const REACT_RULES = {
-    'react/prop-types': 'off',
-    'react/no-array-index-key': 'error',
-    'react/self-closing-comp': 'error',
-    'react/no-danger': 'error',
-    'react/no-unstable-nested-components': 'error',
-    'react/jsx-no-constructed-context-values': 'error',
-    'react/no-object-type-as-default-prop': 'error',
+    '@eslint-react/no-missing-component-display-name': 'error',
+    '@eslint-react/no-array-index-key': 'error',
+    '@eslint-react/dom-no-dangerously-set-innerhtml': 'error',
+    '@eslint-react/no-nested-component-definitions': 'error',
+    '@eslint-react/no-unstable-context-value': 'error',
+    '@eslint-react/no-unstable-default-props': 'error',
 } as const;

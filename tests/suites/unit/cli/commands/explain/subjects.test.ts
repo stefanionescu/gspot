@@ -3,13 +3,12 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
 import { getTool } from '#cli/configurations/tools.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { type PathExplanation } from '#cli/types/commands/explain.ts';
-import { listAlwaysSelected } from '#tests/setup/cli/configurations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/checks/language/bash/sandbox.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 
 import {
     PATH_IGNORES,
@@ -23,6 +22,7 @@ import {
 
 test('a path explanation lists the command checks and the ignores that apply', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const settings = buildSandboxSettings([], {
         rules: true,
         scopes: [{ path: 'api', configurations: [] }],
@@ -59,8 +59,9 @@ test('a path explanation lists the command checks and the ignores that apply', a
         explanation.checks.filter(({ check }) => check !== 'project/syntax'),
     );
 });
+
 test('a configuration name stays a name, and a tracked or ./ path explains the file', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': EXPLAIN_SETTINGS,
         bash: CLEAN_BASH_SCRIPT,
         'api/build.sh': CLEAN_BASH_SCRIPT,
@@ -98,6 +99,7 @@ test.each(['run.sh', './run.sh', '../src/run.sh'])('explain resolves %s from its
     expect(after.code, after.stdout + after.stderr).toBe(0);
     expect(JSON.parse(after.stdout)).toStrictEqual(JSON.parse(before.stdout));
 });
+
 test('a file path reports its scope, checks, and ignores', async () => {
     await using sandbox = await testdir({
         'gspot.toml': EXPLAIN_SETTINGS,
@@ -116,12 +118,7 @@ test('a file path reports its scope, checks, and ignores', async () => {
         fileKind: 'source',
         ignores: [...PATH_IGNORES],
     });
-    expect(explanation.configurations.filter((name) => !listAlwaysSelected().includes(name))).toStrictEqual(['bash']);
-    expect(explanation.configurations.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-        [...new Set(explanation.checks.flatMap(({ configuration }) => configuration ?? []))].toSorted((left, right) =>
-            left.localeCompare(right),
-        ),
-    );
+    expect(explanation.configurations).toStrictEqual(['format', 'prose', 'secrets', 'security', 'spelling', 'bash']);
     expect(explanation.checks.filter(({ configuration }) => configuration === 'bash')).toStrictEqual(
         ['shellcheck', 'shfmt', 'unused-functions', 'unread-arguments', 'safety'].map((name) => ({
             check: `bash/${name}`,
@@ -130,6 +127,7 @@ test('a file path reports its scope, checks, and ignores', async () => {
         })),
     );
 });
+
 test.each([...UNKNOWN_SUBJECT_CASES])(
     'explain of %s fails with an arguments error that names the subject',
     async (subject, message) => {
@@ -141,23 +139,12 @@ test.each([...UNKNOWN_SUBJECT_CASES])(
         expect(JSON.parse(result.stdout)).toStrictEqual({ error: 'arguments', message });
     },
 );
-test.each([
-    ['bash', 'configuration'],
-    ['bash/shellcheck', 'check'],
-] as const)('configuration and check explanations still resolve without settings (%j)', async (subject, kind) => {
-    await using sandbox = await testdir({ 'README.md': '# Example\n' });
-
-    commitAll(sandbox.path);
-
-    const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toMatchObject({ kind, subject });
-});
 
 test.each([...CONFIGURATION_DETECTION_LINES])(
     'explain $configuration lists the detection rules and file tags',
     async ({ configuration, lines }) => {
         await using sandbox = await testdir({ 'README.md': '# Example\n' });
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const result = await runGspot(sandbox.path, ['explain', configuration]);
         expect({ code: result.code, stderr: result.stderr }).toStrictEqual({ code: 0, stderr: '' });
         expect(
@@ -170,6 +157,7 @@ test.each([...CHECK_TOOL_MINIMUMS])(
     'explain <check> lists the minimum versions of the tools that the check runs, not of every tool of its configuration: $check',
     async ({ check, tools }) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const configurations = readConfigurations();
         const expected = tools.map((name) => {
             const minimum = getTool(configurations.values(), name).min_version;

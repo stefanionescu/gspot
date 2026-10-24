@@ -4,13 +4,16 @@ import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { DURATION } from '#tests/config/commands/check/report.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { FIX_SUMMARY_CASES } from '#tests/config/commands/check/fixes/feedback.ts';
 
 test.each([...FIX_SUMMARY_CASES])(
     'check --fix --dry-run shows the diff and writes nothing, and check --fix reports $name',
-    async ({ paths, preview, applied }) => {
+    async ({ paths, previewText, appliedText }) => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const settings = buildSandboxSettings([], {
             tables: stringify({
                 command_check: [
@@ -37,16 +40,15 @@ test.each([...FIX_SUMMARY_CASES])(
         });
         const planned = await runGspot(sandbox.path, ['check', '--only', 'sandbox/feedback', '--fix', '--dry-run']);
         expect(planned.code, planned.stdout + planned.stderr).toBe(0);
-        expect(planned.stdout).toContain(`${preview}\n`);
-        expect(planned.stdout.split('\n').filter((line) => line === '-original')).toHaveLength(paths.length);
-        expect(planned.stdout.split('\n').filter((line) => line === '+corrected')).toHaveLength(paths.length);
+        expect(planned.stdout.replaceAll(DURATION, '0.0s')).toBe(previewText);
         expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
         expect(await readFile(join(sandbox.path, 'other.txt'), 'utf8')).toBe('original\n');
         const corrected = await runGspot(sandbox.path, ['check', '--only', 'sandbox/feedback', '--fix']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(corrected.stdout).toContain(applied);
-        expect(corrected.stderr).not.toContain(applied);
-        for (const path of new Set(['source.txt', 'other.txt', ...paths]))
+        expect(corrected.stdout.replaceAll(DURATION, '0.0s')).toBe(appliedText);
+        expect(corrected.stderr).toBe('');
+        const checkedPaths = new Set(['source.txt', 'other.txt', ...paths]);
+        for (const path of checkedPaths)
             expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
                 new Set<string>(paths).has(path) ? 'corrected\n' : 'original\n',
             );

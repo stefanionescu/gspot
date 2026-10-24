@@ -14,7 +14,7 @@ export function buildSpawnEnvironment(overrides?: Record<string, string | undefi
     const pairs = Object.entries(process.env);
     if (overrides !== undefined) pairs.push(...Object.entries(overrides));
     for (const [key, value] of pairs) {
-        const name = process.platform === 'win32' ? key.toUpperCase() : key;
+        const name = foldVariableName(key);
         if (value === undefined) variables.delete(name);
         else variables.set(name, [key, value]);
     }
@@ -55,4 +55,15 @@ Translate the Node.js name of this system into the gspot name.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 4 files share it.
 export function getOperatingSystem(): string {
     return OPERATING_SYSTEMS.find((platform) => platform.nodeName === process.platform)?.name ?? process.platform;
+}
+
+/**
+Fold variable names for Windows comparisons.
+
+@param name the environment variable name.
+@returns the case that gspot compares variable names in.
+*/
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+export function foldVariableName(name: string): string {
+    return process.platform === 'win32' ? name.toUpperCase() : name;
 }

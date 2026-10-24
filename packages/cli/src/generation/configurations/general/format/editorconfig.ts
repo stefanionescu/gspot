@@ -1,10 +1,7 @@
+import { escapeGlob } from '#cli/system/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { DOT_GSPOT } from '#cli/config/gspot-folder.ts';
-import { AGENTS_FILE } from '#cli/config/files/names.ts';
-import { BACKSLASH_BEFORE_MATCH } from '#cli/config/text.ts';
 import type { PlannedConfigFile } from '#cli/types/generation/files.ts';
-import { GLOB_SPECIAL_CHARACTERS } from '#cli/config/files/path-patterns.ts';
-import { buildPathMatcher, includeFolderContents } from '#cli/repository/files/matchers.ts';
+import { includeFolderContents } from '#cli/repository/files/matchers.ts';
 import { listScopeFormats } from '#cli/generation/configurations/general/format/prettier.ts';
 
 import {
@@ -24,7 +21,7 @@ function buildSectionPath(pattern: string, scope: string): string {
             'settings',
             `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scope}. Use a root-relative selector within that scope.`,
         );
-    return `${scope.replaceAll(GLOB_SPECIAL_CHARACTERS, BACKSLASH_BEFORE_MATCH)}/${pattern}`;
+    return `${escapeGlob(scope)}/${pattern}`;
 }
 
 /**
@@ -36,16 +33,6 @@ Build .editorconfig: the EditorConfig sections of this repository.
 export function buildEditorconfigFile(planned: PlannedConfigFile): string {
     const { format } = planned.scope.settings.values;
     const settings = planned.session.settingsFile.settings;
-    const paths = [
-        ...planned.session.repository.files
-            .filter(
-                (file) =>
-                    !file.path.startsWith(`${DOT_GSPOT}/`) &&
-                    (file.kind !== 'generated' || file.kindOrigin !== 'gspot'),
-            )
-            .map((file) => file.path),
-        ...(settings.rules.enabled ? [AGENTS_FILE] : []),
-    ];
 
     const sections = [
         {
@@ -59,14 +46,14 @@ export function buildEditorconfigFile(planned: PlannedConfigFile): string {
             },
         },
         ...Object.entries(EDITORCONFIG_FIXED_SECTIONS)
-            .filter(([path]) => path !== '*' && paths.some(buildPathMatcher([path])))
+            .filter(([path]) => path !== '*')
             .map(([path, options]) => ({ path, options })),
         ...listScopeFormats(settings).flatMap(({ scope, paths, format }) => {
             const options = {
-                ...(format.indent_style === undefined ? {} : { indent_style: format.indent_style }),
-                ...(format.indent_width === undefined ? {} : { indent_size: format.indent_width }),
-                ...(format.line_ending === undefined ? {} : { end_of_line: format.line_ending }),
-                ...(format.final_newline === undefined ? {} : { insert_final_newline: format.final_newline }),
+                ...(format.indent_style !== undefined && { indent_style: format.indent_style }),
+                ...(format.indent_width !== undefined && { indent_size: format.indent_width }),
+                ...(format.line_ending !== undefined && { end_of_line: format.line_ending }),
+                ...(format.final_newline !== undefined && { insert_final_newline: format.final_newline }),
             };
             if (Object.keys(options).length === 0) return [];
             return includeFolderContents(paths).map((pattern) => ({

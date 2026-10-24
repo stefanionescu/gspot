@@ -8,11 +8,12 @@ import { listAssets, buildAssetPath } from '#cli/system/assets.ts';
 import { GspotError, formatZodIssue } from '#cli/system/errors.ts';
 import { compareText, formatSimilarNames } from '#cli/system/text.ts';
 import { manifestSchema } from '#cli/schemas/configurations/manifest.ts';
+import { CONFIGURATIONS_FOLDER } from '#cli/config/configurations/names.ts';
 import { RULES_FOLDER, MANIFEST_FILE } from '#cli/config/configurations/manifests.ts';
-import { CONFIGURATIONS_FOLDER, SHIPPED_CONFIG_FILES_FOLDER } from '#cli/config/configurations/names.ts';
+import { buildManifestError, validateConfigurations } from '#cli/configurations/validation.ts';
 import type { Tool, Check, Configuration, ParsedManifest, ConfigurationCheck } from '#cli/types/configurations.ts';
 
-let CONFIGURATIONS: Map<string, Configuration> | undefined;
+let shippedConfigurations: Map<string, Configuration> | undefined;
 
 function findOnlyToolName(tools: unknown): string | undefined {
     if (!Array.isArray(tools) || tools.length !== 1) return undefined;
@@ -20,18 +21,11 @@ function findOnlyToolName(tools: unknown): string | undefined {
     return isTable(tool) && typeof tool['name'] === 'string' ? tool['name'] : undefined;
 }
 
-function readConfigFiles(configurationFolder: string, configFiles: unknown, tools: unknown): unknown {
+function readConfigFiles(configFiles: unknown, tools: unknown): unknown {
     if (configFiles !== undefined && !Array.isArray(configFiles)) return configFiles;
     const records: unknown[] = configFiles === undefined ? [] : configFiles;
-    const recordTargets = new Set(
-        records.flatMap((record) => (isTable(record) ? [record['target'], record['source']] : [])),
-    );
-    const folder = `${configurationFolder}/${SHIPPED_CONFIG_FILES_FOLDER}/`;
-    const copied = listAssets(folder)
-        .map((path) => ({ target: posix.relative(folder, path) }))
-        .filter(({ target }) => !recordTargets.has(target));
     const tool = findOnlyToolName(tools);
-    return [...records, ...copied].map((record) =>
+    return records.map((record) =>
         tool === undefined || !isTable(record) || record['tool'] !== undefined || record['check'] !== undefined
             ? record
             : { ...record, tool },
@@ -61,13 +55,13 @@ function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configura
 function parseManifest(text: string, configurationFolder: string): ParsedManifest {
     const parsed = parseToml(text) as Record<string, unknown>;
     const configFiles = parsed['config_file'];
-    const discoveredConfigFiles = readConfigFiles(configurationFolder, configFiles, parsed['tool']);
+    const discoveredConfigFiles = readConfigFiles(configFiles, parsed['tool']);
     const result = manifestSchema.safeParse({
         ...parsed,
         config_file: discoveredConfigFiles,
         folder: configurationFolder,
         configuration: {
-            ...(isTable(parsed['configuration']) ? parsed['configuration'] : {}),
+            ...(isTable(parsed['configuration']) && parsed['configuration']),
             name: posix.basename(configurationFolder),
             group: posix.basename(posix.dirname(configurationFolder)),
         },
@@ -87,26 +81,14 @@ function readShippedConfigurations(): Map<string, Configuration> {
         const manifest = parseManifest(readFileSync(buildAssetPath(path), 'utf8'), folder);
         manifests.set(manifest.configuration.name, manifest);
     }
-    return buildConfigurations(
-        [...manifests.values()].toSorted((first, second) =>
-            compareText(first.configuration.name, second.configuration.name),
-        ),
+    const configurations = buildConfigurations(
+        manifests
+            .values()
+            .toArray()
+            .toSorted((first, second) => compareText(first.configuration.name, second.configuration.name)),
     );
-}
-
-/**
-Build the error for a manifest that fails validation.
-
-@param configuration the name of the failing manifest.
-@param errors the messages in plain English.
-@returns the error to throw.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 4 calls in 2 files share it.
-export function buildManifestError(configuration: string, errors: string[]): GspotError {
-    return new GspotError(
-        'configuration',
-        [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors].join('\n'),
-    );
+    validateConfigurations(configurations);
+    return configurations;
 }
 
 /**
@@ -116,8 +98,8 @@ Read every configuration once per process.
 */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 90 calls in 57 files share it.
 export function readConfigurations(): Map<string, Configuration> {
-    CONFIGURATIONS ??= readShippedConfigurations();
-    return CONFIGURATIONS;
+    shippedConfigurations ??= readShippedConfigurations();
+    return shippedConfigurations;
 }
 
 /**
@@ -127,9 +109,9 @@ List the shipped check IDs and the command check IDs of the repository.
 @returns the shipped IDs, then your command check IDs.
 */
 export function listCheckIds(checks: readonly Pick<Check, 'id'>[]): string[] {
-    const shipped = [...listChecksById(readConfigurations().values()).keys()];
+    const shipped = listChecksById(readConfigurations().values()).keys().toArray();
     const authored = checks.map((check) => check.id);
-    return [...new Set([...shipped, ...authored])];
+    return [...shipped, ...authored];
 }
 
 /**
@@ -166,13 +148,15 @@ export function listChecksById(configurations: Iterable<Configuration>): Map<str
 
 function listManifestTools(manifests: Iterable<ParsedManifest>): Map<string, Tool> {
     const tools = new Map<string, Tool>();
-    for (const manifest of manifests)
-        for (const tool of manifest.tools.filter((each) => typeof each !== 'string')) {
+    for (const manifest of manifests) {
+        const declarations = manifest.tools.values().filter((tool) => typeof tool !== 'string');
+        for (const tool of declarations) {
             const previous = tools.get(tool.name);
             if (previous !== undefined)
                 throw buildManifestError(manifest.configuration.name, [`tool ${tool.name} is already declared.`]);
             tools.set(tool.name, tool);
         }
+    }
     return tools;
 }
 

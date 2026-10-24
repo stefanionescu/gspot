@@ -14,7 +14,7 @@ export type PlanOptions = {
     forConfiguration?: boolean;
     base?: string;
     commits?: string[];
-    historyComplete?: boolean;
+    shallow?: boolean;
     stage: StageFilter | 'any';
     staged?: string[];
     changed?: string[];
@@ -33,8 +33,6 @@ export type PlannedScope = {
 };
 
 export type SettingsSkip = { cause: 'level' | 'ignore' | 'setting'; note: string };
-
-export type ToolIgnore = { file: string; matches: (path: string) => boolean };
 
 export type PlannedCheck = {
     base?: string;

@@ -1,16 +1,5 @@
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-export const STYLELINT_SUGGESTIONS = [
-    {
-        path: 'app/child/package.json',
-        note: 'beside the generated stylelint config file; move any stylelint setting you still need into gspot.toml, then delete the section',
-    },
-    {
-        path: 'other/package.json',
-        note: 'beside the generated stylelint config file; move any stylelint setting you still need into gspot.toml, then delete the section',
-    },
-] as const;
-
 export const REMOVED_CONFIGURATION_SUGGESTIONS = [
     {
         name: 'removed at the root',

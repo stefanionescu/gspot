@@ -1,13 +1,13 @@
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { sep, join } from 'node:path';
 import { compareText } from '#cli/system/text.ts';
 import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { convertToSystemPath } from '#cli/system/paths.ts';
 import { type PlannedCheck } from '#cli/types/planning.ts';
 import type { ConfigFile } from '#cli/types/configurations.ts';
 import { extractConfigFileName } from '#cli/configurations/tools.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
+import type { ScopeSettings } from '#cli/types/settings/inheritance.ts';
 import { getConfigFiles } from '#cli/generation/config-files/generate.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects/dependencies.ts';
 import { getConfigFileTarget } from '#cli/generation/config-files/selection.ts';
@@ -22,7 +22,6 @@ import {
     LEVEL_PLACEHOLDER,
     INDENT_PLACEHOLDER,
     POINTER_PLACEHOLDER,
-    EXISTING_PLACEHOLDER,
     WORKSPACE_PLACEHOLDER,
     CONFIG_FILE_PLACEHOLDER,
     MESSAGE_FILE_PLACEHOLDER,
@@ -30,9 +29,8 @@ import {
 } from '#cli/config/runs/command/placeholders.ts';
 
 function assertArgumentList(value: unknown, name: string): string[] {
-    if (!Array.isArray(value) || !value.every((element) => typeof element === 'string'))
-        throw new Error(`Command setting ${name} must contain only string arguments.`);
-    return value;
+    if (Array.isArray(value) && value.every((element) => typeof element === 'string')) return value;
+    throw new Error(`Command setting ${name} must contain only string arguments.`);
 }
 
 function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[] | undefined {
@@ -42,15 +40,6 @@ function expandEachPlaceholder(planned: PlannedCheck, argument: string): string[
     const held = planned.scope.settings.settings[name];
     const values = held ?? [];
     return assertArgumentList(values, name).flatMap((value) => [groups['flag'] ?? '', convertToSystemPath(value)]);
-}
-
-function expandExistingPlaceholder(repositoryRoot: string, argument: string): string[] | undefined {
-    const groups = EXISTING_PLACEHOLDER.exec(argument)?.groups;
-    if (groups === undefined) return undefined;
-    const path = join(repositoryRoot, groups['path'] ?? '');
-    return statSync(path, { throwIfNoEntry: false }) === undefined
-        ? []
-        : [groups['flag'] ?? '', convertToSystemPath(path)];
 }
 
 function listConfigFiles(session: Session, planned: PlannedCheck): ConfigFile[] {
@@ -121,7 +110,8 @@ export function listCommandConfigFiles(session: Session, planned: PlannedCheck, 
     return [
         ...new Set(
             words.flatMap((segment) => {
-                const configured = [...segment.matchAll(CONFIG_FILE_PLACEHOLDER)]
+                const configured = segment
+                    .matchAll(CONFIG_FILE_PLACEHOLDER)
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
                     .map((name) =>
@@ -130,13 +120,15 @@ export function listCommandConfigFiles(session: Session, planned: PlannedCheck, 
                             getConfigFile(session, planned, name),
                             getConfigFiles(session).targets,
                         ),
-                    );
-                const pointed = [...segment.matchAll(POINTER_PLACEHOLDER)]
+                    )
+                    .toArray();
+                const pointed = segment
+                    .matchAll(POINTER_PLACEHOLDER)
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
-                    .map((name) => selectPointerPath(session, scope, name));
-                const existing = EXISTING_PLACEHOLDER.exec(segment)?.groups?.['path'];
-                return [...configured, ...pointed, ...(existing === undefined ? [] : [existing])];
+                    .map((name) => selectPointerPath(session, scope, name))
+                    .toArray();
+                return [...configured, ...pointed];
             }),
         ),
     ].toSorted((left, right) => compareText(left, right));
@@ -165,6 +157,23 @@ export function listCopyFiles(session: Session, planned: PlannedCheck, command: 
 }
 
 /**
+Replace scalar setting placeholders with their scope values.
+
+@param settings the values of the scope.
+@param text the text with placeholders.
+@returns the expanded text.
+*/
+export function replaceSettingPlaceholders(settings: ScopeSettings, text: string): string {
+    return text.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
+        const found = settings.settings[name];
+        if (Array.isArray(found)) throw new TypeError(`List setting ${name} must occupy a whole command argument.`);
+        return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
+            ? String(found)
+            : '';
+    });
+}
+
+/**
 Expands a scalar command argument or environment value from the check scope.
 
 @param session the repository and settings.
@@ -179,29 +188,15 @@ export function replacePlaceholders(
     argument: string,
     substitutions: Substitutions,
 ): string {
-    return argument
+    return replaceSettingPlaceholders(planned.scope.settings, argument)
         .replaceAll(LEVEL_PLACEHOLDER, (_match, recommended: string, all: string) =>
             session.settingsFile.settings.level === 'all' ? all : recommended,
         )
-        .replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-            const found = planned.scope.settings.settings[name];
-            if (Array.isArray(found)) throw new Error(`List setting ${name} must occupy a whole command argument.`);
-            return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
-                ? String(found)
-                : '';
+        .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) => {
+            const configFile = getConfigFile(session, planned, name);
+            const target = getConfigFileTarget(planned.scope.folder.path, configFile, getConfigFiles(session).targets);
+            return convertToSystemPath(join(session.root, target));
         })
-        .replaceAll(CONFIG_FILE_PLACEHOLDER, (_match, name: string) =>
-            convertToSystemPath(
-                join(
-                    session.root,
-                    getConfigFileTarget(
-                        planned.scope.folder.path,
-                        getConfigFile(session, planned, name),
-                        getConfigFiles(session).targets,
-                    ),
-                ),
-            ),
-        )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) =>
             convertToSystemPath(selectPointerPath(session, substitutions.scope, name)),
         )
@@ -233,7 +228,7 @@ export function expandCommand(
             if (Array.isArray(value)) return assertArgumentList(value, name);
         }
 
-        const expanded = expandEachPlaceholder(planned, argument) ?? expandExistingPlaceholder(session.root, argument);
+        const expanded = expandEachPlaceholder(planned, argument);
         return expanded ?? expandArgument(session, planned, argument, substitutions);
     });
 }
@@ -249,6 +244,11 @@ export function buildFileCommandLines(command: CommandArgument[], files: string[
     const hasFile = command.some((segment) => typeof segment !== 'string');
     return (hasFile ? files : ['']).map((file) => ({
         commandArguments: command.map((argument) => (typeof argument === 'string' ? argument : file)),
-        ...(hasFile ? { file } : {}),
+        ...(hasFile && { file }),
     }));
+}
+
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The rule in the plugin source does not report it.
+function convertToSystemPath(path: string): string {
+    return path.split('/').join(sep);
 }

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { unlink, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { LEVELS } from '#cli/config/configurations/names.ts';
+import { createGitSandbox } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
@@ -23,7 +23,7 @@ test.each([
         level: 'all',
         tables: '[tools.eslint.rules]\n"no-console" = [{allow = ["warn"]}]\n',
     });
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml':
             settings +
             (ignored
@@ -46,7 +46,7 @@ test.each([
     'ESLint override blocks keep their order, nested scope limits, later files and path ignores ($name)',
     async ({ ignored }) => {
         const source = 'export const matches = (value) => value == null;\n';
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml':
                 ESLINT_OVERRIDES_SETTINGS +
                 (ignored
@@ -86,7 +86,7 @@ test.each([
     },
 );
 test('an override of no-restricted-imports is refused with its owning setting', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], RESTRICTED_IMPORT_SETTINGS),
         'package.json': '{"private":true,"type":"module"}\n',
         'app/source.js':
@@ -99,14 +99,14 @@ test('an override of no-restricted-imports is refused with its owning setting', 
     expect(refused.code).toBe(2);
     expect({ stdout: refused.stdout, stderr: refused.stderr }).toStrictEqual({
         stdout: '',
-        stderr: 'gspot.toml: tools.eslint.override.0.rules.no-restricted-imports: gspot writes the options of no-restricted-imports from tools.eslint.restricted_imports. Change that setting instead: gspot set tools.eslint.restricted_imports <value>, with --reason when you raise it.\n',
+        stderr: 'gspot.toml:9: tools.eslint.override.0.rules.no-restricted-imports: gspot writes the options of no-restricted-imports from tools.eslint.restricted_imports. Change that setting instead: gspot set tools.eslint.restricted_imports <value>, with --reason when you raise it.\n',
     });
 });
 
 test.each([...LEVELS])(
     "a scope's tools.eslint.restricted_imports ban reports the import only in that scope (%s)",
     async (level) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             ...SCOPE_IMPORT_FILES,
             'gspot.toml': buildSandboxSettings(['javascript'], { level, tables: SCOPE_IMPORT_TABLES }),
         });
@@ -123,7 +123,7 @@ test.each([...LEVELS])(
 );
 
 test('a JavaScript child applies its import restrictions under a Python root', async () => {
-    await using sandbox = await testdir({
+    await using sandbox = await createGitSandbox({
         'app/source.js': SCOPE_IMPORT_FILES['app/source.js'],
         'gspot.toml': buildSandboxSettings(['python'], {
             scopes: [{ path: 'app', configurations: ['javascript'] }],

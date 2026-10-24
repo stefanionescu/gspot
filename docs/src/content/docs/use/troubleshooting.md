@@ -54,4 +54,4 @@ See [Installation](/start/install/). In a fresh clone, run your package manager'
 ## A commit stops with `npm is not installed`
 
 The Git hook did not find the program that starts gspot: npm, pnpm, Yarn, Bun, or mise. The message names it.
-Install that program, run its install command, such as `npm install` or `mise install`, then commit again.
+Install that program, run its install command, such as `bun install` or `mise install`, then commit again.

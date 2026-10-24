@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import type { Writer } from '#cli/types/apply.ts';
 import { open, readFile } from 'node:fs/promises';
 import type { Session } from '#cli/types/session.ts';
 import { generate } from '#cli/generation/generate.ts';
+import type { Files } from '#cli/types/system/files.ts';
 import { isOnDisk } from '#tests/setup/system/files.ts';
 import type { Tool } from '#cli/types/configurations.ts';
 import type { ToolInstall } from '#cli/types/install/tools.ts';
@@ -11,20 +11,23 @@ import type { ToolSearch } from '#cli/types/tools/inspection.ts';
 import type { ToolProjectFiles } from '#tests/types/packages.ts';
 import { DOT_GSPOT, GSPOT_PATHS } from '#cli/config/gspot-folder.ts';
 import { selectLockfileName } from '#cli/install/npm/package-json.ts';
+import { readToolPackageManager } from '#cli/repository/npm/package-manager.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 import { SETTING_DEFINITIONS } from '#cli/config/settings/definitions/all-settings.ts';
 
-/** Read a tool project file, its lockfile, and the lockfile mode. */
+/**
+Read a tool project file, its lockfile, and the lockfile mode.
+*/
 export async function readToolProjectFiles(
     root: string,
     packageManager: PackageManager['name'] | 'uv',
 ): Promise<ToolProjectFiles> {
-    const python = packageManager === 'uv';
-    const lockfilePath = join(root, DOT_GSPOT, python ? 'uv.lock' : selectLockfileName(packageManager));
+    const isPython = packageManager === 'uv';
+    const lockfilePath = join(root, DOT_GSPOT, isPython ? 'uv.lock' : selectLockfileName(packageManager));
     await using lockfile = await open(lockfilePath, 'r');
     const attributes = await lockfile.stat();
     return {
-        projectFile: await readFile(join(root, DOT_GSPOT, python ? 'pyproject.toml' : 'package.json')),
+        projectFile: await readFile(join(root, DOT_GSPOT, isPython ? 'pyproject.toml' : 'package.json')),
         lockfilePath,
         lockfile: await lockfile.readFile(),
         mode: attributes.mode,
@@ -38,10 +41,20 @@ Build the tool install for a sandbox.
 @param writer holds the repository lock and saves files.
 @returns the session, writer, generated files, and tools that the install steps read.
 */
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 13 calls in 3 files share it.
-export function buildToolInstall(session: Session, writer: Writer): ToolInstall {
+export function buildToolInstall(session: Session, writer: Files): ToolInstall {
     return {
         session,
+        packageManager:
+            session.packageManager === undefined
+                ? undefined
+                : readToolPackageManager(
+                      session.installedRoot,
+                      session.packageManager,
+                      session.timeoutSeconds,
+                      session.reads,
+                  ),
         writer,
         generated: generate(session),
         tools: listDistinctTools(session.toolConfigurations),
@@ -58,6 +71,7 @@ A program pin, with an npm installer when npm names a package.
 @param npm package that ships the program.
 @returns a tool with that program pinned.
 */
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 14 calls in 3 files share it.
 export function buildProgramPin(name: string, version: string, npm?: string): Tool {
     return {
@@ -80,7 +94,10 @@ export async function listToolInstallFiles(root: string): Promise<string[]> {
     return found.flat();
 }
 
-/** What tool search reads, for tests that inspect installed tools. */
+/**
+What tool search reads, for tests that inspect installed tools.
+*/
+
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 30 calls in 3 files share it.
 export function buildToolSearch(root: string, fields: Partial<ToolSearch> = {}): ToolSearch {
     return {

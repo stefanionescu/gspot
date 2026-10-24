@@ -1,6 +1,7 @@
 import type { Tool } from '#cli/types/configurations.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Settings } from '#cli/types/settings/file.ts';
+import type { FROZEN_INSTALLS } from '#cli/config/generation/ci.ts';
 import type { PackageManager } from '#cli/types/repository/npm/package-manager.ts';
 
 export type ActionPin = { name: string; sha: string; version: string };
@@ -17,3 +18,5 @@ export type Pipeline = {
     hasSwift: boolean;
     manualChecks: PlannedCheck[];
 };
+
+export type Lockfile = keyof typeof FROZEN_INSTALLS;

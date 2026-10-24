@@ -8,22 +8,16 @@ import { generate } from '#cli/generation/generate.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readConfigurations } from '#cli/configurations/manifests.ts';
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/header.ts';
-import { findManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildPointerFiles } from '#cli/generation/config-files/pointers.ts';
-
-import {
-    MODULE_PATHS,
-    MODULE_VALUE,
-    OMITTED_SWIFT_SCOPE,
-    XCTEST_POINTER_CASES,
-    MARKDOWNLINT_SCOPE_TABLES,
-} from '#tests/config/generation/config-files/pointers.ts';
+import { XCTEST_POINTER_CASES, MARKDOWNLINT_SCOPE_TABLES } from '#tests/config/generation/config-files/pointers.ts';
 
 test.each([...XCTEST_POINTER_CASES])(
     'XCTest folder pointers keep their SwiftLint overrides in scope "$scope"',
     async ({ scope, pointers }) => {
+        const OMITTED_SWIFT_SCOPE =
+            '[[scope]]\npath = "omitted"\nremoved_configurations = { value = ["swift"], reason = "This scope does not use Swift or its generated pointers." }\n';
+
         await using sandbox = await testdir();
         const prefix = scope === '' ? '' : `${scope}/`;
         const folder = scope.startsWith('AppTests') ? scope : `${prefix}AppTests`;
@@ -45,27 +39,18 @@ test.each([...XCTEST_POINTER_CASES])(
         const written = generate(await openSession(sandbox.path)).files.filter(({ path }) =>
             path.endsWith('.swiftlint.yml'),
         );
-        const config = findManifestTarget('swift', 'swiftlint.yml');
-        const testsPointer = readConfigurations()
-            .get('swift')!
-            .configFiles.find(({ pointer }) => pointer?.folders !== undefined)!.pointer!;
         expect(Object.fromEntries(written.map(({ path, content }) => [path, parse(content) as unknown]))).toStrictEqual(
-            Object.fromEntries(
-                pointers.map(([path, climb, inTests]) => [
-                    path,
-                    inTests
-                        ? (parse(
-                              testsPointer.body.replace('{target_json}', JSON.stringify(`${climb}${config}`)),
-                          ) as unknown)
-                        : { parent_config: `${climb}${config}` },
-                ]),
-            ),
+            pointers,
         );
         for (const { content } of written) expect(content).toStartWith(`# ${GENERATED_HEADER_TEXT}\n`);
     },
 );
 
 test('JavaScript pointers import modules from folders with URI characters and Unicode', async () => {
+    const MODULE_VALUE = { location: 'the requested module' } as const;
+
+    const MODULE_PATHS = ['100%', '#fragment', '?query', "author's", 'café'] as const;
+
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings(['javascript']) });
 
     const session = await openSession(sandbox.path);

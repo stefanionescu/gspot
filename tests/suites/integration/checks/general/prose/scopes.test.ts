@@ -16,7 +16,6 @@ test.each([...LEVELS])(
         const { root } = installedSandbox();
         const path = 'child/only.md';
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-            check: '',
             files: {
                 'gspot.toml': buildSandboxSettings([], {
                     level,
@@ -50,7 +49,6 @@ test('a Vale ignore with a lint rule and a path keeps findings in other files', 
     const { root } = installedSandbox();
     const settings = buildSandboxSettings([]);
     await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-        check: '',
         files: {
             'gspot.toml': settings,
             'guide.md': '# Schedule\n\nRelease on 03/04/2026.\n',
@@ -100,7 +98,6 @@ test.each([...LEVELS])(
         const path = 'sample.md';
         const settings = buildSandboxSettings(['prose'], { level });
         await using _sourceChange = await applySandboxChanges(installedSandbox(), {
-            check: '',
             files: { 'gspot.toml': settings, [path]: sample },
         });
 

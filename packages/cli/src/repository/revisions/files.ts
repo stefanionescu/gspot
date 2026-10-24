@@ -108,16 +108,3 @@ export async function readHead(repositoryRoot: string, cancelSignal?: AbortSigna
     if (symbolic.code !== 0) throw failure;
     return undefined;
 }
-
-/**
-Resolve committed entries, distinguishing an unborn branch from failed Git reads.
-
-@param repositoryRoot the folder where Git runs.
-@param cancelSignal stops the command.
-@returns current commit entries, or an empty list for an unborn branch.
-*/
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: 5 calls in 3 files share it.
-export async function listHeadFiles(repositoryRoot: string, cancelSignal?: AbortSignal): Promise<GitFile[]> {
-    const head = await readHead(repositoryRoot, cancelSignal);
-    return head === undefined ? [] : listRevisionFiles(repositoryRoot, { kind: 'commit', hash: head }, cancelSignal);
-}

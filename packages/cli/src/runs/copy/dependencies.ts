@@ -26,6 +26,7 @@ import {
     constants,
     lstatSync,
     mkdirSync,
+    existsSync,
     unlinkSync,
     symlinkSync,
     copyFileSync,
@@ -58,6 +59,7 @@ async function copyTree(
         filter: (path, destination) => {
             copy.cancelSignal?.throwIfAborted();
             if (lstatSync(path).isSymbolicLink()) {
+                if (!existsSync(path)) return false;
                 const original = realpathSync(path);
                 if (isInside(relative(original, copy.root)))
                     throw new GspotError(
@@ -73,7 +75,8 @@ async function copyTree(
 }
 
 function findCopiedPath(copies: Map<string, string>, source: string): string | undefined {
-    for (const [original, copied] of [...copies].toSorted(([left], [right]) => right.length - left.length)) {
+    const roots = [...copies].toSorted(([left], [right]) => right.length - left.length);
+    for (const [original, copied] of roots) {
         const local = relative(original, source);
         if (isInside(local)) return join(copied, local);
     }
@@ -163,9 +166,9 @@ export async function readDeclarationDependencies(
     const reads = createReadCache(workingTree);
     let paths = new Set<string>();
     let configurationPaths = new Set<string>();
-    for (const indexFile of indexFiles.filter(
-        ({ path }) => basename(path) === TSCONFIG_FILE || basename(path) === JSCONFIG_FILE,
-    )) {
+    for (const indexFile of indexFiles) {
+        const name = basename(indexFile.path);
+        if (name !== TSCONFIG_FILE && name !== JSCONFIG_FILE) continue;
         const tsconfig = readTsconfig(workingTree, join(workingTree, indexFile.path), reads);
         if (tsconfig === undefined) continue;
         const declarations = listUntrackedDeclarations(workingTree, tracked, tsconfig.fileNames);

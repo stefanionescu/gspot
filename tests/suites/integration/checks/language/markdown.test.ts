@@ -29,7 +29,6 @@ test.each([...LEVELS])(
     async (level) => {
         const { root } = installedSandbox();
         await using _change = await applySandboxChanges(installedSandbox(), {
-            check: 'markdown/markdownlint',
             files: {
                 ...MARKDOWN_FILES,
                 'gspot.toml': buildSandboxSettings(['markdown'], { level, tables: MARKDOWNLINT_TABLES }),
@@ -73,7 +72,6 @@ test.each([...LEVELS])(
 test("markdownlint run by an editor reads the pointer files with each scope's options", async () => {
     const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'markdown/markdownlint',
         files: {
             ...MARKDOWN_FILES,
             'gspot.toml': buildSandboxSettings(['markdown', 'javascript'], {
@@ -84,7 +82,6 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
             'title.md': TITLED_DOCUMENT,
         },
     });
-    const environment = installedSandbox().environment;
     for (const folder of ['', 'app']) {
         const toolResult = await runCommand(
             [
@@ -92,7 +89,7 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
                 '--no-globs',
                 ...(folder === '' ? [':root.md', ':title.md', ':long.md'] : [':guide.md']),
             ],
-            { cwd: join(root, folder), env: environment },
+            { cwd: join(root, folder) },
         );
         expect(toolResult.code, toolResult.stdout + toolResult.stderr).toBe(0);
     }
@@ -101,7 +98,6 @@ test("markdownlint run by an editor reads the pointer files with each scope's op
 test('markdownlint honors a lint rule ignore in the root and scope config files', async () => {
     const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'markdown/markdownlint',
         files: {
             ...MARKDOWN_FILES,
             'title.md': TITLED_DOCUMENT,
@@ -133,17 +129,15 @@ test('markdownlint reports line, column, and fixable for findings in files whose
     const { root } = installedSandbox();
     const paths = ['space name.md', ...(isWindows ? [] : ['name:5.md', 'line\nbreak.md'])];
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'markdown/markdownlint',
         files: {
             'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all' }),
             ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png">   \n'])),
         },
     });
-    const environment = installedSandbox().environment;
     const configuration = findManifestTarget('markdown', 'markdownlint-cli2.mjs');
     expect(await isOnDisk(join(root, configuration))).toBe(true);
     const command = ['check', ...paths, '--only', 'markdown/markdownlint', '--json'];
-    const failed = parseCheckReport(await spawnGspot(root, command, environment));
+    const failed = parseCheckReport(await spawnGspot(root, command));
     expect(failed.code, failed.stderr).toBe(1);
     expect(
         failed.report.checks.flatMap(({ findings }) =>
@@ -159,7 +153,7 @@ test('markdownlint reports line, column, and fixable for findings in files whose
             ]),
     );
     for (const path of paths) await writeFile(join(root, path), '# Title\n');
-    const corrected = parseCheckReport(await spawnGspot(root, command, environment));
+    const corrected = parseCheckReport(await spawnGspot(root, command));
     expect(corrected.code, corrected.stderr).toBe(0);
     expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
 });
@@ -167,7 +161,6 @@ test('markdownlint reports line, column, and fixable for findings in files whose
 test('markdownlint reads an MDX page from after its import and export blocks', async () => {
     const { root } = installedSandbox();
     await using _change = await applySandboxChanges(installedSandbox(), {
-        check: 'markdown/markdownlint',
         files: { 'gspot.toml': buildSandboxSettings(['markdown'], { level: 'all' }), ...MDX_FILES },
     });
     const command = ['check', ...Object.keys(MDX_FILES), '--only', 'markdown/markdownlint', '--json'];

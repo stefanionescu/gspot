@@ -129,7 +129,8 @@ export function findFirstSkip(check: PlannedCheck, planned: PlannedScope): Skip 
     const settings = session.settingsFile.settings;
     const selected = findSettingsSkip(settings, check.scope, check.check);
     if (selected !== undefined) return selected;
+    if (options.forConfiguration === true) return undefined;
     const condition = findConditionSkip(check, session.repository);
     if (condition !== undefined) return condition;
-    return options.forConfiguration === true ? undefined : findSystemSkip(check.check, check.tool, host);
+    return findSystemSkip(check.check, check.tool, host);
 }

@@ -37,7 +37,7 @@ export const USE_CASES = [
     },
     {
         title: 'Works the same everywhere',
-        text: 'Every tool is locked to one version, so you, your agent, and CI get the same result.',
+        text: 'Every tool that gspot installs is locked to one version, so you, your agent, and CI get the same result.',
         icon: ['M12 16v5', 'M8 3h8l-1 6 3 3v2H6v-2l3-3-1-6z'],
     },
 ] as const;

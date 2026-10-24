@@ -15,7 +15,7 @@ min_version = "1.100.0"
 name = "semgrep"
 pypi = "semgrep"
 suppression = { marker = "\\bnosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
-version = "1.178.0"
+version = "1.181.0"
 version_command = ["--disable-version-check", "--version"]
 
 [[check]]
@@ -41,6 +41,5 @@ needs = ["network"]
 output = { format = "semgrep" }
 stage = "manual"
 summary = "Downloads and runs the public Semgrep packs in `tools.semgrep.registry_packs`."
-tool = "semgrep"
 when = { setting = "tools.semgrep.registry_packs" }
 why = "The registry packs cover the common vulnerability classes, and their license keeps them out of this package."

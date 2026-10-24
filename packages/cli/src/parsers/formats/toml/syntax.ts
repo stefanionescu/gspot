@@ -151,7 +151,7 @@ export function insertTomlComments(comments: TomlComments, kind: string, path: K
         .join('\n');
     const owned = block.owned.toSorted((left, right) => left.start - right.start).map(({ raw }) => raw);
     return [
-        ...(free === '' ? [] : [free, ...(owned.length === 0 && text === '' ? [] : [''])]),
+        ...(free === '' ? [] : [free, ...(text === '' && owned.length === 0 ? [] : [''])]),
         ...owned,
         ...(text === '' ? [] : [text]),
     ].join('\n');

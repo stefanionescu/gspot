@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import testsPackage from '#tests/package.json' with { type: 'json' };
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
 import { REACT_CASES, WEB_PACKAGES, REACT_SANDBOX } from '#tests/config/integration/checks/framework/react.ts';
 
 const installedSandbox = shareInstalledSandbox({
@@ -10,6 +10,5 @@ const installedSandbox = shareInstalledSandbox({
 });
 
 test.each([...REACT_CASES])('$check reports $expected.rule and passes after the fix', async (sample) => {
-    const result = await runCheckSample(installedSandbox(), sample, REACT_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary(sample));
+    expect(await runCheckSample(installedSandbox(), sample)).toStrictEqual(expectedSummary(sample));
 });

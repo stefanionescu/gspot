@@ -1,4 +1,5 @@
 import { join, posix } from 'node:path';
+import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { type Session } from '#cli/types/session.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -20,9 +21,10 @@ import {
 } from '#cli/config/checks/language/python/deptry.ts';
 
 function listFirstParty(planned: PlannedCheck, written: string[]): string[] {
-    const externals = planned.scope.settings.values.python?.externals ?? [];
-    if (externals.length === 0) return [];
-    return [...new Set([...written, ...externals])].flatMap((module) => [DEPTRY_FIRST_PARTY_FLAG, module]);
+    const externals = getTable(planned.scope.settings, 'python').externals;
+    return externals.length === 0
+        ? []
+        : [...new Set([...written, ...externals])].flatMap((module) => [DEPTRY_FIRST_PARTY_FLAG, module]);
 }
 
 /**

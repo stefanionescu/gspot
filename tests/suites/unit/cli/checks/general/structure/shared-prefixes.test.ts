@@ -7,12 +7,12 @@ import { runChecks } from '#cli/commands/check/run.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/runs.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 import {
     PREFIX_TREE,
     NEST_SUFFIX_FILES,
-    PREFIX_CHECK_OPTIONS,
     NESTJS_PREFIX_RESULTS,
 } from '#tests/config/checks/general/structure/shared-prefixes.ts';
 
@@ -23,7 +23,7 @@ test('shared-prefixes groups files and folders once, and honors an ignore and a 
         ...PREFIX_TREE,
     });
 
-    const options = buildRunOptions(PREFIX_CHECK_OPTIONS);
+    const options = buildRunOptions({ only: ['structure/shared-prefixes'] });
     const initial = await runChecks(await openSession(sandbox.path), options);
     expect(initial.report.checks[0]?.findings).toMatchObject([
         { file: 'cards/asset-card.ts', rule: 'shared-prefix' },
@@ -51,13 +51,10 @@ test.skipIf(isWindows)('prefix groups stay apart when folder and file names cont
         ...Object.fromEntries(paths.map((path) => [path, 'export const value = 1;\n'])),
     });
     commitAll(sandbox.path);
-    const options = buildRunOptions(PREFIX_CHECK_OPTIONS);
-    const initial = await runChecks(await openSession(sandbox.path), options);
-    expect(
-        initial.report.checks[0]!.findings.map((finding) => finding.file).toSorted((left, right) =>
-            left.localeCompare(right),
-        ),
-    ).toStrictEqual([paths[0]!, paths[2]!].toSorted((left, right) => left.localeCompare(right)));
+    const initial = await runSandboxCheck(sandbox.path, 'structure/shared-prefixes');
+    expect(initial.map((finding) => finding.file).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+        [paths[0]!, paths[2]!].toSorted((left, right) => left.localeCompare(right)),
+    );
 });
 
 test('hook scripts under .husky do not count; other files beside them still do', async () => {
@@ -86,7 +83,10 @@ test('hook scripts under .husky do not count; other files beside them still do',
         'src/action-one.ts': '',
         'src/action-two.ts': '',
     });
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions(PREFIX_CHECK_OPTIONS));
+    const result = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['structure/shared-prefixes'] }),
+    );
 
     expect(
         result.report.checks
@@ -118,7 +118,10 @@ test('NestJS kind suffixes do not count in NestJS scopes; JSX files and unknown 
         }),
         ...NEST_SUFFIX_FILES,
     });
-    const result = await runChecks(await openSession(sandbox.path), buildRunOptions(PREFIX_CHECK_OPTIONS));
+    const result = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['structure/shared-prefixes'] }),
+    );
     expect(
         result.report.checks.map(({ scope, findings }) => ({ scope, paths: findings.map(({ file }) => file) })),
     ).toStrictEqual([...NESTJS_PREFIX_RESULTS]);

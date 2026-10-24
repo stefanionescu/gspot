@@ -2,7 +2,6 @@ import { promisify } from 'node:util';
 import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { commitAll } from '#tests/setup/system/git.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { isLinux } from '#tests/setup/system/platform.ts';
 import { randomUUID, generateKeyPair } from 'node:crypto';
@@ -10,8 +9,9 @@ import { LEVELS } from '#cli/config/configurations/names.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runCommandBlocking } from '#tests/setup/system/processes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { runCheckSample, expectedSummary } from '#tests/setup/cli/samples.ts';
+import { commitAll, runGitStep, createGitSandbox } from '#tests/setup/system/git.ts';
 import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { runCheckSample, expectedSummary, buildSampleSummary } from '#tests/setup/cli/samples.ts';
 
 import {
     DOCKER_CASES,
@@ -34,6 +34,7 @@ async function importImage(root: string, tag: string, contents: string | Buffer)
 
 test('Trivy checks each Dockerfile in its deepest scope and honors an ignore limited to a scope path', async () => {
     await using sandbox = await testdir();
+    runGitStep(sandbox.path, ['init', '--quiet']);
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
     const settings = buildSandboxSettings(['docker'], { tables: TRIVY_SCOPE_TABLES });
     await createFileTree(sandbox.path, {
@@ -64,7 +65,7 @@ test('Trivy checks each Dockerfile in its deepest scope and honors an ignore lim
 test.each([...LEVELS])(
     'Hadolint at level %s checks apt and apk version pins only at level all, and reports a latest tag at both levels, in the root and a scope',
     async (level) => {
-        await using sandbox = await testdir({
+        await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['docker'], {
                 level,
                 scopes: [{ path: 'app', configurations: ['docker'] }],
@@ -75,7 +76,8 @@ test.each([...LEVELS])(
             'app/Dockerfile.alpine': ALPINE_DOCKERFILE,
         });
 
-        expect(await spawnGspot(sandbox.path, ['apply'])).toMatchObject({ code: 0 });
+        const applied = await spawnGspot(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const pins =
             level === 'all'
                 ? ([
@@ -114,10 +116,11 @@ test.each([...LEVELS])(
     },
 );
 
-test.skipIf(!isLinux)(
+test.skipIf(!isLinux || Bun.which('docker') === null)(
     'docker/trivy-image reports a private key in an image, errors on a broken config file, and passes a clean image',
     async () => {
         await using sandbox = await testdir();
+        runGitStep(sandbox.path, ['init', '--quiet']);
         const prefix = `gspot-tools-image-${randomUUID()}`;
         const tags = [`${prefix}:defect`, `${prefix}:corrected`] as const;
         const { privateKey: key } = await promisify(generateKeyPair)('rsa', { modulusLength: 2048 });
@@ -174,6 +177,7 @@ test.each([...DOCKER_CASES])('$check reports $expected.file and passes after the
         'message' in sample.expected
             ? { ...sample.expected, message: expect.stringContaining(sample.expected.message) as string }
             : sample.expected;
-    const result = await runCheckSample(installedSandbox(), { ...sample, expected }, DOCKER_SANDBOX);
-    expect(buildSampleSummary(result)).toStrictEqual(expectedSummary({ ...sample, expected }));
+    expect(await runCheckSample(installedSandbox(), { ...sample, expected })).toStrictEqual(
+        expectedSummary({ ...sample, expected }),
+    );
 });

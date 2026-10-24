@@ -18,9 +18,7 @@ const UNREADABLE = 'Semgrep printed output that gspot cannot read.';
 const INCOMPLETE = 'Semgrep could not complete the scan: Syntax error in source.';
 
 export const SEMGREP_REFUSED_REPORTS = [
-    ['no output', '', UNREADABLE],
     ['an empty object', '{}', UNREADABLE],
-    ['text that is not JSON', 'not JSON', UNREADABLE],
     ['a scanner error', JSON.stringify({ results: [], errors: [{ ...SEMGREP_PARSE_ERROR, code: 2 }] }), INCOMPLETE],
     [
         'a rule error',

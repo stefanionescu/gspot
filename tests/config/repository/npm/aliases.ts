@@ -1,7 +1,7 @@
 export const ALIAS_FILES = [
     {
         path: 'package.json',
-        message: 'package.json is not valid JSON:',
+        message: 'package.json:1:38 is not valid JSON: PropertyNameExpected. Fix the file.',
     },
     {
         path: 'tsconfig.json',

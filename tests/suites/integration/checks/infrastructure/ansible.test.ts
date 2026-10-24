@@ -64,7 +64,6 @@ async function checkLevelProfile(sandbox: Sandbox, level: Level): Promise<void> 
     const { root } = sandbox;
     const source = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
     await using _sourceChange = await applySandboxChanges(sandbox, {
-        check: '',
         files: {
             'gspot.toml': buildSandboxSettings(['ansible'], {
                 level,
