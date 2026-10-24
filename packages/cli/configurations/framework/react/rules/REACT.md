@@ -29,12 +29,9 @@ Read this rule when you change React components, hooks, or state.
   during render rather than synchronizing duplicate state with effects. Clean up timers, observers, subscriptions,
   animation frames, and requests.
 - Use refs for mutable controller values and state for what the UI displays.
-
 - Give each state value one place. Navigation goes in the URL, server snapshots in the query cache, edits in form or
   local state, and shared data in a client store.
-
 - Reset private state across identity and tenant changes; give each request its own server stores.
-
 - Do not show a cancellation as a confirmed success.
 
 ## Read states and writes

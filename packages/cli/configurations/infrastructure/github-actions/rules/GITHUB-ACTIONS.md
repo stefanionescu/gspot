@@ -5,8 +5,8 @@ Read this rule when you change a GitHub Actions workflow or action.
 ## Workflow shape
 
 - Every job has `timeout-minutes`.
-- Every workflow that can run twice for one ref has a `concurrency` group. Cancel a run in progress only for a pull
-  request. Never cancel a run on the default branch or a tag; its result records that commit.
+- A workflow that runs for pull requests has a `concurrency` group keyed by the ref that cancels a run in progress.
+  A workflow that runs only on the default branch or a tag has no `concurrency` group: its result records that commit.
 - Pin a runner image such as `ubuntu-24.04` for each job. Do not use `ubuntu-latest`.
 - Put a reason comment above each `continue-on-error`. Let a failing required step fail the job.
 - Upload diagnostics after failed checks with an explicit status condition. Deployments and release publication require

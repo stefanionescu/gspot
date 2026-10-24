@@ -6,6 +6,7 @@ Use the roles and schemas the application declares.
 
 ## Migrations
 
+- Keep durable rows in migrations, not in seed files.
 - Create each migration file with the command the project uses, such as `supabase migration new`, then write its SQL.
 - Repair migration history only when the user asks.
 - Make every durable change through a migration. Never use a web console or SQL editor on a remote database.
@@ -62,10 +63,6 @@ Use the roles and schemas the application declares.
   column list.
 - Avoid dynamic SQL. When the operation requires it, quote identifiers and values safely and constrain the input domain.
 - Raise exceptions with a meaningful SQLSTATE class when clients or tests branch on it.
-
-## Data migrations
-
-Durable rows live in migrations, not in seed files.
 
 ## Tests
 

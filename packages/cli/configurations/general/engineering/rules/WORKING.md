@@ -64,7 +64,7 @@ define the behavior instead of adding speculative protection.
 Keep one implementation of each concept, and one copy of each table of values, in the module that uses it. Extract
 shared code only when two or more callers need the same behavior now.
 
-- Delete each named function of `limits.trivial_function_statements` statements or fewer, two by default, exported or
+- Delete each named function of `limits.trivial_function_statements` statements or fewer, exported or
   not, and inline its body at each call site. Methods, accessors, constructors, and recursive functions count too. A
   callback written inline has no name and stays.
 - When a function of that size must stay, such as a method that an interface requires, ask the user. Then add a

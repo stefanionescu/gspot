@@ -6,7 +6,7 @@ Read HTTP.md too.
 
 ## Routes and middleware
 
-Use the contracts the project already has instead of adding competing ones.
+Validate requests with the schemas the project already has, in middleware, and give each route one domain call.
 
 ```ts
 // Bad: the route validates by hand, queries the database, and relays a provider response.
@@ -30,8 +30,7 @@ router.post('/orders', authenticate, validateBody(submitOrderSchema), async (req
 });
 ```
 
-- Middleware can enforce ownership. It reaches the database for product behavior only through auth or ownership helpers
-  built for that boundary.
+- Middleware checks authentication and ownership, and reaches the database only through the auth helpers.
 - A permission check that depends on domain state belongs in a module, and a transport-level one in ownership
   middleware.
 

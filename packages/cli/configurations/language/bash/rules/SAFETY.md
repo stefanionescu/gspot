@@ -172,7 +172,7 @@ Validate its cleanup path against the approved root folder:
 remove_build_dir() {
     local owner_root build_dir
 
-    [[ -n $1 ]] || return 1
+    [[ -n ${1:-} ]] || return 1
     owner_root="$(cd -- "$1" && pwd -P)" || return 1
     [[ ${owner_root} != / ]] || return 1
     build_dir="${owner_root}/build"

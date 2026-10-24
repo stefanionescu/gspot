@@ -24,8 +24,6 @@ Read this rule when you write SQL.
 | `public.OrderItems`          | `public.order_items`             | An order-item table.               |
 | `users_can_view_order_items` | `users_can_view_own_order_items` | A policy restricted to owned rows. |
 
-Name a policy for what its predicate checks.
-
 ### Migration filenames
 
 Follow the migration tool's file names. Name each migration for its durable database change.

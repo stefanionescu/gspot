@@ -13,7 +13,6 @@ Read this rule when you change HTML or an HTML template.
 - Use the element that means the thing: `button` for actions, `a` with a real `href` for links, and `nav` for
   navigation. Use `ul` and `ol` for lists, `table` for data, `time` with `datetime` for dates, and `figure` and
   `figcaption` for captioned media.
-- `target="_blank"` links carry `rel="noopener"`.
 
 ## Scripts
 

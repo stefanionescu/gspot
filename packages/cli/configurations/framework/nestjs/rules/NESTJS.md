@@ -16,7 +16,7 @@ Read this rule when you change NestJS modules, controllers, providers, or their 
   choosing that scope.
 - Close connections and timers through the application lifecycle, such as `OnModuleDestroy`.
 
-## Settings and security
+## Guards
 
 - Use guards for route authorization. Enforce extra permissions inside each protected operation when one request runs
   several, or the service has non-HTTP callers.
