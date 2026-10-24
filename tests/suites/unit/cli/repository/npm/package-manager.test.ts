@@ -18,6 +18,7 @@ import {
     NON_EXACT_PNPM_VERSIONS,
     OUTDATED_BUN_PACKAGE_JSON,
     PACKAGE_MANAGER_PIN_CASES,
+    UNSUPPORTED_PACKAGE_MANAGERS,
 } from '#tests/config/repository/npm/package-manager.ts';
 
 test('without a packageManager field or Bun on PATH, the tool project uses npm at the version it prints', async () => {
@@ -105,3 +106,14 @@ test('install runs the real bun version check when package.json declares bun@0.0
     expect(await isOnDisk(join(sandbox.path, `${DOT_GSPOT}/bun.lock`))).toBe(false);
     expect(await isOnDisk(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
 });
+
+test.each([...UNSUPPORTED_PACKAGE_MANAGERS])(
+    'unsupported $field values identify the package.json field',
+    async ({ field, written, packageJson }) => {
+        await using sandbox = await testdir({ 'package.json': JSON.stringify(packageJson) });
+        expect(await captureRejectedError(detectPackageManager(sandbox.path, []))).toMatchObject({
+            code: 'install',
+            message: `package.json: ${field} is "${written}"; gspot supports npm, bun, pnpm, yarn with an exact version, such as pnpm@9.0.0. Change the field.`,
+        });
+    },
+);

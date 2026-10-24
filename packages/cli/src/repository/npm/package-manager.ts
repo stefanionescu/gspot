@@ -23,6 +23,7 @@ import type {
 import {
     NPM_TOOL,
     START_RUNNERS,
+    PACKAGE_MANAGERS,
     YARN_BERRY_MAJOR,
     NYPM_DETECTION_OPTIONS,
     PACKAGE_MANAGER_HASH_SUFFIX,
@@ -43,11 +44,28 @@ export function assertPackageManager(pin: PackageManagerPin | undefined): Packag
     return pin;
 }
 
-function parsePackageManagerField(field: string): PackageManagerPin {
+function buildPackageManagerField(
+    pin: { name: string | undefined; version: string | undefined },
+    field: string,
+    written: string,
+): PackageManagerField {
+    const parsed = packageManagerPinSchema.safeParse(pin);
+    if (!parsed.success)
+        throw new GspotError(
+            'install',
+            `package.json: ${field} is "${written}"; gspot supports ${PACKAGE_MANAGERS.join(', ')} with an exact version, such as pnpm@9.0.0. Change the field.`,
+        );
+    return { ...parsed.data, written, field };
+}
+
+function parsePackageManagerField(field: string): PackageManagerField {
     const [name, requested, ...verbatim] = field.split('@');
-    if (verbatim.length > 0) throw new Error('The packageManager field of package.json is not valid.');
     const version = (requested ?? '').split(PACKAGE_MANAGER_HASH_SUFFIX, 1)[0];
-    return packageManagerPinSchema.parse({ name, version });
+    return buildPackageManagerField(
+        { name: verbatim.length === 0 ? name : undefined, version },
+        'packageManager',
+        field,
+    );
 }
 
 async function readFirstPackageManager(
@@ -59,7 +77,8 @@ async function readFirstPackageManager(
         const pin = packageJson === undefined ? undefined : readPackageManagerPin(packageJson);
         if (pin !== undefined) return pin;
         const detected = await nypm.detectPackageManager(join(root, dirname(path)), NYPM_DETECTION_OPTIONS);
-        if (detected !== undefined) return { name: packageManagerPinSchema.parse({ name: detected.name }).name };
+        const name = PACKAGE_MANAGERS.find((tool) => tool === detected?.name);
+        if (name !== undefined) return { name };
     }
     return { name: NPM_TOOL, version: undefined };
 }
@@ -76,21 +95,16 @@ export function isYarnBerry(packageManager: PackageManager): boolean {
 }
 
 function readPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
-    if (packageJson.packageManager !== undefined)
-        return {
-            ...parsePackageManagerField(packageJson.packageManager),
-            written: packageJson.packageManager,
-            field: 'packageManager',
-        };
+    if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
     const engines = packageJson.devEngines?.packageManager;
     const engine = Array.isArray(engines) ? engines[0] : engines;
     return engine?.name === undefined
         ? undefined
-        : {
-              ...packageManagerPinSchema.parse(engine),
-              written: engine.version ?? engine.name,
-              field: 'devEngines.packageManager',
-          };
+        : buildPackageManagerField(
+              { name: engine.name, version: engine.version },
+              'devEngines.packageManager',
+              engine.version ?? engine.name,
+          );
 }
 
 /**

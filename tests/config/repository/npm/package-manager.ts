@@ -44,3 +44,13 @@ export const NON_EXACT_PNPM_VERSIONS = [
 ] as const;
 
 export const OUTDATED_BUN_PACKAGE_JSON = '{"packageManager":"bun@0.0.0"}\n';
+
+export const UNSUPPORTED_PACKAGE_MANAGERS = [
+    { field: 'packageManager', written: 'cnpm@9.0.0', packageJson: { packageManager: 'cnpm@9.0.0' } },
+    { field: 'packageManager', written: 'pnpm@9.0.0@x', packageJson: { packageManager: 'pnpm@9.0.0@x' } },
+    {
+        field: 'devEngines.packageManager',
+        written: '9.0.0',
+        packageJson: { devEngines: { packageManager: { name: 'cnpm', version: '9.0.0' } } },
+    },
+] as const;
