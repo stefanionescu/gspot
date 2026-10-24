@@ -1,4 +1,4 @@
-export const COMPOSE_OVERRIDE = /^(?<base>compose(?=\.override\.)|docker-compose)\.[^.]+\.ya?ml$/u;
+export const COMPOSE_OVERRIDE = /^(?<base>compose|docker-compose)\.[^.]+\.ya?ml$/u;
 
 export const COMPOSE_SUFFIXES = ['.yaml', '.yml'] as const;
 
