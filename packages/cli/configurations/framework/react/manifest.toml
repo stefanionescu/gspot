@@ -60,7 +60,7 @@ version = "0.5.7"
 
 [eslint]
 required_tools = ["eslint-plugin-react-hooks", "eslint-plugin-react", "eslint-plugin-react-refresh"]
-all_level_rules = ["react/self-closing-comp", "react/display-name", "react/no-array-index-key", "react/prop-types"]
+all_level_rules = ["react/self-closing-comp", "react/display-name", "react/no-array-index-key"]
 
 [[eslint.rules_off]]
 files = ["**/*.tsx", "**/*.jsx"]

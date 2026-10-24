@@ -1,4 +1,5 @@
 export const REACT_RULES = {
+    'react/prop-types': 'off',
     'react/no-array-index-key': 'error',
     'react/self-closing-comp': 'error',
     'react/no-danger': 'error',
