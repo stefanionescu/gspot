@@ -123,10 +123,10 @@ export const COMMAND_HELP = {
         summary: 'Change a setting',
         group: 'Change gspot.toml:',
         description:
-            'Change one setting in `gspot.toml`, then write the generated files again. gspot checks the value first.\n\nFor a list, gspot adds the values. For a table, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run `gspot ignore <check> --reason "<why>"`. Write other records, such as `[[command_check]]`, by hand.',
+            'Change one setting in `gspot.toml`, then write the generated files again. gspot checks the value first.\n\ngspot replaces the value. For a table, give one TOML inline table, and gspot adds its keys.\n\nFor an ignore, run `gspot ignore <check> --reason "<why>"`. Write other records, such as `[[command_check]]`, by hand.',
         arguments: {
             setting: 'The setting name, such as `limits.file_lines`. Run `gspot list settings` to see them',
-            values: 'The new value, or the list items or table keys to add',
+            values: 'The new value, or the table keys to add',
         },
         options: {
             '--reason <text>': 'Why you change it. Needed when the change makes a check weaker',

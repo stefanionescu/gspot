@@ -52,7 +52,7 @@ test('set names -- when a value reads as an option, and takes the values after -
     );
     const set = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'bun', 'install', '--frozen-lockfile']);
     expect(set.code, set.stdout + set.stderr).toBe(0);
-    expect(set.stdout.split('\n', 1)[0]).toBe('Added "bun", "install", "--frozen-lockfile" to ci.setup_command.');
+    expect(set.stdout.split('\n', 1)[0]).toBe('Set ci.setup_command to ["bun","install","--frozen-lockfile"].');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(getValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['bun', 'install', '--frozen-lockfile']);
 });
@@ -257,8 +257,43 @@ test('--json after the value separator stays a setup command argument', async ()
     await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
     const result = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'echo', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toStartWith('Added "echo", "--json" to ci.setup_command.');
+    expect(result.stdout).toStartWith('Set ci.setup_command to ["echo","--json"].');
     expect(result.stderr).toBe('');
     const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(getValueAt(written, ['ci', 'setup_command'])).toStrictEqual(['echo', '--json']);
+});
+
+test('set preserves repeated command arguments and replaces the previous command', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    const first = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'make', '-C', 'make']);
+    expect(first.code, first.stdout + first.stderr).toBe(0);
+    expect(
+        getValueAt(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable, [
+            'ci',
+            'setup_command',
+        ]),
+    ).toStrictEqual(['make', '-C', 'make']);
+    const second = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'npm', 'ci']);
+    expect(second.code, second.stdout + second.stderr).toBe(0);
+    expect(second.stdout.split('\n', 1)[0]).toStartWith('Set ci.setup_command to ["npm","ci"].');
+    expect(
+        getValueAt(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable, [
+            'ci',
+            'setup_command',
+        ]),
+    ).toStrictEqual(['npm', 'ci']);
+});
+
+test('set replaces the written values of an ordinary list', async () => {
+    await using sandbox = await testdir({ 'gspot.toml': buildSandboxSettings([]) });
+    const first = await runGspot(sandbox.path, ['set', 'naming.banned_words', 'firstword']);
+    expect(first.code, first.stdout + first.stderr).toBe(0);
+    const second = await runGspot(sandbox.path, ['set', 'naming.banned_words', 'secondword']);
+    expect(second.code, second.stdout + second.stderr).toBe(0);
+    expect(
+        getValueAt(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable, [
+            'naming',
+            'banned_words',
+        ]),
+    ).toStrictEqual(['secondword']);
 });

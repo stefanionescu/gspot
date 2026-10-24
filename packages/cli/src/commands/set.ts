@@ -8,12 +8,12 @@ import { buildRepositoryPath } from '#cli/repository/scopes.ts';
 import { isLoosening } from '#cli/settings/validation/reasons.ts';
 import { type Command, CommanderError } from '@commander-js/extra-typings';
 import { isTable, getValueAt, stripUndefined } from '#cli/system/tables.ts';
+import { setKey, getScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
 import { getSettingValue, findSettingDefault } from '#cli/settings/inherit.ts';
 import { NUMBER, STRUCTURED, DASH_VALUE_HELP } from '#cli/config/commands/set.ts';
 import { listRecordFields, findSettingSchema } from '#cli/schemas/settings/file.ts';
 import { type CommandResult, type CommandCompletion } from '#cli/types/terminal.ts';
 import { type Setting, type EffectiveSetting } from '#cli/types/settings/inheritance.ts';
-import { setKey, addToList, getScopeTable, getWrittenValue } from '#cli/settings/edit.ts';
 import { readSetting, applySettingsEdit, prepareSettingsEdit } from '#cli/apply/settings.ts';
 import { type SetOptions, type ParsedSettingValue, type SettingReasonContext } from '#cli/types/commands/set.ts';
 
@@ -76,7 +76,7 @@ function parseReasonTable(options: SetOptions): ParsedSettingValue {
 
 function editSetting(table: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
     const scopeTable = getScopeTable(table, options.scope);
-    if (change.type === 'list') addToList(scopeTable, options.key, change.value);
+    if (change.type === 'list') setKey(scopeTable, options.key, change.value);
     else if (setting.type === 'table' && isTable(change.value)) {
         const written = getValueAt(scopeTable, options.key.split('.'));
         const writtenValue = getWrittenValue(written);
@@ -114,12 +114,7 @@ function formatSettingChange(
         previous?.value === undefined ? '' : `  (was ${JSON.stringify(previous.value)} from ${previous.source})`;
     if (isReasonTable) return `Added ${options.values.join(' and ')} to ${displayKey}.${was}`;
     const reason = options.reason === undefined ? '' : `  # ${options.reason}`;
-    if (!Array.isArray(change.value)) return `Set ${displayKey} to ${JSON.stringify(change.value)}.${reason}${was}`;
-    const description =
-        change.type === 'list'
-            ? `Added ${change.value.map((value) => JSON.stringify(value)).join(', ')} to ${displayKey}.`
-            : `Set ${displayKey} to ${JSON.stringify(change.value)}.`;
-    return `${description}${reason}${was}`;
+    return `Set ${displayKey} to ${JSON.stringify(change.value)}.${reason}${was}`;
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Inlined, it puts runSetCommand over the complexity limit of 8.
