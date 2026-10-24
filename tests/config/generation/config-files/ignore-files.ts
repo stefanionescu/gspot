@@ -83,8 +83,6 @@ export const PATH_IGNORE_CASES = [
     },
 ] as const;
 
-export const PRETTIER_IGNORE_ATTRIBUTES = '/generated/** linguist-generated\n/vendored/** linguist-vendored\n';
-
 export const IGNORE_LIST_REPOSITORY = {
     'gspot.toml': buildSandboxSettings(['javascript', 'python', 'markdown'], {
         level: 'all',
