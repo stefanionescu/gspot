@@ -169,3 +169,15 @@ test('ignore merges matching paths, keeps different reasons apart, and an entry 
     expect(removed.stdout).toStartWith('Removed 2 ignores for bash/shellcheck.\n');
     expect(parse(await readFile(settingsPath, 'utf8'))).not.toHaveProperty('ignore');
 });
+
+test('a refused ignore reason is an argument error and leaves settings unchanged', async () => {
+    const settings = buildSandboxSettings([]);
+    await using sandbox = await testdir({ 'gspot.toml': settings });
+    const result = await runGspot(sandbox.path, ['ignore', '--paths', 'vendor/**', '--reason', 'x', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toStrictEqual({
+        error: 'arguments',
+        message: 'gspot ignore needs a reason that says something: "x" is refused. Write one sentence saying why.',
+    });
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(settings);
+});
