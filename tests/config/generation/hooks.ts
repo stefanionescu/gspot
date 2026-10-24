@@ -1,7 +1,7 @@
 export const START_COMMANDS = [
     ['npm', 'npm@11.10.1', ['exec', '--no', '--', 'gspot']],
     ['pnpm', 'pnpm@10.32.1', ['exec', 'gspot']],
-    ['yarn', 'yarn@4.13.0', ['exec', 'gspot']],
+    ['yarn', 'yarn@4.13.0', ['exec', '--', 'gspot']],
     ['bun', 'bun@1.4.2', ['run', '--no-install', 'gspot']],
     ['mise', undefined, ['exec', '--', 'gspot']],
 ] as const;

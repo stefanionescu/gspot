@@ -23,7 +23,7 @@ export const START_RUNNERS = {
         installCommand: 'pnpm add --save-dev --save-exact <package>@<version>',
     },
     yarn: {
-        command: 'yarn exec gspot',
+        command: 'yarn exec -- gspot',
         missing: 'Install Yarn, then run: yarn install.',
         installCommand: 'yarn add --dev --exact <package>@<version>',
     },
