@@ -1,10 +1,10 @@
 import { getPosition } from '#cli/system/text.ts';
-import type { Node, TypeName } from '@pgsql/types';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildFinding } from '#cli/runs/finding.ts';
 import type { Session } from '#cli/types/session.ts';
 import type { Finding } from '#cli/types/runs/check.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { Node, TypeName, GrantStmt } from '@pgsql/types';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import type { SqlStatementVisitors } from '#cli/types/parsers/code/sql.ts';
 import { selectFrozenMigrations } from '#cli/parsers/code/sql/migrations.ts';
@@ -111,12 +111,12 @@ export async function checkPostgresGrants(session: Session, planned: PlannedChec
         getTable(planned.scope.settings, 'postgres').frozen_through,
     );
     return listMigrationStatements(migrations.filter(({ path }) => !frozen.has(path)))
-        .filter(
-            ({ statement }) =>
-                statement.kind === 'GrantStmt' &&
-                statement.fields.is_grant === true &&
-                statement.fields.privileges === undefined,
-        )
+        .filter(({ statement }) => {
+            let grant: GrantStmt | undefined;
+            if (statement.kind === 'GrantStmt') grant = statement.fields;
+            else if (statement.kind === 'AlterDefaultPrivilegesStmt') grant = statement.fields.action;
+            return grant?.is_grant === true && grant.privileges === undefined;
+        })
         .map(({ migration, statement }) =>
             buildFinding(
                 planned,

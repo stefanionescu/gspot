@@ -16,6 +16,19 @@ import {
     SECURED_ROW_SECURITY_SQL,
 } from '#tests/config/checks/database/postgres/access.ts';
 
+test('grants reports GRANT ALL in both direct and default privileges', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
+        'migrations/1_grants.sql':
+            'GRANT ALL ON TABLE orders TO app_reader;\nALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO app_reader;\nALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO app_reader;\nALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM app_reader;\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'postgres/grants');
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'migrations/1_grants.sql', line: 1, rule: 'grant-all' },
+        { file: 'migrations/1_grants.sql', line: 2, rule: 'grant-all' },
+    ]);
+});
+
 test.each([...DEFINER_REPAIRS])('definer-search-path accepts a later $name migration', async ({ sql }) => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['postgres'], {
