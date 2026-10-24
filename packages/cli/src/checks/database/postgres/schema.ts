@@ -25,6 +25,25 @@ function removeTable(schema: DatabaseSchema, table: string): void {
     schema.indexes = schema.indexes.filter((index) => index.table !== table);
 }
 
+function renameTable(schema: DatabaseSchema, table: string, name: string): void {
+    const renamed = `${table.slice(0, table.indexOf('.'))}.${name}`;
+    const source = schema.tables.get(table);
+    if (source !== undefined) {
+        schema.tables.set(renamed, source);
+        schema.tables.delete(table);
+    }
+    if (schema.secured.delete(table)) schema.secured.add(renamed);
+    const constraints = schema.constraints.get(table);
+    if (constraints !== undefined) {
+        schema.constraints.set(
+            renamed,
+            new Map([...constraints].map(([constraint, key]) => [constraint, { ...key, table: renamed }])),
+        );
+        schema.constraints.delete(table);
+    }
+    schema.indexes = schema.indexes.map((index) => (index.table === table ? { ...index, table: renamed } : index));
+}
+
 function buildConstraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
     const constraintName = node.conname ?? '';
     if (constraintName !== '') return constraintName;
@@ -122,6 +141,17 @@ const TOKEN_MATCHERS: SqlStatementVisitors<void, [DatabaseSchema, Migration]> = 
     DropStmt: readDrop,
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
+    RenameStmt: ({ fields }, schema) => {
+        const table = buildRelationName(fields.relation);
+        if (fields.renameType === 'OBJECT_TABLE') renameTable(schema, table, fields.newname ?? '');
+        if (fields.renameType !== 'OBJECT_COLUMN') return;
+        for (const key of schema.constraints.get(table)?.values() ?? [])
+            key.columns = key.columns.map((column) => (column === fields.subname ? (fields.newname ?? '') : column));
+        for (const index of schema.indexes.filter((indexed) => indexed.table === table))
+            index.columns = index.columns.map((column) =>
+                column === fields.subname ? (fields.newname ?? '') : column,
+            );
+    },
     IndexStmt: (statement, state) => {
         const columns = listNodeFields(statement.fields.indexParams, 'IndexElem').map((column) => column.name ?? '');
         if (columns.length === 0) return;

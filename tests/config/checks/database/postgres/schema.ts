@@ -32,3 +32,10 @@ export const UNNAMED_FOREIGN_KEY_SQL =
     'CREATE TABLE posts (id int PRIMARY KEY, author_id int REFERENCES users(id), title text UNIQUE, CHECK (id > 0));';
 
 export const DROP_SECOND_INDEX_SQL = 'DROP INDEX second;\nALTER TABLE posts DISABLE ROW LEVEL SECURITY;\n';
+
+export const RENAMED_TABLE_SQL = `CREATE TABLE teams (tenant_id int, user_id int, FOREIGN KEY (tenant_id, user_id) REFERENCES users (tenant_id, user_id));
+CREATE INDEX teams_lookup ON teams (tenant_id, user_id);
+ALTER TABLE teams RENAME TO groups;
+ALTER TABLE groups RENAME COLUMN tenant_id TO organization_id;
+ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
+`;

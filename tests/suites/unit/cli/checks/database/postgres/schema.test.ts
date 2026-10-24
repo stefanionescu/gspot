@@ -1,11 +1,15 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { createReadCache } from '#cli/system/files/cache.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { type Migration } from '#cli/types/checks/postgres.ts';
 import { parseSqlFile } from '#cli/parsers/code/sql/postgres.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 
 import {
     KEYED_TABLES_SQL,
+    RENAMED_TABLE_SQL,
     RECREATED_TABLE_SQL,
     DROP_SECOND_INDEX_SQL,
     EQUIVALENT_INDEXES_SQL,
@@ -13,6 +17,20 @@ import {
     UNNAMED_FOREIGN_KEY_SQL,
     DROPPED_CONSTRAINTS_SQL,
 } from '#tests/config/checks/database/postgres/schema.ts';
+
+test('table and column renames retain their foreign keys, indexes, and row security', async () => {
+    const schema = buildSchema([await parseMigration('1_rename.sql', RENAMED_TABLE_SQL)]);
+    expect([...schema.tables.keys()]).toStrictEqual(['public.groups']);
+    expect([...schema.secured]).toStrictEqual(['public.groups']);
+    expect(schema.foreignKeys).toMatchObject([{ table: 'public.groups', columns: ['organization_id', 'user_id'] }]);
+    expect([...schema.indexed]).toStrictEqual([['public.groups', [['organization_id', 'user_id']]]]);
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
+        'migrations/1_rename.sql': RENAMED_TABLE_SQL,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'postgres/row-level-security')).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes')).toStrictEqual([]);
+});
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 9 calls in this file share it.
 async function parseMigration(name: string, text: string): Promise<Migration> {
